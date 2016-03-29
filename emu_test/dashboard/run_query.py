@@ -12,15 +12,10 @@ from gviz_data_table import Table
 from google.appengine.api import memcache
 from google.appengine.ext.webapp.template import render
 
-
-CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets.json')
-SCOPES = [
-    'https://www.googleapis.com/auth/bigquery'
-]
-decorator = oauth2decorator_from_clientsecrets(
-    filename=CLIENT_SECRETS,
-    scope=SCOPES,
-    cache=memcache)
+import httplib2
+from oauth2client.appengine import AppAssertionCredentials
+credentials = AppAssertionCredentials(scope='https://www.googleapis.com/auth/bigquery')
+http = credentials.authorize(httplib2.Http(memcache))
 
 # Project ID for a project where you and your users
 # are viewing members.  This is where the bill will be sent.
@@ -44,7 +39,6 @@ def get_query_clause(vars):
                 for qemu in  vars['QEMU']:
                     select_clause += "last (CASE WHEN (builderName = '%s' AND tag = '%s' AND gpu = '%s' AND qemu = '%s') THEN boottime ELSE null END) AS [%s_%s_%s_%s], " % (host, tag, gpu_val[gpu], qemu, host.replace('-', '_'), tag.replace('-', '_'), gpu, qemu)
 
-    #where_clause = "api = %s AND abi = '%s' AND tag = '%s' AND gpu = '%s' AND qemu = '%s'" % (vars['API'], vars['ABI'], vars['TAG'], vars['GPU'], vars['QEMU'])
     where_clause = "api = %s AND abi = '%s'" % (vars['API'][0], vars['ABI'][0])
     QUERY = ("SELECT "
              "revision AS build, "
@@ -93,9 +87,8 @@ class RunQuery(webapp2.RequestHandler):
         logging.info("FINAL BOOTTIMEDATA---")
         return count, encode(table)
 
-    @decorator.oauth_required
     def post(self):
-        bq = bqclient.BigQueryClient(decorator)
+        bq = bqclient.BigQueryClient(http)
         title, QUERY, SUM_QUERY = get_query_clause(json.loads(self.request.body)['paint_vars'])
         count, boot_values = self._bq2table(bq.Query(QUERY, BILLING_PROJECT_ID))
         #sum_count, sum_values = self._bq2table(bq.Query(SUM_QUERY, BILLING_PROJECT_ID))
