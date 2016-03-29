@@ -219,7 +219,7 @@ class EmuBaseTestCase(LoggedTestCase):
         local_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "adb_test_data", "large_file.zip")
         device_path = "/data/local/tmp/large_file.zip"
         push_cmd = ["adb", "push", local_path, device_path]
-        pull_cmd = ["adb", "pull", device_path, local_path]
+        pull_cmd = ["adb", "pull", device_path, "."]
         result_re = re.compile("^(\d+ KB/s) \(\d+ bytes in .*s\)")
         run_time = []
         for cmd in [push_cmd, pull_cmd]:
@@ -227,9 +227,14 @@ class EmuBaseTestCase(LoggedTestCase):
                 (exit_code, output, err) = self.run_with_timeout(cmd, 300)
             except Exception as e:
                 self.m_logger.error('exception run_with_timeout %s: %r', ' '.join(cmd), e)
-                continue
-            run_time.append(result_re.match(err.strip()).groups()[0])
+                return
             self.m_logger.info('%s %s %s', ' '.join(cmd), output, err)
+            gr = result_re.match(err.strip())
+            if gr is not None:
+                run_time.append(gr.groups()[0])
+            else:
+                self.m_logger.info('Fails to run adb performance test')
+                return
         self.m_logger.info('AVD %s, adb push: %s, adb pull: %s', avd, run_time[0], run_time[1])
 
     def update_config(self, avd_config):
