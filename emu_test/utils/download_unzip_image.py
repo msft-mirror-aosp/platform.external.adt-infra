@@ -28,7 +28,7 @@ def get_dst_dir(remote_path):
       tag = 'android-tv'
     else:
       tag = 'default'
-    if 'lmp_mr1' in branch_name:
+    if 'lmp-mr1' in branch_name:
       api = '22'
     elif 'mnc' in branch_name:
       api = '23'
