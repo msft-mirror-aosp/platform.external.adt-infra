@@ -4,6 +4,7 @@
 """
 
 import os
+import re
 import sys
 import unittest
 import logging
@@ -210,8 +211,26 @@ class EmuBaseTestCase(LoggedTestCase):
             raise TimeoutError(avd, emu_args.timeout_in_seconds)
         self.boot_time = time.time() - start_time
         self.m_logger.info('AVD %s, boot time is %s', avd, self.boot_time)
-
+        if not emu_args.skip_adb_perf:
+            self.run_adb_perf(avd)
         return self.boot_time
+
+    def run_adb_perf(self, avd):
+        local_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "adb_test_data", "large_file.zip")
+        device_path = "/data/local/tmp/large_file.zip"
+        push_cmd = ["adb", "push", local_path, device_path]
+        pull_cmd = ["adb", "pull", device_path, local_path]
+        result_re = re.compile("^(\d+ KB/s) \(\d+ bytes in .*s\)")
+        run_time = []
+        for cmd in [push_cmd, pull_cmd]:
+            try:
+                (exit_code, output, err) = self.run_with_timeout(cmd, 300)
+            except Exception as e:
+                self.m_logger.error('exception run_with_timeout %s: %r', ' '.join(cmd), e)
+                continue
+            run_time.append(result_re.match(err.strip()).groups()[0])
+            self.m_logger.info('%s %s %s', ' '.join(cmd), output, err)
+        self.m_logger.info('AVD %s, adb push: %s, adb pull: %s', avd, run_time[0], run_time[1])
 
     def update_config(self, avd_config):
         # avd should be found $HOME/.android/avd/
