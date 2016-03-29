@@ -216,15 +216,16 @@ class EmuBaseTestCase(LoggedTestCase):
         return self.boot_time
 
     def run_adb_perf(self, avd):
-        local_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "adb_test_data", "large_file.zip")
-        device_path = "/data/local/tmp/large_file.zip"
+        test_file = "small_file.zip" if avd.classic == "yes" else "large_file.zip"
+        local_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "adb_test_data", test_file)
+        device_path = "/data/local/tmp/%s" % test_file
         push_cmd = ["adb", "push", local_path, device_path]
         pull_cmd = ["adb", "pull", device_path, "."]
         result_re = re.compile("^(\d+ KB/s) \(\d+ bytes in .*s\)")
         run_time = []
         for cmd in [push_cmd, pull_cmd]:
             try:
-                (exit_code, output, err) = self.run_with_timeout(cmd, 300)
+                (exit_code, output, err) = self.run_with_timeout(cmd, 600)
             except Exception as e:
                 self.m_logger.error('exception run_with_timeout %s: %r', ' '.join(cmd), e)
                 return
