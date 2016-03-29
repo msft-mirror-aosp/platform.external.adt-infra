@@ -36,5 +36,7 @@ def get_parser():
     parser.add_argument('-f', type=json.loads, dest='filter_dict', action='store',
                         default=None,
                         help='json style pattern to filter config_file')
+    parser.add_argument('--skip-adb-perf', action='store_true',
+                        help='when defined, skip adb performance test')
     parser.add_argument('unittest_args', nargs='*')
     return parser

@@ -33,13 +33,16 @@ dataset_id = 'emu_buildbot'
 
 table_data = 'avd_to_time_data'
 table_err = 'avd_to_time_error'
+table_adb = 'avd_to_adb_speed'
 
 parser_dir = os.path.dirname(os.path.realpath(__file__))
 root_dir = os.path.join(parser_dir, "..")
 
 file_data = os.path.join(parser_dir, "AVD_to_time_data.csv")
 file_err = os.path.join(parser_dir, "AVD_to_time_error.csv")
-schema_path = os.path.join(parser_dir, "boot_time_csv_schema.json")
+file_adb = os.path.join(parser_dir, "AVD_to_adb_speed.csv")
+boot_schema_path = os.path.join(parser_dir, "boot_time_csv_schema.json")
+adb_schema_path = os.path.join(parser_dir, "adb_csv_schema.json")
 
 result_re = re.compile(".*AVD (.*), boot time: (\d*.?\d*), expected time: \d+")
 log_dir_re = re.compile("build_(\d+)-rev_(.*).zip")
@@ -48,6 +51,7 @@ avd_android_re = re.compile("([^-]*-[^-]*)-(.*)-(.*)-(\d+)-gpu_(.*)-api(\d+)")
 start_re = re.compile(".*INFO - Running - (.*)")
 timeout_re = re.compile(".*ERROR - AVD (.*) didn't boot up within (\d+) seconds")
 fail_re = re.compile("^FAIL: test_boot_(.*)_qemu(\d+) \(test_boot.test_boot.BootTestCase\)$")
+adb_result_re = re.compile(".*- INFO - AVD (.*), adb push: (\d+) KB/s, adb pull: (\d+) KB/s")
 
 log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler = RotatingFileHandler(os.path.join(parser_dir, "parser_logs.txt"), maxBytes=1048576, backupCount=10)
@@ -63,9 +67,6 @@ logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 logger.setLevel(logging.DEBUG)
 
-hasData = False
-hasError = False
-
 def get_emu_branch(zip_path):
     try:
         with zipfile.ZipFile(zip_path, 'r') as log_dir:
@@ -80,8 +81,7 @@ def get_emu_branch(zip_path):
         return "emu-master-dev"
 
 # process a zip folder
-def process_zipfile(zip_name, builder, csv_data, csv_err):
-    global hasData, hasError
+def process_zipfile(zip_name, builder, csv_data, csv_err, csv_adb):
     zip_path = os.path.join(root_dir, builder, zip_name)
     logger.info("Process zip file %s", zip_name)
     if log_dir_re.match(zip_name):
@@ -99,6 +99,7 @@ def process_zipfile(zip_name, builder, csv_data, csv_err):
                 for line in f:
                     is_timeout = False
                     is_fail = False
+                    is_adb_result = False
                     if start_re.match(line):
                         if "_qemu2" in line:
                             is_qemu2 = True
@@ -108,29 +109,34 @@ def process_zipfile(zip_name, builder, csv_data, csv_err):
                         is_timeout = True
                     elif fail_re.match(line):
                         is_fail = True
+                    elif adb_result_re.match(line):
+                        is_adb_result = True
                     gr = result_re.match(line)
-                    if gr is not None or is_timeout or is_fail:
+                    if gr is not None or any([is_timeout, is_fail, is_adb_result]):
                         if is_timeout:
                             boot_time = 9999
                             avd = timeout_re.match(line).groups()[0]
+                            result_file = csv_err
                         elif is_fail:
                             boot_time = 0.0
                             avd = fail_re.match(line).groups()[0]
                             is_qemu2 = (fail_re.match(line).groups()[1] == "2")
+                            result_file = csv_err
+                        elif is_adb_result:
+                            avd, push_speed, pull_speed = adb_result_re.match(line).groups()
+                            result_file = csv_adb
                         else:
                             avd, boot_time = gr.groups()
+                            result_file = csv_data
                         if any([x in avd for x in ["android-wear", "android-tv"]]):
                             tag, abi, device, ram, gpu, api = avd_android_re.match(avd).groups()
                         else:
                             tag, abi, device, ram, gpu, api = avd_re.match(avd).groups()
-
-                        record_line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (api, tag, abi, device, ram, gpu, "qemu2" if is_qemu2 else "qemu1", builder, build, revision, boot_time, emu_branch)
-                        if is_timeout or is_fail:
-                            csv_err.write(record_line)
-                            hasError = True
+                        if is_adb_result:
+                            record_line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (api, tag, abi, device, ram, gpu, "qemu2" if is_qemu2 else "qemu1", builder, build, revision, push_speed, pull_speed, emu_branch)
                         else:
-                            csv_data.write(record_line)
-                            hasData = True
+                            record_line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (api, tag, abi, device, ram, gpu, "qemu2" if is_qemu2 else "qemu1", builder, build, revision, boot_time, emu_branch)
+                        result_file.write(record_line)
     dst_path = "gs://emu_test_traces/%s/" % builder
     logger.info("upload file to Google Storage - %s to %s ", zip_path, dst_path)
     subprocess.check_call(["/home/user/bin/gsutil", "mv", zip_path, dst_path])
@@ -138,16 +144,16 @@ def process_zipfile(zip_name, builder, csv_data, csv_err):
 def parse_logs():
     """Parse zipped log files and write to file in csv format"""
 
-    with open(file_data, 'w') as csv_data, open(file_err, 'w') as csv_err:
+    with open(file_data, 'w') as csv_data, open(file_err, 'w') as csv_err, open(file_adb, 'w') as csv_adb:
         for x in os.listdir(root_dir):
             builder = x
             logger.info("Builder: %s", builder)
             builder_dir = os.path.join(root_dir, builder)
             if os.path.isdir(builder_dir):
                 for zip_dir in [x for x in os.listdir(builder_dir) if x.endswith(".zip")]:
-                    process_zipfile(zip_dir, builder, csv_data, csv_err)
+                    process_zipfile(zip_dir, builder, csv_data, csv_err, csv_adb)
 
-def load_data(data_path, table_id):
+def load_data(data_path, table_id, schema_path):
     """Loads the given data file into BigQuery.
 
     Args:
@@ -159,6 +165,9 @@ def load_data(data_path, table_id):
         dataset_id: The dataset id of the destination table.
         table_id: The table id to load data into.
     """
+    if os.stat(data_path).st_size == 0:
+        logging.info("No data found in %s, skip uploading table %s.", data_path, table_id)
+        return
     # Create a bigquery service object, using the application's default auth
     logger.info('Upload %s to table %s', data_path, table_id)
     credentials = GoogleCredentials.get_application_default()
@@ -218,7 +227,7 @@ if __name__ == "__main__":
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(parser_dir, "LLDB_BUILD_SECRETS.json")
 
     def back_up():
-        for x in [file_data, file_err]:
+        for x in [file_data, file_err, file_adb]:
             dst = "%s_%s" % (x, strftime("%Y%m%d-%H%M%S"))
             copyfile(x, dst)
     try:
@@ -229,14 +238,9 @@ if __name__ == "__main__":
         back_up()
         exit(0)
     try:
-        if hasData:
-            load_data(file_data, table_data)
-        else:
-            logging.info("No test data found, skip uploading data table.")
-        if hasError:
-            load_data(file_err, table_err)
-        else:
-            logging.info("No test error found, skip uploading error table.")
+        load_data(file_data, table_data, boot_schema_path)
+        load_data(file_err, table_err, boot_schema_path)
+        load_data(file_adb, table_adb, adb_schema_path)
     except:
         logging.info(traceback.format_exc())
         back_up()
