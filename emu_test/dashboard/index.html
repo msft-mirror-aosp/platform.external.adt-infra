@@ -13,9 +13,31 @@
      google.setOnLoadCallback(init);
      var colorSet = ["Green", "Red", "Blue", "Salmon", "DarkOliveGreen", "MediumOrchid", "SkyBlue", "DarkOrange", "Aquamarine", "Crimson", "SpringGreen", "RoyalBlue", "DeepPink"]; 
 
-     function drawGraph(desc, data, sum_values, host_count) {
+     function drawGraph(desc, data, sum_values, host_count, hAxis_desc, write_log) {
        var data_table = new google.visualization.DataTable(data);
+
+       var log_area = document.getElementById("log_area");
+       for (var i = data_table.getNumberOfColumns()-1; i>=0; i--)
+       {
+           var range = data_table.getColumnRange(i);
+           if(range.min == null && range.max == null)
+           {
+              if(write_log)
+              {
+                log_area.value += "No matching record for " + data_table.getColumnLabel(i) + "\n";
+                log_area.rows ++;
+              }
+              data_table.removeColumn(i);
+           }
+       }
        var col_count = data_table.getNumberOfColumns()-1;
+       if(col_count==0)
+       {
+           document.getElementById('msg_result').innerHTML = "0 Results Returned!"
+           return;
+       }
+
+       document.getElementById('msg_result').innerHTML = "{{ table_row_count }}" + " Results Returned!"
        var col_per_host = col_count/host_count;
 
        var lineDict = {};
@@ -31,14 +53,14 @@
        }
 
        var options = {
-                    width: 1500,
-                    height: 900,
-                    title: desc,
-                    interpolateNulls: true,
-                    series: lineDict,
-                    colors: lineColor,
-                    hAxis: {title: 'Build'},
-                    vAxis: {title: 'Boot Time in Seconds'},
+                      width: 1500,
+                      height: 900,
+                      title: desc,
+                      interpolateNulls: true,
+                      series: lineDict,
+                      colors: lineColor,
+                      hAxis: {title: 'Build'},
+                      vAxis: {title: hAxis_desc},
        };
        var chart_table = document.getElementById("chart_table");
        var row = chart_table.insertRow();
@@ -46,12 +68,9 @@
        var cell_sum = row.insertCell(1);
 
        var line_chart = new google.visualization.LineChart(cell_data);
-       //var sum_table = new google.visualization.DataTable(sum_values);
-       //var sum_chart = new google.visualization.Table(cell_sum);
        line_chart.draw(data_table, options);
-       //sum_chart.draw(sum_table, {showRowNumber: false});
      }
-     function createCheckboxGroup(ele_arr, group_desc, parent_id, box_type) {
+     function createCheckboxGroup(ele_arr, group_desc, parent_id, box_type, selected_vars) {
        var fieldset = document.createElement('fieldset');
        var legend = document.createElement ('legend');
        legend.innerHTML = group_desc;
@@ -72,6 +91,8 @@
          checkbox.id = display_name;
          if (display_name == "ALL")
            checkbox.onclick = function(){toggle(this);};
+         if(group_name in selected_vars && selected_vars[group_name].indexOf(display_name)>-1)
+             checkbox.checked = true;
 
          var label = document.createElement('label_' + display_name)
          label.htmlFor = display_name;
@@ -114,18 +135,26 @@
        var gpus = ["mesa", "on", "off"];
        var qemus = ["qemu1", "qemu2"];
 
-       createCheckboxGroup(apis, 'API', 'td_api', 'radio');
-       createCheckboxGroup(abis, 'ABI', 'td_abi', 'radio');
-       createCheckboxGroup(host, 'HOST', 'td_host', 'checkbox');
-       createCheckboxGroup(tags, 'TAG', 'td_tag', 'checkbox');
-       createCheckboxGroup(gpus, 'GPU', 'td_gpu', 'checkbox');
-       createCheckboxGroup(qemus, 'QEMU', 'td_qemu', 'checkbox');
+       var selected_vars = {{ paint_vars|safe }};
+       createCheckboxGroup(apis, 'API', 'td_api', 'radio', selected_vars);
+       createCheckboxGroup(abis, 'ABI', 'td_abi', 'radio', selected_vars);
+       createCheckboxGroup(host, 'HOST', 'td_host', 'checkbox', selected_vars);
+       createCheckboxGroup(tags, 'TAG', 'td_tag', 'checkbox', selected_vars);
+       createCheckboxGroup(gpus, 'GPU', 'td_gpu', 'checkbox', selected_vars);
+       createCheckboxGroup(qemus, 'QEMU', 'td_qemu', 'checkbox', selected_vars);
+
+       if ("{{ query_complete }}" =="1" && "{{ table_row_count }}" !== "0")
+       {
+          document.getElementById('paint_btn').disabled = true;
+          var host_count = ({{ paint_vars|safe }}["HOST"]).length;
+          drawGraph("{{ table_title|safe }}", {{ table_bootdata|safe }}, {{ table_sumdata|safe }}, host_count, "Boot Time in Seconds", true);
+          drawGraph("{{ table_title|safe }}", {{ table_adbdata|safe }}, {{ table_sumdata|safe }}, host_count, "Speed in KB/s", false);
+          document.getElementById('paint_btn').disabled = false;
+       }
      }
 
-     function paintOnSelection() {
-       document.getElementById('paint_btn').disabled = true;
-       $("#chart_table tr").remove();
-       document.getElementById('msg_result').innerHTML = ""
+     function validateForm()
+     {
        var empty_selection = "";
        function get_var(group){
          var checkedBoxes = document.querySelectorAll(group);
@@ -149,38 +178,17 @@
        if (empty_selection != ""){
          alert("Please select " + empty_selection)
          document.getElementById('paint_btn').disabled = false;
-         return;
+         return false;
        }
-       var selected_vars = { "HOST": hosts,
-                             "API": apis,
-                             "TAG": tags,
-                             "ABI": abis,
-                             "GPU": gpus,
-                             "QEMU": qemus };
-       $.ajax({
-           type: "POST",
-           url: "/run_query",
-           dataType: 'json',
-           data: JSON.stringify({ "paint_vars": selected_vars})
-        })
-        .done(function( data ) {
-           document.getElementById('msg_result').innerHTML = data['table_row_count'].toString() + " Results Returned!"
-           document.getElementById('paint_btn').disabled = false;
-           if(data['table_row_count'] != 0){
-               drawGraph(data['table_title'], data['table_bootdata'], data['table_sumdata'], hosts.length);
-           }
-        })
-        .fail(function(jqXHR, textStatus) {
-           alert("Query FAIL, please contact chying@ for access");
-           document.getElementById('paint_btn').disabled = false;
-        });
-     };
+       document.getElementById('paint_btn').disabled = true;
+       return true;
+     }
   </script>
 </head>
 <body>
   <h2>Emulator Dashboard</h2>
-  <form name='form_config' action="javascript:paintOnSelection()">
-  <!-- form name='form_config' action="run_query" method="post" -->
+  <!-- form name='form_config' id='form_config' action="javascript:paintOnSelection()" -->
+  <form name='form_config' onsubmit="return validateForm()" method="get">
     <table>
       <tr>
         <td id='td_api'></td>
@@ -200,6 +208,7 @@
     <table id='chart_table'>
     </table>
   </form>
+  <textarea cols="100" id='log_area'></textarea>
   <p>Backed by Google's BigQuery and running in Python on App Engine.</p>
 </body>
 </html>
