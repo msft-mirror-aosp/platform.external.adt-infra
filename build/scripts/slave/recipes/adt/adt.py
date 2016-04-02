@@ -126,7 +126,7 @@ def RunSteps(api):
     # If this build is triggered by sys_image poller, skip public system image step
     # since these has been tested with the same emulator revision in the
     # build triggered by emu poller
-    if project == "emu-master-dev":
+    if project in ['emu-master-dev', 'emu-2.0-release']:
       PythonTestStep('Boot Test - Public System Image',
                      api.path.join(log_dir, 'boot_test_public_sysimage'),
                      'test_boot.*',
