@@ -137,7 +137,7 @@ class EmuBaseTestCase(LoggedTestCase):
         if avd.gpu == "mesa":
             launch_cmd += ["-gpu", "mesa"]
         if avd.cts:
-            launch_cmd += ["-gpu", "guest"]
+            launch_cmd += ["-gpu", "host"]
         def launch_in_thread():
             test_name = self.id().rsplit('.', 1)[-1]
             logcat_path = os.path.join(emu_args.session_dir, "%s_logcat.txt" % test_name)
