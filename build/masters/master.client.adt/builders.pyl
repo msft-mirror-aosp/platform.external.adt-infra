@@ -232,7 +232,7 @@
       "type": "gs_poller",
     },
     "cts_linux_scheduler": {
-      "project": ["emu-2.0-release", "git_klp-emu-dev", "emu-master-dev", "git_lmp-mr1-emu-dev", "git_mnc-emu-dev", "git_nyc-emu-release", "git_lmp-emu-dev"],
+      "project": ["emu-2.0-release", "emu-master-dev", "git_mnc-emu-dev"],
       "branch": ["linux", "all"],
       "type": "gs_poller",
     },
