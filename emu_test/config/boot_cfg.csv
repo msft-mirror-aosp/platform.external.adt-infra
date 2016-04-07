@@ -41,7 +41,7 @@ API 20,android-wear,armeabi-v7a,,,,,,P,,,,,,,,,,
 API 19,default,armeabi-v7a,,,,,,P,,,,,,,,,,
 ,,x86,,,,,,P,,,,,,,,,,
 ,google_apis,armeabi-v7a,,,,,,,,,,,,,,,,
-,,x86,,,,,,,,,,,,,,,,
+,,x86,,,,P,P,P,P,P,P,P,P,P,P,P,P,P
 API 18,default,armeabi-v7a,,,,,,P,,,,,,,,,,
 ,,x86,,,,,,P,,,,,,,,,,
 API 17,default,armeabi-v7a,,,,,,P,,,,,,,,,,
