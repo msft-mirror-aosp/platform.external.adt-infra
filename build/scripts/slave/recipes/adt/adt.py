@@ -162,7 +162,7 @@ def RunSteps(api):
                      api.path.join(log_dir, 'boot_test_KLP_sysimage'),
                      'test_boot.*',
                      'boot_cfg.csv',
-                     '{"api": "19", "tag": "default"}')
+                     '{"api": "19", "tag": "google_apis"}')
     if "cts" in str(api.properties['scheduler']):
       PythonTestStep('Run Emulator CTS Test',
                      api.path.join(log_dir, 'CTS_test'),
