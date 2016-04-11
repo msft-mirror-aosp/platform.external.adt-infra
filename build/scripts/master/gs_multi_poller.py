@@ -91,26 +91,23 @@ class GSMultiPoller(base.PollingChangeSource):
   # return the latest complete build
   def find_latest_build(self, _no_use):
     bucket = boto.storage_uri(self.gs_bucket, 'gs').get_bucket()
-    maxtime = None
-    build_version = None
+    build_version = 0
     last_modified_file = None
     for obj in bucket.list(self.gs_path_list[0]):
-      if (maxtime is None or maxtime < obj.last_modified) and (self.name_identifier in obj.name):
-        maxtime = obj.last_modified
+      if self.name_identifier in obj.name:
+        # file path: "builds/[builder_name]/[build_version]/[random_hash]/[binary].zip"
+        build_version = max(build_version, int(obj.name.split('/')[2]))
         last_modified_file = obj.name
-    if last_modified_file is not None:
-      # file path: "builds/[builder_name]/[build_version]/[random_hash]/[binary].zip"
-      build_version = last_modified_file.split('/')[2]
     log.msg('%s: last_change %s, new_last_change %s' % (self.name, self.last_change, build_version))
-    if build_version is None or build_version == self.last_change:
+    if build_version == 0 or build_version <= int(self.last_change or 0):
       return None
     file_list = []
     for path in self.gs_path_list:
-      objs = bucket.list(path + build_version + '/')
+      objs = bucket.list(path + str(build_version) + '/')
       count = len(list(objs))
-      log.msg("%s: search %s, file count %d" % (self.name, path + build_version, count))
+      log.msg("%s: search %s, file count %d" % (self.name, path + str(build_version), count))
       if count == 0:
-        log.msg("%s: Build incomplete, couldn't find %s" % (self.name, path + build_version))
+        log.msg("%s: Build incomplete, couldn't find %s" % (self.name, path + str(build_version)))
         return None
       for obj in objs:
         if self.name_identifier in obj.name:
