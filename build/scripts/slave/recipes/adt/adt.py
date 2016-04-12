@@ -131,38 +131,38 @@ def RunSteps(api):
                      api.path.join(log_dir, 'boot_test_public_sysimage'),
                      'test_boot.*',
                      'boot_cfg.csv',
-                     '{"api": "<=21", "classic": "yes"}')
+                     '{"ori": "public"}')
     # At least one of the system images are available
     if str(api.properties['lmp_mr1_revision']) != 'None' and project in ['git_lmp-mr1-emu-dev', 'emu-master-dev', 'emu-2.0-release']:
       PythonTestStep('Boot Test - LMP MR1 System Image',
                      api.path.join(log_dir, 'boot_test_LMP_MR1_sysimage'),
                      'test_boot.*',
                      'boot_cfg.csv',
-                     '{"api": "22"}')
+                     '{"ori": "lmp-mr1"}')
     if str(api.properties['mnc_revision']) != 'None' and project in ['git_mnc-emu-dev', 'emu-master-dev', 'emu-2.0-release']:
       PythonTestStep('Boot Test - MNC System Image',
                      api.path.join(log_dir, 'boot_test_MNC_sysimage'),
                      'test_boot.*',
                      'boot_cfg.csv',
-                     '{"api": "23"}')
+                     '{"ori": "mnc"}')
     if str(api.properties['nyc_revision']) != 'None' and project in ['git_nyc-emu-release', 'git_nyc-emu-dev', 'emu-master-dev', 'emu-2.0-release']:
       PythonTestStep('Boot Test - NYC System Image',
                      api.path.join(log_dir, 'boot_test_NYC_sysimage'),
                      'test_boot.*',
                      'boot_cfg.csv',
-                     '{"api": "24"}')
+                     '{"ori": "nyc"}')
     if str(api.properties['lmp_revision']) != 'None' and project in ['git_lmp-emu-dev', 'emu-master-dev', 'emu-2.0-release']:
       PythonTestStep('Boot Test - LMP System Image',
                      api.path.join(log_dir, 'boot_test_LMP_sysimage'),
                      'test_boot.*',
                      'boot_cfg.csv',
-                     '{"api": "21", "tag": "google_apis"}')
+                     '{"ori": "lmp"}')
     if str(api.properties['klp_revision']) != 'None' and project in ['git_klp-emu-dev', 'emu-master-dev', 'emu-2.0-release']:
       PythonTestStep('Boot Test - KLP System Image',
                      api.path.join(log_dir, 'boot_test_KLP_sysimage'),
                      'test_boot.*',
                      'boot_cfg.csv',
-                     '{"api": "19", "tag": "google_apis"}')
+                     '{"ori": "klp"}')
     if "cts" in str(api.properties['scheduler']):
       PythonTestStep('Run Emulator CTS Test',
                      api.path.join(log_dir, 'CTS_test'),
