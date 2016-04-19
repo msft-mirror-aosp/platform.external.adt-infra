@@ -5,6 +5,7 @@ import shutil
 from subprocess import PIPE,STDOUT
 import psutil
 import logging
+import threading
 
 parser = argparse.ArgumentParser(description='Download and unzip a list of files separated by comma')
 parser.add_argument('--build-dir', dest='build_dir', action='store',
@@ -63,23 +64,39 @@ def clean_up():
     except Exception as e:
       logger.error("Error in deleting build directory %r", e)
 
-def update_sdk(filter):
-    android_exec = "android.bat" if os.name == "nt" else "android"
-    cmd = [android_exec, "update", "sdk", "-s", "--no-ui", "--filter", filter, "--force"]
-    logger.info("Update android sdk, cmd: %s", ' '.join(cmd))
-    ps = psutil.Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=STDOUT, bufsize=1)
-    with ps.stdout:
-      ps.stdin.write('y\n')
-      ps.stdin.flush()
-      for line in iter(ps.stdout.readline, b""):
-        logger.info(line)
-        if "Do you accept the license" in line:
-          try:
-            ps.stdin.write('y\n')
-            ps.stdin.flush()
-          except:
-            pass
-      ps.wait()
+def update_sdk_with_timeout(filter, timeout):
+    def update_sdk():
+        android_exec = "android.bat" if os.name == "nt" else "android"
+        cmd = [android_exec, "update", "sdk", "-s", "--no-ui", "--filter", filter, "--force"]
+        logger.info("Update android sdk, cmd: %s", ' '.join(cmd))
+        update_sdk.ps = psutil.Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=STDOUT, bufsize=1)
+        with update_sdk.ps.stdout:
+            update_sdk.ps.stdin.write('y\n')
+            update_sdk.ps.stdin.flush()
+            for line in iter(update_sdk.ps.stdout.readline, b""):
+                logger.info(line)
+                if "Do you accept the license" in line:
+                    try:
+                        update_sdk.ps.stdin.write('y\n')
+                        update_sdk.ps.stdin.flush()
+                    except:
+                        pass
+            update_sdk.ps.wait()
+    thread = threading.Thread(target=update_sdk)
+    thread.start()
+    thread.join(timeout)
+    if thread.is_alive():
+        logger.info('Terminating process %s' % update_sdk.ps)
+        for proc in psutil.process_iter():
+            try:
+                if any([x == update_sdk.ps.pid for x in [proc.ppid(), proc.pid]]):
+                    logger.info("Terminate subprocess: %s - %s" % (proc.pid, proc.cmdline()))
+                    proc.kill()
+            except Exception as e:
+                pass
+        thread.join(5)
+        return 1
+    return 0
 
 if __name__ == "__main__":
   try:
@@ -89,4 +106,5 @@ if __name__ == "__main__":
     clean_up()
   except:
     pass
-  update_sdk('add-on,system-image,extra,platform-tool,platform,tool')
+  rc = update_sdk_with_timeout('add-on,system-image,extra,platform-tool,platform,tool', 900)
+  exit(rc)
