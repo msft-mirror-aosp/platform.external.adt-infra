@@ -80,7 +80,7 @@
        "pollInterval": 300,
        "type": "GSMultiPoller",
        "project": "emu-master-dev",
-       "branch": "linux",
+       "branch": "Ubuntu",
        "name_identifier": "sdk-repo-linux",
     },
     "emulator_windows_poller": {
@@ -89,7 +89,7 @@
        "pollInterval": 307,
        "type": "GSMultiPoller",
        "project": "emu-master-dev",
-       "branch": "windows",
+       "branch": "Win",
        "name_identifier": "sdk-repo-windows",
     },
     "emulator_mac_poller": {
@@ -98,7 +98,7 @@
        "pollInterval": 401,
        "type": "GSMultiPoller",
        "project": "emu-master-dev",
-       "branch": "mac",
+       "branch": "Mac",
        "name_identifier": "sdk-repo-darwin",
     },
     "emulator_2.0_linux_poller": {
@@ -107,7 +107,7 @@
        "pollInterval": 347,
        "type": "GSMultiPoller",
        "project": "emu-2.0-release",
-       "branch": "linux",
+       "branch": "Ubuntu",
        "name_identifier": "sdk-repo-linux",
     },
     "emulator_2.0_windows_poller": {
@@ -116,7 +116,7 @@
        "pollInterval": 487,
        "type": "GSMultiPoller",
        "project": "emu-2.0-release",
-       "branch": "windows",
+       "branch": "Win",
        "name_identifier": "sdk-repo-windows",
     },
     "emulator_2.0_mac_poller": {
@@ -125,116 +125,135 @@
        "pollInterval": 439,
        "type": "GSMultiPoller",
        "project": "emu-2.0-release",
-       "branch": "mac",
+       "branch": "Mac",
        "name_identifier": "sdk-repo-darwin",
     },
  },
+
+  "category": {
+     "CTS": {
+       "name": "CTS",
+       "id": "",
+       "scheduler": "cts_scheduler",
+     },
+     "emu-master-dev": {
+       "name": "emu-master-dev",
+       "id": "_1",
+       "scheduler": "emu_master_dev_scheduler",
+     },
+     "emu-2.0-release": {
+       "name": "Emulator build on SDK images",
+       "id": "_2",
+       "scheduler": "emu_2.0_release_scheduler",
+     },
+     "system-image-builds": {
+       "name": "SDK emulator on system image builds",
+       "id": "_3",
+       "scheduler": "system_image_scheduler",
+     },
+     "cross-builds": {
+       "name": "cross",
+       "id": "_4",
+     },
+  },
+
   "builders": {
      "Ubuntu 12.04 HD Graphics 4000": {
        "recipe": "adt/adt",
-       "scheduler": "emu_linux_scheduler",
        "slave_pools": ["ubuntu-12_04-intel-hd-4000"],
-       "category": "BOOT.Linux",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
-       "scheduler": "emu_linux_dev_scheduler",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "category": "BOOT.Linux",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Linux",
      },
      "Ubuntu 14.04 Quadro 600": {
        "recipe": "adt/adt",
-       "scheduler": "emu_linux_scheduler",
        "slave_pools": ["ubuntu-14_04-nvidia-quadro-600"],
-       "category": "BOOT.Linux",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Linux",
      },
      "Ubuntu 15.04 Quadro K600": {
        "recipe": "adt/adt",
-       "scheduler": "cts_linux_scheduler",
        "slave_pools": ["ubuntu-15_04-nvidia-quadro-k600"],
-       "category": "CTS",
+       "categories": ["CTS"],
+       "tag": "",
      },
      "Win 7 32-bit HD 4400": {
        "recipe": "adt/adt",
-       "scheduler": "emu_windows_scheduler",
        "slave_pools": ["win-7-32-intel-hd-4400"],
-       "category": "BOOT.Win",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Win",
      },
      "Win 7 64-bit HD 4400": {
        "recipe": "adt/adt",
-       "scheduler": "emu_windows_scheduler",
        "slave_pools": ["win-7-64-intel-hd-4400"],
-       "category": "BOOT.Win",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Win",
      },
      "Win 8 64-bit Quadro 600": {
        "recipe": "adt/adt",
-       "scheduler": "emu_windows_scheduler",
        "slave_pools": ["win-8-64-nvidia-quadro-600"],
-       "category": "BOOT.Win",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Win",
      },
      "Win 8.1 64-bit Quadro 600": {
        "recipe": "adt/adt",
-       "scheduler": "emu_windows_scheduler",
        "slave_pools": ["win-8_1-64-nvidia-quadro-600"],
-       "category": "BOOT.Win",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Win",
      },
      "Win 10 64-bit Quadro 600": {
        "recipe": "adt/adt",
-       "scheduler": "emu_windows_scheduler",
        "slave_pools": ["win-10-64-nvidia-quadro-600"],
-       "category": "BOOT.Win",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Win",
      },
      "Mac 10.10.5 Intel HD 5000": {
        "recipe": "adt/adt",
-       "scheduler": "emu_mac_scheduler",
        "slave_pools": ["mac-10-10-5-intel-hd-5000"],
-       "category": "BOOT.Mac",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Mac",
      },
      "Mac 10.10.5 Iris Pro": {
        "recipe": "adt/adt",
-       "scheduler": "emu_mac_scheduler",
        "slave_pools": ["mac-10-10-5-iris-pro"],
-       "category": "BOOT.Mac",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Mac",
      },
      "Mac 10.8.5 Intel HD 5000": {
        "recipe": "adt/adt",
-       "scheduler": "emu_mac_scheduler",
        "slave_pools": ["mac-10-8-5-intel-hd-5000"],
-       "category": "BOOT.Mac",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Mac",
      },
      "Mac 10.11.1 Iris Pro": {
        "recipe": "adt/adt",
-       "scheduler": "emu_mac_scheduler",
        "slave_pools": ["mac-10-11-1-iris-pro"],
-       "category": "BOOT.Mac",
+       "categories": ["emu-master-dev", "emu-2.0-release", "system-image-builds", "cross-builds"],
+       "tag": "Mac",
      },
   },
 
   "schedulers": {
-    "emu_linux_scheduler": {
-      "project": ["emu-2.0-release", "git_klp-emu-dev", "emu-master-dev", "git_lmp-mr1-emu-dev", "git_mnc-emu-dev", "git_nyc-emu-release", "git_lmp-emu-dev"],
-      "branch": ["linux", "all"],
-      "type": "gs_poller",
+    "emu_master_dev_scheduler": {
+      "project": ["emu-master-dev"],
+      "type": "emu_scheduler",
     },
-    "emu_linux_dev_scheduler": {
-      "project": ["emu-2.0-release", "git_klp-emu-dev", "emu-master-dev", "git_lmp-mr1-emu-dev", "git_mnc-emu-dev", "git_nyc-emu-release", "git_nyc-emu-dev", "git_lmp-emu-dev"],
-      "branch": ["linux", "all"],
-      "type": "gs_poller",
+    "emu_2.0_release_scheduler": {
+      "project": ["emu-2.0-release"],
+      "type": "emu_scheduler",
     },
-    "emu_mac_scheduler": {
-      "project": ["emu-2.0-release", "git_klp-emu-dev", "emu-master-dev", "git_lmp-mr1-emu-dev", "git_mnc-emu-dev", "git_nyc-emu-release", "git_lmp-emu-dev"],
-      "branch": ["mac", "all"],
-      "type": "gs_poller",
+    "system_image_scheduler": {
+      "project": ["git_klp-emu-dev", "git_lmp-mr1-emu-dev", "git_mnc-emu-dev", "git_nyc-emu-release", "git_lmp-emu-dev"],
+      "type": "emu_scheduler",
     },
-    "emu_windows_scheduler": {
-      "project": ["emu-2.0-release", "git_klp-emu-dev", "emu-master-dev", "git_lmp-mr1-emu-dev", "git_mnc-emu-dev", "git_nyc-emu-release", "git_lmp-emu-dev"],
-      "branch": ["windows", "all"],
-      "type": "gs_poller",
-    },
-    "cts_linux_scheduler": {
-      "project": ["emu-2.0-release", "emu-master-dev", "git_mnc-emu-dev"],
-      "branch": ["linux", "all"],
-      "type": "gs_poller",
+    "cts_scheduler": {
+      "project": ["git_mnc-emu-dev", "emu-master-dev"],
+      "type": "emu_scheduler",
     },
  },
 
