@@ -148,10 +148,12 @@ class GSMultiPoller(base.PollingChangeSource):
         f.write(self.project)
         log.msg("write project.cache with content %s" % (self.project))
 
+      props={'file_list': ','.join(dst_file_list)}
       self.master.addChange(who=self.name,
                             revision=parsed_revision,
                             files=dst_file_list,
                             project=self.project,
                             branch=self.branch,
                             comments='comment',
+                            properties=props,
                             category=self.category)
