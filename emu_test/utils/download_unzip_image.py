@@ -20,6 +20,7 @@ args = parser.parse_args()
 
 def get_dst_dir(remote_path):
   file_name = os.path.basename(remote_path)
+  emulator_branches = ["emu-master-dev", "emu-2.0-release"]
   if file_name.startswith('sdk-repo-linux-system-images') or file_name.startswith('sdk-repo-linux-addon'):
     branch_name = remote_path.split('/')[-2]
     if 'google' in branch_name and 'addon' in branch_name:
@@ -43,7 +44,10 @@ def get_dst_dir(remote_path):
     return os.path.join(os.environ['ANDROID_SDK_ROOT'],
                         "system-images", "android-%s" % api, tag)
   else:
-    return None
+    for branch in emulator_branches:
+      if branch in remote_path:
+        return branch
+  return None
 
 def clean_emu_proc():
   print 'clean up any emulator process'
@@ -100,12 +104,12 @@ def download_and_unzip():
           verbose_call(['rm', '-rf', os.path.join(dst_dir,'x86')])
         elif 'armv7' in file_path:
           verbose_call(['rm', '-rf', os.path.join(dst_dir,'armeabi-v7a')])
-        if 'system-images' in file_path:
-          verbose_call(['unzip', '-o', file_name, '-d', dst_dir])
-        else:
+        if 'addon' in file_name:
           unzip_addon_dir(file_name, dst_dir)
+        else:
+          verbose_call(['unzip', '-o', file_name, '-d', dst_dir])
       else:
-        verbose_call(['unzip', '-o', file_name])
+        raise ValueError('Error: Unknown branch!')
     except Exception as e:
       print "Error in download_and_unzip %r" % e
       return 1
