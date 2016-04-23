@@ -405,7 +405,40 @@ document.addEventListener("DOMContentLoaded", SetupView, false);
 
 <div align="center">
 <table width="96%">
-  
+{% if categories|length > 1 %}
+  <tr id="groupline">
+    <td width="1%">
+    </td>
+    <td width="1%">
+    </td>
+    <script type="text/javascript">
+      function add_group_row(){
+        var groups = {{ categories }}
+        var name_to_count = {};
+        for(var i=0; i < groups.length; i++){
+          var name = groups[i].name.substr(0, groups[i].name.indexOf(','));
+          name_to_count[name] = (name_to_count[name] || 0) + 1;
+        }
+        var keys = Object.keys(name_to_count);
+        for(var k in name_to_count) {
+          var classname = "DevStatus Alt"
+          if(k == keys[0])
+            classname += " first";
+          if(k == keys[keys.length-1])
+            classname += " last";
+          x = document.getElementById('groupline').insertCell();
+          x.setAttribute("class", classname);
+          x.setAttribute("colspan", name_to_count[k]);
+          x.innerHTML = k;
+        }
+      }
+      add_group_row();
+    </script>
+  </tr>
+  <tr class='DevStatusSpacing'>
+  </tr>
+{% endif %}
+
 {% if categories|length > 1 %}
   <tr>
     <td width="1%">
@@ -413,8 +446,8 @@ document.addEventListener("DOMContentLoaded", SetupView, false);
     <td width="1%">
     </td>
   {% for c in categories %}
-      <td class='DevStatus Alt {{ "first" if loop.first else '' }} {{ "last" if loop.last else '' }}' width='{{ c.size }}%'>
-        {{ c.name|numstrip }}
+      <td class='DevStatus {{ "last" if loop.last else '' }}' width='{{ c.size }}%'>
+        {{ c.name.split(',')[1] }}
       </td>
   {% endfor %}
   </tr>

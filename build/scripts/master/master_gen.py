@@ -46,7 +46,7 @@ def _Populate(BuildmasterConfig, builders, active_master_cls):
       c,
       require_dbconfig=active_master_cls.is_production_host)
 
-  c['builders'] = _ComputeBuilders(builders, m_annotator)
+  c['builders'] = _ComputeBuildersWithCategory(builders, m_annotator)
 
   c['schedulers'] = _ComputeSchedulers(builders)
 
@@ -84,12 +84,20 @@ def _Populate(BuildmasterConfig, builders, active_master_cls):
   c['eventHorizon'] = 200
 
 
-def _ComputeBuilders(builders, m_annotator):
-  actual_builders = []
+def _ComputeBuildersWithCategory(builders, m_annotator):
 
+  actual_builders = []
+  if 'category' in builders:
+    for cat in builders['category']:
+      _ComputeBuilders(builders, m_annotator, actual_builders, cat)
+  else:
+      _ComputeBuilders(builders, m_annotator, actual_builders, None)
+  return actual_builders
+
+def _ComputeBuilders(builders, m_annotator, actual_builders, cat):
   def cmp_fn(a, b):
-    a_cat = builders['builders'][a].get('category')
-    b_cat = builders['builders'][b].get('category')
+    a_cat = builders['builders'][a].get('tag')
+    b_cat = builders['builders'][b].get('tag')
     if a_cat != b_cat:
       return 1 if a_cat > b_cat else -1
     if a != b:
@@ -98,13 +106,14 @@ def _ComputeBuilders(builders, m_annotator):
 
   for builder_name in sorted(builders['builders'], cmp=cmp_fn):
     builder_data = builders['builders'][builder_name]
-    scheduler_name = builder_data['scheduler']
-
+    my_cat = builder_data.get('categories')
+    if my_cat is not None and cat not in my_cat:
+      continue
     # We will automatically merge all build requests for any
     # builder that can be scheduled; this is normally the behavior
     # we want for repo-triggered builders and cron-triggered builders.
     # You can override this behavior by setting the mergeRequests field though.
-    merge_requests = builder_data.get('mergeRequests', bool(scheduler_name))
+    merge_requests = builder_data.get('mergeRequests', True)
 
     slavebuilddir = builder_data.get('slavebuilddir',
                                      util.safeTranslate(builder_name))
@@ -115,12 +124,12 @@ def _ComputeBuilders(builders, m_annotator):
     actual_builders.append({
         'auto_reboot': builder_data.get('auto_reboot', False),
         'mergeRequests': merge_requests,
-        'name': builder_name,
+        'name': "%s_%s" % (builder_name, cat),
         'factory': factory,
         'slavebuilddir': slavebuilddir,
         'slavenames': chromium_utils.GetSlaveNamesForBuilder(builders,
                                                              builder_name),
-        'category': builder_data.get('category'),
+        'category': "%s,%s"%(cat, builder_data["tag"]) if cat is not None else builder_data.get('category'),
         'trybot': builder_data.get('trybot'),
     })
 
@@ -129,16 +138,14 @@ def _ComputeBuilders(builders, m_annotator):
 
 def _ComputeSchedulers(builders):
   scheduler_to_builders = {}
-  for builder_name, builder_data in builders['builders'].items():
-    scheduler_names = builder_data['scheduler']
-    if scheduler_names:
-      if not isinstance(scheduler_names, list):
-        scheduler_names = [scheduler_names]
-      for scheduler_name in scheduler_names:
-        if scheduler_name not in builders['schedulers']:
-          raise ValueError('unknown scheduler "%s"' % scheduler_name)
-        scheduler_to_builders.setdefault(scheduler_name, []).append(builder_name)
-
+  for category, cat_data in builders['category'].items():
+    scheduler_name = cat_data.get('scheduler')
+    if scheduler_name:
+      if scheduler_name not in builders['schedulers']:
+        raise ValueError('unknown scheduler "%s"' % scheduler_name)
+      for builder_name, builder_data in builders['builders'].items():
+        if builder_data.get('categories') is None or category in builder_data['categories']:
+          scheduler_to_builders.setdefault(scheduler_name, []).append("%s_%s" % (builder_name, category))
   schedulers = []
   for scheduler_name, scheduler_values in builders['schedulers'].items():
     scheduler_type = scheduler_values['type']
@@ -159,15 +166,13 @@ def _ComputeSchedulers(builders):
           hour=scheduler_values['hour'],
           builderNames=builder_names))
 
-    elif scheduler_type == 'gs_poller':
+    elif scheduler_type == 'emu_scheduler':
       schedulers.append(EmulatorSingleBranchScheduler(
           name=scheduler_name,
           treeStableTimer=1,
           builderNames=builder_names,
           change_filter = ChangeFilter(
-                branch=scheduler_values['branch'],
                 project=scheduler_values['project'])))
-
     else:
       raise ValueError('unsupported scheduler type "%s"' % scheduler_type)
 
