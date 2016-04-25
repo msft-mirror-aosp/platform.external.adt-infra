@@ -437,7 +437,9 @@ def create_test_case_from_file(desc, testcase_class, test_func):
             if reader.line_num == 1:
                 continue
             if reader.line_num == 2:
-                builder_idx = row.index(emu_args.builder_name)
+                idx = [i for i, j in enumerate(row) if j in emu_args.builder_name]
+                assert len(idx) == 1, "Unexpected builder name in config file"
+                builder_idx = idx[0]
             else:
                 if(row[0].strip() != ""):
                     api = row[0].split("API", 1)[1].strip()
