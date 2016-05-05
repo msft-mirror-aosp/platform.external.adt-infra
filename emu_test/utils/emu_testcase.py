@@ -13,6 +13,7 @@ import psutil
 import csv
 import platform
 import threading
+import shutil
 from emu_error import *
 from emu_argparser import emu_args
 from subprocess import PIPE, STDOUT
@@ -242,12 +243,6 @@ class EmuBaseTestCase(LoggedTestCase):
         # avd should be found $HOME/.android/avd/
         dst_path = os.path.join(os.path.expanduser('~'), '.android', 'avd',
                                 '%s.avd' % avd_config.name(), 'config.ini')
-        if avd_config.device == "":
-            self.m_logger.info("No device information, use default settings!")
-            gpu = "no" if avd_config.gpu == "no" else "yes"
-            with open(dst_path, 'a') as fout:
-                fout.write('hw.gpu.enabled=%s' % gpu)
-            return
         class AVDIniConverter:
             output_file = None
             def __init__(self, file_path):
@@ -315,7 +310,7 @@ class EmuBaseTestCase(LoggedTestCase):
         """
         avd_name = str(avd_config)
 
-        def try_create():
+        def try_create_with_sdk():
             android_exec = "android.bat" if os.name == "nt" else "android"
             avd_abi = "%s/%s" % (avd_config.tag, avd_config.abi)
             api_target = avd_config.api if avd_config.api != "24" else "N"
@@ -336,14 +331,62 @@ class EmuBaseTestCase(LoggedTestCase):
                 return -1
             return avd_proc.poll()
 
-        ret = try_create()
+        def try_create_with_config():
+            """ Create a new AVD based on avd_config
+                Returns 0 if succeeds, non-zero if fails
+                Steps:
+                1. Check system image installed userdata.img
+                2. If there is existing AVD with this name, remove existing directory
+                3. Create [AVD NAME].ini file
+                4. Create AVD directory
+                config.ini is created if above steps pass
+            """
+            # avd directory $HOME/.android/avd/
+            avd_base_dir = os.path.join(os.path.expanduser('~'), ".android", "avd")
+            avd_dir = os.path.join(avd_base_dir, '%s.avd' % avd_name)
+
+            api_target = avd_config.api if avd_config.api != "24" else "N"
+            if "google" in avd_config.tag:
+                avd_target = "Google Inc.:Google APIs:%s" % (api_target)
+            else:
+                avd_target = "android-%s" % (api_target)
+
+            # 1. check userdata.img exists
+            userimg_name = "userdata.img"
+            userdata_src = os.path.join(os.environ['ANDROID_SDK_ROOT'],
+                                        "system-images", "android-%s" % api_target,
+                                        avd_config.tag, avd_config.abi, userimg_name)
+            if not os.path.isfile(userdata_src):
+              self.m_logger.error("userdata image %s does not exist! Try install system image." % userdata_src)
+              return 1
+
+            # 2. if destination directory exists, remove it
+            shutil.rmtree(avd_dir, ignore_errors=True)
+
+            # 3. create ini file
+            ini_path = os.path.join(avd_base_dir, '%s.ini' % avd_name)
+            self.m_logger.info("ini file path: %s" % ini_path)
+            with open(ini_path, "w") as ini_file:
+              ini_file.write('avd.ini.encoding=UTF-8\n')
+              ini_file.write('path=%s\n' % avd_dir)
+              ini_file.write('path.rel=%s\n' % os.path.join('avd', '%s.avd' % avd_name))
+              ini_file.write('target=%s\n' % avd_target)
+
+            # 4. create avd directory
+            try:
+               os.makedirs(avd_dir)
+            except OSError:
+               assert os.path.isdir(avd_dir),"Unable to create avd directory %s, %r" % (avd_dir, OSError)
+            return 0
+
+        ret = try_create_with_config()
         if ret != 0:
             # try to download the system image
             api = avd_config.api if avd_config.api != "24" else "N"
             self.update_sdk("android-%s" % api)
             if "google" in avd_config.tag:
                 self.update_sdk("addon-google_apis-google-%s" % api)
-                self.update_sdk("sys-img-%s-addon-google_apis-google-%s"
+                self.update_sdk("sys-img-%s-google_apis-%s"
                                 % (avd_config.abi, api))
             elif "wear" in avd_config.tag:
                 self.update_sdk("sys-img-%s-android-wear-%s" % (avd_config.abi, api))
@@ -352,8 +395,8 @@ class EmuBaseTestCase(LoggedTestCase):
             else:
                 self.update_sdk("sys-img-%s-android-%s" % (avd_config.abi, api))
             self.m_logger.debug("try create avd again after update sdk")
-            ret = try_create()
-
+            ret = try_create_with_config()
+        # last step, create config.ini
         if ret == 0:
             self.update_config(avd_config)
 
@@ -471,5 +514,7 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                     # disable qemu1 testing on top of tree images based on request from vharron@
                     # for non public images, test with qemu2
                     classic = "yes" if ori == "public" else "no"
+                    if device == "":
+                      device = "default"
                     avd_config = AVDConfig(api, tag, abi, device, ram, gpu, classic, get_port(), False, ori)
                     create_test_case(avd_config, op)
