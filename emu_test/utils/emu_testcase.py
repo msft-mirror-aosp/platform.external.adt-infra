@@ -511,9 +511,12 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                     # For 32 bit machine, ram should be less than 768MB
                     if not platform.machine().endswith('64'):
                         ram = str(min([int(ram), 768]))
-                    # disable qemu1 testing on top of tree images based on request from vharron@
-                    # for non public images, test with qemu2
-                    classic = "yes" if ori == "public" else "no"
+                    # use qemu2 for top of tree images and public images above api 19
+                    # arm use qemu1 regardless of origin and api level
+                    if (ori != "public" or api >= "19") and "arm" not in abi:
+                      classic = "no"
+                    else:
+                      classic = "yes"
                     if device == "":
                       device = "default"
                     avd_config = AVDConfig(api, tag, abi, device, ram, gpu, classic, get_port(), False, ori)
