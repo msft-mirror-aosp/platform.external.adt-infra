@@ -33,13 +33,14 @@ class BootTestCase(EmuBaseTestCase):
         # avd should be found $HOME/.android/avd/
         avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
         try:
-            if result:
+            if result and self.start_proc:
                 self.start_proc.wait()
             time.sleep(1)
             self.kill_proc_by_name(["crash-service", "adb"])
             os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
             shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
-        except:
+        except Exception, e:
+            self.m_logger.debug("Error in cleanup - %r", e)
             pass
 
     def boot_check(self, avd):
