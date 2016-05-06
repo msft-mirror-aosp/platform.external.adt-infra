@@ -23,10 +23,10 @@ class BigQueryClient(object):
         else:
             return None
 
-    def Query(self, query, project, timeout_ms=10000):
+    def Query(self, query, project, timeout_in_sec=10):
         query_config = {
             'query': query,
-            'timeoutMs': timeout_ms
+            'timeoutMs': timeout_in_sec*1000
         }
         result_json = (self.service.jobs()
                        .query(projectId=project,

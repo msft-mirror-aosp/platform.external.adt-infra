@@ -9,7 +9,7 @@ import bqclient
 from gviz_data_table import encode
 from gviz_data_table import Table
 
-from google.appengine.api import memcache
+from google.appengine.api import memcache, urlfetch
 from google.appengine.ext.webapp.template import render
 
 import httplib2
@@ -29,6 +29,7 @@ TABLE_DATA = "avd_to_time_data"
 TABLE_ERROR = "avd_to_time_error"
 TABLE_ADB = "avd_to_adb_speed"
 mem = memcache.Client()
+TIMEOUT_IN_SEC = 60
 
 def get_query_clause(vars):
     gpu_val = {"on": "yes",
@@ -120,11 +121,12 @@ class MainPage(webapp2.RequestHandler):
             for col_name in ['HOST', 'TAG', 'GPU', 'QEMU', 'API', 'ABI']:
                 paint_vars[col_name] = self.request.get_all(col_name)
 
+            urlfetch.set_default_fetch_deadline(TIMEOUT_IN_SEC)
             bq = bqclient.BigQueryClient(http)
             title, QUERY, SUM_QUERY, ADB_QUERY = get_query_clause(paint_vars)
-            count, boot_values = bq2table(bq.Query(QUERY, BILLING_PROJECT_ID))
-            #sum_count, sum_values = bq2table(bq.Query(SUM_QUERY, BILLING_PROJECT_ID))
-            adb_count, adb_values = bq2table(bq.Query(ADB_QUERY, BILLING_PROJECT_ID))
+            count, boot_values = bq2table(bq.Query(QUERY, BILLING_PROJECT_ID, TIMEOUT_IN_SEC))
+            #sum_count, sum_values = bq2table(bq.Query(SUM_QUERY, BILLING_PROJECT_ID, TIMEOUT_IN_SEC))
+            adb_count, adb_values = bq2table(bq.Query(ADB_QUERY, BILLING_PROJECT_ID, TIMEOUT_IN_SEC))
             template_data = {'table_bootdata': boot_values,
                     'table_adbdata': adb_values,
                     'table_sumdata': 0,
