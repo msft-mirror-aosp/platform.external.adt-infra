@@ -12,23 +12,23 @@ import junit.framework.AssertionFailedError;
  * Monitors and dismisses the VPN popup dialog.
  */
 public class VpnPopupWatcher implements UiWatcher {
-  private UiDevice mDevice;
+    private UiDevice mDevice;
 
-  public VpnPopupWatcher(UiDevice device) {
-    this.mDevice = device;
-  }
-
-  @Override
-  public boolean checkForCondition() {
-    UiObject okButton = mDevice.findObject(new UiSelector().text("OK"));
-    if (okButton.exists()) {
-      try {
-        okButton.click();
-        return true;
-      } catch (UiObjectNotFoundException e) {
-        throw new AssertionFailedError("Failed to dismiss the VPN popup dialog");
-      }
+    public VpnPopupWatcher(UiDevice device) {
+        this.mDevice = device;
     }
-    return false;
-  }
+
+    @Override
+    public boolean checkForCondition() {
+        UiObject okButton = mDevice.findObject(new UiSelector().text("OK"));
+        if (okButton.exists()) {
+            try {
+                okButton.click();
+                return true;
+            } catch (UiObjectNotFoundException e) {
+                throw new AssertionFailedError("Failed to dismiss the VPN popup dialog");
+            }
+        }
+        return false;
+    }
 }

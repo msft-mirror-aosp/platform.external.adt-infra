@@ -21,136 +21,139 @@ import java.util.concurrent.TimeUnit;
  */
 public class AccountManager {
 
-  /**
-   * Adds a Google account in settings.
-   * @param instrumentation
-   * see {@link android.test.InstrumentationTestCase#getInstrumentation() getInstrumentation}
-   * @param username the Google account username
-   * @param password the Google account password
-   * @throws UiObjectNotFoundException if it fails to find a UI widget.
-   * @throws IOException if it fails to find the Google account file.
-   */
-  public static void addGoogleAccount(
-      Instrumentation instrumentation, String username, String password)
-      throws UiObjectNotFoundException, IOException {
-    // Read the username and password from a local file if null.
-    // We recommended this way to add a Google account from the security perspective.
-    // We keep these two params here only for testing purpose.
-    // Note that the gaccountFilePath is under Android filesystem.
-    // Use 'adb push' to upload a credential file before testing.
-    if (username == null || password == null) {
-      String gaccountFilePath =
-          AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(), "gaccount");
-      BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
-      username = br.readLine().trim();
-      password = br.readLine().trim();
-      br.close();
-    }
+    /**
+     * Adds a Google account in settings.
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     * @param username        the Google account username
+     * @param password        the Google account password
+     * @throws UiObjectNotFoundException if it fails to find a UI widget.
+     * @throws IOException               if it fails to find the Google account file.
+     */
+    public static void addGoogleAccount(
+            Instrumentation instrumentation, String username, String password)
+            throws UiObjectNotFoundException, IOException {
+        // Read the username and password from a local file if null.
+        // We recommended this way to add a Google account from the security perspective.
+        // We keep these two params here only for testing purpose.
+        // Note that the gaccountFilePath is under Android filesystem.
+        // Use 'adb push' to upload a credential file before testing.
+        if (username == null || password == null) {
+            String gaccountFilePath =
+                    AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(), "gaccount");
+            BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
+            username = br.readLine().trim();
+            password = br.readLine().trim();
+            br.close();
+        }
 
-    openAccountList(instrumentation);
+        openAccountList(instrumentation);
 
-    UiDevice device = UiDevice.getInstance(instrumentation);
-    device.findObject(new UiSelector().text("Add account")).clickAndWaitForNewWindow();
-    device.findObject(new UiSelector().text("Google")).clickAndWaitForNewWindow();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        device.findObject(new UiSelector().text("Add account")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().text("Google")).clickAndWaitForNewWindow();
 
-    // It takes a while to show the login page
-    device
-        .findObject(new UiSelector().text("Add your account"))
-        .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
-
-    loginGoogleAccount(device, username, password);
-  }
-
-  /**
-   * Logins a Google account through Google play service.
-   * @param device see {@link UiDevice}
-   * @param username the Google account username
-   * @param password the Google account password
-   * @throws UiObjectNotFoundException if it fails to find a UI widget.
-   */
-  public static void loginGoogleAccount(UiDevice device, String username, String password)
-      throws UiObjectNotFoundException {
-    // Login a prepared Google account and password.
-    // Many steps are quite laggy due to its networking nature.
-    // Always wait until you see what you expect.
-    device
-        .findObject(new UiSelector().className("android.widget.EditText"))
-        .clickAndWaitForNewWindow();
-    device.findObject(new UiSelector().className("android.widget.EditText")).setText(username);
-    device.pressEnter();
-    device
-        .findObject(new UiSelector().text(username))
-        .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
-    device
-        .findObject(new UiSelector().className("android.widget.EditText"))
-        .clickAndWaitForNewWindow();
-    device.findObject(new UiSelector().className("android.widget.EditText")).setText(password);
-    device.pressEnter();
-    device
-        .findObject(new UiSelector().descriptionContains("ACCEPT"))
-        .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
-    device.findObject(new UiSelector().descriptionContains("ACCEPT")).clickAndWaitForNewWindow();
-    device
-        .findObject(new UiSelector().text("Google services"))
-        .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
-    device.pressBack();
-  }
-
-  /**
-   * Removes a Google account from settings.
-   * @param instrumentation
-   * see {@link android.test.InstrumentationTestCase#getInstrumentation() getInstrumentation}
-   * @param username the Google account username.
-   * @throws UiObjectNotFoundException if it fails to find a UI widget.
-   * @throws IOException if it fails to find the Google account file.
-   */
-  public static void removeAccount(Instrumentation instrumentation, String username)
-      throws UiObjectNotFoundException, IOException {
-    if (username == null) {
-      String gaccountFilePath =
-          AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(), "gaccount");
-      BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
-      username = br.readLine().trim();
-      br.close();
-    }
-    openAccountList(instrumentation);
-
-    UiDevice device = UiDevice.getInstance(instrumentation);
-    // Iterate over the list to find and remove the account.
-    UiSelector listViewSelector = new UiSelector().resourceId("android:id/list");
-    int size = device.findObject(listViewSelector).getChildCount();
-    for (int i = 0; i < size; i++) {
-      UiObject item = device.findObject(listViewSelector.childSelector(new UiSelector().index(i)));
-      // Skip "add account".
-      if (item.getText().equalsIgnoreCase("add account")) {
-        continue;
-      }
-      item.clickAndWaitForNewWindow();
-      UiObject usernameText = device.findObject(new UiSelector().text(username));
-      if (usernameText.exists()) {
-        usernameText.clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().description("More options")).clickAndWaitForNewWindow();
+        // It takes a while to show the login page
         device
-            .findObject(new UiSelector().text("Remove account"))
-            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-        device.findObject(new UiSelector().text("Remove account")).clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().text("Remove account")).clickAndWaitForNewWindow();
-        return;
-      }
+                .findObject(new UiSelector().text("Add your account"))
+                .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
+
+        loginGoogleAccount(device, username, password);
     }
-  }
 
-  private static void openAccountList(Instrumentation instrumentation)
-      throws UiObjectNotFoundException {
-    // Open Settings
-    AppLauncher.launch(instrumentation, "Settings");
+    /**
+     * Logins a Google account through Google play service.
+     *
+     * @param device   see {@link UiDevice}
+     * @param username the Google account username
+     * @param password the Google account password
+     * @throws UiObjectNotFoundException if it fails to find a UI widget.
+     */
+    public static void loginGoogleAccount(UiDevice device, String username, String password)
+            throws UiObjectNotFoundException {
+        // Login a prepared Google account and password.
+        // Many steps are quite laggy due to its networking nature.
+        // Always wait until you see what you expect.
+        device
+                .findObject(new UiSelector().className("android.widget.EditText"))
+                .clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().className("android.widget.EditText")).setText(username);
+        device.pressEnter();
+        device
+                .findObject(new UiSelector().text(username))
+                .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
+        device
+                .findObject(new UiSelector().className("android.widget.EditText"))
+                .clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().className("android.widget.EditText")).setText(password);
+        device.pressEnter();
+        device
+                .findObject(new UiSelector().descriptionContains("ACCEPT"))
+                .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
+        device.findObject(new UiSelector().descriptionContains("ACCEPT")).clickAndWaitForNewWindow();
+        device
+                .findObject(new UiSelector().text("Google services"))
+                .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
+        device.pressBack();
+    }
 
-    // Find and click "Accounts" in Settings
-    UiScrollable itemList =
-        new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-    itemList.setAsVerticalList();
-    UiObject item =
-        itemList.getChildByText(new UiSelector().className("android.widget.TextView"), "Accounts");
-    item.clickAndWaitForNewWindow();
-  }
+    /**
+     * Removes a Google account from settings.
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     * @param username        the Google account username.
+     * @throws UiObjectNotFoundException if it fails to find a UI widget.
+     * @throws IOException               if it fails to find the Google account file.
+     */
+    public static void removeAccount(Instrumentation instrumentation, String username)
+            throws UiObjectNotFoundException, IOException {
+        if (username == null) {
+            String gaccountFilePath =
+                    AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(), "gaccount");
+            BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
+            username = br.readLine().trim();
+            br.close();
+        }
+        openAccountList(instrumentation);
+
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        // Iterate over the list to find and remove the account.
+        UiSelector listViewSelector = new UiSelector().resourceId("android:id/list");
+        int size = device.findObject(listViewSelector).getChildCount();
+        for (int i = 0; i < size; i++) {
+            UiObject item = device.findObject(listViewSelector.childSelector(new UiSelector().index(i)));
+            // Skip "add account".
+            if (item.getText().equalsIgnoreCase("add account")) {
+                continue;
+            }
+            item.clickAndWaitForNewWindow();
+            UiObject usernameText = device.findObject(new UiSelector().text(username));
+            if (usernameText.exists()) {
+                usernameText.clickAndWaitForNewWindow();
+                device.findObject(new UiSelector().description("More options")).clickAndWaitForNewWindow();
+                device
+                        .findObject(new UiSelector().text("Remove account"))
+                        .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+                device.findObject(new UiSelector().text("Remove account")).clickAndWaitForNewWindow();
+                device.findObject(new UiSelector().text("Remove account")).clickAndWaitForNewWindow();
+                return;
+            }
+        }
+    }
+
+    private static void openAccountList(Instrumentation instrumentation)
+            throws UiObjectNotFoundException {
+        // Open Settings
+        AppLauncher.launch(instrumentation, "Settings");
+
+        // Find and click "Accounts" in Settings
+        UiScrollable itemList =
+                new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+        itemList.setAsVerticalList();
+        UiObject item =
+                itemList.getChildByText(new UiSelector().className("android.widget.TextView"), "Accounts");
+        item.clickAndWaitForNewWindow();
+    }
 }

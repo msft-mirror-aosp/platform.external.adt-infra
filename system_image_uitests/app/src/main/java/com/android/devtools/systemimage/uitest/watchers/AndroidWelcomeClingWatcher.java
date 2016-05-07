@@ -14,25 +14,31 @@ import junit.framework.Assert;
  * Android welcome cling watcher.
  */
 public class AndroidWelcomeClingWatcher implements UiWatcher {
-  private UiDevice mDevice;
+    private UiDevice mDevice;
 
-  public AndroidWelcomeClingWatcher(UiDevice device) {
-    mDevice = device;
-  }
-
-  @Override
-  public boolean checkForCondition() {
-    UiObject cling = mDevice.findObject(new UiSelector().resourceId(Res.ANDROID_WELCOME_CLING_RES));
-    try {
-      if (cling.exists()) {
-        cling.click();
-        return true;
-      } else {
-        return false;
-      }
-    } catch (UiObjectNotFoundException e) {
-      Assert.fail(e.getStackTrace().toString());
-      return false;
+    public AndroidWelcomeClingWatcher(UiDevice device) {
+        mDevice = device;
     }
-  }
+
+    @Override
+    public boolean checkForCondition() {
+        UiObject androidCling =
+                mDevice.findObject(new UiSelector().resourceId(Res.ANDROID_WELCOME_CLING_RES));
+        UiObject launcherCling =
+                mDevice.findObject(new UiSelector().resourceId(Res.ANDROID_LAUNCHER_WELCOME_CLING_RES));
+        try {
+            if (androidCling.exists()) {
+                androidCling.click();
+                return true;
+            } else if (launcherCling.exists()) {
+                launcherCling.click();
+                return true;
+            } else {
+                return false;
+            }
+        } catch (UiObjectNotFoundException e) {
+            Assert.fail(e.getStackTrace().toString());
+            return false;
+        }
+    }
 }

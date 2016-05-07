@@ -9,21 +9,21 @@ import com.android.devtools.systemimage.uitest.watchers.GoogleAccountLoginWatche
  */
 public class GoogleAccountLoginWatcherTest extends AbstractSystemImageTestCase {
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    mDevice.registerWatcher(
-        GoogleAccountLoginWatcher.class.getName(),
-        new GoogleAccountLoginWatcher(mDevice, null, null));
-  }
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        mDevice.registerWatcher(
+                GoogleAccountLoginWatcher.class.getName(),
+                new GoogleAccountLoginWatcher(mDevice, null, null));
+    }
 
-  @Override
-  public void tearDown() throws Exception {
-    super.tearDown();
-    mDevice.removeWatcher(GoogleAccountLoginWatcher.class.getName());
-  }
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        mDevice.removeWatcher(GoogleAccountLoginWatcher.class.getName());
+    }
 
-  public void testGoogleAccountLoginWatcher() throws Exception {
-    AppLauncher.launch(mInstrumentation, "Contacts");
-  }
+    public void testGoogleAccountLoginWatcher() throws Exception {
+        AppLauncher.launch(mInstrumentation, "Contacts");
+    }
 }
