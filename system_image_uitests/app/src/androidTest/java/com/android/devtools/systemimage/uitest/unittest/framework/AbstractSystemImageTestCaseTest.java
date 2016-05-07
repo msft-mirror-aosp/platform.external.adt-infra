@@ -6,10 +6,10 @@ import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTest
 
 /**
  * Unit test on {@link AbstractSystemImageTestCase}.
- *
  */
 @SdkSuppress(minSdkVersion = 18)
 public class AbstractSystemImageTestCaseTest extends AbstractSystemImageTestCase {
 
-  public void testAbstractSystemImageTestCase() {}
+    public void testAbstractSystemImageTestCase() {
+    }
 }

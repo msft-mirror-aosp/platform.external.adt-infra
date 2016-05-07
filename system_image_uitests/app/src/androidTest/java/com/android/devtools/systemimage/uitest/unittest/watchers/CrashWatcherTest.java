@@ -15,12 +15,12 @@ import com.android.devtools.systemimage.uitest.utils.AppManager;
  */
 public class CrashWatcherTest extends AbstractSystemImageTestCase {
 
-  public void testCrashWatcher() throws Exception {
-    // CrashWatcher has been registered in AbstractSystemImageTestCase#setUp()
-    // Here we only need to trigger the crash event, and get the expected assertion failure.
-    AppManager.installApp(mInstrumentation, "CrashExample.apk");
-    AppLauncher.launch(mInstrumentation, "DisplayingBitmaps");
-    // Catch the crash by clicking an image.
-    mDevice.findObject(new UiSelector().className("android.widget.ImageView")).click();
-  }
+    public void testCrashWatcher() throws Exception {
+        // CrashWatcher has been registered in AbstractSystemImageTestCase#setUp()
+        // Here we only need to trigger the crash event, and get the expected assertion failure.
+        AppManager.installApp(mInstrumentation, "CrashExample.apk");
+        AppLauncher.launch(mInstrumentation, "DisplayingBitmaps");
+        // Catch the crash by clicking an image.
+        mDevice.findObject(new UiSelector().className("android.widget.ImageView")).click();
+    }
 }
