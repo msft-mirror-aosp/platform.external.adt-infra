@@ -11,8 +11,8 @@ import com.android.devtools.systemimage.uitest.utils.AccountManager;
 @SdkSuppress(minSdkVersion = 18)
 public class AccountManagerTest extends AbstractSystemImageTestCase {
 
-  public void testAccountManager() throws Exception {
-    AccountManager.addGoogleAccount(mInstrumentation, null, null);
-    AccountManager.removeAccount(mInstrumentation, null);
-  }
+    public void testAccountManager() throws Exception {
+        AccountManager.addGoogleAccount(mInstrumentation, null, null);
+        AccountManager.removeAccount(mInstrumentation, null);
+    }
 }
