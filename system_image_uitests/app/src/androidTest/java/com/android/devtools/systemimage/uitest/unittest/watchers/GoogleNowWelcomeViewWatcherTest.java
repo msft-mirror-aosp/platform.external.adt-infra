@@ -9,20 +9,20 @@ import com.android.devtools.systemimage.uitest.watchers.GoogleNowWelcomeViewWatc
  */
 public class GoogleNowWelcomeViewWatcherTest extends AbstractSystemImageTestCase {
 
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
-    mDevice.registerWatcher(
-        GoogleNowWelcomeViewWatcher.class.getName(), new GoogleNowWelcomeViewWatcher(mDevice));
-  }
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        mDevice.registerWatcher(
+                GoogleNowWelcomeViewWatcher.class.getName(), new GoogleNowWelcomeViewWatcher(mDevice));
+    }
 
-  @Override
-  public void tearDown() throws Exception {
-    super.tearDown();
-    mDevice.removeWatcher(GoogleNowWelcomeViewWatcher.class.getName());
-  }
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        mDevice.removeWatcher(GoogleNowWelcomeViewWatcher.class.getName());
+    }
 
-  public void testGoogleNowWelcomeViewWatcher() throws Exception {
-    AppLauncher.launch(mInstrumentation, "Google");
-  }
+    public void testGoogleNowWelcomeViewWatcher() throws Exception {
+        AppLauncher.launch(mInstrumentation, "Google");
+    }
 }
