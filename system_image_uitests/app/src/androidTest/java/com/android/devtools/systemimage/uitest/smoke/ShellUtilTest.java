@@ -1,9 +1,9 @@
 package com.android.devtools.systemimage.uitest.smoke;
 
-import android.support.test.filters.SdkSuppress;
-
 import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTestCase;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
+
+import android.support.test.filters.SdkSuppress;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

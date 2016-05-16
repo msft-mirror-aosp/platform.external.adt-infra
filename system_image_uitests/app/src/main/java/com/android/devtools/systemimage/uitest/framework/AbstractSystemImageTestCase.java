@@ -1,12 +1,12 @@
 package com.android.devtools.systemimage.uitest.framework;
 
-import android.app.Instrumentation;
-import android.support.test.uiautomator.UiDevice;
-import android.test.InstrumentationTestCase;
-
 import com.android.devtools.systemimage.uitest.watchers.AndroidWelcomeClingWatcher;
 import com.android.devtools.systemimage.uitest.watchers.CrashWatcher;
 import com.android.devtools.systemimage.uitest.watchers.LockScreenWatcher;
+
+import android.app.Instrumentation;
+import android.support.test.uiautomator.UiDevice;
+import android.test.InstrumentationTestCase;
 
 /**
  * Abstract class definition of system image test cases.
@@ -22,7 +22,8 @@ public class AbstractSystemImageTestCase extends InstrumentationTestCase {
         mInstrumentation = getInstrumentation();
         mDevice = UiDevice.getInstance(mInstrumentation);
         mCrashWatcher =
-                new CrashWatcher(mDevice, mInstrumentation.getTargetContext().getExternalFilesDir(null));
+                new CrashWatcher(mDevice, mInstrumentation.getTargetContext().getExternalFilesDir
+                        (null));
         // Read a testing Google account credential
 
         // Power on.
@@ -37,7 +38,8 @@ public class AbstractSystemImageTestCase extends InstrumentationTestCase {
         mDevice.registerWatcher(CrashWatcher.class.getName(), mCrashWatcher);
         mDevice.registerWatcher(LockScreenWatcher.class.getName(), new LockScreenWatcher(mDevice));
         mDevice.registerWatcher(
-                AndroidWelcomeClingWatcher.class.getName(), new AndroidWelcomeClingWatcher(mDevice));
+                AndroidWelcomeClingWatcher.class.getName(), new AndroidWelcomeClingWatcher
+                        (mDevice));
     }
 
     @Override

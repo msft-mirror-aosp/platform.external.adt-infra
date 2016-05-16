@@ -11,22 +11,6 @@ public class ShellUtil {
     public static final String TAG = ShellUtil.class.getName();
 
     /**
-     * Shell result class definition.
-     */
-    public static class ShellResult {
-        public final String stdout;
-        public final String stderr;
-
-        /**
-         * Constructs the class.
-         */
-        public ShellResult(String stdout, String stderr) {
-            this.stdout = stdout;
-            this.stderr = stderr;
-        }
-    }
-
-    /**
      * Invokes shell command.
      * <p>
      * Note shell commands that require system privilege cannot be invoked through the method.
@@ -54,5 +38,21 @@ public class ShellUtil {
             p.destroy();
         }
         return new ShellResult(stdout.toString(), stderr.toString());
+    }
+
+    /**
+     * Shell result class definition.
+     */
+    public static class ShellResult {
+        public final String stdout;
+        public final String stderr;
+
+        /**
+         * Constructs the class.
+         */
+        public ShellResult(String stdout, String stderr) {
+            this.stdout = stdout;
+            this.stderr = stderr;
+        }
     }
 }

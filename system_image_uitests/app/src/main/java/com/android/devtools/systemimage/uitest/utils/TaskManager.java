@@ -35,10 +35,12 @@ public class TaskManager {
         int rotation = device.getDisplayRotation();
         // Decide if it is a pad.
         boolean wideScreen =
-                device.isNaturalOrientation() && device.getDisplayWidth() > device.getDisplayHeight();
+                device.isNaturalOrientation() && device.getDisplayWidth() > device
+                        .getDisplayHeight();
 
         UiObject appLabel =
-                device.findObject(new UiSelector().packageName("com.android.systemui").text(appName));
+                device.findObject(new UiSelector().packageName("com.android.systemui").text
+                        (appName));
         Rect labelRect = appLabel.getBounds();
         if (!wideScreen && (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180)) {
             // Swipe right

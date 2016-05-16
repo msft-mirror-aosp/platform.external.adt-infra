@@ -1,5 +1,9 @@
 package com.android.devtools.systemimage.uitest.utils;
 
+import com.android.devtools.systemimage.uitest.common.Res;
+
+import junit.framework.AssertionFailedError;
+
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
@@ -11,10 +15,6 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-
-import com.android.devtools.systemimage.uitest.common.Res;
-
-import junit.framework.AssertionFailedError;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -61,7 +61,8 @@ public class AppManager {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
         UiDevice device = UiDevice.getInstance(instrumentation);
-        UiObject installButton = device.findObject(new UiSelector().textMatches("(INSTALL|Install)"));
+        UiObject installButton = device.findObject(new UiSelector().textMatches("" +
+                "(INSTALL|Install)"));
         installButton.clickAndWaitForNewWindow();
         while (installButton.exists()) {
             installButton.clickAndWaitForNewWindow();
@@ -107,7 +108,8 @@ public class AppManager {
             searchedName = pkgName;
         }
         UiObject app =
-                appList.getChildByText(new UiSelector().className("android.widget.TextView"), searchedName);
+                appList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                        searchedName);
         app.clickAndWaitForNewWindow();
 
         // Uninstall
@@ -145,7 +147,8 @@ public class AppManager {
             searchedName = pkgName;
         }
         try {
-            appList.getChildByText(new UiSelector().className("android.widget.TextView"), searchedName);
+            appList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                    searchedName);
             return true;
         } catch (UiObjectNotFoundException e) {
             return false;
@@ -159,10 +162,12 @@ public class AppManager {
 
         // Find and click "Apps" in Settings
         UiScrollable itemList =
-                new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+                new UiScrollable(new UiSelector().resourceIdMatches(Res
+                        .SETTINGS_LIST_CONTAINER_RES));
         itemList.setAsVerticalList();
         UiObject item =
-                itemList.getChildByText(new UiSelector().className("android.widget.TextView"), "Apps");
+                itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                        "Apps");
         item.clickAndWaitForNewWindow();
     }
 }

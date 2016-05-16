@@ -1,9 +1,9 @@
 package com.android.devtools.systemimage.uitest.smoke;
 
 import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTestCase;
-import com.android.devtools.systemimage.uitest.utils.TestUtils;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
+import com.android.devtools.systemimage.uitest.utils.TestUtils;
 
 import android.app.Instrumentation;
 import android.support.test.filters.SdkSuppress;
