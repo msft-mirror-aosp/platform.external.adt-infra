@@ -1,13 +1,13 @@
 package com.android.devtools.systemimage.uitest.utils;
 
+import com.android.devtools.systemimage.uitest.common.Res;
+
 import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-
-import com.android.devtools.systemimage.uitest.common.Res;
 
 /**
  * Application launcher.
@@ -28,14 +28,16 @@ public class AppLauncher {
         device.pressHome();
         device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
         UiScrollable appList =
-                new UiScrollable(new UiSelector().resourceIdMatches(Res.LAUNCHER_LIST_CONTAINER_RES_REGEX));
+                new UiScrollable(new UiSelector().resourceIdMatches(Res
+                        .LAUNCHER_LIST_CONTAINER_RES_REGEX));
 
         // Note that the direction of scrolling, even the res-id could change with future Android
         // releases. We may need a check here to determine the launcher and res-id used to decide
         // what appropriate gestures to perform.
         appList.setAsVerticalList();
         UiObject app =
-                appList.getChildByText(new UiSelector().className("android.widget.TextView"), appName);
+                appList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                        appName);
         app.clickAndWaitForNewWindow();
     }
 }
