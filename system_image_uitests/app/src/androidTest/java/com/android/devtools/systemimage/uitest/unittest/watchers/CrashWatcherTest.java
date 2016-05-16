@@ -1,10 +1,10 @@
 package com.android.devtools.systemimage.uitest.unittest.watchers;
 
-import android.support.test.uiautomator.UiSelector;
-
 import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTestCase;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
+
+import android.support.test.uiautomator.UiSelector;
 
 /**
  * Unit test on {@link com.android.devtools.systemimage.uitest.watchers.CrashWatcher CrashWatcher}.

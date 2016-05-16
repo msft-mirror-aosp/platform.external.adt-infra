@@ -1,8 +1,8 @@
 package com.android.devtools.systemimage.uitest.unittest.framework;
 
-import android.support.test.filters.SdkSuppress;
-
 import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTestCase;
+
+import android.support.test.filters.SdkSuppress;
 
 /**
  * Unit test on {@link AbstractSystemImageTestCase}.

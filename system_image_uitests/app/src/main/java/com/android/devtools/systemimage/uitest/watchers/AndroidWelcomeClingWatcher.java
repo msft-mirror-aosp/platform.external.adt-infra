@@ -1,14 +1,14 @@
 package com.android.devtools.systemimage.uitest.watchers;
 
+import com.android.devtools.systemimage.uitest.common.Res;
+
+import junit.framework.Assert;
+
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.UiWatcher;
-
-import com.android.devtools.systemimage.uitest.common.Res;
-
-import junit.framework.Assert;
 
 /**
  * Android welcome cling watcher.
@@ -25,7 +25,8 @@ public class AndroidWelcomeClingWatcher implements UiWatcher {
         UiObject androidCling =
                 mDevice.findObject(new UiSelector().resourceId(Res.ANDROID_WELCOME_CLING_RES));
         UiObject launcherCling =
-                mDevice.findObject(new UiSelector().resourceId(Res.ANDROID_LAUNCHER_WELCOME_CLING_RES));
+                mDevice.findObject(new UiSelector().resourceId(Res
+                        .ANDROID_LAUNCHER_WELCOME_CLING_RES));
         try {
             if (androidCling.exists()) {
                 androidCling.click();
