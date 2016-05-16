@@ -1,14 +1,14 @@
 package com.android.devtools.systemimage.uitest.smoke;
 
-import android.support.test.filters.SdkSuppress;
-import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.Until;
-
 import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTestCase;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.watchers.VpnPopupWatcher;
+
+import android.support.test.filters.SdkSuppress;
+import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.UiSelector;
+import android.support.test.uiautomator.Until;
 
 import java.util.concurrent.TimeUnit;
 

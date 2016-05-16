@@ -11,8 +11,8 @@ import android.support.test.uiautomator.UiWatcher;
  * When the web page is done loading, the loading bar is invisible.
  */
 public class BrowserPageLoadedWatcher implements UiWatcher {
-    private final UiDevice mDevice;
     private static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
+    private final UiDevice mDevice;
 
     public BrowserPageLoadedWatcher(UiDevice device) {
         this.mDevice = device;

@@ -1,12 +1,12 @@
 package com.android.devtools.systemimage.uitest.watchers;
 
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.UiWatcher;
-
 import com.android.devtools.systemimage.uitest.utils.AccountManager;
 
 import junit.framework.Assert;
+
+import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiSelector;
+import android.support.test.uiautomator.UiWatcher;
 
 import java.util.concurrent.TimeUnit;
 

@@ -1,10 +1,10 @@
 package com.android.devtools.systemimage.uitest.unittest.utils;
 
-import android.support.test.filters.SdkSuppress;
-
 import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTestCase;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.TaskManager;
+
+import android.support.test.filters.SdkSuppress;
 
 /**
  * Unit test on {@link TaskManager}.

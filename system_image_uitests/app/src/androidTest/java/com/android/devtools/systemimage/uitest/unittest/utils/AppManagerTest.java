@@ -1,9 +1,9 @@
 package com.android.devtools.systemimage.uitest.unittest.utils;
 
-import android.support.test.filters.SdkSuppress;
-
 import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTestCase;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
+
+import android.support.test.filters.SdkSuppress;
 
 /**
  * Unit test on {@link AppManager}.
@@ -15,7 +15,8 @@ public class AppManagerTest extends AbstractSystemImageTestCase {
         AppManager.installApp(mInstrumentation, "FredVPN.apk");
         AppManager.installApp(mInstrumentation, "HelloCompute.apk");
         assertTrue(
-                "Failed to find FredVPN.", AppManager.isAppInstalled(mInstrumentation, "TestVPN", null));
+                "Failed to find FredVPN.", AppManager.isAppInstalled(mInstrumentation, "TestVPN",
+                        null));
         assertTrue(
                 "Failed to find RsHelloCompute.",
                 AppManager.isAppInstalled(mInstrumentation, "RsHelloCompute", null));

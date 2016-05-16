@@ -1,12 +1,12 @@
 package com.android.devtools.systemimage.uitest.utils;
 
+import com.android.devtools.systemimage.uitest.common.Res;
+
 import android.app.Instrumentation;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-
-import com.android.devtools.systemimage.uitest.common.Res;
 
 /**
  * Developer options manager.
@@ -26,7 +26,8 @@ public class DeveloperOptionsManager {
 
         // Click "About phone".
         UiScrollable itemList =
-                new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+                new UiScrollable(new UiSelector().resourceIdMatches(Res
+                        .SETTINGS_LIST_CONTAINER_RES));
         itemList.setAsVerticalList();
         UiObject item =
                 itemList.getChildByText(
@@ -35,7 +36,8 @@ public class DeveloperOptionsManager {
 
         // Click "Build number"
         itemList =
-                new UiScrollable(new UiSelector().resourceIdMatches(Res.ABOUT_PHONE_LIST_CONTAINER_RES));
+                new UiScrollable(new UiSelector().resourceIdMatches(Res
+                        .ABOUT_PHONE_LIST_CONTAINER_RES));
         itemList.setAsVerticalList();
         item =
                 itemList.getChildByText(
@@ -62,7 +64,8 @@ public class DeveloperOptionsManager {
 
         // Look for "Developer options".
         UiScrollable itemList =
-                new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+                new UiScrollable(new UiSelector().resourceIdMatches(Res
+                        .SETTINGS_LIST_CONTAINER_RES));
         itemList.setAsVerticalList();
         try {
             itemList.getChildByText(

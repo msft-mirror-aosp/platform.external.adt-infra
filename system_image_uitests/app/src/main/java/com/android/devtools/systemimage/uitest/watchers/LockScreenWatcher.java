@@ -19,9 +19,11 @@ public class LockScreenWatcher implements UiWatcher {
     public boolean checkForCondition() {
         UiObject unlock =
                 mDevice.findObject(
-                        new UiSelector().packageName("com.android.keyboard").descriptionContains("Slide area"));
+                        new UiSelector().packageName("com.android.keyboard").descriptionContains
+                                ("Slide area"));
         UiObject unlock2 =
-                mDevice.findObject(new UiSelector().resourceId("com.android.systemui:id/lock_icon"));
+                mDevice.findObject(new UiSelector().resourceId("com.android" +
+                        ".systemui:id/lock_icon"));
         if (unlock.exists() || unlock2.exists()) {
             mDevice.pressMenu();
             return true;
