@@ -1,9 +1,9 @@
 package com.android.devtools.systemimage.uitest.unittest.utils;
 
-import android.support.test.filters.SdkSuppress;
-
 import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTestCase;
 import com.android.devtools.systemimage.uitest.utils.AccountManager;
+
+import android.support.test.filters.SdkSuppress;
 
 /**
  * Unit test on {@link AccountManager}.

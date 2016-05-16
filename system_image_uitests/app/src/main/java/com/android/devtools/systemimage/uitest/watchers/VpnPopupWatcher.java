@@ -1,12 +1,12 @@
 package com.android.devtools.systemimage.uitest.watchers;
 
+import junit.framework.AssertionFailedError;
+
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.UiWatcher;
-
-import junit.framework.AssertionFailedError;
 
 /**
  * Monitors and dismisses the VPN popup dialog.

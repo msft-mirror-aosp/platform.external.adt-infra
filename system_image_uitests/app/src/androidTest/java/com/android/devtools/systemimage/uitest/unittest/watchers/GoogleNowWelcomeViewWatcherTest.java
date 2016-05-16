@@ -13,7 +13,8 @@ public class GoogleNowWelcomeViewWatcherTest extends AbstractSystemImageTestCase
     public void setUp() throws Exception {
         super.setUp();
         mDevice.registerWatcher(
-                GoogleNowWelcomeViewWatcher.class.getName(), new GoogleNowWelcomeViewWatcher(mDevice));
+                GoogleNowWelcomeViewWatcher.class.getName(), new GoogleNowWelcomeViewWatcher
+                        (mDevice));
     }
 
     @Override

@@ -13,22 +13,13 @@ import java.util.concurrent.TimeUnit;
  * new wait(timeout, polltime).until(expectedCondition);
  */
 public class Wait {
-    private static final long DEFAULT_WAIT_TIME = TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS);
+    private static final long DEFAULT_WAIT_TIME = TimeUnit.MILLISECONDS.convert(3L, TimeUnit
+            .SECONDS);
     private static final long DEFAULT_POLL_TIME =
             TimeUnit.MILLISECONDS.convert(100L, TimeUnit.MILLISECONDS);
 
     private long timeout;
     private long polltime;
-
-    public interface ExpectedCondition {
-        /**
-         * Interface method to check if the condition meets.
-         *
-         * @return true if waited on condition holds,
-         * or false will cause wait to block and invoke again after the poll time.
-         */
-        boolean isTrue() throws Exception;
-    }
 
     public Wait() {
         this(DEFAULT_WAIT_TIME, DEFAULT_POLL_TIME);
@@ -61,5 +52,15 @@ public class Wait {
             SystemClock.sleep(polltime);
         }
         return false;
+    }
+
+    public interface ExpectedCondition {
+        /**
+         * Interface method to check if the condition meets.
+         *
+         * @return true if waited on condition holds,
+         * or false will cause wait to block and invoke again after the poll time.
+         */
+        boolean isTrue() throws Exception;
     }
 }

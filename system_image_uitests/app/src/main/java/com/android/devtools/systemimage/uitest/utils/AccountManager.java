@@ -2,14 +2,14 @@ package com.android.devtools.systemimage.uitest.utils;
 
 import com.google.android.apps.common.testing.util.AndroidTestUtil;
 
+import com.android.devtools.systemimage.uitest.common.Res;
+
 import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-
-import com.android.devtools.systemimage.uitest.common.Res;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -41,7 +41,8 @@ public class AccountManager {
         // Use 'adb push' to upload a credential file before testing.
         if (username == null || password == null) {
             String gaccountFilePath =
-                    AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(), "gaccount");
+                    AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(),
+                            "gaccount");
             BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
             username = br.readLine().trim();
             password = br.readLine().trim();
@@ -91,7 +92,8 @@ public class AccountManager {
         device
                 .findObject(new UiSelector().descriptionContains("ACCEPT"))
                 .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
-        device.findObject(new UiSelector().descriptionContains("ACCEPT")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().descriptionContains("ACCEPT"))
+                .clickAndWaitForNewWindow();
         device
                 .findObject(new UiSelector().text("Google services"))
                 .waitForExists(TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
@@ -111,7 +113,8 @@ public class AccountManager {
             throws UiObjectNotFoundException, IOException {
         if (username == null) {
             String gaccountFilePath =
-                    AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(), "gaccount");
+                    AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(),
+                            "gaccount");
             BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
             username = br.readLine().trim();
             br.close();
@@ -123,7 +126,8 @@ public class AccountManager {
         UiSelector listViewSelector = new UiSelector().resourceId("android:id/list");
         int size = device.findObject(listViewSelector).getChildCount();
         for (int i = 0; i < size; i++) {
-            UiObject item = device.findObject(listViewSelector.childSelector(new UiSelector().index(i)));
+            UiObject item = device.findObject(listViewSelector.childSelector(new UiSelector()
+                    .index(i)));
             // Skip "add account".
             if (item.getText().equalsIgnoreCase("add account")) {
                 continue;
@@ -132,12 +136,15 @@ public class AccountManager {
             UiObject usernameText = device.findObject(new UiSelector().text(username));
             if (usernameText.exists()) {
                 usernameText.clickAndWaitForNewWindow();
-                device.findObject(new UiSelector().description("More options")).clickAndWaitForNewWindow();
+                device.findObject(new UiSelector().description("More options"))
+                        .clickAndWaitForNewWindow();
                 device
                         .findObject(new UiSelector().text("Remove account"))
                         .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-                device.findObject(new UiSelector().text("Remove account")).clickAndWaitForNewWindow();
-                device.findObject(new UiSelector().text("Remove account")).clickAndWaitForNewWindow();
+                device.findObject(new UiSelector().text("Remove account"))
+                        .clickAndWaitForNewWindow();
+                device.findObject(new UiSelector().text("Remove account"))
+                        .clickAndWaitForNewWindow();
                 return;
             }
         }
@@ -150,10 +157,12 @@ public class AccountManager {
 
         // Find and click "Accounts" in Settings
         UiScrollable itemList =
-                new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+                new UiScrollable(new UiSelector().resourceIdMatches(Res
+                        .SETTINGS_LIST_CONTAINER_RES));
         itemList.setAsVerticalList();
         UiObject item =
-                itemList.getChildByText(new UiSelector().className("android.widget.TextView"), "Accounts");
+                itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                        "Accounts");
         item.clickAndWaitForNewWindow();
     }
 }

@@ -1,12 +1,12 @@
 package com.android.devtools.systemimage.uitest.watchers;
 
+import junit.framework.Assert;
+
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.UiWatcher;
-
-import junit.framework.Assert;
 
 import java.io.File;
 
