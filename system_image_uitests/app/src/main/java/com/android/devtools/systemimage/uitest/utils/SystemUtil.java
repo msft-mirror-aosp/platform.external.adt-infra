@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.devtools.systemimage.uitest.unittest.utils;
-
-import com.android.devtools.systemimage.uitest.utils.ShellUtil;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import android.support.test.runner.AndroidJUnit4;
+package com.android.devtools.systemimage.uitest.utils;
 
 /**
- * Unit test on {@link ShellUtil}.
+ * Static utility methods pertaining to system information.
  */
-@RunWith(AndroidJUnit4.class)
-public class ShellUtilTest {
+public class SystemUtil {
 
-    @Test
-    public void testShellUtil() throws Exception {
-        ShellUtil.ShellResult result = ShellUtil.invokeCommand("ls");
-        Assert.assertTrue(result.stderr, result.stdout.length() > 0 && result.stderr.length() == 0);
+    private SystemUtil() {
+        throw new AssertionError();
     }
+
+    /**
+     * Returns the API level on the device or emulator.
+     */
+    public static int getApiLevel() {
+        return android.os.Build.VERSION.SDK_INT;
+    }
+
 }
