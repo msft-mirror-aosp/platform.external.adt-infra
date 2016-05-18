@@ -81,12 +81,12 @@ def RunSteps(api):
   bootSteps = {
                'emu-master-dev': bootStep('public', '{"ori": "public"}'),
                'emu-2.0-release': bootStep('public', '{"ori": "public"}'),
-               'git_mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
-               'git_lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
-               'git_nyc-emu-dev': bootStep('NYC', '{"ori": "nyc"}'),
-               'git_nyc-emu-release': bootStep('NYC', '{"ori": "nyc"}'),
-               'git_lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
-               'git_klp-emu-dev': bootStep('KLP', '{"ori": "klp"}'),
+               'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
+               'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
+               'nyc-emu-dev': bootStep('NYC', '{"ori": "nyc"}'),
+               'nyc-emu-release': bootStep('NYC', '{"ori": "nyc"}'),
+               'lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
+               'klp-emu-dev': bootStep('KLP', '{"ori": "klp"}'),
               }
 
   # figure out which emulator to use, and which test steps to run
@@ -133,7 +133,8 @@ def RunSteps(api):
     with open(build_cache,'r') as csvfile:
       filereader = csv.reader(csvfile)
       for row in filereader:
-        last_build[row[0]] = [row[1], row[2]]
+        if row[0] in bootSteps:
+          last_build[row[0]] = [row[1], row[2]]
     emulators,steps = getTestConfig(project, True)
     for k in last_build:
       if k != project and (k in steps or k in emulators):
