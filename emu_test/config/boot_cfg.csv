@@ -3,7 +3,8 @@ API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,Ubuntu 12.04 HD Graphics 4000,Ubuntu 14.04 HD 
 API 24,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,,,,,,,,,,,,,,
 ,,x86,Android TV (1080p),2048,yes,nyc,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86,Android TV (1080p),2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
-,default,armeabi-v7a,Nexus 6P,2048,yes,,,,,,,,,,,,,,
+,default,armeabi-v7a,Nexus 6P,2048,yes,nyc,P,P,P,P,P,P,P,P,P,P,P,P,P
+,,arm64-v8a,Nexus 6P,2048,yes,nyc,P,P,P,P,S,P,P,P,P,P,P,P,P
 ,,x86,Nexus 6P,2048,yes,nyc,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86,Nexus 5X,2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 6P,2048,yes,nyc,P,P,P,P,S,P,P,P,P,P,P,P,P

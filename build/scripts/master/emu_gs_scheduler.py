@@ -34,7 +34,6 @@ class EmulatorSingleBranchScheduler(SingleBranchScheduler):
         return
       self.properties.setProperty('got_revision', change['revision'], 'Scheduler')
       self.properties.setProperty('logs_dir', os.path.join(os.getcwd(), 'slave_logs', ''), 'Scheduler')
-      self.properties.setProperty('tt', 'tt', 'Scheduler')
       self.properties.setProperty(change['project'], change['revision'], 'Scheduler')
       kwargs['changeids'] = [change['changeid']]
       return SingleBranchScheduler.addBuildsetForChanges(
