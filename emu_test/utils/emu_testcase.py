@@ -470,7 +470,7 @@ def create_test_case_from_file(desc, testcase_class, test_func):
         qemu_str = "_qemu2" if avd_config.classic == "no" else "_qemu1"
         setattr(testcase_class, "test_%s_%s%s" % (desc, str(avd_config), qemu_str), func)
 
-        if platform.system() in ["Linux", "Windows"] and avd_config.api > "15" and avd_config.gpu == "yes" and avd_config.abi != "armeabi-v7a":
+        if platform.system() in ["Linux", "Windows"] and avd_config.api > "15" and avd_config.gpu == "yes" and "arm" not in avd_config.abi:
             avd_config_mesa = avd_config._replace(gpu = "mesa")
             create_test_case(avd_config_mesa, op)
 
@@ -513,7 +513,7 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                         ram = str(min([int(ram), 768]))
                     # use qemu2 for top of tree images and public images above api 19
                     # arm use qemu1 regardless of origin and api level
-                    if (ori != "public" or api >= "19") and "arm" not in abi:
+                    if (ori != "public" or api >= "19") and abi != "armeabi-v7a":
                       classic = "no"
                     else:
                       classic = "yes"
