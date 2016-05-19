@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.android.devtools.systemimage.uitest.utils;
 
 import com.google.android.apps.common.testing.util.AndroidTestUtil;
@@ -16,10 +32,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Account manager class.
- */
 public class AccountManager {
+
+    private AccountManager() {
+        throw new AssertionError();
+    }
 
     /**
      * Adds a Google account in settings.
@@ -41,7 +58,8 @@ public class AccountManager {
         // Use 'adb push' to upload a credential file before testing.
         if (username == null || password == null) {
             String gaccountFilePath =
-                    AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(),
+                    AndroidTestUtil.getTestArg(
+                            instrumentation.getContext().getContentResolver(),
                             "gaccount");
             BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
             username = br.readLine().trim();
@@ -113,7 +131,8 @@ public class AccountManager {
             throws UiObjectNotFoundException, IOException {
         if (username == null) {
             String gaccountFilePath =
-                    AndroidTestUtil.getTestArg(instrumentation.getContext().getContentResolver(),
+                    AndroidTestUtil.getTestArg(
+                            instrumentation.getContext().getContentResolver(),
                             "gaccount");
             BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
             username = br.readLine().trim();
@@ -126,8 +145,8 @@ public class AccountManager {
         UiSelector listViewSelector = new UiSelector().resourceId("android:id/list");
         int size = device.findObject(listViewSelector).getChildCount();
         for (int i = 0; i < size; i++) {
-            UiObject item = device.findObject(listViewSelector.childSelector(new UiSelector()
-                    .index(i)));
+            UiObject item =
+                    device.findObject(listViewSelector.childSelector(new UiSelector().index(i)));
             // Skip "add account".
             if (item.getText().equalsIgnoreCase("add account")) {
                 continue;
@@ -136,10 +155,9 @@ public class AccountManager {
             UiObject usernameText = device.findObject(new UiSelector().text(username));
             if (usernameText.exists()) {
                 usernameText.clickAndWaitForNewWindow();
-                device.findObject(new UiSelector().description("More options"))
+                device.findObject(new UiSelector().description("More optionsadasdasd"))
                         .clickAndWaitForNewWindow();
-                device
-                        .findObject(new UiSelector().text("Remove account"))
+                device.findObject(new UiSelector().text("Remove account"))
                         .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
                 device.findObject(new UiSelector().text("Remove account"))
                         .clickAndWaitForNewWindow();
@@ -157,12 +175,15 @@ public class AccountManager {
 
         // Find and click "Accounts" in Settings
         UiScrollable itemList =
-                new UiScrollable(new UiSelector().resourceIdMatches(Res
-                        .SETTINGS_LIST_CONTAINER_RES));
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
         itemList.setAsVerticalList();
         UiObject item =
-                itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                        "Accounts");
+                itemList.getChildByText(
+                        new UiSelector().className("android.widget.TextView"),
+                        "Accounts"
+                );
         item.clickAndWaitForNewWindow();
     }
 }

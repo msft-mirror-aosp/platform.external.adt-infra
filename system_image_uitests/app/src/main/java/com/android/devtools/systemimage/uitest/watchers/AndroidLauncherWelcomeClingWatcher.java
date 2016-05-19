@@ -22,33 +22,43 @@ import org.junit.Assert;
 
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.UiWatcher;
 
 /**
- * Google Now welcome view watcher.
+ * Android launcher welcome cling watcher that dismisses a welcome cling
+ * when opening launcher for the first time.
+ * <p>
+ * This watcher should cover all kinds of cling, overlay, popup, etc. that show just after clicking
+ * the launcher for the first time. Because a dismissing button has a very general text like "OK"
+ * and a watcher could be triggered at any time during a test, we should avoid using text to
+ * identify a dismissing button. Instead, we should use resource ID regex.
  */
-public class GoogleNowWelcomeViewWatcher implements UiWatcher {
+public class AndroidLauncherWelcomeClingWatcher implements UiWatcher {
     private final UiDevice mDevice;
 
-    public GoogleNowWelcomeViewWatcher(UiDevice device) {
+    public AndroidLauncherWelcomeClingWatcher(UiDevice device) {
         mDevice = device;
     }
 
     @Override
     public boolean checkForCondition() {
-        UiObject skipButton =
-                mDevice.findObject(new UiSelector().resourceId(Res.GOOGLE_NOW_WELCOME_SKIP_RES));
+        UiObject launcherCling =
+                mDevice.findObject(
+                        new UiSelector().resourceId(Res.ANDROID_LAUNCHER_WELCOME_CLING_RES)
+                );
         try {
-            if (skipButton.exists()) {
-                skipButton.clickAndWaitForNewWindow();
+            if (launcherCling.exists()) {
+                launcherCling.click();
                 return true;
             } else {
                 return false;
             }
-        } catch (Exception e) {
+        } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getStackTrace().toString());
             return false;
         }
     }
+
 }

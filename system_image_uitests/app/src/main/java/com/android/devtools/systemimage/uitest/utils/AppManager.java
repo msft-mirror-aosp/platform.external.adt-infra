@@ -1,8 +1,22 @@
+/*
+ * Copyright (c) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-
-import junit.framework.AssertionFailedError;
 
 import android.app.Instrumentation;
 import android.content.Context;
@@ -22,10 +36,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-/**
- * Application managers.
- */
 public class AppManager {
+
+    private AppManager() {
+        throw new AssertionError();
+    }
 
     private static boolean isExternalStorageAvailable() {
         String extStorageState = Environment.getExternalStorageState();
@@ -61,8 +76,8 @@ public class AppManager {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
         UiDevice device = UiDevice.getInstance(instrumentation);
-        UiObject installButton = device.findObject(new UiSelector().textMatches("" +
-                "(INSTALL|Install)"));
+        UiObject installButton =
+                device.findObject(new UiSelector().textMatches("(INSTALL|Install)"));
         installButton.clickAndWaitForNewWindow();
         while (installButton.exists()) {
             installButton.clickAndWaitForNewWindow();
@@ -103,13 +118,15 @@ public class AppManager {
             searchedName = appName;
         } else {
             if (pkgName == null) {
-                throw new AssertionFailedError("Neither appName nor pkgName is non-null.");
+                throw new AssertionError("Neither appName nor pkgName is non-null.");
             }
             searchedName = pkgName;
         }
         UiObject app =
-                appList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                        searchedName);
+                appList.getChildByText(
+                        new UiSelector().className("android.widget.TextView"),
+                        searchedName
+                );
         app.clickAndWaitForNewWindow();
 
         // Uninstall
@@ -142,13 +159,15 @@ public class AppManager {
             searchedName = appName;
         } else {
             if (pkgName == null) {
-                throw new AssertionFailedError("Neither appName nor pkgName is non-null.");
+                throw new AssertionError("Neither appName nor pkgName is non-null.");
             }
             searchedName = pkgName;
         }
         try {
-            appList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                    searchedName);
+            appList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"),
+                    searchedName
+            );
             return true;
         } catch (UiObjectNotFoundException e) {
             return false;
@@ -162,12 +181,15 @@ public class AppManager {
 
         // Find and click "Apps" in Settings
         UiScrollable itemList =
-                new UiScrollable(new UiSelector().resourceIdMatches(Res
-                        .SETTINGS_LIST_CONTAINER_RES));
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
         itemList.setAsVerticalList();
         UiObject item =
-                itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                        "Apps");
+                itemList.getChildByText(
+                        new UiSelector().className("android.widget.TextView"),
+                        "Apps"
+                );
         item.clickAndWaitForNewWindow();
     }
 }
