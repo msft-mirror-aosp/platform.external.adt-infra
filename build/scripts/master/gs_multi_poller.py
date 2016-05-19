@@ -121,32 +121,14 @@ class GSMultiPoller(base.PollingChangeSource):
       with open(self.cachepath, "w") as f:
           f.write("%s\n" % self.last_change)
 
-  def _download_image(self, src_path, dst_path):
-    log.msg("%s: downloadImage: from %s to %s" % (self.name, src_path, dst_path))
-    src_uri = boto.storage_uri(self.gs_bucket + '/' + src_path, 'gs')
-    object_contents = StringIO.StringIO()
-    src_uri.get_key().get_file(object_contents)
-    dst_uri = boto.storage_uri(dst_path, 'file')
-    object_contents.seek(0)
-    dst_uri.new_key().set_contents_from_file(object_contents)
-    object_contents.close()
-
   def _process_changes(self, file_list):
     if file_list is not None:
       parsed_revision = file_list[0].split('/')[2]
       self._update_last_rev(parsed_revision)
       dst_file_list = []
       for file in file_list:
-        ab_build_branch = file.split('/')[1]
-        dst_path = os.path.join(os.getcwd(), 'images', ab_build_branch, os.path.basename(file))
-        self._download_image(file, dst_path)
-        with open(self.cachepath, "a") as f:
-          f.write("%s\n" % dst_path)
-        dst_file_list.append(dst_path)
-
-      with open("project.cache", "w") as f:
-        f.write(self.project)
-        log.msg("write project.cache with content %s" % (self.project))
+        gs_full_path = 'gs://' + self.gs_bucket + '/' + file
+        dst_file_list.append(gs_full_path)
 
       props={'file_list': ','.join(dst_file_list)}
       self.master.addChange(who=self.name,
