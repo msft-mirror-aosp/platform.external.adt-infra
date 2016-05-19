@@ -169,8 +169,7 @@ def RunSteps(api):
 
   api.python("Download and Unzip Images", image_util_path,
              ['--file', file_list,
-              '--ip', MASTER_IP,
-              '--user', MASTER_USER],
+              '--build-dir', build_dir],
              env=env)
   def PythonTestStep(description,
                      session_dir,

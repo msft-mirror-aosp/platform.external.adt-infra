@@ -8,12 +8,8 @@ import shutil
 parser = argparse.ArgumentParser(description='Download and unzip a list of files separated by comma')
 parser.add_argument('--file', dest='remote_file_list', action='store',
                     help='string contains a list of remote files separated by comma')
-parser.add_argument('--dst', dest='dst', action='store',
-                    help='local location to store images')
-parser.add_argument('--user', dest='remote_user', action='store',
-                    help='remote user name')
-parser.add_argument('--ip', dest='remote_ip', action='store',
-                    help='remote ip')
+parser.add_argument('--build-dir', action='store',
+                    help='location of build directory')
 
 args = parser.parse_args()
 
@@ -22,7 +18,7 @@ def get_dst_dir(remote_path):
   file_name = os.path.basename(remote_path)
   emulator_branches = ["emu-master-dev", "emu-2.0-release"]
   if file_name.startswith('sdk-repo-linux-system-images') or file_name.startswith('sdk-repo-linux-addon'):
-    branch_name = remote_path.split('/')[-2]
+    branch_name = remote_path.split('/')[-4]
     if 'google' in branch_name and 'addon' in branch_name:
       tag = 'google_apis'
     elif 'google_atv' in branch_name:
@@ -87,15 +83,15 @@ def download_and_unzip():
   file_list = args.remote_file_list.split(',')
   dst_dir = get_dst_dir(file_list[0])
 
+  gsutil_path = os.path.join(args.build_dir, 'third_party', 'gsutil', 'gsutil.py')
   for file_path in file_list:
     file_path = file_path.strip('\n')
     if file_path == '':
       continue
     dst_dir = get_dst_dir(file_path)
-    remote_path = '%s@%s:%s' % (args.remote_user, args.remote_ip, file_path)
-    file_name = os.path.basename(remote_path)
+    file_name = file_path.split('/')[-1]
     try:
-      verbose_call(['scp', remote_path, '.'])
+      verbose_call(['python', gsutil_path, 'cp', file_path, '.'])
       if dst_dir is not None:
         verbose_call(['mkdir', '-p', dst_dir])
         if 'x86_64' in file_path:
