@@ -1,34 +1,60 @@
+/*
+ * Copyright (c) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.android.devtools.systemimage.uitest.unittest.utils;
 
-import com.android.devtools.systemimage.uitest.framework.AbstractSystemImageTestCase;
+import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 
-import android.support.test.filters.SdkSuppress;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import android.app.Instrumentation;
+import android.support.test.runner.AndroidJUnit4;
 
 /**
  * Unit test on {@link AppLauncher}.
  */
-@SdkSuppress(minSdkVersion = 18)
-public class AppLauncherTest extends AbstractSystemImageTestCase {
+@RunWith(AndroidJUnit4.class)
+public class AppLauncherTest {
+    @Rule
+    public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
+    @Test
     public void testAppLauncher() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+
         // Common apps
-        AppLauncher.launch(mInstrumentation, "Contacts");
-        AppLauncher.launch(mInstrumentation, "Calendar");
-        AppLauncher.launch(mInstrumentation, "Email");
-        AppLauncher.launch(mInstrumentation, "Settings");
+        AppLauncher.launch(instrumentation, "Contacts");
+        AppLauncher.launch(instrumentation, "Calendar");
+        AppLauncher.launch(instrumentation, "Email");
+        AppLauncher.launch(instrumentation, "Settings");
         // Camera App crashes in many system images.
         // So, we skip it for our unit tests and will add it back when it is fixed.
         // AppLauncher.launchByLauncher(getInstrumentation(), "Camera");
 
         // Developer apps
-        AppLauncher.launch(mInstrumentation, "API Demos");
+        AppLauncher.launch(instrumentation, "API Demos");
         // BACKUP TEST App is not installed on some old system images.
         // AppLauncher.launchByLauncher(getInstrumentation(), "BACKUP TEST");
-        AppLauncher.launch(mInstrumentation, "Custom Locale");
-        AppLauncher.launch(mInstrumentation, "Dev Tools");
-        AppLauncher.launch(mInstrumentation, "Dev Settings");
-        AppLauncher.launch(mInstrumentation, "Gestures Builder");
-        AppLauncher.launch(mInstrumentation, "Widget Preview");
+        AppLauncher.launch(instrumentation, "Custom Locale");
+        AppLauncher.launch(instrumentation, "Dev Tools");
+        AppLauncher.launch(instrumentation, "Dev Settings");
+        AppLauncher.launch(instrumentation, "Gestures Builder");
+        AppLauncher.launch(instrumentation, "Widget Preview");
     }
 }
