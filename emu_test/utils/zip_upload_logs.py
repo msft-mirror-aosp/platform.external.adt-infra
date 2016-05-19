@@ -1,6 +1,7 @@
 import os
 import argparse
 import subprocess
+import shutil
 
 parser = argparse.ArgumentParser(description='Zip and upload log folders')
 
@@ -41,6 +42,14 @@ def zip_and_upload():
           cts_dst = os.path.normpath(cts_dst)
           verbose_call(['ssh', remote_host, 'mkdir -p %s' % cts_dst])
           verbose_call(['scp', '-r', os.path.join(cts_logdir, x, ''), '%s:%s' % (remote_host, os.path.join(cts_dst, args.zip_name[:-4]))])
+
+    # remove log directory
+    try:
+      print "Delete directory %s" % args.log_dir
+      shutil.rmtree(args.log_dir)
+    except Exception as e:
+      print "Error in deleting log directory %r" % e
+
   except Exception as e:
     print "Error in zip_and_upload %r" % e
     return 1
