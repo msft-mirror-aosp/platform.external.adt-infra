@@ -77,18 +77,50 @@ logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 logger.setLevel(logging.DEBUG)
 
-def get_emu_branch(zip_path):
-    try:
-        with zipfile.ZipFile(zip_path, 'r') as log_dir:
-            for log_file in log_dir.namelist():
-                if log_file.endswith('build.props'):
-                    with log_dir.open(log_file) as f:
-                        data = json.load(f)
-                        return data['emu_branch']
-        return "emu-master-dev"
-    except:
-        logging.info(traceback.format_exc())
-        return "emu-master-dev"
+emulator_branches = ["emu-master-dev", "emu-2.0-release"]
+api_to_image_branch = {
+                       '10':'gb-emu-dev',
+                       '15':'ics-mr1-emu-dev',
+                       '16':'jb-emu-dev',
+                       '17':'jb-mr1.1-emu-dev',
+                       '18':'jb-mr2-emu-dev',
+                       '19':'klp-emu-dev',
+                       '21':'lmp-emu-dev',
+                       '22':'lmp-mr1-emu-dev',
+                       '23':'mnc-emu-dev',
+                       '24':'nyc-emu-release',
+                      }
+
+def get_branches(builder, file_path, api):
+  print "inside: ", builder, file_path, api
+  for x in emulator_branches:
+    if builder.endswith(x):
+        emu_branch = x
+        image_branch = "sdk"
+        return emu_branch, image_branch
+  emu_branch = None
+  if builder.endswith("system-image-builds"):
+    emu_branch = "sdk"
+  else:
+    for x in emulator_branches:
+      if x in file_path:
+        emu_branch = x
+  image_branch = api_to_image_branch.get(api) or "Unknown"
+  if not emu_branch or (builder.endswith("cross-builds") and "boot_test_public_sysimage" in file_path):
+     logging.error("INVALID LOG...%s, skip ", file_path)
+     return None, None
+  return emu_branch, image_branch
+
+def get_props(zip_path):
+  try:
+    with zipfile.ZipFile(zip_path, 'r') as log_dir:
+      for log_file in log_dir.namelist():
+        if log_file.endswith('build.props'):
+          with log_dir.open(log_file) as f:
+            return json.load(f)
+  except:
+    logging.error(traceback.format_exc())
+    return {}
 
 # process a zip folder
 def process_zipfile(zip_name, builder, csv_data, csv_err, csv_adb):
@@ -99,12 +131,12 @@ def process_zipfile(zip_name, builder, csv_data, csv_err, csv_adb):
     else:
         logger.info("Skip invalid directory %s", zip_name)
         return
-    emu_branch = get_emu_branch(zip_path)
+    props = get_props(zip_path)
     with zipfile.ZipFile(zip_path, 'r') as log_dir:
         for x in [log_file for log_file in log_dir.namelist() if not log_file.endswith('/')]:
             if any(s in x for s in ["CTS_test", "verbose", "logcat"]):
                 continue
-            #logger.info("parsing file %s ...", x)
+            #logger.info("parsing file %s ...", log_path)
             with log_dir.open(x) as f:
                 for line in f:
                     is_timeout = False
@@ -138,14 +170,19 @@ def process_zipfile(zip_name, builder, csv_data, csv_err, csv_adb):
                         else:
                             avd, boot_time = gr.groups()
                             result_file = csv_data
-                        if any([x in avd for x in ["android-wear", "android-tv"]]):
+                        if any([t in avd for t in ["android-wear", "android-tv"]]):
                             tag, abi, device, ram, gpu, api = avd_android_re.match(avd).groups()
                         else:
                             tag, abi, device, ram, gpu, api = avd_re.match(avd).groups()
+                        emu_branch, image_branch = get_branches(builder, x, api)
+                        if None in [emu_branch, image_branch]:
+                            continue
+                        emu_revision = props.get(emu_branch) or "sdk"
+                        image_revision = props.get("git_" + image_branch) or props.get(image_branch) or "sdk"
                         if is_adb_result:
-                            record_line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (api, tag, abi, device, ram, gpu, "qemu2" if is_qemu2 else "qemu1", builder, build, revision, push_speed, pull_speed, emu_branch)
+                            record_line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (api, tag, abi, device, ram, gpu, "qemu2" if is_qemu2 else "qemu1", builder, build, emu_revision, image_revision, push_speed, pull_speed, emu_branch, image_branch)
                         else:
-                            record_line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (api, tag, abi, device, ram, gpu, "qemu2" if is_qemu2 else "qemu1", builder, build, revision, boot_time, emu_branch)
+                            record_line = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (api, tag, abi, device, ram, gpu, "qemu2" if is_qemu2 else "qemu1", builder, build, emu_revision, image_revision, boot_time, emu_branch, image_branch)
                         result_file.write(record_line)
     dst_path = "gs://emu_test_traces/%s/" % builder
     logger.info("upload file to Google Storage - %s to %s ", zip_path, dst_path)
