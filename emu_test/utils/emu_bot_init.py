@@ -107,4 +107,17 @@ if __name__ == "__main__":
   except:
     pass
   rc = update_sdk_with_timeout('add-on,system-image,extra,platform-tool,platform,tool', 900)
+
+  # kill adb process, during update of sdk tools, it will run adb start-server, which leaves
+  # a child adb process, clean it up here to avoid hanging of script
+  for proc in psutil.process_iter():
+    try:
+      pinfo = proc.as_dict(attrs=['pid', 'name'])
+      if 'adb' in pinfo['name']:
+        logger.info("Kill adb process %s", pinfo)
+        proc.kill()
+        proc.wait(5)
+    except psutil.NoSuchProcess:
+        pass
+
   exit(rc)
