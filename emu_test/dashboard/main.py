@@ -45,16 +45,21 @@ def get_query_clause(vars):
                 for gpu in vars['GPU']:
                     for qemu in  vars['QEMU']:
                         for k, v in columns.iteritems():
-                            select_clause += "last (CASE WHEN (builderName = '%s' AND tag = '%s' AND gpu = '%s' AND qemu = '%s') THEN %s ELSE null END) AS [%s_%s_%s_%s%s], " % (host, tag, gpu_val[gpu], qemu, k, host.replace('-', '_'), tag.replace('-', '_'), gpu, qemu, v)
+                            select_clause += "last (CASE WHEN (builderName CONTAINS '%s' AND tag = '%s' AND gpu = '%s' AND qemu = '%s') THEN %s ELSE null END) AS [%s_%s_%s_%s%s], " % (host, tag, gpu_val[gpu], qemu, k, host.replace('-', '_'), tag.replace('-', '_'), gpu, qemu, v)
         return select_clause
 
-    where_clause = "api = %s AND abi = '%s'" % (vars['API'][0], vars['ABI'][0])
+    emulator = vars['EMULATOR'][0]
+    img_branch = vars['SYS_IMG'][0]
+    img_cmp = "=" if img_branch == "sdk" else "!="
+    order_rev = "image_revision" if emulator == "sdk" else "emu_revision"
+
+    where_clause = "api = %s AND abi = '%s' AND emu_branch = '%s' AND image_branch %s '%s'" % (vars['API'][0], vars['ABI'][0], emulator, img_cmp, 'sdk')
     QUERY = ("SELECT "
-             "revision AS build, "
+             "%s AS build, "
              "%s"
              "FROM [%s:%s.%s] "
              "WHERE %s "
-             "group by build order by build") % (get_select_clause({"boottime": ""}), DATA_PROJECT_ID, DATASET, TABLE_DATA, where_clause)
+             "group by build order by build") % (order_rev, get_select_clause({"boottime": ""}), DATA_PROJECT_ID, DATASET, TABLE_DATA, where_clause)
     logging.info(QUERY)
     title = "AVD - api: %s, abi: %s, tag: %s, gpu: %s, qemu: %s" % ('/'.join(vars['API']), '/'.join(vars['ABI']), '/'.join(vars['TAG']), '/'.join(vars['GPU']), '/'.join(vars['QEMU']))
 
@@ -69,7 +74,7 @@ def get_query_clause(vars):
     #logging.info(SUM_QUERY)
 
     ADB_QUERY = ("SELECT "
-                 "revision AS build, "
+                 "emu_revision AS build, "
                  "%s"
                  "FROM [%s:%s.%s] "
                  "WHERE %s "
@@ -100,41 +105,44 @@ def bq2table(bqdata):
                 if t["type"] == "FLOAT":
                     val = float("{0:.2f}".format(val))
                 row_data.append(val)
-            table.append(row_data)
-    count = len(table.rows)
+            # add row only if it's not all zeros
+            if row_data.count(0) < (len(row_data)-1):
+              table.append(row_data)
     logging.info("FINAL BOOTTIMEDATA---")
-    return count, encode(table)
+    return encode(table)
 
 class MainPage(webapp2.RequestHandler):
     def get(self):
-
         template_data = {'table_bootdata': 0,
                 'table_adbdata': 0,
                 'table_sumdata': 0,
                 'table_title': 0,
-                'table_row_count': 0,
                 'query_complete': 0,
+                'validate_form': 0,
                 'paint_vars': json.dumps({}),
                 'query': ''}
         if len(self.request.GET) != 0:
             paint_vars = {}
-            for col_name in ['HOST', 'TAG', 'GPU', 'QEMU', 'API', 'ABI']:
+            for col_name in ['HOST', 'TAG', 'GPU', 'QEMU', 'API', 'ABI', 'EMULATOR', 'SYS_IMG']:
                 paint_vars[col_name] = self.request.get_all(col_name)
-
-            urlfetch.set_default_fetch_deadline(TIMEOUT_IN_SEC)
-            bq = bqclient.BigQueryClient(http)
-            title, QUERY, SUM_QUERY, ADB_QUERY = get_query_clause(paint_vars)
-            count, boot_values = bq2table(bq.Query(QUERY, BILLING_PROJECT_ID, TIMEOUT_IN_SEC))
-            #sum_count, sum_values = bq2table(bq.Query(SUM_QUERY, BILLING_PROJECT_ID, TIMEOUT_IN_SEC))
-            adb_count, adb_values = bq2table(bq.Query(ADB_QUERY, BILLING_PROJECT_ID, TIMEOUT_IN_SEC))
-            template_data = {'table_bootdata': boot_values,
-                    'table_adbdata': adb_values,
-                    'table_sumdata': 0,
-                    'table_title': title,
-                    'table_row_count': count,
-                    'query_complete': 1,
-                    'paint_vars': json.dumps(paint_vars),
-                    'query': QUERY}
+            if [] in paint_vars.values():
+                 template_data['validate_form'] = 1
+                 template_data['paint_vars'] = json.dumps(paint_vars)
+            else:
+                urlfetch.set_default_fetch_deadline(TIMEOUT_IN_SEC)
+                bq = bqclient.BigQueryClient(http)
+                title, QUERY, SUM_QUERY, ADB_QUERY = get_query_clause(paint_vars)
+                boot_values = bq2table(bq.Query(QUERY, BILLING_PROJECT_ID, TIMEOUT_IN_SEC))
+                #sum_values = bq2table(bq.Query(SUM_QUERY, BILLING_PROJECT_ID, TIMEOUT_IN_SEC))
+                adb_values = bq2table(bq.Query(ADB_QUERY, BILLING_PROJECT_ID, TIMEOUT_IN_SEC))
+                template_data = {'table_bootdata': boot_values,
+                        'table_adbdata': adb_values,
+                        'table_sumdata': 0,
+                        'table_title': title,
+                        'query_complete': 1,
+                        'validate_form': 0,
+                        'paint_vars': json.dumps(paint_vars),
+                        'query': QUERY}
         template = os.path.join(os.path.dirname(__file__), 'index.html')
         self.response.out.write(render(template, template_data))
 

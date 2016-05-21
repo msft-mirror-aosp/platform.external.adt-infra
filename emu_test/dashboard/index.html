@@ -24,20 +24,19 @@
            {
               if(write_log)
               {
-                log_area.value += "No matching record for " + data_table.getColumnLabel(i) + "\n";
+                if(i != 0)
+                  log_area.value += "No matching record for " + data_table.getColumnLabel(i) + "\n";
                 log_area.rows ++;
               }
               data_table.removeColumn(i);
            }
        }
-       var col_count = data_table.getNumberOfColumns()-1;
-       if(col_count==0)
-       {
-           document.getElementById('msg_result').innerHTML = "0 Results Returned!"
-           return;
-       }
 
-       document.getElementById('msg_result').innerHTML = "{{ table_row_count }}" + " Results Returned!"
+       var col_count = Math.max(data_table.getNumberOfColumns()-1, 0);
+       var row_count = data_table.getNumberOfRows();
+       document.getElementById('msg_result').innerHTML = row_count + " Build(s) Returned!"
+       if(col_count == 0 || row_count == 0)
+           return;
        var col_per_host = col_count/host_count;
 
        var lineDict = {};
@@ -131,19 +130,26 @@
                    "Win_8_64-bit_Quadro_600"];
        var apis = ["24", "23", "22", "21", "20", "19", "18", "17", "16", "15", "10"];
        var tags = ["default", "google_apis", "android-wear", "android-tv"];
-       var abis = ["x86", "x86_64", "armeabi-v7a", "mips", "mips64"];
+       var abis = ["x86", "x86_64", "armeabi-v7a", "arm64-v8a", "mips", "mips64"];
        var gpus = ["mesa", "on", "off"];
        var qemus = ["qemu1", "qemu2"];
+       var emu_branches = ["sdk", "emu-master-dev", "emu-2.0-release"];
+       var image_branches = ["sdk", "image-builds"];
 
        var selected_vars = {{ paint_vars|safe }};
        createCheckboxGroup(apis, 'API', 'td_api', 'radio', selected_vars);
        createCheckboxGroup(abis, 'ABI', 'td_abi', 'radio', selected_vars);
+       createCheckboxGroup(emu_branches, 'EMULATOR', 'td_emulator', 'radio', selected_vars);
+       createCheckboxGroup(image_branches, 'SYS_IMG', 'td_sysimage', 'radio', selected_vars);
        createCheckboxGroup(host, 'HOST', 'td_host', 'checkbox', selected_vars);
        createCheckboxGroup(tags, 'TAG', 'td_tag', 'checkbox', selected_vars);
        createCheckboxGroup(gpus, 'GPU', 'td_gpu', 'checkbox', selected_vars);
        createCheckboxGroup(qemus, 'QEMU', 'td_qemu', 'checkbox', selected_vars);
 
-       if ("{{ query_complete }}" =="1" && "{{ table_row_count }}" !== "0")
+       if ("{{ validate_form }}" == "1")
+         validateForm();
+
+       if ("{{ query_complete }}" =="1")
        {
           document.getElementById('paint_btn').disabled = true;
           var host_count = ({{ paint_vars|safe }}["HOST"]).length;
@@ -171,6 +177,8 @@
        var apis = get_var('input[name="API"]:checked');
        var tags = get_var('input[name="TAG"]:checked');
        var abis = get_var('input[name="ABI"]:checked');
+       var emulator = get_var('input[name="EMULATOR"]:checked');
+       var sys_image = get_var('input[name="SYS_IMG"]:checked');
        var hosts = get_var('input[name="HOST"]:checked');
        var gpus = get_var('input[name="GPU"]:checked');
        var qemus = get_var('input[name="QEMU"]:checked');
@@ -193,13 +201,15 @@
       <tr>
         <td id='td_api'></td>
         <td id='td_abi'></td>
+        <td id='td_emulator'></td>
+        <td id='td_sysimage'></td>
         <td id='td_host'></td>
         <td id='td_tag'></td>
         <td id='td_gpu'></td>
         <td id='td_qemu'></td>
       </tr>
       <tr>
-        <td colspan="6" align="right" style="padding: 10px;">
+        <td colspan="8" align="right" style="padding: 10px;">
           <button class='myButton' type='submit' id='paint_btn'>PAINT</button>
         </td>
       </tr>
