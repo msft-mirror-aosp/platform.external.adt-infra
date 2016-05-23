@@ -1,37 +1,7 @@
 [
     {
-        "name": "runUid",
-        "type": "INTEGER",
-        "mode": "REQUIRED"
-    },
-    {
-        "name": "runStartTime",
-        "type": "TIMESTAMP",
-        "mode": "NULLABLE"
-    },
-    {
-        "name": "runEndTime",
-        "type": "TIMESTAMP",
-        "mode": "NULLABLE"
-    },
-    {
-        "name": "buildbotSlaveName",
-        "type": "STRING",
-        "mode": "NULLABLE"
-    },
-    {
-        "name": "buildbotRunId",
-        "type": "INTEGER",
-        "mode": "NULLABLE"
-    },
-    {
         "name": "systemImageBranch",
         "type": "STRING",
-        "mode": "NULLABLE"
-    },
-    {
-        "name": "systemImageBuildId",
-        "type": "INTEGER",
         "mode": "NULLABLE"
     },
     {
@@ -50,27 +20,7 @@
         "mode": "NULLABLE"
     },
     {
-        "name": "avdDevice",
-        "type": "STRING",
-        "mode": "NULLABLE"
-    },
-    {
-        "name": "avdRam",
-        "type": "STRING",
-        "mode": "NULLABLE"
-    },
-    {
-        "name": "avdGpu",
-        "type": "STRING",
-        "mode": "NULLABLE"
-    },
-    {
         "name": "emulatorBranch",
-        "type": "STRING",
-        "mode": "NULLABLE"
-    },
-    {
-        "name": "emulatorRevision",
         "type": "STRING",
         "mode": "NULLABLE"
     },
@@ -81,11 +31,6 @@
     },
     {
         "name": "ctsBranch",
-        "type": "STRING",
-        "mode": "NULLABLE"
-    },
-    {
-        "name": "ctsBuild",
         "type": "STRING",
         "mode": "NULLABLE"
     },
