@@ -72,14 +72,11 @@ public class VpnTest {
             AppManager.installApp(instrumentation, "FredVPN.apk");
             AppLauncher.launch(instrumentation, "TestVPN");
 
-            // Register a watcher to dismiss the popup dialog when starting VPN.
-            device.registerWatcher(VpnPopupWatcher.class.getName(), new VpnPopupWatcher(device));
-            device
-                    .findObject(new UiSelector().resourceId(START_VPN_BUTTON_RES))
+            device.findObject(new UiSelector().resourceId(START_VPN_BUTTON_RES))
                     .clickAndWaitForNewWindow();
+            new VpnPopupWatcher(device).checkForCondition();
             Assert.assertTrue("Failed to find the VPN lock icon after starting VPN!",
                     verifyVpnStatus(device));
-            device.removeWatcher(VpnPopupWatcher.class.getName());
         }
         AppManager.uninstallApp(instrumentation, "TestVPN", null);
     }
