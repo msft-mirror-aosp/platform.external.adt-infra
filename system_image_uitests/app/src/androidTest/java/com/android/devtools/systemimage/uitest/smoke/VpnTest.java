@@ -63,6 +63,20 @@ public class VpnTest {
 
     /**
      * Tests if VPN works as expected.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C1457882
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Install FredVPN app.
+     *   3. Open the app.
+     *   4. Tap on Connect.
+     *   Verify:
+     *   The VPN app runs on the emulator. A VPN lock icon displays on the status bar.
+     *   </pre>
      */
     @Test
     public void testVpn() throws Exception {

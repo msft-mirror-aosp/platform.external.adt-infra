@@ -39,7 +39,19 @@ public class AppTest {
      * Verifies the renderscript app runs on the emulator.
      * <p>
      * The test installs, launches, and uninstalls the app.
-     * Test Rail ID: T136017707
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578823
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Install HelloComputer app.
+     *   3. Open the app.
+     *   Verify:
+     *   App runs on the emulator. Image of a leaf is displayed on the emulator.
+     *   </pre>
      */
     @Test
     public void testAppInstallAndLaunch() throws Exception {
