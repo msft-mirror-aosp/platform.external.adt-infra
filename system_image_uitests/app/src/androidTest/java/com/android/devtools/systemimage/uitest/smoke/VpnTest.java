@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
+import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.VpnPopupWatcher;
 
 import org.junit.Assert;
@@ -31,9 +32,6 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.Until;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Test on VPN app.
@@ -42,19 +40,23 @@ import java.util.concurrent.TimeUnit;
 public class VpnTest {
     private static final String START_VPN_BUTTON_RES = "com.test.vpn:id/start_vpn";
     private static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
+    private static final String VPN_ACTIVATED_TEXT = "VPN is activated by TestVPN";
+
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
-    private static boolean verifyVpnStatus(UiDevice device) {
+    private static boolean verifyVpnStatus(final UiDevice device) throws Exception {
         // Verify that a VPN lock icon is on the status bar.
         device.openNotification();
         // Need to wait for a while to check the notification bar items
         // because opening notification is an animation.
-        boolean isTrue =
-                device.wait(
-                        Until.hasObject(By.res(VPN_LOCK_ICON_RES)),
-                        TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
-                );
+        boolean isTrue = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                return device.hasObject(By.res(VPN_LOCK_ICON_RES)) ||
+                        device.hasObject(By.text(VPN_ACTIVATED_TEXT));
+            }
+        });
         device.pressHome();
         return isTrue;
     }
