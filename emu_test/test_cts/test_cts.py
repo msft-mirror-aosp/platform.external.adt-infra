@@ -147,30 +147,48 @@ class CTSTestCase(EmuBaseTestCase):
                        x['systemImageTag'] == avd.tag and
                        x['systemImageAbi'] == avd.abi)]
         ignored_fails = set()
+        required_passes = set()
         fail_results = set(['flaky', 'bad', 'gotbroken'])
+        pass_results = set(['good', 'gotFixed'])
         for target in matches:
             for result in target.get('ctsFlakinessRecords', []):
-                if result['flakinessResult'] in fail_results:
-                    ignored_fails.add(result['fullName'])
+                full_name = result['fullName']
+                flakiness_result = result['flakinessResult']
+                if flakiness_result in fail_results:
+                    ignored_fails.add(full_name)
+                if flakiness_result in pass_results:
+                    required_passes.add(full_name)
+        # A test that is known to be good for some of the |matches|, but bad for
+        # others should remain in |ignored_fails|, but not in |required_passes|.
+        required_passes = required_passes - ignored_fails
 
         results = cts_results_parser.ExtractResults(cts_results_file)
         fails = set()
+        passes = set()
         for result in results:
+            full_name = '/'.join(
+                    [result[x] for x in
+                        ['PackageName', 'AppPackageName', 'TestSuiteName',
+                        'TestCaseName', 'TestName']])
             if result['Result'] == 'fail':
-                full_name = '/'.join(
-                        [result[x] for x in
-                         ['PackageName', 'AppPackageName', 'TestSuiteName',
-                          'TestCaseName', 'TestName']])
                 fails.add(full_name)
+            elif result['Result'] == 'pass':
+                passes.add(full_name)
+
+        new_fails = fails - ignored_fails
+        missing_passes = required_passes - passes
 
         self.m_logger.info('List of test fails that were ignored: %s' %
                            self._formatSet(ignored_fails & fails))
-        new_fails = fails - ignored_fails
         if new_fails:
             self.m_logger.error('List of significant test failures '
                                '(i.e., why did this run go red): %s' %
                                self._formatSet(new_fails))
-            self.assertEqual(0, len(new_fails))
+        if missing_passes:
+            self.m_logger.error('List of missing test passes '
+                               '(i.e., why did this run go red): %s' %
+                                self._formatSet(missing_passes))
+        self.assertEqual(0, len(new_fails) + len(missing_passes))
 
 
 def create_test_case_for_avds():
