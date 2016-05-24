@@ -37,15 +37,21 @@ public class VpnPopupWatcher implements UiWatcher {
 
     @Override
     public boolean checkForCondition() {
+        UiObject checkBox = mDevice.findObject(new UiSelector().text("I trust this application."));
         UiObject okButton = mDevice.findObject(new UiSelector().text("OK"));
-        if (okButton.exists()) {
-            try {
+        try {
+            if (checkBox.exists()) {
+                checkBox.click();
+            }
+            if (okButton.exists()) {
                 okButton.click();
                 return true;
-            } catch (UiObjectNotFoundException e) {
-                throw new AssertionError("Failed to dismiss the VPN popup dialog");
             }
+            else {
+                return false;
+            }
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError("Failed to dismiss the VPN popup dialog");
         }
-        return false;
     }
 }

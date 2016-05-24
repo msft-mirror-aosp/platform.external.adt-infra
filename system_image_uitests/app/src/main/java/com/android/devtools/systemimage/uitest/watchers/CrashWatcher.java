@@ -58,11 +58,11 @@ public class CrashWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().text("OK")).click();
             } else if (mDevice.hasObject(By.text("Close"))) {
                 mDevice.findObject(new UiSelector().text("Close")).click();
+            } else {
+                Assert.fail("Failed to dismiss the crash popup!");
             }
         } catch (UiObjectNotFoundException e) {
-            Assert.fail(
-                    "Failed to dismiss the crash popup. This is a critical bug to fix, or the "
-                            + "following tests will catch the same crash over and over!");
+            Assert.fail("Failed to dismiss the crash popup!");
         }
         Assert.fail("Caught an application crash. Screenshot saved to " + ss.getAbsolutePath());
     }
