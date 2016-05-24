@@ -1,15 +1,18 @@
-"""Test the emulator boot time"""
+"""Run CTS tests for emulator"""
 
+import cts_results_parser
+
+import json
 import os, platform
 import unittest
-import time
 import psutil
 import shutil
 import re
+import sys
 import threading
 from subprocess import PIPE,STDOUT
 
-from utils.emu_error import *
+from utils import emu_argparser
 from utils.emu_argparser import emu_args
 from utils.emu_testcase import EmuBaseTestCase, AVDConfig
 import utils.emu_testcase
@@ -108,9 +111,67 @@ class CTSTestCase(EmuBaseTestCase):
             self.m_logger.info("Pass: %s, Fail: %s, Not Executed: %s", pass_count, fail_count, skip_count)
             # copy CTS result to log dir, since cts-tradefed doesn't support custom log location
             move_log(log_name)
-            self.assertEqual(fail_count, '0')
+            self._checkResults(avd, fail_count,
+                               os.path.join(emu_args.session_dir, log_name,
+                                            'testResult.xml'))
         else:
             self.assertEqual('NA', '0')
+
+    def _formatSet(self, to_format):
+        to_format_list = sorted(to_format)
+        # Arbitrary limit on how many names we print.
+        num_explicit_names = 15
+        result = ', '.join(to_format_list[:num_explicit_names])
+        remaining = len(to_format_list) - num_explicit_names
+        if remaining > 0:
+            result += ' ... and %d others.' % remaining
+        return result
+
+    def _checkResults(self, avd, fail_count, cts_results_file):
+        if fail_count == 0:
+            return
+
+        baseline = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                'ctsTestCurrentFlakinessData.json')
+        with open(baseline, 'r') as f:
+            flakiness_data = json.load(f)
+        if not flakiness_data:
+            self.m_logger.warning('Found empty / corrupted flakiness data')
+            return
+        self.m_logger.debug('Loaded flakiness data with %d entries' %
+                            len(flakiness_data))
+
+        matches = [x for x in flakiness_data
+                   if (x['systemImageApi'] == avd.api and
+                       x['systemImageTag'] == avd.tag and
+                       x['systemImageAbi'] == avd.abi)]
+        ignored_fails = set()
+        fail_results = set(['flaky', 'bad', 'gotbroken'])
+        for target in matches:
+            for result in target.get('ctsFlakinessRecords', []):
+                if result['flakinessResult'] in fail_results:
+                    ignored_fails.add(result['fullName'])
+
+        results = cts_results_parser.ExtractResults(cts_results_file)
+        fails = set()
+        for result in results:
+            if result['Result'] == 'fail':
+                full_name = '/'.join(
+                        [result[x] for x in
+                         ['PackageName', 'AppPackageName', 'TestSuiteName',
+                          'TestCaseName', 'TestName']])
+                fails.add(full_name)
+
+        self.m_logger.info('List of test fails that were ignored: %s' %
+                           self._formatSet(ignored_fails & fails))
+        new_fails = fails - ignored_fails
+        if new_fails:
+            self.m_logger.error('List of significant test failures '
+                               '(i.e., why did this run go red): %s' %
+                               self._formatSet(new_fails))
+            self.assertEqual(0, len(new_fails))
+
 
 def create_test_case_for_avds():
     avd_name_re = re.compile("([^-]*)-(.*)-(.*)-(\d+)-gpu_(.*)-api(\d+)-CTS")
