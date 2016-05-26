@@ -43,13 +43,13 @@ def clean_up():
     tmp_dir = "/tmp/android-%s" % os.environ["USER"]
     if os.path.isdir(tmp_dir):
       for f in os.listdir(tmp_dir):
-        if f.startswith('qemu-gles-'):
+        if f.startswith('qemu-gles-') or f.startswith('emulator-'):
           file_path = os.path.join(tmp_dir, f)
           logger.info("Delete file %s", file_path)
           try:
             os.remove(file_path)
           except Exception as e:
-            logger.info("Error in deleting qemu-gles-[pid] %r", e)
+            logger.info("Error in deleting %s, %r", file_path, e)
 
   # remove build directory
   for f in os.listdir(args.build_dir):
@@ -112,8 +112,8 @@ if __name__ == "__main__":
   # a child adb process, clean it up here to avoid hanging of script
   for proc in psutil.process_iter():
     try:
-      pinfo = proc.as_dict(attrs=['pid', 'name'])
-      if 'adb' in pinfo['name']:
+      pinfo = proc.as_dict(attrs=['pid', 'name', 'status'])
+      if 'adb' in pinfo['name'] and pinfo['status'] != 'zombie':
         logger.info("Kill adb process %s", pinfo)
         proc.kill()
         proc.wait(5)
