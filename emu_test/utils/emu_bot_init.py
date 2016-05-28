@@ -41,15 +41,14 @@ def clean_up():
   host = platform.system()
   if host in ["Linux", "Darwin"]:
     tmp_dir = "/tmp/android-%s" % os.environ["USER"]
-    if os.path.isdir(tmp_dir):
-      for f in os.listdir(tmp_dir):
-        if f.startswith('qemu-gles-') or f.startswith('emulator-'):
-          file_path = os.path.join(tmp_dir, f)
-          logger.info("Delete file %s", file_path)
-          try:
-            os.remove(file_path)
-          except Exception as e:
-            logger.info("Error in deleting %s, %r", file_path, e)
+  else:
+    tmp_dir = os.path.join(os.path.expanduser("~"), 'AppData', 'Local', 'Temp')
+  if os.path.isdir(tmp_dir):
+    logger.info("Delete directory %s", tmp_dir)
+    try:
+      shutil.rmtree(tmp_dir)
+    except Exception as e:
+      logger.info("Error in deleting %s, %r", tmp_dir, e)
 
   # remove build directory
   for f in os.listdir(args.build_dir):
