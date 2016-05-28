@@ -199,9 +199,8 @@ def RunSteps(api):
   emulator_branch_to_use, steps_to_run = getTestConfig(project, is_cross_build)
 
   # filter out unavailable branches
-  filter_func = lambda x: api.properties.get(x)
-  steps_to_run = filter(filter_func, steps_to_run)
-  emulator_branch_to_use = filter(filter_func, emulator_branch_to_use)
+  steps_to_run = [x for x in steps_to_run if api.properties.get(x)]
+  emulator_branch_to_use = [x for x in emulator_branch_to_use if (api.properties.get(x) or x not in emulator_branches)]
 
   with api.step.defer_results():
     for emu_branch in emulator_branch_to_use:
