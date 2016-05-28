@@ -40,7 +40,7 @@ class BootTestCase(EmuBaseTestCase):
             os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
             shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
         except Exception, e:
-            self.m_logger.debug("Error in cleanup - %r", e)
+            self.m_logger.error("Error in cleanup - %r", e)
             pass
 
     def boot_check(self, avd):
