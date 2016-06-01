@@ -121,10 +121,11 @@ class CTSTestCase(EmuBaseTestCase):
         to_format_list = sorted(to_format)
         # Arbitrary limit on how many names we print.
         num_explicit_names = 15
-        result = ', '.join(to_format_list[:num_explicit_names])
-        remaining = len(to_format_list) - num_explicit_names
-        if remaining > 0:
-            result += ' ... and %d others.' % remaining
+        num_others = len(to_format_list) - num_explicit_names
+        result = ''
+        if num_others > 0:
+            result += '(These + %d others) ' % num_others
+        result += ', '.join(to_format_list[:num_explicit_names])
         return result
 
     def _checkResults(self, avd, fail_count, cts_results_file):
@@ -148,7 +149,7 @@ class CTSTestCase(EmuBaseTestCase):
                        x['systemImageAbi'] == avd.abi)]
         ignored_fails = set()
         required_passes = set()
-        fail_results = set(['flaky', 'bad', 'gotbroken'])
+        fail_results = set(['flaky', 'bad', 'gotBroken'])
         pass_results = set(['good', 'gotFixed'])
         for target in matches:
             for result in target.get('ctsFlakinessRecords', []):
