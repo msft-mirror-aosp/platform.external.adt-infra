@@ -87,6 +87,11 @@ def RunSteps(api):
                'nyc-emu-release': bootStep('NYC', '{"ori": "nyc"}'),
                'lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
                'klp-emu-dev': bootStep('KLP', '{"ori": "klp"}'),
+               'gb-emu-dev': bootStep('GB', '{"ori": "gb"}'),
+               'ics-mr1-emu-dev': bootStep('ICS_MR1', '{"ori": "ics-mr1"}'),
+               'jb-emu-dev': bootStep('JB', '{"ori": "jb"}'),
+               'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"ori": "jb-mr1.1"}'),
+               'jb-mr2-emu-dev': bootStep('JB_MR2', '{"ori": "jb-mr2"}'),
               }
 
   # figure out which emulator to use, and which test steps to run
