@@ -45,7 +45,19 @@ public class NetworkIOTest {
     /**
      * Verifies test browser successfully loads a web page.
      * <p>
-     * Test Rail ID: T136017709
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578825
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Launch browser app.
+     *   3. Navigate to a website.
+     *   Verify:
+     *   Icons indicating working network connection displayed in status bar.
+     *   Browser successfully loads the web page.
+     *   </pre>
      */
     @Test
     public void testBrowserLoadsSite() throws Exception {
