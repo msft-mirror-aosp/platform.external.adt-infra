@@ -35,6 +35,17 @@ def get_dst_dir(remote_path):
       api = '21'
     elif 'klp' in branch_name:
       api = '19'
+    elif 'gb-emu-dev' in branch_name:
+      api = '10'
+    elif 'ics-mr1-emu-dev' in branch_name:
+      api = '15'
+    elif 'jb-emu-dev' in branch_name:
+      api = '16'
+    elif 'jb-mr1.1-emu-dev' in branch_name:
+      api = '17'
+    elif 'jb-mr2-emu-dev' in branch_name:
+      api = '18'
+
     else:
       raise ValueError("unsupported image %s", branch_name)
     return os.path.join(os.environ['ANDROID_SDK_ROOT'],
