@@ -42,6 +42,18 @@ public class ShellUtilTest {
 
     /**
      * Tests the integrity of Shell utilities.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578821
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. From the cmd line, run "adb shell ls /system/bin"
+     *   Verify:
+     *   Shell utilities are listed in SDK emulator image.
+     *   </pre>
      */
     @Test
     public void testShellUtilIntegrity() throws Exception {
