@@ -41,7 +41,19 @@ public class AddGoogleAccountTest {
     /**
      * Verifies able to add a Google account using Contacts app.
      * <p>
-     * Test Bug ID: b/28053652
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581151
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Open Contacts app.
+     *   3. Tap on "Add Account"
+     *   4. Tap on "Add Contact" and choose "Add Account"
+     *   Verify:
+     *   User is prompted to sign in to a Google Account.
+     *   </pre>
      */
     @Test
     public void testAddAccountUsingContactsApp() throws Exception {
