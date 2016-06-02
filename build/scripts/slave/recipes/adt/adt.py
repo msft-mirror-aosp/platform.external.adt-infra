@@ -44,10 +44,9 @@ def RunSteps(api):
     android_sdk_home = os.path.join(home_dir, 'Android', 'android-sdk')
     if api.platform.bits == 64:
       gnu_path = 'C:\\Program Files (x86)\\GnuWin32\\bin'
-      cygwin_path = 'C:\\cygwin64\\bin'
     else:
       gnu_path = 'C:\\Program Files\\GnuWin32\\bin'
-      cygwin_path = 'C:\\cygwin\\bin'
+    cygwin_path = 'C:\\cygwin\\bin'
     env_path = [gnu_path, cygwin_path] + env_path
   else:
     raise # pragma: no cover
