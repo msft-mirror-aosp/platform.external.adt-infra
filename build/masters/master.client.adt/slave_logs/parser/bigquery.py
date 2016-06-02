@@ -28,8 +28,8 @@ class BigQuery(object):
     Default values are set for a test dataset. Bots should override this.
     """
 
-    DEFAULT_PROJECT_ID = "android-devtools-emulator"
-    DEFAULT_DATASET_ID = "emu_buildbot_test"
+    DEFAULT_PROJECT_ID = 'android-devtools-emulator'
+    DEFAULT_DATASET_ID = 'emu_buildbot_test'
 
     def __init__(self, project_id=None, dataset_id=None, credentials=None):
         assert credentials is not None
@@ -45,12 +45,14 @@ class BigQuery(object):
         self._bigquery = discovery.build('bigquery', 'v2',
                                          credentials=credentials)
 
-    def upload(self, schema_path, data_path, table_id):
-        """Uploads data from |data_path| with schema defined in |schema_path| to
-        |table_id|.
+    def upload(self, bq_table, table_id):
+        """Uploads data from GenericBigQueryTable |bq_tale| to |table_id|.
 
         Skips empty files.
         """
+        bq_table.flush()
+        schema_path = bq_table.schema_path
+        data_path = bq_table.data_path
         logging.info('Uploading data to (project:%s, datatset:%s, table:%s) '
                      'from %s with schema %s' % (
                              self._project_id, self._dataset_id, table_id,
@@ -101,13 +103,15 @@ class BigQuery(object):
         # Poll the job until it finishes.
         while True:
             result = status_request.execute(num_retries=2)
-            if result['status']['state'] == 'DONE':
-                if result['status'].get('errors'):
+            status = result['status']
+            if status['state'] == 'DONE':
+                if 'errorResult' in status:
                     err = ('Error when updating table %s with rows from %s '
                            'using schema %s' % (table_id, data_path,
                                                 schema_path))
                     logging.error(err)
-                    logging.error(pprint.pformat(result['status']['errors']))
+                    logging.error('BigQuery error details:')
+                    logging.error(pprint.pformat(status['errorResult']))
                     raise BigQueryException(err)
                 else:
                     logging.info('Job complete.')
