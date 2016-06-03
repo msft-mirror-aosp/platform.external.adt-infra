@@ -119,7 +119,6 @@ def _process_boot_test_logs(zip_path, bqt_boot_pass, bqt_boot_fail,
                         build_prop.get('git_' + image_branch) or
                         build_prop.get(image_branch) or 'sdk')
 
-
                 # ADB speed row is identical so far.
                 if (matches.get(sp.ADB_PUSH_SPEED) or
                     matches.get(sp.ADB_PULL_SPEED)):
@@ -179,6 +178,12 @@ def _for_each_slave_run(root_dir, steps):
                     step(zip_path)
 
 
+def _backup_logs(workdir, backupdir):
+    dst = os.path.join(backupdir,
+                       'work_%s' % time.strftime('%Y%m%d-%H%M%S'))
+    shutil.make_archive(dst, 'gztar', workdir, workdir)
+
+
 _TABLE_DATA = 'avd_to_time_data'
 _TABLE_ERR = 'avd_to_time_error'
 _TABLE_ADB = 'avd_to_adb_speed'
@@ -198,6 +203,13 @@ def main(args):
     backupdir = os.path.join(cwd, 'log_backups')
     try:
         os.mkdir(backupdir)
+    except OSError:
+        # Directory exists.
+        pass
+    # Otherwise, we back them up anyway, here.
+    goodrunsdir = os.path.join(cwd, 'finished_runs')
+    try:
+        os.mkdir(goodrunsdir)
     except OSError:
         # Directory exists.
         pass
@@ -243,18 +255,17 @@ def main(args):
         bq.upload(bqt_boot_pass, _TABLE_DATA)
         bq.upload(bqt_boot_fail, _TABLE_ERR)
         bq.upload(bqt_adb_speed, _TABLE_ADB)
+        _backup_logs(workdir, goodrunsdir)
     except:
         # First, forcibly log the exception so that it appears in our log file.
         logging.exception('TOP LEVEL EXCEPTION')
 
-        dst = os.path.join(backupdir,
-                           'work_%s' % time.strftime('%Y%m%d-%H%M%S'))
         try:
-            shutil.make_archive(dst, 'gztar', workdir, workdir)
+            _backup_logs(workdir, backupdir)
         except:
             logging.warning('Backup failed after earlier error. '
                             'Failed to archive %s to %s' %
-                            (workdir, dst))
+                            (workdir, backupdir))
         # Always re-raise the catch-all exception.
         raise
 
