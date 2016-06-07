@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.smoke;
 
+import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
@@ -28,6 +29,8 @@ import static org.junit.Assert.*;
 
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 
 /**
@@ -45,7 +48,7 @@ public class AppTest {
     public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
-     * Verifies the renderscript app runs on the emulator.
+     * Verifies an app runs on the emulator.
      * <p>
      * The test installs, launches, and uninstalls the app.
      * <p>
@@ -63,7 +66,7 @@ public class AppTest {
      *   </pre>
      */
     @Test
-    public void testAppInstallAndLaunch() throws Exception {
+    public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
         AppManager.installApp(instrumentation, "HelloCompute.apk");
@@ -71,5 +74,47 @@ public class AppTest {
         assertTrue(testFramework.getDevice().findObject(new UiSelector().resourceId(
                 APP_IMAGE_VIEW_ID)).exists());
         AppManager.uninstallApp(instrumentation, "RsHelloCompute", null);
+    }
+
+    /**
+     * Verify website is bookmarked.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578831
+     * <p>
+     *   <pre>
+     *   1. Launch emulator.
+     *   2. Open Browser app.
+     *   3. Tap on the address bar and enter espn.com
+     *   4. Open menu (3 vertical dots).
+     *   5. Tap on "Save to bookmarks" and tap OK.
+     *   6. Assert message that bookmark is added.
+     *   7. Open menu (3 vertical dots).
+     *   8. Tap on "Bookmarks"
+     *   Verify:
+     *   ESPN website is bookmarked.
+     *   </pre>
+     */
+    @Test
+    public void bookmarkWebSiteInBrowser() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        AppLauncher.launch(instrumentation, "Browser");
+        UiObject textField = device.findObject(
+                new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES));
+        textField.click();
+        textField.clearTextField();
+        textField.setText("espn.com");
+        device.pressEnter();
+        device.pressMenu();
+        device.findObject(new UiSelector().text("Save to bookmarks")).click();
+        device.findObject(new UiSelector().text("OK")).click();
+        device.pressMenu();
+        device.findObject(new UiSelector().text("Bookmarks")).click();
+        assertTrue("Cannot find ESPN bookmark",
+                device.findObject(new UiSelector().text("Bookmarks")).exists() &&
+                device.findObject(new UiSelector().textContains(
+                        "ESPN").resourceId(Res.BROWSER_BOOKMARKS_LABEL_RES)).exists());
     }
 }
