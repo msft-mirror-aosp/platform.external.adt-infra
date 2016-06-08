@@ -1,14 +1,3 @@
-# Copyright 2016 The Android Open Source Project
-#
-# This software is licensed under the terms of the GNU General Public
-# License version 2, as published by the Free Software Foundation, and
-# may be copied, distributed, and modified under those terms.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
 # This is a standalone script to parse emulator boot test log files
 # It does,
 # 1. read log files, extract boot time information
@@ -20,8 +9,6 @@
 # This file should be placed under [LogDIR]\parser\,
 # BigQuery schema should be placed under the same directory and named "boot_time_csv_schema.json"
 # The script also assume client secret file "LLDB_BUILD_SECRETS.json" exists under the same directory
-
-import bigquery
 
 import os
 import re
@@ -35,6 +22,9 @@ import traceback
 from logging.handlers import RotatingFileHandler
 from oauth2client.client import GoogleCredentials
 
+from apiclient.http import MediaFileUpload
+
+from googleapiclient import discovery
 from time import gmtime, strftime
 from shutil import copyfile
 
@@ -200,6 +190,76 @@ def parse_logs():
                 for zip_dir in [x for x in os.listdir(builder_dir) if x.endswith(".zip")]:
                     process_zipfile(zip_dir, builder, csv_data, csv_err, csv_adb)
 
+def load_data(data_path, table_id, schema_path):
+    """Loads the given data file into BigQuery.
+
+    Args:
+        schema_path: the path to a file containing a valid bigquery schema.
+            see https://cloud.google.com/bigquery/docs/reference/v2/tables
+        data_path: the name of the file to insert into the table.
+        project_id: The project id that the table exists under. This is also
+            assumed to be the project id this request is to be made under.
+        dataset_id: The dataset id of the destination table.
+        table_id: The table id to load data into.
+    """
+    if os.stat(data_path).st_size == 0:
+        logging.info("No data found in %s, skip uploading table %s.", data_path, table_id)
+        return
+    # Create a bigquery service object, using the application's default auth
+    logger.info('Upload %s to table %s', data_path, table_id)
+    credentials = GoogleCredentials.get_application_default()
+    bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
+
+    # Infer the data format from the name of the data file.
+    source_format = 'CSV'
+    if data_path[-5:].lower() == '.json':
+        source_format = 'NEWLINE_DELIMITED_JSON'
+
+    # Post to the jobs resource using the client's media upload interface. See:
+    # http://developers.google.com/api-client-library/python/guide/media_upload
+    insert_request = bigquery.jobs().insert(
+        projectId=project_id,
+        # Provide a configuration object. See:
+        # https://cloud.google.com/bigquery/docs/reference/v2/jobs#resource
+        body={
+            'configuration': {
+                'load': {
+                    'schema': {
+                        'fields': json.load(open(schema_path, 'r'))
+                    },
+                    'destinationTable': {
+                        'projectId': project_id,
+                        'datasetId': dataset_id,
+                        'tableId': table_id
+                    },
+                    'sourceFormat': source_format,
+                }
+            }
+        },
+        media_body=MediaFileUpload(
+            data_path,
+            mimetype='application/octet-stream'))
+    job = insert_request.execute()
+
+    logger.info('Waiting for job to finish...')
+
+    status_request = bigquery.jobs().get(
+        projectId=job['jobReference']['projectId'],
+        jobId=job['jobReference']['jobId'])
+
+    # Poll the job until it finishes.
+    while True:
+        result = status_request.execute(num_retries=2)
+
+        if result['status']['state'] == 'DONE':
+            if result['status'].get('errors'):
+                raise RuntimeError('\n'.join(
+                    e['message'] for e in result['status']['errors']))
+            logger.info('Job complete.')
+            return
+
+        time.sleep(1)
+
 if __name__ == "__main__":
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(parser_dir, "LLDB_BUILD_SECRETS.json")
 
@@ -215,12 +275,9 @@ if __name__ == "__main__":
         back_up()
         exit(0)
     try:
-        bq = bigquery.BigQuery(
-                project_id, dataset_id,
-                GoogleCredentials.get_application_default())
-        bq.upload(boot_schema_path, file_data, table_data)
-        bq.upload(boot_schema_path, file_err, table_err)
-        bq.upload(adb_schema_path, file_adb, table_adb)
+        load_data(file_data, table_data, boot_schema_path)
+        load_data(file_err, table_err, boot_schema_path)
+        load_data(file_adb, table_adb, adb_schema_path)
     except:
         logging.info(traceback.format_exc())
         back_up()
