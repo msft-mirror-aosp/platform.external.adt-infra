@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,9 +29,14 @@ import static org.junit.Assert.*;
 
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.test.uiautomator.By;
+import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+
+import java.util.List;
 
 
 /**
@@ -45,6 +51,7 @@ public class SettingsTest {
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(60);
+
 
     /**
      * Verifies Location page opens.
@@ -108,5 +115,55 @@ public class SettingsTest {
                 && device.findObject(new UiSelector().textContains("Contacts")).exists()
                 && device.findObject(new UiSelector().textContains("Phone")).exists()
                 && device.findObject(new UiSelector().description("Navigate up")).exists());
+    }
+
+    /**
+     * Verifies set date and set time fields are editable.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581295
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > Date and time
+     *   3. Automatic date & time option is enabled.
+     *   4. Disable Automatic date & time option.
+     *   5. Set date and Set time options are enabled.
+     *   6. Click on Set date option and Set time option.
+     *   Verify:
+     *   Calendar frame and Clock frame appears respectively.
+     *   </pre>
+     */
+    @Test
+    public void enableSetDateAndSetTime() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = testFramework.getDevice();
+        AppLauncher.launch(instrumentation, "Settings");
+        UiScrollable itemList = new UiScrollable(
+                new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+        itemList.setAsVerticalList();
+        itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
+        device.findObject(new UiSelector().text("Date & time")).click();
+
+        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
+                instrumentation,
+                By.clazz("android.widget.Switch"),
+                By.text("Automatic date & time"),
+                By.clazz("android.widget.ListView"));
+        assertTrue((switchWidget).isChecked());
+        assertTrue(!device.findObject(new UiSelector().text("Set date")).isEnabled());
+        assertTrue(!device.findObject(new UiSelector().text("Set time")).isEnabled());
+        switchWidget.click();
+        assertTrue(device.findObject(new UiSelector().text("Set date")).isEnabled());
+        assertTrue(device.findObject(new UiSelector().text("Set time")).isEnabled());
+        device.findObject(new UiSelector().text("Set date")).click();
+        assertTrue(device.findObject(
+                new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES)).exists());
+        device.findObject(new UiSelector().textContains("CANCEL")).click();
+        device.findObject(new UiSelector().text("Set time")).click();
+        assertTrue(device.findObject(
+                new UiSelector().resourceId(Res.ANDROID_TIME_HEADER_RES)).exists());
+        device.findObject(new UiSelector().textContains("CANCEL")).click();
     }
 }
