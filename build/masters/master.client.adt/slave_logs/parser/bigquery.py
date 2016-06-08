@@ -51,8 +51,12 @@ class BigQuery(object):
         Skips empty files.
         """
         bq_table.flush()
+        for data_path in bq_table.backing_files:
+            self._upload_one(bq_table, data_path, table_id)
+
+    def _upload_one(self, bq_table, data_path, table_id):
+        """The engine behind |upload|."""
         schema_path = bq_table.schema_path
-        data_path = bq_table.data_path
         logging.info('Uploading data to (project:%s, datatset:%s, table:%s) '
                      'from %s with schema %s' % (
                              self._project_id, self._dataset_id, table_id,
@@ -62,10 +66,8 @@ class BigQuery(object):
             logging.info('No data found. Skipping upload.')
             return
 
-        # Infer the data format from the name of the data file.
-        source_format = 'CSV'
-        if data_path[-5:].lower() == '.json':
-            source_format = 'NEWLINE_DELIMITED_JSON'
+        source_format = ('CSV' if bq_table.source_format == bq_table.FORMAT_CSV
+                         else 'NEWLINE_DELIMITED_JSON')
 
         # Post to the jobs resource using the client's media upload interface.
         # See:

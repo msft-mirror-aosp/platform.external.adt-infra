@@ -23,6 +23,7 @@
 
 import bigquery
 import bigquery_tables
+import cts_results_parser as ctsparser
 import simple_parsers as sp
 import site_config
 
@@ -36,6 +37,7 @@ import subprocess
 import sys
 import time
 import zipfile
+import uuid
 
 # TODO(pprabhu) Clean this up. Include the image/revision specific information
 # completely build.props file
@@ -53,6 +55,9 @@ _API_TO_IMAGE_BRANCH = {
         '24': 'nyc-emu-release',
 }
 def _get_branches(builder, file_path, api):
+    if builder.endswith('_CTS'):
+        return 'Unknown', 'Unknown'
+
     for x in _EMULATOR_BRANCHES:
         if builder.endswith(x):
             emu_branch = x
@@ -70,6 +75,7 @@ def _get_branches(builder, file_path, api):
         'boot_test_public_sysimage' in file_path)):
         logging.error('INVALID LOG...%s, skip ', file_path)
         return None, None
+
     return emu_branch, image_branch
 
 
@@ -111,7 +117,8 @@ def _process_boot_test_logs(zip_path, bqt_boot_pass, bqt_boot_fail,
                 emu_branch, image_branch = _get_branches(
                         build_row['builderName'], log_file, boot_row['api'])
                 if emu_branch is None or image_branch is None:
-                    pass
+                    continue
+
                 boot_row['emu_branch'] = emu_branch
                 boot_row['image_branch'] = image_branch
                 boot_row['emu_revision'] = build_prop.get(emu_branch) or 'sdk'
@@ -141,6 +148,94 @@ def _process_boot_test_logs(zip_path, bqt_boot_pass, bqt_boot_fail,
                     bqt_boot_fail.append_row(boot_row)
                 if adb_speed_row is not None:
                     bqt_adb_speed.append_row(adb_speed_row)
+
+
+_CTS_TEST_LOG_RE = re.compile('.*CTS_test/CTSTestCase_.*[^/]')
+_CTS_TEST_REGEXES = list(sp.AVD_REGEXES)
+_CTS_TEST_REGEXES += list(sp.BUILDBOT_REGEXES)
+_CTS_TEST_REGEXES += list(sp.CTS_REGEXES)
+def _process_cts_test_logs(zip_path, bqt_cts_run, bqt_cts_results):
+    logging.info('Processing CTS tests from |%s|.', zip_path)
+    with zipfile.ZipFile(zip_path, 'r') as log_dir:
+        log_files = [x for x in log_dir.namelist() if
+                     _CTS_TEST_LOG_RE.match(x)]
+        if not log_files:
+            # Found no CTS test logs.
+            return
+
+        build_row = {}
+        build_prop = sp.find_and_parse_build_prop(log_dir)
+        build_row['buildbotSlaveName'] = (build_prop.get('buildername')
+                                    .replace(' ', '_'))
+        build_row['buildbotRunId'] = build_prop.get('buildnumber')
+
+        for log_file in log_files:
+            logging.info('Processing CTS test log: |%s|' % log_file)
+            cts_row = dict(build_row)
+
+            with log_dir.open(log_file) as ifile:
+                # TODO(pprabhu) Add check to avoid uuid collisions.
+                run_uuid = str(uuid.uuid4())
+                cts_row['uuid'] = run_uuid
+                matches = sp.re_match_one_in_file(_CTS_TEST_REGEXES, ifile)
+                cts_row['systemImageApi'] = matches.get(sp.AVD_API)
+                cts_row['systemImageTag'] = matches.get(sp.AVD_TAG)
+                cts_row['systemImageAbi'] = matches.get(sp.AVD_ABI)
+                cts_row['avdDevice'] = matches.get(sp.AVD_DEVICE)
+                cts_row['avdRam'] = matches.get(sp.AVD_RAM)
+                cts_row['avdGpu'] = matches.get(sp.AVD_GPU)
+                cts_row['emulatorQemu'] = matches.get(sp.AVD_QEMU_ENGINE)
+                cts_row['numTestsPassed'] = matches.get(sp.CTS_NUM_TESTS_PASSED)
+                cts_row['numTestsFailed'] = matches.get(sp.CTS_NUM_TESTS_FAILED)
+                cts_row['numTestsNotExecuted'] = matches.get(
+                        sp.CTS_NUM_TESTS_NOT_EXECUTED)
+
+                emu_branch, image_branch = _get_branches(
+                        build_row['buildbotSlaveName'], log_file,
+                        cts_row['systemImageApi'])
+                assert emu_branch is not None
+                assert image_branch is not None
+
+                cts_row['emulatorBranch'] = emu_branch
+                cts_row['systemImageBranch'] = image_branch
+                cts_row['emulatorRevision'] = (build_prop.get(emu_branch) or
+                                               'sdk')
+                cts_row['systemImageBuildId'] = (
+                        build_prop.get('git_' + image_branch) or
+                        build_prop.get(image_branch) or 'sdk')
+
+                start_time = sp.parse_log_timestamp(
+                        matches.get(sp.BUILDBOT_START_TIME, ''))
+                if start_time is not None:
+                    cts_row['runStartTime'] = sp.bq_format_timestamp(start_time)
+                end_time = sp.parse_log_timestamp(
+                        matches.get(sp.BUILDBOT_END_TIME, ''))
+                if end_time is not None:
+                    cts_row['runEndTime'] = sp.bq_format_timestamp(end_time)
+
+                bqt_cts_run.append_row(cts_row)
+
+                cts_dir = matches.get(sp.CTS_LOG_DIR)
+                assert cts_dir is not None
+                cts_files = [
+                        x for x in log_dir.namelist() if
+                        x.endswith(os.path.join(cts_dir, 'testResult.xml'))]
+                if len(cts_files) != 1:
+                    logging.error(
+                            'Expected one CTS testResult.xml file, |%s|' %
+                            str(cts_files))
+                    continue
+
+                logging.debug('Extracting CTS results from: |%s|' %
+                              cts_files[0])
+                cts_results = ctsparser.extract_results(
+                        log_dir.open(cts_files[0]))
+                for result in cts_results:
+                    bqt_cts_results.append_row(
+                        {'f_uuid': run_uuid,
+                         'fullName': ctsparser.format_full_name(result),
+                         'result': result['Result']}
+                    )
 
 
 def _gs_offloader(zip_path, is_prod):
@@ -184,9 +279,19 @@ def _backup_logs(workdir, backupdir):
     shutil.make_archive(dst, 'gztar', workdir, workdir)
 
 
+def _try_make_dir(dirname):
+    try:
+        os.mkdir(dirname)
+    except OSError:
+        # Directory exists.
+        pass
+
+
 _TABLE_DATA = 'avd_to_time_data'
 _TABLE_ERR = 'avd_to_time_error'
 _TABLE_ADB = 'avd_to_adb_speed'
+_TABLE_CTS_RUN = 'cts_raw_run'
+_TABLE_CTS_RESULTS = 'cts_raw_results'
 def main(args):
     cwd = os.path.dirname(os.path.realpath(__file__))
     config = site_config.setup(cwd)
@@ -201,18 +306,10 @@ def main(args):
     os.mkdir(workdir)
     # In case of failure, any files created and logs are backed up here.
     backupdir = os.path.join(cwd, 'log_backups')
-    try:
-        os.mkdir(backupdir)
-    except OSError:
-        # Directory exists.
-        pass
+    _try_make_dir(backupdir)
     # Otherwise, we back them up anyway, here.
     goodrunsdir = os.path.join(cwd, 'finished_runs')
-    try:
-        os.mkdir(goodrunsdir)
-    except OSError:
-        # Directory exists.
-        pass
+    _try_make_dir(goodrunsdir)
 
     log_formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s')
@@ -237,24 +334,32 @@ def main(args):
             config[site_config.GCLOUD_BQ_DATASET_ID],
             o2cclient.GoogleCredentials.get_application_default())
     bqt_boot_pass = bigquery_tables.BootTimeTable(
-            os.path.join(workdir, 'AVD_to_time_data.csv'))
+            os.path.join(workdir, 'AVD_to_time_data'))
     bqt_boot_fail = bigquery_tables.BootTimeTable(
-            os.path.join(workdir, 'AVD_to_time_error.csv'))
+            os.path.join(workdir, 'AVD_to_time_error'))
     bqt_adb_speed = bigquery_tables.AdbSpeedTable(
-            os.path.join(workdir, 'AVD_to_adb_speed.csv'))
+            os.path.join(workdir, 'AVD_to_adb_speed'))
+    bqt_cts_run = bigquery_tables.CTSRawRun(
+            os.path.join(workdir, 'cts_run'))
+    bqt_cts_results = bigquery_tables.CTSRawResults(
+            os.path.join(workdir, 'cts_results'))
+
 
     try:
         _for_each_slave_run(slave_logs_dir,
-                            [(lambda x: _process_boot_test_logs(x,
-                                                                bqt_boot_pass,
-                                                                bqt_boot_fail,
-                                                                bqt_adb_speed)),
+                            [(lambda x: _process_boot_test_logs(
+                                    x, bqt_boot_pass, bqt_boot_fail,
+                                    bqt_adb_speed)),
+                             (lambda x: _process_cts_test_logs(
+                                     x, bqt_cts_run, bqt_cts_results)),
                              # Must be last as it removes the zip file.
                              (lambda x: _gs_offloader(
                                      x, config[site_config.IS_PROD]))])
         bq.upload(bqt_boot_pass, _TABLE_DATA)
         bq.upload(bqt_boot_fail, _TABLE_ERR)
         bq.upload(bqt_adb_speed, _TABLE_ADB)
+        bq.upload(bqt_cts_run, _TABLE_CTS_RUN)
+        bq.upload(bqt_cts_results, _TABLE_CTS_RESULTS)
         _backup_logs(workdir, goodrunsdir)
     except:
         # First, forcibly log the exception so that it appears in our log file.

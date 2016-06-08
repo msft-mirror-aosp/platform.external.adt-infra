@@ -1,6 +1,6 @@
 """Run CTS tests for emulator"""
 
-import cts_results_parser
+import cts_results_parser as ctsparser
 
 import json
 import os, platform
@@ -163,14 +163,11 @@ class CTSTestCase(EmuBaseTestCase):
         # others should remain in |ignored_fails|, but not in |required_passes|.
         required_passes = required_passes - ignored_fails
 
-        results = cts_results_parser.ExtractResults(cts_results_file)
+        results = ctsparser.extract_results(cts_results_file)
         fails = set()
         passes = set()
         for result in results:
-            full_name = '/'.join(
-                    [result[x] for x in
-                        ['PackageName', 'AppPackageName', 'TestSuiteName',
-                        'TestCaseName', 'TestName']])
+            full_name = ctsparser.format_full_name(results)
             if result['Result'] == 'fail':
                 fails.add(full_name)
             elif result['Result'] == 'pass':

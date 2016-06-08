@@ -50,13 +50,17 @@ class GenericBigQueryTable(object):
     SCHEMA_VALUE_TYPE_RECORD = 'record'
 
     # Control how many table entries can be kept in memory at any time.
-    MAX_OUTSTANDING_LINES = 1000
+    # This is a poor man's way to control the size of the data streaming
+    # request. Subclass may override this.
+    MAX_OUTSTANDING_LINES = 10000
 
-    def __init__(self, schema_file_path, out_file_path, source_format):
+    def __init__(self, schema_file_path, out_file_dir, source_format):
         """Args:
             schema_file: Path to the schema file for this table.
-            out_file_path: Ptah to the file where data for this table should be
-                    written to.
+            out_file_dir: Path prefix to the file where data for this table
+                    should be written to. This should be a directory that
+                    exists. Multiple files may be created inside it for the
+                    data.
             source_format: The format in which backing data should be stored.
                     Options: FORMAT_CSV and FORMAT_NEWLINE_DELIMITED_JSON.
         """
@@ -66,7 +70,9 @@ class GenericBigQueryTable(object):
                                  self.FORMAT_NEWLINE_DELIMITED_JSON]:
             raise BigQueryTableException('Unrecoginzed source format: %s' %
                                          self._source_format)
-        self._out_file_path = out_file_path
+        self._out_file_dir = out_file_dir
+        self._out_file_num = 0
+        self._out_files = []
 
         # Stores the data that is yet to be written to disk.
         # A list of rows. The way we store each row depends on |source_format|.
@@ -97,6 +103,12 @@ class GenericBigQueryTable(object):
 
         # Create an empty backing file to make sure we can write to the path.
         try:
+            os.mkdir(out_file_dir)
+        except OSError:
+            # Directory exists.
+            pass
+        try:
+            out_file_path = self._current_file()
             with open(out_file_path, 'w') as f:
                 f.flush()
         except IOError as e:
@@ -142,8 +154,9 @@ class GenericBigQueryTable(object):
         return self._schema_file_path
 
     @property
-    def data_path(self):
-        return self._out_file_path
+    def backing_files(self):
+        """Returns the list of files backing this table."""
+        return self._out_files
 
     def _extract_keys(self):
         for item in self._schema:
@@ -166,7 +179,8 @@ class GenericBigQueryTable(object):
             self._table_suffix_len = 0
 
     def _write_to_disk(self):
-        with open(self._out_file_path, 'a') as outfile:
+        out_file_path = self._current_file()
+        with open(out_file_path, 'w') as outfile:
             for row in self._table_suffix:
                 if self._source_format == self.FORMAT_NEWLINE_DELIMITED_JSON:
                     formatted_row = json.dumps(row)
@@ -177,20 +191,50 @@ class GenericBigQueryTable(object):
                 outfile.write('%s%s' % (formatted_row, os.linesep))
             outfile.flush()
         self._table_suffix = []
+        self._out_files.append(out_file_path)
+        self._out_file_num += 1
+
+    def _current_file(self):
+        ext = '.csv' if self._source_format == self.FORMAT_CSV else '.json'
+        return os.path.join(self._out_file_dir,
+                            ('data' + str(self._out_file_num) + ext))
+
 
 _BQ_SCHEMAS_DIR = 'bq_schemas'
 
+
 class BootTimeTable(GenericBigQueryTable):
     """A BigQuery table that stores boot time data"""
-    def __init__(self, out_file_path):
+
+    def __init__(self, out_file_dir):
         super(BootTimeTable, self).__init__(
                 os.path.join(_BQ_SCHEMAS_DIR, 'boot_time.json'),
-                out_file_path,
+                out_file_dir,
                 self.FORMAT_CSV)
+
 
 class AdbSpeedTable(GenericBigQueryTable):
     """A BigQuery table that stores boot time data"""
-    def __init__(self, out_file_path):
+
+    def __init__(self, out_file_dir):
         super(AdbSpeedTable, self).__init__(
-                os.path.join(_BQ_SCHEMAS_DIR, 'adb_speed.json'), out_file_path,
+                os.path.join(_BQ_SCHEMAS_DIR, 'adb_speed.json'), out_file_dir,
                 self.FORMAT_CSV)
+
+
+class CTSRawRun(GenericBigQueryTable):
+    """A BigQuery table that summarizes results for each CTS run."""
+
+    def __init__(self, out_file_dir):
+        super(CTSRawRun, self).__init__(
+                os.path.join(_BQ_SCHEMAS_DIR, 'cts_raw_run.json'),
+                out_file_dir, self.FORMAT_CSV)
+
+
+class CTSRawResults(GenericBigQueryTable):
+    """A BigQuery table that summarizes results for each CTS run."""
+
+    def __init__(self, out_file_dir):
+        super(CTSRawResults, self).__init__(
+                os.path.join(_BQ_SCHEMAS_DIR, 'cts_raw_results.json'),
+                out_file_dir, self.FORMAT_CSV)
