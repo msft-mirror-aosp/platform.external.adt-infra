@@ -19,8 +19,8 @@ def re_match_one_in_file(regexes, ifile):
 
     TODO(pprabhu): Update docstring.
     Args:
-        regexes: [(regex, (match_names))] A map from arbitrary keys to complied regex
-                objects to match against.
+        regexes: [(regex, (match_names))] A map from arbitrary keys to compiled
+                regex objects to match against.
         ifile: Input file opened in read mode.
     Returns:
         {regex_name: match_object}: A map from input regex_names to a tuple of
@@ -70,6 +70,16 @@ AVD_REGEXES = (
          (AVD_QEMU_ENGINE,)),
 )
 
+# Buildbot run related information.
+BUILDBOT_START_TIME = 'BUILDBOT_START_TIME'
+BUILDBOT_END_TIME = 'BUILDBOT_END_TIME'
+BUILDBOT_REGEXES = (
+        (re.compile("(.*) - INFO - Running - test_.*"),
+         (BUILDBOT_START_TIME,)),
+        (re.compile("(.*) - INFO - copy CTS log from .*"),
+         (BUILDBOT_END_TIME,)),
+)
+
 BOOT_TIME = 'BOOT_TIME'
 # This doesn't actually contain a value. The existence of this key in the result
 # implies boot failure.
@@ -89,9 +99,21 @@ BOOT_REGEXES = (
 ADB_PUSH_SPEED = 'ADB_PUSH_SPEED'
 ADB_PULL_SPEED = 'ADB_PULL_SPEED'
 ADB_SPEED_REGEXES = (
-    (re.compile('.*- INFO - AVD .*, adb push: (\d+) KB/s, adb pull: '
-                '(\d+) KB/s'),
-     (ADB_PUSH_SPEED, ADB_PULL_SPEED)),
+        (re.compile('.*- INFO - AVD .*, adb push: (\d+) KB/s, adb pull: '
+                    '(\d+) KB/s'),
+         (ADB_PUSH_SPEED, ADB_PULL_SPEED)),
+)
+
+CTS_LOG_DIR = 'CTS_LOG_DIR'
+CTS_NUM_TESTS_PASSED = 'CTS_NUM_TESTS_PASSED'
+CTS_NUM_TESTS_FAILED = 'CTS_NUM_TESTS_FAILED'
+CTS_NUM_TESTS_NOT_EXECUTED = 'CTS_NUM_TESTS_NOT_EXECUTED'
+CTS_REGEXES = (
+        (re.compile('.*- INFO - copy CTS log from .* to .*/CTS_test/(.*)'),
+         (CTS_LOG_DIR,)),
+        (re.compile('.* Pass: (\d+), Fail: (\d+), Not Executed: (\d+).*'),
+         (CTS_NUM_TESTS_PASSED, CTS_NUM_TESTS_FAILED,
+          CTS_NUM_TESTS_NOT_EXECUTED)),
 )
 
 
@@ -107,7 +129,36 @@ def find_and_parse_build_prop(log_dir):
         raise RuntimeError('Unexpected number of build.prop files: %s' %
                            str(files))
 
-    build_prop = {}
     with log_dir.open(files[0], 'r') as f:
         data = json.load(f)
         return data
+
+
+_TIMESTAMP_RE = re.compile('([0-9]+)-([0-9]+)-([0-9]+) '
+                           '([0-9]+):([0-9]+):([0-9]+),([0-9]+)')
+def parse_log_timestamp(ts):
+    """Parses the timestamp |ts| dropped by buildbot slave.
+
+    Returns (year, month, day, hour, minute, second) where each value is a
+    number.
+    """
+    m = _TIMESTAMP_RE.match(ts)
+    if m is None:
+        return None
+    try:
+        ret = [int(m.groups()[i]) for i in range(5)]
+        seconds = int(m.groups()[5])
+        mills = int(m.groups()[6])
+        ret.append(seconds + mills/1000.0)
+        return tuple(ret)
+    except ValueError:
+        return None
+
+def bq_format_timestamp(ts):
+    """Format a timestamp returned by |parse_log_timestamp|.
+
+    ... to a bigquery friendly string.
+    """
+    if ts is None:
+        return None
+    return '%04d-%02d-%02d %02d:%02d:%09.6f' % ts
