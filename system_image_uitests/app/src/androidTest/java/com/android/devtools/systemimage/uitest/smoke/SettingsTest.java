@@ -41,6 +41,8 @@ public class SettingsTest {
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
+    private static final String APP_IMAGE_SETTINGS_ID = "com.android.settings:id/advanced";
+
     /**
      * Verifies Location page opens.
      * <p>
@@ -68,5 +70,41 @@ public class SettingsTest {
         device.findObject(new UiSelector().textContains("Google")).clickAndWaitForNewWindow();
         device.findObject(new UiSelector().textContains("Location")).clickAndWaitForNewWindow();
         assertTrue(device.findObject(new UiSelector().textContains("Location")).exists());
+    }
+
+    /**
+     * Verifies the App permissions screen loads.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581153
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > Apps
+     *   3. Click on the gear icon.
+     *   4. Click on App permissions.
+     *   Verify:
+     *   App permissions page loads. Able to identify various apps on the page.
+     *   </pre>
+     */
+    @Test
+    public void displayConfigureAppPermissions() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        AppLauncher.launch(instrumentation, "Settings");
+        device.findObject(new UiSelector().textContains("Apps")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().resourceId(APP_IMAGE_SETTINGS_ID))
+                .clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().textContains("App permissions"))
+                .clickAndWaitForNewWindow();
+
+        assertTrue(device.findObject(new UiSelector().textContains("App permissions")).exists()
+                && device.findObject(new UiSelector().textContains("Calendar")).exists()
+                && device.findObject(new UiSelector().textContains("Camera")).exists()
+                && device.findObject(new UiSelector().textContains("Contacts")).exists()
+                && device.findObject(new UiSelector().textContains("Phone")).exists()
+                && device.findObject(new UiSelector().description("Navigate up")).exists());
     }
 }
