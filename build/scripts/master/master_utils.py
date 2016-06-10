@@ -266,7 +266,7 @@ class WrongHostException(Exception):
 def AutoSetupMaster(c, active_master, mail_notifier=False,
                     mail_notifier_mode=None,
                     public_html=None, templates=None,
-                    order_console_by_time=False,
+                    order_console_by_time=True,
                     tagComparator=None,
                     customEndpoints=None,
                     enable_http_status_push=False,
