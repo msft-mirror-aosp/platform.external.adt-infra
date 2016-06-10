@@ -11,8 +11,10 @@
 
 """Some standard parsing functions used to parse common log files"""
 
+import datetime
 import json
 import re
+
 
 def re_match_one_in_file(regexes, ifile):
     """Searches for the first match of given regular expressions in the file.
@@ -134,31 +136,45 @@ def find_and_parse_build_prop(log_dir):
         return data
 
 
-_TIMESTAMP_RE = re.compile('([0-9]+)-([0-9]+)-([0-9]+) '
-                           '([0-9]+):([0-9]+):([0-9]+),([0-9]+)')
+_LOG_TIMESTAMP_RE = re.compile('([0-9]+)-([0-9]+)-([0-9]+) '
+                               '([0-9]+):([0-9]+):([0-9]+),([0-9]+)')
 def parse_log_timestamp(ts):
     """Parses the timestamp |ts| dropped by buildbot slave.
 
-    Returns (year, month, day, hour, minute, second) where each value is a
-    number.
+    Returns: datetime.datetime.
     """
-    m = _TIMESTAMP_RE.match(ts)
+    m = _LOG_TIMESTAMP_RE.match(ts)
     if m is None:
         return None
+
     try:
-        ret = [int(m.groups()[i]) for i in range(5)]
-        seconds = int(m.groups()[5])
-        mills = int(m.groups()[6])
-        ret.append(seconds + mills/1000.0)
-        return tuple(ret)
+        print(m.groups()[6])
+        return datetime.datetime(
+                *[int(m.groups()[i]) for i in range(6)],
+                microsecond=int(m.groups()[6])*1000)
     except ValueError:
         return None
 
-def bq_format_timestamp(ts):
-    """Format a timestamp returned by |parse_log_timestamp|.
 
-    ... to a bigquery friendly string.
-    """
+def bq_format_timestamp(ts):
+    """Format a datetime.datetime to a bigquery friendly string."""
     if ts is None:
         return None
-    return '%04d-%02d-%02d %02d:%02d:%09.6f' % ts
+    return ts.strftime('%Y-%m-%d %H:%M:%S.%f')
+
+
+# We currently ignore timezone information.
+_SQL_TIMESTAMP_RE = re.compile('([0-9]+)-([0-9]+)-([0-9]+) '
+                               '([0-9]+):([0-9]+):([0-9]+)(?:.([0-9]+))?.*')
+def bq_parse_timestamp(ts):
+    """Parse an SQL TIMESTAMP string into datetime.datetime."""
+    if ts is None or not ts:
+        return None
+    m = _SQL_TIMESTAMP_RE.match(ts)
+    ms = 0
+    if m.groups()[6] is not None:
+        ms = m.groups()[6]
+        ms += (6 - len(ms)) * '0'
+        ms = int(ms)
+    return datetime.datetime(*[int(m.groups()[i]) for i in range(6)],
+                             microsecond=ms)
