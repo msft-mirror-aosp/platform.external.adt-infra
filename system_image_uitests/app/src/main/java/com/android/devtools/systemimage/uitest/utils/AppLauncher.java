@@ -55,12 +55,18 @@ public class AppLauncher {
         // Note that the direction of scrolling, even the res-id could change with future Android
         // releases. We may need a check here to determine the launcher and res-id used to decide
         // what appropriate gestures to perform.
-        appList.setAsVerticalList();
-        UiObject app =
-                appList.getChildByText(
-                        new UiSelector().className("android.widget.TextView"),
-                        appName
-                );
+        UiObject app;
+        try {
+            appList.setAsVerticalList();
+            app = appList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"),
+                    appName);
+        } catch (UiObjectNotFoundException e) {
+            appList.setAsHorizontalList();
+            app = appList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"),
+                    appName);
+        }
         app.clickAndWaitForNewWindow();
     }
 }
