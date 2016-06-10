@@ -155,7 +155,7 @@ public class AccountManager {
             UiObject usernameText = device.findObject(new UiSelector().text(username));
             if (usernameText.exists()) {
                 usernameText.clickAndWaitForNewWindow();
-                device.findObject(new UiSelector().description("More optionsadasdasd"))
+                device.findObject(new UiSelector().description("More options"))
                         .clickAndWaitForNewWindow();
                 device.findObject(new UiSelector().text("Remove account"))
                         .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
