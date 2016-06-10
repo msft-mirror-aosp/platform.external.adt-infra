@@ -24,6 +24,7 @@ import org.hamcrest.core.StringStartsWith;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -42,8 +43,12 @@ import android.support.test.uiautomator.UiSelector;
 public class CrashWatcherTest {
     @Rule
     public final ExpectedException exception = ExpectedException.none();
+
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     @Test
     public void testCrashWatcher() throws Exception {

@@ -24,6 +24,7 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import android.app.Instrumentation;
@@ -39,8 +40,13 @@ import android.support.test.uiautomator.UiSelector;
 public class NetworkIOTest {
     private static final String BROWSER_URL_TEXT_FIELD = "com.android.browser:id/url";
     private static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
+
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
+
 
     /**
      * Verifies test browser successfully loads a web page.

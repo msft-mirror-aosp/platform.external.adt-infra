@@ -21,6 +21,7 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import android.app.Instrumentation;
@@ -33,6 +34,9 @@ import android.support.test.runner.AndroidJUnit4;
 public class AppLauncherTest {
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     @Test
     public void testAppLauncher() throws Exception {
