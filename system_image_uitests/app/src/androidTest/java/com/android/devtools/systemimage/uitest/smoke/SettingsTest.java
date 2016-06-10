@@ -22,6 +22,7 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
@@ -37,11 +38,13 @@ import android.support.test.uiautomator.UiSelector;
  */
 @RunWith(AndroidJUnit4.class)
 public class SettingsTest {
+    private static final String APP_IMAGE_SETTINGS_ID = "com.android.settings:id/advanced";
 
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
-    private static final String APP_IMAGE_SETTINGS_ID = "com.android.settings:id/advanced";
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * Verifies Location page opens.

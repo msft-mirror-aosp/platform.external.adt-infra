@@ -23,6 +23,7 @@ import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import android.app.Instrumentation;
@@ -39,6 +40,9 @@ import java.io.InputStreamReader;
 public class ShellUtilTest {
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * Tests the integrity of Shell utilities.
