@@ -22,6 +22,7 @@ import com.android.devtools.systemimage.uitest.utils.AppManager;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
@@ -34,11 +35,14 @@ import android.support.test.uiautomator.UiSelector;
  */
 @RunWith(AndroidJUnit4.class)
 public class AppTest {
+    private static final String APP_IMAGE_VIEW_ID =
+            "com.example.android.rs.hellocompute:id/displayin";
+
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
-    private static final String APP_IMAGE_VIEW_ID =
-            "com.example.android.rs.hellocompute:id/displayin";
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * Verifies the renderscript app runs on the emulator.

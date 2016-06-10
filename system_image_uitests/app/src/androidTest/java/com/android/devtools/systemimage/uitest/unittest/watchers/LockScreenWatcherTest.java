@@ -22,6 +22,7 @@ import com.android.devtools.systemimage.uitest.watchers.LockScreenWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import android.app.Instrumentation;
@@ -35,6 +36,9 @@ import android.support.test.uiautomator.UiDevice;
 public class LockScreenWatcherTest {
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     @Test
     public void testLockScreenWatcher() throws Exception {
