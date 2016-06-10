@@ -25,6 +25,7 @@ import com.android.devtools.systemimage.uitest.watchers.VpnPopupWatcher;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import android.app.Instrumentation;
@@ -44,6 +45,9 @@ public class VpnTest {
 
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     private static boolean verifyVpnStatus(final UiDevice device) throws Exception {
         // Verify that a VPN lock icon is on the status bar.

@@ -22,6 +22,7 @@ import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import android.app.Instrumentation;
@@ -37,6 +38,9 @@ import android.support.test.uiautomator.UiSelector;
 public class AddGoogleAccountTest {
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(60);
 
     /**
      * Verifies able to add a Google account using Contacts app.
