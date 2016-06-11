@@ -32,9 +32,12 @@ class FlakinessPipline(object):
     TABLE_STEPS = 'steps'
 
     TAG_TRANSITION = 'transition'
+    TAG_COMPLETE = 'complete'
 
     STATE_STARTED = 'started'
     STATE_FINISHED = 'finished'
+    STATE_SUCCESS = 'success'
+    STATE_FAILURE = 'failure'
 
     QUERY_NOW = """
     SELECT FORMAT_UTC_USEC(NOW())
@@ -55,6 +58,12 @@ class FlakinessPipline(object):
         self._sync_time()
         self._transition_start()
         old_steps = self._query_current_steps()
+        old_steps = self._marshall_steps(old_steps)
+        if self.TAG_COMPLETE in old_steps:
+            self._cleanup_workspace()
+            self.run()
+            return
+
         new_steps = self._take_actions(old_steps)
         self._transition_commit(new_steps)
 
@@ -78,22 +87,16 @@ class FlakinessPipline(object):
 
     def _transition_start(self):
         table_steps = bigquery_tables.PipelineSteps(self._workdir)
-        table_steps.append_row({
-                'timestamp': sp.bq_format_timestamp(self._synced_now()),
-                'tag': self.TAG_TRANSITION,
-                'state': self.STATE_STARTED
-        })
+        table_steps.append_row(self._make_step_row(
+                self.TAG_TRANSITION, self.STATE_STARTED))
         self._bigquery_ws.upload(table_steps, self.TABLE_STEPS)
 
     def _transition_commit(self, new_steps):
         table_steps = bigquery_tables.PipelineSteps(self._workdir)
         for step in new_steps:
             table_steps.append_row(step)
-        table_steps.append_row({
-                'timestamp': sp.bq_format_timestamp(self._synced_now()),
-                'tag': self.TAG_TRANSITION,
-                'state': self.STATE_FINISHED
-        })
+        table_steps.append_row(self._make_step_row(
+                self.TAG_TRANSITION, self.STATE_FINISHED))
         self._bigquery_ws.upload(table_steps, self.TABLE_STEPS)
 
     def _query_current_steps(self):
@@ -101,9 +104,50 @@ class FlakinessPipline(object):
                 self._flatten(self.QUERY_GET_STEPS),
                 bigquery_tables.PipelineSteps.SCHEMA_PATH)
 
+    def _make_step_row(self, tag, state):
+        return {
+                'timestamp': sp.bq_format_timestamp(self._synced_now()),
+                'tag': tag, 'state': state
+        }
+
+    def _marshall_steps(self, steps):
+        old_steps = {}
+        for step in steps:
+            tag = step['tag']
+            state = step['state']
+            if tag == self.TAG_TRANSITION:
+                continue
+            if tag not in old_steps:
+                old_steps[tag] = set()
+            old_steps[tag].add(state)
+        return old_steps
+
+    def _seal_steps(self, steps, is_good):
+        if is_good:
+            steps.append(self._make_step_row(
+                    self.TAG_COMPLETE, self.STATE_SUCCESS))
+        else:
+            steps.append(self._make_step_row(
+                    self.TAG_COMPLETE, self.STATE_FAILURE))
+
     def _take_actions(self, old_steps):
+        new_steps = []
         pprint.pprint(old_steps)
-        return []
+
+        # Example step.
+        if 'example_step' not in old_steps:
+            new_steps.append(self._make_step_row('example_step',
+                                                 self.STATE_STARTED))
+        elif self.STATE_FINISHED in old_steps['example_step']:
+            self._seal_steps(new_steps, True)
+        else:
+            new_steps.append(self._make_step_row('example_step',
+                                                 self.STATE_FINISHED))
+        return new_steps
+
+    def _cleanup_workspace(self):
+        logging.info('### Cleaning up workspace for a new run.')
+        self._bigquery_ws.delete(self.TABLE_STEPS)
 
 
 def _try_make_dir(dirname):
