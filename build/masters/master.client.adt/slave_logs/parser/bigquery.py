@@ -9,6 +9,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+import simple_parsers as sp
+
 import collections
 import json
 import logging
@@ -137,6 +139,10 @@ class BigQuery(object):
         self._bigquery = discovery.build('bigquery', 'v2',
                                          credentials=credentials)
 
+    @property
+    def dataset(self):
+        return self._dataset_id
+
     def upload(self, bq_table, table_id):
         """Uploads data from GenericBigQueryTable |bq_tale| to |table_id|.
 
@@ -167,17 +173,22 @@ class BigQuery(object):
             done += concurrency
         logging.info('Upload complete.')
 
-    def batch_query(self, query_template, destination_table):
+    def batch_query(self, query_template, destination_table,
+                    destination_dataset=None):
         """Run a query on bigquery in batch mode.
 
         Runs a query on bigquery in batch mode. The result of the query is
         written to |destination_table|.
         Query should be specified as a templated string where all occurences of
         DATASET_ID will be replaced with the current dataset id.
+
+        If provided, |destination_table| will be created/appended to in the
+        |destination_dataset|.
         """
         return self._run_async_query(
                 self._format_query(query_template),
-                destination_table)
+                destination_dataset=destination_dataset,
+                destination_table=destination_table)
 
     def sync_query(self, query_template, return_table_schema, timeout_s=60):
         """Runs a synchronous query and returns the result.
@@ -185,8 +196,16 @@ class BigQuery(object):
         Args:
             query_template: A templated string where all occurences of
                     DATASET_ID will be replaced with the current dataset id.
-        Returns: TODO(pprabhu) describe the type of returned object.
+            return_table_schema: A path to a schema file for the returned data,
+                    or a list(dict) specifying the schema.
+        Returns: A list of dicts, where each dict is one row of data:
+                [{column_name: value}] with |value| in the correct python data
+                type.
         """
+        if isinstance(return_table_schema, str):
+            with open(return_table_schema, 'r') as f:
+                return_table_schema = json.load(f)
+
         query = self._format_query(query_template)
         logging.debug('Running (de-templated) query: |%s|', query)
         job_id = self._run_async_query(
@@ -217,7 +236,7 @@ class BigQuery(object):
 
         return self._marshall_query_result(rows, return_table_schema)
 
-    def job_status(self, job_id):
+    def job_completed(self, job_id):
         """Check the status of the indicated job.
 
         Returns: True if the job completed successfully, False if it is still
@@ -241,8 +260,8 @@ class BigQuery(object):
         raise BigQueryException('Job %s failed.' % (job_id,))
 
     def _run_async_query(self, query,
-                         destination=None, batch_mode=True,
-                         large_tables_mode=True):
+                         destination_dataset=None, destination_table=None,
+                         batch_mode=True, large_tables_mode=True):
         job_id = str(uuid.uuid4())
         body = {
                 'jobReference': {
@@ -257,15 +276,19 @@ class BigQuery(object):
                         }
                 }
         }
-        if destination is not None:
-            body['configuration']['query']['destinationTable'] = {
+        query_config = body['configuration']['query']
+        if destination_dataset is None:
+            destination_dataset = self._dataset_id
+        if destination_table is not None:
+            query_config['destinationTable'] = {
                     'projectId': self._project_id,
-                    'datasetId': self._dataset_id,
-                    'tableId': destination
+                    'datasetId': destination_dataset,
+                    'tableId': destination_table
             }
+            query_config['createDisposition'] = 'CREATE_IF_NEEDED'
+            query_config['writeDisposition'] = 'WRITE_APPEND'
         if large_tables_mode:
             body['configuration']['query']['allowLargeResults'] = True
-        pprint.pprint(body)
 
         insert_request = self._bigquery.jobs().insert(
                 projectId=self._project_id,
@@ -274,14 +297,14 @@ class BigQuery(object):
 
     def _format_query(self, query_template):
         return query_template.replace(self.QUERY_TEMPLATE_PARAMTER,
-                                      self._dataset_id)
+                                      self._dataset_id).strip()
 
     def _marshall_query_result(self, result, schema):
         num_columns = len(schema)
         names = [x['name'] for x in schema]
-        types = [x['type'] for x in schema]
+        types = [x['type'].lower() for x in schema]
         allowed_types = set(['string', 'integer', 'float', 'timestamp'])
-        contained_types = set([x.lower() for x in types])
+        contained_types = set([x for x in types])
         if contained_types - allowed_types:
             raise BigQueryException('Schema contains disallowed types: %s' %
                                     (str(contained_types - allowed_types),))
@@ -300,6 +323,8 @@ class BigQuery(object):
                     value = int(value)
                 elif types[c] == 'float':
                     value = float(value)
+                elif types[c] == 'timestamp':
+                    value = sp.bq_parse_timestamp(value)
                 marshalled_row[names[c]] = value
             marshalled.append(marshalled_row)
         return marshalled
