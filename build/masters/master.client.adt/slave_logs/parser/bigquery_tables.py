@@ -38,6 +38,9 @@ class GenericBigQueryTable(object):
     disk.
     """
 
+    # Subclasses must define a class variable SCHEMA_PATH pointing to the schema
+    # to use.
+
     # Backing data formats.
     FORMAT_CSV = 'CSV'
     FORMAT_NEWLINE_DELIMITED_JSON = 'NEWLINE_DELIMITED_JSON'
@@ -54,9 +57,8 @@ class GenericBigQueryTable(object):
     # request. Subclass may override this.
     MAX_OUTSTANDING_LINES = 10000
 
-    def __init__(self, schema_file_path, out_file_dir, source_format):
+    def __init__(self, out_file_dir, source_format):
         """Args:
-            schema_file: Path to the schema file for this table.
             out_file_dir: Path prefix to the file where data for this table
                     should be written to. This should be a directory that
                     exists. Multiple files may be created inside it for the
@@ -64,7 +66,8 @@ class GenericBigQueryTable(object):
             source_format: The format in which backing data should be stored.
                     Options: FORMAT_CSV and FORMAT_NEWLINE_DELIMITED_JSON.
         """
-        self._schema_file_path = schema_file_path
+        assert(self.SCHEMA_PATH)
+        self._schema_file_path = self.SCHEMA_PATH
         self._source_format = source_format
         if source_format not in [self.FORMAT_CSV,
                                  self.FORMAT_NEWLINE_DELIMITED_JSON]:
@@ -83,15 +86,15 @@ class GenericBigQueryTable(object):
         self._table_suffix_len = 0
 
         try:
-            with open(schema_file_path, 'r') as f:
+            with open(self._schema_file_path, 'r') as f:
                 self._schema = json.load(f)
         except ValueError as e:
             raise BigQueryTableException(
                     'Failed to load schema from |%s|: %s' %
-                    (schema_file_path, str(e)))
+                    (self._schema_file_path, str(e)))
         if not self._schema:
             raise BigQueryTableException('Loaded empty schema from |%s|' %
-                                         schema_file_path)
+                                         self._schema_file_path)
 
         self._keys = []
         if self._source_format == self.FORMAT_CSV:
@@ -206,35 +209,43 @@ _BQ_SCHEMAS_DIR = 'bq_schemas'
 class BootTimeTable(GenericBigQueryTable):
     """A BigQuery table that stores boot time data"""
 
+    SCHEMA_PATH = os.path.join(_BQ_SCHEMAS_DIR, 'boot_time.json'),
+
     def __init__(self, out_file_dir):
-        super(BootTimeTable, self).__init__(
-                os.path.join(_BQ_SCHEMAS_DIR, 'boot_time.json'),
-                out_file_dir,
-                self.FORMAT_CSV)
+        super(BootTimeTable, self).__init__(out_file_dir, self.FORMAT_CSV)
 
 
 class AdbSpeedTable(GenericBigQueryTable):
     """A BigQuery table that stores boot time data"""
 
+    SCHEMA_PATH = os.path.join(_BQ_SCHEMAS_DIR, 'adb_speed.json'),
+
     def __init__(self, out_file_dir):
-        super(AdbSpeedTable, self).__init__(
-                os.path.join(_BQ_SCHEMAS_DIR, 'adb_speed.json'), out_file_dir,
-                self.FORMAT_CSV)
+        super(AdbSpeedTable, self).__init__(out_file_dir, self.FORMAT_CSV)
 
 
 class CTSRawRun(GenericBigQueryTable):
     """A BigQuery table that summarizes results for each CTS run."""
 
+    SCHEMA_PATH = os.path.join(_BQ_SCHEMAS_DIR, 'cts_raw_run.json'),
+
     def __init__(self, out_file_dir):
-        super(CTSRawRun, self).__init__(
-                os.path.join(_BQ_SCHEMAS_DIR, 'cts_raw_run.json'),
-                out_file_dir, self.FORMAT_CSV)
+        super(CTSRawRun, self).__init__(out_file_dir, self.FORMAT_CSV)
 
 
 class CTSRawResults(GenericBigQueryTable):
     """A BigQuery table that summarizes results for each CTS run."""
 
+    SCHEMA_PATH = os.path.join(_BQ_SCHEMAS_DIR, 'cts_raw_results.json'),
+
     def __init__(self, out_file_dir):
-        super(CTSRawResults, self).__init__(
-                os.path.join(_BQ_SCHEMAS_DIR, 'cts_raw_results.json'),
-                out_file_dir, self.FORMAT_CSV)
+        super(CTSRawResults, self).__init__(out_file_dir, self.FORMAT_CSV)
+
+
+class PipelineSteps(GenericBigQueryTable):
+    """The table that keeps tracks of in-flight pipeline steps."""
+
+    SCHEMA_PATH = os.path.join(_BQ_SCHEMAS_DIR, 'pipeline_steps.json')
+
+    def __init__(self, out_file_dir):
+        super(PipelineSteps, self).__init__(out_file_dir, self.FORMAT_CSV)

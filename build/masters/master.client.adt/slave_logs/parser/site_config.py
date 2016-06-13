@@ -11,11 +11,14 @@
 
 """Site specific configuration to allow easy testing / site migration"""
 
+
 import os
 import os.path
 
+
 GCLOUD_PROJECT_ID = 'GCLOUD_PROJECT_ID'
 GCLOUD_BQ_DATASET_ID = 'GCLOUD_BQ_DATASET_ID'
+GCLOUD_BQ_WORKSPACE_DATASET_ID = 'GCLOUD_BQ_WORKSPACE_DATASET_ID'
 IS_PROD = 'IS_PROD'
 def setup(root_dir):
     """Sets up various site-specific stuff.
@@ -45,8 +48,10 @@ def setup(root_dir):
         raise RuntimeError('TODO(pprabhu) Verify these.')
         config[GCLOUD_PROJECT_ID] = 'android-devtools-lldb-build'
         config[GCLOUD_BQ_DATASET_ID] = 'emu_build'
+        config[GCLOUD_BQ_WORKSPACE_DATASET_ID] = 'emu_build_ws'
     else:
         config[GCLOUD_PROJECT_ID] = 'google.com:android-devtools-emulator-1307'
         config[GCLOUD_BQ_DATASET_ID] = 'developer_scratch'
+        config[GCLOUD_BQ_WORKSPACE_DATASET_ID] = 'developer_scratch_ws'
 
     return config
