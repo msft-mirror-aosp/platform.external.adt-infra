@@ -167,7 +167,7 @@ class CTSTestCase(EmuBaseTestCase):
         fails = set()
         passes = set()
         for result in results:
-            full_name = ctsparser.format_full_name(results)
+            full_name = ctsparser.format_full_name(result)
             if result['Result'] == 'fail':
                 fails.add(full_name)
             elif result['Result'] == 'pass':
