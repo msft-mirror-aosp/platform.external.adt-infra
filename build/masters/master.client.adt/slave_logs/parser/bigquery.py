@@ -173,6 +173,12 @@ class BigQuery(object):
             done += concurrency
         logging.info('Upload complete.')
 
+    def delete(self, table_name):
+        """Deletes the specific table, synchronously."""
+        self._bigquery.tables().delete(projectId=self._project_id,
+                                       datasetId=self._dataset_id,
+                                       tableId=table_name).execute()
+
     def batch_query(self, query_template, destination_table,
                     destination_dataset=None):
         """Run a query on bigquery in batch mode.
