@@ -27,6 +27,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import android.app.Instrumentation;
+import android.os.Bundle;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 
@@ -37,6 +38,7 @@ public class SystemImageTestFramework implements TestRule {
 
     private final Instrumentation mInstrumentation = InstrumentationRegistry.getInstrumentation();
     private final UiDevice mDevice = UiDevice.getInstance(mInstrumentation);
+    private final Bundle args = InstrumentationRegistry.getArguments();
 
     public Instrumentation getInstrumentation() {
         return mInstrumentation;
@@ -44,6 +46,22 @@ public class SystemImageTestFramework implements TestRule {
 
     public UiDevice getDevice() {
         return mDevice;
+    }
+
+    public String getApi() {
+        return args.getString("api");
+    }
+
+    public String getAbi() {
+        return args.getString("abi");
+    }
+
+    public String getTag() {
+        return args.getString("tag");
+    }
+
+    public String getOrigin() {
+        return args.getString("origin");
     }
 
     @Override
