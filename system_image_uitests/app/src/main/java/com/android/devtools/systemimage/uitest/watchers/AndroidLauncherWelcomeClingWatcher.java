@@ -44,10 +44,8 @@ public class AndroidLauncherWelcomeClingWatcher implements UiWatcher {
 
     @Override
     public boolean checkForCondition() {
-        UiObject launcherCling =
-                mDevice.findObject(
-                        new UiSelector().resourceId(Res.ANDROID_LAUNCHER_WELCOME_CLING_RES)
-                );
+        UiObject launcherCling = mDevice.findObject(
+                new UiSelector().resourceIdMatches(Res.ANDROID_LAUNCHER_WELCOME_CLING_RES));
         try {
             if (launcherCling.exists()) {
                 launcherCling.click();
