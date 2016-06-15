@@ -37,8 +37,8 @@ public class GoogleNowWelcomeViewWatcher implements UiWatcher {
 
     @Override
     public boolean checkForCondition() {
-        UiObject skipButton =
-                mDevice.findObject(new UiSelector().resourceId(Res.GOOGLE_NOW_WELCOME_SKIP_RES));
+        UiObject skipButton = mDevice.findObject(
+                new UiSelector().resourceIdMatches(Res.GOOGLE_NOW_WELCOME_SKIP_RES));
         try {
             if (skipButton.exists()) {
                 skipButton.clickAndWaitForNewWindow();
