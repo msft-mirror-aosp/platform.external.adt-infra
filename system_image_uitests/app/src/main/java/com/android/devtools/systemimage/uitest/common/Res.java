@@ -29,9 +29,10 @@ public class Res {
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
             "com.android.settings:id/container_material";
     public static final String ANDROID_WELCOME_CLING_RES =
-            "com.google.android.googlequicksearchbox:id/cling_dismiss_longpress_info";
+            "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
+                    + "/cling_dismiss_longpress_info";
     public static final String ANDROID_LAUNCHER_WELCOME_CLING_RES =
-            "com.android.launcher:id/cling_dismiss";
+            "com.android.launcher\\d*:id/cling_dismiss";
     public static final String GOOGLE_NOW_WELCOME_SKIP_RES =
-            "com.google.android.googlequicksearchbox:id/decline_button";
+            "com.google.android.googlequicksearchbox\\d*:id/decline_button";
 }
