@@ -43,8 +43,8 @@ public class AndroidWelcomeClingWatcher implements UiWatcher {
 
     @Override
     public boolean checkForCondition() {
-        UiObject androidCling =
-                mDevice.findObject(new UiSelector().resourceId(Res.ANDROID_WELCOME_CLING_RES));
+        UiObject androidCling = mDevice.findObject(
+                new UiSelector().resourceIdMatches(Res.ANDROID_WELCOME_CLING_RES));
         try {
             if (androidCling.exists()) {
                 androidCling.click();
