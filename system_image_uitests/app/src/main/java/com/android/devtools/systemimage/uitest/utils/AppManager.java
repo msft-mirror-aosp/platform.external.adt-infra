@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+// TODO(pallavi): add an openSystemAppList() into this fixture to click "Show system".
 public class AppManager {
 
     private AppManager() {
@@ -174,7 +175,15 @@ public class AppManager {
         }
     }
 
-    private static void openAppList(Instrumentation instrumentation)
+    /**
+     * Clicks "Settings" and "Apps" options to launch the "Apps" page.
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     *
+     * @throws UiObjectNotFoundException if it fails to find a UI widget.
+     */
+    public static void openAppList(Instrumentation instrumentation)
             throws UiObjectNotFoundException {
         // Open settings
         AppLauncher.launch(instrumentation, "Settings");
