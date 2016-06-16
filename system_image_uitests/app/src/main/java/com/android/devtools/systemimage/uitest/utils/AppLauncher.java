@@ -49,7 +49,7 @@ public class AppLauncher {
         device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
         UiScrollable appList =
                 new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.LAUNCHER_LIST_CONTAINER_RES_REGEX)
+                        new UiSelector().resourceIdMatches(Res.LAUNCHER_LIST_CONTAINER_RES)
                 );
 
         // Note that the direction of scrolling, even the res-id could change with future Android
