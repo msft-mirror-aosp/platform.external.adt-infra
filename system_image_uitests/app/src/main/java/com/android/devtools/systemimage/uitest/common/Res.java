@@ -35,4 +35,6 @@ public class Res {
             "com.android.launcher\\d*:id/cling_dismiss";
     public static final String GOOGLE_NOW_WELCOME_SKIP_RES =
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
+    public static final String BROWSER_URL_TEXT_FIELD_RES = "com.android.browser:id/url";
+    public static final String BROWSER_BOOKMARKS_LABEL_RES = "com.android.browser:id/label";
 }

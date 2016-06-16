@@ -65,9 +65,8 @@ public class SettingsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
         AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+        UiScrollable itemList = new UiScrollable(
+                new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
         itemList.setAsVerticalList();
         itemList.scrollIntoView(new UiSelector().textContains("Google"));
         device.findObject(new UiSelector().textContains("Google")).clickAndWaitForNewWindow();
