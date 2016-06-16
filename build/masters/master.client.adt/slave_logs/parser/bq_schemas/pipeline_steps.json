@@ -13,5 +13,10 @@
     "name": "state",
     "type": "string",
     "mode": "required"
+  },
+  {
+    "name": "job_id",
+    "type": "string",
+    "mode": "nullable"
   }
 ]
