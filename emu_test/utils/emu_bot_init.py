@@ -37,31 +37,39 @@ logger.setLevel(logging.DEBUG)
 def clean_up():
   """clean up build directory and qemu-gles-[pid] files"""
 
+  # on Windows, some system log file cannot be deleted since they're
+  # always being used by another process
+  # so try delete each file or directory under separately
+  # and ignore failures
+
+  def remove_dir_content(path_to_dir):
+    if not os.path.isdir(path_to_dir):
+      logger.info("Directory %s does not exist!" % path_to_dir)
+      return
+    for f in os.listdir(path_to_dir):
+      file_path = os.path.join(path_to_dir, f)
+      try:
+        if os.path.isfile(file_path):
+          logger.info("Delete file %s", file_path)
+          os.remove(file_path)
+        elif os.path.isdir(file_path) and args.log_dir != f:
+          logger.info("Delete directory %s", file_path)
+          shutil.rmtree(file_path)
+      except Exception as e:
+        logger.error("Error in deleting %s, %r", file_path, e)
+        pass
+
   # remove qemu-gles-[pid] files
   host = platform.system()
   if host in ["Linux", "Darwin"]:
     tmp_dir = "/tmp/android-%s" % os.environ["USER"]
   else:
     tmp_dir = os.path.join(os.path.expanduser("~"), 'AppData', 'Local', 'Temp')
-  if os.path.isdir(tmp_dir):
-    logger.info("Delete directory %s", tmp_dir)
-    try:
-      shutil.rmtree(tmp_dir)
-    except Exception as e:
-      logger.info("Error in deleting %s, %r", tmp_dir, e)
+
+  remove_dir_content(tmp_dir)
 
   # remove build directory
-  for f in os.listdir(args.build_dir):
-    file_path = os.path.join(args.build_dir,f)
-    try:
-      if os.path.isfile(file_path):
-        logger.info("Delete file %s", file_path)
-        os.remove(file_path)
-      elif os.path.isdir(file_path) and args.log_dir != f:
-        logger.info("Delete directory %s", file_path)
-        shutil.rmtree(file_path)
-    except Exception as e:
-      logger.error("Error in deleting build directory %r", e)
+  remove_dir_content(args.build_dir)
 
 def update_sdk_with_timeout(filter, timeout):
     def update_sdk():
