@@ -35,18 +35,20 @@ class FlakinessPipline(object):
     TAG_COMPLETE = 'complete'
 
     STATE_STARTED = 'started'
+    STATE_JOB_SUCCESS = 'job_success'
+    STATE_JOB_FAILURE = 'job_failure'
     STATE_FINISHED = 'finished'
-    STATE_SUCCESS = 'success'
-    STATE_FAILURE = 'failure'
+    STATE_PIPELINE_SUCCESS = 'pipeline_success'
+    STATE_PIPELINE_FAILURE = 'pipeline_failure'
 
     QUERY_NOW = """
     SELECT FORMAT_UTC_USEC(NOW())
     """
     QUERY_GET_STEPS = """
     SELECT
-        FORMAT_UTC_USEC(timestamp) as timestamp, tag, state
+        FORMAT_UTC_USEC(timestamp) as timestamp, tag, state, job_id
     FROM
-        DATASET_ID.{TABLE_STEPS}
+        DATASET_ID.{TABLE_STEPS} ORDER BY timestamp
     """
 
     def __init__(self, bigquery, bigquery_ws, workdir):
@@ -58,13 +60,15 @@ class FlakinessPipline(object):
         self._sync_time()
         self._transition_start()
         old_steps = self._query_current_steps()
-        old_steps = self._marshall_steps(old_steps)
-        if self.TAG_COMPLETE in old_steps:
+        old_tags = [x['tag'] for x in old_steps]
+        if self.TAG_COMPLETE in old_tags:
             self._cleanup_workspace()
             self.run()
             return
 
-        new_steps = self._take_actions(old_steps)
+        new_steps = []
+        self._query_job_statuses(old_steps, new_steps)
+        self._take_actions(old_steps, new_steps)
         self._transition_commit(new_steps)
 
     def _flatten(self, query):
@@ -104,46 +108,83 @@ class FlakinessPipline(object):
                 self._flatten(self.QUERY_GET_STEPS),
                 bigquery_tables.PipelineSteps.SCHEMA_PATH)
 
-    def _make_step_row(self, tag, state):
+    def _make_step_row(self, tag, state, job_id=None):
         return {
                 'timestamp': sp.bq_format_timestamp(self._synced_now()),
-                'tag': tag, 'state': state
+                'tag': tag, 'state': state, 'job_id': job_id,
         }
 
-    def _marshall_steps(self, steps):
-        old_steps = {}
-        for step in steps:
+    def _seal_steps(self, steps, is_good):
+        if is_good:
+            steps.append(self._make_step_row(
+                    self.TAG_COMPLETE, self.STATE_PIPELINE_SUCCESS))
+        else:
+            steps.append(self._make_step_row(
+                    self.TAG_COMPLETE, self.STATE_PIPELINE_FAILURE))
+
+    def _query_job_statuses(self, old_steps, new_steps):
+        job_completion_states = set([self.STATE_JOB_SUCCESS,
+                                     self.STATE_JOB_FAILURE])
+        started_steps = [x['tag'] for x in old_steps
+                         if x['state'] == self.STATE_STARTED and
+                         x['tag'] != self.TAG_TRANSITION]
+        finished_steps = [x['tag'] for x in old_steps
+                          if x['state'] in job_completion_states]
+        outstanding_steps = set(started_steps) - set(finished_steps)
+        # Get the last job_id for each outstanding job
+        job_ids = {}
+        for step in old_steps:
+            if step['tag'] in outstanding_steps:
+                job_ids[step['tag']] = step.get('job_id')
+
+        for step in outstanding_steps:
+            if job_ids[step] is None:
+                logging.warning('Tag %s is outstanding, but has no job_id',
+                                step)
+                continue
+            succeeded = False
+            try:
+                if not self._bigquery.job_completed(job_ids[step]):
+                    continue
+
+                succeeded = True
+            except bigquery.BigQueryException:
+                # Means that the step failed
+                succeeded = False
+
+            finished_step = self._make_step_row(
+                    step,
+                    self.STATE_JOB_SUCCESS if succeeded else
+                    self.STATE_JOB_FAILURE)
+            old_steps.append(finished_step)
+            new_steps.append(finished_step)
+
+    def _take_actions(self, old_steps, new_steps):
+        pprint.pprint(old_steps)
+
+        old_step_states = {}
+        for step in old_steps:
             tag = step['tag']
             state = step['state']
             if tag == self.TAG_TRANSITION:
                 continue
             if tag not in old_steps:
-                old_steps[tag] = set()
-            old_steps[tag].add(state)
-        return old_steps
-
-    def _seal_steps(self, steps, is_good):
-        if is_good:
-            steps.append(self._make_step_row(
-                    self.TAG_COMPLETE, self.STATE_SUCCESS))
-        else:
-            steps.append(self._make_step_row(
-                    self.TAG_COMPLETE, self.STATE_FAILURE))
-
-    def _take_actions(self, old_steps):
-        new_steps = []
-        pprint.pprint(old_steps)
+                old_step_states[tag] = set()
+            old_step_states[tag].add(state)
 
         # Example step.
-        if 'example_step' not in old_steps:
+        if 'example_step' not in old_step_states:
+            job_id = self._bigquery_ws.batch_query(
+                    self._flatten(self.QUERY_NOW), 'ttt')
             new_steps.append(self._make_step_row('example_step',
-                                                 self.STATE_STARTED))
-        elif self.STATE_FINISHED in old_steps['example_step']:
+                                                 self.STATE_STARTED,
+                                                 job_id))
+        elif self.STATE_FINISHED in old_step_states['example_step']:
             self._seal_steps(new_steps, True)
-        else:
+        elif (self.STATE_JOB_SUCCESS in old_step_states['example_step'] or
+              self.STATE_JOB_FAILURE in old_step_states['example_step']):
             new_steps.append(self._make_step_row('example_step',
                                                  self.STATE_FINISHED))
-        return new_steps
 
     def _cleanup_workspace(self):
         logging.info('### Cleaning up workspace for a new run.')
