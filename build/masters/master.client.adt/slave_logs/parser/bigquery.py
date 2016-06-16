@@ -249,9 +249,13 @@ class BigQuery(object):
                 outstanding.
         Raises: BigQueryException if an error occured in running the job.
         """
-        result = self._bigquery.jobs().get(
-            projectId=self._project_id,
-            jobId=job_id).execute(num_retries=2)
+        try:
+            result = self._bigquery.jobs().get(
+                projectId=self._project_id,
+                jobId=job_id).execute(num_retries=2)
+        except http.HttpError:
+            raise BigQueryException('Job %s does not exist' % (job_id,))
+
         status = result['status']
         if status['state'] != 'DONE':
             return False
