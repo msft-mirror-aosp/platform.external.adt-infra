@@ -16,6 +16,8 @@
 
 package com.android.devtools.systemimage.uitest.utils;
 
+import com.android.devtools.systemimage.uitest.common.Res;
+
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
@@ -26,8 +28,6 @@ import java.util.concurrent.TimeUnit;
  * Static utility methods pertaining to network status.
  */
 public class NetworkUtil {
-    private static final String WIFI_ICONS_RES = "com.android.systemui:id/wifi_signal";
-    private static final String MOBILE_TYPE_ICONS_RES = "com.android.systemui:id/mobile_type";
 
     private NetworkUtil() {
         throw new AssertionError();
@@ -60,7 +60,7 @@ public class NetworkUtil {
         // Wait to check the notification bar items. Opening notification is an animation.
         boolean isTrue =
                 device.wait(
-                        Until.hasObject(By.res(WIFI_ICONS_RES)),
+                        Until.hasObject(By.res(Res.WIFI_ICONS_RES)),
                         TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
                 );
         return isTrue;
@@ -70,7 +70,7 @@ public class NetworkUtil {
         // Wait to check the notification bar items. Opening notification is an animation.
         boolean isTrue =
                 device.wait(
-                        Until.hasObject(By.res(MOBILE_TYPE_ICONS_RES)),
+                        Until.hasObject(By.res(Res.MOBILE_TYPE_ICONS_RES)),
                         TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
                 );
         return isTrue;

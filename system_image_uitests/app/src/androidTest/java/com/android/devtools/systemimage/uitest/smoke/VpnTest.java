@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.smoke;
 
+import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
@@ -39,8 +40,6 @@ import android.support.test.uiautomator.UiSelector;
  */
 @RunWith(AndroidJUnit4.class)
 public class VpnTest {
-    private static final String START_VPN_BUTTON_RES = "com.test.vpn:id/start_vpn";
-    private static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
     private static final String VPN_ACTIVATED_TEXT = "VPN is activated by TestVPN";
 
     @Rule
@@ -57,7 +56,7 @@ public class VpnTest {
         boolean isTrue = new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws Exception {
-                return device.hasObject(By.res(VPN_LOCK_ICON_RES)) ||
+                return device.hasObject(By.res(Res.VPN_LOCK_ICON_RES)) ||
                         device.hasObject(By.text(VPN_ACTIVATED_TEXT));
             }
         });
@@ -92,7 +91,7 @@ public class VpnTest {
             AppManager.installApp(instrumentation, "FredVPN.apk");
             AppLauncher.launch(instrumentation, "TestVPN");
 
-            device.findObject(new UiSelector().resourceId(START_VPN_BUTTON_RES))
+            device.findObject(new UiSelector().resourceId(Res.START_VPN_BUTTON_RES))
                     .clickAndWaitForNewWindow();
             new VpnPopupWatcher(device).checkForCondition();
             Assert.assertTrue("Failed to find the VPN lock icon after starting VPN!",
