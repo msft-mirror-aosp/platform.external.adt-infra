@@ -65,16 +65,11 @@ public class GoogleServicesTest {
     @Test
     public void verifyGoogleApps() throws Exception{
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice mdevice = testFramework.getDevice();
         if (!"google_apis".equals(testFramework.getTag())) {
             return;
         }
 
-        AppManager.openAppList(instrumentation);
-        mdevice.pressMenu();
-        // Google Services Framework is not shown until "Show system" is clicked from
-        // "More options" drop down
-        mdevice.findObject(new UiSelector().textContains("Show system")).click();
+        AppManager.openSystemAppList(instrumentation);
 
         UiScrollable appList=
                 new UiScrollable(new UiSelector().resourceIdMatches(Res.APPS_LIST_CONTAINER_RES));
