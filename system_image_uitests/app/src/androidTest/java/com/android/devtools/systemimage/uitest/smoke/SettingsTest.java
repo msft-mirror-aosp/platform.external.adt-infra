@@ -33,6 +33,7 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
@@ -191,5 +192,50 @@ public class SettingsTest {
         }
         assertTrue("Developer options not enabled.",
                 DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation));
+    }
+
+    /**
+     * Verifies show cards confirmation page opens.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581322
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > Google > Search and Now > Now Cards
+     *   3. Enable Show cards.
+     *   Verify:
+     *   The show cards confirmation page opens.
+     *   </pre>
+     */
+    @Test
+    public void confirmNowCardsPageOpen() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = testFramework.getDevice();
+        AppLauncher.launch(instrumentation, "Settings");
+        UiScrollable itemList = new UiScrollable(
+                new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+        itemList.setAsVerticalList();
+        itemList.scrollIntoView(new UiSelector().textContains("Google"));
+        device.findObject(new UiSelector().text("Google")).click();
+        device.findObject(new UiSelector().text("Search & Now")).click();
+        device.findObject(new UiSelector().text("Now cards")).click();
+
+        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
+                instrumentation,
+                By.clazz("android.widget.Switch"),
+                By.text("Show cards"),
+                By.clazz("android.widget.ListView"));
+        if (!switchWidget.isChecked()) {
+            switchWidget.click();
+            assertTrue("Resource IDs not found on Now sign in page.", device.findObject(
+                    new UiSelector().resourceId(Res.NOW_SIGNIN_SCREEN_RES)).exists()
+                    && device.findObject(
+                    new UiSelector().resourceId(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
+                    && device.findObject(
+                    new UiSelector().resourceId(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists()
+            );
+        }
     }
 }
