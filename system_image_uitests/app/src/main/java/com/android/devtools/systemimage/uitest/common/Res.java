@@ -17,9 +17,12 @@
 package com.android.devtools.systemimage.uitest.common;
 
 /**
- * Common resource IDs.
+ * Common resource IDs used to identify UI widgets by UiAutomator.
+ * <p>
+ * They could be String or regex String.
  */
 public class Res {
+    // System and Google application resource IDs ("com.android.*" or "com.google.*")
     public static final String LAUNCHER_LIST_CONTAINER_RES =
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
                     + "/(all_apps_container|apps_customize_pane_content|apps_list_view)";
@@ -37,6 +40,20 @@ public class Res {
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
     public static final String BROWSER_URL_TEXT_FIELD_RES = "com.android.browser:id/url";
     public static final String BROWSER_BOOKMARKS_LABEL_RES = "com.android.browser:id/label";
+    public static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
+    public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
+    public static final String WIFI_ICONS_RES = "com.android.systemui:id/wifi_signal";
+    public static final String MOBILE_TYPE_ICONS_RES = "com.android.systemui:id/mobile_type";
+    public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
+    public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
+
+    // Third-party application resource IDs
+    public static final String APP_IMAGE_VIEW_ID =
+            "com.example.android.rs.hellocompute:id/displayin";
+    public static final String START_VPN_BUTTON_RES = "com.test.vpn:id/start_vpn";
+
+    // Platform resource IDs ("android.*")
     public static final String ANDROID_DATE_PICKER_HEADER_RES = "android:id/date_picker_header";
     public static final String ANDROID_TIME_HEADER_RES = "android:id/time_header";
+    public static final String ANDROID_LIST_RES = "android:id/list";
 }
