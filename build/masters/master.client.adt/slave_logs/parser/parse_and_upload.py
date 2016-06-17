@@ -67,7 +67,7 @@ logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 logger.setLevel(logging.DEBUG)
 
-emulator_branches = ["emu-master-dev", "emu-2.0-release"]
+emulator_branches = ["emu-master-dev", "emu-2.0-release", "emu-2.2-release"]
 api_to_image_branch = {
                        '10':'gb-emu-dev',
                        '15':'ics-mr1-emu-dev',
