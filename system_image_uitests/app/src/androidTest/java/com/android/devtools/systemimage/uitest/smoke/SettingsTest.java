@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 
 import org.junit.Rule;
@@ -163,5 +164,32 @@ public class SettingsTest {
         assertTrue(device.findObject(
                 new UiSelector().resourceId(Res.ANDROID_TIME_HEADER_RES)).exists());
         device.findObject(new UiSelector().textContains("CANCEL")).click();
+    }
+
+    /**
+     * Verifies Developer options is displayed under the System section on the Systems page.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581154
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > About emulated device
+     *   3. Click on the Build number option 7 times.
+     *   4. Toast message indicating developer options is enabled. (Can't confirm due to b/26511336)
+     *   5. Navigate to Settings page.
+     *   Verify:
+     *   Developer options displayed under Systems section on the Settings page.
+     *   </pre>
+     */
+    @Test
+    public void developerOptionsEnabled() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation)) {
+            DeveloperOptionsManager.enableDeveloperOptions(instrumentation);
+        }
+        assertTrue("Developer options not enabled.",
+                DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation));
     }
 }
