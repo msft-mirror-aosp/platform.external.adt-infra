@@ -190,7 +190,7 @@ class CTSTestCase(EmuBaseTestCase):
 
 
 def create_test_case_for_avds():
-    avd_name_re = re.compile("([^-]*)-(.*)-(.*)-(\d+)-gpu_(.*)-api(\d+)-CTS")
+    avd_name_re = re.compile("([^-]*)-(.*)-(.*)-(\d+)-gpu_(.*)-api(\d+)-CTS$")
     def create_avd_from_name(avd_str):
         res = avd_name_re.match(avd_str)
         assert res is not None
@@ -199,7 +199,6 @@ def create_test_case_for_avds():
         return avd_config
 
     def fn(avd_name, plan):
-        #return lambda self: self.run_cts_plan(create_avd_from_name(avd_name), plan)
         return lambda self: self.run_cts_plan(create_avd_from_name(avd_name), plan)
 
     for avd in emu_args.avd_list:
