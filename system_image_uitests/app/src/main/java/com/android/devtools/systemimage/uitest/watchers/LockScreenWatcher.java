@@ -16,6 +16,8 @@
 
 package com.android.devtools.systemimage.uitest.watchers;
 
+import com.android.devtools.systemimage.uitest.common.Res;
+
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
@@ -42,7 +44,7 @@ public class LockScreenWatcher implements UiWatcher {
                 );
         UiObject unlock2 =
                 mDevice.findObject(
-                        new UiSelector().resourceId("com.android.systemui:id/lock_icon")
+                        new UiSelector().resourceId(Res.LOCK_SCREEN_ICON_RES)
                 );
         if (unlock.exists() || unlock2.exists()) {
             mDevice.pressMenu();

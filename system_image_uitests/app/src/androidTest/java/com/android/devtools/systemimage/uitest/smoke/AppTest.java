@@ -38,9 +38,6 @@ import android.support.test.uiautomator.UiSelector;
  */
 @RunWith(AndroidJUnit4.class)
 public class AppTest {
-    private static final String APP_IMAGE_VIEW_ID =
-            "com.example.android.rs.hellocompute:id/displayin";
-
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
@@ -72,7 +69,7 @@ public class AppTest {
         AppManager.installApp(instrumentation, "HelloCompute.apk");
         AppLauncher.launch(instrumentation, "RsHelloCompute");
         assertTrue(testFramework.getDevice().findObject(new UiSelector().resourceId(
-                APP_IMAGE_VIEW_ID)).exists());
+                Res.APP_IMAGE_VIEW_ID)).exists());
         AppManager.uninstallApp(instrumentation, "RsHelloCompute", null);
     }
 
