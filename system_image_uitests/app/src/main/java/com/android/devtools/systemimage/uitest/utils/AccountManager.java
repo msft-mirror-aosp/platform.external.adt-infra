@@ -142,7 +142,7 @@ public class AccountManager {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
         // Iterate over the list to find and remove the account.
-        UiSelector listViewSelector = new UiSelector().resourceId("android:id/list");
+        UiSelector listViewSelector = new UiSelector().resourceId(Res.ANDROID_LIST_RES);
         int size = device.findObject(listViewSelector).getChildCount();
         for (int i = 0; i < size; i++) {
             UiObject item =

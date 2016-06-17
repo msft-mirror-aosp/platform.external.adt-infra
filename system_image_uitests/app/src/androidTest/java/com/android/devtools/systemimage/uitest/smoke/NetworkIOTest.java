@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.smoke;
 
+import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.NetworkUtil;
@@ -38,9 +39,6 @@ import android.support.test.uiautomator.UiSelector;
  */
 @RunWith(AndroidJUnit4.class)
 public class NetworkIOTest {
-    private static final String BROWSER_URL_TEXT_FIELD = "com.android.browser:id/url";
-    private static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
-
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
@@ -73,17 +71,17 @@ public class NetworkIOTest {
         // Check network connectivity.
         if (NetworkUtil.verifyNetworkStatus(device)) {
             AppLauncher.launch(instrumentation, "Browser");
-            device.findObject(new UiSelector().resourceId(BROWSER_URL_TEXT_FIELD)).click();
-            device.findObject(new UiSelector().resourceId(BROWSER_URL_TEXT_FIELD))
+            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES)).click();
+            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
                     .clearTextField();
-            device.findObject(new UiSelector().resourceId(BROWSER_URL_TEXT_FIELD))
+            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
                     .setText("google.com");
             device.pressEnter();
 
             // Verify if the load bar is there at first,
             // then verify if the loading bar finishes in 3 seconds (default timeout on Wait()).
             final UiObject progress =
-                    device.findObject(new UiSelector().resourceId(BROWSER_SEARCH_ICON_RES));
+                    device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
             boolean isSuccess =
                     new Wait().until(new Wait.ExpectedCondition() {
                         @Override
