@@ -37,4 +37,6 @@ public class Res {
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
     public static final String BROWSER_URL_TEXT_FIELD_RES = "com.android.browser:id/url";
     public static final String BROWSER_BOOKMARKS_LABEL_RES = "com.android.browser:id/label";
+    public static final String ANDROID_DATE_PICKER_HEADER_RES = "android:id/date_picker_header";
+    public static final String ANDROID_TIME_HEADER_RES = "android:id/time_header";
 }
