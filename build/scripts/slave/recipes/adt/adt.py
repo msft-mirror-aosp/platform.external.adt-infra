@@ -30,7 +30,7 @@ def RunSteps(api):
   file_list = api.properties.get('file_list')
   download_path = api.path['slave_build'].join('')
   env_path = ['%(PATH)s']
-  emulator_branches = ['emu-master-dev', 'emu-2.0-release']
+  emulator_branches = ['emu-master-dev', 'emu-2.2-release']
   is_cts = "cts" in str(api.properties.get('scheduler'))
 
   # find android sdk root directory
@@ -79,7 +79,7 @@ def RunSteps(api):
 
   bootSteps = {
                'emu-master-dev': bootStep('public', '{"ori": "public"}'),
-               'emu-2.0-release': bootStep('public', '{"ori": "public"}'),
+               'emu-2.2-release': bootStep('public', '{"ori": "public"}'),
                'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
                'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
                'nyc-emu-dev': bootStep('NYC', '{"ori": "nyc"}'),
