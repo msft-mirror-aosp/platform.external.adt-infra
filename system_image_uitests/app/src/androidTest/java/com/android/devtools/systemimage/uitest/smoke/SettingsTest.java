@@ -44,8 +44,6 @@ import java.util.List;
  */
 @RunWith(AndroidJUnit4.class)
 public class SettingsTest {
-    private static final String APP_IMAGE_SETTINGS_ID = "com.android.settings:id/advanced";
-
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
@@ -104,7 +102,7 @@ public class SettingsTest {
 
         AppLauncher.launch(instrumentation, "Settings");
         device.findObject(new UiSelector().textContains("Apps")).clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().resourceId(APP_IMAGE_SETTINGS_ID))
+        device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
                 .clickAndWaitForNewWindow();
         device.findObject(new UiSelector().textContains("App permissions"))
                 .clickAndWaitForNewWindow();
