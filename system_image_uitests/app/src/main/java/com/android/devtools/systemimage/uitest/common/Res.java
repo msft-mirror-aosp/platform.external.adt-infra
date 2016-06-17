@@ -20,7 +20,7 @@ package com.android.devtools.systemimage.uitest.common;
  * Common resource IDs.
  */
 public class Res {
-    public static final String LAUNCHER_LIST_CONTAINER_RES_REGEX =
+    public static final String LAUNCHER_LIST_CONTAINER_RES =
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
                     + "/(all_apps_container|apps_customize_pane_content|apps_list_view)";
     public static final String SETTINGS_LIST_CONTAINER_RES =
