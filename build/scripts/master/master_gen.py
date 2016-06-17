@@ -115,8 +115,9 @@ def _ComputeBuilders(builders, m_annotator, actual_builders, cat):
     # You can override this behavior by setting the mergeRequests field though.
     merge_requests = builder_data.get('mergeRequests', True)
 
+    actual_builder_name = "%s_%s" % (builder_name, cat)
     slavebuilddir = builder_data.get('slavebuilddir',
-                                     util.safeTranslate(builder_name))
+                                     util.safeTranslate(actual_builder_name))
     factory = m_annotator.BaseFactory(
         recipe=builder_data['recipe'],
         factory_properties=builder_data.get('properties')
@@ -124,7 +125,7 @@ def _ComputeBuilders(builders, m_annotator, actual_builders, cat):
     actual_builders.append({
         'auto_reboot': builder_data.get('auto_reboot', False),
         'mergeRequests': merge_requests,
-        'name': "%s_%s" % (builder_name, cat),
+        'name': actual_builder_name,
         'factory': factory,
         'slavebuilddir': slavebuilddir,
         'slavenames': chromium_utils.GetSlaveNamesForBuilder(builders,
