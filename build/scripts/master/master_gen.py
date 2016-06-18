@@ -116,8 +116,9 @@ def _ComputeBuilders(builders, m_annotator, actual_builders, cat):
     merge_requests = builder_data.get('mergeRequests', True)
 
     actual_builder_name = "%s_%s" % (builder_name, cat)
+    # Use cat as directory name to avoid path being too long on Windows.
     slavebuilddir = builder_data.get('slavebuilddir',
-                                     util.safeTranslate(actual_builder_name))
+                                     util.safeTranslate(cat))
     factory = m_annotator.BaseFactory(
         recipe=builder_data['recipe'],
         factory_properties=builder_data.get('properties')
