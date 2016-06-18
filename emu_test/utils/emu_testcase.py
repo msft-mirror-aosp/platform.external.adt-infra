@@ -234,7 +234,6 @@ class EmuBaseTestCase(LoggedTestCase):
                 calculated_speed = (file_size/1024)/elapsed_time
                 speed = "%.0f KB/s" % calculated_speed
 
-                self.m_logger.info('%s %s %s', ' '.join(cmd), output, err)
                 self.m_logger.info('Time elapsed: %s, File size: %s, speed: %s', elapsed_time, file_size, speed)
 
                 if exit_code == 0:
@@ -291,7 +290,7 @@ class EmuBaseTestCase(LoggedTestCase):
         gpu = "no" if avd_config.gpu == "no" else "yes"
         set_val('hw.gpu.enabled', gpu)
         set_val('hw.ramSize', avd_config.ram)
-        api_target = avd_config.api if avd_config.api != "24" else "N"
+        api_target = avd_config.api
         set_val('image.sysdir.1',
                 'system-images/android-%s/%s/%s/' % (api_target, avd_config.tag, avd_config.abi))
         set_val('tag.display', tag_id_to_display[avd_config.tag])
@@ -321,7 +320,7 @@ class EmuBaseTestCase(LoggedTestCase):
         def try_create_with_sdk():
             android_exec = "android.bat" if os.name == "nt" else "android"
             avd_abi = "%s/%s" % (avd_config.tag, avd_config.abi)
-            api_target = avd_config.api if avd_config.api != "24" else "N"
+            api_target = avd_config.api
             if "google" in avd_config.tag:
                 avd_target = "Google Inc.:Google APIs:%s" % (api_target)
             else:
@@ -353,7 +352,7 @@ class EmuBaseTestCase(LoggedTestCase):
             avd_base_dir = os.path.join(os.path.expanduser('~'), ".android", "avd")
             avd_dir = os.path.join(avd_base_dir, '%s.avd' % avd_name)
 
-            api_target = avd_config.api if avd_config.api != "24" else "N"
+            api_target = avd_config.api
             if "google" in avd_config.tag:
                 avd_target = "Google Inc.:Google APIs:%s" % (api_target)
             else:
@@ -390,7 +389,7 @@ class EmuBaseTestCase(LoggedTestCase):
         ret = try_create_with_config()
         if ret != 0:
             # try to download the system image
-            api = avd_config.api if avd_config.api != "24" else "N"
+            api = avd_config.api
             self.update_sdk("android-%s" % api)
             if "google" in avd_config.tag:
                 self.update_sdk("addon-google_apis-google-%s" % api)
