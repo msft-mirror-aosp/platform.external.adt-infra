@@ -212,14 +212,14 @@
      "Ubuntu 14.04 Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds"],
-       "tag": "Linux",
+       "categories": ["CTS"],
+       "tag": "",
      },
      "Ubuntu 15.04 Quadro K600": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-15_04-nvidia-quadro-k600"],
-       "categories": ["CTS"],
-       "tag": "",
+       "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds"],
+       "tag": "Linux",
      },
      "Win 7 32-bit HD 4400": {
        "recipe": "adt/adt",
