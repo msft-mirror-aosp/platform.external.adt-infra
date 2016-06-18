@@ -219,23 +219,31 @@ class EmuBaseTestCase(LoggedTestCase):
     def run_adb_perf(self, avd):
         test_file = "small_file.zip" if avd.classic == "yes" else "large_file.zip"
         local_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "adb_test_data", test_file)
+        file_size = os.path.getsize(local_path)
         device_path = "/data/local/tmp/%s" % test_file
         push_cmd = ["adb", "push", local_path, device_path]
         pull_cmd = ["adb", "pull", device_path, "."]
-        result_re = re.compile("^(\d+ KB/s) \(\d+ bytes in .*s\)")
         run_time = []
         for cmd in [push_cmd, pull_cmd]:
             try:
+                start_time = time.time()
                 (exit_code, output, err) = self.run_with_timeout(cmd, 600)
+                # deduct 0.015 seconds for the overhead of sending adb command
+                elapsed_time = time.time() - start_time - 0.015
+
+                calculated_speed = (file_size/1024)/elapsed_time
+                speed = "%.0f KB/s" % calculated_speed
+
+                self.m_logger.info('%s %s %s', ' '.join(cmd), output, err)
+                self.m_logger.info('Time elapsed: %s, File size: %s, speed: %s', elapsed_time, file_size, speed)
+
+                if exit_code == 0:
+                  run_time.append(speed)
+                else:
+                  self.m_logger.info('Fails to run adb performance test, exit_code: %s', exit_code)
+                  return
             except Exception as e:
                 self.m_logger.error('exception run_with_timeout %s: %r', ' '.join(cmd), e)
-                return
-            self.m_logger.info('%s %s %s', ' '.join(cmd), output, err)
-            gr = result_re.match(err.strip())
-            if gr is not None:
-                run_time.append(gr.groups()[0])
-            else:
-                self.m_logger.info('Fails to run adb performance test')
                 return
         self.m_logger.info('AVD %s, adb push: %s, adb pull: %s', avd, run_time[0], run_time[1])
 
