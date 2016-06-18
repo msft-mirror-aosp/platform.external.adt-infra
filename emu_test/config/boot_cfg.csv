@@ -12,8 +12,8 @@ API 24,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,,,,,,,,,,,,,,
 ,google_apis,armeabi-v7a,Nexus 5X,2048,yes,public,,,,,,,,,,,,,
 ,,x86,Nexus 6P,2048,yes,public,,,,,,,,,,,,,
 ,,x86_64,Nexus 5X,2048,yes,public,,,,,,,,,,,,,
-API 23,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,public,,,P,,,,,,,,,,
-,,x86,Android TV (1080p),2048,yes,public,,,S,,,,,,,,,,
+API 23,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,public,,,P,P,,,,,,,,,
+,,x86,Android TV (1080p),2048,yes,public,,,S,S,,,,,,,,,
 ,default,armeabi-v7a,Nexus 6P,2048,yes,public,P,P,P,P,P,,P,P,P,P,P,P,P
 ,,x86,Nexus 6P,2048,yes,mnc,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86,Nexus 5X,2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
@@ -24,11 +24,11 @@ API 23,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,public,,,P,,,,,,,,,,
 ,,x86,Nexus 5X,2048,yes,public,S,S,S,S,S,S,S,S,S,S,S,S,S
 ,,x86_64,Nexus 6P,2048,yes,mnc,P,P,P,P,S,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 5X,2048,yes,public,S,S,S,S,S,S,S,S,S,S,S,S,S
-API 22,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,public,,,P,,,,,,,,,,
-,,x86,Android TV (1080p),2048,yes,public,,,P,,,,,,,,,,
-,android-wear,armeabi-v7a,wear_square_320,1024,yes,public,,,P,,,,,,,,,,
-,,x86,wear_square_320,1024,yes,public,,,P,,,,,,,,,,
-,default,armeabi-v7a,Nexus 5,2048,yes,public,,,P,,,,,,,,,,
+API 22,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,public,,,P,P,,,,,,,,,
+,,x86,Android TV (1080p),2048,yes,public,,,P,P,,,,,,,,,
+,android-wear,armeabi-v7a,wear_square_320,1024,yes,public,,,P,P,,,,,,,,,
+,,x86,wear_square_320,1024,yes,public,,,P,P,,,,,,,,,
+,default,armeabi-v7a,Nexus 5,2048,yes,public,,,P,P,,,,,,,,,
 ,,x86,Nexus 5,2048,yes,lmp-mr1,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86,Nexus 5,2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 5,2048,yes,lmp-mr1,P,P,P,P,S,P,P,P,P,P,P,P,P
@@ -36,10 +36,10 @@ API 22,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,public,,,P,,,,,,,,,,
 ,google_apis,armeabi-v7a,,,,public,,,,,,,,,,,,,
 ,,x86,Nexus 5,2048,yes,lmp-mr1,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 5,2048,yes,lmp-mr1,P,P,P,P,S,P,P,P,P,P,P,P,P
-API 21,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,public,,,P,,,,,,,,,,
-,,x86,Android TV (1080p),2048,yes,public,,,P,,,,,,,,,,
-,android-wear,armeabi-v7a,wear_square_320,1024,yes,public,,,P,,,,,,,,,,
-,,x86,wear_square_320,1024,yes,public,,,P,,,,,,,,,,
+API 21,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,public,,,P,P,,,,,,,,,
+,,x86,Android TV (1080p),2048,yes,public,,,P,P,,,,,,,,,
+,android-wear,armeabi-v7a,wear_square_320,1024,yes,public,,,P,P,,,,,,,,,
+,,x86,wear_square_320,1024,yes,public,,,P,P,,,,,,,,,
 ,default,armeabi-v7a,Nexus 5,2048,yes,public,P,P,P,P,P,,P,P,P,P,P,P,P
 ,,x86,Nexus 5,2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 5,2048,yes,public,P,P,P,P,S,,P,P,P,P,P,P,P
@@ -48,20 +48,20 @@ API 21,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,public,,,P,,,,,,,,,,
 ,,x86,Nexus 5,2048,yes,public,S,S,S,S,S,S,S,S,S,S,S,S,S
 ,,x86_64,Nexus 5,2048,yes,lmp,P,P,P,P,S,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 5,2048,yes,public,S,S,S,S,S,S,S,S,S,S,S,S,S
-API 20,android-wear,armeabi-v7a,,,yes,public,,,P,,,,,,,,,,
-,,x86,,,yes,public,,,P,,,,,,,,,,
-API 19,default,armeabi-v7a,,,yes,public,,,P,,,,,,,,,,
-,,x86,,,yes,public,,,P,,,,,,,,,,
+API 20,android-wear,armeabi-v7a,,,yes,public,,,P,P,,,,,,,,,
+,,x86,,,yes,public,,,P,P,,,,,,,,,
+API 19,default,armeabi-v7a,,,yes,public,,,P,P,,,,,,,,,
+,,x86,,,yes,public,,,P,P,,,,,,,,,
 ,google_apis,armeabi-v7a,Nexus 5,2048,yes,public,,,,,,,,,,,,,
 ,,x86,Nexus 5,2048,yes,klp,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86,Nexus 5,2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
-API 18,default,armeabi-v7a,Nexus 5,2048,yes,public,,,P,,,,,,,,,,
-,,x86,Nexus 5,2048,yes,public,,,P,,,,,,,,,,
+API 18,default,armeabi-v7a,Nexus 5,2048,yes,public,,,P,P,,,,,,,,,
+,,x86,Nexus 5,2048,yes,public,,,P,P,,,,,,,,,
 ,,x86,Nexus 5,2048,yes,jb-mr2,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,google_apis,x86,Nexus 5,2048,yes,jb-mr2,P,P,P,P,P,P,P,P,P,P,P,P,P
-API 17,default,armeabi-v7a,Nexus 5,2048,yes,public,,,P,,,,,,,,,,
-,,mips,Nexus 5,2048,yes,public,,,P,,,,,,,,,,
-,,x86,Nexus 5,2048,yes,public,,,P,,,,,,,,,,
+API 17,default,armeabi-v7a,Nexus 5,2048,yes,public,,,P,P,,,,,,,,,
+,,mips,Nexus 5,2048,yes,public,,,P,P,,,,,,,,,
+,,x86,Nexus 5,2048,yes,public,,,P,P,,,,,,,,,
 ,,x86,Nexus 5,2048,yes,jb-mr1.1,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,google_apis,x86,Nexus 5,2048,yes,jb-mr1.1,P,P,P,P,P,P,P,P,P,P,P,P,P
 API 16,default,armeabi-v7a,Nexus 4,2048,yes,public,P,P,P,P,,,P,P,P,P,P,P,P
@@ -69,9 +69,9 @@ API 16,default,armeabi-v7a,Nexus 4,2048,yes,public,P,P,P,P,,,P,P,P,P,P,P,P
 ,,x86,Nexus 4,2048,yes,public,P,P,P,P,,,P,P,P,P,P,P,P
 ,,x86,Nexus 4,2048,yes,jb,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,google_apis,x86,Nexus 4,2048,yes,jb,P,P,P,P,P,P,P,P,P,P,P,P,P
-API 15,default,armeabi-v7a,Nexus 4,2048,no,public,,,P,,,,,,,,,,
+API 15,default,armeabi-v7a,Nexus 4,2048,no,public,,,P,P,,,,,,,,,
 ,,mips,Nexus 4,2048,no,public,,,,,,,,,,,,,
-,,x86,Nexus 4,2048,no,public,,,P,,,,,,,,,,
+,,x86,Nexus 4,2048,no,public,,,P,P,,,,,,,,,
 ,,x86,Nexus 4,2048,no,ics-mr1,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,google_apis,x86,Nexus 4,2048,no,ics-mr1,P,P,P,P,P,P,P,P,P,P,P,P,P
 API 10,default,x86,Nexus 4,2048,no,public,P,P,P,P,,,P,P,P,P,P,P,P
