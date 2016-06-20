@@ -64,8 +64,7 @@ def clean_up():
   if host in ["Linux", "Darwin"]:
     tmp_dir = "/tmp/android-%s" % os.environ["USER"]
   else:
-    pass
-    #tmp_dir = os.path.join(os.path.expanduser("~"), 'AppData', 'Local', 'Temp')
+    tmp_dir = os.path.join(os.path.expanduser("~"), 'AppData', 'Local', 'Temp')
 
   remove_dir_content(tmp_dir)
 
