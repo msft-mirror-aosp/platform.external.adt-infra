@@ -151,7 +151,10 @@ public class SettingsTest {
                 By.clazz("android.widget.Switch"),
                 By.text("Automatic date & time"),
                 By.clazz("android.widget.ListView"));
-        assertTrue((switchWidget).isChecked());
+        // Test requires "Automatic date & time" switch widget to start in the on state.
+        if (!switchWidget.isChecked()) {
+            switchWidget.click();
+        }
         assertTrue(!device.findObject(new UiSelector().text("Set date")).isEnabled());
         assertTrue(!device.findObject(new UiSelector().text("Set time")).isEnabled());
         switchWidget.click();
