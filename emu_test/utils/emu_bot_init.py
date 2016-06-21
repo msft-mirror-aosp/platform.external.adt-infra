@@ -113,7 +113,7 @@ if __name__ == "__main__":
     clean_up()
   except:
     pass
-  rc = update_sdk_with_timeout('add-on,system-image,extra,platform-tool,platform,tool', 900)
+  rc = update_sdk_with_timeout('add-on,system-image,extra,platform-tool,platform,tool', 3600)
 
   # kill adb process, during update of sdk tools, it will run adb start-server, which leaves
   # a child adb process, clean it up here to avoid hanging of script
