@@ -1,8 +1,10 @@
 """Run CTS tests for emulator"""
 
 import cts_results_parser as ctsparser
+from test_cts_exclusions import cts_plans_current_exclusions
 
 import json
+import xml.etree.ElementTree as ElementTree
 import os, platform
 import unittest
 import psutil
@@ -69,10 +71,39 @@ class CTSTestCase(EmuBaseTestCase):
         cts_dir = "%s-%s" % (api_to_android_version[avd.api], avd.abi)
         return os.path.join(cts_home, cts_dir, 'android-cts', 'tools', 'cts-tradefed')
 
+    @classmethod
+    def get_cts_plan_dir(cls, avd):
+        home_dir = os.path.expanduser('~')
+        cts_home = os.path.join(home_dir, 'Android', 'CTS')
+        cts_dir = "%s-%s" % (api_to_android_version[avd.api], avd.abi)
+        return os.path.join(cts_home, cts_dir, 'android-cts', 'repository', 'plan')
+
+    @classmethod
+    def get_emu_stable_plan(cls, avd, plan):
+        cur_exclusions = cts_plans_current_exclusions();
+        if (plan in cur_exclusions):
+            plan_exclusions = cur_exclusions[plan]
+            plan_dir = cls.get_cts_plan_dir(avd)
+            plan_path = os.path.join(plan_dir, plan + '.xml')
+            emu_stable_plan = plan + '-emu-stable'
+            emu_stable_plan_path = os.path.join(plan_dir, emu_stable_plan + '.xml')
+            tree = ElementTree.parse(plan_path)
+            for entry in tree.findall('Entry'):
+                test_package = entry.attrib['name']
+                if test_package in plan_exclusions:
+                    entry.set('exclude', ';'.join(plan_exclusions[test_package]))
+            tree.write(emu_stable_plan_path)
+            return emu_stable_plan
+        else:
+            return plan
+
     def run_cts_plan(self, avd, plan):
         result_re = re.compile("^.*XML test result file generated at (.*). Passed ([0-9]+), Failed ([0-9]+), Not Executed ([0-9]+)")
         #self.assertEqual(self.create_avd(avd), 0)
         self.launch_emu_and_wait(avd)
+
+        # Create the stable (excluding excluded tests) version of the plan.
+        plan = self.get_emu_stable_plan(avd, plan)
 
         exec_path = self.get_cts_exec(avd)
         cst_cmd = [exec_path, "run", "cts", "--plan", plan, "--disable-reboot"]
@@ -188,7 +219,6 @@ class CTSTestCase(EmuBaseTestCase):
                                 self._formatSet(missing_passes))
         self.assertEqual(0, len(new_fails) + len(missing_passes))
 
-
 def create_test_case_for_avds():
     avd_name_re = re.compile("([^-]*)-(.*)-(.*)-(\d+)-gpu_(.*)-api(\d+)-CTS$")
     def create_avd_from_name(avd_str):
@@ -206,7 +236,6 @@ def create_test_case_for_avds():
             setattr(CTSTestCase, "test_cts_%s" % avd, fn(avd, "CTS"))
 
 # TODO: create test case based on config file. Since we need to do some pre-work to run CTS, use static AVD at this time for simplicity.
-create_test_case_for_avds()
 #utils.emu_testcase.create_test_case_from_file("cts", CTSTestCase, CTSTestCase.run_cts_plan)
 
 create_test_case_for_avds()
