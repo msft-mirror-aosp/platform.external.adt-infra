@@ -76,7 +76,7 @@ class CTSTestCase(EmuBaseTestCase):
         home_dir = os.path.expanduser('~')
         cts_home = os.path.join(home_dir, 'Android', 'CTS')
         cts_dir = "%s-%s" % (api_to_android_version[avd.api], avd.abi)
-        return os.path.join(cts_home, cts_dir, 'android-cts', 'repository', 'plan')
+        return os.path.join(cts_home, cts_dir, 'android-cts', 'repository', 'plans')
 
     @classmethod
     def get_emu_stable_plan(cls, avd, plan):
