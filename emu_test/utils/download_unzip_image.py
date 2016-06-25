@@ -115,6 +115,7 @@ def download_and_unzip():
           unzip_addon_dir(file_name, dst_dir)
         else:
           verbose_call(['unzip', '-o', file_name, '-d', dst_dir])
+        verbose_call(['rm', '-rf', file_name])
       else:
         raise ValueError('Error: Unknown branch!')
     except Exception as e:
