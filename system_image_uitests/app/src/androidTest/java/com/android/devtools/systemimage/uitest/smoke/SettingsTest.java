@@ -241,4 +241,99 @@ public class SettingsTest {
             );
         }
     }
+
+    /**
+     * Verifies Time Zone option can be enabled.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581409
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > Date & Time
+     *   3. Verify automatic time zone option is enabled.
+     *   4. Disable automatic time zone.
+     *   5. Verify Select time zone is enabled.
+     *   6. Enable time zone.
+     *   Verify:
+     *   Select time zone text and Pacific Daylight Time text can be seen.
+     *   </pre>
+     */
+    @Test
+    public void enableTimeZone() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = testFramework.getDevice();
+        AppLauncher.launch(instrumentation, "Settings");
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+        itemList.setAsVerticalList();
+        itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
+        device.findObject(new UiSelector().text("Date & time")).click();
+
+        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
+                instrumentation,
+                By.clazz("android.widget.Switch"),
+                By.text("Automatic time zone"),
+                By.clazz("android.widget.ListView"));
+        // Initialize automatic time zone option to enabled state.
+        if (!switchWidget.isChecked()) {
+            switchWidget.click();
+        }
+        assertTrue(!device.findObject(new UiSelector().text("Select time zone")).isEnabled());
+        // Disable automatic time zone option.
+        switchWidget.click();
+        assertTrue(device.findObject(new UiSelector().text("Select time zone")).isEnabled());
+        device.findObject(new UiSelector().text("Select time zone")).click();
+        assertTrue(device.findObject(new UiSelector().text("Select time zone")).exists());
+        assertTrue(device.findObject(new UiSelector().text("Pacific Daylight Time")).exists());
+    }
+
+    /**
+     * Verifies 24-hour format is enabled.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581410
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > Date & Time
+     *   3. Verify 24-hour format option is disabled.
+     *   4. Verify example time on screen shows 1:00 PM.
+     *   5. Enable 24-hour format.
+     *   Verify:
+     *   Example time on screen shows 13:00.
+     *   </pre>
+     */
+    @Test
+    public void enableTwentyFourHourFormat() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = testFramework.getDevice();
+        AppLauncher.launch(instrumentation, "Settings");
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+        itemList.setAsVerticalList();
+        itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
+        device.findObject(new UiSelector().text("Date & time")).click();
+
+        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
+                instrumentation,
+                By.clazz("android.widget.Switch"),
+                By.text("Use 24-hour format"),
+                By.clazz("android.widget.ListView"));
+        // Initialize 24-hour format option to disabled state.
+        if (switchWidget.isChecked()) {
+            switchWidget.click();
+        }
+        assertTrue(device.findObject(new UiSelector().text("Use 24-hour format")).exists());
+        assertTrue(device.findObject(new UiSelector().text("1:00 PM")).exists());
+        // Enable 24-hour format.
+        switchWidget.click();
+        assertTrue(device.findObject(new UiSelector().text("13:00")).exists());
+        // Clean up by disabling 24-hour format option.
+        switchWidget.click();
+    }
 }
