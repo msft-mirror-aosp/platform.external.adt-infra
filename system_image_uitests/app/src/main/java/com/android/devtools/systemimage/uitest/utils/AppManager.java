@@ -29,6 +29,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -202,8 +203,9 @@ public class AppManager {
     }
 
     /**
-     * Clicks "Show system" text option from the "More options" drop down to show all the
-     * system apps.
+     * Show all the system apps.
+     * For API >= 23, clicks "Show system" text option from the "More options" drop down,
+     * for APIs <= 22 scrolls to the last tab to select the "All" option.
      *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
@@ -215,8 +217,18 @@ public class AppManager {
 
         // Launch the "Apps" page.
         openAppList(instrumentation);
-        // From "More options" drop down click "Show system"
-        device.pressMenu();
-        device.findObject(new UiSelector().textContains("Show system")).click();
+
+        if (SystemUtil.getApiLevel() > 22) {
+            // From "More options" drop down click "Show system"
+            device.pressMenu();
+            device.findObject(new UiSelector().textContains("Show system")).click();
+        } else {
+            // Scroll to the last tab for all the system apps for APIs <= 22
+            UiScrollable itemList =
+                    new UiScrollable(new UiSelector().resourceId(Res.APPS_TAB_CONTAINER_RES));
+            itemList.setAsHorizontalList();
+            itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                    "All").clickAndWaitForNewWindow();
+        }
     }
 }
