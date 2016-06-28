@@ -29,6 +29,7 @@ public class Res {
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard_container|list)";
     public static final String APPS_LIST_CONTAINER_RES = "com.android.settings:id/list_container";
+    public static final String APPS_TAB_CONTAINER_RES = "com.android.settings:id/pager";
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
             "com.android.settings:id/container_material";
     public static final String ANDROID_WELCOME_CLING_RES =
