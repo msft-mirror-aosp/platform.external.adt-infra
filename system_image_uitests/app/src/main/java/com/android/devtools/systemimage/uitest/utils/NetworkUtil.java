@@ -17,12 +17,20 @@
 package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
+import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 
+import org.junit.Rule;
+
+import android.app.Instrumentation;
+import android.content.Context;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.Until;
+import android.telephony.TelephonyManager;
 
 import java.util.concurrent.TimeUnit;
+
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 
 /**
  * Static utility methods pertaining to network status.
@@ -75,4 +83,17 @@ public class NetworkUtil {
                 );
         return isTrue;
     }
+
+    public static boolean hasCellularNetworkConnection(Instrumentation instrumentation) {
+
+        TelephonyManager tm = (TelephonyManager) instrumentation.getContext().getSystemService(
+                Context.TELEPHONY_SERVICE);
+
+        if (tm.getDataState() != TelephonyManager.DATA_DISCONNECTED) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

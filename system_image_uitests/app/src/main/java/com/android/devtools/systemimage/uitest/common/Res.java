@@ -23,34 +23,41 @@ package com.android.devtools.systemimage.uitest.common;
  */
 public class Res {
     // System and Google application resource IDs ("com.android.*" or "com.google.*")
-    public static final String LAUNCHER_LIST_CONTAINER_RES =
-            "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
-                    + "/(all_apps_container|apps_customize_pane_content|apps_list_view)";
-    public static final String SETTINGS_LIST_CONTAINER_RES =
-            "(com.android.settings|android):id/(dashboard_container|list)";
-    public static final String APPS_LIST_CONTAINER_RES = "com.android.settings:id/list_container";
-    public static final String APPS_TAB_CONTAINER_RES = "com.android.settings:id/pager";
-    public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
-            "com.android.settings:id/container_material";
+
+    public static final String BROWSER_BOOKMARKS_LABEL_RES = "com.android.browser:id/label";
+    public static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
+    public static final String BROWSER_URL_TEXT_FIELD_RES = "com.android.browser:id/url";
+
+    public static final String ANDROID_LAUNCHER_WELCOME_CLING_RES =
+            "com.android.launcher\\d*:id/cling_dismiss";
     public static final String ANDROID_WELCOME_CLING_RES =
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
                     + "/cling_dismiss_longpress_info";
-    public static final String ANDROID_LAUNCHER_WELCOME_CLING_RES =
-            "com.android.launcher\\d*:id/cling_dismiss";
-    public static final String BROWSER_URL_TEXT_FIELD_RES = "com.android.browser:id/url";
-    public static final String BROWSER_BOOKMARKS_LABEL_RES = "com.android.browser:id/label";
-    public static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
+    public static final String LAUNCHER_LIST_CONTAINER_RES =
+            "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
+                    + "/(all_apps_container|apps_customize_pane_content|apps_list_view)";
+
+    public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
+            "com.android.settings:id/container_material";
+    public static final String APPS_LIST_CONTAINER_RES = "com.android.settings:id/list_container";
+    public static final String APPS_TAB_CONTAINER_RES = "com.android.settings:id/pager";
+    public static final String NETWORK_SWITCHES_CONTAINER_RES =
+            "com.android.settings:id/network_switches";
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
-    public static final String WIFI_ICONS_RES = "com.android.systemui:id/wifi_signal";
-    public static final String MOBILE_TYPE_ICONS_RES = "com.android.systemui:id/mobile_type";
+    public static final String SETTINGS_LIST_CONTAINER_RES =
+            "(com.android.settings|android):id/(dashboard_container|list)";
+
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
+    public static final String MOBILE_TYPE_ICONS_RES = "com.android.systemui:id/mobile_type";
     public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
-    public static final String NOW_SIGNIN_SCREEN_RES =
-            "com.google.android.googlequicksearchbox\\d*:id/header_title";
-    public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
-            "com.google.android.googlequicksearchbox\\d*:id/decline_button";
+    public static final String WIFI_ICONS_RES = "com.android.systemui:id/wifi_signal";
+
     public static final String NOW_SIGNIN_ACCEPT_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/accept_button";
+    public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
+            "com.google.android.googlequicksearchbox\\d*:id/decline_button";
+    public static final String NOW_SIGNIN_SCREEN_RES =
+            "com.google.android.googlequicksearchbox\\d*:id/header_title";
 
     // Third-party application resource IDs
     public static final String APP_IMAGE_VIEW_ID =
