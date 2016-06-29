@@ -27,9 +27,11 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import android.app.Instrumentation;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
+import android.telephony.TelephonyManager;
 
 /**
  * System image test framework that standardizes a test's initialization and finalization.
@@ -109,6 +111,5 @@ public class SystemImageTestFramework implements TestRule {
             }
         };
     }
-
 
 }
