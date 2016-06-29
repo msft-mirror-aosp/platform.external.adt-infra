@@ -35,16 +35,15 @@ def zip_and_upload():
       verbose_call(['ssh', remote_host, 'mkdir -p %s' % args.remote_dir])
       verbose_call(['scp', args.zip_name, remote_path])
 
+    cts_logdir = os.path.join(args.log_dir, 'CTS_test', 'cts_combined_result')
+
     # if cts result is available, upload to public_html directory
-    cts_logdir = os.path.join(args.log_dir, "CTS_test")
     if os.path.isdir(cts_logdir):
-      for x in os.listdir(cts_logdir):
-        if os.path.isdir(os.path.join(cts_logdir,x)):
-          builderName = os.path.basename(os.path.normpath(args.remote_dir))
-          cts_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "CTS_Result", builderName)
-          cts_dst = os.path.normpath(cts_dst)
-          verbose_call(['ssh', remote_host, 'mkdir -p %s' % cts_dst])
-          verbose_call(['scp', '-r', os.path.join(cts_logdir, x, ''), '%s:%s' % (remote_host, os.path.join(cts_dst, args.zip_name[:-4]))])
+      builderName = os.path.basename(os.path.normpath(args.remote_dir))
+      cts_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "CTS_Result", builderName)
+      cts_dst = os.path.normpath(cts_dst)
+      verbose_call(['ssh', remote_host, 'mkdir -p %s' % cts_dst])
+      verbose_call(['scp', '-r', os.path.join(cts_logdir, ''), '%s:%s' % (remote_host, os.path.join(cts_dst, args.zip_name[:-4]))])
 
     # if ui result is available, upload to public_html directory
     ui_logdir = os.path.join(args.log_dir, "UI_test")

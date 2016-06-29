@@ -15,7 +15,7 @@ import platform
 import threading
 import shutil
 from emu_error import *
-from emu_argparser import emu_args
+import utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
 from ConfigParser import ConfigParser
@@ -54,13 +54,13 @@ class LoggedTestCase(unittest.TestCase):
     @classmethod
     def setupLogger(cls, logger_name, file_name, formatter):
 
-        file_handler = logging.FileHandler(os.path.join(emu_args.session_dir, file_name))
+        file_handler = logging.FileHandler(os.path.join(emu_argparser.emu_args.session_dir, file_name))
         file_handler.setFormatter(formatter)
         file_handler.setLevel(logging.DEBUG)
         # Redirect message to standard out, these messages indicate test progress, they don't belong to stderr
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)
-        console_handler.setLevel(getattr(logging, emu_args.loglevel.upper()))
+        console_handler.setLevel(getattr(logging, emu_argparser.emu_args.loglevel.upper()))
 
         logger = logging.getLogger(logger_name)
         logger.propagate = False
@@ -131,7 +131,7 @@ class EmuBaseTestCase(LoggedTestCase):
 
     def launch_emu(self, avd):
         """Launch given avd and return immediately"""
-        exec_path = emu_args.emulator_exec
+        exec_path = emu_argparser.emu_args.emulator_exec
         launch_cmd = [exec_path, "-avd", str(avd), "-verbose", "-show-kernel", "-wipe-data"]
         if avd.classic == "yes":
             launch_cmd += ["-engine", "classic"]
@@ -141,8 +141,8 @@ class EmuBaseTestCase(LoggedTestCase):
             launch_cmd += ["-gpu", "host"]
         def launch_in_thread():
             test_name = self.id().rsplit('.', 1)[-1]
-            logcat_path = os.path.join(emu_args.session_dir, "%s_logcat.txt" % test_name)
-            verbose_log_path = os.path.join(emu_args.session_dir, "%s_verbose.txt" % test_name)
+            logcat_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_logcat.txt" % test_name)
+            verbose_log_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_verbose.txt" % test_name)
             with open(logcat_path, 'w') as output:
                 self.run_with_timeout(["adb", "start-server"], 20)
                 psutil.Popen(["adb", "logcat"], stdout=output, stderr=STDOUT)
@@ -158,7 +158,7 @@ class EmuBaseTestCase(LoggedTestCase):
         t_launch = threading.Thread(target=launch_in_thread)
         t_launch.start()
         # TODO: decrease the wait time
-        # It is noticed that it takes ~10 seconds for process to quit in some failiure cases
+        # It is noticed that it takes ~10 seconds for process to quit in some failure cases
         # But if the boot up time improves to be under 15 seconds, we will need to fine tune this wait time
         time.sleep(15)
         if self.start_proc.poll() or not self.find_emu_proc():
@@ -192,7 +192,7 @@ class EmuBaseTestCase(LoggedTestCase):
         start_time = time.time()
         self.launch_emu(avd)
         completed = "0"
-        while time.time()-start_time < emu_args.timeout_in_seconds:
+        while time.time()-start_time < emu_argparser.emu_args.timeout_in_seconds:
             cmd = ["adb", "shell", "getprop", "sys.boot_completed"]
             try:
                 (exit_code, output, err) = self.run_with_timeout(cmd, 10)
@@ -207,12 +207,13 @@ class EmuBaseTestCase(LoggedTestCase):
             time.sleep(1)
         if completed is not "1":
             self.m_logger.info('command output - %s %s', output, err)
-            self.m_logger.error('AVD %s didn\'t boot up within %s seconds', avd, emu_args.timeout_in_seconds)
+            self.m_logger.error('AVD %s didn\'t boot up within %s seconds', avd,
+                                emu_argparser.emu_args.timeout_in_seconds)
             self.boot_time = -1
-            raise TimeoutError(avd, emu_args.timeout_in_seconds)
+            raise TimeoutError(avd, emu_argparser.emu_args.timeout_in_seconds)
         self.boot_time = time.time() - start_time
         self.m_logger.info('AVD %s, boot time is %s', avd, self.boot_time)
-        if not emu_args.skip_adb_perf:
+        if not emu_argparser.emu_args.skip_adb_perf:
             self.run_adb_perf(avd)
         return self.boot_time
 
@@ -462,8 +463,8 @@ def create_test_case_from_file(desc, testcase_class, test_func):
             ">=": fn_geq,
             "<=": fn_leq
             }
-        if emu_args.filter_dict is not None:
-            for key, value in emu_args.filter_dict.iteritems():
+        if emu_argparser.emu_args.filter_dict is not None:
+            for key, value in emu_argparser.emu_args.filter_dict.iteritems():
                 if any([value.startswith(x) for x in ["==", "!=", "<>", ">=", "<="]]):
                     cmp_op = value[:2]
                     cmp_val = value[2:]
@@ -494,14 +495,14 @@ def create_test_case_from_file(desc, testcase_class, test_func):
             avd_config_mesa = avd_config._replace(gpu = "mesa")
             create_test_case(avd_config_mesa, op)
 
-    with open(emu_args.config_file, "rb") as file:
+    with open(emu_argparser.emu_args.config_file, "rb") as file:
         reader = csv.reader(file)
         for row in reader:
             #skip the first line
             if reader.line_num == 1:
                 continue
             if reader.line_num == 2:
-                idx = [i for i, j in enumerate(row) if j in emu_args.builder_name]
+                idx = [i for i, j in enumerate(row) if j in emu_argparser.emu_args.builder_name]
                 assert len(idx) == 1, "Unexpected builder name in config file"
                 builder_idx = idx[0]
             else:
