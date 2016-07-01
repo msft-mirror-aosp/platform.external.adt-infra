@@ -194,6 +194,11 @@
        "name": "cross",
        "id": "_4",
      },
+     "UI": {
+       "name": "emulator ui test",
+       "id": "_5",
+       "scheduler": "ui_scheduler",
+     },
   },
 
   "builders": {
@@ -206,7 +211,7 @@
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds", "UI"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 Quadro 600": {
@@ -293,6 +298,10 @@
     },
     "cts_scheduler": {
       "project": ["mnc-emu-dev", "emu-master-dev"],
+      "type": "emu_scheduler",
+    },
+    "ui_scheduler": {
+      "project": ["emu-master-dev"],
       "type": "emu_scheduler",
     },
  },
