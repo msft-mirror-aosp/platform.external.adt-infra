@@ -32,6 +32,7 @@ def RunSteps(api):
   env_path = ['%(PATH)s']
   emulator_branches = ['emu-master-dev', 'emu-2.2-release']
   is_cts = "cts" in str(api.properties.get('scheduler'))
+  is_ui = "ui" in str(api.properties.get('scheduler'))
 
   # find android sdk root directory
   home_dir = os.path.expanduser('~')
@@ -178,22 +179,31 @@ def RunSteps(api):
   def PythonTestStep(description,
                      session_dir,
                      test_pattern,
-                     cfg_file, cfg_filter, emulator_path):
-    deferred_step_result = api.python(description, dotest_path,
-                                      ['-l', 'INFO', '-exec', emulator_path,
-                                       '-s', session_dir,
-                                       '-p', test_pattern,
-                                       '-c', api.path.join(script_root, 'config', cfg_file),
-                                       '-n', buildername,
-                                       '-f', cfg_filter],
-                                      env=env, stderr=api.raw_io.output('err'))
+                     cfg_file,
+                     cfg_filter,
+                     emulator_path,
+                     skip_adb_perf=False):
+    test_args = ['-l', 'INFO', '-exec', emulator_path,
+                 '-s', session_dir,
+                 '-p', test_pattern,
+                 '-c', api.path.join(script_root, 'config', cfg_file),
+                 '-n', buildername,
+                 '-f', cfg_filter]
+    if skip_adb_perf is True:
+      test_args.append('--skip-adb-perf')
+    deferred_step_result = api.python(description, dotest_path, test_args, env=env, stderr=api.raw_io.output('err'))
     if not deferred_step_result.is_ok:
       stderr_output = deferred_step_result.get_error().result.stderr
       print stderr_output
       lines = [line for line in stderr_output.split('\n')
                if line.startswith('FAIL:') or line.startswith('TIMEOUT:')]
       for line in lines:
-        api.step.active_result.presentation.logs[line] = ''
+        if "UI" in description and line.startswith('FAIL:'):
+          test_method = line[6:]
+          api.step.active_result.presentation.links['View Report: ' + test_method] = \
+              api.path.join("..", "..", "..", "UI_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), test_method + '_report', "index.html")
+        else:
+          api.step.active_result.presentation.logs[line] = ''
     else:
       print deferred_step_result.get_result().stderr
     if "CTS" in description:
@@ -210,7 +220,7 @@ def RunSteps(api):
     for emu_branch in emulator_branch_to_use:
       emulator_path = api.path.join(emu_branch, 'tools', 'emulator')
       emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
-      if not is_cts:
+      if not is_cts and not is_ui:
         for step in steps_to_run:
           step_data = bootSteps[step]
           PythonTestStep('Boot Test - %s System Image - %s' % (step_data.description, emu_desc),
@@ -219,25 +229,34 @@ def RunSteps(api):
                          'boot_cfg.csv',
                          step_data.filter,
                          emulator_path)
-      elif project in emulator_branches:
+      elif is_cts and project in emulator_branches:
         PythonTestStep('Run Emulator CTS Test',
                        api.path.join(log_dir, 'CTS_test'),
                        'test_cts.*',
                        'cts_cfg.csv',
                        '{}',
                        emulator_path)
+      elif is_ui:
+        PythonTestStep('Run Emulator UI Test',
+                       api.path.join(log_dir, 'UI_test'),
+                       'test_ui.*',
+                       'ui_cfg.csv',
+                       '{}',
+                       emulator_path,
+                       True)
 
-    api.python("Zip and Upload Logs", log_util_path,
-               ['--dir', log_dir,
-                '--name', 'build_%s-rev_%s.zip' % (buildnum, rev),
-                '--ip', MASTER_IP,
-                '--user', MASTER_USER,
-                '--dst', '%s%s/'% (api.properties['logs_dir'], buildername)],
-                env=env)
+    upload_log_args = ['--dir', log_dir,
+                       '--name', 'build_%s-rev_%s.zip' % (buildnum, rev),
+                       '--ip', MASTER_IP,
+                       '--user', MASTER_USER,
+                       '--dst', '%s%s/'% (api.properties['logs_dir'], buildername)]
+    if is_ui:
+      upload_log_args.append('--skiplog')
+    api.python("Zip and Upload Logs", log_util_path, upload_log_args, env=env)
 
   # If this build is triggered by scheduler, and it passes above steps
   # trigger build on cross builers
-  if not is_cts and not is_cross_build:
+  if not is_cts and not is_ui and not is_cross_build:
     setProps()
     api.trigger(getProps())
 
