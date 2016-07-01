@@ -45,8 +45,8 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             self.m_logger.error("Error in cleanup - %r", e)
             pass
 
-    def _save_gradle_test_report(self, avd, gradle_report_path):
-        dst_path = os.path.join(emu_args.session_dir, str(avd) + '_report')
+    def _save_gradle_test_report(self, test_method, gradle_report_path):
+        dst_path = os.path.join(emu_args.session_dir, test_method + '_report')
         if os.path.exists(dst_path):
             shutil.rmtree(dst_path)
         shutil.copytree(gradle_report_path, dst_path)
@@ -67,16 +67,19 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
 
     def ui_test_check(self, avd):
         self.launch_emu_and_wait(avd)
-        self.m_logger.info('AVD %s, system image UI tests start.', avd)
+        self.m_logger.info('System image UI tests (%s) start.' % self._testMethodName)
         uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'system_image_uitests')
         proc = self._launch_ui_test_with_avd_configs(uitest_dir, avd)
         (output, err) = proc.communicate()
-        self.m_logger.info(output)
-        self.m_logger.info(err)
-        m = re.search('file://(.+)index\.html', err)
-        self.assertIsNotNone(m.group(1), "Failed to find the gradle test report.")
-        self._save_gradle_test_report(avd, m.group(1))
-        self.m_logger.info('AVD %s, system image UI tests end.', avd)
+        self.m_logger.info('gradle_stdout:\n' + output)
+        self.m_logger.info('gradle_stderr:\n' + err)
+        if err is not None and len(err.strip()) > 0:
+            m = re.search('file://(.+)index\.html', err)
+            if m.group(1) is None:
+                self.m_logger.error("Failed to find the gradle test report.")
+            self._save_gradle_test_report(self._testMethodName, m.group(1))
+        self.m_logger.info('System image UI tests (%s) end.' % self._testMethodName)
+        self.assertTrue(err is None or len(err.strip()) == 0, "The UI tests failed.")
 
     def run_ui_test(self, avd_config):
         self.avd_config = avd_config
@@ -84,16 +87,8 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.ui_test_check(avd_config)
 
 
-def create_test_case_for_avds():
-    avd_list = emu_args.avd_list
-    for avd in avd_list:
-        def fn(i):
-            return lambda self: self.ui_test_check(i)
-        setattr(UiAutomatorBaseTestCase, "test_ui_%s" % avd, fn(avd))
-
-
 if emu_args.config_file is None:
-    create_test_case_for_avds()
+    sys.exit(0)
 else:
     create_test_case_from_file("ui", UiAutomatorBaseTestCase, UiAutomatorBaseTestCase.run_ui_test)
 
