@@ -84,7 +84,6 @@ def RunSteps(api):
                'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
                'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
                'nyc-emu-dev': bootStep('NYC', '{"ori": "nyc"}'),
-               'nyc-emu-release': bootStep('NYC', '{"ori": "nyc"}'),
                'lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
                'klp-emu-dev': bootStep('KLP', '{"ori": "klp"}'),
                'gb-emu-dev': bootStep('GB', '{"ori": "gb"}'),
@@ -127,12 +126,11 @@ def RunSteps(api):
   build_cache = api.path.join(script_root, 'config', 'build_cache.csv')
   def getProps():
     props = {'blamelist': api.properties.get('blamelist'),
-             'file_list': file_list,
+             'file_list': '',
              'logs_dir': api.properties.get('logs_dir'),
              'buildername': '%s_cross-builds' % buildername.rsplit('_',1)[0],
              'triggered': 'True',
              'got_revision': rev,
-             project: rev,
              'revision': rev}
     last_build = {}
     with open(build_cache,'r') as csvfile:
@@ -142,9 +140,13 @@ def RunSteps(api):
           last_build[row[0]] = [row[1], row[2]]
     emulators,steps = getTestConfig(project, True)
     for k in last_build:
-      if k != project and (k in steps or k in emulators):
+      if k in emulators:
+        props['file_list'] += last_build[k][1] + ','
         props[k] = last_build[k][0]
-        props['file_list'] += ',' + last_build[k][1]
+      elif k in steps:
+        props[k + '_file'] = last_build[k][1]
+        props[k] = last_build[k][0]
+
     return props
 
   def setProps():
@@ -217,11 +219,16 @@ def RunSteps(api):
   emulator_branch_to_use = [x for x in emulator_branch_to_use if (api.properties.get(x) or x not in emulator_branches)]
 
   with api.step.defer_results():
-    for emu_branch in emulator_branch_to_use:
-      emulator_path = api.path.join(emu_branch, 'tools', 'emulator')
-      emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
-      if not is_cts and not is_ui:
-        for step in steps_to_run:
+    for step in steps_to_run:
+      if is_cross_build:
+        api.python("Download Image - %s" % step, image_util_path,
+                   ['--file', api.properties.get(step+'_file'),
+                    '--build-dir', build_dir, '--clean-system-image-dir'],
+                   env=env)
+      for emu_branch in emulator_branch_to_use:
+        emulator_path = api.path.join(emu_branch, 'tools', 'emulator')
+        emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
+        if not is_cts and not is_ui:
           step_data = bootSteps[step]
           PythonTestStep('Boot Test - %s System Image - %s' % (step_data.description, emu_desc),
                          api.path.join(log_dir, 'boot_test_%s_sysimage-%s' % (step_data.description, emu_desc)),
@@ -229,21 +236,21 @@ def RunSteps(api):
                          'boot_cfg.csv',
                          step_data.filter,
                          emulator_path)
-      elif is_cts and project in emulator_branches:
-        PythonTestStep('Run Emulator CTS Test',
-                       api.path.join(log_dir, 'CTS_test'),
-                       'test_cts.*',
-                       'cts_cfg.csv',
-                       '{}',
-                       emulator_path)
-      elif is_ui:
-        PythonTestStep('Run Emulator UI Test',
-                       api.path.join(log_dir, 'UI_test'),
-                       'test_ui.*',
-                       'ui_cfg.csv',
-                       '{}',
-                       emulator_path,
-                       True)
+        elif is_cts and project in emulator_branches:
+          PythonTestStep('Run Emulator CTS Test',
+                         api.path.join(log_dir, 'CTS_test'),
+                         'test_cts.*',
+                         'cts_cfg.csv',
+                         '{}',
+                         emulator_path)
+        elif is_ui:
+          PythonTestStep('Run Emulator UI Test',
+                         api.path.join(log_dir, 'UI_test'),
+                         'test_ui.*',
+                         'ui_cfg.csv',
+                         '{}',
+                         emulator_path,
+                         True)
 
     upload_log_args = ['--dir', log_dir,
                        '--name', 'build_%s-rev_%s.zip' % (buildnum, rev),
