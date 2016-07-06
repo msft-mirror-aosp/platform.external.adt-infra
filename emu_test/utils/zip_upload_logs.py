@@ -27,11 +27,11 @@ def zip_and_upload():
 
   try:
     args.remote_dir = args.remote_dir.replace(" ", "_")
+    remote_host = '%s@%s' % (args.remote_user, args.remote_ip)
+    remote_path = '%s:%s' % (remote_host, args.remote_dir)
 
     if args.skiplog is False:
       verbose_call(['zip', '-r', args.zip_name, args.log_dir])
-      remote_host = '%s@%s' % (args.remote_user, args.remote_ip)
-      remote_path = '%s:%s' % (remote_host, args.remote_dir)
       verbose_call(['ssh', remote_host, 'mkdir -p %s' % args.remote_dir])
       verbose_call(['scp', args.zip_name, remote_path])
 
