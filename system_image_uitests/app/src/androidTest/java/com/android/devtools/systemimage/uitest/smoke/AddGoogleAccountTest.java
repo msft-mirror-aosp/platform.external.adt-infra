@@ -64,7 +64,7 @@ public class AddGoogleAccountTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice mDevice = testFramework.getDevice();
 
-        if (SystemUtil.getApiLevel() > 19) {
+        if (testFramework.getApi() > 19) {
             AppLauncher.launch(instrumentation, "Contacts");
             // Check if the app is running for the first time.
             UiObject checkingInfo =
