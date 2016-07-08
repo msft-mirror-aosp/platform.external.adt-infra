@@ -62,6 +62,10 @@ public class SystemImageTestFramework implements TestRule {
         return args.getString("tag");
     }
 
+    public boolean isGoogleApiImage() {
+        return "google_apis".equals(getTag());
+    }
+
     public String getOrigin() {
         return args.getString("origin");
     }

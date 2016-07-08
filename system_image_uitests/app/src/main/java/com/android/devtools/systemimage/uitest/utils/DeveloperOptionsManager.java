@@ -50,11 +50,16 @@ public class DeveloperOptionsManager {
                         new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
                 );
         itemList.setAsVerticalList();
-        UiObject item =
-                itemList.getChildByText(
-                        new UiSelector().className("android.widget.TextView"),
-                        "About phone"
-                );
+        UiObject item;
+        try {
+            item = itemList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"),
+                    "About phone");
+        } catch (UiObjectNotFoundException e) {
+            item = itemList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"),
+                    "About emulated device");
+        }
         item.clickAndWaitForNewWindow();
 
         // Click "Build number"

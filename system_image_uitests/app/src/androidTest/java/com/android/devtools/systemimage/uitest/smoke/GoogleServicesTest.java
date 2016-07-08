@@ -65,7 +65,8 @@ public class GoogleServicesTest {
     @Test
     public void verifyGoogleApps() throws Exception{
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        if (!"google_apis".equals(testFramework.getTag())) {
+
+        if (!testFramework.isGoogleApiImage()) {
             return;
         }
 
