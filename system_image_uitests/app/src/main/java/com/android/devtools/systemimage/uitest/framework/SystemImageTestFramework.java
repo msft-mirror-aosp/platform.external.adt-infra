@@ -50,8 +50,8 @@ public class SystemImageTestFramework implements TestRule {
         return mDevice;
     }
 
-    public String getApi() {
-        return args.getString("api");
+    public int getApi() {
+        return Integer.parseInt(args.getString("api"));
     }
 
     public String getAbi() {
