@@ -54,7 +54,7 @@ public class SettingsTest {
 
 
     /**
-     * Verifies Location page opens.
+     * Verifies Location page opens on Google API images.
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
@@ -71,6 +71,11 @@ public class SettingsTest {
     public void testLocationSettingsPageOpen() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
+
+        if (!testFramework.isGoogleApiImage()) {
+            return;
+        }
+
         AppLauncher.launch(instrumentation, "Settings");
         UiScrollable itemList = new UiScrollable(
                 new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
@@ -198,7 +203,7 @@ public class SettingsTest {
     }
 
     /**
-     * Verifies show cards confirmation page opens.
+     * Verifies show cards confirmation page opens on Google API images.
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
@@ -216,6 +221,11 @@ public class SettingsTest {
     public void confirmNowCardsPageOpen() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
+
+        if (!testFramework.isGoogleApiImage()) {
+            return;
+        }
+
         AppLauncher.launch(instrumentation, "Settings");
         UiScrollable itemList = new UiScrollable(
                 new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
