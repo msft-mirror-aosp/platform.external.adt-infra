@@ -248,8 +248,9 @@ class EmuBaseTestCase(LoggedTestCase):
 
     def update_config(self, avd_config):
         # avd should be found $HOME/.android/avd/
-        dst_path = os.path.join(os.path.expanduser('~'), '.android', 'avd',
-                                '%s.avd' % avd_config.name(), 'config.ini')
+        avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd',
+                               '%s.avd' % avd_config.name())
+        dst_path = os.path.join(avd_dir, 'config.ini')
         class AVDIniConverter:
             output_file = None
             def __init__(self, file_path):
@@ -308,6 +309,18 @@ class EmuBaseTestCase(LoggedTestCase):
             data = fin.read().splitlines(True)
         with open(dst_path, 'w') as fout:
             fout.writelines(data[1:])
+        # create sdcard.img
+        try:
+            img_path = os.path.join(avd_dir, 'sdcard.img')
+            create_img_cmd = ['mksdcard', config.get('Common', 'sdcard.size'), img_path]
+            self.m_logger.info('Create sdcard.img, cmd: %s', ' '.join(create_img_cmd))
+            psutil.Popen(create_img_cmd, stdout=PIPE, stderr=PIPE).communicate()
+        except ConfigParser.NoOptionError:
+            self.m_logger.exception('Check avd_template.ini')
+            pass
+        except:
+            self.m_logger.exception('Fails to create sdcard.img')
+            pass
 
     def create_avd(self, avd_config):
         """Create avd if doesn't exist
