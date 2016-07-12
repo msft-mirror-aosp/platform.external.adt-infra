@@ -46,7 +46,7 @@ public class VpnTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(60);
+    public Timeout globalTimeout = Timeout.seconds(90);
 
     private static boolean verifyVpnStatus(final UiDevice device) throws Exception {
         // Verify that a VPN lock icon is on the status bar.
