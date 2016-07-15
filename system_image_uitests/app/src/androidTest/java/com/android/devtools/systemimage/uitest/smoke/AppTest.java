@@ -66,11 +66,9 @@ public class AppTest {
     public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        AppManager.installApp(instrumentation, "HelloCompute.apk");
         AppLauncher.launch(instrumentation, "RsHelloCompute");
         assertTrue(testFramework.getDevice().findObject(new UiSelector().resourceId(
                 Res.APP_IMAGE_VIEW_ID)).exists());
-        AppManager.uninstallApp(instrumentation, "RsHelloCompute", null);
     }
 
     /**

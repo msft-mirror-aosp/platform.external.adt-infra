@@ -43,8 +43,6 @@ public class AppManagerTest {
     public void testAppManager() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        AppManager.installApp(instrumentation, "FredVPN.apk");
-        AppManager.installApp(instrumentation, "HelloCompute.apk");
         Assert.assertTrue(
                 "Failed to find FredVPN.",
                 AppManager.isAppInstalled(instrumentation, "TestVPN", null)
@@ -53,7 +51,5 @@ public class AppManagerTest {
                 "Failed to find RsHelloCompute.",
                 AppManager.isAppInstalled(instrumentation, "RsHelloCompute", null)
         );
-        AppManager.uninstallApp(instrumentation, "TestVPN", null);
-        AppManager.uninstallApp(instrumentation, "RsHelloCompute", null);
     }
 }

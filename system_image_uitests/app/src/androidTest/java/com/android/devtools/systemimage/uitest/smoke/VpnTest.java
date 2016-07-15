@@ -88,7 +88,6 @@ public class VpnTest {
 
         // Check if VPN is on. If true, skip.
         if (!verifyVpnStatus(device)) {
-            AppManager.installApp(instrumentation, "FredVPN.apk");
             AppLauncher.launch(instrumentation, "TestVPN");
 
             device.findObject(new UiSelector().resourceId(Res.START_VPN_BUTTON_RES))
@@ -97,6 +96,5 @@ public class VpnTest {
             Assert.assertTrue("Failed to find the VPN lock icon after starting VPN!",
                     verifyVpnStatus(device));
         }
-        AppManager.uninstallApp(instrumentation, "TestVPN", null);
     }
 }
