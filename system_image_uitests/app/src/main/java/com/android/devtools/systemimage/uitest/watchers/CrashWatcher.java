@@ -24,18 +24,14 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.UiWatcher;
 
-import java.io.File;
-
 /**
  * Crash watcher that detects the dialog appearing when an app crashes.
  */
 public class CrashWatcher implements UiWatcher {
     private final UiDevice mDevice;
-    private final File mStorageDirPath;
 
-    public CrashWatcher(UiDevice device, File storageDirPath) {
+    public CrashWatcher(UiDevice device) {
         this.mDevice = device;
-        this.mStorageDirPath = storageDirPath;
     }
 
     @Override
@@ -45,25 +41,17 @@ public class CrashWatcher implements UiWatcher {
                 || mDevice.hasObject(By.clazz("com.android.server.am.AppNotRespondingDialog"))
                 || mDevice.hasObject(By.clazz("com.android.server.am.AppErrorDialog"))
                 || mDevice.hasObject(By.textContains("keeps stopping"))) {
-            reportCrashAndDismiss();
+            Assert.fail("Caught an application crash.");
         }
         return false;
     }
 
-    private void reportCrashAndDismiss() {
-        File ss = new File(mStorageDirPath, "crash.png");
-        mDevice.takeScreenshot(ss);
-        try {
-            if (mDevice.hasObject(By.text("OK"))) {
-                mDevice.findObject(new UiSelector().text("OK")).click();
-            } else if (mDevice.hasObject(By.text("Close"))) {
-                mDevice.findObject(new UiSelector().text("Close")).click();
-            } else {
-                Assert.fail("Failed to dismiss the crash popup!");
-            }
-        } catch (UiObjectNotFoundException e) {
-            Assert.fail("Failed to dismiss the crash popup!");
+    public void dismiss() throws UiObjectNotFoundException {
+        if (mDevice.hasObject(By.text("OK"))) {
+            mDevice.findObject(new UiSelector().text("OK")).click();
+        } else if (mDevice.hasObject(By.text("Close"))) {
+            mDevice.findObject(new UiSelector().text("Close")).click();
         }
-        Assert.fail("Caught an application crash. Screenshot saved to " + ss.getAbsolutePath());
     }
+
 }

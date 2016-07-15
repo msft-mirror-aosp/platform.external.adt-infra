@@ -20,30 +20,23 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 
-import org.hamcrest.core.StringStartsWith;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import android.app.Instrumentation;
+import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiSelector;
 
 /**
  * Unit test on {@link com.android.devtools.systemimage.uitest.watchers.CrashWatcher CrashWatcher}.
  * <p>
- * This unit test is expected to throw an assertion error. Note that we particularly use JUnit4 to
- * expect the exception message because AndroidJunit4 cannot expect the message correctly due to
- * an unknown reason.
+ * This unit test is expected to throw an assertion error.
  */
-@RunWith(JUnit4.class)
+@RunWith(AndroidJUnit4.class)
 public class CrashWatcherTest {
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
@@ -57,7 +50,6 @@ public class CrashWatcherTest {
 
         // CrashWatcher has been registered in SystemImageTestFramework#apply()
         // Here we only need to trigger the crash event, and expect the assertion failure.
-        exception.expectMessage(StringStartsWith.startsWith("Caught an application crash."));
         AppManager.installApp(instrumentation, "CrashExample.apk");
         AppLauncher.launch(instrumentation, "DisplayingBitmaps");
         // Catch the crash by clicking an image.
