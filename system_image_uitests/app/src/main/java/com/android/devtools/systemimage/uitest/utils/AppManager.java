@@ -53,14 +53,17 @@ public class AppManager {
 
     /**
      * Installs a testing app. The app must be in main/assets.
-     *
+     * <p>
+     * Since all APK installation and uninstallation under tests will be handled in boot strap,
+     * this method will be deprecated.
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      * @param apkName         the APK file full name in main/assets
      * @throws IOException               if File IO fails.
      * @throws UiObjectNotFoundException if it fails to find a UI widget.
      */
-    public static void installApp(Instrumentation instrumentation, String apkName)
+    @Deprecated
+    public static void deprecateInstallApp(Instrumentation instrumentation, String apkName)
             throws IOException, UiObjectNotFoundException {
         Context context = instrumentation.getTargetContext();
         AssetManager assetManager = context.getAssets();
@@ -86,6 +89,7 @@ public class AppManager {
         device.findObject(new UiSelector().textMatches("(DONE|Done)")).click();
     }
 
+    @Deprecated
     private static void copyFile(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[1024];
         int read;
@@ -96,7 +100,9 @@ public class AppManager {
 
     /**
      * Uninstalls a testing app.
-     *
+     * <p>
+     * Since all APK installation and uninstallation under tests will be handled in boot strap,
+     * this method will be deprecated.
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      * @param appName         the app name
@@ -105,7 +111,8 @@ public class AppManager {
      * @throws IOException               if File IO fails.
      * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
-    public static void uninstallApp(Instrumentation instrumentation, String appName, String pkgName)
+    @Deprecated
+    public static void deprecateUninstallApp(Instrumentation instrumentation, String appName, String pkgName)
             throws IOException, UiObjectNotFoundException {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
