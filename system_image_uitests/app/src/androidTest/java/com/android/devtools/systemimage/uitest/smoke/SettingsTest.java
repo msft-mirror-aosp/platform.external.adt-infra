@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.smoke;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
@@ -68,6 +69,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581163")
     public void testLocationSettingsPageOpen() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
@@ -103,6 +105,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581153")
     public void displayConfigureAppPermissions() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
@@ -141,6 +144,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581295")
     public void enableSetDateAndSetTime() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
@@ -193,6 +197,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581154")
     public void developerOptionsEnabled() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation)) {
@@ -218,6 +223,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581322")
     public void confirmNowCardsPageOpen() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
@@ -271,6 +277,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581409")
     public void enableTimeZone() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
@@ -318,6 +325,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581410")
     public void enableTwentyFourHourFormat() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();

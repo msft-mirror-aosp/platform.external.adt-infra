@@ -23,6 +23,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
@@ -63,6 +64,7 @@ public class GoogleServicesTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14578827")
     public void verifyGoogleApps() throws Exception{
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
