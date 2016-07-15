@@ -50,7 +50,6 @@ public class CrashWatcherTest {
 
         // CrashWatcher has been registered in SystemImageTestFramework#apply()
         // Here we only need to trigger the crash event, and expect the assertion failure.
-        AppManager.installApp(instrumentation, "CrashExample.apk");
         AppLauncher.launch(instrumentation, "DisplayingBitmaps");
         // Catch the crash by clicking an image.
         device.findObject(new UiSelector().className("android.widget.ImageView")).click();
