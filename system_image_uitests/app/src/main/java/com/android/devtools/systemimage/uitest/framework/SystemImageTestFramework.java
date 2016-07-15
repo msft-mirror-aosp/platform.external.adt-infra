@@ -27,11 +27,11 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import android.app.Instrumentation;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
-import android.telephony.TelephonyManager;
+
+import java.io.File;
 
 /**
  * System image test framework that standardizes a test's initialization and finalization.
@@ -70,22 +70,29 @@ public class SystemImageTestFramework implements TestRule {
         return args.getString("origin");
     }
 
+    private File getLoggingDir(String testClassName, String testMethodName) {
+        File loggingDir = new File(
+                new File(mInstrumentation.getTargetContext().getExternalFilesDir(null),
+                        testClassName),
+                testMethodName);
+        loggingDir.mkdirs();
+        return loggingDir;
+    }
+
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Throwable throwable = null;
+
                 mDevice.wakeUp();
                 Assert.assertTrue("Failed to wake up the device.", mDevice.isScreenOn());
                 // Press "Home" to dismiss a lock screen if any.
                 mDevice.pressMenu();
                 mDevice.pressHome();
 
-                CrashWatcher crashWatcher =
-                        new CrashWatcher(
-                                mDevice,
-                                mInstrumentation.getTargetContext().getExternalFilesDir(null)
-                        );
+                CrashWatcher crashWatcher = new CrashWatcher(mDevice);
                 mDevice.registerWatcher(CrashWatcher.class.getName(), crashWatcher);
                 mDevice.registerWatcher(
                         LockScreenWatcher.class.getName(),
@@ -100,11 +107,19 @@ public class SystemImageTestFramework implements TestRule {
                         new AndroidLauncherWelcomeClingWatcher(mDevice)
                 );
 
-                base.evaluate();
+                try {
+                    base.evaluate();
+                    // Must check the crash watcher again for finalization,
+                    // or could miss a crash if it happens at the end of a test case.
+                    crashWatcher.checkForCondition();
+                } catch (Throwable t) {
+                    File loggingDir = getLoggingDir(description.getTestClass().getSimpleName(),
+                            description.getMethodName());
 
-                // Must check the crash watcher again for finalization,
-                // or could miss a crash if it happens at the end of a test case.
-                crashWatcher.checkForCondition();
+                    // Snap a screenshot after a test fails.
+                    mDevice.takeScreenshot(new File(loggingDir, "Screenshot.png"));
+                    throwable = t;
+                }
 
                 mDevice.pressHome();
 
@@ -112,6 +127,13 @@ public class SystemImageTestFramework implements TestRule {
                 mDevice.removeWatcher(LockScreenWatcher.class.getName());
                 mDevice.removeWatcher(AndroidWelcomeClingWatcher.class.getName());
                 mDevice.removeWatcher(AndroidLauncherWelcomeClingWatcher.class.getName());
+
+                if (throwable != null) {
+                    // Dismiss any left crash dialog before throw and end the test.
+                    // Failed to dismiss a crash dialog may impair the following tests.
+                    crashWatcher.dismiss();
+                    throw throwable;
+                }
             }
         };
     }
