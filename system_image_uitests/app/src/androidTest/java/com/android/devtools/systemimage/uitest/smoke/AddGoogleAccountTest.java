@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.smoke;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.SystemUtil;
@@ -60,6 +61,7 @@ public class AddGoogleAccountTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581151")
     public void testAddAccountUsingContactsApp() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice mDevice = testFramework.getDevice();

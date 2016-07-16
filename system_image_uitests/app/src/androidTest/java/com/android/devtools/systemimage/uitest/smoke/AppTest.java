@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.smoke;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
@@ -63,6 +64,7 @@ public class AppTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14578823")
     public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
@@ -92,6 +94,7 @@ public class AppTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14578831")
     public void bookmarkWebSiteInBrowser() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
