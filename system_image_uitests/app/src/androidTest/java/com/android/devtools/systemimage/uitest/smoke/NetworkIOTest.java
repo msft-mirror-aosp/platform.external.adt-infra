@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.smoke;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
@@ -74,6 +75,7 @@ public class NetworkIOTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14578825")
     public void testBrowserLoadsSite() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
@@ -121,6 +123,7 @@ public class NetworkIOTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581152")
     public void toggleCellularDataOff() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
@@ -181,6 +184,7 @@ public class NetworkIOTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14581408")
     public void toggleCellularDataOn() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);

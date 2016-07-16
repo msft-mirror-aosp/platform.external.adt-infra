@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.smoke;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 
 import org.junit.Assert;
@@ -59,6 +60,7 @@ public class ShellUtilTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14578821")
     public void testShellUtilIntegrity() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
