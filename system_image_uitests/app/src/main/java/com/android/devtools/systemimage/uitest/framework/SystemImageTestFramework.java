@@ -16,12 +16,14 @@
 
 package com.android.devtools.systemimage.uitest.framework;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.watchers.AndroidLauncherWelcomeClingWatcher;
 import com.android.devtools.systemimage.uitest.watchers.AndroidWelcomeClingWatcher;
 import com.android.devtools.systemimage.uitest.watchers.CrashWatcher;
 import com.android.devtools.systemimage.uitest.watchers.LockScreenWatcher;
 
 import org.junit.Assert;
+import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -32,6 +34,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 
 import java.io.File;
+import java.io.PrintWriter;
 
 /**
  * System image test framework that standardizes a test's initialization and finalization.
@@ -113,12 +116,26 @@ public class SystemImageTestFramework implements TestRule {
                     // or could miss a crash if it happens at the end of a test case.
                     crashWatcher.checkForCondition();
                 } catch (Throwable t) {
+                    throwable = t;
                     File loggingDir = getLoggingDir(description.getTestClass().getSimpleName(),
                             description.getMethodName());
 
-                    // Snap a screenshot after a test fails.
-                    mDevice.takeScreenshot(new File(loggingDir, "Screenshot.png"));
-                    throwable = t;
+                    // Snap the screenshot when a test fails.
+                    mDevice.takeScreenshot(new File(loggingDir, "screenshot.png"));
+                    // Log the error message
+                    PrintWriter error =
+                            new PrintWriter(new File(loggingDir, "error.txt").getPath(), "UTF-8");
+                    t.printStackTrace(error);
+                    error.close();
+                    // Log the test case description
+                    PrintWriter info =
+                            new PrintWriter(new File(loggingDir, "description.txt").getPath());
+                    String testRailLink = description.getAnnotation(TestInfo.class).rootLink() +
+                            description.getAnnotation(TestInfo.class).id();
+                    info.println("See " + testRailLink);
+                    info.println();
+                    info.println("If you cannot access the link above, see http://go/adt-sysimage-autotracker instead");
+                    info.close();
                 }
 
                 mDevice.pressHome();
