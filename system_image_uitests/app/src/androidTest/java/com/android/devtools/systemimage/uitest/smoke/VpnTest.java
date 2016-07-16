@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.smoke;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
@@ -69,7 +70,7 @@ public class VpnTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C1457882
+     * TR ID: C14578822
      * <p>
      *   <pre>
      *   Test Steps:
@@ -82,6 +83,7 @@ public class VpnTest {
      *   </pre>
      */
     @Test
+    @TestInfo(id = "14578822")
     public void testVpn() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
