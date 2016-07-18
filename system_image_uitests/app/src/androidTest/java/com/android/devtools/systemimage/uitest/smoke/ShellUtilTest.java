@@ -18,7 +18,9 @@ package com.android.devtools.systemimage.uitest.smoke;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+import com.android.devtools.systemimage.uitest.utils.ShellUtil;
 
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,7 +68,9 @@ public class ShellUtilTest {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         String cmd = "ls /system/bin";
-        String result = device.executeShellCommand(cmd);
+        ShellUtil.ShellResult result = ShellUtil.invokeCommand(cmd);
+        // Check if the cmd is executed correctly.
+        Assert.assertTrue(result.stderr, result.stderr.length() == 0);
 
         // Verify the integrity of the shell utilities.
         InputStream inputStream = instrumentation.getTargetContext().getAssets().open("util.txt");
@@ -76,6 +80,7 @@ public class ShellUtilTest {
         while ((line = reader.readLine()) != null) {
             util.append(line).append("\n");
         }
-        Assert.assertTrue("Failure: The shell util is incomplete.", result.equals(util.toString()));
+        Assert.assertThat("Failure: The shell util is incomplete.", result.stderr,
+                Matchers.isEmptyOrNullString());
     }
 }
