@@ -17,8 +17,12 @@
 package com.android.devtools.systemimage.uitest.smoke;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
+import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
+import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
+
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -30,6 +34,9 @@ import org.junit.runner.RunWith;
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiScrollable;
+import android.support.test.uiautomator.UiSelector;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -82,5 +89,80 @@ public class ShellUtilTest {
         }
         Assert.assertThat("Failure: The shell util is incomplete.", result.stderr,
                 Matchers.isEmptyOrNullString());
+    }
+
+    /**
+     * Tests take bug report in Developer Options.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581588
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Open Settings > Developer Options.
+     *   3. Tap on "Take Bug Report"
+     *   4. Click on REPORT button.
+     *   Verify:
+     *   Verify that a bug report is taken by checking for the pnd and zip file in the bugreport
+     *     directory.
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "14581588")
+    public void createBugReport() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        if (testFramework.getApi() >= 21) {
+            if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation)) {
+                DeveloperOptionsManager.enableDeveloperOptions(testFramework.getInstrumentation());
+            } else {
+                // Launch the Settings app.
+                AppLauncher.launch(instrumentation, "Settings");
+                UiScrollable itemList = new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+                itemList.setAsVerticalList();
+                UiObject item = itemList.getChildByText(
+                        new UiSelector().className("android.widget.TextView"), "Developer options");
+                item.click();
+                device.findObject(
+                        new UiSelector().text("Take bug report")).clickAndWaitForNewWindow();
+                if (device.findObject(new UiSelector().text("Report")).exists()) {
+                    device.findObject(new UiSelector().text("Report")).click();
+                }
+            }
+
+            String cmd = "ls -l cd data/data/com.android.shell/files/bugreports";
+            device.executeShellCommand(cmd);
+            String result = device.executeShellCommand(cmd);
+            String[] arr = result.split(" ");
+
+            boolean containsPng = false;
+            boolean containsZip = false;
+            String png = "";
+            String zip = "";
+
+            for (String ss : arr) {
+                if (ss.contains("bugreport") && ss.contains(".png")) {
+                    containsPng = true;
+                    png = ss;
+                }
+                if (ss.contains("bugreport") && ss.contains(".zip")) {
+                    containsZip = true;
+                    zip = ss;
+                }
+            }
+
+            Assert.assertTrue(
+                    "Missing bug report files for png and zip.", containsPng && containsZip);
+
+            // Clean up by deleting all png and zip bug reports. This factors out from having
+            // to keep track of the timestamp and date of when the bug report files were created.
+            cmd = "remove " + png;
+            device.executeShellCommand(cmd);
+            cmd = "remove " + zip;
+            device.executeShellCommand(cmd);
+        }
     }
 }
