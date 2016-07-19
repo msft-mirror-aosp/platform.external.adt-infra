@@ -51,6 +51,21 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             shutil.rmtree(dst_path)
         shutil.copytree(gradle_report_path, dst_path)
 
+    def _save_adb_bug_report(self, test_method):
+        dst_path = os.path.join(emu_args.session_dir, test_method + '_bugreport.txt')
+        with open(dst_path, 'w') as f:
+            p = psutil.Popen(['adb', 'bugreport'], stdout=f, stderr=f)
+            p.communicate()
+
+    def _pull_log_details(self, test_method):
+        dst_path = os.path.join(emu_args.session_dir, test_method + '_details')
+        p = psutil.Popen(['adb', 'pull',
+                          '/sdcard/Logs', dst_path],
+                         stdout=PIPE, stderr=PIPE)
+        (out, err) = p.communicate()
+        self.m_logger.info('adb_pull_stdout:\n' + out)
+        self.m_logger.info('adb_pull_stderr:\n' + err)
+
     def _launch_ui_test_with_avd_configs(self, uitest_dir, avd):
         if os.name is 'nt':
             gradle = 'gradlew.bat'
@@ -81,14 +96,23 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
 
         # run tests using gradle script
         proc = self._launch_ui_test_with_avd_configs(uitest_dir, avd)
-        (output, err) = proc.communicate()
-        self.m_logger.info('gradle_stdout:\n' + output)
+        (out, err) = proc.communicate()
+        self.m_logger.info('gradle_stdout:\n' + out)
         self.m_logger.info('gradle_stderr:\n' + err)
+
+        # save gradle reports
         if err is not None and len(err.strip()) > 0:
             m = re.search('file://(.+)index\.html', err)
             if m.group(1) is None:
                 self.m_logger.error("Failed to find the gradle test report.")
             self._save_gradle_test_report(self._testMethodName, m.group(1))
+
+        # save adb bug reports for the bug report automation purpose
+        self._save_adb_bug_report(self._testMethodName)
+
+        # pull detailed test case log info from android
+        self._pull_log_details(self._testMethodName)
+
         self.m_logger.info('System image UI tests (%s) end.' % self._testMethodName)
         self.assertTrue(err is None or len(err.strip()) == 0, "The UI tests failed.")
 
