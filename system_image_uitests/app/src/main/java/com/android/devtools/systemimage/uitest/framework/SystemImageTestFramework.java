@@ -30,6 +30,7 @@ import org.junit.runners.model.Statement;
 
 import android.app.Instrumentation;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
 
@@ -74,9 +75,11 @@ public class SystemImageTestFramework implements TestRule {
     }
 
     private File getLoggingDir(String testClassName, String testMethodName) {
-        File loggingDir = new File(
-                new File(mInstrumentation.getTargetContext().getExternalFilesDir(null),
-                        testClassName),
+        File externalStorageLogDir =
+                new File(Environment.getExternalStorageDirectory().getPath(), "Logs");
+        if (!externalStorageLogDir.exists())
+            externalStorageLogDir.mkdir();
+        File loggingDir = new File(new File(externalStorageLogDir.getPath(), testClassName),
                 testMethodName);
         loggingDir.mkdirs();
         return loggingDir;
