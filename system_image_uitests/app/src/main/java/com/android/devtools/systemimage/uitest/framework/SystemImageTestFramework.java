@@ -23,12 +23,12 @@ import com.android.devtools.systemimage.uitest.watchers.CrashWatcher;
 import com.android.devtools.systemimage.uitest.watchers.LockScreenWatcher;
 
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import android.app.Instrumentation;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
@@ -74,7 +74,24 @@ public class SystemImageTestFramework implements TestRule {
         return args.getString("origin");
     }
 
+    private boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) && !Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkWriteExternalPermission()
+    {
+        String permission = "android.permission.WRITE_EXTERNAL_STORAGE";
+        int res = mInstrumentation.getContext().checkCallingOrSelfPermission(permission);
+        return (res == PackageManager.PERMISSION_GRANTED);
+    }
+
     private File getLoggingDir(String testClassName, String testMethodName) {
+        Assert.assertTrue("Failed to write to external storage.", isExternalStorageWritable());
+        Assert.assertTrue("Failed to acquire permission.", checkWriteExternalPermission());
         File externalStorageLogDir =
                 new File(Environment.getExternalStorageDirectory().getPath(), "Logs");
         if (!externalStorageLogDir.exists())
