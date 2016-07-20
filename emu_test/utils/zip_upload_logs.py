@@ -16,6 +16,7 @@ parser.add_argument('--ip', dest='remote_ip', action='store',
 parser.add_argument('--dst', dest='remote_dir', action='store',
                     help='remote directory')
 parser.add_argument('--skiplog', dest='skiplog', action='store_true', help='skip uploading log')
+parser.add_argument('--build-dir', dest='build_dir', action='store', help='path to build directory')
 
 args = parser.parse_args()
 
@@ -29,15 +30,15 @@ def zip_and_upload():
     args.remote_dir = args.remote_dir.replace(" ", "_")
     remote_host = '%s@%s' % (args.remote_user, args.remote_ip)
     remote_path = '%s:%s' % (remote_host, args.remote_dir)
+    gsutil_path = os.path.join(args.build_dir, 'third_party', 'gsutil', 'gsutil.py')
 
     if args.skiplog is False:
       verbose_call(['zip', '-r', args.zip_name, args.log_dir])
       verbose_call(['ssh', remote_host, 'mkdir -p %s' % args.remote_dir])
       verbose_call(['scp', args.zip_name, remote_path])
 
-    cts_logdir = os.path.join(args.log_dir, 'CTS_test', 'cts_combined_result')
-
     # if cts result is available, upload to public_html directory
+    cts_logdir = os.path.join(args.log_dir, 'CTS_test', 'cts_combined_result')
     if os.path.isdir(cts_logdir):
       builderName = os.path.basename(os.path.normpath(args.remote_dir))
       cts_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "CTS_Result", builderName)
@@ -52,9 +53,16 @@ def zip_and_upload():
       ui_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "UI_Result", builderName)
       ui_dst = os.path.normpath(ui_dst)
       verbose_call(['ssh', remote_host, 'mkdir -p %s' % os.path.join(ui_dst, args.zip_name[:-4])])
+      ui_gs_dst = 'gs://sysimage_test_traces/%s/%s' % (builderName, args.log_dir)
       for x in os.listdir(ui_logdir):
-        if os.path.isdir(os.path.join(ui_logdir,x)):
+        # upload gradle report to the master
+        if os.path.isdir(os.path.join(ui_logdir, x)) and x.endswith("_report"):
           verbose_call(['scp', '-r', os.path.join(ui_logdir, x), '%s:%s' % (remote_host, os.path.join(ui_dst, args.zip_name[:-4]))])
+        # upload bugreport, logcat, verbose, and details dir to GCS
+        elif os.path.isdir(os.path.join(ui_logdir, x)) and x.endswith("_details"):
+          verbose_call(['python', gsutil_path, 'cp', '-r', os.path.join(ui_logdir, x), os.path.join(ui_gs_dst, x[:-8])])
+        elif x.endswith('_bugreport.txt') or x.endswith('_logcat.txt') or x.endswith('_verbose.txt'):
+          verbose_call(['python', gsutil_path, 'cp', os.path.join(ui_logdir, x), os.path.join(ui_gs_dst, x[:x.rfind('_')], '')])
 
     # remove log directory
     try:
