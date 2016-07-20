@@ -257,7 +257,8 @@ def RunSteps(api):
                        '--name', 'build_%s-rev_%s.zip' % (buildnum, rev),
                        '--ip', MASTER_IP,
                        '--user', MASTER_USER,
-                       '--dst', '%s%s/'% (api.properties['logs_dir'], buildername)]
+                       '--dst', '%s%s/'% (api.properties['logs_dir'], buildername),
+                       '--build-dir', build_dir]
     if is_ui:
       upload_log_args.append('--skiplog')
     api.python("Zip and Upload Logs", log_util_path, upload_log_args, env=env)
