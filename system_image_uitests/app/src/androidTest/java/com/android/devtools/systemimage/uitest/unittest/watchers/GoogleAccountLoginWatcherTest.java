@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.unittest.watchers;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAccountLoginWatcher;
@@ -41,6 +42,7 @@ public class GoogleAccountLoginWatcherTest {
     public Timeout globalTimeout = Timeout.seconds(60);
 
     @Test
+    @TestInfo()
     public void testGoogleAccountLoginWatcher() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();

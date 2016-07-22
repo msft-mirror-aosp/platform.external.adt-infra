@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.unittest.utils;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 
@@ -40,6 +41,7 @@ public class DeveloperOptionsManagerTest {
     public Timeout globalTimeout = Timeout.seconds(60);
 
     @Test
+    @TestInfo()
     public void testDeveloperOptionsManager() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
