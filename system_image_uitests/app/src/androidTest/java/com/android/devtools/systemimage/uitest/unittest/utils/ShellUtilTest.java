@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.unittest.utils;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
 
 import org.junit.Assert;
@@ -35,6 +36,7 @@ public class ShellUtilTest {
     public Timeout globalTimeout = Timeout.seconds(60);
 
     @Test
+    @TestInfo()
     public void testShellUtil() throws Exception {
         ShellUtil.ShellResult result = ShellUtil.invokeCommand("ls");
         Assert.assertTrue(result.stderr, result.stdout.length() > 0 && result.stderr.length() == 0);

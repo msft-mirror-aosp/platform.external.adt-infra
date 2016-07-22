@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.unittest.utils;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 
@@ -39,6 +40,7 @@ public class AppLauncherTest {
     public Timeout globalTimeout = Timeout.seconds(60);
 
     @Test
+    @TestInfo()
     public void testAppLauncher() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
@@ -53,11 +55,8 @@ public class AppLauncherTest {
 
         // Developer apps
         AppLauncher.launch(instrumentation, "API Demos");
-        // BACKUP TEST App is not installed on some old system images.
-        // AppLauncher.launchByLauncher(getInstrumentation(), "BACKUP TEST");
         AppLauncher.launch(instrumentation, "Custom Locale");
         AppLauncher.launch(instrumentation, "Dev Tools");
-        AppLauncher.launch(instrumentation, "Dev Settings");
         AppLauncher.launch(instrumentation, "Gestures Builder");
         AppLauncher.launch(instrumentation, "Widget Preview");
     }
