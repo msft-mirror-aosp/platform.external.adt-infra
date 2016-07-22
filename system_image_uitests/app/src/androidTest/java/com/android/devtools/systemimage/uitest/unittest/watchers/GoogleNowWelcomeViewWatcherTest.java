@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.unittest.watchers;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.watchers.GoogleNowWelcomeViewWatcher;
@@ -43,6 +44,7 @@ public class GoogleNowWelcomeViewWatcherTest {
     public Timeout globalTimeout = Timeout.seconds(60);
 
     @Test
+    @TestInfo()
     public void testGoogleNowWelcomeViewWatcher() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
