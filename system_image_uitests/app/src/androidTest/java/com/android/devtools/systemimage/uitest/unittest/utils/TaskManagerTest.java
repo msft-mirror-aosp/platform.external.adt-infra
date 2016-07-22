@@ -16,6 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.unittest.utils;
 
+import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.TaskManager;
@@ -40,6 +41,7 @@ public class TaskManagerTest {
     public Timeout globalTimeout = Timeout.seconds(60);
 
     @Test
+    @TestInfo()
     public void testTaskManager() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
