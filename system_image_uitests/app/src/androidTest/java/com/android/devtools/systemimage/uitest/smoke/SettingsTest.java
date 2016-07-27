@@ -38,8 +38,10 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.support.test.uiautomator.Until;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -247,14 +249,14 @@ public class SettingsTest {
                 By.text("Show cards"),
                 By.clazz("android.widget.ListView"));
         if (!switchWidget.isChecked()) {
-            switchWidget.click();
-            assertTrue("Resource IDs not found on Now sign in page.", device.findObject(
-                    new UiSelector().resourceId(Res.NOW_SIGNIN_SCREEN_RES)).exists()
-                    && device.findObject(
-                    new UiSelector().resourceId(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
-                    && device.findObject(
-                    new UiSelector().resourceId(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists()
-            );
+            switchWidget.clickAndWait(Until.newWindow(),
+                    TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            assertTrue("Failed to find Now sign-in title.", device.findObject(
+                    new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_SCREEN_RES)).exists());
+            assertTrue("Failed to find Now sign-in decline button.", device.findObject(
+                    new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists());
+            assertTrue("Failed to find Now sign-in accept button.", device.findObject(
+                    new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists());
         }
     }
 
