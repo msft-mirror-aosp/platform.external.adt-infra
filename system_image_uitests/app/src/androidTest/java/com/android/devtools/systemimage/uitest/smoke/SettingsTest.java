@@ -22,6 +22,7 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
+import com.android.devtools.systemimage.uitest.utils.Wait;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,6 +37,7 @@ import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
@@ -286,7 +288,7 @@ public class SettingsTest {
     @TestInfo(id = "14581409")
     public void enableTimeZone() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = testFramework.getDevice();
+        final UiDevice device = testFramework.getDevice();
         AppLauncher.launch(instrumentation, "Settings");
         UiScrollable itemList =
                 new UiScrollable(
@@ -295,22 +297,51 @@ public class SettingsTest {
         itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
         device.findObject(new UiSelector().text("Date & time")).click();
 
-        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
-                instrumentation,
-                By.clazz("android.widget.Switch"),
-                By.text("Automatic time zone"),
-                By.clazz("android.widget.ListView"));
-        // Initialize automatic time zone option to enabled state.
-        if (!switchWidget.isChecked()) {
-            switchWidget.click();
+        UiObject2 widget;
+        try {
+            widget = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.Switch"),
+                    By.text("Automatic time zone"),
+                    By.clazz("android.widget.ListView"));
+        } catch (UiObjectNotFoundException e) {
+            widget = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.CheckBox"),
+                    By.text("Automatic time zone"),
+                    By.clazz("android.widget.ListView"));
         }
-        assertTrue(!device.findObject(new UiSelector().text("Select time zone")).isEnabled());
+        // Initialize automatic time zone option to enabled state.
+        if (!widget.isChecked()) {
+            widget.click();
+        }
+        assertTrue("Failed to disable select time zone",
+            new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return !device.findObject(new UiSelector().text("Select time zone")).isEnabled();
+                }
+            }));
         // Disable automatic time zone option.
-        switchWidget.click();
-        assertTrue(device.findObject(new UiSelector().text("Select time zone")).isEnabled());
-        device.findObject(new UiSelector().text("Select time zone")).click();
-        assertTrue(device.findObject(new UiSelector().text("Select time zone")).exists());
-        assertTrue(device.findObject(new UiSelector().text("Pacific Daylight Time")).exists());
+        widget.click();
+        assertTrue("Failed to enable select time zone",
+            new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return device.findObject(new UiSelector().text("Select time zone")).isEnabled();
+                }
+            }));
+        device.findObject(new UiSelector().text("Select time zone")).clickAndWaitForNewWindow();
+        assertTrue("Failed to find Select time zone title.",
+                device.findObject(new UiSelector().text("Select time zone")).exists());
+        UiScrollable timeZoneList =
+                new UiScrollable(
+                        new UiSelector().className("android.widget.ListView"));
+        try {
+            timeZoneList.getChildByText(new UiSelector().className("android.widget.TextView"), "Pacific Daylight Time");
+        } catch (UiObjectNotFoundException e) {
+            timeZoneList.getChildByText(new UiSelector().className("android.widget.TextView"), "Pacific Time");
+        }
     }
 
     /**
