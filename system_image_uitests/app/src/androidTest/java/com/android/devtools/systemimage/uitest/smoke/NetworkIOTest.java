@@ -121,6 +121,8 @@ public class NetworkIOTest {
      *   Cellular data is turned off.
      *   Text "Set cellular data limit" is on the page.
      *   </pre>
+     * <p>
+     * The test works on API 23 and greater.
      */
     @Test
     @TestInfo(id = "14581152")
@@ -128,42 +130,44 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
         // TODO: Add a fixture method in AppLauncher class to launch a specified path.
-        AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList = new UiScrollable(
-                new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-        itemList.setAsVerticalList();
-        itemList.scrollToBeginning(100);
-        device.findObject(new UiSelector().textContains("Data usage")).click();
+        if (testFramework.getApi() >= 23) {
+            AppLauncher.launch(instrumentation, "Settings");
+            UiScrollable itemList = new UiScrollable(
+                    new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+            itemList.setAsVerticalList();
+            itemList.scrollToBeginning(100);
+            device.findObject(new UiSelector().textContains("Data usage")).click();
 
-        UiObject2 dataSwitch = UiAutomatorPlus.findObjectByRelative(
-                instrumentation,
-                By.clazz("android.widget.Switch"),
-                By.text("Cellular data"),
-                By.res(Res.NETWORK_SWITCHES_CONTAINER_RES));
-        // Test requires "Cellular data" switch widget to start in the on state.
-        if (!dataSwitch.isChecked()) {
+            UiObject2 dataSwitch = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.Switch"),
+                    By.text("Cellular data"),
+                    By.res(Res.NETWORK_SWITCHES_CONTAINER_RES));
+            // Test requires "Cellular data" switch widget to start in the on state.
+            if (!dataSwitch.isChecked()) {
+                dataSwitch.click();
+            }
+            // Disable "Cellular data" option.
+            dataSwitch.click();
+            device.findObject(new UiSelector().text("OK")).click();
+            // Wait for data connection to turn off.
+            new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+
+                    return !NetworkUtil.hasCellularNetworkConnection(instrumentation);
+                }
+            });
+
+            assertFalse("Cellular data is enabled.",
+                    NetworkUtil.hasCellularNetworkConnection(instrumentation));
+            if (device.findObject(
+                    new UiSelector().textContains("Set cellular data limit")).exists()) {
+                assertTrue("Set cellular data limit text not visible.", false);
+            }
+            // Enable Cellular data.
             dataSwitch.click();
         }
-        // Disable "Cellular data" option.
-        dataSwitch.click();
-        device.findObject(new UiSelector().text("OK")).click();
-        // Wait for data connection to turn off.
-        new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-
-                return !NetworkUtil.hasCellularNetworkConnection(instrumentation);
-            }
-        });
-
-        assertFalse("Cellular data is enabled.",
-                NetworkUtil.hasCellularNetworkConnection(instrumentation));
-        if (device.findObject(
-                new UiSelector().textContains("Set cellular data limit")).exists()) {
-            assertTrue("Set cellular data limit text not visible.", false);
-        }
-        // Enable Cellular data.
-        dataSwitch.click();
     }
 
     /**
@@ -182,6 +186,8 @@ public class NetworkIOTest {
      *   Cellular data is turned on.
      *   Text "Set cellular data limit" is not on the page.
      *   </pre>
+     * <p>
+     * The test works on API 23 and greater.
      */
     @Test
     @TestInfo(id = "14581408")
@@ -189,41 +195,43 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
         // TODO: Add a fixture method in AppLauncher class to launch a specified path.
-        AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList = new UiScrollable(
-                new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-        itemList.setAsVerticalList();
-        itemList.scrollToBeginning(100);
-        device.findObject(new UiSelector().textContains("Data usage")).click();
+        if (testFramework.getApi() >= 23) {
+            AppLauncher.launch(instrumentation, "Settings");
+            UiScrollable itemList = new UiScrollable(
+                    new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+            itemList.setAsVerticalList();
+            itemList.scrollToBeginning(100);
+            device.findObject(new UiSelector().textContains("Data usage")).click();
 
-        UiObject2 dataSwitch = UiAutomatorPlus.findObjectByRelative(
-                instrumentation,
-                By.clazz("android.widget.Switch"),
-                By.text("Cellular data"),
-                By.res(Res.NETWORK_SWITCHES_CONTAINER_RES));
-        // Test requires "Cellular data" switch widget to start in the off state.
-        if (dataSwitch.isChecked()) {
-            dataSwitch.click();
-        }
-        // Enable Cellular data.
-        dataSwitch.click();
-        // Wait for data connection to turn off.
-        new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-
-                return NetworkUtil.hasCellularNetworkConnection(instrumentation);
+            UiObject2 dataSwitch = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.Switch"),
+                    By.text("Cellular data"),
+                    By.res(Res.NETWORK_SWITCHES_CONTAINER_RES));
+            // Test requires "Cellular data" switch widget to start in the off state.
+            if (dataSwitch.isChecked()) {
+                dataSwitch.click();
             }
-        });
-        assertTrue("Cellular data is disabled.",
-                NetworkUtil.hasCellularNetworkConnection(instrumentation));
+            // Enable Cellular data.
+            dataSwitch.click();
+            // Wait for data connection to turn off.
+            new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
 
-        if (!device.findObject(
-                new UiSelector().textContains("Set cellular data limit")).exists()) {
-            assertTrue("Set cellular data limit text is visible.", false);
+                    return NetworkUtil.hasCellularNetworkConnection(instrumentation);
+                }
+            });
+            assertTrue("Cellular data is disabled.",
+                    NetworkUtil.hasCellularNetworkConnection(instrumentation));
+
+            if (!device.findObject(
+                    new UiSelector().textContains("Set cellular data limit")).exists()) {
+                assertTrue("Set cellular data limit text is visible.", false);
+            }
+            // Disable Cellular data.
+            dataSwitch.click();
+            device.findObject(new UiSelector().text("OK")).click();
         }
-        // Disable Cellular data.
-        dataSwitch.click();
-        device.findObject(new UiSelector().text("OK")).click();
     }
 }
