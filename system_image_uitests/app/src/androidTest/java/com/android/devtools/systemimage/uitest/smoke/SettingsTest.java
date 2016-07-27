@@ -234,7 +234,7 @@ public class SettingsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
 
-        if (!testFramework.isGoogleApiImage()) {
+        if (!testFramework.isGoogleApiImage() || testFramework.getApi() < 23) {
             return;
         }
 
