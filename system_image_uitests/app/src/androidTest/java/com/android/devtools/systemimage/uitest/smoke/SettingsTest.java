@@ -105,6 +105,8 @@ public class SettingsTest {
      *   Verify:
      *   App permissions page loads. Able to identify various apps on the page.
      *   </pre>
+     * <p>
+     * The test works on API 23 and greater. No gear menu and app permissions for APIs under 23.
      */
     @Test
     @TestInfo(id = "14581153")
@@ -112,19 +114,21 @@ public class SettingsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        AppLauncher.launch(instrumentation, "Settings");
-        device.findObject(new UiSelector().textContains("Apps")).clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
-                .clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().textContains("App permissions"))
-                .clickAndWaitForNewWindow();
+        if (testFramework.getApi() >= 23) {
+            AppLauncher.launch(instrumentation, "Settings");
+            device.findObject(new UiSelector().textContains("Apps")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
+                    .clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().textContains("App permissions"))
+                    .clickAndWaitForNewWindow();
 
-        assertTrue(device.findObject(new UiSelector().textContains("App permissions")).exists()
-                && device.findObject(new UiSelector().textContains("Calendar")).exists()
-                && device.findObject(new UiSelector().textContains("Camera")).exists()
-                && device.findObject(new UiSelector().textContains("Contacts")).exists()
-                && device.findObject(new UiSelector().textContains("Phone")).exists()
-                && device.findObject(new UiSelector().description("Navigate up")).exists());
+            assertTrue(device.findObject(new UiSelector().textContains("App permissions")).exists()
+                    && device.findObject(new UiSelector().textContains("Calendar")).exists()
+                    && device.findObject(new UiSelector().textContains("Camera")).exists()
+                    && device.findObject(new UiSelector().textContains("Contacts")).exists()
+                    && device.findObject(new UiSelector().textContains("Phone")).exists()
+                    && device.findObject(new UiSelector().description("Navigate up")).exists());
+        }
     }
 
     /**
