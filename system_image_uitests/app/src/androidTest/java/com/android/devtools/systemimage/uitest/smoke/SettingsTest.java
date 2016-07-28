@@ -163,14 +163,23 @@ public class SettingsTest {
         itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
         device.findObject(new UiSelector().text("Date & time")).click();
 
-        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
-                instrumentation,
-                By.clazz("android.widget.Switch"),
-                By.text("Automatic date & time"),
-                By.clazz("android.widget.ListView"));
-        // Test requires "Automatic date & time" switch widget to start in the on state.
-        if (!switchWidget.isChecked()) {
-            switchWidget.click();
+        UiObject2 widget;
+        try {
+            widget = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.Switch"),
+                    By.text("Automatic date & time"),
+                    By.clazz("android.widget.ListView"));
+        } catch (UiObjectNotFoundException e) {
+            widget = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.CheckBox"),
+                    By.text("Automatic date & time"),
+                    By.clazz("android.widget.ListView"));
+        }
+        // Test requires "Automatic date & time" widget to start in the enabled state.
+        if (!widget.isChecked()) {
+            widget.click();
         }
         assertTrue("Failed to disable set date.",
                 new Wait().until(new Wait.ExpectedCondition() {
@@ -186,7 +195,7 @@ public class SettingsTest {
                         return !device.findObject(new UiSelector().text("Set time")).isEnabled();
                     }
                 }));
-        switchWidget.click();
+        widget.click();
         assertTrue("Failed to enable set date.",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
@@ -362,9 +371,11 @@ public class SettingsTest {
                 new UiScrollable(
                         new UiSelector().className("android.widget.ListView"));
         try {
-            timeZoneList.getChildByText(new UiSelector().className("android.widget.TextView"), "Pacific Daylight Time");
+            timeZoneList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"), "Pacific Daylight Time");
         } catch (UiObjectNotFoundException e) {
-            timeZoneList.getChildByText(new UiSelector().className("android.widget.TextView"), "Pacific Time");
+            timeZoneList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"), "Pacific Time");
         }
     }
 
@@ -398,20 +409,30 @@ public class SettingsTest {
         itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
         device.findObject(new UiSelector().text("Date & time")).click();
 
-        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
-                instrumentation,
-                By.clazz("android.widget.Switch"),
-                By.text("Use 24-hour format"),
-                By.clazz("android.widget.ListView"));
+        UiObject2 widget;
+        try {
+            widget = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.Switch"),
+                    By.text("Use 24-hour format"),
+                    By.clazz("android.widget.ListView"));
+        } catch (UiObjectNotFoundException e) {
+            widget = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.CheckBox"),
+                    By.text("Use 24-hour format"),
+                    By.clazz("android.widget.ListView"));
+        }
         // Initialize 24-hour format option to disabled state.
-        if (switchWidget.isChecked()) {
-            switchWidget.click();
+        if (!widget.isChecked()) {
+            widget.click();
         }
         assertTrue("Failed to find Use 24-hour format.",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("Use 24-hour format")).exists();
+                        return device.findObject(
+                                new UiSelector().text("Use 24-hour format")).exists();
                     }
                 }));
         assertTrue("Failed to find 1:00 PM.",
@@ -422,7 +443,7 @@ public class SettingsTest {
                     }
                 }));
         // Enable 24-hour format.
-        switchWidget.click();
+        widget.click();
         assertTrue("Failed to find 13:00.",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
@@ -431,6 +452,6 @@ public class SettingsTest {
                     }
                 }));
         // Clean up by disabling 24-hour format option.
-        switchWidget.click();
+        widget.click();
     }
 }
