@@ -389,7 +389,7 @@ public class SettingsTest {
     @TestInfo(id = "14581410")
     public void enableTwentyFourHourFormat() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = testFramework.getDevice();
+        final UiDevice device = testFramework.getDevice();
         AppLauncher.launch(instrumentation, "Settings");
         UiScrollable itemList =
                 new UiScrollable(
@@ -407,11 +407,29 @@ public class SettingsTest {
         if (switchWidget.isChecked()) {
             switchWidget.click();
         }
-        assertTrue(device.findObject(new UiSelector().text("Use 24-hour format")).exists());
-        assertTrue(device.findObject(new UiSelector().text("1:00 PM")).exists());
+        assertTrue("Failed to find Use 24-hour format.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(new UiSelector().text("Use 24-hour format")).exists();
+                    }
+                }));
+        assertTrue("Failed to find 1:00 PM.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(new UiSelector().text("1:00 PM")).exists();
+                    }
+                }));
         // Enable 24-hour format.
         switchWidget.click();
-        assertTrue(device.findObject(new UiSelector().text("13:00")).exists());
+        assertTrue("Failed to find 13:00.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(new UiSelector().text("13:00")).exists();
+                    }
+                }));
         // Clean up by disabling 24-hour format option.
         switchWidget.click();
     }
