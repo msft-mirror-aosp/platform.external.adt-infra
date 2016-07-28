@@ -112,7 +112,6 @@ public class SystemImageTestFramework implements TestRule {
                 mDevice.wakeUp();
                 Assert.assertTrue("Failed to wake up the device.", mDevice.isScreenOn());
                 // Press "Home" to dismiss a lock screen if any.
-                mDevice.pressMenu();
                 mDevice.pressHome();
 
                 CrashWatcher crashWatcher = new CrashWatcher(mDevice);
@@ -129,12 +128,17 @@ public class SystemImageTestFramework implements TestRule {
                         AndroidLauncherWelcomeClingWatcher.class.getName(),
                         new AndroidLauncherWelcomeClingWatcher(mDevice)
                 );
+                mDevice.runWatchers();
 
                 try {
                     base.evaluate();
                     // Must check the crash watcher again for finalization,
                     // or could miss a crash if it happens at the end of a test case.
                     crashWatcher.checkForCondition();
+                    mDevice.removeWatcher(CrashWatcher.class.getName());
+                    mDevice.removeWatcher(LockScreenWatcher.class.getName());
+                    mDevice.removeWatcher(AndroidWelcomeClingWatcher.class.getName());
+                    mDevice.removeWatcher(AndroidLauncherWelcomeClingWatcher.class.getName());
                 } catch (Throwable t) {
                     throwable = t;
                     File loggingDir = getLoggingDir(description.getTestClass().getSimpleName(),
@@ -159,11 +163,6 @@ public class SystemImageTestFramework implements TestRule {
                 }
 
                 mDevice.pressHome();
-
-                mDevice.removeWatcher(CrashWatcher.class.getName());
-                mDevice.removeWatcher(LockScreenWatcher.class.getName());
-                mDevice.removeWatcher(AndroidWelcomeClingWatcher.class.getName());
-                mDevice.removeWatcher(AndroidLauncherWelcomeClingWatcher.class.getName());
 
                 if (throwable != null) {
                     // Dismiss any left crash dialog before throw and end the test.
