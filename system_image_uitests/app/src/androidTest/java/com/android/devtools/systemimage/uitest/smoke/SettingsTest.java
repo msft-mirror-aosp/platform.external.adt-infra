@@ -155,7 +155,7 @@ public class SettingsTest {
     @TestInfo(id = "14581295")
     public void enableSetDateAndSetTime() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = testFramework.getDevice();
+        final UiDevice device = testFramework.getDevice();
         AppLauncher.launch(instrumentation, "Settings");
         UiScrollable itemList = new UiScrollable(
                 new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
@@ -172,12 +172,36 @@ public class SettingsTest {
         if (!switchWidget.isChecked()) {
             switchWidget.click();
         }
-        assertTrue(!device.findObject(new UiSelector().text("Set date")).isEnabled());
-        assertTrue(!device.findObject(new UiSelector().text("Set time")).isEnabled());
+        assertTrue("Failed to disable set date.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return !device.findObject(new UiSelector().text("Set date")).isEnabled();
+                    }
+                }));
+        assertTrue("Failed to disable set time.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return !device.findObject(new UiSelector().text("Set time")).isEnabled();
+                    }
+                }));
         switchWidget.click();
-        assertTrue(device.findObject(new UiSelector().text("Set date")).isEnabled());
-        assertTrue(device.findObject(new UiSelector().text("Set time")).isEnabled());
-        device.findObject(new UiSelector().text("Set date")).click();
+        assertTrue("Failed to enable set date.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(new UiSelector().text("Set date")).isEnabled();
+                    }
+                }));
+        assertTrue("Failed to enable set time.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(new UiSelector().text("Set time")).isEnabled();
+                    }
+                }));
+        device.findObject(new UiSelector().text("Set date")).clickAndWaitForNewWindow();
         assertTrue(device.findObject(
                 new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES)).exists());
         device.findObject(new UiSelector().textContains("CANCEL")).click();
