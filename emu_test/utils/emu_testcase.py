@@ -139,6 +139,10 @@ class EmuBaseTestCase(LoggedTestCase):
             launch_cmd += ["-gpu", "mesa"]
         else:
             launch_cmd += ["-gpu", "host"]
+        # Launch emulator with "-dns-server 8.8.8.8" for CTS test
+        # to make test_getByName in android.core.tests.libcore.package.libcore pass
+        if avd.cts:
+            launch_cmd += ["-dns-server", "8.8.8.8"]
         def launch_in_thread():
             test_name = self.id().rsplit('.', 1)[-1]
             logcat_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_logcat.txt" % test_name)
