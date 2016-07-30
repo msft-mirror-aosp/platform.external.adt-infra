@@ -78,7 +78,7 @@ public class SettingsTest {
     @TestInfo(id = "14581163")
     public void testLocationSettingsPageOpen() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = testFramework.getDevice();
+        final UiDevice device = testFramework.getDevice();
 
         if (!testFramework.isGoogleApiImage() || testFramework.getApi() < 23) {
             return;
@@ -91,7 +91,13 @@ public class SettingsTest {
         itemList.scrollIntoView(new UiSelector().textContains("Google"));
         device.findObject(new UiSelector().textContains("Google")).clickAndWaitForNewWindow();
         device.findObject(new UiSelector().textContains("Location")).clickAndWaitForNewWindow();
-        assertTrue(device.findObject(new UiSelector().textContains("Location")).exists());
+        assertTrue("Failed to find Location title.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(new UiSelector().textContains("Location")).exists();
+                    }
+                }));
     }
 
     /**
@@ -120,7 +126,7 @@ public class SettingsTest {
 
         if (testFramework.getApi() >= 23) {
             AppLauncher.launch(instrumentation, "Settings");
-            device.findObject(new UiSelector().textContains("Apps")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().text("Apps")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
                     .clickAndWaitForNewWindow();
             device.findObject(new UiSelector().textContains("App permissions"))
@@ -269,7 +275,7 @@ public class SettingsTest {
     @TestInfo(id = "14581322")
     public void confirmNowCardsPageOpen() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = testFramework.getDevice();
+        final UiDevice device = testFramework.getDevice();
 
         if (!testFramework.isGoogleApiImage() || testFramework.getApi() < 23) {
             return;
@@ -290,14 +296,15 @@ public class SettingsTest {
                 By.text("Show cards"),
                 By.clazz("android.widget.ListView"));
         if (!switchWidget.isChecked()) {
-            switchWidget.clickAndWait(Until.newWindow(),
-                    TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-            assertTrue("Failed to find Now sign-in title.", device.findObject(
-                    new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_SCREEN_RES)).exists());
-            assertTrue("Failed to find Now sign-in decline button.", device.findObject(
-                    new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists());
-            assertTrue("Failed to find Now sign-in accept button.", device.findObject(
-                    new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists());
+            switchWidget.click();
+            assertTrue("Failed to find Now sign-in title and buttons.", new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_SCREEN_RES)).exists()
+                                && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
+                                && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
+                    }
+            }));
         }
     }
 
@@ -426,7 +433,7 @@ public class SettingsTest {
                     By.clazz("android.widget.ListView"));
         }
         // Initialize 24-hour format option to disabled state.
-        if (!widget.isChecked()) {
+        if (widget.isChecked()) {
             widget.click();
         }
         assertTrue("Failed to find Use 24-hour format.",
