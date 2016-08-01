@@ -111,6 +111,8 @@ public class SystemImageTestFramework implements TestRule {
 
                 mDevice.wakeUp();
                 Assert.assertTrue("Failed to wake up the device.", mDevice.isScreenOn());
+                // Press "Menu" to unlock screen if any.
+                mDevice.pressMenu();
                 // Press "Home" to dismiss a lock screen if any.
                 mDevice.pressHome();
 
