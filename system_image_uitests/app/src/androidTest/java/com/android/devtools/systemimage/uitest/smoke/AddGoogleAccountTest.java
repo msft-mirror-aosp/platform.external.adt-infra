@@ -83,8 +83,13 @@ public class AddGoogleAccountTest {
                 notNow.click();
             }
         }
-        mDevice.findObject(
-                new UiSelector().textContains("NEW CONTACT")).clickAndWaitForNewWindow();
+        if (testFramework.getApi() > 23) {
+            mDevice.findObject(
+                    new UiSelector().description("add new contact")).clickAndWaitForNewWindow();
+        } else {
+            mDevice.findObject(
+                    new UiSelector().textContains("NEW CONTACT")).clickAndWaitForNewWindow();
+        }
         mDevice.findObject(new UiSelector().textContains("ADD ACCOUNT")).click();
     }
 }
