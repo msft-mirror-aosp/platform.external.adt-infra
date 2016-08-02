@@ -66,6 +66,8 @@ public class Res {
 
     // Platform resource IDs ("android.*")
     public static final String ANDROID_DATE_PICKER_HEADER_RES = "android:id/date_picker_header";
+    public static final String ANDROID_DATE_PICKER_HEADER_RES_19 = "android:id/datePicker";
     public static final String ANDROID_TIME_HEADER_RES = "android:id/time_header";
+    public static final String ANDROID_TIME_HEADER_RES_19 = "android:id/timePicker";
     public static final String ANDROID_LIST_RES = "android:id/list";
 }

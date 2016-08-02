@@ -126,7 +126,13 @@ public class SettingsTest {
 
         if (testFramework.getApi() >= 23) {
             AppLauncher.launch(instrumentation, "Settings");
-            device.findObject(new UiSelector().text("Apps")).clickAndWaitForNewWindow();
+            UiScrollable settingsList =
+                    new UiScrollable(
+                            new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                    );
+            settingsList.setAsVerticalList();
+            UiObject appsObject = settingsList.getChild(new UiSelector().text("Apps"));
+            appsObject.clickAndWaitForNewWindow();
             device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
                     .clickAndWaitForNewWindow();
             device.findObject(new UiSelector().textContains("App permissions"))
@@ -219,13 +225,25 @@ public class SettingsTest {
                     }
                 }));
         device.findObject(new UiSelector().text("Set date")).clickAndWaitForNewWindow();
-        assertTrue(device.findObject(
-                new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES)).exists());
-        device.findObject(new UiSelector().textContains("CANCEL")).click();
-        device.findObject(new UiSelector().text("Set time")).click();
-        assertTrue(device.findObject(
-                new UiSelector().resourceId(Res.ANDROID_TIME_HEADER_RES)).exists());
-        device.findObject(new UiSelector().textContains("CANCEL")).click();
+        if (testFramework.getApi() < 20) {
+            assertTrue(device.findObject(
+                    new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES_19)).exists());
+            device.findObject(new UiSelector().textContains("Done")).click();
+            device.findObject(new UiSelector().text("Set time")).click();
+            assertTrue(device.findObject(
+                    new UiSelector().resourceId(Res.ANDROID_TIME_HEADER_RES_19)).exists());
+
+            device.findObject(new UiSelector().textContains("Done")).click();
+        } else {
+            assertTrue(device.findObject(
+                    new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES)).exists());
+            device.findObject(new UiSelector().textContains("CANCEL")).click();
+            device.findObject(new UiSelector().text("Set time")).click();
+            assertTrue(device.findObject(
+                    new UiSelector().resourceId(Res.ANDROID_TIME_HEADER_RES)).exists());
+
+            device.findObject(new UiSelector().textContains("CANCEL")).click();
+        }
     }
 
     /**
