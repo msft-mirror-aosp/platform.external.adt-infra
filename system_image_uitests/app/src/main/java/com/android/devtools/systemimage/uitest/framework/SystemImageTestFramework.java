@@ -130,9 +130,9 @@ public class SystemImageTestFramework implements TestRule {
                         AndroidLauncherWelcomeClingWatcher.class.getName(),
                         new AndroidLauncherWelcomeClingWatcher(mDevice)
                 );
-                mDevice.runWatchers();
 
                 try {
+                    mDevice.runWatchers();
                     base.evaluate();
                     // Must check the crash watcher again for finalization,
                     // or could miss a crash if it happens at the end of a test case.
