@@ -224,7 +224,7 @@ def RunSteps(api):
       if is_cross_build:
         api.python("Download Image - %s" % step, image_util_path,
                    ['--file', api.properties.get(step+'_file'),
-                    '--build-dir', build_dir, '--clean-system-image-dir'],
+                    '--build-dir', build_dir],
                    env=env)
       for emu_branch in emulator_branch_to_use:
         emulator_path = api.path.join(emu_branch, 'tools', 'emulator')

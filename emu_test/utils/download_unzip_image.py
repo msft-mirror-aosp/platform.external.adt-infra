@@ -10,7 +10,6 @@ parser.add_argument('--file', dest='remote_file_list', action='store',
                     help='string contains a list of remote files separated by comma')
 parser.add_argument('--build-dir', action='store',
                     help='location of build directory')
-parser.add_argument('--clean-system-image-dir', action='store_true', help='clean up system image directory')
 
 args = parser.parse_args()
 
@@ -92,8 +91,9 @@ def unzip_addon_dir(file_name, dst_dir):
 
 def download_and_unzip():
   clean_emu_proc()
-  if args.clean_system_image_dir:
-    image_dir = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'system-images')
+  sdk_root = os.environ['ANDROID_SDK_ROOT']
+  if 'image-builds' in sdk_root:
+    image_dir = os.path.join(sdk_root, 'system-images')
     print 'Remove system image directory: ', image_dir
     verbose_call(['rm', '-rf', image_dir])
   file_list = args.remote_file_list.split(',')
