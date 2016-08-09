@@ -163,6 +163,14 @@ def RunSteps(api):
       for line in props:
         filewriter.writerow([line, props[line][0], props[line][1]])
 
+  # For cts test, download both of emulator and system image files
+  # triggerring branch could be either emulator or system image
+  if is_cts:
+    setProps()
+    with open(build_cache,'r') as csvfile:
+      filereader = csv.reader(csvfile)
+      file_list = ','.join([row[2] for row in filereader])
+
   try:
     api.python('Initialize Bot', init_bot_util_path,
                ['--build-dir', api.path['slave_build'],
@@ -237,7 +245,7 @@ def RunSteps(api):
                          'boot_cfg.csv',
                          step_data.filter,
                          emulator_path)
-        elif is_cts and project in emulator_branches:
+        elif is_cts:
           PythonTestStep('Run Emulator CTS Test',
                          api.path.join(log_dir, 'CTS_test'),
                          'test_cts.*',
