@@ -285,8 +285,12 @@ class EmuBaseTestCase(LoggedTestCase):
                            'mips': 'mips',
                            'mips64': 'mips64'
                           }
-        for conf in config.options(avd_config.device):
-            set_val(conf, config.get(avd_config.device, conf))
+        def loadSection(section):
+            for conf in config.options(section):
+                set_val(conf, config.get(section, conf))
+        loadSection(avd_config.device)
+        if avd_config.cts:
+            loadSection('cts')
         set_val('AvdId', avd_config.name())
         set_val('abi.type', avd_config.abi)
         set_val('avd.ini.displayname', avd_config.name())
@@ -443,6 +447,7 @@ class EmuBaseTestCase(LoggedTestCase):
 def create_test_case_from_file(desc, testcase_class, test_func):
     """ Create test case based on test configuration file. """
 
+    is_cts = True if desc == "cts" else False
     def get_port():
         if not hasattr(get_port, '_port'):
             get_port._port = 5552
@@ -495,7 +500,7 @@ def create_test_case_from_file(desc, testcase_class, test_func):
         qemu_str = "_qemu2" if avd_config.classic == "no" else "_qemu1"
         setattr(testcase_class, "test_%s_%s%s" % (desc, str(avd_config), qemu_str), func)
 
-        if platform.system() in ["Linux", "Windows"] and avd_config.api > "15" and avd_config.gpu == "yes" and "arm" not in avd_config.abi:
+        if not is_cts and platform.system() in ["Linux", "Windows"] and avd_config.api > "15" and avd_config.gpu == "yes" and "arm" not in avd_config.abi:
             avd_config_mesa = avd_config._replace(gpu = "mesa")
             create_test_case(avd_config_mesa, op)
 
@@ -544,5 +549,5 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                       classic = "yes"
                     if device == "":
                       device = "default"
-                    avd_config = AVDConfig(api, tag, abi, device, ram, gpu, classic, get_port(), False, ori)
+                    avd_config = AVDConfig(api, tag, abi, device, ram, gpu, classic, get_port(), is_cts, ori)
                     create_test_case(avd_config, op)

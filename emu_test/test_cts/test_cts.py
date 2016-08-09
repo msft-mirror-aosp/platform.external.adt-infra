@@ -156,7 +156,7 @@ class CTSTestCase(EmuBaseTestCase):
     #   'subplan_results_dir' : directory into which the output of the run is written.
     def run_cts_subplan_work(self, paths, avd, subplan):
         result_re = re.compile("^.*XML test result file generated at (.*). Passed ([0-9]+), Failed ([0-9]+), Not Executed ([0-9]+)")
-        #self.assertEqual(self.create_avd(avd), 0)
+        self.assertEqual(self.create_avd(avd), 0)
         self.launch_emu_and_wait(avd)
         exec_path = paths['cts_exec_path']
         cts_cmd = [exec_path, "run", "cts", "--plan", subplan, "--disable-reboot"]
@@ -202,7 +202,8 @@ class CTSTestCase(EmuBaseTestCase):
             # Kill this emulator instance
             self.kill_emu_procs()
 
-    def run_cts_plan(self, avd, plan):
+    def run_cts_plan(self, avd):
+        plan = "CTS"
         plan_dir = CTSTestCase.get_cts_plan_dir(avd)
         exec_path = CTSTestCase.get_cts_exec(avd)
         paths = { 'cts_exec_path' : exec_path,
@@ -375,17 +376,17 @@ def create_test_case_for_avds():
         avd_config = AVDConfig(api, tag, abi, device, ram, gpu, classic="no", port="", cts=True, ori="mnc")
         return avd_config
 
-    def fn(avd_name, plan):
-        return lambda self: self.run_cts_plan(create_avd_from_name(avd_name), plan)
+    def fn(avd_name):
+        return lambda self: self.run_cts_plan(create_avd_from_name(avd_name))
 
     for avd in emu_argparser.emu_args.avd_list:
         if avd_name_re.match(avd):
-            setattr(CTSTestCase, "test_cts_%s" % avd, fn(avd, "CTS"))
+            setattr(CTSTestCase, "test_cts_%s" % avd, fn(avd))
 
 # TODO: create test case based on config file. Since we need to do some pre-work to run CTS, use static AVD at this time for simplicity.
-#utils.emu_testcase.create_test_case_from_file("cts", CTSTestCase, CTSTestCase.run_cts_plan)
+utils.emu_testcase.create_test_case_from_file("cts", CTSTestCase, CTSTestCase.run_cts_plan)
 
-create_test_case_for_avds()
+#create_test_case_for_avds()
 
 if __name__ == '__main__':
     emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
