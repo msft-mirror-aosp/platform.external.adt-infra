@@ -131,7 +131,8 @@ public class SettingsTest {
                             new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
                     );
             settingsList.setAsVerticalList();
-            UiObject appsObject = settingsList.getChild(new UiSelector().text("Apps"));
+            UiObject appsObject = settingsList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"), "Apps");
             appsObject.clickAndWaitForNewWindow();
             device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
                     .clickAndWaitForNewWindow();
