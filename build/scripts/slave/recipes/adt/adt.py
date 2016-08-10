@@ -246,6 +246,7 @@ def RunSteps(api):
                          step_data.filter,
                          emulator_path)
         elif is_cts:
+          emulator_path = api.path.join('emu-master-dev', 'tools', 'emulator')
           PythonTestStep('Run Emulator CTS Test',
                          api.path.join(log_dir, 'CTS_test'),
                          'test_cts.*',
