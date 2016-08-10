@@ -488,6 +488,10 @@ def create_test_case_from_file(desc, testcase_class, test_func):
         return True
 
     def create_test_case(avd_config, op):
+        if not is_cts and platform.system() in ["Linux", "Windows"] and avd_config.api > "15" and avd_config.gpu == "yes" and "arm" not in avd_config.abi:
+            avd_config_mesa = avd_config._replace(gpu = "mesa")
+            create_test_case(avd_config_mesa, op)
+
         if op == "S" or op == "" or not valid_case(avd_config):
             return
 
@@ -499,10 +503,6 @@ def create_test_case_from_file(desc, testcase_class, test_func):
             func = func
         qemu_str = "_qemu2" if avd_config.classic == "no" else "_qemu1"
         setattr(testcase_class, "test_%s_%s%s" % (desc, str(avd_config), qemu_str), func)
-
-        if not is_cts and platform.system() in ["Linux", "Windows"] and avd_config.api > "15" and avd_config.gpu == "yes" and "arm" not in avd_config.abi:
-            avd_config_mesa = avd_config._replace(gpu = "mesa")
-            create_test_case(avd_config_mesa, op)
 
     with open(emu_argparser.emu_args.config_file, "rb") as file:
         reader = csv.reader(file)
