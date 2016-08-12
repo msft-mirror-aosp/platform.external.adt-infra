@@ -31,7 +31,7 @@ def RunSteps(api):
   download_path = api.path['slave_build'].join('')
   env_path = ['%(PATH)s']
   emulator_branches = ['emu-master-dev', 'emu-2.2-release']
-  is_cts = "cts" in str(api.properties.get('scheduler'))
+  is_cts = 'CTS' in str(buildername)
   is_ui = "ui" in str(api.properties.get('scheduler'))
 
   # find android sdk root directory
@@ -183,10 +183,17 @@ def RunSteps(api):
     # so set status to "warning" and continue test
     f.result.presentation.status = api.step.WARNING
 
+  if is_cts:
+    file_list = "cts"
   api.python("Download and Unzip Images", image_util_path,
              ['--file', file_list,
               '--build-dir', build_dir],
              env=env)
+  if is_cts:
+    rev_file_path = api.path.join(script_root, 'config', 'rev.txt')
+    with open(rev_file_path) as revfile:
+      rev_str = revfile.read()
+    api.step('Rev emu-img %s' % rev_str, ['echo', rev_str])
   def PythonTestStep(description,
                      session_dir,
                      test_pattern,
@@ -245,14 +252,6 @@ def RunSteps(api):
                          'boot_cfg.csv',
                          step_data.filter,
                          emulator_path)
-        elif is_cts:
-          emulator_path = api.path.join('emu-master-dev', 'tools', 'emulator')
-          PythonTestStep('Run Emulator CTS Test',
-                         api.path.join(log_dir, 'CTS_test'),
-                         'test_cts.*',
-                         'cts_cfg.csv',
-                         '{}',
-                         emulator_path)
         elif is_ui:
           PythonTestStep('Run Emulator UI Test',
                          api.path.join(log_dir, 'UI_test'),
@@ -261,16 +260,33 @@ def RunSteps(api):
                          '{"gpu": "yes"}',
                          emulator_path,
                          True)
+    if is_cts:
+      emulator_path = api.path.join('emu-master-dev', 'tools', 'emulator')
+      PythonTestStep('Run Emulator CTS Test',
+                     api.path.join(log_dir, 'CTS_test'),
+                     'test_cts.*',
+                     'cts_cfg.csv',
+                     '{}',
+                     emulator_path,
+                     True)
 
+    logs_dir = '/home/user/buildbot/external/adt-infra/build/masters/master.client.adt/slave_logs/'
     upload_log_args = ['--dir', log_dir,
                        '--name', 'build_%s-rev_%s.zip' % (buildnum, rev),
                        '--ip', MASTER_IP,
                        '--user', MASTER_USER,
-                       '--dst', '%s%s/'% (api.properties['logs_dir'], buildername),
+                       '--dst', '%s%s/'% (logs_dir, buildername),
                        '--build-dir', build_dir]
     if is_ui:
       upload_log_args.append('--skiplog')
     api.python("Zip and Upload Logs", log_util_path, upload_log_args, env=env)
+
+    # Trigger next CTS build, to make CTS builder run continously
+    if is_cts:
+      api.trigger({
+        'buildername': buildername,
+        'got_revision': 'LATEST'
+      })
 
   # If this build is triggered by scheduler, and it passes above steps
   # trigger build on cross builers

@@ -89,6 +89,42 @@ def unzip_addon_dir(file_name, dst_dir):
           print "unzip from %s to %s" % (name, dst_path)
           shutil.copyfileobj(src, dst)
 
+gsutil_path = os.path.join(args.build_dir, 'third_party', 'gsutil', 'gsutil.py')
+def get_file_list_cts():
+    branches = [
+        'gs://android-build-emu/builds/aosp-emu-master-dev-linux-sdk_tools_linux/',
+        'gs://android-build-emu-sysimage/builds/git_mnc-emu-dev-linux-sdk_google_phone_x86-sdk_addon/',
+                      ]
+    file_list = []
+    rev_list = []
+    def find_latest(gspath):
+        maxrev = 0
+        proc = subprocess.Popen(['python', gsutil_path, 'ls', gspath], stdout=subprocess.PIPE)
+        while True:
+          output = proc.stdout.readline()
+          if output == '' and proc.poll() is not None:
+            break
+          if output:
+            output = output.strip()
+            rev = output[output.rfind('/', 0, output.rfind('/'))+1:-1]
+            maxrev = max(maxrev, int(rev))
+        rev_list.append(str(maxrev))
+        print "Found last build %s from %s" % (maxrev, gspath)
+        subpath = '%s%s/' % (gspath, maxrev)
+        proc = subprocess.Popen(['python', gsutil_path, 'ls', '-R', subpath], stdout=subprocess.PIPE)
+        while True:
+          output = proc.stdout.readline().strip()
+          if output == '' and proc.poll() is not None:
+            break
+          if output and output.endswith('.zip') and 'sdk-repo-linux' in output:
+            output = output.strip()
+            file_list.append(output)
+    for branch in branches:
+        find_latest(branch)
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'config', 'rev.txt'), 'w') as ofile:
+        ofile.write('-'.join(rev_list))
+    return file_list
+
 def download_and_unzip():
   clean_emu_proc()
   sdk_root = os.environ['ANDROID_SDK_ROOT']
@@ -96,10 +132,11 @@ def download_and_unzip():
     image_dir = os.path.join(sdk_root, 'system-images')
     print 'Remove system image directory: ', image_dir
     verbose_call(['rm', '-rf', image_dir])
-  file_list = args.remote_file_list.split(',')
-  dst_dir = get_dst_dir(file_list[0])
+  if args.remote_file_list == "cts":
+    file_list = get_file_list_cts()
+  else:
+    file_list = args.remote_file_list.split(',')
 
-  gsutil_path = os.path.join(args.build_dir, 'third_party', 'gsutil', 'gsutil.py')
   for file_path in file_list:
     file_path = file_path.strip('\n')
     if file_path == '':
