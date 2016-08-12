@@ -218,13 +218,13 @@
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-nvidia-quadro-600"],
        "categories": ["CTS"],
-       "tag": "",
+       "tag": "1",
      },
-     "Ubuntu 15.04 Quadro K600": {
+     "Ubuntu 14.04 Quadro 600 2": {
        "recipe": "adt/adt",
-       "slave_pools": ["ubuntu-15_04-nvidia-quadro-k600"],
-       "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds"],
-       "tag": "Linux",
+       "slave_pools": ["ubuntu-14_04-nvidia-quadro-k600"],
+       "categories": ["CTS"],
+       "tag": "2",
      },
      "Win 7 32-bit HD 4400": {
        "recipe": "adt/adt",
@@ -297,7 +297,7 @@
       "type": "emu_scheduler",
     },
     "cts_scheduler": {
-      "project": ["mnc-emu-dev", "emu-master-dev"],
+      "project": ["no-branch"],
       "type": "emu_scheduler",
     },
     "ui_scheduler": {
@@ -339,7 +339,7 @@
       },
       "slaves": ['chromeos1-row3-rack3-host5'],
     },
-    "ubuntu-15_04-nvidia-quadro-k600": {
+    "ubuntu-14_04-nvidia-quadro-k600": {
       "slave_data": {
         "bits": 64,
         "os": "linux",
