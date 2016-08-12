@@ -14,11 +14,11 @@ import csv
 import platform
 import threading
 import shutil
+import ConfigParser
 from emu_error import *
 import utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
-from ConfigParser import ConfigParser
 
 class AVDConfig(namedtuple('AVDConfig', 'api, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     __slots__ = ()
@@ -262,7 +262,7 @@ class EmuBaseTestCase(LoggedTestCase):
                 self.output_file = file_path
             def write(self, what):
                 self.output_file.write(what.replace(" = ", "="))
-        config = ConfigParser()
+        config = ConfigParser.ConfigParser()
         config.optionxform = str
         file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                  '..', 'config', 'avd_template.ini')
