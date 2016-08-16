@@ -22,9 +22,11 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
+import com.android.devtools.systemimage.uitest.utils.Wait;
 
 
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,16 +39,21 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Test on shell utility.
  */
 @RunWith(AndroidJUnit4.class)
 public class ShellUtilTest {
+    private final String BUG_REPORT_DIR = "/data/data/com.android.shell/files/bugreports";
+    private final String TAG = "ShellUtilTest";
+
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
@@ -105,7 +112,7 @@ public class ShellUtilTest {
      *   3. Tap on "Take Bug Report"
      *   4. Click on REPORT button.
      *   Verify:
-     *   Verify that a bug report is taken by checking for the pnd and zip file in the bugreport
+     *   Verify that a bug report is taken by checking for the png and zip file in the bugreport
      *     directory.
      *   </pre>
      */
@@ -113,56 +120,57 @@ public class ShellUtilTest {
     @TestInfo(id = "14581588")
     public void createBugReport() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = UiDevice.getInstance(instrumentation);
+        final UiDevice device = UiDevice.getInstance(instrumentation);
         if (testFramework.getApi() >= 21) {
+            deleteBugReportFiles();
+
             if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation)) {
                 DeveloperOptionsManager.enableDeveloperOptions(testFramework.getInstrumentation());
-            } else {
-                // Launch the Settings app.
-                AppLauncher.launch(instrumentation, "Settings");
-                UiScrollable itemList = new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-                itemList.setAsVerticalList();
-                UiObject item = itemList.getChildByText(
-                        new UiSelector().className("android.widget.TextView"), "Developer options");
-                item.click();
-                device.findObject(
-                        new UiSelector().text("Take bug report")).clickAndWaitForNewWindow();
-                if (device.findObject(new UiSelector().text("Report")).exists()) {
-                    device.findObject(new UiSelector().text("Report")).click();
-                }
             }
 
-            String cmd = "ls -l cd data/data/com.android.shell/files/bugreports";
-            device.executeShellCommand(cmd);
-            String result = device.executeShellCommand(cmd);
-            String[] arr = result.split(" ");
-
-            boolean containsPng = false;
-            boolean containsZip = false;
-            String png = "";
-            String zip = "";
-
-            for (String ss : arr) {
-                if (ss.contains("bugreport") && ss.contains(".png")) {
-                    containsPng = true;
-                    png = ss;
-                }
-                if (ss.contains("bugreport") && ss.contains(".zip")) {
-                    containsZip = true;
-                    zip = ss;
-                }
+            AppLauncher.launch(instrumentation, "Settings");
+            UiScrollable itemList = new UiScrollable(
+                    new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+            itemList.setAsVerticalList();
+            UiObject item = itemList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"), "Developer options");
+            item.click();
+            device.findObject(
+                    new UiSelector().text("Take bug report")).clickAndWaitForNewWindow();
+            if (device.findObject(new UiSelector().text("Report")).exists()) {
+                device.findObject(new UiSelector().text("Report")).click();
             }
 
-            Assert.assertTrue(
-                    "Missing bug report files for png and zip.", containsPng && containsZip);
+            boolean gotPngAndZip = new Wait(
+                    TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
+                    new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
+                    Log.d(TAG, "ls result " + result);
+                    return result.matches("(?s).*bugreport[-0-9]+\\.png.*")
+                            && result.matches("(?s).*bugreport[-0-9]+\\.zip.*");
+                }
+            });
+            Assert.assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
+        }
+    }
 
-            // Clean up by deleting all png and zip bug reports. This factors out from having
-            // to keep track of the timestamp and date of when the bug report files were created.
-            cmd = "remove " + png;
-            device.executeShellCommand(cmd);
-            cmd = "remove " + zip;
-            device.executeShellCommand(cmd);
+    @After
+    public void deleteBugReportFiles() throws Exception {
+        Log.v(TAG, "Deleting any existing bug report files");
+
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        // Delete all png and zip bug reports. Delete the files one at a time, as wildcards
+        // don't work.
+        String lsResult = device.executeShellCommand("ls " + BUG_REPORT_DIR);
+        String[] files = lsResult.split("\\s+");
+        for (String file : files) {
+            if (file.matches("bugreport[-0-9]+\\.(png|zip)")) {
+                device.executeShellCommand(String.format("rm %s/%s", BUG_REPORT_DIR, file));
+            }
         }
     }
 }
