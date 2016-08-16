@@ -78,7 +78,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         test_tag = test_args_prefix + '.tag=' + avd.tag
         test_ori = test_args_prefix + '.origin=' + avd.ori
         return psutil.Popen([gradle, 'cAT', test_package, test_api, test_abi, test_tag, test_ori],
-                            cwd=uitest_dir, stdout=PIPE, stderr=PIPE)
+                            cwd=uitest_dir, stdout=PIPE, stderr=PIPE, shell=True)
 
     def ui_test_check(self, avd):
         self.launch_emu_and_wait(avd)
