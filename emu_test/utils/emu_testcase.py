@@ -147,11 +147,11 @@ class EmuBaseTestCase(LoggedTestCase):
             test_name = self.id().rsplit('.', 1)[-1]
             logcat_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_logcat.txt" % test_name)
             verbose_log_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_verbose.txt" % test_name)
-            with open(logcat_path, 'w') as output:
+            with open(logcat_path, 'a') as output:
                 self.run_with_timeout(["adb", "start-server"], 20)
                 psutil.Popen(["adb", "logcat"], stdout=output, stderr=STDOUT)
             self.start_proc = psutil.Popen(launch_cmd, stdout=PIPE, stderr=STDOUT)
-            with open(verbose_log_path, 'w') as verb_output:
+            with open(verbose_log_path, 'a') as verb_output:
                 lines_iterator = iter(self.start_proc.stdout.readline, b"")
                 for line in lines_iterator:
                     verb_output.write(line)
