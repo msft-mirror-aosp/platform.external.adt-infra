@@ -43,7 +43,7 @@ public class AppTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(60);
+    public Timeout globalTimeout = Timeout.seconds(90);
 
     /**
      * Verifies an app runs on the emulator.
