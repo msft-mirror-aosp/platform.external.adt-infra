@@ -26,9 +26,14 @@ class AVDConfig(namedtuple('AVDConfig', 'api, tag, abi, device, ram, gpu, classi
         device = self.device if self.device != '' else 'defdev'
         for ch in [' ', '(', ')']:
             device = device.replace(ch, '_')
+        suffix = ""
+        if emu_argparser.emu_args.is_gts:
+          suffix = "-GTS"
+        elif self.cts:
+          suffix = "-CTS"
         return str("%s-%s-%s-%s-gpu_%s-api%s%s" % (self.tag, self.abi,
                                                  device, self.ram, self.gpu,
-                                                 self.api, "-CTS" if self.cts else ""))
+                                                 self.api, suffix))
     def name(self):
         return str(self)
 class LoggedTestCase(unittest.TestCase):
