@@ -156,7 +156,6 @@ public class ShellUtilTest {
         }
     }
 
-    @After
     public void deleteBugReportFiles() throws Exception {
         Log.v(TAG, "Deleting any existing bug report files");
 
