@@ -229,9 +229,6 @@ public class NetworkIOTest {
                     new UiSelector().textContains("Set cellular data limit")).exists()) {
                 assertTrue("Set cellular data limit text is visible.", false);
             }
-            // Disable Cellular data.
-            dataSwitch.click();
-            device.findObject(new UiSelector().text("OK")).click();
         }
     }
 }
