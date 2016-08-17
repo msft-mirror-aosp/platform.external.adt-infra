@@ -38,5 +38,7 @@ def get_parser():
                         help='json style pattern to filter config_file')
     parser.add_argument('--skip-adb-perf', action='store_true',
                         help='when defined, skip adb performance test')
+    parser.add_argument('--is-gts', action='store_true',
+                        help='when defined, run gts instead of cts')
     parser.add_argument('unittest_args', nargs='*')
     return parser
