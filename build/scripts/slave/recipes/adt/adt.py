@@ -209,6 +209,8 @@ def RunSteps(api):
                  '-f', cfg_filter]
     if skip_adb_perf is True:
       test_args.append('--skip-adb-perf')
+    if 'GTS' in description:
+      test_args.append('--is-gts')
     deferred_step_result = api.python(description, dotest_path, test_args, env=env, stderr=api.raw_io.output('err'))
     if not deferred_step_result.is_ok:
       stderr_output = deferred_step_result.get_error().result.stderr
@@ -227,6 +229,9 @@ def RunSteps(api):
     if "CTS" in description:
       api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
                                                     "CTS_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "testResult.xml")
+    if "GTS" in description:
+      api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
+                                                    "GTS_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "xtsTestResult.xml")
 
   emulator_branch_to_use, steps_to_run = getTestConfig(project, is_cross_build)
 
@@ -264,6 +269,14 @@ def RunSteps(api):
       emulator_path = api.path.join('emu-master-dev', 'tools', 'emulator')
       PythonTestStep('Run Emulator CTS Test',
                      api.path.join(log_dir, 'CTS_test'),
+                     'test_cts.*',
+                     'cts_cfg.csv',
+                     '{}',
+                     emulator_path,
+                     True)
+
+      PythonTestStep('Run Emulator GTS Test',
+                     api.path.join(log_dir, 'GTS_test'),
                      'test_cts.*',
                      'cts_cfg.csv',
                      '{}',

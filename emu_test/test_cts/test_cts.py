@@ -86,18 +86,22 @@ class CTSTestCase(EmuBaseTestCase):
             super(CTSTestCase, self).launch_emu_and_wait(avd)
 
     @staticmethod
-    def get_cts_exec(avd):
+    def get_cts_root(avd):
         home_dir = os.path.expanduser('~')
+        if emu_argparser.emu_args.is_gts:
+            return os.path.join(home_dir, 'Android', 'GTS', 'android-xts')
         cts_home = os.path.join(home_dir, 'Android', 'CTS')
         cts_dir = "%s-%s" % (api_to_android_version[avd.api], avd.abi)
-        return os.path.join(cts_home, cts_dir, 'android-cts', 'tools', 'cts-tradefed')
+        return os.path.join(cts_home, cts_dir, 'android-cts')
+
+    @staticmethod
+    def get_cts_exec(avd):
+        exec_name = 'xts-tradefed' if emu_argparser.emu_args.is_gts else 'cts-tradefed'
+        return os.path.join(CTSTestCase.get_cts_root(avd), 'tools', exec_name)
 
     @staticmethod
     def get_cts_plan_dir(avd):
-        home_dir = os.path.expanduser('~')
-        cts_home = os.path.join(home_dir, 'Android', 'CTS')
-        cts_dir = "%s-%s" % (api_to_android_version[avd.api], avd.abi)
-        return os.path.join(cts_home, cts_dir, 'android-cts', 'repository', 'plans')
+        return os.path.join(CTSTestCase.get_cts_root(avd), 'repository', 'plans')
 
     @staticmethod
     def get_emu_stable_plan(avd, plan):
@@ -159,7 +163,10 @@ class CTSTestCase(EmuBaseTestCase):
         self.assertEqual(self.create_avd(avd), 0)
         self.launch_emu_and_wait(avd)
         exec_path = paths['cts_exec_path']
-        cts_cmd = [exec_path, "run", "cts", "--plan", subplan, "--disable-reboot"]
+        if emu_argparser.emu_args.is_gts:
+            cts_cmd = [exec_path, "run", "xts", "--plan", subplan]
+        else:
+            cts_cmd = [exec_path, "run", "cts", "--plan", subplan, "--disable-reboot"]
         # use "script -c" to force message flush, not available on Windows
         if platform.system() in ["Linux", "Darwin"]:
             cts_cmd = ["script", "-c", " ".join(cts_cmd)]
@@ -203,7 +210,7 @@ class CTSTestCase(EmuBaseTestCase):
             self.kill_emu_procs()
 
     def run_cts_plan(self, avd):
-        plan = "CTS"
+        plan = "XTS" if emu_argparser.emu_args.is_gts else "CTS"
         plan_dir = CTSTestCase.get_cts_plan_dir(avd)
         exec_path = CTSTestCase.get_cts_exec(avd)
         paths = { 'cts_exec_path' : exec_path,
@@ -220,9 +227,11 @@ class CTSTestCase(EmuBaseTestCase):
                           top_plan, cts_result_dirs, pass_count, fail_count, skip_count):
         total_tests = pass_count + fail_count + skip_count
         first = True
+        result_name = 'xtsTestResult.xml' if emu_argparser.emu_args.is_gts else 'testResult.xml'
+        xsl_name = 'xts_result.xsl' if emu_argparser.emu_args.is_gts else 'cts_result.xsl'
         for cts_result_dir in cts_result_dirs:
             tree = ElementTree.parse(
-                os.path.join(paths['subplan_results_dir'], cts_result_dir, 'testResult.xml'))
+                os.path.join(paths['subplan_results_dir'], cts_result_dir, result_name))
             tree_root = tree.getroot()
             if first:
                 combined_tree = tree
@@ -255,10 +264,10 @@ class CTSTestCase(EmuBaseTestCase):
         # getElementTree.write to write the XML declaration...but not
         # in a way that allows the xml-stylesheet declaration to be
         # written as the second element.)
-        combined_result_path = os.path.join(combined_result_dir, 'testResult.xml')
+        combined_result_path = os.path.join(combined_result_dir, result_name)
         with open(combined_result_path, 'w') as f:
             f.write("<?xml version='1.0' encoding='UTF-8' standalone='no' ?>\n")
-            f.write("<?xml-stylesheet type='text/xsl'  href='cts_result.xsl'?>\n")
+            f.write("<?xml-stylesheet type='text/xsl'  href='%s'?>\n" % xsl_name)
             combined_tree.write(f)
 
     # Exposed for testing.
@@ -269,7 +278,7 @@ class CTSTestCase(EmuBaseTestCase):
     #  'subplan_file_dir' : directory into which to write the generated subplan XML files.
     def run_cts_plan_work(self, paths, avd, plan):
         # Shard the overall CTS plan into this many subplans.
-        NumShards = 10
+        NumShards = 1 if emu_argparser.emu_args.is_gts else 10
         subplan_results = []
         for i in range(0, NumShards):
             subplan_results.append(
@@ -288,7 +297,8 @@ class CTSTestCase(EmuBaseTestCase):
             skip_count += int(subplan_result[3])
 
         # Write a top-level xml file.
-        top_result_dir = os.path.join(emu_argparser.emu_args.session_dir, 'cts_combined_result')
+        testName = 'gts' if emu_argparser.emu_args.is_gts else 'cts'
+        top_result_dir = os.path.join(emu_argparser.emu_args.session_dir, '%s_combined_result' % testName)
         CTSTestCase.combine_xml_files(paths, top_result_dir, plan,
                                       cts_results_dirs, pass_count, fail_count, skip_count)
 
@@ -342,8 +352,9 @@ class CTSTestCase(EmuBaseTestCase):
 
         fails = set()
         passes = set()
+        result_name = 'xtsTestResult.xml' if emu_argparser.emu_args.is_gts else 'testResult.xml'
         for cts_results_dir in cts_results_dirs:
-            cts_results_file_path = os.path.join(paths['subplan_results_dir'], cts_results_dir, 'testResult.xml');
+            cts_results_file_path = os.path.join(paths['subplan_results_dir'], cts_results_dir, result_name);
             results = ctsparser.extract_results(cts_results_file_path)
             for result in results:
                 full_name = ctsparser.format_full_name(result)
