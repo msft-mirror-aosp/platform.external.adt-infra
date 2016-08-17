@@ -105,7 +105,10 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             m = re.search('file://(.+)index\.html', err)
             if m.group(1) is None:
                 self.m_logger.error("Failed to find the gradle test report.")
-            self._save_gradle_test_report(self._testMethodName, m.group(1))
+            gradle_test_report = m.group(1)
+            if os.name is 'nt':
+                gradle_test_report = gradle_test_report[1:]
+            self._save_gradle_test_report(self._testMethodName, gradle_test_report)
 
         # save adb bug reports for the bug report automation purpose
         self._save_adb_bug_report(self._testMethodName)
