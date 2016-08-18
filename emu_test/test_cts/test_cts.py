@@ -12,6 +12,7 @@ import shutil
 import re
 import sys
 import threading
+import time
 from subprocess import PIPE,STDOUT
 import utils.emu_argparser as emu_argparser
 
@@ -84,6 +85,8 @@ class CTSTestCase(EmuBaseTestCase):
         # If we're testing the infrastructure, don't actually launch the emulator.
         if not self.for_test:
             super(CTSTestCase, self).launch_emu_and_wait(avd)
+            self.m_logger.info("Wait for 120 seconds for emulator to fully boot up")
+            time.sleep(120)
 
     @staticmethod
     def get_cts_root(avd):
