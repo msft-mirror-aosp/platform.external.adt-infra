@@ -69,8 +69,10 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
     def _launch_ui_test_with_avd_configs(self, uitest_dir, avd):
         if os.name is 'nt':
             gradle = 'gradlew.bat'
+            use_shell = True
         else:
             gradle = './gradlew'
+            use_shell = False
         test_args_prefix = '-Pandroid.testInstrumentationRunnerArguments'
         test_package = test_args_prefix + '.package=com.android.devtools.systemimage.uitest.smoke'
         test_api = test_args_prefix + '.api=' + avd.api
@@ -78,7 +80,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         test_tag = test_args_prefix + '.tag=' + avd.tag
         test_ori = test_args_prefix + '.origin=' + avd.ori
         return psutil.Popen([gradle, 'cAT', test_package, test_api, test_abi, test_tag, test_ori],
-                            cwd=uitest_dir, stdout=PIPE, stderr=PIPE, shell=True)
+                            cwd=uitest_dir, stdout=PIPE, stderr=PIPE, shell=use_shell)
 
     def ui_test_check(self, avd):
         self.launch_emu_and_wait(avd)
