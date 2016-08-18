@@ -135,29 +135,34 @@ public class ShellUtilTest {
             UiObject item = itemList.getChildByText(
                     new UiSelector().className("android.widget.TextView"), "Developer options");
             item.click();
-            device.findObject(
-                    new UiSelector().text("Take bug report")).clickAndWaitForNewWindow();
-            if (device.findObject(new UiSelector().text("Report")).exists()) {
-                device.findObject(new UiSelector().text("Report")).click();
-            }
 
-            boolean gotPngAndZip = new Wait(
-                    TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
-                    new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws Exception {
-                    String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
-                    Log.d(TAG, "ls result " + result);
-                    return result.matches("(?s).*bugreport[-0-9]+\\.png.*")
-                            && result.matches("(?s).*bugreport[-0-9]+\\.zip.*");
+            // Remove bug report files even if the test fails.
+            try {
+                device.findObject(
+                        new UiSelector().text("Take bug report")).clickAndWaitForNewWindow();
+                if (device.findObject(new UiSelector().text("Report")).exists()) {
+                    device.findObject(new UiSelector().text("Report")).click();
                 }
-            });
-            Assert.assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
+                boolean gotPngAndZip = new Wait(
+                        TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
+                        new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
+                        Log.d(TAG, "ls result " + result);
+                        return result.matches("(?s).*bugreport[-0-9]+\\.png.*")
+                               && result.matches("(?s).*bugreport[-0-9]+\\.zip.*");
+                    }
+                });
+                Assert.assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
+            } finally {
+                deleteBugReportFiles();
+            }
         }
     }
 
     public void deleteBugReportFiles() throws Exception {
-        Log.v(TAG, "Deleting any existing bug report files");
+        Log.i(TAG, "Deleting any existing bug report files");
 
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
