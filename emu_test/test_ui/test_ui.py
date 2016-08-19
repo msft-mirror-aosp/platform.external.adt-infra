@@ -66,29 +66,48 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.m_logger.info('adb_pull_stdout:\n' + out)
         self.m_logger.info('adb_pull_stderr:\n' + err)
 
-    def _launch_ui_test_with_avd_configs(self, uitest_dir, avd):
-        if os.name is 'nt':
-            gradle = 'gradlew.bat'
-            use_shell = True
-        else:
-            gradle = './gradlew'
-            use_shell = False
+    def _launch_ui_test_with_avd_configs(self, avd):
         test_args_prefix = '-Pandroid.testInstrumentationRunnerArguments'
         test_package = test_args_prefix + '.package=com.android.devtools.systemimage.uitest.smoke'
         test_api = test_args_prefix + '.api=' + avd.api
         test_abi = test_args_prefix + '.abi=' + avd.abi
         test_tag = test_args_prefix + '.tag=' + avd.tag
         test_ori = test_args_prefix + '.origin=' + avd.ori
-        return psutil.Popen([gradle, 'cAT', test_package, test_api, test_abi, test_tag, test_ori],
-                            cwd=uitest_dir, stdout=PIPE, stderr=PIPE, shell=use_shell)
+        return psutil.Popen([self.gradle, 'cAT', test_package, test_api, test_abi, test_tag, test_ori],
+                            cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+
+    def _launch_local_presubmit_check(self, avd, test_method):
+        p1 = psutil.Popen([self.gradle, 'installDebug'],
+                          cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+        p1.communicate()
+        p2 = psutil.Popen([self.gradle, 'installDebugAndroidTest'],
+                          cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+        p2.communicate()
+        self.assertTrue(p1.poll() == 0 and p2.poll() == 0, "Failed to install the instrumentation APK.")
+
+        p = psutil.Popen(['adb', 'shell', 'am', 'instrument', '-w',
+                          '-e', 'class', test_method,
+                          '-e', 'api', avd.api, '-e', 'abi', avd.abi, '-e', 'tag', avd.tag, '-e', 'origin', avd.ori,
+                          'com.android.devtools.systemimage.uitest.test/android.support.test.runner.AndroidJUnitRunner'],
+                         cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+        (out, err) = p.communicate()
+        self.m_logger.info('instrumentation_test_stdout:\n' + out)
+        self.m_logger.info('instrumentation_test_stderr:\n' + err)
+        self.assertTrue(p.poll() == 0 and 'FAILURES!!!' not in out, "%s failed." % test_method)
 
     def ui_test_check(self, avd):
         self.launch_emu_and_wait(avd)
         self.m_logger.info('System image UI tests (%s) start.' % self._testMethodName)
-        uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'system_image_uitests')
+        if os.name is 'nt':
+            self.gradle = 'gradlew.bat'
+            self.use_shell = True
+        else:
+            self.gradle = './gradlew'
+            self.use_shell = False
+        self.uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'system_image_uitests')
 
         # install APKs required in UI tests
-        uitest_assets_dir = os.path.join(uitest_dir, 'app', 'src', 'main', 'assets')
+        uitest_assets_dir = os.path.join(self.uitest_dir, 'app', 'src', 'main', 'assets')
         for filename in os.listdir(uitest_assets_dir):
             if filename.endswith('.apk'):
                 p = psutil.Popen(['adb', 'install', '-r', filename], cwd=uitest_assets_dir, stdout=PIPE, stderr=PIPE)
@@ -96,8 +115,13 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
                 self.m_logger.info('Install APK, stdout: %s, stderr: %s', out, err)
                 self.assertTrue(p.poll() == 0, "Failed to install %s." % filename)
 
+        # check if it is a local presubmit test
+        if emu_args.uitest_psc is not None:
+            self._launch_local_presubmit_check(avd, emu_args.uitest_psc)
+            return
+
         # run tests using gradle script
-        proc = self._launch_ui_test_with_avd_configs(uitest_dir, avd)
+        proc = self._launch_ui_test_with_avd_configs(avd)
         (out, err) = proc.communicate()
         self.m_logger.info('gradle_stdout:\n' + out)
         self.m_logger.info('gradle_stderr:\n' + err)
