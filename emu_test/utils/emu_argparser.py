@@ -40,5 +40,8 @@ def get_parser():
                         help='when defined, skip adb performance test')
     parser.add_argument('--is-gts', action='store_true',
                         help='when defined, run gts instead of cts')
+    parser.add_argument('--uitest-psc', type=str, dest='uitest_psc', action='store',
+                        default=None,
+                        help='test class and method for uitest presubmit check')
     parser.add_argument('unittest_args', nargs='*')
     return parser
