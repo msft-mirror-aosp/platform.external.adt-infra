@@ -26,7 +26,9 @@ import android.support.test.uiautomator.UiSelector;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
+import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -87,5 +89,63 @@ public class GoogleServicesTest {
         assertTrue("Cannot find Maps", appList.getChildByText(
                 new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
                 "Maps").exists());
+    }
+
+    /**
+     * Verify the contents of the Location Settings page
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578827
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start an emulator AVD targeting Google Add On image
+     *   2. Open Settings > Location
+     *   Verify:
+     *   Location enable toggle button
+     *   Verify location Mode
+     *   Verify recent location requests
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "14578827")
+    public void verifyLocationSettings() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        // Open settings
+        AppLauncher.launch(instrumentation, "Settings");
+
+        // Find and click "Location" in Settings
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
+        if(SystemUtil.getApiLevel() > 18) {
+            UiObject item =
+                    itemList.getChildByText(
+                            new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
+                            "Location");
+            item.clickAndWaitForNewWindow();
+
+            assertTrue("Cannot find location toggle button", device.findObject(
+                    new UiSelector().className("android.widget.Switch")).exists());
+            assertTrue("Cannot find mode", device.findObject(new UiSelector().text(
+                    "Mode")).exists());
+            assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
+                    "Recent location requests")).exists());
+        } else {
+            UiObject item =
+                    itemList.getChildByText(
+                            new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
+                            "Location access");
+            item.clickAndWaitForNewWindow();
+
+            // API specific assertion, since mode and recent location requests are absent in API 18
+            assertTrue("Cannot find location toggle button", device.findObject(new
+                    UiSelector().className("android.widget.Switch")).exists());
+        }
     }
 }
