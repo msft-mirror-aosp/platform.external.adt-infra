@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/exploded-aar/com.android.support.test.uiautomator/uiautomator-v18/2.1.2/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="d9ebd18603c0013727799e7ed41bcb42f3df75c0">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/com.android.support.test.uiautomator-uiautomator-v18-2.1.2_1dbf6c607b2068660bf31c97a9774e1f6dc4f857.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/19.0/6ce200f6b23222af3d8abb6b6459e6c44f4bb0e9/guava-19.0.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="6ce200f6b23222af3d8abb6b6459e6c44f4bb0e9">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/guava-19.0_37b9a74320d2e3dfee13184568b17c4564d8bb41.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/exploded-aar/com.android.support.test/exposed-instrumentation-api-publish/0.5/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="905f3e63973d47fedf2d945fa31d8c0f0c98816e">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/com.android.support.test-exposed-instrumentation-api-publish-0.5_08163bb1682dc2171c46189fcb06055300cc4822.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/.gradle/caches/modules-2/files-2.1/com.android.support/support-annotations/24.1.1/3af19f153122737b372622fa6c81dd11a1c6b999/support-annotations-24.1.1.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="3af19f153122737b372622fa6c81dd11a1c6b999">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/support-annotations-24.1.1_2a707c21760f051c260bfb6f5f8df1d946d4e842.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="2973d150c0dc1fefe998f834810d68f278ea58ec">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/junit-4.12_a75509a8470e6eee7102570b9ac2f6c1b0a5d548.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/.gradle/caches/modules-2/files-2.1/org.mortbay.jetty/jetty/6.1.22/e097b3b684cececf84a35cfdd08e56096a3188da/jetty-6.1.22.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="e097b3b684cececf84a35cfdd08e56096a3188da">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/jetty-6.1.22_1e5130ad332bb2236705f21249d812bfce7514d6.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="42a25dc3219429f0e5d060061f71acb49bf010a0">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/hamcrest-core-1.3_12f6beabddefce79b1320f3c1fa2838aca62df1d.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/exploded-aar/com.android.support/animated-vector-drawable/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="de4db3785756bfb0915a9f59a9b3f2fea7407be4">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/com.android.support-animated-vector-drawable-23.4.0_7cda7467aa823df6354eff1e0dc32ce944767903.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/exploded-aar/com.android.support.test/rules/0.5/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="7e11799d8a26bfa5d48acafe012ee5545b9bf468">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/com.android.support.test-rules-0.5_5a0e536c7ddc745b15950a855756bd089e8bb47a.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/exploded-aar/com.android.support.test/runner/0.5/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="796f9229948e907471c5595fbe94655ccf03ff73">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/com.android.support.test-runner-0.5_7fbffeca86c01ed0531e6465e45df1c8100d78cc.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.4.0/jars/libs/internal_impl-23.4.0.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="ea3c07504d2c8f4b13aa17c45c1b68ed9c1c3674">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/internal_impl-23.4.0_3a400684d07751c6d3017e03a0aa408575805c07.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="548f06de403a9409f00554b3ee12a9fdea0e236c">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/com.android.support-appcompat-v7-23.4.0_754c64b0dcfbc7ea6152bf98ce3cd9694b51bbb1.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/.gradle/caches/modules-2/files-2.1/org.mortbay.jetty/servlet-api/2.5-20081211/22bff70037e1e6fa7e6413149489552ee2064702/servlet-api-2.5-20081211.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="22bff70037e1e6fa7e6413149489552ee2064702">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/servlet-api-2.5-20081211_285cd2fc00eb317d8c55915fd24e114217f73087.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/exploded-aar/com.android.support/support-v4/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="67bd36ee9340ec7c254108936ad16b24bed160cc">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/com.android.support-support-v4-23.4.0_f076bf115c99e405269d3f04de1a7719b32bcef6.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/exploded-aar/com.android.support/support-vector-drawable/23.4.0/jars/classes.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="c2c594cace5d83a3227b2b6e658ecbfd586d3ed9">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/com.android.support-support-vector-drawable-23.4.0_e62f079d0fa43d2b2ed0f1440433bf6c3de90ca9.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.3.1/ecb6e1f8e4b0e84c4b886c2f14a1500caf309757/gson-2.3.1.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="ecb6e1f8e4b0e84c4b886c2f14a1500caf309757">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/gson-2.3.1_e9be8cf2fcc04ec17352dcaa31bda478a1c728da.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/.gradle/caches/modules-2/files-2.1/org.mortbay.jetty/jetty-util/6.1.22/9039d1940a9ae1c91d2b5d7fdfd64bd1924cd447/jetty-util-6.1.22.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="9039d1940a9ae1c91d2b5d7fdfd64bd1924cd447">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/jetty-util-6.1.22_a4d249fd3fd04eb7441db06007ac08c72b958648.jar" />
+    </item>
+    <item
+        jar="/usr/local/google/home/jesikmin/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-library/1.3/4785a3c21320980282f9f33d0d1264a69040538f/hamcrest-library-1.3.jar"
+        jumboMode="false"
+        revision="23.0.3"
+        sha1="4785a3c21320980282f9f33d0d1264a69040538f">
+        <dex dex="/usr/local/google/home/jesikmin/workspace/external/adt-infra/emu_test/test_console/Server/app/build/intermediates/pre-dexed/debug/hamcrest-library-1.3_6075a186d895bfb740d20e3e804fa2ec0a618844.jar" />
+    </item>
+
+</items>
