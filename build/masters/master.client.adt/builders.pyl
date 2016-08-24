@@ -199,13 +199,18 @@
        "id": "_5",
        "scheduler": "ui_scheduler",
      },
+     "Console": {
+       "name": "emulator console test",
+       "id": "_6",
+       "scheduler": "console_scheduler",
+     },
   },
 
   "builders": {
      "Ubuntu 12.04 HD Graphics 4000": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-12_04-intel-hd-4000"],
-       "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds", "Console"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400": {
@@ -225,6 +230,12 @@
        "slave_pools": ["ubuntu-14_04-nvidia-quadro-k600"],
        "categories": ["CTS"],
        "tag": "2",
+     },
+     "Ubuntu 14.04 Quadro 600 3": {
+       "recipe": "adt/adt",
+       "slave_pools": ["ubuntu-14_04-nvidia-quadro-600-1"],
+       "categories": ["CTS"],
+       "tag": "3",
      },
      "Win 7 32-bit HD 4400": {
        "recipe": "adt/adt",
@@ -254,6 +265,12 @@
        "recipe": "adt/adt",
        "slave_pools": ["win-10-64-nvidia-quadro-600"],
        "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds"],
+       "tag": "Win",
+     },
+     "Win 10 64-bit Quadro 600 1": {
+       "recipe": "adt/adt",
+       "slave_pools": ["win-10-64-nvidia-quadro-600-ui"],
+       "categories": ["UI"],
        "tag": "Win",
      },
      "Mac 10.10.5 Intel HD 5000": {
@@ -304,6 +321,10 @@
       "project": ["emu-master-dev"],
       "type": "emu_scheduler",
     },
+    "console_scheduler": {
+      "project": ["emu-master-dev"],
+      "type": "emu_scheduler",
+    },
  },
 
   "slave_pools": {
@@ -347,6 +368,14 @@
       },
       "slaves": ['chromeos1-row3-rack2-host2'],
     },
+    "ubuntu-14_04-nvidia-quadro-600-1": {
+      "slave_data": {
+        "bits": 64,
+        "os": "linux",
+        "version": "trusty",
+      },
+      "slaves": ['chromeos1-row3-rack4-host5'],
+    },
     "win-7-32-intel-hd-4400": {
       "slave_data": {
         "bits": 32,
@@ -386,6 +415,14 @@
         "version": "win10",
       },
       "slaves": ['chromeos1-row3-rack3-host4'],
+    },
+    "win-10-64-nvidia-quadro-600-ui": {
+      "slave_data": {
+        "bits": 64,
+        "os": "win",
+        "version": "win10",
+      },
+      "slaves": ['chromeos1-row3-rack4-host6'],
     },
     "mac-10-10-5-intel-hd-5000": {
       "slave_data": {
