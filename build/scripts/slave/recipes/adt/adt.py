@@ -33,6 +33,7 @@ def RunSteps(api):
   emulator_branches = ['emu-master-dev', 'emu-2.2-release']
   is_cts = 'CTS' in str(buildername)
   is_ui = "ui" in str(api.properties.get('scheduler'))
+  is_console = "console" in str(api.properties.get('scheduler'))
 
   # find android sdk root directory
   home_dir = os.path.expanduser('~')
@@ -265,6 +266,15 @@ def RunSteps(api):
                          '{"gpu": "yes"}',
                          emulator_path,
                          True)
+        elif is_console:
+          PythonTestStep('Run Emulator Console Test',
+                         api.path.join(log_dir, 'Console_test'),
+                         'test_console.*',
+                         'console_cfg.csv',
+                         '{"gpu": "yes"}',
+                         emulator_path,
+                         True)
+
     if is_cts:
       emulator_path = api.path.join('emu-master-dev', 'tools', 'emulator')
       PythonTestStep('Run Emulator CTS Test',
@@ -290,7 +300,7 @@ def RunSteps(api):
                        '--user', MASTER_USER,
                        '--dst', '%s%s/'% (logs_dir, buildername),
                        '--build-dir', build_dir]
-    if is_ui:
+    if is_ui or is_console:
       upload_log_args.append('--skiplog')
     api.python("Zip and Upload Logs", log_util_path, upload_log_args, env=env)
 
@@ -303,7 +313,7 @@ def RunSteps(api):
 
   # If this build is triggered by scheduler, and it passes above steps
   # trigger build on cross builers
-  if not is_cts and not is_ui and not is_cross_build:
+  if not is_cts and not is_ui and not is_console and not is_cross_build:
     setProps()
     api.trigger(getProps())
 
