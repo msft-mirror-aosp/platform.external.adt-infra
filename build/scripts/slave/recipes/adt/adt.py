@@ -250,7 +250,7 @@ def RunSteps(api):
       for emu_branch in emulator_branch_to_use:
         emulator_path = api.path.join(emu_branch, 'tools', 'emulator')
         emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
-        if not is_cts and not is_ui:
+        if not is_cts and not is_ui and not is_console:
           step_data = bootSteps[step]
           PythonTestStep('Boot Test - %s System Image - %s' % (step_data.description, emu_desc),
                          api.path.join(log_dir, 'boot_test_%s_sysimage-%s' % (step_data.description, emu_desc)),
