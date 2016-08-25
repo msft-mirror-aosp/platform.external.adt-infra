@@ -46,6 +46,8 @@ public class Res {
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list)";
+    public static final String SETTINGS_RECYCLER_VIEW_RES =
+            "com.android.settings:id/dashboard_container"; // Added in API 24
 
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
     public static final String MOBILE_TYPE_ICONS_RES = "com.android.systemui:id/mobile_type";
