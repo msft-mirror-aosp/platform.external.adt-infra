@@ -9,7 +9,7 @@ import re
 import subprocess
 import os
 
-NEWLINE = "\r\n"
+NEWLINE = "\n"
 OK = "OK"
 STATUS = "status: "
 AC = "AC: "
@@ -30,6 +30,7 @@ EVENTS_CODE_EV_KEY_FILENAME = os.path.join(EVENT_DIR, "EVENTS_CODE_EV_KEY")
 EVENTS_CODE_EV_REL_FILENAME = os.path.join(EVENT_DIR, "EVENTS_CODE_EV_REL")
 EVENTS_CODE_EV_ABS_FILENAME = os.path.join(EVENT_DIR, "EVENTS_CODE_EV_ABS")
 EVENTS_EV_TYPES_FILENAME = os.path.join(EVENT_DIR, "EVENTS_EV_TYPES")
+PORT_NO_REDIR = "no active redirections\r\nOK"
 
 def checkReadUntil(consoleOutput):
     """
@@ -44,7 +45,6 @@ def parseOutput(telnet):
     Helper function for parsing console output until 'OK' appears
     """
     parsed_output = telnet.read_until(OK).strip()
-    parsed_output = parsed_output[parsed_output.find(NEWLINE)+len(NEWLINE):].strip()
     return parsed_output
 
 def extractFieldFromOutput(output, keyword):
@@ -72,16 +72,14 @@ def checkBatteryStatus(status):
     if status == "failure":
         return "Unspecified failure"
     if status == "overheat":
-         # b/204804
-        return "Overhead"
+        return "Overheat"
     return status.capitalize()
 
 def parseOutputForEV(telnet):
     """
     Helper function for parsing console output until 'OK' appears for 'event' command
     """
-    parsed_output = telnet.read_until("\r\n"+OK).strip()
-    parsed_output = parsed_output[parsed_output.find(NEWLINE)+len(NEWLINE):].strip()
+    parsed_output = telnet.read_until("\n"+OK).strip()
     return parsed_output
 
 def getEventsCodeEvKey():

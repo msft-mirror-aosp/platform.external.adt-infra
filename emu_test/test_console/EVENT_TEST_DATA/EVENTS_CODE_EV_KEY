@@ -90,7 +90,7 @@ type 'EV_KEY' accepts the following <code> aliases:
     KEY_KATAKANA
     KEY_HIRAGANA
     KEY_HENKAN
-    KEY_KATAKANAHIRAGANA
+    KEY_KATAKANAHIRAGAN
     KEY_MUHENKAN
     KEY_KPJPCOMMA
     KEY_KPENTER
@@ -124,6 +124,7 @@ type 'EV_KEY' accepts the following <code> aliases:
     KEY_LEFTMETA
     KEY_RIGHTMETA
     KEY_COMPOSE
+    KEY_STOP
     KEY_AGAIN
     KEY_PROPS
     KEY_UNDO
@@ -220,6 +221,7 @@ type 'EV_KEY' accepts the following <code> aliases:
     KEY_SHARP
     KEY_SOFT1
     KEY_SOFT2
+    KEY_SEND
     KEY_CENTER
     KEY_HEADSETHOOK
     KEY_0_5
@@ -228,7 +230,6 @@ type 'EV_KEY' accepts the following <code> aliases:
     KEY_KBDILLUMTOGGLE
     KEY_KBDILLUMDOWN
     KEY_KBDILLUMUP
-    KEY_SEND
     KEY_REPLY
     KEY_FORWARDMAIL
     KEY_SAVE
@@ -239,7 +240,103 @@ type 'EV_KEY' accepts the following <code> aliases:
     KEY_FOCUS
     KEY_PLUS
     KEY_NOTIFICATION
-    KEY_APPSWITCH
+    KEY_OK
+    KEY_SELECT
+    KEY_GOTO
+    KEY_CLEAR
+    KEY_POWER2
+    KEY_OPTION
+    KEY_INFO
+    KEY_TIME
+    KEY_VENDOR
+    KEY_ARCHIVE
+    KEY_PROGRAM
+    KEY_CHANNEL
+    KEY_FAVORITES
+    KEY_EPG
+    KEY_PVR
+    KEY_MHP
+    KEY_LANGUAGE
+    KEY_TITLE
+    KEY_SUBTITLE
+    KEY_ANGLE
+    KEY_ZOOM
+    KEY_MODE
+    KEY_KEYBOARD
+    KEY_SCREEN
+    KEY_PC
+    KEY_TV
+    KEY_TV2
+    KEY_VCR
+    KEY_VCR2
+    KEY_SAT
+    KEY_SAT2
+    KEY_CD
+    KEY_TAPE
+    KEY_RADIO
+    KEY_TUNER
+    KEY_PLAYER
+    KEY_TEXT
+    KEY_DVD
+    KEY_AUX
+    KEY_MP3
+    KEY_AUDIO
+    KEY_VIDEO
+    KEY_DIRECTORY
+    KEY_LIST
+    KEY_MEMO
+    KEY_CALENDAR
+    KEY_RED
+    KEY_GREEN
+    KEY_YELLOW
+    KEY_BLUE
+    KEY_CHANNELUP
+    KEY_CHANNELDOWN
+    KEY_FIRST
+    KEY_LAST
+    KEY_AB
+    KEY_NEXT
+    KEY_RESTART
+    KEY_SLOW
+    KEY_SHUFFLE
+    KEY_BREAK
+    KEY_PREVIOUS
+    KEY_DIGITS
+    KEY_TEEN
+    KEY_TWEN
+    KEY_DEL_EOL
+    KEY_DEL_EOS
+    KEY_INS_LINE
+    KEY_DEL_LINE
+    KEY_FN
+    KEY_FN_ESC
+    KEY_FN_F1
+    KEY_FN_F2
+    KEY_FN_F3
+    KEY_FN_F4
+    KEY_FN_F5
+    KEY_FN_F6
+    KEY_FN_F7
+    KEY_FN_F8
+    KEY_FN_F9
+    KEY_FN_F10
+    KEY_FN_F11
+    KEY_FN_F12
+    KEY_FN_1
+    KEY_FN_2
+    KEY_FN_D
+    KEY_FN_E
+    KEY_FN_F
+    KEY_FN_S
+    KEY_FN_B
+    KEY_BRL_DOT1
+    KEY_BRL_DOT2
+    KEY_BRL_DOT3
+    KEY_BRL_DOT4
+    KEY_BRL_DOT5
+    KEY_BRL_DOT6
+    KEY_BRL_DOT7
+    KEY_BRL_DOT8
     BTN_MISC
     BTN_0
     BTN_1
