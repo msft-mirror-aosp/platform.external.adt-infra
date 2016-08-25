@@ -169,22 +169,27 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "14581295")
     public void enableSetDateAndSetTime() throws Exception {
+        int api = testFramework.getApi();
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
         AppLauncher.launch(instrumentation, "Settings");
+        String scrollableRes = (api >= 24) ? Res.SETTINGS_RECYCLER_VIEW_RES :
+                Res.SETTINGS_LIST_CONTAINER_RES;
         UiScrollable itemList = new UiScrollable(
-                new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+                new UiSelector().resourceIdMatches(scrollableRes));
         itemList.setAsVerticalList();
         itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
         device.findObject(new UiSelector().text("Date & time")).click();
 
         UiObject2 widget;
         try {
+            String listViewClass = (api >= 24) ? "android.support.v7.widget.RecyclerView" :
+                    "android.widget.ListView";
             widget = UiAutomatorPlus.findObjectByRelative(
                     instrumentation,
                     By.clazz("android.widget.Switch"),
                     By.text("Automatic date & time"),
-                    By.clazz("android.widget.ListView"));
+                    By.clazz(listViewClass));
         } catch (UiObjectNotFoundException e) {
             widget = UiAutomatorPlus.findObjectByRelative(
                     instrumentation,
@@ -226,7 +231,7 @@ public class SettingsTest {
                     }
                 }));
         device.findObject(new UiSelector().text("Set date")).clickAndWaitForNewWindow();
-        if (testFramework.getApi() < 20) {
+        if (api < 20) {
             assertTrue(device.findObject(
                     new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES_19)).exists());
             device.findObject(new UiSelector().textContains("Done")).click();
