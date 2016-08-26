@@ -27,11 +27,11 @@ class PortTest(BaseConsoleTest):
             self.telnet.write("redir list\n")
             time.sleep(CMD_WAIT_TIMEOUT)
             output_redir_list = console_utils.parseOutput(self.telnet)
-            isCmdSuccessful = (output_redir_list == "no active redirections\r\nOK")
+            isCmdSuccessful = (output_redir_list == console_utils.PORT_NO_REDIR)
             if isCmdSuccessful:
                 break
             time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to properly list port redirections", False, "")
+        self.assertCmdSuccessful(isCmdSuccessful, "Failed to properly list port redirections", False, "", console_utils.PORT_NO_REDIR, output_redir_list)
 
     def test_addNewPortRedir(self):
         """
