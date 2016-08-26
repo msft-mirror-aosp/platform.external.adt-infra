@@ -44,11 +44,16 @@ class BaseConsoleTest(unittest.TestCase):
         self.wait_on_windows()
         self.telnet.close()
 
-    def assertCmdSuccessful(self, isCmdSuccessful, assertionMsg, hasStatus, status):
+    def assertCmdSuccessful(self, isCmdSuccessful, assertionMsg, hasStatus, status, expected, actual):
         if hasStatus:
             print "Test result: " + inspect.stack()[0][3] + " status matches " + status + " => " + str(isCmdSuccessful)
         else:
             print "Test result: " + inspect.stack()[0][3] + " => " + str(isCmdSuccessful)
+        if not isCmdSuccessful:
+            print "Expected output:"
+            print expected
+            print "Actual Output:"
+            print actual
         self.assertTrue(isCmdSuccessful, assertionMsg)
 
 

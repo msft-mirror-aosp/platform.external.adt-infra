@@ -72,7 +72,7 @@ class PhoneCallTest(BaseConsoleTest):
             if isCmdSuccessful:
                 break
             time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to properly cancel an inbound call", False, "")
+        self.assertCmdSuccessful(isCmdSuccessful, "Failed to properly cancel an inbound call", False, "", console_utils.OK, output_cancel_inbound)
         self.assertTrue(self.processRequestTelephonyService({}) == CALL_STATE_IDLE, "Call state idle not matched")
         time.sleep(CMD_WAIT_TIMEOUT)
 
@@ -88,7 +88,7 @@ class PhoneCallTest(BaseConsoleTest):
             if isCmdSuccessful:
                 break
             time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to properly set up an inbound call", False, "")
+        self.assertCmdSuccessful(isCmdSuccessful, "Failed to properly set up an inbound call", False, "", console_utils.OK, output_inbound_call)
         self.assertTrue(self.processRequestTelephonyService({}) == CALL_STATE_RINGING, "Call state ringing not matched")
         time.sleep(CMD_WAIT_TIMEOUT)
 
@@ -103,7 +103,7 @@ class PhoneCallTest(BaseConsoleTest):
             if isCmdSuccessful:
                 break
             time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to properly accept an inbound call", False, "")
+        self.assertCmdSuccessful(isCmdSuccessful, "Failed to properly accept an inbound call", False, "", console_utils.OK, output_accept_inbound)
         self.assertTrue(self.processRequestTelephonyService({}) == CALL_STATE_OFFHOOK, "Call state offhook not matched")
         time.sleep(CMD_WAIT_TIMEOUT)
 
