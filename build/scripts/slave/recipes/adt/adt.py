@@ -235,6 +235,9 @@ def RunSteps(api):
     if "GTS" in description:
       api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
                                                     "GTS_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "xtsTestResult.xml")
+    if "Console" in description:
+      api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
+                                                    "Console_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "consoleTestResult.xml")
 
   emulator_branch_to_use, steps_to_run = getTestConfig(project, is_cross_build)
 
