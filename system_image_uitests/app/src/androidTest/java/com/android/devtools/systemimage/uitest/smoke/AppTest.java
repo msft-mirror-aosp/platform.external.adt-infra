@@ -20,19 +20,22 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
-import com.android.devtools.systemimage.uitest.utils.AppManager;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+
 import static org.junit.Assert.*;
 
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
+
+import java.util.Date;
 
 /**
  * Test for app interactions.
@@ -47,13 +50,13 @@ public class AppTest {
 
     /**
      * Verifies an app runs on the emulator.
-     * <p>
+     * <p/>
      * The test installs, launches, and uninstalls the app.
-     * <p>
+     * <p/>
      * This is run to qualify releases. Please involve the test team in substantial changes.
-     * <p>
+     * <p/>
      * TR ID: C14578823
-     * <p>
+     * <p/>
      *   <pre>
      *   Test Steps:
      *   1. Start the emulator.
@@ -75,12 +78,13 @@ public class AppTest {
 
     /**
      * Verify website is bookmarked.
-     * <p>
+     * <p/>
      * This is run to qualify releases. Please involve the test team in substantial changes.
-     * <p>
+     * <p/>
      * TR ID: C14578831
-     * <p>
+     * <p/>
      *   <pre>
+     *   (Note: Test varies for API 24 and above, because it uses the Chrome browser app.)
      *   1. Launch emulator.
      *   2. Open Browser app.
      *   3. Tap on the address bar and enter espn.com
@@ -90,7 +94,7 @@ public class AppTest {
      *   7. Open menu (3 vertical dots).
      *   8. Tap on "Bookmarks"
      *   Verify:
-     *   ESPN website is bookmarked.
+     *   Website is bookmarked.
      *   </pre>
      */
     @Test
@@ -98,21 +102,77 @@ public class AppTest {
     public void bookmarkWebSiteInBrowser() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        AppLauncher.launch(instrumentation, "Browser");
-        UiObject textField = device.findObject(
-                new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES));
-        textField.click();
-        textField.clearTextField();
-        textField.setText("espn.com");
-        device.pressEnter();
-        device.pressMenu();
-        device.findObject(new UiSelector().text("Save to bookmarks")).click();
-        device.findObject(new UiSelector().text("OK")).click();
-        device.pressMenu();
-        device.findObject(new UiSelector().text("Bookmarks")).click();
-        assertTrue("Cannot find ESPN bookmark",
-                device.findObject(new UiSelector().text("Bookmarks")).exists() &&
-                device.findObject(new UiSelector().textContains(
-                        "ESPN").resourceId(Res.BROWSER_BOOKMARKS_LABEL_RES)).exists());
+
+        if (testFramework.getApi() >= 24) {
+            AppLauncher.launch(instrumentation, "Chrome");
+
+            // If this is the first launch, dismiss the "Welcome to Chrome" screen.
+            UiObject acceptButton = device.findObject(
+                    new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
+            if (acceptButton.exists()) {
+                acceptButton.clickAndWaitForNewWindow();
+            }
+
+            // Dismiss the "Sign in to Chrome" screen if it's there.
+            if (device.hasObject(By.res(Res.CHROME_SIGN_IN_TITLE_RES))) {
+                device.findObject(new UiSelector().resourceId(
+                        Res.CHROME_NEGATIVE_BUTTON_RES)).clickAndWaitForNewWindow();
+            }
+
+            // Click the search box if it's there.
+            UiObject searchBox = device.findObject(new UiSelector().resourceId(
+                    Res.CHROME_SEARCH_BOX_RES));
+            if (searchBox.exists()) {
+                searchBox.clickAndWaitForNewWindow();
+            }
+
+            UiObject textField = device.findObject(
+                    new UiSelector().resourceId(Res.CHROME_URL_BAR_RES));
+
+            textField.click();
+            textField.clearTextField();
+            // Include a timestamp in the URL so it's not already bookmarked. (On Chrome, the UI
+            // changes in that case.)
+            textField.setText("https://httpbin.org/?d=" + new Date().getTime());
+            device.pressEnter();
+            device.pressMenu();
+            device.findObject(new UiSelector().description("Bookmark this page")).click();
+            device.pressMenu();
+            // After bookmarking, the button description changes.
+            assertTrue("Bookmark was not set",
+                    device.findObject(new UiSelector().description("Edit bookmark")).exists());
+            // Verify the new bookmark is in the list.
+            device.findObject(new UiSelector().text("Bookmarks")).clickAndWaitForNewWindow();
+            assertTrue("Cannot find bookmark",
+                    device.findObject(new UiSelector().text("Bookmarks")).exists() &&
+                            device.findObject(new UiSelector().textContains(
+                                    "httpbin").resourceId(
+                                    Res.CHROME_BOOKMARKS_LABEL_RES)).exists());
+            device.findObject(new UiSelector().resourceId(
+                    Res.CHROME_CLOSE_MENU_BUTTON_RES)).clickAndWaitForNewWindow();
+            // Delete the bookmark.
+            device.pressMenu();
+            device.findObject(
+                    new UiSelector().description("Edit bookmark")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().description("Delete bookmarks")).click();
+
+        } else {
+            AppLauncher.launch(instrumentation, "Browser");
+            UiObject textField = device.findObject(
+                    new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES));
+            textField.click();
+            textField.clearTextField();
+            textField.setText("espn.com");
+            device.pressEnter();
+            device.pressMenu();
+            device.findObject(new UiSelector().text("Save to bookmarks")).click();
+            device.findObject(new UiSelector().text("OK")).click();
+            device.pressMenu();
+            device.findObject(new UiSelector().text("Bookmarks")).click();
+            assertTrue("Cannot find ESPN bookmark",
+                    device.findObject(new UiSelector().text("Bookmarks")).exists() &&
+                            device.findObject(new UiSelector().textContains(
+                                    "ESPN").resourceId(Res.BROWSER_BOOKMARKS_LABEL_RES)).exists());
+        }
     }
 }
