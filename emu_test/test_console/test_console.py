@@ -12,13 +12,18 @@ import psutil
 import shutil
 import sys
 import re
-from subprocess import PIPE
 from utils.emu_error import *
 from utils.emu_argparser import emu_args
 import utils.emu_testcase
 from utils.emu_testcase import EmuBaseTestCase, AVDConfig, create_test_case_from_file
 from utils import emu_unittest
-from subprocess import PIPE
+import subprocess
+import xml.etree.ElementTree as ET
+
+CUR_DIR = os.path.dirname(os.path.realpath(__file__))
+CONSOLE_RESULT_XML_FILE = "consoleTestResult.xml"
+CONSOLE_CSS_FILE = os.path.join(CUR_DIR, "static", "console.css")
+CONSOLE_XSL_FILE =  os.path.join(CUR_DIR, "static", "console.xsl")
 
 class ConsoleTestCase(EmuBaseTestCase):
 
@@ -27,6 +32,7 @@ class ConsoleTestCase(EmuBaseTestCase):
         self.avd_config = None
 
     @classmethod
+
     def setUpClass(cls):
         super(ConsoleTestCase, cls).setUpClass()
 
@@ -54,35 +60,82 @@ class ConsoleTestCase(EmuBaseTestCase):
             self.m_logger.error("Error in cleanup - %r", e)
             pass
 
+    def getTestName(self, id):
+        return id.rsplit('.', 1)[-1]
+
+    def createResultXml(self, emuResult):
+        dst_path = os.path.join(emu_args.session_dir, CONSOLE_RESULT_XML_FILE)
+        xsl_path = os.path.join(emu_args.session_dir, "console.xsl")
+        subprocess.call(['cp', CONSOLE_XSL_FILE, xsl_path])
+        css_path = os.path.join(emu_args.session_dir, "console.css")
+        subprocess.call(['cp', CONSOLE_CSS_FILE, css_path])
+
+        result = ET.Element("result")
+
+        test_method_name = ET.SubElement(result, "testMethodName", name=self._testMethodName)
+        avd_config_name = ET.SubElement(result, "avdConfigName", name=self.avd_config.name())
+
+        resultSummary = ET.SubElement(result, "resultSummary")
+        ET.SubElement(resultSummary, "total", num=str(emuResult.testsRun))
+        ET.SubElement(resultSummary, "passes", num=str(len(emuResult.passes)))
+        ET.SubElement(resultSummary, "failures", num=str(len(emuResult.failures)))
+        ET.SubElement(resultSummary, "errors", num=str(len(emuResult.errors)))
+        ET.SubElement(resultSummary, "expectedFailures", num=str(len(emuResult.expectedFailures)))
+        ET.SubElement(resultSummary, "unexpectedSuccesses", num=str(len(emuResult.unexpectedSuccesses)))
+
+        passes = ET.SubElement(result, "Passes")
+        for x in emuResult.passes:
+            ET.SubElement(passes, "test", name=self.getTestName(x.id()), test_result="pass")
+
+        failures = ET.SubElement(result, "Failures")
+        for x in emuResult.failures:
+            ET.SubElement(failures, "test", name=self.getTestName(x[0].id()), test_result="fail")
+
+        errors = ET.SubElement(result, "Errors")
+        for x in emuResult.errors:
+            ET.SubElement(errors, "test", name=self.getTestName(x[0].id()), test_result="error")
+
+        expectedFailures = ET.SubElement(result, "ExpectedFailures")
+        for x in emuResult.expectedFailures:
+            ET.SubElement(expectedFailures, "test", name=self.getTestName(x[0].id()), test_result="expected failure")
+
+        unexpectedSuccesses = ET.SubElement(result, "UnexpectedSuccesses")
+        for x in emuResult.unexpectedSuccesses:
+            ET.SubElement(unexpectedSuccesses, "test", name=self.getTestName(x.id()), test_result="unexpected failure")
+
+        tree = ET.ElementTree(result)
+        tree.write(dst_path)
+        with file(dst_path, 'r') as original: data = original.read()
+        with file(dst_path, 'w') as modified: modified.write('<?xml-stylesheet type="text/xsl" href="console.xsl"?>\n' + data)
+
     def printConsoleResult(self, emuResult):
-        def getTestName(id):
-            return id.rsplit('.', 1)[-1]
         self.m_logger.info("Run %d tests (%d fail, %d pass, %d xfail, %d xpass)",
                emuResult.testsRun, len(emuResult.failures)+len(emuResult.errors), len(emuResult.passes),
                len(emuResult.expectedFailures), len(emuResult.unexpectedSuccesses))
         if len(emuResult.passes) > 0:
             self.m_logger.info('------------------------------------------------------')
         for x in emuResult.passes:
-            self.m_logger.info("PASS: %s", getTestName(x.id()))
+            self.m_logger.info("PASS: %s", self.getTestName(x.id()))
 
         if len(emuResult.failures) + len(emuResult.errors) > 0:
             self.m_logger.info('------------------------------------------------------')
         for x in emuResult.failures:
-            self.m_logger.info("Failure: %s", getTestName(x[0].id()))
+            self.m_logger.info("Failure: %s", self.getTestName(x[0].id()))
         for x in emuResult.errors:
-            self.m_logger.info("Error: %s", getTestName(x[0].id()))
+            self.m_logger.info("Error: %s", self.getTestName(x[0].id()))
 
         if len(emuResult.expectedFailures) > 0:
             self.m_logger.info('------------------------------------------------------')
         for x in emuResult.expectedFailures:
-            self.m_logger.info("Expected Failure: %s", getTestName(x[0].id()))
+            self.m_logger.info("Expected Failure: %s", self.getTestName(x[0].id()))
 
         if len(emuResult.unexpectedSuccesses) > 0:
             self.m_logger.info('------------------------------------------------------')
         for x in emuResult.unexpectedSuccesses:
-            self.m_logger.info("Unexpected Success: %s", getTestName(x.id()))
+            self.m_logger.info("Unexpected Success: %s", self.getTestName(x.id()))
 
         self.m_logger.info('')
+        self.createResultXml(emuResult)
 
     def console_test_check(self, avd):
         """
