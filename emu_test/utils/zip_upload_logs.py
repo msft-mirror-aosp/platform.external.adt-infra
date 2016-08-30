@@ -67,7 +67,7 @@ def zip_and_upload():
 
     # if console result is available, upload to public_html directory
     console_logdir = os.path.join(args.log_dir, "Console_test")
-    if os.path.isdir(ui_logdir):
+    if os.path.isdir(console_logdir):
         builderName = os.path.basename(os.path.normpath(args.remote_dir))
         console_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "Console_Result", builderName)
         console_dst = os.path.normpath(console_dst)
