@@ -19,8 +19,8 @@ package com.android.devtools.systemimage.uitest.smoke;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
-import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
+import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
@@ -33,17 +33,11 @@ import static org.junit.Assert.*;
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.BySelector;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.Until;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -84,12 +78,7 @@ public class SettingsTest {
             return;
         }
 
-        AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList = new UiScrollable(
-                new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-        itemList.setAsVerticalList();
-        itemList.scrollIntoView(new UiSelector().textContains("Google"));
-        device.findObject(new UiSelector().textContains("Google")).clickAndWaitForNewWindow();
+        SettingsUtil.openItem(instrumentation, "Google");
         device.findObject(new UiSelector().textContains("Location")).clickAndWaitForNewWindow();
         assertTrue("Failed to find Location title.",
                 new Wait().until(new Wait.ExpectedCondition() {
@@ -125,15 +114,7 @@ public class SettingsTest {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (testFramework.getApi() >= 23) {
-            AppLauncher.launch(instrumentation, "Settings");
-            UiScrollable settingsList =
-                    new UiScrollable(
-                            new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                    );
-            settingsList.setAsVerticalList();
-            UiObject appsObject = settingsList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"), "Apps");
-            appsObject.clickAndWaitForNewWindow();
+            SettingsUtil.openItem(instrumentation, "Apps");
             device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
                     .clickAndWaitForNewWindow();
             device.findObject(new UiSelector().textContains("App permissions"))
@@ -146,6 +127,33 @@ public class SettingsTest {
                     && device.findObject(new UiSelector().textContains("Phone")).exists()
                     && device.findObject(new UiSelector().description("Navigate up")).exists());
         }
+    }
+
+    /**
+     * Common code for finding a checkbox/switch in the Date & time settings.
+     */
+    private  UiObject2 navigateToDateTimeSwitch(String text) throws UiObjectNotFoundException {
+        final Instrumentation instrumentation = testFramework.getInstrumentation();
+        SettingsUtil.openItem(instrumentation, "Date & time");
+
+        UiObject2 widget;
+        try {
+            final String listViewClass = (
+                    testFramework.getApi() >= 24) ? "android.support.v7.widget.RecyclerView" :
+                    "android.widget.ListView";
+            widget = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.Switch"),
+                    By.text(text),
+                    By.clazz(listViewClass));
+        } catch (UiObjectNotFoundException e) {
+            widget = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.CheckBox"),
+                    By.text(text),
+                    By.clazz("android.widget.ListView"));
+        }
+        return widget;
     }
 
     /**
@@ -170,33 +178,9 @@ public class SettingsTest {
     @TestInfo(id = "14581295")
     public void enableSetDateAndSetTime() throws Exception {
         int api = testFramework.getApi();
-        Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
-        AppLauncher.launch(instrumentation, "Settings");
-        String scrollableRes = (api >= 24) ? Res.SETTINGS_RECYCLER_VIEW_RES :
-                Res.SETTINGS_LIST_CONTAINER_RES;
-        UiScrollable itemList = new UiScrollable(
-                new UiSelector().resourceIdMatches(scrollableRes));
-        itemList.setAsVerticalList();
-        itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
-        device.findObject(new UiSelector().text("Date & time")).click();
+        final UiObject2 widget = navigateToDateTimeSwitch("Automatic date & time");
 
-        UiObject2 widget;
-        try {
-            String listViewClass = (api >= 24) ? "android.support.v7.widget.RecyclerView" :
-                    "android.widget.ListView";
-            widget = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.Switch"),
-                    By.text("Automatic date & time"),
-                    By.clazz(listViewClass));
-        } catch (UiObjectNotFoundException e) {
-            widget = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.CheckBox"),
-                    By.text("Automatic date & time"),
-                    By.clazz("android.widget.ListView"));
-        }
         // Test requires "Automatic date & time" widget to start in the enabled state.
         if (!widget.isChecked()) {
             widget.click();
@@ -305,12 +289,7 @@ public class SettingsTest {
             return;
         }
 
-        AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList = new UiScrollable(
-                new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-        itemList.setAsVerticalList();
-        itemList.scrollIntoView(new UiSelector().textContains("Google"));
-        device.findObject(new UiSelector().text("Google")).click();
+        SettingsUtil.openItem(instrumentation, "Google");
         device.findObject(new UiSelector().text("Search & Now")).click();
         device.findObject(new UiSelector().text("Now cards")).click();
 
@@ -353,30 +332,9 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "14581409")
     public void enableTimeZone() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
-        AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-        itemList.setAsVerticalList();
-        itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
-        device.findObject(new UiSelector().text("Date & time")).click();
+        final UiObject2 widget = navigateToDateTimeSwitch("Automatic time zone");
 
-        UiObject2 widget;
-        try {
-            widget = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.Switch"),
-                    By.text("Automatic time zone"),
-                    By.clazz("android.widget.ListView"));
-        } catch (UiObjectNotFoundException e) {
-            widget = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.CheckBox"),
-                    By.text("Automatic time zone"),
-                    By.clazz("android.widget.ListView"));
-        }
         // Initialize automatic time zone option to enabled state.
         if (!widget.isChecked()) {
             widget.click();
@@ -432,30 +390,9 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "14581410")
     public void enableTwentyFourHourFormat() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
-        AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-        itemList.setAsVerticalList();
-        itemList.scrollIntoView(new UiSelector().textContains("Date & time"));
-        device.findObject(new UiSelector().text("Date & time")).click();
+        final UiObject2 widget = navigateToDateTimeSwitch("Use 24-hour format");
 
-        UiObject2 widget;
-        try {
-            widget = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.Switch"),
-                    By.text("Use 24-hour format"),
-                    By.clazz("android.widget.ListView"));
-        } catch (UiObjectNotFoundException e) {
-            widget = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.CheckBox"),
-                    By.text("Use 24-hour format"),
-                    By.clazz("android.widget.ListView"));
-        }
         // Initialize 24-hour format option to disabled state.
         if (widget.isChecked()) {
             widget.click();

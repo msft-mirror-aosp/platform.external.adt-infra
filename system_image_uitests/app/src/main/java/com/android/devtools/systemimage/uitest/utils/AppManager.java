@@ -29,7 +29,6 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -192,21 +191,7 @@ public class AppManager {
      */
     public static void openAppList(Instrumentation instrumentation)
             throws UiObjectNotFoundException {
-        // Open settings
-        AppLauncher.launch(instrumentation, "Settings");
-
-        // Find and click "Apps" in Settings
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-        UiObject item =
-                itemList.getChildByText(
-                        new UiSelector().className("android.widget.TextView"),
-                        "Apps"
-                );
-        item.clickAndWaitForNewWindow();
+        SettingsUtil.openItem(instrumentation, "Apps");
     }
 
     /**

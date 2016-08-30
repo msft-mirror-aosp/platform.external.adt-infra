@@ -21,6 +21,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.NetworkUtil;
+import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
@@ -37,7 +38,7 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.UiScrollable;
+import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.telephony.TelephonyManager;
 
@@ -105,6 +106,19 @@ public class NetworkIOTest {
         }
     }
 
+    private UiObject2 navigateToDataSwitch(Instrumentation instrumentation) throws UiObjectNotFoundException {
+        String containerRes = (testFramework.getApi() >= 24) ? Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES :
+                Res.NETWORK_SWITCHES_CONTAINER_RES;
+
+        SettingsUtil.openItem(instrumentation, "Data usage");
+
+        return UiAutomatorPlus.findObjectByRelative(
+                instrumentation,
+                By.clazz("android.widget.Switch"),
+                By.text("Cellular data"),
+                By.res(containerRes));
+    }
+
     /**
      * Verifies cellular data can be toggled off.
      * <p>
@@ -130,26 +144,19 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
         // TODO: Add a fixture method in AppLauncher class to launch a specified path.
-        if (testFramework.getApi() >= 23) {
-            AppLauncher.launch(instrumentation, "Settings");
-            UiScrollable itemList = new UiScrollable(
-                    new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-            itemList.setAsVerticalList();
-            itemList.scrollToBeginning(100);
-            device.findObject(new UiSelector().textContains("Data usage")).click();
+        int api = testFramework.getApi();
+        if (api >= 23) {
+            UiObject2 dataSwitch = navigateToDataSwitch(instrumentation);
 
-            UiObject2 dataSwitch = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.Switch"),
-                    By.text("Cellular data"),
-                    By.res(Res.NETWORK_SWITCHES_CONTAINER_RES));
             // Test requires "Cellular data" switch widget to start in the on state.
             if (!dataSwitch.isChecked()) {
                 dataSwitch.click();
             }
             // Disable "Cellular data" option.
             dataSwitch.click();
-            device.findObject(new UiSelector().text("OK")).click();
+            if (api < 24) {
+                device.findObject(new UiSelector().text("OK")).click();
+            }
             // Wait for data connection to turn off.
             new Wait().until(new Wait.ExpectedCondition() {
                 @Override
@@ -161,9 +168,9 @@ public class NetworkIOTest {
 
             assertFalse("Cellular data is enabled.",
                     NetworkUtil.hasCellularNetworkConnection(instrumentation));
-            if (device.findObject(
-                    new UiSelector().textContains("Set cellular data limit")).exists()) {
-                assertTrue("Set cellular data limit text not visible.", false);
+            if (api < 24) {
+                assertFalse("Set cellular data limit text is visible.", device.findObject(
+                        new UiSelector().textContains("Set cellular data limit")).exists());
             }
             // Enable Cellular data.
             dataSwitch.click();
@@ -195,22 +202,16 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
         // TODO: Add a fixture method in AppLauncher class to launch a specified path.
-        if (testFramework.getApi() >= 23) {
-            AppLauncher.launch(instrumentation, "Settings");
-            UiScrollable itemList = new UiScrollable(
-                    new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-            itemList.setAsVerticalList();
-            itemList.scrollToBeginning(100);
-            device.findObject(new UiSelector().textContains("Data usage")).click();
+        int api = testFramework.getApi();
+        if (api >= 23) {
+            UiObject2 dataSwitch = navigateToDataSwitch(instrumentation);
 
-            UiObject2 dataSwitch = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.Switch"),
-                    By.text("Cellular data"),
-                    By.res(Res.NETWORK_SWITCHES_CONTAINER_RES));
             // Test requires "Cellular data" switch widget to start in the off state.
             if (dataSwitch.isChecked()) {
                 dataSwitch.click();
+                if (api < 24) {
+                    device.findObject(new UiSelector().text("OK")).click();
+                }
             }
             // Enable Cellular data.
             dataSwitch.click();
@@ -225,9 +226,9 @@ public class NetworkIOTest {
             assertTrue("Cellular data is disabled.",
                     NetworkUtil.hasCellularNetworkConnection(instrumentation));
 
-            if (!device.findObject(
-                    new UiSelector().textContains("Set cellular data limit")).exists()) {
-                assertTrue("Set cellular data limit text is visible.", false);
+            if (api < 24) {
+                assertTrue("Set cellular data limit text is not visible.", device.findObject(
+                        new UiSelector().textContains("Set cellular data limit")).exists());
             }
         }
     }

@@ -24,7 +24,6 @@ import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
 import java.io.BufferedReader;
@@ -170,20 +169,6 @@ public class AccountManager {
 
     private static void openAccountList(Instrumentation instrumentation)
             throws UiObjectNotFoundException {
-        // Open Settings
-        AppLauncher.launch(instrumentation, "Settings");
-
-        // Find and click "Accounts" in Settings
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-        UiObject item =
-                itemList.getChildByText(
-                        new UiSelector().className("android.widget.TextView"),
-                        "Accounts"
-                );
-        item.clickAndWaitForNewWindow();
+        SettingsUtil.openItem(instrumentation, "Accounts");
     }
 }
