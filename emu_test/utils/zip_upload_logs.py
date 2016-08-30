@@ -65,6 +65,15 @@ def zip_and_upload():
         elif x.endswith('_bugreport.txt') or x.endswith('_logcat.txt') or x.endswith('_verbose.txt'):
           verbose_call(['python', gsutil_path, 'cp', os.path.join(ui_logdir, x), os.path.join(ui_gs_dst, x[:x.rfind('_')], '')])
 
+    # if console result is available, upload to public_html directory
+    console_logdir = os.path.join(args.log_dir, "Console_test")
+    if os.path.isdir(ui_logdir):
+        builderName = os.path.basename(os.path.normpath(args.remote_dir))
+        console_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "Console_Result", builderName)
+        console_dst = os.path.normpath(console_dst)
+        verbose_call(['ssh', remote_host, 'mkdir -p %s' % console_dst])
+        verbose_call(['scp', '-r', os.path.join(console_logdir, ''), '%s:%s' % (remote_host, os.path.join(console_dst, args.zip_name[:-4]))])
+
     # remove log directory
     try:
       print "Delete directory %s" % args.log_dir
