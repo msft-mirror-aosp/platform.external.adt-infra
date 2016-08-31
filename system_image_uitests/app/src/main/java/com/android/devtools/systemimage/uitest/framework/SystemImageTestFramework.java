@@ -137,10 +137,6 @@ public class SystemImageTestFramework implements TestRule {
                     // Must check the crash watcher again for finalization,
                     // or could miss a crash if it happens at the end of a test case.
                     crashWatcher.checkForCondition();
-                    mDevice.removeWatcher(CrashWatcher.class.getName());
-                    mDevice.removeWatcher(LockScreenWatcher.class.getName());
-                    mDevice.removeWatcher(AndroidWelcomeClingWatcher.class.getName());
-                    mDevice.removeWatcher(AndroidLauncherWelcomeClingWatcher.class.getName());
                 } catch (Throwable t) {
                     throwable = t;
                     File loggingDir = getLoggingDir(description.getTestClass().getSimpleName(),
@@ -162,6 +158,11 @@ public class SystemImageTestFramework implements TestRule {
                     info.println();
                     info.println("If you cannot access the link above, see http://go/adt-sysimage-autotracker instead");
                     info.close();
+                } finally {
+                    mDevice.removeWatcher(CrashWatcher.class.getName());
+                    mDevice.removeWatcher(LockScreenWatcher.class.getName());
+                    mDevice.removeWatcher(AndroidWelcomeClingWatcher.class.getName());
+                    mDevice.removeWatcher(AndroidLauncherWelcomeClingWatcher.class.getName());
                 }
 
                 mDevice.pressHome();
