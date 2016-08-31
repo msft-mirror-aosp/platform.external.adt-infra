@@ -42,33 +42,19 @@ public class DeveloperOptionsManager {
      */
     public static void enableDeveloperOptions(Instrumentation instrumentation)
             throws UiObjectNotFoundException {
-        AppLauncher.launch(instrumentation, "Settings");
-
-        // Click "About phone".
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-        UiObject item;
         try {
-            item = itemList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"),
-                    "About phone");
+            SettingsUtil.openItem(instrumentation, "About phone");
         } catch (UiObjectNotFoundException e) {
-            item = itemList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"),
-                    "About emulated device");
+            SettingsUtil.openItem(instrumentation, "About emulated device");
         }
-        item.clickAndWaitForNewWindow();
 
         // Click "Build number"
-        itemList =
+        UiScrollable itemList =
                 new UiScrollable(
                         new UiSelector().resourceIdMatches(Res.ABOUT_PHONE_LIST_CONTAINER_RES)
                 );
         itemList.setAsVerticalList();
-        item =
+        UiObject item =
                 itemList.getChildByText(
                         new UiSelector().className("android.widget.TextView"),
                         "Build number"
@@ -91,22 +77,6 @@ public class DeveloperOptionsManager {
      */
     public static boolean isDeveloperOptionsEnabled(Instrumentation instrumentation)
             throws UiObjectNotFoundException {
-        AppLauncher.launch(instrumentation, "Settings");
-
-        // Look for "Developer options".
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-        try {
-            itemList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"),
-                    "Developer options"
-            );
-            return true;
-        } catch (UiObjectNotFoundException e) {
-            return false;
-        }
+        return SettingsUtil.scrollToItem(instrumentation, "Developer options");
     }
 }

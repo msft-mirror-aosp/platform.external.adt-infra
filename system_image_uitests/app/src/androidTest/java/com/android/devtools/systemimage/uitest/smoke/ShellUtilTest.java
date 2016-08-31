@@ -17,16 +17,14 @@
 package com.android.devtools.systemimage.uitest.smoke;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
-import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
-import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
 
 import org.hamcrest.Matchers;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,7 +35,6 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
@@ -121,6 +118,7 @@ public class ShellUtilTest {
     public void createBugReport() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
+
         if (testFramework.getApi() >= 21) {
             deleteBugReportFiles();
 
@@ -128,20 +126,15 @@ public class ShellUtilTest {
                 DeveloperOptionsManager.enableDeveloperOptions(testFramework.getInstrumentation());
             }
 
-            AppLauncher.launch(instrumentation, "Settings");
-            UiScrollable itemList = new UiScrollable(
-                    new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
-            itemList.setAsVerticalList();
-            UiObject item = itemList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"), "Developer options");
-            item.click();
+            SettingsUtil.openItem(instrumentation, "Developer options");
 
             // Remove bug report files even if the test fails.
             try {
                 device.findObject(
                         new UiSelector().text("Take bug report")).clickAndWaitForNewWindow();
-                if (device.findObject(new UiSelector().text("Report")).exists()) {
-                    device.findObject(new UiSelector().text("Report")).click();
+                UiObject reportButton = device.findObject(new UiSelector().text("Report"));
+                if (reportButton.exists()) {
+                    reportButton.click();
                 }
                 boolean gotPngAndZip = new Wait(
                         TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
