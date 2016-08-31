@@ -50,10 +50,12 @@ public class Res {
     public static final String APPS_LIST_CONTAINER_RES = "com.android.settings:id/list_container";
     public static final String APPS_TAB_CONTAINER_RES = "com.android.settings:id/pager";
     public static final String NETWORK_SWITCHES_CONTAINER_RES =
-            "com.android.settings:id/network_switches";
+            "com.android.settings:id/network_switches"; // Removed in API 24
+    public static final String NETWORK_SWITCHES_RECYCLER_VIEW_RES =
+            "com.android.settings:id/list"; // Added in API 24
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
-            "(com.android.settings|android):id/(dashboard|list)";
+            "(com.android.settings|android):id/(dashboard|list)"; // Still present in API 24 but at a different point in the hierarchy.
     public static final String SETTINGS_RECYCLER_VIEW_RES =
             "com.android.settings:id/dashboard_container"; // Added in API 24
 
