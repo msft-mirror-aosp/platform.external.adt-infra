@@ -148,6 +148,7 @@ class EmuBaseTestCase(LoggedTestCase):
         # to make test_getByName in android.core.tests.libcore.package.libcore pass
         if avd.cts:
             launch_cmd += ["-dns-server", "8.8.8.8"]
+        launch_cmd += ["-skip-adb-auth"]
         def launch_in_thread():
             test_name = self.id().rsplit('.', 1)[-1]
             logcat_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_logcat.txt" % test_name)
