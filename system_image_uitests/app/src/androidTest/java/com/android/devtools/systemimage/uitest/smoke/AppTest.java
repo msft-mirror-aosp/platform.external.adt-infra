@@ -26,8 +26,6 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
-import static org.junit.Assert.*;
-
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
@@ -36,6 +34,8 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 
 import java.util.Date;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for app interactions.
@@ -117,6 +117,13 @@ public class AppTest {
             if (device.hasObject(By.res(Res.CHROME_SIGN_IN_TITLE_RES))) {
                 device.findObject(new UiSelector().resourceId(
                         Res.CHROME_NEGATIVE_BUTTON_RES)).clickAndWaitForNewWindow();
+            }
+
+            // Dismiss the "Browse more for less" screen if it's there.
+            UiObject noThanksButton = device.findObject(
+                    new UiSelector().resourceId(Res.CHROME_NO_THANKS_BUTTON));
+            if (noThanksButton.exists()) {
+                noThanksButton.clickAndWaitForNewWindow();
             }
 
             // Click the search box if it's there.
