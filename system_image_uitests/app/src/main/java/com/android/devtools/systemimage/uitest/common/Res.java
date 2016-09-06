@@ -35,6 +35,7 @@ public class Res {
     public static final String CHROME_URL_BAR_RES = "com.android.chrome:id/url_bar";
     public static final String CHROME_CLOSE_MENU_BUTTON_RES = "com.android.chrome:id/close_menu_id";
     public static final String CHROME_BOOKMARKS_LABEL_RES = "com.android.chrome:id/title";
+    public static final String CHROME_NO_THANKS_BUTTON = "com.android.chrome:id/no_thanks_button";
 
     public static final String ANDROID_LAUNCHER_WELCOME_CLING_RES =
             "com.android.launcher\\d*:id/cling_dismiss";
@@ -82,5 +83,4 @@ public class Res {
     public static final String ANDROID_TIME_HEADER_RES = "android:id/time_header";
     public static final String ANDROID_TIME_HEADER_RES_19 = "android:id/timePicker";
     public static final String ANDROID_LIST_RES = "android:id/list";
-
 }
