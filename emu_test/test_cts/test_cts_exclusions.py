@@ -9,8 +9,10 @@
 #  in
 #    '{' <plan> ':' '{' <package-spec> {, <package-spec> }* '}'
 
+# Bugs for current exclusions:
+#   android.trustedvoice.cts.TrustedVoiceHostTest#testLogcat: b/29270651
+
 def cts_plans_current_exclusions():
     return { 'CTS' : { 'android.host.trustedvoice' :
-                       [ 'android.trustedvoice.cts.TrustedVoiceHostTest#testLogcat' ],
-                       'android.calllog' :
-                       [ 'android.calllog.cts.CallLogBackupTest#testSingleCallBackup' ] } }
+                       [ 'android.trustedvoice.cts.TrustedVoiceHostTest#testLogcat' ]
+                     } }
