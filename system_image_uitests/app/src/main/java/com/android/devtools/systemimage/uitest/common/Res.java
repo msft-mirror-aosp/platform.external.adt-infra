@@ -28,6 +28,7 @@ public class Res {
     public static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
     public static final String BROWSER_URL_TEXT_FIELD_RES = "com.android.browser:id/url";
 
+    public static final String CHROME_WELCOME_TITLE_RES = "com.android.chrome:id/title";
     public static final String CHROME_TERMS_ACCEPT_BUTTON_RES = "com.android.chrome:id/terms_accept";
     public static final String CHROME_SIGN_IN_TITLE_RES = "com.android.chrome:id/signin_title";
     public static final String CHROME_NEGATIVE_BUTTON_RES = "com.android.chrome:id/negative_button";
