@@ -297,6 +297,12 @@
        "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds"],
        "tag": "Mac",
      },
+     "Mac 10.11.6 Iris Pro UI": {
+       "recipe": "adt/adt",
+       "slave_pools": ["mac-10-11-6-iris-pro-ui"],
+       "categories": ["UI"],
+       "tag": "Mac",
+     },
   },
 
   "schedulers": {
@@ -455,6 +461,14 @@
         "version": "elcapitan",
       },
       "slaves": ['chromeos1-row4-rack4-host3'],
+    },
+    "mac-10-11-6-iris-pro-ui": {
+      "slave_data": {
+        "bits": 64,
+        "os": "mac",
+        "version": "elcapitan",
+      },
+      "slaves": ['chromeos1-row4-rack4-host4'],
     },
   },
 }
