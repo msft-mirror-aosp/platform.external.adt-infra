@@ -197,7 +197,7 @@
      "UI": {
        "name": "emulator ui test",
        "id": "_5",
-       "scheduler": "ui_scheduler",
+       "scheduler": "system_image_scheduler",
      },
      "Console": {
        "name": "emulator console test",
