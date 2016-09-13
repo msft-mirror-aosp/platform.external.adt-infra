@@ -109,7 +109,7 @@ public class AppTest {
             // If this is the first launch, dismiss the "Welcome to Chrome" screen.
             UiObject acceptButton = device.findObject(
                     new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-            if (acceptButton.exists()) {
+            if (device.hasObject(By.res(Res.CHROME_WELCOME_TITLE_RES)) && acceptButton.exists()) {
                 acceptButton.clickAndWaitForNewWindow();
             }
 
