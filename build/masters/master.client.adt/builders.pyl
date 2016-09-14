@@ -323,10 +323,10 @@
       "project": ["no-branch"],
       "type": "emu_scheduler",
     },
-    "ui_scheduler": {
-      "project": ["emu-master-dev"],
-      "type": "emu_scheduler",
-    },
+    #"ui_scheduler": {
+    #  "project": ["emu-master-dev"],
+    #  "type": "emu_scheduler",
+    #},
     "console_scheduler": {
       "project": ["emu-master-dev"],
       "type": "emu_scheduler",
