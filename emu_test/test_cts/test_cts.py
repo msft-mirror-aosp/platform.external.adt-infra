@@ -18,7 +18,8 @@ import utils.emu_argparser as emu_argparser
 
 from utils.emu_testcase import EmuBaseTestCase, AVDConfig
 import utils.emu_testcase
-api_to_android_version = {"23": "6.0",
+api_to_android_version = {"24": "7.0",
+                          "23": "6.0",
                           "22": "5.1",
                           "21": "5.0",
                           "19": "4.4",
