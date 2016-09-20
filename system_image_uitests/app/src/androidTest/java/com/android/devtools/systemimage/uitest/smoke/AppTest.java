@@ -20,6 +20,7 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,12 +66,18 @@ public class AppTest {
      *   Verify:
      *   App runs on the emulator. Image of a leaf is displayed on the emulator.
      *   </pre>
+     * <p/>
+     * This test does not run on API 18 due to RsHelloCompute app crashing on API 18.
      */
     @Test
     @TestInfo(id = "14578823")
     public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
+        // Disable test for API 18. Enable when bug 30437951 is fixed.
+        if (SystemUtil.getApiLevel() == 18) {
+            return;
+        }
         AppLauncher.launch(instrumentation, "RsHelloCompute");
         assertTrue(testFramework.getDevice().findObject(new UiSelector().resourceId(
                 Res.APP_IMAGE_VIEW_ID)).exists());
