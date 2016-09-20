@@ -26,6 +26,7 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -113,6 +114,7 @@ public class ShellUtilTest {
      *     directory.
      *   </pre>
      */
+    @Ignore ("bug 31016470 - bug report files not generated.")
     @Test
     @TestInfo(id = "14581588")
     public void createBugReport() throws Exception {
