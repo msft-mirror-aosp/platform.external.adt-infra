@@ -21,6 +21,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
+import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.VpnPopupWatcher;
 
@@ -81,6 +82,8 @@ public class VpnTest {
      *   Verify:
      *   The VPN app runs on the emulator. A VPN lock icon displays on the status bar.
      *   </pre>
+     * <p/>
+     * This test does not run on API 19 due to TestVPN app crashing on API 19.
      */
     @Test
     @TestInfo(id = "14578822")
@@ -88,6 +91,10 @@ public class VpnTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
 
+        // Disable test for API 19. Enable when bug 30376641 is fixed.
+        if (SystemUtil.getApiLevel() == 19) {
+            return;
+        }
         // Check if VPN is on. If true, skip.
         if (!verifyVpnStatus(device)) {
             AppLauncher.launch(instrumentation, "TestVPN");
