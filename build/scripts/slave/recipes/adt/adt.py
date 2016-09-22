@@ -32,7 +32,7 @@ def RunSteps(api):
   env_path = ['%(PATH)s']
   emulator_branches = ['emu-master-dev', 'emu-2.2-release']
   is_cts = 'CTS' in str(buildername)
-  is_ui = "ui" in str(api.properties.get('scheduler'))
+  is_ui = 'UI' in str(buildername)
   is_console = "console" in str(api.properties.get('scheduler'))
 
   # find android sdk root directory
