@@ -31,6 +31,7 @@ EVENTS_CODE_EV_REL_FILENAME = os.path.join(EVENT_DIR, "EVENTS_CODE_EV_REL")
 EVENTS_CODE_EV_ABS_FILENAME = os.path.join(EVENT_DIR, "EVENTS_CODE_EV_ABS")
 EVENTS_EV_TYPES_FILENAME = os.path.join(EVENT_DIR, "EVENTS_EV_TYPES")
 PORT_NO_REDIR = "no active redirections\r\nOK"
+PORT_REDIR_ADD = "tcp:5556  => 5554 \r\nOK"
 
 def checkReadUntil(consoleOutput):
     """
