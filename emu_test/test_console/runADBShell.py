@@ -4,7 +4,7 @@ import subprocess
 
 mainAPK_package = "com.android.devtools.server"
 launcherClass_name = mainAPK_package + ".Server"
-instrumentation_runner = "android.test.InstrumentationTestRunner"
+instrumentation_runner = "android.support.test.runner.AndroidJUnitRunner"
 
 TRIAL_WAIT_TIME = 2
 NUM_MAX_TRIALS = 5
