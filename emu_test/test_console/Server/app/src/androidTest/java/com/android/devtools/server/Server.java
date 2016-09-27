@@ -20,8 +20,15 @@ import com.android.devtools.server.http.UiAutomatorServlet;
 import com.android.devtools.server.services.ServiceLocator;
 import com.android.devtools.server.services.TelephonyManagerService;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import android.app.Instrumentation;
 import android.content.Context;
 import android.os.RemoteException;
+import android.support.test.InstrumentationRegistry;
+import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObjectNotFoundException;
@@ -35,18 +42,14 @@ import java.util.Map;
 /**
  * InstrumentationTestCase for launching servlet on emulator and use Android SDK.
  */
-public class Server extends InstrumentationTestCase {
-  private HttpServer server;
-  private UiDevice mDevice;
-  private Context mContext;
+@RunWith(AndroidJUnit4.class)
+public class Server {
+  private final Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
 
-  @Override
-  public void setUp() throws RemoteException, UiObjectNotFoundException {
-    getInstrumentation().getUiAutomation().getRootInActiveWindow();
-    mContext = getInstrumentation().getContext();
-
+  @Before
+  public void setUp() throws RemoteException {
     // Initialize UiDevice instance
-    mDevice = UiDevice.getInstance(getInstrumentation());
+    UiDevice mDevice = UiDevice.getInstance(instrumentation);
     if (!mDevice.isScreenOn()) {
       mDevice.wakeUp();
       mDevice.wait(Until.hasObject(By.res("android", "glow_pad_view")), 10000);
@@ -55,10 +58,11 @@ public class Server extends InstrumentationTestCase {
     mDevice.pressHome();
   }
 
+  @Test
   public void testLaunchTestServer() {
     Map<Class<?>, String> servletUrlMapping = new HashMap<>(1);
     servletUrlMapping.put(UiAutomatorServlet.class, "/");
-    server =
+    HttpServer server =
         new HttpServer.HttpServerBuilder()
             .withServer(new org.mortbay.jetty.Server())
             .withAcceptors(10)
@@ -76,7 +80,7 @@ public class Server extends InstrumentationTestCase {
   }
 
   private void registerService() {
-    ServiceLocator.register(new TelephonyManagerService(mContext));
+    ServiceLocator.register(new TelephonyManagerService(instrumentation.getContext()));
     registerReceiver();
   }
 
