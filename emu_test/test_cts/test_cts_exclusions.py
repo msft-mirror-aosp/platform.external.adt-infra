@@ -16,8 +16,8 @@ def cts_plans_current_exclusions():
     return { 'CTS' :
         { 'android.host.trustedvoice' :
             [ 'android.trustedvoice.cts.TrustedVoiceHostTest#testLogcat' ]
-        }
-        { 'com.android.cts.filesystemperf' :
+        ,
+        'com.android.cts.filesystemperf' :
             [ 'com.android.cts.filesystemperf.AlmostFullTest#testRandomRead' ]
             [ 'com.android.cts.filesystemperf.AlmostFullTest#testRandomUpdate' ]
             [ 'com.android.cts.filesystemperf.AlmostFullTest#testSequentialUpdate' ]
