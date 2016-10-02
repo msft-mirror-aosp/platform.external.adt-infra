@@ -18,13 +18,13 @@ def cts_plans_current_exclusions():
             [ 'android.trustedvoice.cts.TrustedVoiceHostTest#testLogcat' ]
         ,
         'com.android.cts.filesystemperf' :
-            [ 'com.android.cts.filesystemperf.AlmostFullTest#testRandomRead' ]
-            [ 'com.android.cts.filesystemperf.AlmostFullTest#testRandomUpdate' ]
-            [ 'com.android.cts.filesystemperf.AlmostFullTest#testSequentialUpdate' ]
-            [ 'com.android.cts.filesystemperf.RandomRWTest#testRandomRead' ]
-            [ 'com.android.cts.filesystemperf.RandomRWTest#testRandomUpdate' ]
-            [ 'com.android.cts.filesystemperf.SequentialRWTest#testSingleSequentialRead' ]
-            [ 'com.android.cts.filesystemperf.SequentialRWTest#testSingleSequentialUpdate' ]
-            [ 'com.android.cts.filesystemperf.SequentialRWTest#testSingleSequentialWrite' ]
+            [ 'com.android.cts.filesystemperf.AlmostFullTest#testRandomRead' ,
+              'com.android.cts.filesystemperf.AlmostFullTest#testRandomUpdate' ,
+              'com.android.cts.filesystemperf.AlmostFullTest#testSequentialUpdate' ,
+              'com.android.cts.filesystemperf.RandomRWTest#testRandomRead' ,
+              'com.android.cts.filesystemperf.RandomRWTest#testRandomUpdate' ,
+              'com.android.cts.filesystemperf.SequentialRWTest#testSingleSequentialRead' ,
+              'com.android.cts.filesystemperf.SequentialRWTest#testSingleSequentialUpdate' ,
+              'com.android.cts.filesystemperf.SequentialRWTest#testSingleSequentialWrite' ]
         }
     }
