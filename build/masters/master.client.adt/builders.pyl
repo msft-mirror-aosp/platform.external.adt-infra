@@ -94,6 +94,15 @@
        "branch": "all",
        "name_identifier": "system-images",
     },
+     "sys_image_nyc_release_poller": {
+       "gs_bucket": "android-build-emu-sysimage",
+       "gs_path": ["builds/git_nyc-emu-release-linux-sdk_google_phone_x86-user/"],
+       "pollInterval": 977,
+       "type": "GSMultiPoller",
+       "project": "nyc-emu-release",
+       "branch": "all",
+       "name_identifier": "emulator",
+    },
     "sys_image_klp_poller": {
        "gs_bucket": "android-build-emu-sysimage",
        "gs_path": ["builds/git_klp-emu-dev-linux-google_sdk_x86-sdk_addon/"],
