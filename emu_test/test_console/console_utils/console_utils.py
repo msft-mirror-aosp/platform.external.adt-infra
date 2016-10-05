@@ -4,9 +4,9 @@ Particularly, parseOutput(telnet) function is extensively used throughout
 the entire console test in order to parse the console output until "OK" message.
 """
 
-import telnetlib
+#TODO: refactor this file name to util.py, the parent dir name to utils
+
 import re
-import subprocess
 import os
 
 NEWLINE = "\n"
@@ -22,6 +22,17 @@ if os.name == "nt":
     COMPARE_CMD = "FC"
 else:
     COMPARE_CMD = "diff"
+
+SERVER_NAME = 'localhost'
+CONSOLE_PORT = 5554
+
+NUM_MAX_TRIALS = 3
+TRIAL_WAIT_TIMEOUT = 0.5
+CMD_WAIT_TIMEOUT = 0.5
+
+TIMEOUT = 1 # in second
+
+CONSOLE_AUTH_TOKEN_FILE_NAME = '.emulator_console_auth_token'
 
 UTILS_DIR = os.path.dirname(os.path.realpath(__file__))
 EVENT_DIR = os.path.join(UTILS_DIR, "..", "EVENT_TEST_DATA")
