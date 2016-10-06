@@ -40,7 +40,10 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
+import android.support.test.uiautomator.Until;
 import android.telephony.TelephonyManager;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Test class for network connection on emulator.
@@ -82,33 +85,39 @@ public class NetworkIOTest {
         UiDevice device = testFramework.getDevice();
 
         // Check network connectivity.
-        if (NetworkUtil.verifyNetworkStatus(device)) {
-            if (testFramework.getApi() < 24) {
-                AppLauncher.launch(instrumentation, "Browser");
-                device.findObject(new UiSelector().resourceId(
-                        Res.BROWSER_URL_TEXT_FIELD_RES)).click();
-                device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                        .clearTextField();
-                device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                        .setText("google.com");
-                device.pressEnter();
+        if (NetworkUtil.verifyNetworkStatus(device) && testFramework.getApi() < 24) {
+            AppLauncher.launch(instrumentation, "Browser");
+            device.findObject(new UiSelector().resourceId(
+                    Res.BROWSER_URL_TEXT_FIELD_RES)).click();
+            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
+                    .clearTextField();
+            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
+                    .setText("google.com");
+            device.pressEnter();
 
-                // Verify if the load bar is there at first,
-                // then verify if the loading bar finishes in 3 seconds (default timeout on Wait()).
-                final UiObject progress =
-                        device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
-                boolean isSuccess =
-                        new Wait().until(new Wait.ExpectedCondition() {
-                            @Override
-                            public boolean isTrue() throws Exception {
-                                return !progress.exists();
-                            }
-                        });
-                assertTrue("Failed to dismiss the loading bar.", isSuccess);
-            }
+            // Verify if the load bar is there at first,
+            // then verify if the loading bar finishes in 3 seconds (default timeout on Wait()).
+            final UiObject progress =
+                    device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
+            boolean isSuccess =
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return !progress.exists();
+                        }
+                    });
+            assertTrue("Failed to dismiss the loading bar.", isSuccess);
         }
         // verifyNetworkStatus does not work in API 24. No text or resource ID present in UI.
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+            device.openNotification();
+            boolean hasCellularData =
+                    device.wait(
+                            Until.hasObject(By.descContains("Mobile Cellular Data")),
+                                    TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
+                    );
+            assertTrue("Could not connect to the network.", hasCellularData);
+            device.pressHome();
 
             AppLauncher.launch(instrumentation, "Chrome");
             // If this is the first launch, dismiss the "Welcome to Chrome" screen.
