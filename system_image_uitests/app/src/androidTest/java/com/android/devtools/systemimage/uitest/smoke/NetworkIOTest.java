@@ -83,18 +83,64 @@ public class NetworkIOTest {
 
         // Check network connectivity.
         if (NetworkUtil.verifyNetworkStatus(device)) {
-            AppLauncher.launch(instrumentation, "Browser");
-            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES)).click();
-            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                    .clearTextField();
-            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                    .setText("google.com");
+            if (testFramework.getApi() < 24) {
+                AppLauncher.launch(instrumentation, "Browser");
+                device.findObject(new UiSelector().resourceId(
+                        Res.BROWSER_URL_TEXT_FIELD_RES)).click();
+                device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
+                        .clearTextField();
+                device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
+                        .setText("google.com");
+                device.pressEnter();
+
+                // Verify if the load bar is there at first,
+                // then verify if the loading bar finishes in 3 seconds (default timeout on Wait()).
+                final UiObject progress =
+                        device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
+                boolean isSuccess =
+                        new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() throws Exception {
+                                return !progress.exists();
+                            }
+                        });
+                assertTrue("Failed to dismiss the loading bar.", isSuccess);
+            }
+        }
+        // verifyNetworkStatus does not work in API 24. No text or resource ID present in UI.
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+
+            AppLauncher.launch(instrumentation, "Chrome");
+            // If this is the first launch, dismiss the "Welcome to Chrome" screen.
+            UiObject acceptButton = device.findObject(new UiSelector().resourceId(
+                    Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
+            if (acceptButton.exists()) {
+                acceptButton.clickAndWaitForNewWindow();
+            }
+
+            // Dismiss the "Sign in to Chrome" screen if it's there.
+            if (device.hasObject(By.res(Res.CHROME_SIGN_IN_TITLE_RES))) {
+                device.findObject(new UiSelector().resourceId(
+                        Res.CHROME_NEGATIVE_BUTTON_RES)).clickAndWaitForNewWindow();
+            }
+
+            UiObject searchBox = device.findObject(new UiSelector().resourceId(
+                    Res.CHROME_SEARCH_BOX_RES));
+            if (searchBox.exists()) {
+                searchBox.clickAndWaitForNewWindow();
+            }
+
+            UiObject textField = device.findObject(new UiSelector().resourceId(
+                    Res.CHROME_URL_BAR_RES));
+            textField.click();
+            textField.clearTextField();
+            textField.setText("google.com");
             device.pressEnter();
 
-            // Verify if the load bar is there at first,
-            // then verify if the loading bar finishes in 3 seconds (default timeout on Wait()).
+            // Verify if the load bar is there at first. Then verify if the loading bar
+            // finishes within the default timeout on Wait().
             final UiObject progress =
-                    device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
+                    device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
             boolean isSuccess =
                     new Wait().until(new Wait.ExpectedCondition() {
                         @Override
