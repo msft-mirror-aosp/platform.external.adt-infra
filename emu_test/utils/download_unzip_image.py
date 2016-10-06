@@ -29,6 +29,8 @@ def get_dst_dir(remote_path):
       api = '22'
     elif 'mnc' in branch_name:
       api = '23'
+    elif 'nyc-mr1' in branch_name:
+      api = '25'
     elif 'nyc' in branch_name:
       api = '24'
     elif 'lmp' in branch_name:
