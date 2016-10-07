@@ -21,6 +21,15 @@ class BatteryTest(BaseConsoleTest):
     def test_powerDisplay(self):
         """
         Test for command: power ac <on_or_off>
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power display, and verify 1
+        Verify:
+            1. Power details are displayed
         """
         isCmdSuccessful = True
         for i in range(0, NUM_MAX_TRIALS):
@@ -68,6 +77,19 @@ class BatteryTest(BaseConsoleTest):
     def test_setACChargeState(self):
         """
         Test for command: power ac <on_or_off>
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power ac on
+            6. Run: power display, and verify 1
+            7. Run: power ac off
+            8. Run: power display, and verify 2
+        Verify:
+            1. Emulator displays AC as online
+            2. Emulator displays AC as offline
         """
         self.setACChargeTest("on")
         self.setACChargeTest("off")
@@ -100,30 +122,75 @@ class BatteryTest(BaseConsoleTest):
     def test_setBatteryStatusToUnknown(self):
         """
         Test for command: power status unknown
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power status unknown, and verify 1
+        Verify:
+            1. Success to set power status to unknown
         """
         self.setBatteryStatusTest("unknown")
 
     def test_setBatteryStatusToCharging(self):
         """
         Test for command: power status charging
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power status charging, and verify 1
+        Verify:
+            1. Success to set power status to charging
         """
         self.setBatteryStatusTest("charging")
 
     def test_setBatteryStatusToDischarging(self):
         """
         Test for command: power status discharging
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power status discharging, and verify 1
+        Verify:
+            1. Success to set power status to discharging
         """
         self.setBatteryStatusTest("discharging")
 
     def test_setBatteryStatusToNotCharging(self):
         """
         Test for command: power status not-charging
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power status not-charging, and verify 1
+        Verify:
+            1. Success to set power status to not-charging
         """
         self.setBatteryStatusTest("not-charging")
 
     def test_setBatteryStatusToFull(self):
         """
         Test for command: power status full
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power status full, and verify 1
+        Verify:
+            1. Success to set power status to full
         """
         self.setBatteryStatusTest("full")
 
@@ -154,6 +221,17 @@ class BatteryTest(BaseConsoleTest):
     def test_setPresenceState(self):
         """
         Test for command: power present <true_or_false>
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power present true, and verify 1
+            6. Run: power present false, and verify 2
+        Verify:
+            1. Success to set power presence to True
+            2. Success to set power presence to False
         """
         self.setPresenceStateTest("true")
         self.setPresenceStateTest("false")
@@ -187,42 +265,105 @@ class BatteryTest(BaseConsoleTest):
     def test_setBatteryHealthToUnknown(self):
         """
         Test for command: power health unknown
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power health unknown, and verify 1
+        Verify:
+            1. Success to set power health to unknown
         """
         self.setBatteryHealthTest("unknown")
 
     def test_setBatteryHealthToGood(self):
         """
         Test for command: power health good
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power health good, and verify 1
+        Verify:
+            1. Success to set power health to good
         """
         self.setBatteryHealthTest("good")
 
     def test_setBatteryHealthToOverheat(self):
         """
         Test for command: power health overheat
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power health overheat, and verify 1
+        Verify:
+            1. Success to set power health to overheat
         """
         self.setBatteryHealthTest("overheat")
 
     def test_setBatteryHealthToDead(self):
         """
         Test for command: power health dead
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power health dead, and verify 1
+        Verify:
+            1. Success to set power health to dead
         """
         self.setBatteryHealthTest("dead")
 
     def test_setBatteryHealthToOvervoltage(self):
         """
         Test for command: power health overvoltage
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power health overvoltage, and verify 1
+        Verify:
+            1. Success to set power health to overvoltage
         """
         self.setBatteryHealthTest("overvoltage")
 
     def test_setBatteryHealthToFailure(self):
         """
         Test for command: power health failure
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power health failure, and verify 1
+        Verify:
+            1. Success to set power health to failure
         """
         self.setBatteryHealthTest("failure")
 
     def test_setRemainingBatteryCapacity(self):
         """
         Test for command: power capacity 75
+        Test Rail ID: C14595300
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: power capacity 75, and verify 1
+        Verify:
+            1. Success to set power capacity to 75
         """
         isCmdSuccessful = True
         for i in range(0, NUM_MAX_TRIALS):
