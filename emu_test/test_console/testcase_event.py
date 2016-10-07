@@ -20,6 +20,16 @@ class EventTest(BaseConsoleTest):
     def test_listEventAliases(self):
         """
         Test for command: event types
+        Test Rail ID: C14595360
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: event types
+            6. verify 1
+        Verify:
+            1. Available event types are listed
         """
         isCmdSuccessful = True
         for i in range(0, NUM_MAX_TRIALS):
@@ -81,6 +91,16 @@ class EventTest(BaseConsoleTest):
     def test_listAllCodeAliases(self):
         """
         Test for command: event codes <type>" (for example: event codes EV_REL)
+        Test Rail ID: C14595360
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run several "event codes <type>" commands
+            6. verify 1
+        Verify:
+            1. Available event code alias for the selected type are listed
         """
         self.verifyAllEventCodes()
         self.verifyAllEventsNoAlias()
