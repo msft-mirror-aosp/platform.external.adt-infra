@@ -110,6 +110,17 @@ class PhoneCallTest(BaseConsoleTest):
     def test_inboundCall(self):
         """
         Test for command: gsm call <phonenumber>
+        Test Rail ID: C14595296
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: gsm call <phonenumber>, verify 1
+            6. Run: gsm cancel <phonenumber>, verify 2
+        Verify:
+            1. Emulator displays an incoming call from the <phonenumber>
+            2. Phone call is terminated.
         """
         self.make_inbound_call()
         self.cancel_inbound_call()
@@ -117,6 +128,18 @@ class PhoneCallTest(BaseConsoleTest):
     def test_acceptCall(self):
         """
         Test for command: gsm accept <phonenumber>
+        Test Rail ID: C14595296
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: gsm call <phonenumber>, verify 1
+            5. Run: gsm accept <phonenumber>, verify 2
+            6. Run: gsm cancel <phonenumber>
+        Verify:
+            1. Emulator displays an incoming call from the <phonenumber>
+            2. Emulator displays that the incoming call is accepted
         """
         self.make_inbound_call()
         self.accept_inbound_call()
@@ -125,6 +148,20 @@ class PhoneCallTest(BaseConsoleTest):
     def test_terminateCall(self):
         """
         Test for command: gsm cancel <phonenumber>
+        Test Rail ID: C14595296
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Copy the auth_token value from ~/.emulator_console_auth_token
+            4. Run: auth auth_token
+            5. Run: gsm call <phonenumber>, verify 1
+            6. Run: gsm accept <phonenumber>, verify 2
+            7. Run: gsm cancel <phonenumber>, verify 3
+        Verify:
+            1. Emulator displays an incoming call from the <phonenumber>
+            2. Emulator displays that the incoming call is accepted
+            3. Phone call is terminated. The emulator displays the phone
+               hang-up icon in the notification bar.
         """
         self.make_inbound_call()
         self.accept_inbound_call()
