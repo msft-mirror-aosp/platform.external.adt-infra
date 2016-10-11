@@ -87,6 +87,7 @@ def RunSteps(api):
                'emu-2.2-release': bootStep('public', '{"ori": "public"}'),
                'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
                'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
+               'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
                'nyc-emu-dev': bootStep('NYC', '{"ori": "nyc"}'),
                'lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
                'klp-emu-dev': bootStep('KLP', '{"ori": "klp"}'),
