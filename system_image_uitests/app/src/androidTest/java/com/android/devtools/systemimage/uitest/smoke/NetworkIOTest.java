@@ -227,6 +227,12 @@ public class NetworkIOTest {
                 assertFalse("Set cellular data limit text is visible.", device.findObject(
                         new UiSelector().textContains("Set cellular data limit")).exists());
             }
+            if (api >= 24) {
+                assertFalse("Set cellular data is not turned off.", device.findObject(
+                        new UiSelector().textContains("ON").resourceId(
+                                Res.CELLULAR_DATA_SWITCH_RES).className(
+                                "android.widget.Switch")).exists());
+            }
             // Enable Cellular data.
             dataSwitch.click();
         }
@@ -284,6 +290,12 @@ public class NetworkIOTest {
             if (api < 24) {
                 assertTrue("Set cellular data limit text is not visible.", device.findObject(
                         new UiSelector().textContains("Set cellular data limit")).exists());
+            }
+            if (api >= 24) {
+                assertTrue("Set cellular data is not turned on.", device.findObject(
+                        new UiSelector().textContains("ON").resourceId(
+                                Res.CELLULAR_DATA_SWITCH_RES).className(
+                                "android.widget.Switch")).exists());
             }
         }
     }
