@@ -58,7 +58,7 @@ public class Res {
             "com.android.settings:id/list"; // Added in API 24
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
-            "(com.android.settings|android):id/(dashboard|list)"; // Still present in API 24 but at a different point in the hierarchy.
+            "(com.android.settings|android):id/(dashboard|list|dashboard_container)";
     public static final String SETTINGS_RECYCLER_VIEW_RES =
             "com.android.settings:id/dashboard_container"; // Added in API 24
 
