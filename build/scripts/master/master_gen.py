@@ -21,6 +21,7 @@ from master import repo_poller
 from master import slaves_list
 from master.factory import annotator_factory
 from gs_multi_poller import GSMultiPoller
+from sysimage_release_psq_poller import SysimageReleasePsqPoller
 from emu_gs_scheduler import EmulatorSingleBranchScheduler
 
 def PopulateBuildmasterConfig(BuildmasterConfig, builders_path,
@@ -195,6 +196,14 @@ def _ComputeChangeSourceAndTagComparator(builders):
                                      cs_values['project'],
                                      cs_values['branch'],
                                      cs_values['name_identifier']))
+      elif cs_values['type'] == 'SysimageReleasePsqPoller':
+          change_source.append(SysimageReleasePsqPoller(cs_name,
+                                             cs_values['gs_bucket'],
+                                             cs_values['gs_path'],
+                                             cs_values['pollInterval'],
+                                             cs_values['project'],
+                                             cs_values['branch'],
+                                             cs_values['name_identifier']))
       else:
         raise ValueError('unsupported change source type %s' % cs_values['type'])
     return change_source, tag_comparator
