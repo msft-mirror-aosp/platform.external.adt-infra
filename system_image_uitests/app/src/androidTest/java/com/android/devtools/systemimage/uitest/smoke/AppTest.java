@@ -35,6 +35,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 
@@ -182,7 +183,9 @@ public class AppTest {
             device.findObject(new UiSelector().text("Save to bookmarks")).click();
             device.findObject(new UiSelector().text("OK")).click();
             device.pressMenu();
-            device.findObject(new UiSelector().text("Bookmarks")).click();
+            UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
+            bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
+            bookmarks.click();
             assertTrue("Cannot find ESPN bookmark",
                     device.findObject(new UiSelector().text("Bookmarks")).exists() &&
                             device.findObject(new UiSelector().textContains(
