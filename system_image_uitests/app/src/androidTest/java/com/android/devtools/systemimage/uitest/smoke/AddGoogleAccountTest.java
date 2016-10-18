@@ -19,7 +19,6 @@ package com.android.devtools.systemimage.uitest.smoke;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
-import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,6 +30,8 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Test for adding a Google account.
@@ -86,11 +87,14 @@ public class AddGoogleAccountTest {
         // Verification step requires sign in to a Google Account,
         // which requires Google API support. Test is irrelevant on API 24.
         if (testFramework.getApi() > 23 && testFramework.isGoogleApiImage()) {
-            mDevice.findObject(
-                    new UiSelector().description("add new contact")).clickAndWaitForNewWindow();
+            UiObject add_contact = mDevice.findObject(
+                    new UiSelector().description("add new contact"));
+            add_contact.clickAndWaitForNewWindow();
         } else {
-            mDevice.findObject(
-                    new UiSelector().textContains("NEW CONTACT")).clickAndWaitForNewWindow();
+            UiObject add_contact = mDevice.findObject(
+                    new UiSelector().textContains("NEW CONTACT"));
+            add_contact.waitForExists(TimeUnit.SECONDS.toMillis(5));
+            add_contact.clickAndWaitForNewWindow();
         }
         mDevice.findObject(new UiSelector().textContains("ADD ACCOUNT")).click();
     }
