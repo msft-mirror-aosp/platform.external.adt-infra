@@ -24,6 +24,8 @@ import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -38,6 +40,7 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.support.test.uiautomator.Until;
 
 
 /**
@@ -80,7 +83,13 @@ public class SettingsTest {
 
         SettingsUtil.openItem(instrumentation, "Google");
         device.findObject(new UiSelector().textContains("Location")).clickAndWaitForNewWindow();
-        assertTrue("Failed to find Location title.",
+        boolean isLocationDisabled = device.wait(Until.hasObject(By.text("Yes")),
+                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        if (isLocationDisabled) {
+            device.findObject(new UiSelector().textContains("Yes")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().textContains("Location")).clickAndWaitForNewWindow();
+        }
+            assertTrue("Failed to find Location title.",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws Exception {
