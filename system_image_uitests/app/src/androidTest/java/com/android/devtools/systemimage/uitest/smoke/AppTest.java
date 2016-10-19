@@ -33,6 +33,7 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
+import android.support.test.uiautomator.Until;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -186,10 +187,21 @@ public class AppTest {
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
             bookmarks.click();
+            boolean hasBookmarks = device.wait(
+                    Until.hasObject(By.text("Bookmarks")),
+                    TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
+            );
+            boolean hasNewBookmark = device.wait(
+                    Until.hasObject(By.res(Res.BROWSER_BOOKMARKS_LABEL_RES)),
+                    TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
+            );
             assertTrue("Cannot find ESPN bookmark",
-                    device.findObject(new UiSelector().text("Bookmarks")).exists() &&
-                            device.findObject(new UiSelector().textContains(
-                                    "ESPN").resourceId(Res.BROWSER_BOOKMARKS_LABEL_RES)).exists());
+                    hasBookmarks && hasNewBookmark);
+            device.findObject(new UiSelector().textContains(
+                    "ESPN").resourceId(Res.BROWSER_BOOKMARKS_LABEL_RES)).swipeUp(400);
+            // Delete the bookmark.
+            device.findObject(new UiSelector().text("Delete bookmark")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
         }
     }
 }
