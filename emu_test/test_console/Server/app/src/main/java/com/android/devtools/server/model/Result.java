@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.devtools.server.model;
 
 /**
@@ -23,6 +24,8 @@ public class Result {
   private String description;
   private String requestBody;
   private String windowHierarchy;
+  private String smsAddress;
+  private String smsTextMessage;
 
   public boolean isFail() {
     return isFail;
@@ -57,6 +60,24 @@ public class Result {
 
   public Result setWindowHierarchy(String windowHierarchy) {
     this.windowHierarchy = windowHierarchy;
+    return this;
+  }
+
+  public String getSmsAddress() {
+    return smsAddress;
+  }
+
+  public Result setSmsAddress(String smsAddress) {
+    this.smsAddress = smsAddress;
+    return this;
+  }
+
+  public String getSmsTextMessage() {
+    return smsTextMessage;
+  }
+
+  public Result setSmsTextMessage(String smsTextMessage) {
+    this.smsTextMessage = smsTextMessage;
     return this;
   }
 }
