@@ -85,14 +85,10 @@ public class AddGoogleAccountTest {
             }
         }
         // Verification step requires sign in to a Google Account,
-        // which requires Google API support. Test is irrelevant on API 24.
-        if (testFramework.getApi() > 23 && testFramework.isGoogleApiImage()) {
+        // which requires Google API support.
+        if (testFramework.isGoogleApiImage()) {
             UiObject add_contact = mDevice.findObject(
                     new UiSelector().description("add new contact"));
-            add_contact.clickAndWaitForNewWindow();
-        } else {
-            UiObject add_contact = mDevice.findObject(
-                    new UiSelector().textContains("NEW CONTACT"));
             add_contact.waitForExists(TimeUnit.SECONDS.toMillis(5));
             add_contact.clickAndWaitForNewWindow();
         }
