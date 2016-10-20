@@ -265,6 +265,7 @@ def RunSteps(api):
                          step_data.filter,
                          emulator_path)
         elif is_ui:
+          step_data = bootSteps[step]
           PythonTestStep('Run Emulator UI Test',
                          api.path.join(log_dir, 'UI_test'),
                          'test_ui.*',
