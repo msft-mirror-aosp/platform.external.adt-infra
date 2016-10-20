@@ -92,6 +92,6 @@ public class AddGoogleAccountTest {
             add_contact.waitForExists(TimeUnit.SECONDS.toMillis(5));
             add_contact.clickAndWaitForNewWindow();
         }
-        mDevice.findObject(new UiSelector().textContains("ADD ACCOUNT")).click();
+        mDevice.findObject(new UiSelector().textContains("Add account")).click();
     }
 }
