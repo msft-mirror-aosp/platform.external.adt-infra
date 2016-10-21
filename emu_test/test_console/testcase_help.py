@@ -1,81 +1,51 @@
 #!/usr/bin/env python
 
-"""
-Test for help-related commands.
-"""
+"""Test for help-related commands."""
 
 import os
 import sys
-import time
-import inspect
-import unittest
 import telnetlib
+import unittest
 
+from console_utils import console_utils
 from os.path import expanduser
 from testcase_base import BaseConsoleTest
 
-import console_utils.console_utils as console_utils
-
-CMD_HELP = 'help\n'
-REGEX_HELP_DISPLAY_NO_AUTH = \
-    '.*\n.*\n.*help.*\n.*avd.*\n.*auth.*\n.*quit\|exit.*\n.*\n.*\nOK'
-REGEX_HELP_DISPLAY_AUTH = \
-    '.*\n.*\n.*help.*\n.*event.*\n.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n' \
-    '.*kill.*\n.*network.*\n.*power.*\n.*quit\|exit.*\n.*redir.*\n' \
-    '.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*finger.*\n.*debug.*\n.*\n.*\nOK'
-
 
 class HelpTest(BaseConsoleTest):
-    """
-    This class aims to test help-related emulator console commands.
-    """
+    """This class aims to test help-related emulator console commands."""
 
     def setUp(self):
-        """
-        Only telnet to emulator, initially not need to run auth command.
-        """
+        """Only telnet to emulator, initially not need to run auth command."""
         self.telnet = telnetlib.Telnet(console_utils.SERVER_NAME,
                                        console_utils.CONSOLE_PORT)
         if not console_utils.checkReadUntil(
-                self.telnet.read_until(console_utils.OK, console_utils.TIMEOUT_S)):
+                self.telnet.read_until(console_utils.OK,
+                                       console_utils.TIMEOUT_S)):
             sys.exit(-1)
 
-    def _help_command(self, user_auth):
-        is_command_successful = False
-        expected_regex_pattern = None
+    def _help_command(self, expected_output):
+        """Executes help command and verifies output.
 
-        for i in range(console_utils.NUM_MAX_TRIALS):
-            print('Running %s, user authorized: %s, trial #%d' %
-                  (inspect.stack()[0][3], user_auth, i))
-
-            self.telnet.write(CMD_HELP)
-            time.sleep(console_utils.CMD_WAIT_TIMEOUT_S)
-
-            output_help = console_utils.parseOutput(self.telnet)
-
-            if user_auth:
-                expected_regex_pattern = REGEX_HELP_DISPLAY_AUTH
-            else:
-                expected_regex_pattern = REGEX_HELP_DISPLAY_NO_AUTH
-
-            is_command_successful = console_utils.patternMatchOutput(
-                output_help,
-                expected_regex_pattern)
-
-            if is_command_successful:
-                break
-
-            time.sleep(console_utils.TRIAL_WAIT_TIMEOUT_S)
+        Args:
+            expected_output: Expected console output for help commands.
+        """
+        is_command_successful, output = \
+            console_utils.execute_console_command(
+                self.telnet,
+                console_utils.CMD_HELP,
+                expected_output)
 
         self.assertCmdSuccessful(
             is_command_successful,
             'Failed to properly list all command options.',
             False,
             '',
-            'Pattern: \n%s' % expected_regex_pattern,
-            output_help)
+            'Pattern: \n%s' % expected_output,
+            output)
 
     def _auth_user_for_emulator_console(self):
+        """Authorization user."""
         home = expanduser('~')
         token_path = os.path.join(home,
                                   console_utils.CONSOLE_AUTH_TOKEN_FILE_NAME)
@@ -94,11 +64,22 @@ class HelpTest(BaseConsoleTest):
         """
         Test command for: help
         Test Rail ID: C14578962
+        Test steps:
+            1. Launch an emulator avd
+            2. From command prompt, run: telnet localhost <port>
+            3. Run: help, and verify 1
+            4. Copy the auth_token value from ~/.emulator_console_auth_token
+            5. Run: auth auth_token
+            6. Run: help, and verify 2
+        Verify:
+            1. help, auth, avd and quit/exit commands are available
+            2. crash, kill, redir, power, event, avd ,finger, geo, sms, cdma,
+               gsm and rotate commands are available
         """
-        self._help_command(user_auth=False)
+        self._help_command(console_utils.REGEX_HELP_DISPLAY_NO_AUTH)
         self._auth_user_for_emulator_console()
-        self._help_command(user_auth=True)
+        self._help_command(console_utils.REGEX_HELP_DISPLAY_AUTH)
 
 if __name__ == '__main__':
-    print('======= Port Test =======')
+    print('======= help Test =======')
     unittest.main()
