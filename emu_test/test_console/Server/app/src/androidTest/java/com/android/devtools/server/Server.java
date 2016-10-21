@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.devtools.server;
 
 import com.android.devtools.server.http.HttpServer;
 import com.android.devtools.server.http.UiAutomatorServlet;
 import com.android.devtools.server.services.ServiceLocator;
+import com.android.devtools.server.services.SmsManagerService;
 import com.android.devtools.server.services.TelephonyManagerService;
 
 import org.junit.Before;
@@ -31,11 +33,8 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.Until;
-import android.test.InstrumentationTestCase;
 import android.util.Log;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,12 +43,13 @@ import java.util.Map;
  */
 @RunWith(AndroidJUnit4.class)
 public class Server {
-  private final Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
+  private final Instrumentation mInstrumentation =
+          InstrumentationRegistry.getInstrumentation();
+  private final UiDevice mDevice = UiDevice.getInstance(mInstrumentation);
+  private final Context mContext = mInstrumentation.getTargetContext();
 
   @Before
   public void setUp() throws RemoteException {
-    // Initialize UiDevice instance
-    UiDevice mDevice = UiDevice.getInstance(instrumentation);
     if (!mDevice.isScreenOn()) {
       mDevice.wakeUp();
       mDevice.wait(Until.hasObject(By.res("android", "glow_pad_view")), 10000);
@@ -80,9 +80,7 @@ public class Server {
   }
 
   private void registerService() {
-    ServiceLocator.register(new TelephonyManagerService(instrumentation.getContext()));
-    registerReceiver();
+    ServiceLocator.register(new TelephonyManagerService(mContext));
+    ServiceLocator.register(new SmsManagerService(mContext));
   }
-
-  private void registerReceiver() {}
 }

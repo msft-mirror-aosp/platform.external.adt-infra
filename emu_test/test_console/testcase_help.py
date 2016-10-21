@@ -18,11 +18,11 @@ import console_utils.console_utils as console_utils
 
 CMD_HELP = 'help\n'
 REGEX_HELP_DISPLAY_NO_AUTH = \
-    ".*\n.*\n.*help.*\n.*avd.*\n.*auth.*\n.*quit\|exit.*\n.*\n.*\nOK"
+    '.*\n.*\n.*help.*\n.*avd.*\n.*auth.*\n.*quit\|exit.*\n.*\n.*\nOK'
 REGEX_HELP_DISPLAY_AUTH = \
-    ".*\n.*\n.*help.*\n.*event.*\n.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n" \
-    ".*kill.*\n.*network.*\n.*power.*\n.*quit\|exit.*\n.*redir.*\n" \
-    ".*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*finger.*\n.*debug.*\n.*\n.*\nOK"
+    '.*\n.*\n.*help.*\n.*event.*\n.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n' \
+    '.*kill.*\n.*network.*\n.*power.*\n.*quit\|exit.*\n.*redir.*\n' \
+    '.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*finger.*\n.*debug.*\n.*\n.*\nOK'
 
 
 class HelpTest(BaseConsoleTest):
@@ -37,7 +37,7 @@ class HelpTest(BaseConsoleTest):
         self.telnet = telnetlib.Telnet(console_utils.SERVER_NAME,
                                        console_utils.CONSOLE_PORT)
         if not console_utils.checkReadUntil(
-                self.telnet.read_until(console_utils.OK, console_utils.TIMEOUT)):
+                self.telnet.read_until(console_utils.OK, console_utils.TIMEOUT_S)):
             sys.exit(-1)
 
     def _help_command(self, user_auth):
@@ -49,7 +49,7 @@ class HelpTest(BaseConsoleTest):
                   (inspect.stack()[0][3], user_auth, i))
 
             self.telnet.write(CMD_HELP)
-            time.sleep(console_utils.CMD_WAIT_TIMEOUT)
+            time.sleep(console_utils.CMD_WAIT_TIMEOUT_S)
 
             output_help = console_utils.parseOutput(self.telnet)
 
@@ -65,27 +65,29 @@ class HelpTest(BaseConsoleTest):
             if is_command_successful:
                 break
 
-            time.sleep(console_utils.TRIAL_WAIT_TIMEOUT)
+            time.sleep(console_utils.TRIAL_WAIT_TIMEOUT_S)
 
         self.assertCmdSuccessful(
             is_command_successful,
-            "Failed to properly list all command options.",
+            'Failed to properly list all command options.',
             False,
-            "",
-            "Pattern: \n%s" % expected_regex_pattern,
+            '',
+            'Pattern: \n%s' % expected_regex_pattern,
             output_help)
 
     def _auth_user_for_emulator_console(self):
-        home = expanduser("~")
-        token_path = os.path.join(home, console_utils.CONSOLE_AUTH_TOKEN_FILE_NAME)
+        home = expanduser('~')
+        token_path = os.path.join(home,
+                                  console_utils.CONSOLE_AUTH_TOKEN_FILE_NAME)
         with open(token_path) as f:
             content = f.readlines()
         auth_token = content[0]
-        cmd_auth = "auth %s\n" % (auth_token)
+        cmd_auth = 'auth %s\n' % (auth_token)
         self.telnet.write(cmd_auth)
         self.wait_on_windows()
         if not console_utils.checkReadUntil(
-                self.telnet.read_until(console_utils.OK, console_utils.TIMEOUT)):
+                self.telnet.read_until(console_utils.OK,
+                                       console_utils.TIMEOUT_S)):
             sys.exit(-1)
 
     def test_help_command(self):
