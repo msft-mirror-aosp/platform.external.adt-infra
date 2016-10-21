@@ -172,6 +172,10 @@ public class AppTest {
                     new UiSelector().description("Edit bookmark")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().description("Delete bookmarks")).click();
 
+        } else if (testFramework.getApi() >= 24) {
+            // API 24+ uses WebView Browser as the default browser. Does not have bookmarking
+            // options.
+            return;
         } else {
             AppLauncher.launch(instrumentation, "Browser");
             UiObject textField = device.findObject(
