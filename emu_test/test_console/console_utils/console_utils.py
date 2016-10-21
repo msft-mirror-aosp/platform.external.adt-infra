@@ -46,6 +46,13 @@ EVENTS_CODE_EV_ABS_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_CODE_EV_ABS')
 EVENTS_EV_TYPES_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_EV_TYPES')
 PORT_NO_REDIR = 'no active redirections\r\nOK'
 PORT_REDIR_ADD = 'tcp:5556  => 5554 \r\nOK'
+CMD_HELP = 'help\n'
+REGEX_HELP_DISPLAY_NO_AUTH = \
+    '.*\n.*\n.*help.*\n.*avd.*\n.*auth.*\n.*quit\|exit.*\n.*\n.*\nOK'
+REGEX_HELP_DISPLAY_AUTH = \
+    '.*\n.*\n.*help.*\n.*event.*\n.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n' \
+    '.*kill.*\n.*network.*\n.*power.*\n.*quit\|exit.*\n.*redir.*\n' \
+    '.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*finger.*\n.*debug.*\n.*\n.*\nOK'
 
 def checkReadUntil(consoleOutput):
     """Checks whether the console output ends with 'OK' message.
