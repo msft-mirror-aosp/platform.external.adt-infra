@@ -158,7 +158,9 @@ public class AppTest {
             assertTrue("Bookmark was not set",
                     device.findObject(new UiSelector().description("Edit bookmark")).exists());
             // Verify the new bookmark is in the list.
-            device.findObject(new UiSelector().text("Bookmarks")).clickAndWaitForNewWindow();
+            UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
+            bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
+            bookmarks.clickAndWaitForNewWindow();
             assertTrue("Cannot find bookmark",
                     device.findObject(new UiSelector().text("Bookmarks")).exists() &&
                             device.findObject(new UiSelector().textContains(
