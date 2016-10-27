@@ -5,7 +5,7 @@ Tests for call-related commands
 import unittest
 import telnetlib
 from subprocess import check_output
-import console_utils.console_utils as console_utils
+import utils.util as console_utils
 import subprocess
 import os
 import time
