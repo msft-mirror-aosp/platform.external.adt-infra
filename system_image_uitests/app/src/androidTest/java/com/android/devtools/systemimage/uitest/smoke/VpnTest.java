@@ -20,8 +20,6 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
-import com.android.devtools.systemimage.uitest.utils.AppManager;
-import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.VpnPopupWatcher;
 
@@ -43,6 +41,7 @@ import android.support.test.uiautomator.UiSelector;
 @RunWith(AndroidJUnit4.class)
 public class VpnTest {
     private static final String VPN_ACTIVATED_TEXT = "VPN is activated by TestVPN";
+    private static final String NETWORK_MONITORED_TEXT = "Network may be monitored";
 
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
@@ -50,18 +49,31 @@ public class VpnTest {
     @Rule
     public Timeout globalTimeout = Timeout.seconds(90);
 
-    private static boolean verifyVpnStatus(final UiDevice device) throws Exception {
+    private boolean verifyVpnStatus(final UiDevice device) throws Exception {
         // Verify that a VPN lock icon is on the status bar.
         device.openNotification();
         // Need to wait for a while to check the notification bar items
         // because opening notification is an animation.
-        boolean isTrue = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-                return device.hasObject(By.res(Res.VPN_LOCK_ICON_RES)) ||
-                        device.hasObject(By.text(VPN_ACTIVATED_TEXT));
-            }
-        });
+        boolean isTrue = false;
+        if (testFramework.getApi() >= 24) {
+            device.findObject(new UiSelector().resourceId(
+                    "com.android.systemui:id/expand_indicator").className(
+                    "android.widget.ImageView")).click();
+            isTrue = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return device.hasObject(By.text(NETWORK_MONITORED_TEXT));
+                }
+            });
+        } else {
+            isTrue = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return device.hasObject(By.res(Res.VPN_LOCK_ICON_RES)) ||
+                            device.hasObject(By.text(VPN_ACTIVATED_TEXT));
+                }
+            });
+        }
         device.pressHome();
         return isTrue;
     }
@@ -92,7 +104,7 @@ public class VpnTest {
         UiDevice device = testFramework.getDevice();
 
         // Disable test for API 19. Enable when bug 30376641 is fixed.
-        if (SystemUtil.getApiLevel() == 19) {
+        if (testFramework.getApi() == 19) {
             return;
         }
         // Check if VPN is on. If true, skip.
