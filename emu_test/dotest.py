@@ -19,6 +19,9 @@ import time
 import psutil
 from subprocess import PIPE
 
+# Add parent directory to current module. Then, emu_test module is recognized.
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                             os.pardir))
 from emu_test.utils import emu_argparser
 from emu_test.utils import emu_unittest
 
