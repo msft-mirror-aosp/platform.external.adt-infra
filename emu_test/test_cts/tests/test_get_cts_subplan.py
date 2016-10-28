@@ -1,7 +1,7 @@
 # This should be run from the emu_test directory.
 import os, platform
 import xml.etree.ElementTree as ElementTree
-import utils.emu_argparser as emu_argparser
+import emu_test.utils.emu_argparser as emu_argparser
 
 # Must do this before the import below to satisfy a query on
 # emu_argparser.emu_args.avd_list in the module init code of

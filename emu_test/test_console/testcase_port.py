@@ -3,7 +3,7 @@ Tests for port-related commands
 """
 
 import unittest
-import console_utils.console_utils as console_utils
+import utils.util as console_utils
 import time
 import inspect
 from testcase_base import BaseConsoleTest

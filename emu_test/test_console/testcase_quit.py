@@ -5,7 +5,7 @@ Test for quit/exit-related commands.
 """
 
 import unittest
-import console_utils.console_utils as console_utils
+import utils.util as console_utils
 from testcase_base import BaseConsoleTest
 
 CMD_QUIT = 'quit\n'
