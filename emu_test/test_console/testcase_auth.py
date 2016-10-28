@@ -7,7 +7,7 @@ import sys
 import telnetlib
 import unittest
 
-from console_utils import console_utils
+from utils import util
 from os.path import expanduser
 from testcase_base import BaseConsoleTest
 
@@ -19,23 +19,23 @@ class AuthTest(BaseConsoleTest):
 
     def setUp(self):
         """Only telnet to emulator, initially not need to run auth command."""
-        self.telnet = telnetlib.Telnet(console_utils.SERVER_NAME,
-                                       console_utils.CONSOLE_PORT)
-        if not console_utils.checkReadUntil(
-              self.telnet.read_until(console_utils.OK,
-                                     console_utils.TIMEOUT_S)):
+        self.telnet = telnetlib.Telnet(util.SERVER_NAME,
+                                       util.CONSOLE_PORT)
+        if not util.checkReadUntil(
+              self.telnet.read_until(util.OK,
+                                     util.TIMEOUT_S)):
             sys.exit(-1)
 
     def _auth_user_for_emulator_console(self):
         home = expanduser('~')
         token_path = os.path.join(home,
-                                  console_utils.CONSOLE_AUTH_TOKEN_FILE_NAME)
+                                  util.CONSOLE_AUTH_TOKEN_FILE_NAME)
         with open(token_path) as f:
             content = f.readlines()
         auth_token = content[0]
         cmd_auth = 'auth %s\n' % auth_token
 
-        is_command_successful, output = console_utils.execute_console_command(
+        is_command_successful, output = util.execute_console_command(
             self.telnet,
             cmd_auth,
             AUTH_OUTPUT)
@@ -48,17 +48,17 @@ class AuthTest(BaseConsoleTest):
 
     def _verify_auth_command_by_enter_help_command(self):
         is_command_successful, output = \
-            console_utils.execute_console_command(
+            util.execute_console_command(
                 self.telnet,
-                console_utils.CMD_HELP,
-                console_utils.REGEX_HELP_DISPLAY_AUTH)
+                util.CMD_HELP,
+                util.REGEX_HELP_DISPLAY_AUTH)
 
         self.assertCmdSuccessful(
             is_command_successful,
             'Failed to properly list all command options.',
             False,
             '',
-            'Pattern: \n%s' % console_utils.REGEX_HELP_DISPLAY_AUTH,
+            'Pattern: \n%s' % util.REGEX_HELP_DISPLAY_AUTH,
             output)
 
     def test_auth_command(self):

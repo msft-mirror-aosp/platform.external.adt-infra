@@ -9,8 +9,8 @@ import sys
 import re
 from subprocess import PIPE
 
-from utils.emu_argparser import emu_args
-from utils.emu_testcase import EmuBaseTestCase, create_test_case_from_file
+from emu_test.utils.emu_argparser import emu_args
+from emu_test.utils.emu_testcase import EmuBaseTestCase, create_test_case_from_file
 
 class UiAutomatorBaseTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):

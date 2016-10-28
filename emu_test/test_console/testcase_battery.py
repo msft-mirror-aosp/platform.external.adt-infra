@@ -5,7 +5,7 @@ Tests for battery-related commands
 import unittest
 import telnetlib
 from subprocess import check_output
-import console_utils.console_utils as console_utils
+import utils.util as console_utils
 from os.path import expanduser
 import os
 import inspect

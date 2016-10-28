@@ -6,7 +6,7 @@ import inspect
 import time
 import unittest
 from testcase_base import BaseConsoleTest
-from console_utils import console_utils
+from utils import util
 
 CMD_HELP_AVD = 'help avd\n'
 CMD_AVD_STOP = 'avd stop\n'
@@ -58,9 +58,9 @@ class AvdTest(BaseConsoleTest):
             2. Check console output is 'virtual device is running'
         """
         print('Running test: %s' % (inspect.stack()[0][3]))
-        self._execute_console_command_and_verify(CMD_AVD_STOP, console_utils.OK)
+        self._execute_console_command_and_verify(CMD_AVD_STOP, util.OK)
         self._execute_console_command_and_verify(CMD_AVD_STATUS, AVD_STOPPED)
-        self._execute_console_command_and_verify(CMD_AVD_START, console_utils.OK)
+        self._execute_console_command_and_verify(CMD_AVD_START, util.OK)
         self._execute_console_command_and_verify(CMD_AVD_STATUS, AVD_RUNNING)
 
     def _execute_console_command_and_verify(self,
@@ -74,22 +74,22 @@ class AvdTest(BaseConsoleTest):
         """
         is_command_successful = False
 
-        for i in range(console_utils.NUM_MAX_TRIALS):
+        for i in range(util.NUM_MAX_TRIALS):
             print('execute command: %s, trial #%d' % (inspect.stack()[0][3], i))
 
             self.telnet.write(command)
-            time.sleep(console_utils.CMD_WAIT_TIMEOUT_S)
+            time.sleep(util.CMD_WAIT_TIMEOUT_S)
 
-            output = console_utils.parseOutput(self.telnet)
+            output = util.parseOutput(self.telnet)
 
-            is_command_successful = console_utils.patternMatchOutput(
+            is_command_successful = util.patternMatchOutput(
                 output,
                 expected_output)
 
             if is_command_successful:
                 break
 
-            time.sleep(console_utils.TRIAL_WAIT_TIMEOUT_S)
+            time.sleep(util.TRIAL_WAIT_TIMEOUT_S)
 
         self.assertCmdSuccessful(
             is_command_successful,

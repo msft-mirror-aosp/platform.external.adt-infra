@@ -7,7 +7,7 @@ import sys
 import telnetlib
 import unittest
 
-from console_utils import console_utils
+from utils import util
 from os.path import expanduser
 from testcase_base import BaseConsoleTest
 
@@ -17,11 +17,11 @@ class HelpTest(BaseConsoleTest):
 
     def setUp(self):
         """Only telnet to emulator, initially not need to run auth command."""
-        self.telnet = telnetlib.Telnet(console_utils.SERVER_NAME,
-                                       console_utils.CONSOLE_PORT)
-        if not console_utils.checkReadUntil(
-                self.telnet.read_until(console_utils.OK,
-                                       console_utils.TIMEOUT_S)):
+        self.telnet = telnetlib.Telnet(util.SERVER_NAME,
+                                       util.CONSOLE_PORT)
+        if not util.checkReadUntil(
+                self.telnet.read_until(util.OK,
+                                       util.TIMEOUT_S)):
             sys.exit(-1)
 
     def _help_command(self, expected_output):
@@ -31,9 +31,9 @@ class HelpTest(BaseConsoleTest):
             expected_output: Expected console output for help commands.
         """
         is_command_successful, output = \
-            console_utils.execute_console_command(
+            util.execute_console_command(
                 self.telnet,
-                console_utils.CMD_HELP,
+                util.CMD_HELP,
                 expected_output)
 
         self.assertCmdSuccessful(
@@ -48,16 +48,16 @@ class HelpTest(BaseConsoleTest):
         """Authorization user."""
         home = expanduser('~')
         token_path = os.path.join(home,
-                                  console_utils.CONSOLE_AUTH_TOKEN_FILE_NAME)
+                                  util.CONSOLE_AUTH_TOKEN_FILE_NAME)
         with open(token_path) as f:
             content = f.readlines()
         auth_token = content[0]
         cmd_auth = 'auth %s\n' % (auth_token)
         self.telnet.write(cmd_auth)
         self.wait_on_windows()
-        if not console_utils.checkReadUntil(
-                self.telnet.read_until(console_utils.OK,
-                                       console_utils.TIMEOUT_S)):
+        if not util.checkReadUntil(
+                self.telnet.read_until(util.OK,
+                                       util.TIMEOUT_S)):
             sys.exit(-1)
 
     def test_help_command(self):
@@ -76,9 +76,9 @@ class HelpTest(BaseConsoleTest):
             2. crash, kill, redir, power, event, avd ,finger, geo, sms, cdma,
                gsm and rotate commands are available
         """
-        self._help_command(console_utils.REGEX_HELP_DISPLAY_NO_AUTH)
+        self._help_command(util.REGEX_HELP_DISPLAY_NO_AUTH)
         self._auth_user_for_emulator_console()
-        self._help_command(console_utils.REGEX_HELP_DISPLAY_AUTH)
+        self._help_command(util.REGEX_HELP_DISPLAY_AUTH)
 
 if __name__ == '__main__':
     print('======= help Test =======')
