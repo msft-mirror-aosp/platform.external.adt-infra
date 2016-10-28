@@ -9,7 +9,7 @@ import subprocess
 import time
 import unittest
 from testcase_base import BaseConsoleTest
-from console_utils import console_utils
+from utils import util
 
 TESTCASE_CALL_DIR = os.path.dirname(os.path.realpath(__file__))
 SERVLET_SMS = 'http://localhost:8080/SmsManagerService'
@@ -39,7 +39,7 @@ class SmsTest(BaseConsoleTest):
              'tcp:8081'])
         subprocess.call(['python', TESTCASE_CALL_DIR + '/installAPK.py'])
         cls.run_script_run_adb_shell()
-        time.sleep(console_utils.SETUP_WAIT_TIMEOUT_S)
+        time.sleep(util.SETUP_WAIT_TIMEOUT_S)
 
     def _process_request_sms_service(self, payload):
         """Processes post request to sms service.
@@ -83,14 +83,14 @@ class SmsTest(BaseConsoleTest):
             An sms is received from <phone number> with the text <text message>.
         """
         is_command_successful, output = \
-            console_utils.execute_console_command(self.telnet,
-                                                  CMD_SMS_SEND,
-                                                  console_utils.OK)
+            util.execute_console_command(self.telnet,
+                                         CMD_SMS_SEND,
+                                         util.OK)
         self.assertCmdSuccessful(is_command_successful,
                                  'Failed to properly send sms text message',
                                  False,
                                  '',
-                                 console_utils.OK,
+                                 util.OK,
                                  output)
 
         got_phone_number, got_sms_message = self._process_request_sms_service({})
@@ -119,14 +119,14 @@ class SmsTest(BaseConsoleTest):
             <expected text> ('How are you?').
         """
         is_command_successful, output = \
-            console_utils.execute_console_command(self.telnet,
-                                                  CMD_SMS_PDU,
-                                                  console_utils.OK)
+            util.execute_console_command(self.telnet,
+                                         CMD_SMS_PDU,
+                                         util.OK)
         self.assertCmdSuccessful(is_command_successful,
                                  'Failed to properly send sms pdu',
                                  False,
                                  '',
-                                 console_utils.OK,
+                                 util.OK,
                                  output)
 
         got_phone_number, got_sms_message = self._process_request_sms_service({})

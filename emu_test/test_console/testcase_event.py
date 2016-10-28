@@ -6,7 +6,7 @@ import unittest
 import telnetlib
 from subprocess import check_output
 import subprocess
-import console_utils.console_utils as console_utils
+import utils.util as console_utils
 import time
 import inspect
 from testcase_base import BaseConsoleTest

@@ -14,10 +14,10 @@ import sys
 import threading
 import time
 from subprocess import PIPE,STDOUT
-import utils.emu_argparser as emu_argparser
+import emu_test.utils.emu_argparser as emu_argparser
 
-from utils.emu_testcase import EmuBaseTestCase, AVDConfig
-import utils.emu_testcase
+from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig
+import emu_test.utils.emu_testcase
 api_to_android_version = {"24": "7.0",
                           "23": "6.0",
                           "22": "5.1",
@@ -399,7 +399,7 @@ def create_test_case_for_avds():
             setattr(CTSTestCase, "test_cts_%s" % avd, fn(avd))
 
 # TODO: create test case based on config file. Since we need to do some pre-work to run CTS, use static AVD at this time for simplicity.
-utils.emu_testcase.create_test_case_from_file("cts", CTSTestCase, CTSTestCase.run_cts_plan)
+emu_test.utils.emu_testcase.create_test_case_from_file("cts", CTSTestCase, CTSTestCase.run_cts_plan)
 
 #create_test_case_for_avds()
 
