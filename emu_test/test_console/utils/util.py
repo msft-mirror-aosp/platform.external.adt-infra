@@ -3,10 +3,12 @@ This module contains utility helper functions and constants for running each con
 Particularly, parseOutput(telnet) function is extensively used throughout
 the entire console test in order to parse the console output until "OK" message.
 """
-import inspect
+
 import os
 import re
 import time
+
+from os.path import expanduser
 
 NEWLINE = '\n'
 OK = 'OK'
@@ -32,7 +34,9 @@ SETUP_WAIT_TIMEOUT_S = 5
 
 TIMEOUT_S = 1 # in second
 
+HOME = expanduser('~')
 CONSOLE_AUTH_TOKEN_FILE_NAME = '.emulator_console_auth_token'
+TOKEN_PATH = os.path.join(HOME, CONSOLE_AUTH_TOKEN_FILE_NAME)
 
 UTILS_DIR = os.path.dirname(os.path.realpath(__file__))
 EVENT_DIR = os.path.join(UTILS_DIR, '..', 'EVENT_TEST_DATA')
@@ -50,6 +54,10 @@ REGEX_HELP_DISPLAY_AUTH = \
     '.*\n.*\n.*help.*\n.*event.*\n.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n' \
     '.*kill.*\n.*network.*\n.*power.*\n.*quit\|exit.*\n.*redir.*\n' \
     '.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*finger.*\n.*debug.*\n.*\n.*\nOK'
+AUTH = 'auth'
+CMD_RANDOM_AUTH_TOKEN = '%s axxB123cc\n' % AUTH
+CMD_EMPTY_AUTH_TOKEN = '%s \n' % AUTH
+
 
 def checkReadUntil(consoleOutput):
     """Checks whether the console output ends with 'OK' message.
@@ -65,6 +73,7 @@ def checkReadUntil(consoleOutput):
     index_OK = consoleOutput.rfind(OK)
     return index_OK == len(consoleOutput) - len(OK)
 
+
 def parseOutput(telnet):
     """Parses console output until 'OK' appears
 
@@ -76,6 +85,7 @@ def parseOutput(telnet):
     """
     parsed_output = telnet.read_until(OK).strip()
     return parsed_output
+
 
 def extractFieldFromOutput(output, keyword):
     """Extract value of specific field from battery command.
@@ -89,6 +99,7 @@ def extractFieldFromOutput(output, keyword):
     """
     keyword_idx = output.find(keyword)
     return output[keyword_idx + len(keyword):output.find(NEWLINE, keyword_idx)].strip()
+
 
 def patternMatchOutput(output, regex):
     """Check whether console output matches with a given regex.
@@ -104,6 +115,7 @@ def patternMatchOutput(output, regex):
         return True
     else:
         return False
+
 
 def checkBatteryStatus(status):
     """Checking each battery status, used in testcase_battery.py
@@ -122,6 +134,7 @@ def checkBatteryStatus(status):
         return 'Overheat'
     return status.capitalize()
 
+
 def parseOutputForEV(telnet):
     """Parses console output until 'OK' appears for 'event' command.
 
@@ -133,6 +146,7 @@ def parseOutputForEV(telnet):
     """
     parsed_output = telnet.read_until("\n"+OK).strip()
     return parsed_output
+
 
 def getEventsCodeEvKey():
     """Gets event codes from a static file.
@@ -146,6 +160,7 @@ def getEventsCodeEvKey():
     for line in lines:
         EVENTS_CODE_EV_KEY += ('\r\n    ' + line.strip())
     return EVENTS_CODE_EV_KEY.strip() + '\r\nOK'
+
 
 def readStringFromFile(filename):
     """Reads strings written in the file by appending each line.
@@ -163,6 +178,7 @@ def readStringFromFile(filename):
         stringRead += line
     return stringRead
 
+
 def removeAllSpaces(string):
     """Removes all the trailing spaces and spaces within the string.
 
@@ -173,6 +189,7 @@ def removeAllSpaces(string):
         A string value: A parsed string after removing all trailing spaces.
     """
     return re.sub('[\s+]', '', string.strip(' \t\n\r'))
+
 
 def execute_console_command(telnet, command, expected_output):
     """Executes emulator console command.
@@ -192,15 +209,19 @@ def execute_console_command(telnet, command, expected_output):
     is_command_successful = False
 
     for i in range(NUM_MAX_TRIALS):
-        print('execute command: %s, trial #%d' % (inspect.stack()[0][3], i))
+        print('execute console command: %s, trial #%d' % (command.strip(), i))
 
         telnet.write(command)
         time.sleep(CMD_WAIT_TIMEOUT_S)
 
-        if command != 'crash\n':
-            output = parseOutput(telnet)
-        else:
+        if command == 'crash\n':
             output = telnet.read_all()
+        elif command == CMD_EMPTY_AUTH_TOKEN:
+            output = telnet.read_until('missing authentication token').strip()
+        elif command == CMD_RANDOM_AUTH_TOKEN:
+            output = telnet.read_until('emulator_console_auth_token').strip()
+        else:
+            output = parseOutput(telnet)
 
         is_command_successful = patternMatchOutput(output, expected_output)
 
@@ -210,3 +231,15 @@ def execute_console_command(telnet, command, expected_output):
         time.sleep(TRIAL_WAIT_TIMEOUT_S)
 
     return is_command_successful, output
+
+
+def get_auth_token():
+    """Gets auth token value from auth token file.
+
+    Returns:
+        auth_token: The value of auth token.
+    """
+    with open(TOKEN_PATH) as f:
+        content = f.readlines()
+    auth_token = content[0]
+    return auth_token
