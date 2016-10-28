@@ -6,10 +6,10 @@ import time
 import psutil
 import shutil
 
-from utils.emu_error import *
-from utils.emu_argparser import emu_args
-import utils.emu_testcase
-from utils.emu_testcase import EmuBaseTestCase, AVDConfig
+from emu_test.utils.emu_error import *
+from emu_test.utils.emu_argparser import emu_args
+import emu_test.utils.emu_testcase
+from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig
 
 class BootTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
@@ -64,7 +64,7 @@ def create_test_case_for_avds():
 if emu_args.config_file is None:
     create_test_case_for_avds()
 else:
-    utils.emu_testcase.create_test_case_from_file("boot", BootTestCase, BootTestCase.run_boot_test)
+    emu_test.utils.emu_testcase.create_test_case_from_file("boot", BootTestCase, BootTestCase.run_boot_test)
 
 if __name__ == '__main__':
     os.environ["SHELL"] = "/bin/bash"

@@ -14,7 +14,7 @@ from subprocess import check_output
 import subprocess
 import os
 from os.path import expanduser
-import console_utils.console_utils as console_utils
+import utils.util as console_utils
 import time
 import inspect
 

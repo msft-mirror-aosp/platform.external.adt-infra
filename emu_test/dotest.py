@@ -19,8 +19,8 @@ import time
 import psutil
 from subprocess import PIPE
 
-from utils import emu_argparser
-from utils import emu_unittest
+from emu_test.utils import emu_argparser
+from emu_test.utils import emu_unittest
 
 # Provides a regular expression for matching fail message
 TIMEOUT_REGEX = re.compile(r"(^\d+)([smhd])?$")

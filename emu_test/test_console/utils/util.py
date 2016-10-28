@@ -3,9 +3,6 @@ This module contains utility helper functions and constants for running each con
 Particularly, parseOutput(telnet) function is extensively used throughout
 the entire console test in order to parse the console output until "OK" message.
 """
-
-#TODO: refactor this file name to util.py, the parent dir name to utils
-
 import inspect
 import os
 import re

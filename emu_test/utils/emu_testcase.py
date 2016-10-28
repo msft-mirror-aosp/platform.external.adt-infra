@@ -16,7 +16,7 @@ import threading
 import shutil
 import ConfigParser
 from emu_error import *
-import utils.emu_argparser as emu_argparser
+import emu_test.utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
 

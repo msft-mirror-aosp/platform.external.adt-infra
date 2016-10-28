@@ -12,11 +12,11 @@ import psutil
 import shutil
 import sys
 import re
-from utils.emu_error import *
-from utils.emu_argparser import emu_args
-import utils.emu_testcase
-from utils.emu_testcase import EmuBaseTestCase, AVDConfig, create_test_case_from_file
-from utils import emu_unittest
+from emu_test.utils.emu_error import *
+from emu_test.utils.emu_argparser import emu_args
+import emu_test.utils.emu_testcase
+from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig, create_test_case_from_file
+from emu_test.utils import emu_unittest
 import subprocess
 import xml.etree.ElementTree as ET
 
@@ -166,7 +166,7 @@ class ConsoleTestCase(EmuBaseTestCase):
 if emu_args.config_file is None:
     sys.exit(-1)
 else:
-    utils.emu_testcase.create_test_case_from_file("console", ConsoleTestCase, ConsoleTestCase.run_console_test)
+    emu_test.utils.emu_testcase.create_test_case_from_file("console", ConsoleTestCase, ConsoleTestCase.run_console_test)
 
 if __name__ == '__main__':
     os.environ["SHELL"] = "/bin/bash"
