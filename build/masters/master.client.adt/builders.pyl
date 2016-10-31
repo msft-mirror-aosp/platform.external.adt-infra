@@ -206,6 +206,15 @@
        "project": "emu-2.3-release",
        "branch": "Mac",
        "name_identifier": "sdk-repo-darwin",
+     },
+     "sysimage_release_psq_poller": {
+       "gs_bucket": "sysimage_release_psq",
+       "gs_path": ["builds/"],
+       "pollInterval": 62,
+       "type": "SysimageReleasePsqPoller",
+       "project": "sysimage-release-psq",
+       "branch": "all",
+       "name_identifier": "test_config",
     },
  },
 
@@ -244,6 +253,11 @@
        "id": "_6",
        "scheduler": "console_scheduler",
      },
+     "System Image Release": {
+        "name": "system image release test",
+        "id": "_7",
+        "scheduler": "sysimage_release_psq_scheduler",
+     },
   },
 
   "builders": {
@@ -257,6 +271,12 @@
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
        "categories": ["emu-master-dev", "emu-2.2-release", "system-image-builds", "cross-builds", "UI"],
+       "tag": "Linux",
+     },
+     "Ubuntu 14.04 HD 4400 2": {
+       "recipe": "adt/sysimage_release_psq",
+       "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
+       "categories": ["System Image Release"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 Quadro 600": {
@@ -357,6 +377,10 @@
     "system_image_scheduler": {
       "project": ["klp-emu-dev", "lmp-mr1-emu-dev", "mnc-emu-dev", "nyc-emu-dev", "nyc-mr1-emu-dev", "lmp-emu-dev", "gb-emu-dev",
                   "ics-mr1-emu-dev", "jb-emu-dev", "jb-mr1.1-emu-dev", "jb-mr2-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimage_release_psq_scheduler": {
+      "project": ["sysimage-release-psq"],
       "type": "emu_scheduler",
     },
     "cts_scheduler": {
