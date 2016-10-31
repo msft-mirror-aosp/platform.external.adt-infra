@@ -1,24 +1,142 @@
-"""
-Tests for battery-related commands
-"""
+#!/usr/bin/env python
 
-import unittest
-import telnetlib
-from subprocess import check_output
-import utils.util as console_utils
-from os.path import expanduser
-import os
+"""Tests for battery-related commands"""
+
 import inspect
 import time
-from testcase_base import BaseConsoleTest
+import unittest
 
-NUM_MAX_TRIALS = 3
-TRIAL_WAIT_TIMEOUT = 0.5
-CMD_WAIT_TIMEOUT = 0.5
+from testcase_base import BaseConsoleTest
+from utils import util
+
+CMD_POWER_DISPLAY = 'power display\n'
+CMD_POWER_AC_PREFIX = 'power ac'
+CMD_POWER_STATUS_PREFIX = 'power status'
+CMD_POWER_HEALTH_PREFIX = 'power health'
+CMD_POWER_PRESENT_PREFIX = 'power present'
+CMD_POWER_CAPACITY_PREFIX = 'power capacity'
+
+STATUS_ASSERT_MSG_PREFIX = 'Failed to set power status to'
+PRESENCE_ASSERT_MSG_PREFIX = 'Failed to set power presence to'
+HEATH_ASSERT_MSG_PREFIX = 'Failed to set power health to'
+REMAINING_75 = '75'
+CAPACITY_ASSERT_MSG_PREFIX = 'Failed to set remaining battery to %s' \
+                             % REMAINING_75
+
 
 class BatteryTest(BaseConsoleTest):
+    def _execute_command_and_verify(self, command, expected_output, assert_msg):
+        """Executes console command and verify output.
 
-    def test_powerDisplay(self):
+        Args:
+            command: Console command to be executed.
+            expected_output: Expected console output.
+            assert_msg: Assertion message.
+        """
+        is_command_successful, output = \
+            util.execute_console_command(
+                self.telnet,
+                command,
+                expected_output)
+
+        self.assertCmdSuccessful(
+            is_command_successful,
+            assert_msg,
+            False,
+            '',
+            'Pattern: \n%s' % expected_output,
+            output)
+
+    def _get_power_display(self):
+        """Gets the console output for 'power display' command.
+
+        Returns:
+            output_pwr_display: The console output for 'power display' command.
+        """
+        self.telnet.write(CMD_POWER_DISPLAY)
+        time.sleep(util.CMD_WAIT_TIMEOUT_S)
+        output_pwr_display = util.parseOutput(self.telnet)
+        return output_pwr_display
+
+    def _set_power_test(self, command_prefix, status, assert_msg, keyword):
+        """Sets the test scenario for power.
+
+        Args:
+            command_prefix: The sub command prefix for power.
+            status: The status to be set.
+            assert_msg: The assertion message.
+            keyword: Keyword used for searching in the console output.
+        """
+        is_command_successful, output = \
+            util.execute_console_command(
+                self.telnet,
+                '%s %s\n' % (command_prefix, status),
+                util.OK)
+        self.assertCmdSuccessful(
+            is_command_successful,
+            assert_msg,
+            False,
+            '',
+            'Pattern: \n%s' % util.OK,
+            output)
+
+        is_cmd_successful = False
+        for i in range(0, util.NUM_MAX_TRIALS):
+            print('Running test: %s, retrieve status %s, trial # %s'
+                  % (inspect.stack()[0][3], status, str(i + 1)))
+            output_pwr_display = self._get_power_display()
+            output_extracted = util.extractFieldFromOutput(
+                output_pwr_display,
+                keyword)
+
+            if CMD_POWER_AC_PREFIX == command_prefix:
+                is_cmd_successful = (output_extracted == ('%sline' % status))
+            elif command_prefix in \
+                    (CMD_POWER_STATUS_PREFIX, CMD_POWER_HEALTH_PREFIX):
+                correct_output = util.checkBatteryStatus(status)
+                is_cmd_successful = (output_extracted == correct_output)
+            elif CMD_POWER_PRESENT_PREFIX == command_prefix:
+                is_cmd_successful = output_extracted
+            elif CMD_POWER_CAPACITY_PREFIX == command_prefix:
+                is_cmd_successful = (output_extracted == status)
+            else:
+                print('Un-handled command prefix: %s' % command_prefix)
+
+            if is_cmd_successful:
+                break
+            time.sleep(util.TRIAL_WAIT_TIMEOUT_S)
+        print('Test result: %s %s => %s'
+              % (inspect.stack()[0][3], status, str(is_cmd_successful)))
+        self.assertCmdSuccessful(
+            is_cmd_successful,
+            'Failed to retrieve power status as %s' % status,
+            True,
+            status,
+            '%s' % status,
+            output_extracted)
+
+    def _set_battery_status(self, status):
+        assert_msg = '%s %s' % (STATUS_ASSERT_MSG_PREFIX, status)
+        self._set_power_test(CMD_POWER_STATUS_PREFIX,
+                             status,
+                             assert_msg,
+                             util.STATUS)
+
+    def _set_presence_state(self, status):
+        assert_msg = '%s %s' % (PRESENCE_ASSERT_MSG_PREFIX, status)
+        self._set_power_test(CMD_POWER_PRESENT_PREFIX,
+                             status,
+                             assert_msg,
+                             util.PRESENT)
+
+    def _set_health_state(self, status):
+        assert_msg = '%s %s' % (HEATH_ASSERT_MSG_PREFIX, status)
+        self._set_power_test(CMD_POWER_HEALTH_PREFIX,
+                             status,
+                             assert_msg,
+                             util.HEALTH)
+
+    def test_power_display(self):
         """
         Test for command: power ac <on_or_off>
         Test Rail ID: C14595300
@@ -31,50 +149,13 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Power details are displayed
         """
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + ", trial #" + str(i+1)
-            self.telnet.write("power display\n")
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output_pwr_display = console_utils.parseOutput(self.telnet)
-            isCmdSuccessful = console_utils.patternMatchOutput(output_pwr_display, console_utils.REGEX_PWR_DISPLAY)
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to properly display current power info", False, "", "Pattern: " + console_utils.REGEX_PWR_DISPLAY, output_pwr_display)
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        assert_msg = 'Failed to properly display power details.'
+        self._execute_command_and_verify(CMD_POWER_DISPLAY,
+                                         util.REGEX_PWR_DISPLAY,
+                                         assert_msg)
 
-    def getPowerDisplay(self):
-        self.telnet.write("power display\n")
-        time.sleep(CMD_WAIT_TIMEOUT)
-        output_pwr_display = console_utils.parseOutput(self.telnet)
-        return output_pwr_display
-
-    def setACChargeTest(self, status):
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + " set as " + status + ", trial #" + str(i+1)
-            self.telnet.write("power ac " + status + "\n")
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output = console_utils.parseOutput(self.telnet)
-            isCmdSuccessful = (output == console_utils.OK)
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to set power ac to " + status, True, status, console_utils.OK, output)
-
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + " retrieve status " + status + ", trial #" + str(i+1)
-            output_pwr_display = self.getPowerDisplay()
-            output_extracted = console_utils.extractFieldFromOutput(output_pwr_display, console_utils.AC)
-            isCmdSuccessful = (output_extracted == status + "line")
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        print "Test result: " + inspect.stack()[0][3] + " " + status + " => " + str(isCmdSuccessful)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to retrieve power status as " + status + "line", True, status, status + "line", output_extracted)
-
-    def test_setACChargeState(self):
+    def test_set_ac_charge_state(self):
         """
         Test for command: power ac <on_or_off>
         Test Rail ID: C14595300
@@ -91,35 +172,18 @@ class BatteryTest(BaseConsoleTest):
             1. Emulator displays AC as online
             2. Emulator displays AC as offline
         """
-        self.setACChargeTest("on")
-        self.setACChargeTest("off")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        assert_msg = 'Failed to properly display power details.'
+        self._set_power_test(CMD_POWER_AC_PREFIX,
+                             'on',
+                             assert_msg,
+                             util.AC)
+        self._set_power_test(CMD_POWER_AC_PREFIX,
+                             'off',
+                             assert_msg,
+                             util.AC)
 
-    def setBatteryStatusTest(self, status):
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + " set as " + status + ", trial #" + str(i+1)
-            self.telnet.write("power status " + status + "\n")
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output = console_utils.parseOutput(self.telnet)
-            isCmdSuccessful = (output == console_utils.OK)
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to set power status to " + status, True, status, console_utils.OK, output)
-
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + " check whether status matches " + status + ", trial #" + str(i+1)
-            output_pwr_display = self.getPowerDisplay()
-            output_extracted = console_utils.extractFieldFromOutput(output_pwr_display, console_utils.STATUS)
-            correct_output = console_utils.checkBatteryStatus(status)
-            isCmdSuccessful = (output_extracted == correct_output)
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to retrieve power status as " + console_utils.checkBatteryStatus(status), True, status, correct_output, output_extracted)
-
-    def test_setBatteryStatusToUnknown(self):
+    def test_set_battery_status_to_unknown(self):
         """
         Test for command: power status unknown
         Test Rail ID: C14595300
@@ -132,9 +196,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power status to unknown
         """
-        self.setBatteryStatusTest("unknown")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_battery_status('unknown')
 
-    def test_setBatteryStatusToCharging(self):
+    def test_set_battery_status_to_charging(self):
         """
         Test for command: power status charging
         Test Rail ID: C14595300
@@ -147,9 +212,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power status to charging
         """
-        self.setBatteryStatusTest("charging")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_battery_status('charging')
 
-    def test_setBatteryStatusToDischarging(self):
+    def test_set_battery_status_to_discharging(self):
         """
         Test for command: power status discharging
         Test Rail ID: C14595300
@@ -162,9 +228,11 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power status to discharging
         """
-        self.setBatteryStatusTest("discharging")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        status = 'discharging'
+        self._set_battery_status('charging')
 
-    def test_setBatteryStatusToNotCharging(self):
+    def test_set_battery_status_to_not_charging(self):
         """
         Test for command: power status not-charging
         Test Rail ID: C14595300
@@ -177,9 +245,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power status to not-charging
         """
-        self.setBatteryStatusTest("not-charging")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_battery_status('not-charging')
 
-    def test_setBatteryStatusToFull(self):
+    def test_set_battery_status_to_full(self):
         """
         Test for command: power status full
         Test Rail ID: C14595300
@@ -192,33 +261,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power status to full
         """
-        self.setBatteryStatusTest("full")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_battery_status('full')
 
-    def setPresenceStateTest(self, state):
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + " set as " + state + ", trial #" + str(i+1)
-            self.telnet.write("power present " + state + "\n")
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output = console_utils.parseOutput(self.telnet)
-            isCmdSuccessful = (output == console_utils.OK)
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to set power presence to " + state, True, state, console_utils.OK, output)
-
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + " check whether presence matches " + state + ", trial #" + str(i+1)
-            output_pwr_display = self.getPowerDisplay()
-            output_extracted = console_utils.extractFieldFromOutput(output_pwr_display, console_utils.PRESENT)
-            isCmdSuccessful = output_extracted
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to retrieve power status as " + state, True, state, "<any value>", output_extracted)
-
-    def test_setPresenceState(self):
+    def test_set_presence_state(self):
         """
         Test for command: power present <true_or_false>
         Test Rail ID: C14595300
@@ -233,36 +279,11 @@ class BatteryTest(BaseConsoleTest):
             1. Success to set power presence to True
             2. Success to set power presence to False
         """
-        self.setPresenceStateTest("true")
-        self.setPresenceStateTest("false")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_presence_state('true')
+        self._set_presence_state('false')
 
-    def setBatteryHealthTest(self, status):
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + " set as " + status + ", trial #" + str(i+1)
-            self.telnet.write("power health " + status + "\n")
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output = console_utils.parseOutput(self.telnet)
-            isCmdSuccessful = (output == console_utils.OK)
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to set power health to " + status, True, status, console_utils.OK, output)
-
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + " check whether health matches " + status + ", trial #" + str(i+1)
-            output_pwr_display = self.getPowerDisplay()
-            output_extracted = console_utils.extractFieldFromOutput(output_pwr_display, console_utils.HEALTH)
-            correct_output = console_utils.checkBatteryStatus(status)
-            isCmdSuccessful = (output_extracted == correct_output)
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        c_status = console_utils.checkBatteryStatus(status)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to retrieve power health as " + c_status, True, c_status, correct_output, output_extracted)
-
-    def test_setBatteryHealthToUnknown(self):
+    def test_set_battery_health_to_unknown(self):
         """
         Test for command: power health unknown
         Test Rail ID: C14595300
@@ -275,9 +296,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power health to unknown
         """
-        self.setBatteryHealthTest("unknown")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_health_state('unknown')
 
-    def test_setBatteryHealthToGood(self):
+    def test_set_battery_health_to_good(self):
         """
         Test for command: power health good
         Test Rail ID: C14595300
@@ -290,9 +312,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power health to good
         """
-        self.setBatteryHealthTest("good")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_health_state('good')
 
-    def test_setBatteryHealthToOverheat(self):
+    def test_set_battery_health_to_overheat(self):
         """
         Test for command: power health overheat
         Test Rail ID: C14595300
@@ -305,9 +328,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power health to overheat
         """
-        self.setBatteryHealthTest("overheat")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_health_state('overheat')
 
-    def test_setBatteryHealthToDead(self):
+    def test_set_battery_health_to_dead(self):
         """
         Test for command: power health dead
         Test Rail ID: C14595300
@@ -320,9 +344,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power health to dead
         """
-        self.setBatteryHealthTest("dead")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_health_state('dead')
 
-    def test_setBatteryHealthToOvervoltage(self):
+    def test_set_battery_health_to_overvoltage(self):
         """
         Test for command: power health overvoltage
         Test Rail ID: C14595300
@@ -335,9 +360,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power health to overvoltage
         """
-        self.setBatteryHealthTest("overvoltage")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_health_state('overvoltage')
 
-    def test_setBatteryHealthToFailure(self):
+    def test_set_battery_health_to_failure(self):
         """
         Test for command: power health failure
         Test Rail ID: C14595300
@@ -350,9 +376,10 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power health to failure
         """
-        self.setBatteryHealthTest("failure")
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        self._set_health_state('failure')
 
-    def test_setRemainingBatteryCapacity(self):
+    def test_set_remaining_battery_capacity(self):
         """
         Test for command: power capacity 75
         Test Rail ID: C14595300
@@ -365,30 +392,14 @@ class BatteryTest(BaseConsoleTest):
         Verify:
             1. Success to set power capacity to 75
         """
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + ", set battery capacity: trial #" + str(i+1)
-            self.telnet.write("power capacity 75\n")
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output = console_utils.parseOutput(self.telnet)
-            isCmdSuccessful = (output == console_utils.OK)
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to set remaining battery to 75", False, "", console_utils.OK, output)
-
-        isCmdSuccessful = True
-        for i in range(0, NUM_MAX_TRIALS):
-            print "Running test: " + inspect.stack()[0][3] + "check whether batterty capacity set properly , trial #" + str(i+1)
-            output_pwr_display = self.getPowerDisplay()
-            output_extracted = console_utils.extractFieldFromOutput(output_pwr_display, console_utils.CAPACITY)
-            isCmdSuccessful = (output_extracted == "75")
-            if isCmdSuccessful:
-                break
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-        self.assertCmdSuccessful(isCmdSuccessful, "Failed to retrieve battery capacity as 75", False, "", "75", output_extracted)
+        print('Running test: %s' % (inspect.stack()[0][3]))
+        assert_msg = '%s %s' % (HEATH_ASSERT_MSG_PREFIX, REMAINING_75)
+        self._set_power_test(CMD_POWER_CAPACITY_PREFIX,
+                             REMAINING_75,
+                             assert_msg,
+                             util.CAPACITY)
 
 
 if __name__ == '__main__':
-    print "======= Battery Test ======="
+    print('======= Battery Test =======')
     unittest.main()
