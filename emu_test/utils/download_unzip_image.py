@@ -29,7 +29,7 @@ def get_dst_dir(remote_path):
       api = '22'
     elif 'mnc' in branch_name:
       api = '23'
-    elif 'nyc-mr1' in branch_name:
+    elif 'nyc-mr1' or 'nyc-preview' in branch_name:
       api = '25'
     elif 'nyc' in branch_name:
       api = '24'
@@ -37,15 +37,15 @@ def get_dst_dir(remote_path):
       api = '21'
     elif 'klp' in branch_name:
       api = '19'
-    elif 'gb-emu-dev' in branch_name:
+    elif 'gb-emu' in branch_name:
       api = '10'
-    elif 'ics-mr1-emu-dev' in branch_name:
+    elif 'ics-mr1-emu' in branch_name:
       api = '15'
-    elif 'jb-emu-dev' in branch_name:
+    elif 'jb-emu' in branch_name:
       api = '16'
-    elif 'jb-mr1.1-emu-dev' in branch_name:
+    elif 'jb-mr1.1-emu' in branch_name:
       api = '17'
-    elif 'jb-mr2-emu-dev' in branch_name:
+    elif 'jb-mr2-emu' in branch_name:
       api = '18'
 
     else:
