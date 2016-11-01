@@ -140,8 +140,8 @@ class EmuBaseTestCase(LoggedTestCase):
         launch_cmd = [exec_path, "-avd", str(avd), "-verbose", "-show-kernel", "-wipe-data"]
         if avd.classic == "yes":
             launch_cmd += ["-engine", "classic"]
-        if avd.gpu == "mesa":
-            launch_cmd += ["-gpu", "mesa"]
+        if avd.gpu == "swiftshader":
+            launch_cmd += ["-gpu", "swiftshader"]
         else:
             launch_cmd += ["-gpu", "host"]
         # Launch emulator with "-dns-server 8.8.8.8" for CTS test
@@ -497,9 +497,10 @@ def create_test_case_from_file(desc, testcase_class, test_func):
         return True
 
     def create_test_case(avd_config, op):
-        if not is_cts and platform.system() in ["Linux", "Windows"] and avd_config.api > "15" and avd_config.gpu == "yes" and "arm" not in avd_config.abi:
-            avd_config_mesa = avd_config._replace(gpu = "mesa")
-            create_test_case(avd_config_mesa, op)
+        """ Swiftshader GPU rendering is currently only available within the emu-master-dev branch. """
+        if not is_cts and avd_config.gpu == "yes" and "emu-master-dev" in emu_argparser.emu_args.emulator_exec:
+            avd_config_swiftshader = avd_config._replace(gpu = "swiftshader")
+            create_test_case(avd_config_swiftshader, op)
 
         if op == "S" or op == "" or not valid_case(avd_config):
             return
