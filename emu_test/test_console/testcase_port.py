@@ -1,132 +1,103 @@
-"""
-Tests for port-related commands
-"""
+"""Tests for port-related commands."""
 
-import unittest
-import utils.util as console_utils
-import time
 import inspect
-from testcase_base import BaseConsoleTest
+import time
+import unittest
 
-NUM_MAX_TRIALS = 3
-TRIAL_WAIT_TIMEOUT = 0.5
-CMD_WAIT_TIMEOUT = 0.5
+import testcase_base
+from utils import util
 
-EMULATOR_PORT = "5554"
-HOST_PORT = "5556"
+EMULATOR_PORT = '5554'
+HOST_PORT = '5556'
 
-CMD_REDIR_LIST = "redir list\n"
-CMD_REDIR_ADD = "redir add tcp:%s:%s\n" % (HOST_PORT, EMULATOR_PORT)
-CMD_REDIR_DEL = "redir del tcp:%s\n" % (HOST_PORT)
+CMD_REDIR_LIST = 'redir list\n'
+CMD_REDIR_ADD = 'redir add tcp:%s:%s\n' % (HOST_PORT, EMULATOR_PORT)
+CMD_REDIR_DEL = 'redir del tcp:%s\n' % HOST_PORT
 
 
-class PortTest(BaseConsoleTest):
+class PortTest(testcase_base.BaseConsoleTest):
+  """This class aims to test redir-related emulator console commands."""
 
-    def _list_redir_cmd(self):
-        is_cmd_succ = False
+  def _list_redir_cmd(self):
+    is_cmd_succ, output_redir_list = util.execute_console_command(
+        self.telnet, CMD_REDIR_LIST, util.PORT_NO_REDIR)
+    self.assert_cmd_successful(
+        is_cmd_succ, 'Failed to properly list port redirection.',
+        False, '', util.PORT_NO_REDIR, output_redir_list)
+    return output_redir_list
 
-        for i in range(NUM_MAX_TRIALS):
-            print("Running %s,  trial #%s" %
-                  (inspect.stack()[0][3], str(i + 1)))
-            self.telnet.write(CMD_REDIR_LIST)
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output_redir_list = console_utils.parseOutput(self.telnet)
-            is_cmd_succ = (output_redir_list == console_utils.PORT_NO_REDIR)
+  def _add_port_redir_cmd(self):
+    is_cmd_succ = False
 
-            if is_cmd_succ:
-                break
+    for i in range(util.NUM_MAX_TRIALS):
+      print ('Running %s, trial #%s' %
+             (inspect.stack()[0][3], str(i + 1)))
 
-            time.sleep(TRIAL_WAIT_TIMEOUT)
+      self.telnet.write(CMD_REDIR_ADD)
+      time.sleep(util.CMD_WAIT_TIMEOUT_S)
+      output_redir_add = util.parse_output(self.telnet)
+      assert output_redir_add == util.OK
 
-        self.assertCmdSuccessful(
-            is_cmd_succ,
-            "Failed to properly list port redirection.",
-            False,
-            "",
-            console_utils.PORT_NO_REDIR, output_redir_list)
+      self.telnet.write(CMD_REDIR_LIST)
+      time.sleep(util.CMD_WAIT_TIMEOUT_S)
+      output_redir_list = util.parse_output(self.telnet)
 
-        return output_redir_list
+      is_cmd_succ = (output_redir_list == util.PORT_REDIR_ADD)
 
-    def _add_port_redir_cmd(self):
-        is_cmd_succ = False
+      if is_cmd_succ:
+        break
 
-        for i in range(NUM_MAX_TRIALS):
-            print("Running %s, trial #%s" %
-                  (inspect.stack()[0][3], str(i + 1)))
+      time.sleep(util.TRIAL_WAIT_TIMEOUT)
 
-            self.telnet.write(CMD_REDIR_ADD)
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output_redir_add = console_utils.parseOutput(self.telnet)
-            assert output_redir_add == console_utils.OK
+    self.assert_cmd_successful(
+        is_cmd_succ, 'Failed to properly add a new port redirection',
+        False, '', util.PORT_REDIR_ADD, output_redir_add)
 
-            self.telnet.write(CMD_REDIR_LIST)
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output_redir_list = console_utils.parseOutput(self.telnet)
+  def _del_port_redir_cmd(self):
+    is_cmd_succ = False
 
-            is_cmd_succ = (output_redir_list == console_utils.PORT_REDIR_ADD)
+    for i in range(util.NUM_MAX_TRIALS):
+      print ('Running : %s, trial #%s' %
+             (inspect.stack()[0][3], str(i + 1)))
 
-            if is_cmd_succ:
-                break
+      self.telnet.write(CMD_REDIR_DEL)
+      time.sleep(util.CMD_WAIT_TIMEOUT_S)
+      output_redir_del = util.parse_output(self.telnet)
+      assert output_redir_del == util.OK
 
-            time.sleep(TRIAL_WAIT_TIMEOUT)
+      is_cmd_succ = (self._list_redir_cmd() == util.PORT_NO_REDIR)
 
-        self.assertCmdSuccessful(
-            is_cmd_succ,
-            "Failed to properly add a new port redirection",
-            False,
-            "",
-            console_utils.PORT_REDIR_ADD,
-            output_redir_add)
+      if is_cmd_succ:
+        break
 
-    def _del_port_redir_cmd(self):
-        is_cmd_succ = False
+      time.sleep(util.TRIAL_WAIT_TIMEOUT_S)
 
-        for i in range(NUM_MAX_TRIALS):
-            print("Running : %s, trial #%s" %
-                  (inspect.stack()[0][3], str(i+1)))
+    self.assert_cmd_successful(
+        is_cmd_succ, 'Failed to properly delete a port redirection',
+        False, '', util.OK, output_redir_del)
 
-            self.telnet.write(CMD_REDIR_DEL)
-            time.sleep(CMD_WAIT_TIMEOUT)
-            output_redir_del = console_utils.parseOutput(self.telnet)
-            assert output_redir_del == console_utils.OK
+  def test_list_port_redir(self):
+    """Test for command: redir list.
 
-            is_cmd_succ = (self._list_redir_cmd() == console_utils.PORT_NO_REDIR)
+    TR ID: C14594979
+    """
+    print 'Running test: %s' % (inspect.stack()[0][3])
+    self._list_redir_cmd()
 
-            if is_cmd_succ:
-                break
+  def test_add_new_port_and_delete_port_redir(self):
+    """Test for commands: redir.
 
-            time.sleep(TRIAL_WAIT_TIMEOUT)
-
-        self.assertCmdSuccessful(
-            is_cmd_succ,
-            "Failed to properly delete a port redirection",
-            False,
-            "",
-            console_utils.OK,
-            output_redir_del)
-
-    def test_list_port_redir(self):
-        """
-        Test for command: redir list
-        TR ID: C14594979
-        """
-        print("Running test: %s" % (inspect.stack()[0][3]))
-        self._list_redir_cmd()
-
-    def test_add_new_port_and_delete_port_redir(self):
-        """
-        Test for commands: redir add <tcp_or_udp>:<5556>:<port_of_emulator>
-                           redir def <tcp_or_udp>:<5556>
-        TR ID: C14594979
-        b/210442:
-            command "redir del" doesn't work on API 23/24 on Windows; but Linux.
-        """
-
-        print("Running test: %s" % (inspect.stack()[0][3]))
-        self._add_port_redir_cmd()
-        self._del_port_redir_cmd()
+    redir add <tcp_or_udp>:<5556>:<port_of_emulator>
+    redir def <tcp_or_udp>:<5556>
+    TR ID: C14594979
+    b/210442:
+      command "redir del" doesn't work on API 23/24 on Windows; but Linux.
+    """
+    print 'Running test: %s' % (inspect.stack()[0][3])
+    self._add_port_redir_cmd()
+    self._del_port_redir_cmd()
 
 
 if __name__ == '__main__':
-    print "======= Port Test ======="
-    unittest.main()
+  print '======= Port Test ======='
+  unittest.main()
