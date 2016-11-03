@@ -1,176 +1,213 @@
-"""
-This class is the entry point for console tests from dotest.py.
+"""This class is the entry point for console tests from dotest.py.
+
 When the class is instantiated, it sets up logger and runs emulator for tests.
 Then, using unittest loader, it loads all the console test cases
-that are written in the python files with filename starting with "testcase_" in the same directory.
+that are written in the python files with filename starting with "testcase_"
+in the same directory.
 """
 
-import unittest
+
 import os
-import time
-import psutil
 import shutil
-import sys
-import re
-from emu_test.utils.emu_error import *
-from emu_test.utils.emu_argparser import emu_args
-import emu_test.utils.emu_testcase
-from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig, create_test_case_from_file
-from emu_test.utils import emu_unittest
 import subprocess
+import sys
+import time
+import unittest
 import xml.etree.ElementTree as ET
 
+import emu_test
+from emu_test.utils import emu_argparser
+from emu_test.utils import emu_testcase
+from emu_test.utils import emu_unittest
+import psutil
+
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
-CONSOLE_RESULT_XML_FILE = "consoleTestResult.xml"
-CONSOLE_CSS_FILE = os.path.join(CUR_DIR, "static", "console.css")
-CONSOLE_XSL_FILE =  os.path.join(CUR_DIR, "static", "console.xsl")
-
-class ConsoleTestCase(EmuBaseTestCase):
-
-    def __init__(self, *args, **kwargs):
-        super(ConsoleTestCase, self).__init__(*args, **kwargs)
-        self.avd_config = None
-
-    @classmethod
-
-    def setUpClass(cls):
-        super(ConsoleTestCase, cls).setUpClass()
-
-    def tearDown(self):
-        self.m_logger.debug('First try - quit emulator by adb emu kill')
-        kill_proc = psutil.Popen(["adb", "emu", "kill"])
-        # check emulator process is terminated
-        result = self.term_check(timeout=5)
-        if not result:
-            self.m_logger.debug('Second try - quit emulator by psutil')
-            self.kill_proc_by_name(["emulator", "qemu-system"])
-            result = self.term_check(timeout=10)
-            self.m_logger.debug("term_check after psutil.kill - %s", result)
-        self.m_logger.info("Remove AVD inside of tear down")
-        # avd should be found $HOME/.android/avd/
-        avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
-        try:
-            if result and self.start_proc:
-                self.start_proc.wait()
-            time.sleep(1)
-            self.kill_proc_by_name(["crash-service", "adb"])
-            os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
-            shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
-        except Exception, e:
-            self.m_logger.error("Error in cleanup - %r", e)
-            pass
-
-    def getTestName(self, id):
-        return id.rsplit('.', 1)[-1]
-
-    def createResultXml(self, emuResult):
-        dst_path = os.path.join(emu_args.session_dir, CONSOLE_RESULT_XML_FILE)
-        xsl_path = os.path.join(emu_args.session_dir, "console.xsl")
-        subprocess.call(['cp', CONSOLE_XSL_FILE, xsl_path])
-        css_path = os.path.join(emu_args.session_dir, "console.css")
-        subprocess.call(['cp', CONSOLE_CSS_FILE, css_path])
-
-        result = ET.Element("result")
-
-        test_method_name = ET.SubElement(result, "testMethodName", name=self._testMethodName)
-        avd_config_name = ET.SubElement(result, "avdConfigName", name=self.avd_config.name())
-
-        resultSummary = ET.SubElement(result, "resultSummary")
-        ET.SubElement(resultSummary, "total", num=str(emuResult.testsRun))
-        ET.SubElement(resultSummary, "passes", num=str(len(emuResult.passes)))
-        ET.SubElement(resultSummary, "failures", num=str(len(emuResult.failures)))
-        ET.SubElement(resultSummary, "errors", num=str(len(emuResult.errors)))
-        ET.SubElement(resultSummary, "expectedFailures", num=str(len(emuResult.expectedFailures)))
-        ET.SubElement(resultSummary, "unexpectedSuccesses", num=str(len(emuResult.unexpectedSuccesses)))
-
-        passes = ET.SubElement(result, "Passes")
-        for x in emuResult.passes:
-            ET.SubElement(passes, "test", name=self.getTestName(x.id()), test_result="pass")
-
-        failures = ET.SubElement(result, "Failures")
-        for x in emuResult.failures:
-            ET.SubElement(failures, "test", name=self.getTestName(x[0].id()), test_result="fail")
-
-        errors = ET.SubElement(result, "Errors")
-        for x in emuResult.errors:
-            ET.SubElement(errors, "test", name=self.getTestName(x[0].id()), test_result="error")
-
-        expectedFailures = ET.SubElement(result, "ExpectedFailures")
-        for x in emuResult.expectedFailures:
-            ET.SubElement(expectedFailures, "test", name=self.getTestName(x[0].id()), test_result="expected failure")
-
-        unexpectedSuccesses = ET.SubElement(result, "UnexpectedSuccesses")
-        for x in emuResult.unexpectedSuccesses:
-            ET.SubElement(unexpectedSuccesses, "test", name=self.getTestName(x.id()), test_result="unexpected failure")
-
-        tree = ET.ElementTree(result)
-        tree.write(dst_path)
-        with file(dst_path, 'r') as original: data = original.read()
-        with file(dst_path, 'w') as modified: modified.write('<?xml-stylesheet type="text/xsl" href="console.xsl"?>\n' + data)
-
-    def printConsoleResult(self, emuResult):
-        self.m_logger.info("Run %d tests (%d fail, %d pass, %d xfail, %d xpass)",
-               emuResult.testsRun, len(emuResult.failures)+len(emuResult.errors), len(emuResult.passes),
-               len(emuResult.expectedFailures), len(emuResult.unexpectedSuccesses))
-        if len(emuResult.passes) > 0:
-            self.m_logger.info('------------------------------------------------------')
-        for x in emuResult.passes:
-            self.m_logger.info("PASS: %s", self.getTestName(x.id()))
-
-        if len(emuResult.failures) + len(emuResult.errors) > 0:
-            self.m_logger.info('------------------------------------------------------')
-        for x in emuResult.failures:
-            self.m_logger.info("Failure: %s", self.getTestName(x[0].id()))
-        for x in emuResult.errors:
-            self.m_logger.info("Error: %s", self.getTestName(x[0].id()))
-
-        if len(emuResult.expectedFailures) > 0:
-            self.m_logger.info('------------------------------------------------------')
-        for x in emuResult.expectedFailures:
-            self.m_logger.info("Expected Failure: %s", self.getTestName(x[0].id()))
-
-        if len(emuResult.unexpectedSuccesses) > 0:
-            self.m_logger.info('------------------------------------------------------')
-        for x in emuResult.unexpectedSuccesses:
-            self.m_logger.info("Unexpected Success: %s", self.getTestName(x.id()))
-
-        self.m_logger.info('')
-        self.createResultXml(emuResult)
-
-    def console_test_check(self, avd):
-        """
-        1) Run emulator with self.launch_emu_and_wait(avd)
-        2) Print to logger that the test begins
-        3) Load all the console tests using unittest.TestLoader()
-        4) Verify whether every individual testcase was successful
-        """
-        self.launch_emu_and_wait(avd)
-        self.m_logger.info('Console tests (%s) start.' % self._testMethodName)
-        test_root_dir=os.path.dirname(os.path.realpath(__file__))
-        emuSuite = unittest.TestLoader().discover(start_dir=test_root_dir, pattern="testcase_*")
-        emuRunner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
-        emuResult = emuRunner.run(emuSuite)
-        self.printConsoleResult(emuResult)
-        self.assertTrue(emuResult.wasSuccessful(), self._testMethodName + " was failed.")
-
-    def run_console_test(self, avd_config):
-        """
-        Run console test with the given avd_config.
-        This function first make sure whether avd is properly up or not.
-        """
-        self.avd_config = avd_config
-        self.assertEqual(self.create_avd(avd_config), 0)
-        self.console_test_check(avd_config)
+CONSOLE_RESULT_XML_FILE = 'consoleTestResult.xml'
+CONSOLE_CSS_FILE = os.path.join(CUR_DIR, 'static', 'console.css')
+CONSOLE_XSL_FILE = os.path.join(CUR_DIR, 'static', 'console.xsl')
 
 
-if emu_args.config_file is None:
-    sys.exit(-1)
+class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
+  """This class helps for run all console tests."""
+
+  def __init__(self, *args, **kwargs):
+    super(ConsoleTestCase, self).__init__(*args, **kwargs)
+    self.avd_config = None
+
+  @classmethod
+  def setUpClass(cls):
+    super(ConsoleTestCase, cls).setUpClass()
+
+  def tearDown(self):
+    self.m_logger.debug('First try - quit emulator by adb emu kill')
+    psutil.Popen(['adb', 'emu', 'kill'])
+    # check emulator process is terminated
+    result = self.term_check(timeout=5)
+    if not result:
+      self.m_logger.debug('Second try - quit emulator by psutil')
+      self.kill_proc_by_name(['emulator', 'qemu-system'])
+      result = self.term_check(timeout=10)
+      self.m_logger.debug('term_check after psutil.kill - %s', result)
+    self.m_logger.info('Remove AVD inside of tear down')
+    # avd should be found $HOME/.android/avd/
+    avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
+    try:
+      if result and self.start_proc:
+        self.start_proc.wait()
+      time.sleep(1)
+      self.kill_proc_by_name(['crash-service' 'adb'])
+      os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
+      shutil.rmtree(os.path.join(avd_dir,
+                                 '%s.avd' % self.avd_config.name()),
+                    ignore_errors=True)
+    except Exception, e:
+      self.m_logger.error('Error in cleanup - %r' % e)
+
+  def get_test_name(self, failed_test_id):
+    return failed_test_id.rsplit('.', 1)[-1]
+
+  def create_result_xml(self, emu_result):
+    dst_path = os.path.join(emu_argparser.emu_args.session_dir,
+                            CONSOLE_RESULT_XML_FILE)
+    xsl_path = os.path.join(emu_argparser.emu_args.session_dir,
+                            'console.xsl')
+    subprocess.call(['cp', CONSOLE_XSL_FILE, xsl_path])
+    css_path = os.path.join(emu_argparser.emu_args.session_dir, 'console.css')
+    subprocess.call(['cp', CONSOLE_CSS_FILE, css_path])
+
+    result = ET.Element('result')
+
+    ET.SubElement(result, 'testMethodName', name=self._testMethodName)
+    ET.SubElement(result, 'avdConfigName', name=self.avd_config.name())
+
+    result_summary = ET.SubElement(result, 'resultSummary')
+    ET.SubElement(result_summary, 'total', num=str(emu_result.testsRun))
+    ET.SubElement(result_summary, 'passes', num=str(len(emu_result.passes)))
+    ET.SubElement(result_summary, 'failures',
+                  num=str(len(emu_result.failures)))
+    ET.SubElement(result_summary, 'errors', num=str(len(emu_result.errors)))
+    ET.SubElement(result_summary, 'expectedFailures',
+                  num=str(len(emu_result.expectedFailures)))
+    ET.SubElement(result_summary, 'unexpectedSuccesses',
+                  num=str(len(emu_result.unexpectedSuccesses)))
+
+    passes = ET.SubElement(result, 'Passes')
+    for x in emu_result.passes:
+      ET.SubElement(passes, 'test', name=self.get_test_name(x.id()),
+                    test_result='pass')
+
+    failures = ET.SubElement(result, 'Failures')
+    for x in emu_result.failures:
+      ET.SubElement(failures, 'test', name=self.get_test_name(x[0].id()),
+                    test_result='fail')
+
+    errors = ET.SubElement(result, 'Errors')
+    for x in emu_result.errors:
+      ET.SubElement(errors, 'test', name=self.get_test_name(x[0].id()),
+                    test_result='error')
+
+    expected_failures = ET.SubElement(result, 'ExpectedFailures')
+    for x in emu_result.expectedFailures:
+      ET.SubElement(expected_failures, 'test',
+                    name=self.get_test_name(x[0].id()),
+                    test_result='expected failure')
+
+    unexpected_successes = ET.SubElement(result, 'UnexpectedSuccesses')
+    for x in emu_result.unexpectedSuccesses:
+      ET.SubElement(unexpected_successes, 'test',
+                    name=self.get_test_name(x.id()),
+                    test_result='unexpected failure')
+
+    tree = ET.ElementTree(result)
+    tree.write(dst_path)
+    with file(dst_path, 'r') as original:
+      data = original.read()
+    with file(dst_path, 'w') as modified:
+      modified.write(('<?xml-stylesheet type="text/xsl"'
+                      'href="console.xsl"?>\n%s' % data))
+
+  def print_console_result(self, emu_result):
+    self.m_logger.info(
+        'Run %d tests (%d fail, %d pass, %d xfail, %d xpass)' %
+        (emu_result.testsRun,
+         len(emu_result.failures) + len(emu_result.errors),
+         len(emu_result.passes),
+         len(emu_result.expectedFailures),
+         len(emu_result.unexpectedSuccesses)))
+
+    border_line = '------------------------------------------------------'
+    if emu_result.passes:
+      self.m_logger.info(border_line)
+    for x in emu_result.passes:
+      self.m_logger.info('PASS: %s' % self.get_test_name(x.id()))
+
+    if len(emu_result.failures) + len(emu_result.errors) > 0:
+      self.m_logger.info(border_line)
+    for x in emu_result.failures:
+      self.m_logger.info('Failure: %s' % self.get_test_name(x[0].id()))
+    for x in emu_result.errors:
+      self.m_logger.info('Error: %s' % self.get_test_name(x[0].id()))
+
+    if emu_result.expectedFailures:
+      self.m_logger.info(border_line)
+    for x in emu_result.expectedFailures:
+      self.m_logger.info('Expected Failure: %s' %
+                         self.get_test_name(x[0].id()))
+
+    if emu_result.unexpectedSuccesses:
+      self.m_logger.info(border_line)
+    for x in emu_result.unexpectedSuccesses:
+      self.m_logger.info('Unexpected Success: %s' %
+                         self.get_test_name(x.id()))
+
+    self.m_logger.info('')
+    self.create_result_xml(emu_result)
+
+  def console_test_check(self, avd):
+    """Checks console test.
+
+    1) Run emulator with self.launch_emu_and_wait(avd)
+    2) Print to logger that the test begins
+    3) Load all the console tests using unittest.TestLoader()
+    4) Verify whether every individual testcase was successful
+
+    Args:
+      avd: The running avd.
+    """
+    self.launch_emu_and_wait(avd)
+    self.m_logger.info('Console tests (%s) start.' % self._testMethodName)
+    test_root_dir = os.path.dirname(os.path.realpath(__file__))
+    emu_suite = unittest.TestLoader().discover(start_dir=test_root_dir,
+                                               pattern='testcase_*')
+    emu_runner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
+    emu_result = emu_runner.run(emu_suite)
+    self.print_console_result(emu_result)
+    self.assertTrue(emu_result.wasSuccessful(),
+                    '%s was failed.' % self._testMethodName)
+
+  def run_console_test(self, avd_config):
+    """Run console test.
+
+    Run console test with the given avd_config.
+    This function first make sure whether avd is properly up or not.
+
+    Args:
+      avd_config: The avd configuration.
+    """
+    self.avd_config = avd_config
+    self.assertEqual(self.create_avd(avd_config), 0)
+    self.console_test_check(avd_config)
+
+
+if emu_argparser.emu_args.config_file is None:
+  sys.exit(-1)
 else:
-    emu_test.utils.emu_testcase.create_test_case_from_file("console", ConsoleTestCase, ConsoleTestCase.run_console_test)
+  emu_test.utils.emu_testcase.create_test_case_from_file(
+      'console', ConsoleTestCase, ConsoleTestCase.run_console_test)
 
 if __name__ == '__main__':
-    os.environ["SHELL"] = "/bin/bash"
-    emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
-    print emu_argparser.emu_args
-    sys.argv[1:] = emu_args.unittest_args
-    unittest.main()
+  os.environ['SHELL'] = '/bin/bash'
+  emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
+  print emu_argparser.emu_args
+  sys.argv[1:] = emu_argparser.emu_args.unittest_args
+  unittest.main()
