@@ -52,9 +52,9 @@ public class SettingsTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     // Tests under this class may take more than 60 seconds depending on buildbot infrastructure.
-    // 90 seconds is a more reliable setup here.
+    // 120 seconds is a more reliable setup here.
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(90);
+    public Timeout globalTimeout = Timeout.seconds(120);
 
 
     /**
