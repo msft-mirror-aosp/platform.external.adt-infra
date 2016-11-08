@@ -18,6 +18,13 @@ CMD_REDIR_DEL = 'redir del tcp:%s\n' % HOST_PORT
 class PortTest(testcase_base.BaseConsoleTest):
   """This class aims to test redir-related emulator console commands."""
 
+  def __init__(self, method_name=None, avd=None):
+    if method_name:
+      super(PortTest, self).__init__(method_name)
+    else:
+      super(PortTest, self).__init__()
+    self.avd = avd
+
   def _list_redir_cmd(self):
     is_cmd_succ, output_redir_list = util.execute_console_command(
         self.telnet, CMD_REDIR_LIST, util.PORT_NO_REDIR)

@@ -23,6 +23,14 @@ CAPACITY_ASSERT_MSG_PREFIX = ('Failed to set remaining battery to %s'
 
 
 class BatteryTest(testcase_base.BaseConsoleTest):
+  """Tests for battery-related commands."""
+
+  def __init__(self, method_name=None, avd=None):
+    if method_name:
+      super(BatteryTest, self).__init__(method_name)
+    else:
+      super(BatteryTest, self).__init__()
+    self.avd = avd
 
   def _execute_command_and_verify(self, command, expected_output, assert_msg):
     """Executes console command and verify output.

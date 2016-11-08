@@ -12,6 +12,13 @@ from utils import util
 class HelpTest(testcase_base.BaseConsoleTest):
   """This class aims to test help-related emulator console commands."""
 
+  def __init__(self, method_name=None, avd=None):
+    if method_name:
+      super(HelpTest, self).__init__(method_name)
+    else:
+      super(HelpTest, self).__init__()
+    self.avd = avd
+
   def setUp(self):
     """Only telnet to emulator, initially not need to run auth command."""
     self.telnet = telnetlib.Telnet(util.SERVER_NAME, util.CONSOLE_PORT)
