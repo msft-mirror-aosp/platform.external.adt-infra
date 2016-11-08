@@ -24,6 +24,13 @@ PDU_PHONE_NUMBER = '+31641600986'
 class SmsTest(testcase_base.BaseConsoleTest):
   """This class aims to test sms-related emulator console commands."""
 
+  def __init__(self, method_name=None, avd=None):
+    if method_name:
+      super(SmsTest, self).__init__(method_name)
+    else:
+      super(SmsTest, self).__init__()
+    self.avd = avd
+
   @classmethod
   def setUpClass(cls):
     util.run_script_run_adb_shell(TESTCASE_CALL_DIR)

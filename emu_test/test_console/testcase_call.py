@@ -26,6 +26,13 @@ CMD_GSM_ACCEPT = 'gsm accept %s\n' % CALL_NUMBER
 class PhoneCallTest(testcase_base.BaseConsoleTest):
   """This class aims to test call-related emulator console commands."""
 
+  def __init__(self, method_name=None, avd=None):
+    if method_name:
+      super(PhoneCallTest, self).__init__(method_name)
+    else:
+      super(PhoneCallTest, self).__init__()
+    self.avd = avd
+
   @classmethod
   def setUpClass(cls):
     util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
