@@ -46,7 +46,7 @@ CONSOLE_AUTH_TOKEN_FILE_NAME = '.emulator_console_auth_token'
 TOKEN_PATH = os.path.join(HOME, CONSOLE_AUTH_TOKEN_FILE_NAME)
 
 UTILS_DIR = os.path.dirname(os.path.realpath(__file__))
-EVENT_DIR = os.path.join(UTILS_DIR, '..', 'EVENT_TEST_DATA')
+EVENT_DIR = os.path.join(UTILS_DIR, 'constants')
 EVENTS_CODE_NO_ALIAS = 'no code aliases defined for this type\r\nOK'
 EVENTS_CODE_EV_KEY_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_CODE_EV_KEY')
 EVENTS_CODE_EV_REL_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_CODE_EV_REL')
