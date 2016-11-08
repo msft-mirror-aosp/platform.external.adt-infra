@@ -8,7 +8,8 @@ import time
 from utils import util
 
 install_apk_script_dir = os.path.dirname(os.path.realpath(__file__))
-servlet_launcher_dir = os.path.join(install_apk_script_dir, 'Server')
+servlet_launcher_dir = os.path.join(install_apk_script_dir, os.pardir,
+                                    os.pardir, 'console_test_server')
 main_apk_path = os.path.join(servlet_launcher_dir,
                              'app', 'build', 'outputs', 'apk', 'app-debug.apk')
 android_test_apk_path = os.path.join(servlet_launcher_dir,
