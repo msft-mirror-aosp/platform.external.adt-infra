@@ -6,7 +6,9 @@ that are written in the python files with filename starting with "testcase_"
 in the same directory.
 """
 
-
+import glob
+import importlib
+import inspect
 import os
 import shutil
 import subprocess
@@ -15,11 +17,12 @@ import time
 import unittest
 import xml.etree.ElementTree as ET
 
+import psutil
+
 import emu_test
 from emu_test.utils import emu_argparser
 from emu_test.utils import emu_testcase
 from emu_test.utils import emu_unittest
-import psutil
 
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 CONSOLE_RESULT_XML_FILE = 'consoleTestResult.xml'
@@ -163,6 +166,20 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
     self.m_logger.info('')
     self.create_result_xml(emu_result)
 
+  def get_all_console_test_classes(self):
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+
+    test_classes = []
+    for test_file in glob.glob(os.path.join(current_dir, 'testcase_*.py')):
+      name = os.path.splitext(os.path.basename(test_file))[0]
+      test_module = importlib.import_module('.' + name, 'test_console')
+      for member in dir(test_module):
+        handler_class = getattr(test_module, member)
+        if handler_class and inspect.isclass(handler_class):
+          test_classes.append(handler_class)
+
+    return test_classes
+
   def console_test_check(self, avd):
     """Checks console test.
 
@@ -176,9 +193,14 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
     """
     self.launch_emu_and_wait(avd)
     self.m_logger.info('Console tests (%s) start.' % self._testMethodName)
-    test_root_dir = os.path.dirname(os.path.realpath(__file__))
-    emu_suite = unittest.TestLoader().discover(start_dir=test_root_dir,
-                                               pattern='testcase_*')
+
+    test_classes = self.get_all_console_test_classes()
+    emu_suite = unittest.TestSuite()
+    for test_class in test_classes:
+      for method in dir(test_class):
+        if method.startswith('test_'):
+          emu_suite.addTest(test_class(method, avd))
+
     emu_runner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
     emu_result = emu_runner.run(emu_suite)
     self.print_console_result(emu_result)
