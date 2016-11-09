@@ -8,6 +8,7 @@ from recipe_engine.types import freeze
 import os
 import csv
 import collections
+from slave.email_watcher import EmailRecipeWatcher
 
 DEPS = [
     'path',
@@ -24,6 +25,8 @@ MASTER_USER = 'user'
 MASTER_IP = '172.27.213.40'
 
 bootStep = collections.namedtuple('bootStep', 'description, filter')
+
+@EmailRecipeWatcher()
 def RunSteps(api):
   buildername = api.properties['buildername']
   project = str(api.properties['project'])
