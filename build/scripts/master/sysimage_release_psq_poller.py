@@ -92,7 +92,7 @@ class SysimageReleasePsqPoller(base.PollingChangeSource):
       if self.name_identifier in obj.name:
         # request file path: "builds/[build_number]/test_config"
         build_number = max(build_number, int(obj.name.split('/')[1]))
-    log.msg('%s: last_build %d, new_last_build %s' % (self.name, self.last_build, build_number))
+    log.msg('%s: last_build %s, new_last_build %s' % (self.name, self.last_build, build_number))
     if build_number == None or build_number <= self.last_build:
       return None
     file_list = []
