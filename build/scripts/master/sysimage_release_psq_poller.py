@@ -97,12 +97,12 @@ class SysimageReleasePsqPoller(base.PollingChangeSource):
       return None
     file_list = []
     for path in self.gs_path_list:
-      objs = bucket.list(path + '%d/' % build_number)
+      objs = bucket.list(path + '%s/' % build_number)
       configs = [obj for obj in objs if self.name_identifier in obj.name]
       count = len(list(configs))
-      log.msg("%s: search %s%d, configs count %d" % (self.name, path, build_number, count))
+      log.msg("%s: search %s%s, configs count %s" % (self.name, path, build_number, count))
       if count != 1:
-        log.msg("%s: there must be exactly one config in %s%d (actual count %s)" % (self.name, path, build_number, count))
+        log.msg("%s: there must be exactly one config in %s%s (actual count %s)" % (self.name, path, build_number, count))
         return None
       # download and parse the release test request file
       gs_full_path = 'gs://' + self.gs_bucket + '/' + configs[0].name
@@ -120,19 +120,17 @@ class SysimageReleasePsqPoller(base.PollingChangeSource):
             BUILD_NUMBER: build_number}
 
   def _update_last_build(self, new_build):
-    log.msg("%s: last build changed from %d to %d" % (self.name, self.last_build, new_build))
+    log.msg("%s: last build changed from %s to %s" % (self.name, self.last_build, new_build))
     self.last_build = new_build
     if self.cachepath:
       with open(self.cachepath, "w") as f:
-          f.write("%d\n" % self.last_build)
+          f.write("%s\n" % self.last_build)
 
   def _process_changes(self, change):
     if change is None:
       return
     file_list = change[Constants.CHANGE_FILES]
     build_number = change[BUILD_NUMBER]
-    #print 'change:', change
-    #print 'file_list:', file_list
     if file_list is not None:
       self._update_last_build(build_number)
       props={Constants.CHANGE_FILES: ','.join(file_list),
