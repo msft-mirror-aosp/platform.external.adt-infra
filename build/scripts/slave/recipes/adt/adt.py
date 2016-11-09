@@ -61,7 +61,6 @@ def RunSteps(api):
     android_sdk_home += "_public"
   else:
     android_sdk_home += "_image-builds"
-  sdk_emulator_path = api.path.join(android_sdk_home, 'tools', 'emulator')
 
   android_tools_dir = os.path.join(android_sdk_home, 'tools')
   android_platform_dir = os.path.join(android_sdk_home, 'platform-tools')
@@ -257,7 +256,10 @@ def RunSteps(api):
                     '--build-dir', build_dir],
                    env=env)
       for emu_branch in emulator_branch_to_use:
-        emulator_path = api.path.join(emu_branch, 'tools', 'emulator')
+        if 'emu-master-dev' in emu_branch:
+          emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
+        else:
+          emulator_path = api.path.join(emu_branch, 'tools', 'emulator')
         emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
         if not is_cts and not is_ui and not is_console:
           step_data = bootSteps[step]
@@ -286,7 +288,7 @@ def RunSteps(api):
                          True)
 
     if is_cts:
-      emulator_path = api.path.join('emu-master-dev', 'tools', 'emulator')
+      emulator_path = api.path.join('emu-master-dev', 'emulator', 'emulator')
       PythonTestStep('Run Emulator CTS Test',
                      api.path.join(log_dir, 'CTS_test'),
                      'test_cts.*',
