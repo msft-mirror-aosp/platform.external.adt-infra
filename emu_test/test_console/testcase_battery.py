@@ -20,6 +20,8 @@ HEATH_ASSERT_MSG_PREFIX = 'Failed to set power health to'
 REMAINING_75 = '75'
 CAPACITY_ASSERT_MSG_PREFIX = ('Failed to set remaining battery to %s'
                               % REMAINING_75)
+CHARGING_STATUS = 'charging'
+GOOD_STATUS = 'good'
 
 
 class BatteryTest(testcase_base.BaseConsoleTest):
@@ -31,6 +33,18 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     else:
       super(BatteryTest, self).__init__()
     self.avd = avd
+
+  def _reset_status_back_to_charging(self):
+    self._set_battery_status(CHARGING_STATUS)
+
+  def _reset_health_back_to_good(self):
+    self._set_health_state(GOOD_STATUS)
+
+  def _reset_capacity_back_to_100(self):
+    REMAINING_100 = '100'
+    assert_msg = '%s %s' % (HEATH_ASSERT_MSG_PREFIX, REMAINING_100)
+    self._set_power_test(CMD_POWER_CAPACITY_PREFIX, REMAINING_100,
+                         assert_msg, util.CAPACITY)
 
   def _execute_command_and_verify(self, command, expected_output, assert_msg):
     """Executes console command and verify output.
@@ -153,8 +167,8 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     assert_msg = 'Failed to properly display power details.'
-    self._set_power_test(CMD_POWER_AC_PREFIX, 'on', assert_msg, util.AC)
     self._set_power_test(CMD_POWER_AC_PREFIX, 'off', assert_msg, util.AC)
+    self._set_power_test(CMD_POWER_AC_PREFIX, 'on', assert_msg, util.AC)
 
   def test_set_battery_status_to_unknown(self):
     """Test for command: power status unknown.
@@ -171,6 +185,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._set_battery_status('unknown')
+    self._reset_status_back_to_charging()
 
   def test_set_battery_status_to_charging(self):
     """Test for command: power status charging.
@@ -186,7 +201,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
       1. Success to set power status to charging
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
-    self._set_battery_status('charging')
+    self._set_battery_status(CHARGING_STATUS)
 
   def test_set_battery_status_to_discharging(self):
     """Test for command: power status discharging.
@@ -203,6 +218,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._set_battery_status('discharging')
+    self._reset_status_back_to_charging()
 
   def test_set_battery_status_to_not_charging(self):
     """Test for command: power status not-charging.
@@ -219,6 +235,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._set_battery_status('not-charging')
+    self._reset_status_back_to_charging()
 
   def test_set_battery_status_to_full(self):
     """Test for command: power status full.
@@ -235,6 +252,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._set_battery_status('full')
+    self._reset_status_back_to_charging()
 
   def test_set_presence_state(self):
     """Test for command: power present <true_or_false>.
@@ -252,8 +270,8 @@ class BatteryTest(testcase_base.BaseConsoleTest):
       2. Success to set power presence to False
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
-    self._set_presence_state('true')
     self._set_presence_state('false')
+    self._set_presence_state('true')
 
   def test_set_battery_health_to_unknown(self):
     """Test for command: power health unknown.
@@ -270,6 +288,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._set_health_state('unknown')
+    self._reset_health_back_to_good()
 
   def test_set_battery_health_to_good(self):
     """Test for command: power health good.
@@ -302,6 +321,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._set_health_state('overheat')
+    self._reset_health_back_to_good()
 
   def test_set_battery_health_to_dead(self):
     """Test for command: power health dead.
@@ -318,6 +338,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._set_health_state('dead')
+    self._reset_health_back_to_good()
 
   def test_set_battery_health_to_overvoltage(self):
     """Test for command: power health overvoltage.
@@ -334,6 +355,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._set_health_state('overvoltage')
+    self._reset_health_back_to_good()
 
   def test_set_battery_health_to_failure(self):
     """Test for command: power health failure.
@@ -350,6 +372,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._set_health_state('failure')
+    self._reset_health_back_to_good()
 
   def test_set_remaining_battery_capacity(self):
     """Test for command: power capacity 75.
@@ -368,6 +391,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     assert_msg = '%s %s' % (HEATH_ASSERT_MSG_PREFIX, REMAINING_75)
     self._set_power_test(CMD_POWER_CAPACITY_PREFIX, REMAINING_75,
                          assert_msg, util.CAPACITY)
+    self._reset_capacity_back_to_100()
 
 
 if __name__ == '__main__':
