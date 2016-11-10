@@ -24,6 +24,8 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Developer options manager.
  */
@@ -75,8 +77,10 @@ public class DeveloperOptionsManager {
      * @return {@code true} if the developer options is enabled, or {@code false} otherwise.
      * @throws UiObjectNotFoundException if it fails to find a UI widget.
      */
-    public static boolean isDeveloperOptionsEnabled(Instrumentation instrumentation)
+    public static boolean isDeveloperOptionsEnabled(final Instrumentation instrumentation)
             throws UiObjectNotFoundException {
+        SettingsUtil.findItem(instrumentation, "Developer options").waitForExists(
+                TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
         return SettingsUtil.scrollToItem(instrumentation, "Developer options");
     }
 }
