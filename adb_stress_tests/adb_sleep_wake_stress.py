@@ -6,6 +6,7 @@ optional arguments:
   -h, --help                     Show this help message and exit.
   -d float, --duration float     Duration of time to run stress test (in hrs).
   -c int, --count int            Number of devices/emulators connected.
+  -p, --progress                 Print progress
 """
 
 import subprocess
@@ -62,36 +63,11 @@ def test_wake(dut):
     return success
 
 
-def launcher(duration, devices):
-    """Launches the test.
-
-    Args:
-        duration: Number of iterations to execute.
-        devices: Number of expected devices.
-    """
-    connection_error = False
-    iterations = int(duration * _ITERATIONS)
-    for i in range(iterations):
-        util.print_progress(i, iterations, prefix='Progress:', suffix='Complete', bar_len=50)
-        success, connected = util.test_connected(devices)
-        if not success:
-            break
-
-        # Verify successful sleep and wake from each connected device/emulator.
-        for dut in connected:
-            success_sleep = test_sleep(dut)
-            success_wake  = test_wake(dut)
-            if not success_sleep or not success_wake:
-                connection_error = True
-
-        if connection_error:
-            break
-
-    if i == iterations - 1 and success and not connection_error:
-        util.print_progress(i + 1, iterations, prefix='Progress:', suffix='Complete', bar_len=50)
-        print('\nSUCCESS\n')
+def test_device(dut):
+    return test_sleep(dut) and test_wake(dut)
 
 
 if __name__ == '__main__':
     args = util.parse_args()
-    launcher(args.duration, args.count)
+    iterations = int(args.duration * _ITERATIONS)
+    util.launcher(test_device, iterations, args.count, is_print_progress=args.progress)
