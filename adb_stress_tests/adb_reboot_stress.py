@@ -6,6 +6,7 @@ optional arguments:
   -h, --help                     Show this help message and exit.
   -d float, --duration float     Duration of time to run stress test (in hrs).
   -c int, --count int            Number of devices/emulators connected.
+  -p, --progress                 Print progress
 """
 
 import subprocess
@@ -51,40 +52,14 @@ def wait_for_reboot(devices):
     # It would be better to check (perhaps via `adb shell`)
     # whether the devices are available again, with an appropriate timeout.
     time.sleep(2*60)
+    return True
 
 
-def launcher(duration, devices):
-    """Launches the test.
-
-    Args:
-        duration: Number of iterations to execute.
-        devices: Number of expected devices.
-    """
-    connection_error = False
-    iterations = int(duration * _ITERATIONS)
-    for i in range(iterations):
-        util.print_progress(i, iterations, prefix='Progress:', suffix='Complete', bar_len=50)
-        success, connected = util.test_connected(devices)
-        if not success:
-            break
-
-        # Verify successful reboot of each connected device.
-        for dut in connected:
-            success_reboot = test_reboot(dut)
-            if not success_reboot:
-                connection_error = True
-
-        # Wait for devices to reboot.
-        wait_for_reboot(devices)
-
-        if connection_error:
-            break
-
-    if i == iterations - 1 and success and not connection_error:
-        util.print_progress(i + 1, iterations, prefix='Progress:', suffix='Complete', bar_len=50)
-        print('\nSUCCESS\n')
+def test_device(dut):
+    return test_reboot(dut) and wait_for_reboot(dut)
 
 
 if __name__ == '__main__':
     args = util.parse_args()
-    launcher(args.duration, args.count)
+    iterations = int(args.duration * _ITERATIONS)
+    util.launcher(test_device, iterations, args.count, is_print_progress=args.progress)
