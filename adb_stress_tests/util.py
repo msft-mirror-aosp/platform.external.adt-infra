@@ -1,5 +1,7 @@
 """ADB stress test utilities."""
 
+from multiprocessing import pool
+
 import argparse
 import subprocess
 import sys
@@ -57,6 +59,69 @@ def test_connected(devices):
 
     return success, connected
 
+
+def noop():
+    """Function that does absolutely nothing.
+    This is useful as a placeholder / default function
+    for function arguments, such as the setup and teardown arguments
+    of the launcher function.
+    """
+    pass
+
+
+def launcher(test_fn, iterations, devices, setup=noop, cleanup=noop, is_print_progress=False):
+    """Higher-order function for launching tests
+
+        Args:
+            test_fn: Function that executes a single iteration of a test. This function must take a single argument,
+                     which is the device under test, and must return a boolean value indicating the success (True)
+                     or failure (False) of the test. Failure may also be indicated by raising an exception.
+            iterations: Number of iterations to execute.
+            devices: Number of expected devices.
+            setup: Function that performs any necessary setup steps before the test is run
+                   (optional — defaults to noop).
+            cleanup: Function that performs any necessary cleanup steps after the test is run
+                     (optional — defaults to noop).
+            is_print_progress: If True, progress information is printed to stdout after each iteration of the test.
+                               If False (the default), progress information is not printed.
+                               If any other value (i.e., non-boolean) is provided for this argument,
+                               the behaviour of this function is undefined.
+
+        Returns:
+            True if the test ran successfully to completion, otherwise False.
+        """
+
+    # ThreadPool for running the tests in parallel.
+    # We choose the size to match the number of devices, so that every device can execute in parallel.
+    thread_pool = pool.ThreadPool(processes = devices)
+
+    try:
+        setup()
+        for i in range(iterations):
+            if is_print_progress:
+                print_progress(i, iterations, prefix='Progress:', suffix='Complete', bar_len=50)
+            connection_success, connected = test_connected(devices)
+            if not connection_success:
+                return False
+
+            # Run one iteration of the test against every device in parallel
+            results = thread_pool.map(test_fn, connected)
+
+            # Verify the results
+            for result in results:
+                if not result:
+                    return False
+
+        # If we get here, the test completed successfully.
+        if is_print_progress:
+            # Print the progress bar one last time, to show 100%.
+            print_progress(i + 1, iterations, prefix='Progress:', suffix='Complete', bar_len=50)
+        print('\nSUCCESS\n')
+        return True
+    finally:
+        cleanup()
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -65,4 +130,8 @@ def parse_args():
     parser.add_argument(
         '-c', '--count', metavar='int', type=int, default=1,
         help='Number of devices/emulators connected')
+    parser.add_argument(
+        '-p', '--progress', default=False,
+        action='store_const', const=True,
+        help='Print progress')
     return parser.parse_args()
