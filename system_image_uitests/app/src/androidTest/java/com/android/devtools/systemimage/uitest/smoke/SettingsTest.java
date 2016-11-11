@@ -335,7 +335,7 @@ public class SettingsTest {
      *   5. Verify Select time zone is enabled.
      *   6. Enable time zone.
      *   Verify:
-     *   Select time zone text and Pacific Daylight Time text can be seen.
+     *   Select time zone text and timezone offset text can be seen.
      *   </pre>
      */
     @Test
@@ -370,13 +370,14 @@ public class SettingsTest {
         UiScrollable timeZoneList =
                 new UiScrollable(
                         new UiSelector().className("android.widget.ListView"));
-        try {
-            timeZoneList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"), "Pacific Daylight Time");
-        } catch (UiObjectNotFoundException e) {
-            timeZoneList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"), "Pacific Time");
-        }
+
+        String timezoneOffset;
+        if (testFramework.getApi() <= 19)
+            timezoneOffset = "GMT-8:00";
+        else
+            timezoneOffset = "GMT-08:00";
+        assertTrue(timeZoneList.getChildByText(
+                new UiSelector().className("android.widget.TextView"), timezoneOffset).exists());
     }
 
     /**
