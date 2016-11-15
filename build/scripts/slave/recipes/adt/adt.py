@@ -53,7 +53,8 @@ def RunSteps(api):
     else:
       gnu_path = 'C:\\Program Files\\GnuWin32\\bin'
     cygwin_path = 'C:\\cygwin\\bin'
-    env_path = [gnu_path, cygwin_path] + env_path
+    cygwin_path64 = 'C:\\cygwin64\\bin'
+    env_path = [gnu_path, cygwin_path, cygwin_path64] + env_path
   else:
     raise # pragma: no cover
 
