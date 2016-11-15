@@ -1,0 +1,60 @@
+import os
+
+from recipe_engine import recipe_api
+
+class AdtApi(recipe_api.RecipeApi):
+  def __init__(self, **kwargs):
+    super(AdtApi, self).__init__(**kwargs)
+
+  def PythonTestStep(self, description, session_dir, test_pattern, cfg_file, cfg_filter, emulator_path, env,
+                     skip_adb_perf=False):
+    buildername = self.m.properties['buildername']
+    buildnum = self.m.properties['buildnumber']
+    rev = self.m.properties['revision']
+    build_dir = self.m.path['build']
+    script_root = self.m.path.join(build_dir, os.pardir, 'emu_test')
+    dotest_path = self.m.path.join(script_root, 'dotest.py')
+
+    test_args = ['-l', 'INFO', '-exec', emulator_path,
+                 '-s', session_dir,
+                 '-p', test_pattern,
+                 '-c', self.m.path.join(script_root, 'config', cfg_file),
+                 '-n', buildername,
+                 '-f', cfg_filter]
+    if skip_adb_perf is True:
+      test_args.append('--skip-adb-perf')
+    if 'GTS' in description:
+      test_args.append('--is-gts')
+    with self.m.step.defer_results():
+      deferred_step_result = self.m.python(description, dotest_path, test_args, env=env, stderr=self.m.raw_io.output('err'))
+      if not deferred_step_result.is_ok:
+        stderr_output = deferred_step_result.get_error().result.stderr
+        lines = [line for line in stderr_output.split('\n')
+                 if line.startswith('FAIL:') or line.startswith('TIMEOUT:')]
+        # Do not show empty links for UI tests since UI tests create these links to display test reports later.
+        if "UI" not in description:
+          for line in lines:
+            self.m.step.active_result.presentation.logs[line] = ''
+      else:
+        stderr_output = deferred_step_result.get_result().stderr
+      print stderr_output
+      if "UI" in description:
+        lines = [line for line in stderr_output.split('\n')
+                 if line.startswith('FAIL:') or line.startswith('PASS:') or line.startswith('TIMEOUT:')]
+        for line in lines:
+          test_method = line.split(',')[0]
+          self.m.step.active_result.presentation.links['[Report] ' + test_method] = \
+            self.m.path.join("..", "..", "..", "UI_Result", buildername.replace(" ", "_"),
+                             'build_%s-rev_%s' % (buildnum, rev), test_method + '_report', "index.html")
+      if "CTS" in description:
+        self.m.step.active_result.presentation.links['View XML'] = \
+          self.m.path.join("..", "..", "..", "CTS_Result", buildername.replace(" ", "_"),
+                           'build_%s-rev_%s' % (buildnum, rev), "testResult.xml")
+      if "GTS" in description:
+        self.m.step.active_result.presentation.links['View XML'] = \
+          self.m.path.join("..", "..", "..", "GTS_Result", self.m.buildername.replace(" ", "_"),
+                           'build_%s-rev_%s' % (self.m.buildnum, self.m.rev), "xtsTestResult.xml")
+      if "Console" in description:
+        self.m.step.active_result.presentation.links['View XML'] = \
+          self.m.path.join("..", "..", "..","Console_Result", self.m.buildername.replace(" ", "_"),
+                           'build_%s-rev_%s' % (buildnum, rev), "consoleTestResult.xml")
