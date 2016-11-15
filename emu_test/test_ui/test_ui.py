@@ -45,7 +45,11 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             self.m_logger.error("Error in cleanup - %r", e)
             pass
 
-    def _save_gradle_test_report(self, test_method, gradle_report_path):
+    def _save_gradle_test_report(self, test_method):
+        gradle_report_path = os.path.join(self.uitest_dir, 'app', 'build', 'reports', 'androidTests', 'connected', '')
+        if not os.path.exists(gradle_report_path):
+            self.m_logger.info('Failed to find gradle reports.')
+            return
         dst_path = os.path.join(emu_args.session_dir, test_method + '_report')
         if os.path.exists(dst_path):
             shutil.rmtree(dst_path)
@@ -127,14 +131,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.m_logger.info('gradle_stderr:\n' + err)
 
         # save gradle reports
-        if err is not None and len(err.strip()) > 0:
-            m = re.search('file://(.+)index\.html', err)
-            if m.group(1) is None:
-                self.m_logger.error("Failed to find the gradle test report.")
-            gradle_test_report = m.group(1)
-            if os.name is 'nt':
-                gradle_test_report = gradle_test_report[1:]
-            self._save_gradle_test_report(self._testMethodName, gradle_test_report)
+        self._save_gradle_test_report(self._testMethodName)
 
         # save adb bug reports for the bug report automation purpose
         self._save_adb_bug_report(self._testMethodName)

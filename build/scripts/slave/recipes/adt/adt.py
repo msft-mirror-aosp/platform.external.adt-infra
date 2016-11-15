@@ -11,6 +11,7 @@ import collections
 from slave.email_watcher import EmailRecipeWatcher
 
 DEPS = [
+    'adt',
     'path',
     'platform',
     'properties',
@@ -76,7 +77,6 @@ def RunSteps(api):
   # Emulator scripts are located [project root]/emu_test
   build_dir = api.path['build']
   script_root = api.path.join(build_dir, os.pardir, 'emu_test')
-  dotest_path = api.path.join(script_root, 'dotest.py')
   image_util_path = api.path.join(script_root, 'utils', 'download_unzip_image.py')
   buildnum = api.properties['buildnumber']
   rev = api.properties['revision']
@@ -200,47 +200,6 @@ def RunSteps(api):
     with open(rev_file_path) as revfile:
       rev_str = revfile.read()
     api.step('Rev emu-img %s' % rev_str, ['echo', rev_str])
-  def PythonTestStep(description,
-                     session_dir,
-                     test_pattern,
-                     cfg_file,
-                     cfg_filter,
-                     emulator_path,
-                     skip_adb_perf=False):
-    test_args = ['-l', 'INFO', '-exec', emulator_path,
-                 '-s', session_dir,
-                 '-p', test_pattern,
-                 '-c', api.path.join(script_root, 'config', cfg_file),
-                 '-n', buildername,
-                 '-f', cfg_filter]
-    if skip_adb_perf is True:
-      test_args.append('--skip-adb-perf')
-    if 'GTS' in description:
-      test_args.append('--is-gts')
-    deferred_step_result = api.python(description, dotest_path, test_args, env=env, stderr=api.raw_io.output('err'))
-    if not deferred_step_result.is_ok:
-      stderr_output = deferred_step_result.get_error().result.stderr
-      print stderr_output
-      lines = [line for line in stderr_output.split('\n')
-               if line.startswith('FAIL:') or line.startswith('TIMEOUT:')]
-      for line in lines:
-        if "UI" in description and line.startswith('FAIL:'):
-          test_method = line[6:]
-          api.step.active_result.presentation.links['View Report: ' + test_method] = \
-              api.path.join("..", "..", "..", "UI_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), test_method + '_report', "index.html")
-        else:
-          api.step.active_result.presentation.logs[line] = ''
-    else:
-      print deferred_step_result.get_result().stderr
-    if "CTS" in description:
-      api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
-                                                    "CTS_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "testResult.xml")
-    if "GTS" in description:
-      api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
-                                                    "GTS_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "xtsTestResult.xml")
-    if "Console" in description:
-      api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
-                                                    "Console_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "consoleTestResult.xml")
 
   emulator_branch_to_use, steps_to_run = getTestConfig(project, is_cross_build)
 
@@ -263,47 +222,52 @@ def RunSteps(api):
         emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
         if not is_cts and not is_ui and not is_console:
           step_data = bootSteps[step]
-          PythonTestStep('Boot Test - %s System Image - %s' % (step_data.description, emu_desc),
-                         api.path.join(log_dir, 'boot_test_%s_sysimage-%s' % (step_data.description, emu_desc)),
-                         'test_boot.*',
-                         'boot_cfg.csv',
-                         step_data.filter,
-                         emulator_path)
+          api.adt.PythonTestStep('Boot Test - %s System Image - %s' % (step_data.description, emu_desc),
+                                 api.path.join(log_dir, 'boot_test_%s_sysimage-%s' % (step_data.description, emu_desc)),
+                                 'test_boot.*',
+                                 'boot_cfg.csv',
+                                 step_data.filter,
+                                 emulator_path,
+                                 env)
         elif is_ui:
           step_data = bootSteps[step]
-          PythonTestStep('Run Emulator UI Test',
-                         api.path.join(log_dir, 'UI_test'),
-                         'test_ui.*',
-                         'ui_cfg.csv',
-                         step_data.filter,
-                         emulator_path,
-                         True)
+          api.adt.PythonTestStep('Run Emulator UI Test',
+                                 api.path.join(log_dir, 'UI_test'),
+                                 'test_ui.*',
+                                 'ui_cfg.csv',
+                                 step_data.filter,
+                                 emulator_path,
+                                 env,
+                                 True)
         elif is_console:
-          PythonTestStep('Run Emulator Console Test',
-                         api.path.join(log_dir, 'Console_test'),
-                         'test_console.*',
-                         'console_cfg.csv',
-                         '{"gpu": "yes"}',
-                         emulator_path,
-                         True)
+          api.adt.PythonTestStep('Run Emulator Console Test',
+                                 api.path.join(log_dir, 'Console_test'),
+                                 'test_console.*',
+                                 'console_cfg.csv',
+                                 '{"gpu": "yes"}',
+                                 emulator_path,
+                                 env,
+                                 True)
 
     if is_cts:
       emulator_path = api.path.join('emu-master-dev', 'emulator', 'emulator')
-      PythonTestStep('Run Emulator CTS Test',
-                     api.path.join(log_dir, 'CTS_test'),
-                     'test_cts.*',
-                     'cts_cfg.csv',
-                     '{}',
-                     emulator_path,
-                     True)
+      api.adt.PythonTestStep('Run Emulator CTS Test',
+                             api.path.join(log_dir, 'CTS_test'),
+                             'test_cts.*',
+                             'cts_cfg.csv',
+                             '{}',
+                             emulator_path,
+                             env,
+                             True)
 
-      PythonTestStep('Run Emulator GTS Test',
-                     api.path.join(log_dir, 'GTS_test'),
-                     'test_cts.*',
-                     'cts_cfg.csv',
-                     '{}',
-                     emulator_path,
-                     True)
+      api.adt.PythonTestStep('Run Emulator GTS Test',
+                             api.path.join(log_dir, 'GTS_test'),
+                             'test_cts.*',
+                             'cts_cfg.csv',
+                             '{}',
+                             emulator_path,
+                             env,
+                             True)
 
     logs_dir = '/home/user/buildbot/external/adt-infra/build/masters/master.client.adt/slave_logs/'
     upload_log_args = ['--dir', log_dir,
