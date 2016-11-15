@@ -12,6 +12,7 @@ from common.presubmit.agent_lib import AgentLib
 from common.presubmit.constants import Constants
 
 DEPS = [
+    'adt',
     'file',
     'gerrit',
     'path',
@@ -185,56 +186,14 @@ def RunSteps(api):
   if invalid_test_configs: # pragma: no cover
     api.step.active_result.presentation.status = api.step.WARNING
 
-  # Run Boot, CTS, GTS, Sysimage UI, and Console tests
-  def python_test_step(description,
-                     session_dir,
-                     test_pattern,
-                     cfg_file,
-                     cfg_filter,
-                     emulator_path,
-                     skip_adb_perf=False):
-    test_args = ['-l', 'INFO', '-exec', emulator_path,
-                 '-s', session_dir,
-                 '-p', test_pattern,
-                 '-c', cfg_file,
-                 '-n', buildername,
-                 '-f', cfg_filter]
-    if skip_adb_perf is True:
-      test_args.append('--skip-adb-perf')
-    if 'GTS' in description:
-      test_args.append('--is-gts')
-    deferred_step_result = api.python(description, dotest_path, test_args, env=env, stderr=api.raw_io.output('err'))
-    if not deferred_step_result.is_ok: # pragma: no cover
-      stderr_output = deferred_step_result.get_error().result.stderr
-      print stderr_output
-      lines = [line for line in stderr_output.split('\n')
-               if line.startswith('FAIL:') or line.startswith('TIMEOUT:')]
-      for line in lines:
-        if "UI" in description and line.startswith('FAIL:'):
-          test_method = line[6:]
-          api.step.active_result.presentation.links['View Report: ' + test_method] = \
-              api.path.join("..", "..", "..", "UI_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), test_method + '_report', "index.html")
-        else:
-          api.step.active_result.presentation.logs[line] = ''
-    else:
-      print deferred_step_result.get_result().stderr
-    if "CTS" in description: # pragma: no cover
-      api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
-                                                    "CTS_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "testResult.xml")
-    if "GTS" in description:
-      api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
-                                                    "GTS_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "xtsTestResult.xml")
-    if "Console" in description:
-      api.step.active_result.presentation.links['View XML'] = api.path.join("..", "..", "..",
-                                                    "Console_Result", buildername.replace(" ", "_"), 'build_%s-rev_%s' % (buildnum, rev), "consoleTestResult.xml")
-
   with api.step.defer_results():
-    python_test_step('Run Boot Test',
-                   api.path.join(log_dir, 'boot_test'),
-                   'test_boot.*',
-                   'config.csv',
-                   '{}',
-                   emulator_path)
+    api.adt.python_test_step('Run Boot Test',
+                             api.path.join(log_dir, 'boot_test'),
+                             'test_boot.*',
+                             'config.csv',
+                             '{}',
+                             emulator_path,
+                             env)
 
     # CTS tests take about 15 hrs for each config.
     # Disable it in the test.
@@ -246,33 +205,36 @@ def RunSteps(api):
     #                emulator_path,
     #                True)
 
-    python_test_step('Run Emulator GTS Test',
-                   api.path.join(log_dir, 'GTS_test'),
-                   'test_cts.*',
-                   'config.csv',
-                   '{"abi": "x86"}',
-                   emulator_path,
-                   True)
+    api.adt.python_test_step('Run Emulator GTS Test',
+                             api.path.join(log_dir, 'GTS_test'),
+                             'test_cts.*',
+                             'config.csv',
+                             '{"abi": "x86"}',
+                             emulator_path,
+                             env,
+                             True)
 
-    python_test_step('Run System Image UI Test',
-                   api.path.join(log_dir, 'UI_test'),
-                   'test_ui.*',
-                   'config.csv',
-                   # We run only x86 images for UI tests.
-                   # Besides, UiAutomation framework only supports API 18 or plus.
-                   '{"abi": "x86", "api": ">=18"}',
-                   emulator_path,
-                   True)
+    api.adt.python_test_step('Run System Image UI Test',
+                             api.path.join(log_dir, 'UI_test'),
+                             'test_ui.*',
+                             'config.csv',
+                             # We run only x86 images for UI tests.
+                             # Besides, UiAutomation framework only supports API 18 or plus.
+                             '{"abi": "x86", "api": ">=18"}',
+                             emulator_path,
+                             env,
+                             True)
 
-    python_test_step('Run Emulator Console Test',
-                   api.path.join(log_dir, 'Console_test'),
-                   'test_console.*',
-                   'config.csv',
-                     # We run only x86 images for console tests.
-                     # Besides, UiAutomation framework only supports API 18 or plus.
-                     '{"abi": "x86", "api": ">=18"}',
-                   emulator_path,
-                   True)
+    api.adt.python_test_step('Run Emulator Console Test',
+                             api.path.join(log_dir, 'Console_test'),
+                             'test_console.*',
+                             'config.csv',
+                             # We run only x86 images for console tests.
+                             # Besides, UiAutomation framework only supports API 18 or plus.
+                             '{"abi": "x86", "api": ">=18"}',
+                             emulator_path,
+                             env,
+                             True)
 
     api.file.remove(name='Remove Test Configuration', path='config.csv')
 
