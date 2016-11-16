@@ -74,7 +74,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
     assert os.path.isfile(util.TOKEN_PATH)
     util.exit_emulator_console(self.telnet)
 
-  def test_auth_without_authorization_by_run_help_command(self):
+  def test_auth_without_authorization(self):
     """Test command for: auth <auth_token>.
 
     Test Rail ID: C14595293
@@ -189,7 +189,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
 
     util.exit_emulator_console(self.telnet)
 
-  def test_auth_by_change_auth_token_file_permissions(self):
+  def test_auth_change_auth_token_file_permissions(self):
     """Test command for: auth <auth_token>.
 
     Test Rail ID: C14595293

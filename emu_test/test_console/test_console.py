@@ -29,6 +29,9 @@ CONSOLE_RESULT_XML_FILE = 'consoleTestResult.xml'
 CONSOLE_CSS_FILE = os.path.join(CUR_DIR, 'static', 'console.css')
 CONSOLE_XSL_FILE = os.path.join(CUR_DIR, 'static', 'console.xsl')
 
+g_xml_string_result = ''
+g_avd_counter = 0
+
 
 class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
   """This class helps for run all console tests."""
@@ -70,6 +73,10 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
     return failed_test_id.rsplit('.', 1)[-1]
 
   def create_result_xml(self, emu_result):
+    global g_xml_string_result
+    global g_avd_counter
+    g_avd_counter += 1
+
     dst_path = os.path.join(emu_argparser.emu_args.session_dir,
                             CONSOLE_RESULT_XML_FILE)
     xsl_path = os.path.join(emu_argparser.emu_args.session_dir,
@@ -79,6 +86,9 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
     subprocess.call(['cp', CONSOLE_CSS_FILE, css_path])
 
     result = ET.Element('result')
+
+    # The avdCounter tag is used for indexing.
+    ET.SubElement(result, 'avdCounter', value=str(g_avd_counter))
 
     ET.SubElement(result, 'testMethodName', name=self._testMethodName)
     ET.SubElement(result, 'avdConfigName', name=self.avd_config.name())
@@ -121,13 +131,15 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
                     name=self.get_test_name(x.id()),
                     test_result='unexpected failure')
 
-    tree = ET.ElementTree(result)
-    tree.write(dst_path)
-    with file(dst_path, 'r') as original:
-      data = original.read()
-    with file(dst_path, 'w') as modified:
+    xml_string_result = ET.tostring(result)
+    # Saves each avd testing result to global variable: g_xml_string_result
+    g_xml_string_result += xml_string_result
+
+    # Refresh the current whole test result page.
+    with open(dst_path, 'w+') as modified:
       modified.write(('<?xml-stylesheet type="text/xsl"'
-                      'href="console.xsl"?>\n%s' % data))
+                      'href="console.xsl"?>\n<avd>%s</avd>'
+                      % g_xml_string_result))
 
   def print_console_result(self, emu_result):
     self.m_logger.info(
