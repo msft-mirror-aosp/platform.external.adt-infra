@@ -45,7 +45,7 @@ class AdtApi(recipe_api.RecipeApi):
           test_method = line.split(',')[0]
           self.m.step.active_result.presentation.links['[Report] ' + test_method] = \
             self.m.path.join("..", "..", "..", "UI_Result", buildername.replace(" ", "_"),
-                             'build_%s-rev_%s' % (buildnum, rev), test_method + '_report', "index.html")
+                             'build_%s-rev_%s' % (buildnum, rev), test_method.split(' ')[1] + '_report', "index.html")
       if "CTS" in description:
         self.m.step.active_result.presentation.links['View XML'] = \
           self.m.path.join("..", "..", "..", "CTS_Result", buildername.replace(" ", "_"),
