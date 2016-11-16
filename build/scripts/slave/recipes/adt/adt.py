@@ -54,7 +54,8 @@ def RunSteps(api):
       gnu_path = 'C:\\Program Files\\GnuWin32\\bin'
     cygwin_path = 'C:\\cygwin\\bin'
     cygwin_path64 = 'C:\\cygwin64\\bin'
-    env_path = [gnu_path, cygwin_path, cygwin_path64] + env_path
+    java_path = "C:\\ProgramData\\Oracle\\Java\\javapath"
+    env_path = [gnu_path, cygwin_path, cygwin_path64, java_path] + env_path
   else:
     raise # pragma: no cover
 
