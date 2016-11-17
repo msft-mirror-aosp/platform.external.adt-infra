@@ -6,9 +6,11 @@ optional arguments:
   -h, --help                     Show this help message and exit.
   -d float, --duration float     Duration of time to run stress test (in hrs).
   -c int, --count int            Number of devices/emulators connected.
-  -p, --progress                 Print progress
+  -p, --progress                 Print progress.
+  --log-dir                      Base directory under which logs will be placed.
 """
 
+import os
 import subprocess
 import time
 
@@ -62,4 +64,5 @@ def test_device(dut):
 if __name__ == '__main__':
     args = util.parse_args()
     iterations = int(args.duration * _ITERATIONS)
-    util.launcher(test_device, iterations, args.count, is_print_progress=args.progress)
+    util.launcher(test_device, iterations, args.count, is_print_progress=args.progress,
+                  log_dir=os.path.join(args.log_dir, 'adb_reboot_stress'))
