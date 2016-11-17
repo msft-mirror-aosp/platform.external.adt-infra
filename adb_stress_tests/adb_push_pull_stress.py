@@ -6,7 +6,8 @@ optional arguments:
   -h, --help                     Show this help message and exit.
   -d float, --duration float     Duration of time to run stress test (in hrs).
   -c int, --count int            Number of devices/emulators connected.
-  -p, --progress                 Print progress
+  -p, --progress                 Print progress.
+  --log-dir                      Base directory under which logs will be placed.
 """
 
 from __future__ import print_function
@@ -101,4 +102,5 @@ if __name__ == '__main__':
     args = util.parse_args()
     iterations = int(args.duration * _ITERATIONS)
     util.launcher(test_device, iterations, args.count,
-                  setup=create_temp_files, cleanup=delete_temp_files, is_print_progress=args.progress)
+                  setup=create_temp_files, cleanup=delete_temp_files, is_print_progress=args.progress,
+                  log_dir=os.path.join(args.log_dir, 'adv_push_pull_stress'))

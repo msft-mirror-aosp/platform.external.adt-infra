@@ -3,6 +3,7 @@
 from multiprocessing import pool
 
 import argparse
+import os
 import subprocess
 import sys
 
@@ -69,7 +70,7 @@ def noop():
     pass
 
 
-def launcher(test_fn, iterations, devices, setup=noop, cleanup=noop, is_print_progress=False):
+def launcher(test_fn, iterations, devices, setup=noop, cleanup=noop, is_print_progress=False, log_dir='logs'):
     """Higher-order function for launching tests
 
         Args:
@@ -86,6 +87,7 @@ def launcher(test_fn, iterations, devices, setup=noop, cleanup=noop, is_print_pr
                                If False (the default), progress information is not printed.
                                If any other value (i.e., non-boolean) is provided for this argument,
                                the behaviour of this function is undefined.
+            log_dir: base directory under which logs will be placed.
 
         Returns:
             True if the test ran successfully to completion, otherwise False.
@@ -112,6 +114,12 @@ def launcher(test_fn, iterations, devices, setup=noop, cleanup=noop, is_print_pr
                 if not result:
                     return False
 
+            # Capture logcat.
+            logs = thread_pool.map(logcat, connected)
+            for device,log in zip(connected, logs):
+                filename = os.path.join(log_dir, device, str(i) + '.txt')
+                spit(filename, log)
+
         # If we get here, the test completed successfully.
         if is_print_progress:
             # Print the progress bar one last time, to show 100%.
@@ -134,4 +142,53 @@ def parse_args():
         '-p', '--progress', default=False,
         action='store_const', const=True,
         help='Print progress')
+    parser.add_argument(
+        '--log-dir', type=str, default='logs',
+        help='Directory under which log files will be placed (defaults to "logs")')
     return parser.parse_args()
+
+
+def adb(dut):
+    """Helper function for running adb commands.
+
+    Args:
+      dut: Device under tests.
+      cmd: List containing adb command to run arguments.
+
+    Returns:
+      String containing the comand's output.
+    """
+    adb_cmd = ['adb', '-s', dut] + cmd
+    return subprocess.check_output(adb_cmd)
+
+
+def logcat(dut, cmd):
+    """Get logcat of specified device.
+
+    Args:
+      dut: Device under test.
+      cmd: List containing adb command to run arguments.
+
+    Returns:
+      String containing the command's output.
+    """
+    cmd = ['shell', 'logcat', '-d', '-v', 'threadtime']
+    return adb(dut, cmd)
+
+
+def spit(filename, text):
+    """Writes given text to specified file.
+
+    Args:
+      filename: Name of file to write to.
+      text: The text to write.
+    """
+    # Ensure the enclosing directory exists.
+    directory = os.path.dirname(filename)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # Write the file.
+    out_file = open(filename, 'w+')
+    out_file.write(text)
+    out_file.close()
