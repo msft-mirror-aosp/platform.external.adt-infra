@@ -17,7 +17,8 @@ parser.add_argument('--dst', dest='remote_dir', action='store',
                     help='remote directory')
 parser.add_argument('--skiplog', dest='skiplog', action='store_true', help='skip uploading log')
 parser.add_argument('--build-dir', dest='build_dir', action='store', help='path to build directory')
-parser.add_argument('--iswindows', dest="is_windows", action='store_false', help='treat file args as windows style')
+parser.add_argument('--iswindows', dest="is_windows", action='store_true', default=False,
+                    help='treat file args as windows style')
 
 args = parser.parse_args()
 
