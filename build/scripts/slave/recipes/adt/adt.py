@@ -281,7 +281,7 @@ def RunSteps(api):
     if is_ui or is_console:
       upload_log_args.append('--skiplog')
     if api.platform.is_win:
-      upload_log_args += ['--iswindows', True]
+      upload_log_args.append('--iswindows')
     api.python("Zip and Upload Logs", log_util_path, upload_log_args, env=env)
 
     # Trigger next CTS build, to make CTS builder run continously
