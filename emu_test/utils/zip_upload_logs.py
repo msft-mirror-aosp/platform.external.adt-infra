@@ -17,6 +17,7 @@ parser.add_argument('--dst', dest='remote_dir', action='store',
                     help='remote directory')
 parser.add_argument('--skiplog', dest='skiplog', action='store_true', help='skip uploading log')
 parser.add_argument('--build-dir', dest='build_dir', action='store', help='path to build directory')
+parser.add_argument('--iswindows', dest="is_windows", action='store_false', help='treat file args as windows style')
 
 args = parser.parse_args()
 
@@ -52,7 +53,11 @@ def zip_and_upload():
     if os.path.isdir(ui_logdir):
       builderName = os.path.basename(os.path.normpath(args.remote_dir))
       ui_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "UI_Result", builderName)
-      ui_dst = os.path.normpath(ui_dst)
+      if args.is_windows is True:
+        import posixpath
+        ui_dst = posixpath.normpath(ui_dst)  # Destination is a *Nix machine.
+      else:
+        ui_dst = os.path.normpath(ui_dst)
       verbose_call(['ssh', remote_host, 'mkdir -p %s' % os.path.join(ui_dst, args.zip_name[:-4])])
       ui_gs_dst = 'gs://sysimage_test_traces/%s/%s' % (builderName, args.log_dir)
       for x in os.listdir(ui_logdir):
