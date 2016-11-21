@@ -3,6 +3,7 @@
 import inspect
 import json
 import os
+import time
 import unittest
 
 import requests
@@ -19,6 +20,7 @@ CMD_SMS_PDU = ('sms pdu 07911326040000F0040B911346610089F6000020806291'
                '7314080CC8F71D14969741F977FD07\n')
 PDU_MESSAGE = 'How are you?'
 PDU_PHONE_NUMBER = '+31641600986'
+MAX_TRIES = 30
 
 
 class SmsTest(testcase_base.BaseConsoleTest):
@@ -65,6 +67,29 @@ class SmsTest(testcase_base.BaseConsoleTest):
 
     return r_json['smsAddress'], r_json['smsTextMessage']
 
+  def _poll_sms_and_verify(self, expected_phone_number, expected_text_message):
+    """Polls sms message information from emulator and verifies it.
+
+    Args:
+      expected_phone_number: Expected phone number to get.
+      expected_text_message: Expected sms text message to get.
+    """
+    got_expected_sms = False
+    for i in range(MAX_TRIES):
+      got_phone_number, got_sms_message = self._process_request_sms_service(
+        {})
+      print ('got_phone_number = %s, got_sms_message = %s'
+             % (got_phone_number, got_sms_message))
+      if (got_phone_number == expected_phone_number
+          and got_sms_message == expected_text_message):
+        got_expected_sms = True
+        break
+      else:
+        time.sleep(util.TRIAL_WAIT_TIMEOUT_S)
+
+    self.assertTrue(got_expected_sms,
+                    'Max tries reached, failed to get expected sms message.')
+
   def test_send_inbound_sms_text_message(self):
     """Test command for: sms send <phone number> <text message>.
 
@@ -84,14 +109,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
     self.assert_cmd_successful(
         is_command_successful, 'Failed to properly send sms text message',
         False, '', util.OK, output)
-
-    got_phone_number, got_sms_message = self._process_request_sms_service({})
-    print ('got_phone_number = %s, got_sms_message=%s'
-           % (got_phone_number, got_sms_message))
-    self.assertTrue(got_phone_number == SENDER_PHONE_NUMBER,
-                    'Sender phone number is wrong.')
-    self.assertTrue(got_sms_message == TEXT_MESSAGE,
-                    'The received text message is wrong.')
+    self._poll_sms_and_verify(SENDER_PHONE_NUMBER, TEXT_MESSAGE)
 
   def test_send_inbound_sms_pdu(self):
     """Test command for: sms send <phone number> <text message>.
@@ -114,14 +132,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
     self.assert_cmd_successful(
         is_command_successful, 'Failed to properly send sms pdu',
         False, '', util.OK, output)
-
-    got_phone_number, got_sms_message = self._process_request_sms_service({})
-    print ('got_phone_number = %s, got_sms_message=%s'
-           % (got_phone_number, got_sms_message))
-    self.assertTrue(got_phone_number == PDU_PHONE_NUMBER,
-                    'Sender phone number is wrong.')
-    self.assertTrue(got_sms_message == PDU_MESSAGE,
-                    'The received text message is wrong.')
+    self._poll_sms_and_verify(PDU_PHONE_NUMBER, PDU_MESSAGE)
 
 
 if __name__ == '__main__':
