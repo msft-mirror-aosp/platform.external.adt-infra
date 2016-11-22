@@ -28,6 +28,10 @@ def zip_and_upload():
     print "Run command %s" % ' '.join(cmd)
     subprocess.check_call(cmd)
 
+  # The below is a special utility function to convert remote_dir to UNIX filepath.
+  def convert_path_to_posix(path):
+    return path.replace(os.path.sep, '/')
+
   try:
     args.remote_dir = args.remote_dir.replace(" ", "_")
     remote_host = '%s@%s' % (args.remote_user, args.remote_ip)
@@ -47,29 +51,33 @@ def zip_and_upload():
         cts_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "%s_Result" % x, builderName)
         cts_dst = os.path.normpath(cts_dst)
         verbose_call(['ssh', remote_host, 'mkdir -p %s' % cts_dst])
-        verbose_call(['scp', '-r', os.path.join(cts_logdir, ''), '%s:%s' % (remote_host, os.path.join(cts_dst, args.zip_name[:-4]))])
+        verbose_call(['scp', '-r', os.path.join(cts_logdir, ''), '%s:%s' %
+                      (remote_host, os.path.join(cts_dst, args.zip_name[:-4]))])
 
     # if ui result is available, upload to public_html directory
     ui_logdir = os.path.join(args.log_dir, "UI_test")
     if os.path.isdir(ui_logdir):
       builderName = os.path.basename(os.path.normpath(args.remote_dir))
       ui_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "UI_Result", builderName)
+      remote_path = os.path.join(ui_dst, args.zip_name[:-4])
+      os.path.normpath(remote_path)
       if args.is_windows is True:
-        import posixpath
-        ui_dst = posixpath.normpath(ui_dst)  # Destination is a *Nix machine.
-      else:
-        ui_dst = os.path.normpath(ui_dst)
-      verbose_call(['ssh', remote_host, 'mkdir -p %s' % os.path.join(ui_dst, args.zip_name[:-4])])
+        remote_path = convert_path_to_posix(remote_path)
+      verbose_call(['ssh', remote_host, 'mkdir -p %s' % remote_path])
       ui_gs_dst = 'gs://sysimage_test_traces/%s/%s' % (builderName, args.log_dir)
       for x in os.listdir(ui_logdir):
         # upload gradle report to the master
         if os.path.isdir(os.path.join(ui_logdir, x)) and x.endswith("_report"):
-          verbose_call(['scp', '-r', os.path.join(ui_logdir, x), '%s:%s' % (remote_host, os.path.join(ui_dst, args.zip_name[:-4]))])
+          verbose_call(['scp', '-r', os.path.join(ui_logdir, x), '%s:%s' % (remote_host, remote_path)])
         # upload bugreport, logcat, verbose, and details dir to GCS
         elif os.path.isdir(os.path.join(ui_logdir, x)) and x.endswith("_details"):
-          verbose_call(['python', gsutil_path, 'cp', '-r', os.path.join(ui_logdir, x), os.path.join(ui_gs_dst, x[:-8])])
+          path_name = os.path.join(ui_gs_dst, x[:-8])
+          path_name = convert_path_to_posix(path_name) if args.is_windows else path_name
+          verbose_call(['python', gsutil_path, 'cp', '-r', os.path.join(ui_logdir, x), path_name])
         elif x.endswith('_bugreport.txt') or x.endswith('_logcat.txt') or x.endswith('_verbose.txt'):
-          verbose_call(['python', gsutil_path, 'cp', os.path.join(ui_logdir, x), os.path.join(ui_gs_dst, x[:x.rfind('_')], '')])
+          path_name = os.path.join(ui_gs_dst, x[:x.rfind('_')], '')
+          path_name = convert_path_to_posix(path_name) if args.is_windows else path_name
+          verbose_call(['python', gsutil_path, 'cp', os.path.join(ui_logdir, x), path_name])
 
     # if console result is available, upload to public_html directory
     console_logdir = os.path.join(args.log_dir, "Console_test")
@@ -78,7 +86,8 @@ def zip_and_upload():
         console_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "Console_Result", builderName)
         console_dst = os.path.normpath(console_dst)
         verbose_call(['ssh', remote_host, 'mkdir -p %s' % console_dst])
-        verbose_call(['scp', '-r', os.path.join(console_logdir, ''), '%s:%s' % (remote_host, os.path.join(console_dst, args.zip_name[:-4]))])
+        verbose_call(['scp', '-r', os.path.join(console_logdir, ''), '%s:%s' %
+                      (remote_host, os.path.join(console_dst, args.zip_name[:-4]))])
 
     # remove log directory
     try:
