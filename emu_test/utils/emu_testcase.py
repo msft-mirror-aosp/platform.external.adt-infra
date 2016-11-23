@@ -171,9 +171,9 @@ class EmuBaseTestCase(LoggedTestCase):
         t_launch = threading.Thread(target=launch_in_thread)
         t_launch.start()
         # TODO: decrease the wait time
-        # It is noticed that it takes ~10 seconds for process to quit in some failure cases
-        # But if the boot up time improves to be under 15 seconds, we will need to fine tune this wait time
-        time.sleep(15)
+        # It is noticed that it takes a 'long time' for process to quit in some failure cases
+        # But if the boot up time improves to be under 60 seconds, we will need to fine tune this wait time
+        time.sleep(60)
         if self.start_proc.poll() or not self.find_emu_proc():
             raise LaunchError(str(avd))
 
