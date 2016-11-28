@@ -68,7 +68,12 @@ def zip_and_upload():
       for x in os.listdir(ui_logdir):
         # upload gradle report to the master
         if os.path.isdir(os.path.join(ui_logdir, x)) and x.endswith("_report"):
-          verbose_call(['scp', '-r', os.path.join(ui_logdir, x), '%s:%s' % (remote_host, remote_path)])
+          if args.is_windows:
+            saved_path = os.path.abspath(os.path.curdir)
+            os.chdir(os.path.join(os.path.abspath(os.path.curdir), ui_logdir))
+          verbose_call(['scp', '-r', x, '%s:%s' % (remote_host, remote_path)])
+          if args.is_windows:
+            os.chdir(saved_path)
         # upload bugreport, logcat, verbose, and details dir to GCS
         elif os.path.isdir(os.path.join(ui_logdir, x)) and x.endswith("_details"):
           path_name = os.path.join(ui_gs_dst, x[:-8])
