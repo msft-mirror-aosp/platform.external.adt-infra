@@ -152,23 +152,48 @@ class EmuBaseTestCase(LoggedTestCase):
         # TODO: change it when https://android-review.googlesource.com/#/c/266872/ is merged to release branch or published.
         if "emu-master-dev" in exec_path:
             launch_cmd += ["-skip-adb-auth"]
-        def launch_in_thread():
-            test_name = self.id().rsplit('.', 1)[-1]
-            logcat_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_logcat.txt" % test_name)
-            verbose_log_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_verbose.txt" % test_name)
+
+        def launch_logcat_in_thread():
+            local_test_name = self.id().rsplit('.', 1)[-1]
+            logcat_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_logcat.txt" % local_test_name)
+
             with open(logcat_path, 'a') as output:
-                self.run_with_timeout(["adb", "start-server"], 20)
-                psutil.Popen(["adb", "logcat"], stdout=output, stderr=STDOUT)
-            self.start_proc = psutil.Popen(launch_cmd, stdout=PIPE, stderr=STDOUT)
+                logcat_proc = None
+                while (True):
+                    if (logcat_proc is None or logcat_proc.poll() is not None):
+                        self.m_logger.info('Launching logcat')
+                        output.flush()
+                        output.write("----Starting logcat----\n")
+                        output.flush()
+                        logcat_proc = psutil.Popen(["adb", "logcat"], stdout=output, stderr=STDOUT)
+                    time.sleep(10)
+                    if (not self.find_emu_proc()):
+                        self.m_logger.info('No emulator found, stopping logcat')
+                        break
+                if (logcat_proc):
+                    logcat_proc.terminate()
+
+        def readoutput_in_thread():
             with open(verbose_log_path, 'a') as verb_output:
                 lines_iterator = iter(self.start_proc.stdout.readline, b"")
                 for line in lines_iterator:
                     verb_output.write(line)
+                    # Just write everything back to master builder as a heart-beat signal to avoid being killed
+                    self.m_logger.info(line)
                     if any(x in line for x in ["ERROR", "FAIL", "error", "failed", "FATAL"]) and not line.startswith('['):
                         self.m_logger.error(line)
 
+        self.run_with_timeout(["adb", "kill-server"], 20)
+        self.run_with_timeout(["adb", "start-server"], 20)
+        logcat_thread = threading.Thread(target=launch_logcat_in_thread)
+        logcat_thread.start()
+
+        test_name  = self.id().rsplit('.', 1)[-1]
+        verbose_log_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_verbose.txt" % test_name)
         self.m_logger.info('Launching AVD, cmd: %s', ' '.join(launch_cmd))
-        t_launch = threading.Thread(target=launch_in_thread)
+        self.start_proc = psutil.Popen(launch_cmd, stdout=PIPE, stderr=STDOUT)
+
+        t_launch = threading.Thread(target=readoutput_in_thread)
         t_launch.start()
         # TODO: decrease the wait time
         # It is noticed that it takes a 'long time' for process to quit in some failure cases
