@@ -52,9 +52,9 @@ class AdtApi(recipe_api.RecipeApi):
                            'build_%s-rev_%s' % (buildnum, rev), "testResult.xml")
       if "GTS" in description:
         self.m.step.active_result.presentation.links['View XML'] = \
-          self.m.path.join("..", "..", "..", "GTS_Result", self.m.buildername.replace(" ", "_"),
-                           'build_%s-rev_%s' % (self.m.buildnum, self.m.rev), "xtsTestResult.xml")
+          self.m.path.join("..", "..", "..", "GTS_Result", buildername.replace(" ", "_"),
+                           'build_%s-rev_%s' % (buildnum, rev), "xtsTestResult.xml")
       if "Console" in description:
         self.m.step.active_result.presentation.links['View XML'] = \
-          self.m.path.join("..", "..", "..","Console_Result", self.m.buildername.replace(" ", "_"),
+          self.m.path.join("..", "..", "..","Console_Result", buildername.replace(" ", "_"),
                            'build_%s-rev_%s' % (buildnum, rev), "consoleTestResult.xml")
