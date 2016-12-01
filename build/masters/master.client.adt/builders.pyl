@@ -392,7 +392,7 @@
     #  "type": "emu_scheduler",
     #},
     "console_scheduler": {
-      "project": ["emu-master-dev"],
+      "project": ["emu-master-dev", "emu-2.2-release"],
       "type": "emu_scheduler",
     },
  },
