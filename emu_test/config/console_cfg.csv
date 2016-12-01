@@ -1,5 +1,6 @@
 Device Config,,,,,,,Linux
 API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,Ubuntu 12.04 HD Graphics 4000
+API 25,google_apis,x86,Nexus 5,2048,yes,public,P
 API 24,google_apis,x86,Nexus 5,2048,yes,public,P
 API 23,google_apis,x86,Nexus 5,2048,yes,public,P
 API 22,google_apis,x86,Nexus 5,2048,yes,public,P
