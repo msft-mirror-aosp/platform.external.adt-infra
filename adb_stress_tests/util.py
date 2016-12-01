@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ADB stress test utilities."""
 
 from multiprocessing import pool
@@ -148,7 +149,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def adb(dut):
+def adb(dut, cmd):
     """Helper function for running adb commands.
 
     Args:
@@ -162,7 +163,7 @@ def adb(dut):
     return subprocess.check_output(adb_cmd)
 
 
-def logcat(dut, cmd):
+def logcat(dut):
     """Get logcat of specified device.
 
     Args:
