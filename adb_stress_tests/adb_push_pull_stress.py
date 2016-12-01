@@ -103,4 +103,4 @@ if __name__ == '__main__':
     iterations = int(args.duration * _ITERATIONS)
     util.launcher(test_device, iterations, args.count,
                   setup=create_temp_files, cleanup=delete_temp_files, is_print_progress=args.progress,
-                  log_dir=os.path.join(args.log_dir, 'adv_push_pull_stress'))
+                  log_dir=os.path.join(args.log_dir, 'adb_push_pull_stress'))
