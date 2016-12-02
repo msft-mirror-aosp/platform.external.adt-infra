@@ -169,6 +169,13 @@ def _ComputeSchedulers(builders):
           hour=scheduler_values['hour'],
           builderNames=builder_names))
 
+    elif scheduler_type == 'adb_cron':
+      schedulers.append(Nightly(
+          name=scheduler_name,
+          branch='master',
+          hour=range(0, 24, scheduler_values['every_x_hour']),
+          builderNames=builder_names))
+
     elif scheduler_type == 'emu_scheduler':
       schedulers.append(EmulatorSingleBranchScheduler(
           name=scheduler_name,
