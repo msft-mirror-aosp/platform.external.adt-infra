@@ -37,17 +37,23 @@ def zip_and_upload():
     remote_host = '%s@%s' % (args.remote_user, args.remote_ip)
     remote_path = '%s:%s' % (remote_host, args.remote_dir)
     gsutil_path = os.path.join(args.build_dir, 'third_party', 'gsutil', 'gsutil.py')
+    builderName = os.path.basename(os.path.normpath(args.remote_dir))
 
     if args.skiplog is False:
       verbose_call(['zip', '-r', args.zip_name, args.log_dir])
       verbose_call(['ssh', remote_host, 'mkdir -p %s' % args.remote_dir])
       verbose_call(['scp', args.zip_name, remote_path])
 
+    # if it is adb stress test log, zip and upload to GCS
+    if 'adb_stress_logs' in args.log_dir:
+      verbose_call(['zip', '-r', args.zip_name, args.log_dir])
+      adb_stress_gs_dst = 'gs://adb_test_traces/%s/' % builderName
+      verbose_call(['python', gsutil_path, 'cp', args.zip_name, adb_stress_gs_dst])
+
     # if cts result is available, upload to public_html directory
     for x in ['CTS', 'GTS']:
       cts_logdir = os.path.join(args.log_dir, '%s_test' % x, '%s_combined_result' % x.lower())
       if os.path.isdir(cts_logdir):
-        builderName = os.path.basename(os.path.normpath(args.remote_dir))
         cts_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "%s_Result" % x, builderName)
         cts_dst = os.path.normpath(cts_dst)
         verbose_call(['ssh', remote_host, 'mkdir -p %s' % cts_dst])
@@ -57,7 +63,6 @@ def zip_and_upload():
     # if ui result is available, upload to public_html directory
     ui_logdir = os.path.join(args.log_dir, "UI_test")
     if os.path.isdir(ui_logdir):
-      builderName = os.path.basename(os.path.normpath(args.remote_dir))
       ui_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "UI_Result", builderName)
       remote_path = os.path.join(ui_dst, args.zip_name[:-4])
       os.path.normpath(remote_path)
@@ -87,7 +92,6 @@ def zip_and_upload():
     # if console result is available, upload to public_html directory
     console_logdir = os.path.join(args.log_dir, "Console_test")
     if os.path.isdir(console_logdir):
-        builderName = os.path.basename(os.path.normpath(args.remote_dir))
         console_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "Console_Result", builderName)
         console_dst = os.path.normpath(console_dst)
         verbose_call(['ssh', remote_host, 'mkdir -p %s' % console_dst])

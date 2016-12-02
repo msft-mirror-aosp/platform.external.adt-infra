@@ -258,6 +258,11 @@
         "id": "_7",
         "scheduler": "sysimage_release_psq_scheduler",
      },
+     "ADB": {
+       "name": "adb stress test",
+       "id": "_8",
+       "scheduler": "adb_test_scheduler",
+     },
   },
 
   "builders": {
@@ -363,6 +368,12 @@
        "categories": ["UI"],
        "tag": "Mac",
      },
+     "Ubuntu 14.04 Intel HD 520": {
+       "recipe": "adt/adb",
+       "slave_pools": ["ubuntu-14_04-intel-hd-520"],
+       "categories": ["ADB"],
+       "tag": "Linux",
+     },
   },
 
   "schedulers": {
@@ -394,6 +405,10 @@
     "console_scheduler": {
       "project": ["emu-master-dev", "emu-2.2-release"],
       "type": "emu_scheduler",
+    },
+    "adb_test_scheduler": {
+      "type": "adb_cron",
+      "every_x_hour": 4,
     },
  },
 
@@ -445,6 +460,14 @@
         "version": "trusty",
       },
       "slaves": ['chromeos1-row3-rack4-host5'],
+    },
+    "ubuntu-14_04-intel-hd-520": {
+      "slave_data": {
+        "bits": 64,
+        "os": "linux",
+        "version": "trusty",
+      },
+      "slaves": ['chromeos1-row3-rack4-host2'],
     },
     "win-7-32-intel-hd-4400": {
       "slave_data": {
