@@ -137,7 +137,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
 
     # Refresh the current whole test result page.
     with open(dst_path, 'w+') as modified:
-      modified.write(('<?xml-stylesheet type="text/xsl"'
+      modified.write(('<?xml-stylesheet type="text/xsl" '
                       'href="console.xsl"?>\n<avd>%s</avd>'
                       % g_xml_string_result))
 
