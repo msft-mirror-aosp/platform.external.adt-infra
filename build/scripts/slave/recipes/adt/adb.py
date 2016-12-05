@@ -44,18 +44,18 @@ def RunSteps(api):
         stderr_output = deferred_step_result.get_error().result.stderr
         print stderr_output
 
-  # Upload logs to GCS (gs://adb_test_traces/)
-  script_root = api.path.join(build_dir, os.pardir, 'emu_test')
-  log_util_path = api.path.join(script_root, 'utils', 'zip_upload_logs.py')
-  logs_dir = '/home/user/buildbot/external/adt-infra/build/masters/master.client.adt/slave_logs/'
-  upload_log_args = ['--dir', log_dir,
-                     '--name', 'build_%s.zip' % buildnum,
-                     '--ip', MASTER_IP,
-                     '--user', MASTER_USER,
-                     '--dst', '%s%s/' % (logs_dir, buildername),
-                     '--build-dir', build_dir,
-                     '--skiplog']
-  api.python("Zip and Upload Logs", log_util_path, upload_log_args)
+    # Upload logs to GCS (gs://adb_test_traces/)
+    script_root = api.path.join(build_dir, os.pardir, 'emu_test')
+    log_util_path = api.path.join(script_root, 'utils', 'zip_upload_logs.py')
+    logs_dir = '/home/user/buildbot/external/adt-infra/build/masters/master.client.adt/slave_logs/'
+    upload_log_args = ['--dir', log_dir,
+                       '--name', 'build_%s.zip' % buildnum,
+                       '--ip', MASTER_IP,
+                       '--user', MASTER_USER,
+                       '--dst', '%s%s/' % (logs_dir, buildername),
+                       '--build-dir', build_dir,
+                       '--skiplog']
+    api.python("Zip and Upload Logs", log_util_path, upload_log_args)
 
 def GenTests(api):
   yield (
