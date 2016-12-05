@@ -8,6 +8,7 @@
       "1",
       "--count",
       "1",
+      "--progress",
       "--log-dir",
       "adb_stress_logs-build_12"
     ],
@@ -26,6 +27,7 @@
       "1",
       "--count",
       "1",
+      "--progress",
       "--log-dir",
       "adb_stress_logs-build_12"
     ],
@@ -44,6 +46,7 @@
       "1",
       "--count",
       "1",
+      "--progress",
       "--log-dir",
       "adb_stress_logs-build_12"
     ],
