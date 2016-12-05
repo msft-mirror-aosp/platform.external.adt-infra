@@ -38,6 +38,7 @@ def RunSteps(api):
       deferred_step_result = api.python('Run %s' % test, test_path,
                                         ['--duration', '1',
                                          '--count', '1',
+                                         '--progress',
                                          '--log-dir', log_dir],
                                         env=env)
       if not deferred_step_result.is_ok: # pragma: no cover
