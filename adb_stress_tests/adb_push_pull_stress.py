@@ -76,7 +76,7 @@ def test_pull(dut):
     Returns:
       True if successful, else False.
     """
-    arg = 'adb -s ' + str(dut) + ' push ' + TEMP_FILE + ' /sdcard/'
+    arg = 'adb -s ' + str(dut) + ' pull /sdcard/' + TEMP_FILE
     process = subprocess.Popen(arg.split(), stdout=subprocess.PIPE)
     output, error = process.communicate()
     success = True
