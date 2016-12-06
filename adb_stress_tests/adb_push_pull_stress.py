@@ -16,7 +16,6 @@ import subprocess
 
 import util
 
-_ITERATIONS = 500000
 TEMP_FILE = '__push_file.txt'
 
 # Number of lines in push/pull'd file.
@@ -100,7 +99,6 @@ def test_device(dut):
 
 if __name__ == '__main__':
     args = util.parse_args()
-    iterations = int(args.duration * _ITERATIONS)
-    util.launcher(test_device, iterations, args.count,
+    util.launcher(test_device, args.duration, args.count,
                   setup=create_temp_files, cleanup=delete_temp_files, is_print_progress=args.progress,
                   log_dir=os.path.join(args.log_dir, 'adb_push_pull_stress'))

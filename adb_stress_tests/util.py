@@ -7,26 +7,26 @@ import argparse
 import os
 import subprocess
 import sys
+import time
 
 
-def print_progress(iteration, total, prefix='',
+def print_progress(perc, prefix='',
                    suffix='', decimals=1, bar_len=100):
     """Call in a loop to create terminal progress bar.
 
     Args:
-      iteration   - Required  : current iteration (Int)
-      total       - Required  : total iterations (Int)
+      perc        - Required  : current percentages (Float)
       prefix      - Optional  : prefix string (Str)
       suffix      - Optional  : suffix string (Str)
       decimals    - Optional  : pos number of decimals in % complete (Int)
       barLength   - Optional  : character length of bar (Int)
     """
     format_str = '{0:.' + str(decimals) + 'f}'
-    perc = format_str.format(100 * (iteration / float(total)))
-    filled_len = int(round(bar_len * iteration / float(total)))
+    perc_str = format_str.format(perc * 100)
+    filled_len = int(round(bar_len * perc))
     bar = '*' * filled_len + '-' * (bar_len - filled_len)
-    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, perc, '%', suffix)),
-    if iteration == total:
+    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, perc_str, '%', suffix)),
+    if perc == 1:
         sys.stdout.write('\n')
     sys.stdout.flush()
 
@@ -71,14 +71,14 @@ def noop():
     pass
 
 
-def launcher(test_fn, iterations, devices, setup=noop, cleanup=noop, is_print_progress=False, log_dir='logs'):
+def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_progress=False, log_dir='logs'):
     """Higher-order function for launching tests
 
         Args:
             test_fn: Function that executes a single iteration of a test. This function must take a single argument,
                      which is the device under test, and must return a boolean value indicating the success (True)
                      or failure (False) of the test. Failure may also be indicated by raising an exception.
-            iterations: Number of iterations to execute.
+            duration: Maximum elapsed running time
             devices: Number of expected devices.
             setup: Function that performs any necessary setup steps before the test is run
                    (optional — defaults to noop).
@@ -100,14 +100,24 @@ def launcher(test_fn, iterations, devices, setup=noop, cleanup=noop, is_print_pr
 
     try:
         setup()
-        for i in range(iterations):
-            if is_print_progress:
-                print_progress(i, iterations, prefix='Progress:', suffix='Complete', bar_len=50)
+        duration_sec = int(duration * 3600)
+        start = time.time()
+        stop = start + duration_sec
+        print_progress(0, prefix='Progress:', suffix='Complete', bar_len=50)
+        next_progress_time = start + 60
+        iteration = 0
+        while time.time() < stop:
+            if is_print_progress and time.time() > next_progress_time:
+                # Print the progress per minute
+                print_progress(float(time.time()-start)/duration_sec, prefix='Progress:', suffix='Complete', bar_len=50)
+                next_progress_time += 60
+
             connection_success, connected = test_connected(devices)
             if not connection_success:
                 return False
 
             # Run one iteration of the test against every device in parallel
+            iteration += 1
             results = thread_pool.map(test_fn, connected)
 
             # Verify the results
@@ -118,16 +128,17 @@ def launcher(test_fn, iterations, devices, setup=noop, cleanup=noop, is_print_pr
             # Capture logcat.
             logs = thread_pool.map(logcat, connected)
             for device,log in zip(connected, logs):
-                filename = os.path.join(log_dir, device, str(i) + '.txt')
+                filename = os.path.join(log_dir, device, str(iteration) + '.txt')
                 spit(filename, log)
 
         # If we get here, the test completed successfully.
         if is_print_progress:
             # Print the progress bar one last time, to show 100%.
-            print_progress(i + 1, iterations, prefix='Progress:', suffix='Complete', bar_len=50)
+            print_progress(1, prefix='Progress:', suffix='Complete', bar_len=50)
         print('\nSUCCESS\n')
         return True
     finally:
+        print('\nIterations: %s\n' % iteration)
         cleanup()
 
 
