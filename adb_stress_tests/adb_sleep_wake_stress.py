@@ -15,8 +15,6 @@ import subprocess
 
 import util
 
-_ITERATIONS = 30*60
-
 
 def test_sleep(dut):
     """Verify that putting the device to sleep is successful.
@@ -71,6 +69,5 @@ def test_device(dut):
 
 if __name__ == '__main__':
     args = util.parse_args()
-    iterations = int(args.duration * _ITERATIONS)
-    util.launcher(test_device, iterations, args.count, is_print_progress=args.progress,
+    util.launcher(test_device, args.duration, args.count, is_print_progress=args.progress,
                   log_dir=os.path.join(args.log_dir, 'adb_sleep_wake_stress'))
