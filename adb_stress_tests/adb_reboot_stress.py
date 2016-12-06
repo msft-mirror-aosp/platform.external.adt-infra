@@ -16,8 +16,6 @@ import time
 
 import util
 
-_ITERATIONS = 30
-
 
 def test_reboot(dut):
     """Verify that rebooting the device is successful.
@@ -63,6 +61,5 @@ def test_device(dut):
 
 if __name__ == '__main__':
     args = util.parse_args()
-    iterations = int(args.duration * _ITERATIONS)
-    util.launcher(test_device, iterations, args.count, is_print_progress=args.progress,
+    util.launcher(test_device, args.duration, args.count, is_print_progress=args.progress,
                   log_dir=os.path.join(args.log_dir, 'adb_reboot_stress'))
