@@ -84,14 +84,10 @@ public class AddGoogleAccountTest {
                 notNow.click();
             }
         }
-        // Verification step requires sign in to a Google Account,
-        // which requires Google API support.
-        if (testFramework.isGoogleApiImage()) {
-            UiObject add_contact = mDevice.findObject(
-                    new UiSelector().description("add new contact"));
-            add_contact.waitForExists(TimeUnit.SECONDS.toMillis(5));
-            add_contact.clickAndWaitForNewWindow();
-        }
+        UiObject add_contact = mDevice.findObject(
+                new UiSelector().className("android.widget.Button").textContains("new"));
+        add_contact.waitForExists(TimeUnit.SECONDS.toMillis(5));
+        add_contact.clickAndWaitForNewWindow();
         mDevice.findObject(new UiSelector().textContains("Add account")).click();
     }
 }
