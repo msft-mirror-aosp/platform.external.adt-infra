@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,9 +85,9 @@ public class AddGoogleAccountTest {
                 notNow.click();
             }
         }
-        UiObject add_contact = mDevice.findObject(
-                new UiSelector().className("android.widget.Button").textContains("new"));
-        add_contact.waitForExists(TimeUnit.SECONDS.toMillis(5));
+        UiObject add_contact = UiAutomatorPlus.findObjectMatchingAny(instrumentation,
+                new UiSelector().className("android.widget.Button").textContains("new"),
+                new UiSelector().className("android.widget.ImageButton").descriptionContains("new"));
         add_contact.clickAndWaitForNewWindow();
         mDevice.findObject(new UiSelector().textContains("Add account")).click();
     }
