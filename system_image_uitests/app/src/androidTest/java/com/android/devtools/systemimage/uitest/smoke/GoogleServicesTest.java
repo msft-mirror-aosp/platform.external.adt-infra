@@ -123,7 +123,7 @@ public class GoogleServicesTest {
                         new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
                 );
         itemList.setAsVerticalList();
-        if(SystemUtil.getApiLevel() > 18) {
+        if(testFramework.getApi() > 18) {
             UiObject item =
                     itemList.getChildByText(
                             new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),

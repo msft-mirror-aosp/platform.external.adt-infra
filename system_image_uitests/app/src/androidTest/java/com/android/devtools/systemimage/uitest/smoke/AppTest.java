@@ -77,7 +77,7 @@ public class AppTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
         // Disable test for API 18. Enable when bug 30437951 is fixed.
-        if (SystemUtil.getApiLevel() == 18) {
+        if (testFramework.getApi() == 18) {
             return;
         }
         AppLauncher.launch(instrumentation, "RsHelloCompute");
