@@ -148,7 +148,8 @@ def RunSteps(api):
     print file
     config_str = file[5:].split('/')[2]
     m = re.match('(.*)-linux-(.*)_(x86.*|arm.*|mips.*)-.*', config_str)
-    m2 = re.match('(.*)-linux-sdk', config_str)
+    # if the config does not match m, that means abi is 'armeabi-v7a' by default and it should match m2 below.
+    m2 = re.match('(.*)-linux-(.*)-.*', config_str)
     # Filter out invalid image path
     if m is None and m2 is None: # pragma: no cover
       invalid_test_configs.add(config_str)
@@ -162,7 +163,7 @@ def RunSteps(api):
         config['ori'] = m.group(1)
       elif m2 is not None: # pragma: no cover
         config['api'] = 'API ' + ORI_TO_API[m2.group(1)]
-        config['tag'] = 'default'
+        config['tag'] = 'google_apis' if 'google' in m.group(2) else 'default'
         config['abi'] = 'armeabi-v7a'
         config['ori'] = m2.group(1)
       config['device'] = 'Nexus 5'
