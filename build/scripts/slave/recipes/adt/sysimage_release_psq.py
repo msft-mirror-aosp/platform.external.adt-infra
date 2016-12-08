@@ -147,9 +147,9 @@ def RunSteps(api):
     # For some branches, arch is not included in target name. It is armeabi-v7a by default.
     print file
     config_str = file[5:].split('/')[2]
-    m = re.match('(.*)-linux-(.*)_(x86.*|arm.*|mips.*)-.*', config_str)
+    m = re.match('(.*)-linux-.*_(x86.*|arm.*|mips.*)-.*', config_str)
     # if the config does not match m, that means abi is 'armeabi-v7a' by default and it should match m2 below.
-    m2 = re.match('(.*)-linux-(.*)-.*', config_str)
+    m2 = re.match('(.*)-linux-.*', config_str)
     # Filter out invalid image path
     if m is None and m2 is None: # pragma: no cover
       invalid_test_configs.add(config_str)
@@ -158,14 +158,13 @@ def RunSteps(api):
     try:
       if m is not None: # pragma: no cover
         config['api'] = 'API ' + ORI_TO_API[m.group(1)]
-        config['tag'] = 'google_apis' if 'google' in m.group(2) else 'default'
-        config['abi'] = CPU_ARCH_TO_ABI[m.group(3)]
+        config['abi'] = CPU_ARCH_TO_ABI[m.group(2)]
         config['ori'] = m.group(1)
       elif m2 is not None: # pragma: no cover
         config['api'] = 'API ' + ORI_TO_API[m2.group(1)]
-        config['tag'] = 'google_apis' if 'google' in m.group(2) else 'default'
         config['abi'] = 'armeabi-v7a'
         config['ori'] = m2.group(1)
+      config['tag'] = 'google_apis' if 'google' in config_str and 'addon' in config_str else 'default'
       config['device'] = 'Nexus 5'
       config['ram'] = 2048
       config['gpu'] = 'yes'
