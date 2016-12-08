@@ -45,7 +45,7 @@ public class Res {
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
                     + "/cling_dismiss_longpress_info";
     public static final String LAUNCHER_LIST_CONTAINER_RES =
-            "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
+            "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id|com.google.android.apps.nexuslauncher\\d*:id)"
                     + "/(all_apps_container|apps_customize_pane_content|apps_list_view)";
 
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
@@ -66,6 +66,8 @@ public class Res {
     public static final String MOBILE_TYPE_ICONS_RES = "com.android.systemui:id/mobile_type";
     public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
     public static final String WIFI_ICONS_RES = "com.android.systemui:id/wifi_signal";
+    public static final String NOTIFICATION_BAR_EXPAND_RES =
+            "com.android.systemui:id/expand_indicator";
 
     public static final String NOW_SIGNIN_ACCEPT_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/accept_button";
