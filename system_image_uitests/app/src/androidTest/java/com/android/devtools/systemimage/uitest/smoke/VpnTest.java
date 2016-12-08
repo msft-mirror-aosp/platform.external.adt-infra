@@ -35,6 +35,8 @@ import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiSelector;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Test on VPN app.
  */
@@ -47,21 +49,21 @@ public class VpnTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(90);
+    public Timeout globalTimeout = Timeout.seconds(120);
 
     private boolean verifyVpnStatus(final UiDevice device) throws Exception {
         // Verify that a VPN lock icon is on the status bar.
-        device.openNotification();
         // Need to wait for a while to check the notification bar items
         // because opening notification is an animation.
-        boolean isTrue = false;
+        boolean isTrue;
         if (testFramework.getApi() >= 24) {
-            device.findObject(new UiSelector().resourceId(
-                    "com.android.systemui:id/expand_indicator").className(
-                    "android.widget.ImageView")).click();
-            isTrue = new Wait().until(new Wait.ExpectedCondition() {
+            // API 25 requires extra retry time to indentify VPN indicator.
+            isTrue = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
                 @Override
                 public boolean isTrue() throws Exception {
+                    device.openNotification();
+                    device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_BAR_EXPAND_RES)
+                            .className("android.widget.ImageView")).click();
                     return device.hasObject(By.text(NETWORK_MONITORED_TEXT));
                 }
             });
@@ -69,6 +71,7 @@ public class VpnTest {
             isTrue = new Wait().until(new Wait.ExpectedCondition() {
                 @Override
                 public boolean isTrue() throws Exception {
+                    device.openNotification();
                     return device.hasObject(By.res(Res.VPN_LOCK_ICON_RES)) ||
                             device.hasObject(By.text(VPN_ACTIVATED_TEXT));
                 }
