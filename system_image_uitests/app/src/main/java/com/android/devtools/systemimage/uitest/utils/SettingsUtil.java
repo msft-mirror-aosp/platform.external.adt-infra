@@ -7,7 +7,6 @@ import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 
 import java.util.concurrent.TimeUnit;
 
@@ -48,16 +47,11 @@ public class SettingsUtil {
      */
     public static UiObject findItem(Instrumentation instrumentation, String name) throws UiObjectNotFoundException {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
-        SystemImageTestFramework testFramework = new SystemImageTestFramework();
-        if(testFramework.getApi() >= 24){
-            itemList.scrollIntoView(new UiSelector().textContains(name));
-            return itemList.getChild(new UiSelector().text(name));
-        }
-        else {
-            UiObject child = itemList.getChild(new UiSelector().text(name));
-            child.waitForExists(TimeUnit.SECONDS.toMillis(5));
-            itemList.scrollIntoView(child);
-            return child;
+        UiObject item = itemList.getChildByText(new UiSelector().className("android.widget.TextView"), name);
+        if (item.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+            return item;
+        } else {
+            throw new UiObjectNotFoundException("Failed to find the item in Settings.");
         }
     }
 
