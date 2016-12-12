@@ -187,16 +187,16 @@ def RunSteps(api):
     api.step.active_result.presentation.status = api.step.WARNING
 
   with api.step.defer_results():
-    api.adt.python_test_step('Run System Image UI Test',
-                             api.path.join(log_dir, 'UI_test'),
-                             'test_ui.*',
-                             'config.csv',
-                             # We run only x86 images for UI tests.
-                             # Besides, UiAutomation framework only supports API 18 or plus.
-                             '{"abi": "x86", "api": ">=18"}',
-                             emulator_path,
-                             env,
-                             True)
+    api.adt.PythonTestStep('Run System Image UI Test',
+                           api.path.join(log_dir, 'UI_test'),
+                           'test_ui.*',
+                           'config.csv',
+                           # We run only x86 images for UI tests.
+                           # Besides, UiAutomation framework only supports API 18 or plus.
+                           '{"abi": "x86", "api": ">=18"}',
+                           emulator_path,
+                           env,
+                           True)
     api.file.remove(name='Remove Test Configuration', path='config.csv')
 
     if not TESTING: # pragma: no cover
