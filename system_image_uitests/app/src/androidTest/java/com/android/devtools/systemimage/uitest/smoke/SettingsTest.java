@@ -42,7 +42,6 @@ import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 
-
 /**
  * Test class for Android Settings page on Google API images.
  */
@@ -268,8 +267,10 @@ public class SettingsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation)) {
             DeveloperOptionsManager.enableDeveloperOptions(instrumentation);
+        } else {
+            return;
         }
-        assertTrue("Developer options not enabled.",
+        assertTrue("Failed to enable Developer options.",
                 DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation));
     }
 
