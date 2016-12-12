@@ -49,6 +49,12 @@ def zip_and_upload():
       verbose_call(['zip', '-r', args.zip_name, args.log_dir])
       adb_stress_gs_dst = 'gs://adb_test_traces/%s/' % builderName
       verbose_call(['python', gsutil_path, 'cp', args.zip_name, adb_stress_gs_dst])
+      # remove log zip files
+      try:
+        print "Delete log zip %s" % args.zip_name
+        shutil.rmtree(args.zip_name)
+      except Exception as e:
+        print "Error in deleting log zip %r" % e
 
     # if cts result is available, upload to public_html directory
     for x in ['CTS', 'GTS']:
