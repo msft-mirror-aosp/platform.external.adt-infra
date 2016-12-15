@@ -377,7 +377,7 @@
      "Mac 10.12.1 Intel HD 5000": {
        "recipe": "adt/adb",
        "slave_pools": ["mac-10-12-1-intel-hd-5000"],
-       "catagories": ["ADB"],
+       "categories": ["ADB"],
        "tag": "Mac",
      },
   },
