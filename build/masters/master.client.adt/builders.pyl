@@ -374,6 +374,12 @@
        "categories": ["ADB"],
        "tag": "Linux",
      },
+     "Mac 10.12.1 Intel HD 5000": {
+       "recipe": "adt/adb",
+       "slave_pools": ["mac-10-12-1-intel-hd-5000"],
+       "catagories": ["ADB"],
+       "tag": "Mac",
+     },
   },
 
   "schedulers": {
@@ -428,6 +434,14 @@
         "version": "precise",
       },
       "slaves": ['chromeos1-row3-rack3-host1'],
+    },
+    "mac-10-12-1-intel-hd-5000": {
+      "slave_data": {
+        "bits": 64,
+        "os": "mac",
+        "version": "trusty",
+      },
+      "slaves": ['chromeos1-row3-rack4-host3'],
     },
     "ubuntu-14_04-intel-hd-4400": {
       "slave_data": {
