@@ -25,7 +25,7 @@ def RunSteps(api):
   buildnum = api.properties['buildnumber']
   log_dir = 'adb_stress_logs-build_%s' % buildnum
 
-  if api.platform.is_linux:
+  if api.platform.is_linux or api.platform.is_mac:
     android_sdk_home = api.path.join(os.path.expanduser('~'), 'Android', 'android-sdk-linux_public')
   platform_tools_dir = api.path.join(android_sdk_home, 'platform-tools')
   env_path = ['%(PATH)s', platform_tools_dir]
@@ -67,5 +67,15 @@ def GenTests(api):
       project='master',
       buildername='Ubuntu 14.04 Intel HD 520',
       buildnumber='12',
+    )
+  )
+  yield (
+    api.test('basic') +
+    api.platform.name('mac') +
+    api.properties(
+        mastername='client.adt',
+        project='master',
+        buildernae='Mac 10.12.1 Intel HD 5000',
+        buildnumber='12',
     )
   )
