@@ -176,8 +176,9 @@ def RunSteps(api):
   print test_configs
 
   test_builder = buildername.split('_')[0]
+  config_file = api.path.join(script_root, 'config', 'config.csv')
   api.file.write(name='Generate Test Configuration',
-                 path='config.csv',
+                 path=config_file,
                  data=generate_test_config(test_configs, test_builder))
   for invalid_test_config in invalid_test_configs: # pragma: no cover
     api.step.active_result.presentation.logs['Invalid test config: %s' % invalid_test_config] = ''
@@ -197,7 +198,7 @@ def RunSteps(api):
                            emulator_path,
                            env,
                            True)
-    api.file.remove(name='Remove Test Configuration', path='config.csv')
+    api.file.remove(name='Remove Test Configuration', path=config_file)
 
     if not TESTING: # pragma: no cover
         api.gerrit.post(agentLib, 'Check system image release test results at: ' + psq_job_url)
