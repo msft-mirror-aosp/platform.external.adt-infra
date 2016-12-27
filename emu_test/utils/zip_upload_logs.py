@@ -52,7 +52,7 @@ def zip_and_upload():
       # remove log zip files
       try:
         print "Delete log zip %s" % args.zip_name
-        shutil.rmtree(args.zip_name)
+        os.remove(args.zip_name)
       except Exception as e:
         print "Error in deleting log zip %r" % e
 
