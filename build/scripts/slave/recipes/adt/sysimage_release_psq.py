@@ -200,6 +200,17 @@ def RunSteps(api):
                            True)
     api.file.remove(name='Remove Test Configuration', path=config_file)
 
+    log_util_path = api.path.join(script_root, 'utils', 'zip_upload_logs.py')
+    logs_dir = '/home/user/buildbot/external/adt-infra/build/masters/master.client.adt/slave_logs/'
+    upload_log_args = ['--dir', log_dir,
+                       '--name', 'build_%s-rev_%s.zip' % (buildnum, rev),
+                       '--ip', MASTER_IP,
+                       '--user', MASTER_USER,
+                       '--dst', '%s%s/' % (logs_dir, buildername),
+                       '--build-dir', build_dir,
+                       '--skiplog']
+    api.python("Zip and Upload Logs", log_util_path, upload_log_args, env=env)
+
     if not TESTING: # pragma: no cover
         api.gerrit.post(agentLib, 'Check system image release test results at: ' + psq_job_url)
 
