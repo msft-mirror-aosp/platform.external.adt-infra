@@ -59,7 +59,6 @@ class GSMultiPoller(base.PollingChangeSource):
     self.gs_path_list = gs_path_list
     self.pollInterval = pollInterval
     self.category = category
-    self.prev_build  = None
     self.last_change = None
     self.project = project
     self.branch = branch
@@ -117,7 +116,6 @@ class GSMultiPoller(base.PollingChangeSource):
 
   def _update_last_rev(self, new_revision):
     log.msg("%s: last revision changed from %s to %s" % (self.name, self.last_change, new_revision))
-    self.prev_build = self.last_change
     self.last_change = new_revision
     if self.cachepath:
       with open(self.cachepath, "w") as f:
@@ -132,8 +130,7 @@ class GSMultiPoller(base.PollingChangeSource):
         gs_full_path = 'gs://' + self.gs_bucket + '/' + file
         dst_file_list.append(gs_full_path)
 
-      props={'file_list': ','.join(dst_file_list),
-             'prev_build': self.prev_build}
+      props={'file_list': ','.join(dst_file_list)}
       self.master.addChange(who=self.name,
                             revision=parsed_revision,
                             files=dst_file_list,
