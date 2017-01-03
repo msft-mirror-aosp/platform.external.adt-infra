@@ -573,9 +573,9 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                         gpu = "yes" if api > "15" else "no"
                     ori = row[6].strip()
                     ori = "public" if ori == "" else ori
-                    # For 32 bit machine, ram should be less than 768MB
+                    # For 32 bit machine, ram should be less than 1024 MB
                     if not platform.machine().endswith('64'):
-                        ram = str(min([int(ram), 768]))
+                        ram = str(min([int(ram), 1024]))
                     # use qemu2 for top of tree images and public images above api 19
                     # arm use qemu1 regardless of origin and api level
                     if (ori != "public" or api >= "19") and abi != "armeabi-v7a":
