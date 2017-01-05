@@ -79,6 +79,7 @@ def RunSteps(api):
   # Emulator scripts are located [project root]/emu_test
   build_dir = api.path['build']
   script_root = api.path.join(build_dir, os.pardir, 'emu_test')
+  create_cl_list_path = api.path.join(script_root, 'utils', 'create_cl_list.py')
   image_util_path = api.path.join(script_root, 'utils', 'download_unzip_image.py')
   buildnum = api.properties['buildnumber']
   rev = api.properties['revision']
@@ -190,6 +191,19 @@ def RunSteps(api):
     # not a stopper to run actual tests
     # so set status to "warning" and continue test
     f.result.presentation.status = api.step.WARNING
+
+  try:
+    api.python('Create CL List', create_cl_list_path,
+               ['--poller', str(api.properties.get('blamelist')),
+                '--prevRevision', api.properties.get('prev_build'),
+                '--curRevision', api.properties.get('revision')],
+               env=env)
+  except api.step.StepFailure as f:
+    f.result.presentation.status = api.step.WARNING
+  except TypeError as f:
+    #This occurs when we fail to find 'prev_build' within the properties file.
+    # We will continue execution ignoring this error for now.
+    pass
 
   if is_cts:
     file_list = "cts"
