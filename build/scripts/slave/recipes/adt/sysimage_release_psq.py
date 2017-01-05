@@ -74,7 +74,6 @@ def RunSteps(api):
   script_root = api.path.join(build_dir, os.pardir, 'emu_test')
   init_bot_util_path = api.path.join(script_root, 'utils', 'emu_bot_init.py')
   image_util_path = api.path.join(script_root, 'utils', 'download_unzip_image.py')
-  dotest_path = api.path.join(script_root, 'dotest.py')
   agentLib = AgentLib(HOST, COOKIE_PATH, PROJECTS, BRANCH, PATH)  # pragma: no cover
   psq_job_url = 'https://goto.google.com/adt-sysimage-release-test/builds/%s' % buildnum
 
@@ -105,7 +104,7 @@ def RunSteps(api):
          'ANDROID_SDK_ROOT': android_sdk_home,
          'ANDROID_HOME': android_sdk_home}
 
-  if not TESTING: # pragma: no cover
+  if not TESTING in api.properties: # pragma: no cover
     api.gerrit.post(agentLib, 'Start to test releasing system images: ' + psq_job_url)
 
   # Initialize bot
@@ -211,8 +210,8 @@ def RunSteps(api):
                        '--skiplog']
     api.python("Zip and Upload Logs", log_util_path, upload_log_args, env=env)
 
-    if not TESTING: # pragma: no cover
-        api.gerrit.post(agentLib, 'Check system image release test results at: ' + psq_job_url)
+    if not TESTING in api.properties: # pragma: no cover
+      api.gerrit.post(agentLib, 'Check system image release test results at: ' + psq_job_url)
 
 
 def GenTests(api):
