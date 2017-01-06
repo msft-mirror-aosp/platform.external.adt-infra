@@ -16,8 +16,8 @@ def get_parser():
                         default=None,
                         help='run test for given AVD, support multiple avd separated by space')
     parser.add_argument('-b', type=int, dest='expected_boot_time', action='store',
-                        default=480,
-                        help='expected boot time in seconds, default is 480')
+                        default=600,
+                        help='expected boot time in seconds, default is 600')
     parser.add_argument('-exec', type=str, dest='emulator_exec', action='store',
                         default='emulator',
                         help='path of emulator executable, default is system emulator')
