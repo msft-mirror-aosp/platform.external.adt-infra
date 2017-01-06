@@ -136,6 +136,7 @@ class EmuBaseTestCase(LoggedTestCase):
 
     def launch_emu(self, avd):
         """Launch given avd and return immediately"""
+        self.m_logger.info('call Launching AVD, ...: %s', str(avd))
         exec_path = emu_argparser.emu_args.emulator_exec
         launch_cmd = [exec_path, "-avd", str(avd), "-verbose", "-show-kernel", "-wipe-data"]
         if avd.classic == "yes":
@@ -183,24 +184,29 @@ class EmuBaseTestCase(LoggedTestCase):
                     if any(x in line for x in ["ERROR", "FAIL", "error", "failed", "FATAL"]) and not line.startswith('['):
                         self.m_logger.error(line)
 
-        self.run_with_timeout(["adb", "kill-server"], 20)
-        self.run_with_timeout(["adb", "start-server"], 20)
-        logcat_thread = threading.Thread(target=launch_logcat_in_thread)
-        logcat_thread.start()
 
         test_name  = self.id().rsplit('.', 1)[-1]
         verbose_log_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_verbose.txt" % test_name)
         self.m_logger.info('Launching AVD, cmd: %s', ' '.join(launch_cmd))
         self.start_proc = psutil.Popen(launch_cmd, stdout=PIPE, stderr=STDOUT)
+        self.m_logger.info('done Launching AVD, cmd: %s', ' '.join(launch_cmd))
 
+        self.m_logger.info('create thread to read output of AVD, cmd: %s', str(avd))
         t_launch = threading.Thread(target=readoutput_in_thread)
         t_launch.start()
+        self.m_logger.info('done create thread to read output of AVD, cmd: %s', str(avd))
+
+        self.m_logger.info('create thread to read logcat of AVD, cmd: %s', str(avd))
+        logcat_thread = threading.Thread(target=launch_logcat_in_thread)
+        logcat_thread.start()
+        self.m_logger.info('done create thread to read logcat of AVD, cmd: %s', str(avd))
         # TODO: decrease the wait time
         # It is noticed that it takes a 'long time' for process to quit in some failure cases
         # But if the boot up time improves to be under 60 seconds, we will need to fine tune this wait time
-        time.sleep(60)
-        if self.start_proc.poll() or not self.find_emu_proc():
-            raise LaunchError(str(avd))
+        #time.sleep(60)
+        #if self.start_proc.poll() or not self.find_emu_proc():
+        #    raise LaunchError(str(avd))
+        self.m_logger.info('return Launching AVD, ...: %s', str(avd))
 
     def run_with_timeout(self, cmd, timeout):
         vars = {'output': "",
@@ -227,30 +233,47 @@ class EmuBaseTestCase(LoggedTestCase):
 
     def launch_emu_and_wait(self, avd):
         """Launch given avd and wait for boot completion, return boot time"""
+        #self.launch_emu(avd)
+        self.run_with_timeout(["adb", "kill-server"], 20)
+        self.run_with_timeout(["adb", "start-server"], 20)
+        launcher_emu = threading.Thread(target=self.launch_emu, args=[avd])
+        launcher_emu.start()
         start_time = time.time()
-        self.launch_emu(avd)
         completed = "0"
-        while time.time()-start_time < emu_argparser.emu_args.timeout_in_seconds:
+        counter = 0
+        real_time_out = emu_argparser.emu_args.timeout_in_seconds;
+        if 'swiftshader' in str(avd):
+            real_time_out = real_time_out + emu_argparser.emu_args.timeout_in_seconds
+        if 'arm' in str(avd):
+            real_time_out = real_time_out + emu_argparser.emu_args.timeout_in_seconds;
+        if 'mips' in str(avd):
+            real_time_out = real_time_out + emu_argparser.emu_args.timeout_in_seconds;
+        while time.time()-start_time < real_time_out:
             cmd = ["adb", "shell", "getprop", "sys.boot_completed"]
             try:
                 (exit_code, output, err) = self.run_with_timeout(cmd, 10)
             except Exception as e:
                 self.m_logger.error('exception run_with_timeout adb getprop: %r', e)
                 continue
-            self.m_logger.debug('AVD %s, %s %s', avd, output, err)
+            if counter % 60 is 0 or counter < 60:
+                self.m_logger.info('timeout is %s seconds', real_time_out)
+                self.m_logger.info('ping AVD %s for boot completion, output: %s error: %s', avd, output, err)
+            counter = counter + 1
             if exit_code is 0:
                 completed = output.strip()
             if completed is "1":
+                self.m_logger.info('AVD %s is fully booted', avd)
                 break
             time.sleep(1)
         if completed is not "1":
             self.m_logger.info('command output - %s %s', output, err)
             self.m_logger.error('AVD %s didn\'t boot up within %s seconds', avd,
-                                emu_argparser.emu_args.timeout_in_seconds)
+                                real_time_out)
             self.boot_time = -1
-            raise TimeoutError(avd, emu_argparser.emu_args.timeout_in_seconds)
+            raise TimeoutError(avd, real_time_out)
         self.boot_time = time.time() - start_time
         self.m_logger.info('AVD %s, boot time is %s', avd, self.boot_time)
+        launcher_emu.join(10)
         if not emu_argparser.emu_args.skip_adb_perf:
             self.run_adb_perf(avd)
         return self.boot_time
