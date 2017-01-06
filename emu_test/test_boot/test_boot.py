@@ -44,9 +44,16 @@ class BootTestCase(EmuBaseTestCase):
             pass
 
     def boot_check(self, avd):
+        real_expected_boot_time = emu_args.expected_boot_time;
+        if 'swiftshader' in str(avd):
+            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time;
+        if 'arm' in str(avd):
+            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time;
+        if 'mips' in str(avd):
+            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time;
         self.boot_time = self.launch_emu_and_wait(avd)
-        self.m_logger.info('AVD %s, boot time: %s, expected time: %s', avd, self.boot_time, emu_args.expected_boot_time)
-        self.assertLessEqual(self.boot_time, emu_args.expected_boot_time)
+        self.m_logger.info('AVD %s, boot time: %s, expected time: %s', avd, self.boot_time, real_expected_boot_time)
+        self.assertLessEqual(self.boot_time, real_expected_boot_time)
 
     def run_boot_test(self, avd_config):
         self.avd_config = avd_config
