@@ -29,6 +29,8 @@ def RunSteps(api):
     android_sdk_home = api.path.join(os.path.expanduser('~'), 'Android', 'android-sdk-linux_public')
   elif api.platform.is_mac:
     android_sdk_home = api.path.join(os.path.expanduser('~'), 'Android', 'android-sdk-macosx_public')
+  elif api.platform.is_win:
+    android_sdk_home = api.path.join(os.path.expanduser('~'), 'Android', 'android-sdk_public')
   platform_tools_dir = api.path.join(android_sdk_home, 'platform-tools')
   env_path = ['%(PATH)s', platform_tools_dir]
   env = {'PATH': api.path.pathsep.join(env_path)}
