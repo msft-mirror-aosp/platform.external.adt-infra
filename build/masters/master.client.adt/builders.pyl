@@ -380,6 +380,12 @@
        "categories": ["ADB"],
        "tag": "Mac",
      },
+     "Win 10 Intel HD 4400": {
+       "recipe": "adt/adb",
+       "slave_pools": ["win-10-intel-hd-4400"],
+       "categories": ["ADB"],
+       "tag": "Win",
+     },
   },
 
   "schedulers": {
@@ -442,6 +448,14 @@
         "version": "trusty",
       },
       "slaves": ['chromeos1-row3-rack4-host3'],
+    },
+    "win-10-intel-hd-4400": {
+      "slave_data": {
+        "bits": 64,
+        "os": "win",
+        "version": "trusty",
+      },
+      "slaves": ['chromeos1-row3-rack4-host4'],
     },
     "ubuntu-14_04-intel-hd-4400": {
       "slave_data": {
