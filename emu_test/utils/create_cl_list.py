@@ -28,6 +28,7 @@ def create_cl_list():
   Returns:
     Nothing.  Prints out results to stdout, which is captured by buildbot in recipe stdout.
   '''
+  print 'Calling into query_ab with: %s, %s, %s' % (args.poller, args.prevRevision, args.curRevision)
   changeSets = query_ab(args.poller, args.prevRevision, args.curRevision)
   print 'Changes included in this build:'
   print ''
