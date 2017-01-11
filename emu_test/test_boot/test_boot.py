@@ -19,7 +19,7 @@ class BootTestCase(EmuBaseTestCase):
     def setUpClass(cls):
         super(BootTestCase, cls).setUpClass()
 
-    def tearDown(self):
+    def kill_emulator(self):
         self.m_logger.debug('First try - quit emulator by adb emu kill')
         kill_proc = psutil.Popen(["adb", "emu", "kill"])
         # check emulator process is terminated
@@ -29,6 +29,9 @@ class BootTestCase(EmuBaseTestCase):
             self.kill_proc_by_name(["emulator", "qemu-system"])
             result = self.term_check(timeout=10)
             self.m_logger.debug("term_check after psutil.kill - %s", result)
+        return result
+    def tearDown(self):
+        result = self.kill_emulator()
         self.m_logger.info("Remove AVD inside of tear down")
         # avd should be found $HOME/.android/avd/
         avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
@@ -51,8 +54,18 @@ class BootTestCase(EmuBaseTestCase):
             real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time;
         if 'mips' in str(avd):
             real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time;
+        try:
+            self.boot_time = self.launch_emu_and_wait(avd)
+            self.m_logger.error('AVD %s, boot time: %s, expected time: %s', avd, self.boot_time, real_expected_boot_time)
+            self.assertLessEqual(self.boot_time, real_expected_boot_time)
+            return
+        except TimeoutError:
+            self.m_logger.error('AVD %s, time out, try one more time', avd)
+        except :
+            self.m_logger.error('AVD %s, exception, try one more time', avd)
+        self.kill_emulator()
         self.boot_time = self.launch_emu_and_wait(avd)
-        self.m_logger.info('AVD %s, boot time: %s, expected time: %s', avd, self.boot_time, real_expected_boot_time)
+        self.m_logger.error('2nd try AVD %s, boot time: %s, expected time: %s', avd, self.boot_time, real_expected_boot_time)
         self.assertLessEqual(self.boot_time, real_expected_boot_time)
 
     def run_boot_test(self, avd_config):
