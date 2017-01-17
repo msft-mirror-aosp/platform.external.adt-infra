@@ -171,6 +171,9 @@ def RunSteps(api):
       invalid_test_configs.add(config_str)
       print traceback.print_exc()
       continue
+    # For API 25, we only test default.
+    if config['api'] == 'API 25' and config['tag'] == 'google_apis':
+      continue
     test_configs.append(config)
   print test_configs
 
