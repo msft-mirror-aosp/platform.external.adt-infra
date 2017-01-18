@@ -45,6 +45,7 @@ public class SystemImageTestFramework implements TestRule {
     private final Instrumentation mInstrumentation = InstrumentationRegistry.getInstrumentation();
     private final UiDevice mDevice = UiDevice.getInstance(mInstrumentation);
     private final Bundle args = InstrumentationRegistry.getArguments();
+    private static final int RETRY_COUNT = 2;
 
     public Instrumentation getInstrumentation() {
         return mInstrumentation;
@@ -104,6 +105,10 @@ public class SystemImageTestFramework implements TestRule {
 
     @Override
     public Statement apply(final Statement base, final Description description) {
+        return statement(base, description);
+    }
+
+    private Statement statement (final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
@@ -130,49 +135,53 @@ public class SystemImageTestFramework implements TestRule {
                         AndroidLauncherWelcomeClingWatcher.class.getName(),
                         new AndroidLauncherWelcomeClingWatcher(mDevice)
                 );
+                mDevice.runWatchers();
 
-                try {
-                    mDevice.runWatchers();
-                    base.evaluate();
-                    // Must check the crash watcher again for finalization,
-                    // or could miss a crash if it happens at the end of a test case.
-                    crashWatcher.checkForCondition();
-                } catch (Throwable t) {
-                    throwable = t;
-                    File loggingDir = getLoggingDir(description.getTestClass().getSimpleName(),
-                            description.getMethodName());
+                // Implement retry logic here
+                for (int i = 0; i < RETRY_COUNT; i++) {
+                    throwable = null;
+                    try {
+                        base.evaluate();
+                        // Must check the crash watcher again for finalization,
+                        // or could miss a crash if it happens at the end of a test case.
+                        crashWatcher.checkForCondition();
+                        mDevice.pressHome();
+                    } catch (Throwable t) {
+                        throwable = t;
+                        File loggingDir = getLoggingDir(description.getTestClass().getSimpleName(),
+                                description.getMethodName());
 
-                    // Snap the screenshot when a test fails.
-                    mDevice.takeScreenshot(new File(loggingDir, "screenshot.png"));
-                    // Log the error message
-                    PrintWriter error =
-                            new PrintWriter(new File(loggingDir, "error.txt").getPath(), "UTF-8");
-                    t.printStackTrace(error);
-                    error.close();
-                    // Log the test case description
-                    PrintWriter info =
-                            new PrintWriter(new File(loggingDir, "description.txt").getPath());
-                    String testRailLink = description.getAnnotation(TestInfo.class).rootLink() +
-                            description.getAnnotation(TestInfo.class).id();
-                    info.println("See " + testRailLink);
-                    info.println();
-                    info.println("If you cannot access the link above, see http://go/adt-sysimage-autotracker instead");
-                    info.close();
-                } finally {
-                    mDevice.removeWatcher(CrashWatcher.class.getName());
-                    mDevice.removeWatcher(LockScreenWatcher.class.getName());
-                    mDevice.removeWatcher(AndroidWelcomeClingWatcher.class.getName());
-                    mDevice.removeWatcher(AndroidLauncherWelcomeClingWatcher.class.getName());
+                        // Snap the screenshot when a test fails.
+                        mDevice.takeScreenshot(new File(loggingDir, "screenshot.png"));
+                        // Log the error message
+                        PrintWriter error =
+                                new PrintWriter(new File(loggingDir, "error.txt").getPath(), "UTF-8");
+                        t.printStackTrace(error);
+                        error.close();
+                        // Log the test case description
+                        PrintWriter info =
+                                new PrintWriter(new File(loggingDir, "description.txt").getPath());
+                        String testRailLink = description.getAnnotation(TestInfo.class).rootLink() +
+                                description.getAnnotation(TestInfo.class).id();
+                        info.println("See " + testRailLink);
+                        info.println();
+                        info.println("If you cannot access the link above, see http://go/adt-sysimage-autotracker instead");
+                        info.close();
+                    } finally {
+                        mDevice.removeWatcher(CrashWatcher.class.getName());
+                        mDevice.removeWatcher(LockScreenWatcher.class.getName());
+                        mDevice.removeWatcher(AndroidWelcomeClingWatcher.class.getName());
+                        mDevice.removeWatcher(AndroidLauncherWelcomeClingWatcher.class.getName());
+                    }
+                    if (throwable == null) {
+                        return;
+                    }
                 }
 
-                mDevice.pressHome();
-
-                if (throwable != null) {
-                    // Dismiss any left crash dialog before throw and end the test.
-                    // Failed to dismiss a crash dialog may impair the following tests.
-                    crashWatcher.dismiss();
-                    throw throwable;
-                }
+                // Dismiss any left crash dialog before throw and end the test.
+                // Failed to dismiss a crash dialog may impair the following tests.
+                crashWatcher.dismiss();
+                throw throwable;
             }
         };
     }
