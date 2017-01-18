@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 25
+    buildToolsVersion "24.0.3"
 
     defaultConfig {
         applicationId "com.android.devtools.server"
@@ -12,6 +12,7 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -19,17 +20,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.+'
-    compile 'com.android.support:support-annotations:+'
-    compile 'com.android.support.test.uiautomator:uiautomator-v18:+'
-    compile 'com.android.support.test:runner:+'
-    compile 'com.android.support.test:rules:+'
-    compile 'com.google.guava:guava:+'
+    compile 'com.android.support:appcompat-v7:25.1.0'
+    compile 'com.android.support:support-annotations:25.1.0'
+    compile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
+    compile 'com.android.support.test:runner:0.4'
+    compile 'com.android.support.test:rules:0.4'
+    compile 'com.google.guava:guava:19.0'
     compile 'org.hamcrest:hamcrest-library:1.3'
+
     compile group: 'org.mortbay.jetty', name: 'jetty', version: '6.1.22'
     compile group: 'com.google.code.gson', name: 'gson', version: '2.3.1'
-
 }
