@@ -10,11 +10,6 @@ from utils import util
 install_apk_script_dir = os.path.dirname(os.path.realpath(__file__))
 servlet_launcher_dir = os.path.join(install_apk_script_dir, os.pardir,
                                     os.pardir, 'console_test_server')
-main_apk_path = os.path.join(servlet_launcher_dir,
-                             'app', 'build', 'outputs', 'apk', 'app-debug.apk')
-android_test_apk_path = os.path.join(servlet_launcher_dir,
-                                     'app', 'build', 'outputs', 'apk',
-                                     'app-debug-androidTest-unaligned.apk')
 
 gradle = ''
 if os.name == util.WINDOWS_OS_NAME:
@@ -34,10 +29,10 @@ while True:
     res_gradlew_build_android_test = (subprocess
                                       .check_call([gradle,
                                                    'assembleAndroidTest']))
-    res_install_main = subprocess.check_call(['adb', 'install', '-r',
-                                              main_apk_path])
-    res_install_android_test = subprocess.check_call(['adb', 'install', '-r',
-                                                      android_test_apk_path])
+    res_gradlew_build_main = subprocess.check_call([gradle, 'installDebug'])
+    res_gradlew_build_android_test = (subprocess
+                                      .check_call([gradle,
+                                                   'installDebugAndroidTest']))
     break
   except subprocess.CalledProcessError as err:
     print 'Subprocess call error: {0}'.format(err)
