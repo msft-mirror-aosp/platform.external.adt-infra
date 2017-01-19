@@ -47,7 +47,6 @@ class EventTest(testcase_base.BaseConsoleTest):
   def _verify_all_events_no_allias(self):
     self._verify_events_no_alias(CMD_EVENT_CODES_EV_SYN)
     self._verify_events_no_alias(CMD_EVENT_CODES_EV_MSC)
-    self._verify_events_no_alias(CMD_EVENT_CODES_EV_SW)
     self._verify_events_no_alias(CMD_EVENT_CODES_EV_LED)
     self._verify_events_no_alias(CMD_EVENT_CODES_EV_SND)
     self._verify_events_no_alias(CMD_EVENT_CODES_EV_REP)
@@ -82,6 +81,8 @@ class EventTest(testcase_base.BaseConsoleTest):
                              util.EVENTS_CODE_EV_REL_FILENAME)
     self._verify_event_codes(CMD_EVENT_CODES_EV_ABS,
                              util.EVENTS_CODE_EV_ABS_FILENAME)
+    self._verify_event_codes(CMD_EVENT_CODES_EV_SW,
+                             util.EVENTS_CODE_EV_SW_FILENAME)
 
   def test_list_event_aliases(self):
     """Test for command: event types.
