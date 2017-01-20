@@ -132,7 +132,7 @@ def main(args):
   if master_overrides_slave:
     cmd.append('--master-overrides-slave')
 
-  return subprocess.call(cmd, cwd=SLAVE_DIR, env=env)
+  return subprocess.call(cmd, cwd=slave_dir, env=env)
 
 
 if __name__ == '__main__':
