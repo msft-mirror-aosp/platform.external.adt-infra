@@ -26,6 +26,8 @@ public class Result {
   private String windowHierarchy;
   private String smsAddress;
   private String smsTextMessage;
+  private String screenOrientation;
+  private String screenRotation;
 
   public boolean isFail() {
     return isFail;
@@ -78,6 +80,24 @@ public class Result {
 
   public Result setSmsTextMessage(String smsTextMessage) {
     this.smsTextMessage = smsTextMessage;
+    return this;
+  }
+
+  public String getScreenOrientation() {
+    return screenOrientation;
+  }
+
+  public Result setScreenOrientation(String screenOrientation) {
+    this.screenOrientation = screenOrientation;
+    return this;
+  }
+
+  public String getScreenRotation() {
+    return screenRotation;
+  }
+
+  public Result setScreenRotation(String screenRotation) {
+    this.screenRotation = screenRotation;
     return this;
   }
 }
