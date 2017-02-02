@@ -107,6 +107,17 @@
        "branch": "all",
        "name_identifier": "system-images",
     },
+     "sys_image_master_poller": {
+       "gs_bucket": "android-build-emu-sysimage",
+       "gs_path": ["builds/git_master-linux-sdk_google_phone_x86_64-sdk_addon/",
+                   "builds/git_master-mac-sdk_google_phone_x86-sdk_addon_mac/",
+                   "builds/git_master-mac-sdk_phone_armv7-sdk_mac/"],
+       "pollInterval": 577,
+       "type": "GSMultiPoller",
+       "project": "master",
+       "branch": "all",
+       "name_identifier": "system-images",
+    },
     "sys_image_klp_poller": {
        "gs_bucket": "android-build-emu-sysimage",
        "gs_path": ["builds/git_klp-emu-dev-linux-google_sdk_x86-sdk_addon/"],
@@ -398,7 +409,7 @@
       "type": "emu_scheduler",
     },
     "system_image_scheduler": {
-      "project": ["klp-emu-dev", "lmp-mr1-emu-dev", "mnc-emu-dev", "nyc-emu-dev", "nyc-mr1-emu-dev", "lmp-emu-dev", "gb-emu-dev",
+      "project": ["master", "klp-emu-dev", "lmp-mr1-emu-dev", "mnc-emu-dev", "nyc-emu-dev", "nyc-mr1-emu-dev", "lmp-emu-dev", "gb-emu-dev",
                   "ics-mr1-emu-dev", "jb-emu-dev", "jb-mr1.1-emu-dev", "jb-mr2-emu-dev"],
       "type": "emu_scheduler",
     },
