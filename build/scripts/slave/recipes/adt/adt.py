@@ -34,7 +34,7 @@ def RunSteps(api):
   file_list = api.properties.get('file_list')
   download_path = api.path['slave_build'].join('')
   env_path = ['%(PATH)s']
-  emulator_branches = ['emu-master-dev', 'emu-2.2-release']
+  emulator_branches = ['emu-master-dev', 'emu-2.3-release']
   is_cts = 'CTS' in str(buildername)
   is_ui = 'UI' in str(buildername)
   is_console = "console" in str(api.properties.get('scheduler'))
@@ -89,7 +89,7 @@ def RunSteps(api):
 
   bootSteps = {
                'emu-master-dev': bootStep('public', '{"ori": "public"}'),
-               'emu-2.2-release': bootStep('public', '{"ori": "public"}'),
+               'emu-2.3-release': bootStep('public', '{"ori": "public"}'),
                'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
                'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
                'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
@@ -231,7 +231,7 @@ def RunSteps(api):
                     '--build-dir', build_dir],
                    env=env)
       for emu_branch in emulator_branch_to_use:
-        if 'emu-master-dev' in emu_branch:
+        if 'emu-master-dev' in emu_branch or 'emu-2.3-release' in emu_branch:
           emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
         else:
           emulator_path = api.path.join(emu_branch, 'tools', 'emulator')
