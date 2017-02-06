@@ -36,6 +36,7 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
@@ -95,6 +96,121 @@ public class SettingsTest {
                         return device.findObject(new UiSelector().textContains("Location")).exists();
                     }
                 }));
+    }
+
+    /**
+     * Verifies that the phone cannot dial out if phone privileges have been disabled.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578843
+     * <p>
+     *   <pre>
+     *  1. Start the emulator.
+     *  2. Open Settings > Apps
+     *  3. Click on the gear icon and select App permissions.
+     *  4. Click on "Phone"
+     *  5. Disable Phone permissions.
+     *  6. Click on DENY button.
+     *  7. Return to the main screen.
+     *  8. Launch the phone app.
+     *  9. Click on the dialer icon.
+     *  10. Type in a number.
+     *  11. Click on Call icon.
+     *   Verify:
+     *   Dialog stating "This application cannot make outgoing calls without the Phone permission."
+     *   </pre>
+     * <p>
+     * The test works on API 23 and greater. No gear menu and app permissions for APIs under 23.
+     */
+    @Test
+    @TestInfo(id = "14578843")
+    public void testPhonePermissions() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        if (testFramework.getApi() >= 23) {
+            SettingsUtil.openItem(instrumentation, "Apps");
+            device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
+                    .clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().text("App permissions"))
+                    .clickAndWaitForNewWindow();
+
+            UiScrollable appPermissionsList = new UiScrollable(
+                    new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+            assertTrue(appPermissionsList.exists());
+            appPermissionsList.setAsVerticalList();
+            appPermissionsList.scrollIntoView(new UiSelector().text("Phone"));
+            device.findObject(new UiSelector().text("Phone")).click();
+
+            UiScrollable phonePermissionsList = new UiScrollable(
+                    new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+            assertTrue(phonePermissionsList.exists());
+            phonePermissionsList.setAsVerticalList();
+            phonePermissionsList.scrollIntoView(new UiSelector().text("Phone"));
+
+            UiObject phoneToggle = device.findObject(new UiSelector().text("Phone"));
+            phoneToggle.click();
+
+            final UiObject denyButton;
+            if (testFramework.getApi() == 23) {
+                denyButton = device.findObject(new UiSelector().text("Deny"));
+            } else {
+                denyButton = device.findObject(new UiSelector().text("DENY ANYWAY"));
+            }
+
+
+            boolean isSuccess =
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return denyButton.exists();
+                        }
+                    });
+
+            if (!isSuccess) {
+                phoneToggle.clickAndWaitForNewWindow();
+            }
+
+            denyButton.click();
+
+            device.pressHome();
+            device.findObject(new UiSelector().text("Phone")).click();
+            device.findObject(new UiSelector().description("dial pad")).click();
+            for (int i=0; i<3; i++) {
+                device.findObject(new UiSelector().text("JKL")).click();
+            }
+            device.findObject(new UiSelector().resourceId(
+                    Res.DIALER_BUTTON_RES)).clickAndWaitForNewWindow();
+
+            assertTrue("Did not prompt for lack of Phone permission.",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return device.findObject(new UiSelector().text(
+                                    "This application cannot make outgoing calls " +
+                                            "without the Phone permission.")).exists();
+                        }
+                    }));
+
+            SettingsUtil.openItem(instrumentation, "Apps");
+            device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
+                    .clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().text("App permissions"))
+                    .clickAndWaitForNewWindow();
+
+            assertTrue(appPermissionsList.exists());
+            appPermissionsList.setAsVerticalList();
+            appPermissionsList.scrollIntoView(new UiSelector().text("Phone"));
+            device.findObject(new UiSelector().text("Phone")).click();
+
+            assertTrue(phonePermissionsList.exists());
+            phonePermissionsList.setAsVerticalList();
+            phonePermissionsList.scrollIntoView(new UiSelector().text("Phone"));
+
+            phoneToggle.click();
+            device.pressHome();
+        }
     }
 
     /**
