@@ -69,6 +69,9 @@ public class Res {
     public static final String NOTIFICATION_BAR_EXPAND_RES =
             "com.android.systemui:id/expand_indicator";
 
+    public static final String DIALER_BUTTON_RES =
+            "com.android.dialer:id/dialpad_floating_action_button";
+
     public static final String NOW_SIGNIN_ACCEPT_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/accept_button";
     public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
@@ -87,5 +90,6 @@ public class Res {
     public static final String ANDROID_TIME_HEADER_RES = "android:id/time_header";
     public static final String ANDROID_TIME_HEADER_RES_19 = "android:id/timePicker";
     public static final String ANDROID_LIST_RES = "android:id/list";
+    public static final String ANDROID_CONTENT_RES = "android:id/content";
     public static final String CELLULAR_DATA_SWITCH_RES = "android:id/switch_widget";
 }
