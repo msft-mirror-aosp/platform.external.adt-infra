@@ -17,7 +17,8 @@ args = parser.parse_args()
 def get_dst_dir(remote_path):
   file_name = os.path.basename(remote_path)
   emulator_branches = ["emu-master-dev", "emu-2.0-release", "emu-2.2-release", "emu-2.3-release"]
-  if file_name.startswith('sdk-repo-linux-system-images') or file_name.startswith('sdk-repo-linux-addon'):
+  if file_name.startswith('sdk-repo-linux-system-images') or file_name.startswith('sdk-repo-linux-addon')
+      or file_name.startswith('sdk-repo-darwin-system-images'):
     branch_name = remote_path.split('/')[-4]
     if 'google' in branch_name and 'addon' in branch_name:
       tag = 'google_apis'
@@ -47,6 +48,8 @@ def get_dst_dir(remote_path):
       api = '17'
     elif 'jb-mr2-emu' in branch_name:
       api = '18'
+    elif 'master' in branch_name:
+      api = 'O'
 
     else:
       raise ValueError("unsupported image %s", branch_name)

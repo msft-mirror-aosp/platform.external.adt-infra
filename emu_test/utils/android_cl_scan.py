@@ -112,6 +112,8 @@ def generate_git_information(poller):
     return 'git_klp-emu-dev', 'google_sdk_x86-sdk_addon'
   elif 'sys_image_lmp_poller' in poller:
     return 'git_lmp-emu-dev', 'sdk_google_phone_x86-sdk_addon'
+  elif 'sys_image_master_poller' in poller:
+    return 'git_master', 'sdk_gphone_x86-sdk_addon'
   elif 'emulator_2.3_linux_poller' in poller or 'emulator_2.3_windows_poller' in poller:
     return 'aosp-emu-2.3-release', 'sdk_tools_linux'
   elif 'emulator_2.3_windows_poller' in poller:
