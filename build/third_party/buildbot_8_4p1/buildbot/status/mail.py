@@ -656,12 +656,12 @@ class MailNotifier(base.StatusReceiverMultiService):
         s = m.as_string()
         twlog.msg('sending mail (%d bytes) to' % len(s), recipients)
         try:
-          emailServer = smtplib.SMTP(self.smtpServer, self.smtpPort)
-          emailServer.starttls()
-          emailServer.login(self.smtpUser, self.smtpPassword)
-          emailServer.sendmail(self.fromaddr, recipients, s)
-          emailServer.quit()
-          twlog.msg('successfully sent email')
+          #emailServer = smtplib.SMTP(self.smtpServer, self.smtpPort)
+          #emailServer.starttls()
+          #emailServer.login(self.smtpUser, self.smtpPassword)
+          #emailServer.sendmail(self.fromaddr, recipients, s)
+          #emailServer.quit()
+          twlog.msg('Email has been disabled - no route to host on machine.')
         except Exception as ex:
           twlog.msg('error: failed to send email: %s' % repr(ex))
         return 0
