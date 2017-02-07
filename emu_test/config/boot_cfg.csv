@@ -1,7 +1,6 @@
 Device Config,,,,,,,Linux,,,,Windows,,,,,MacOSX,,,
 API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,Ubuntu 12.04 HD Graphics 4000,Ubuntu 14.04 HD 4400,Ubuntu 14.04 Quadro 600,Ubuntu 15.04 Quadro K600,Win 7 32-bit HD 4400,Win 7 64-bit HD 4400,Win 8 64-bit Quadro 600,Win 8.1 64-bit Quadro 600,Win 10 64-bit Quadro 600,Mac 10.10.5 Intel HD 5000,Mac 10.10.5 Iris Pro,Mac 10.8.5 Intel HD 5000,Mac 10.11.1 Iris Pro
-API O,default,armeabi-v7a,Nexus 6P,2048,yes,master,P,P,P,P,P,P,P,P,P,P,P,P,P
-,google_apis,x86,Nexus 6P,2048,yes,master,P,P,P,P,P,P,P,P,P,P,P,P,P
+API O,google_apis,x86,Nexus 6P,2048,yes,master,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 6P,2048,yes,master,P,P,P,P,P,P,P,P,P,P,P,P,P
 API 25,android-tv,armeabi-v7a,Android TV (1080p),2048,yes,,,,,,,,,,,,,,
 ,,x86,Android TV (1080p),2048,yes,nyc-mr1,P,P,P,P,P,P,P,P,P,P,P,P,P
