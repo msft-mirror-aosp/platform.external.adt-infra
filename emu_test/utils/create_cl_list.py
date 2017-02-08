@@ -34,7 +34,7 @@ def create_cl_list():
   print ''
   for change in changeSets:
     print 'CL %s' % (change['changeNumber'])
-    print 'https://android-review.googlesource.com/#/%s' % (change['changeNumber'])
+    print 'https://android-review.googlesource.com/#/c/%s' % (change['changeNumber'])
     print 'Owner: %s   in build: %s' % (change['email'], change['buildId'])
     print change['subject']
     print ''
