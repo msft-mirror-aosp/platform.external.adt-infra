@@ -551,4 +551,68 @@ public class SettingsTest {
         // Clean up by disabling 24-hour format option.
         widget.click();
     }
+
+    /**
+     * Verify that activating and deactivating Device Administrators setting works.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C144630613
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start an emulator AVD.
+     *   2. Goto Settings —> Security —> Device Administration.
+     *   3. Select Sample Device Admin.
+     *   4. Goto to setting and deactivate policy.
+     *   Verify:
+     *   1. (Verify #3) the "Sample Device Admin" policy is activated.
+     *   2. (Verify #4) that the sample device Admin policy is deactivated.
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "T144630613")
+    public void activateDeactivatePolicy() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = testFramework.getDevice();
+
+        // Activate "Sample Device Admin" policy
+        SettingsUtil.activate(instrumentation, "Sample Device Admin");
+        assertTrue(checkStatusOfPolicy(instrumentation, "Sample Device Admin"));
+
+        // Deactivate "Sample Device Admin" policy
+        SettingsUtil.deactivate(instrumentation, "Sample Device Admin");
+        assertFalse(checkStatusOfPolicy(instrumentation, "Sample Device Admin"));
+
+    }
+
+    /**
+     *Check if the the selected policy is checked or not.
+     */
+    private boolean checkStatusOfPolicy(Instrumentation instrumentation, String adminPolicyName)
+            throws Exception{
+
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        UiSelector listViewSelector = new UiSelector().resourceId(Res.ANDROID_LIST_RES);
+
+        assertTrue(device.findObject(listViewSelector).exists());
+
+        // Get all the available "Device administrators" options
+        int size = device.findObject(listViewSelector).getChildCount();
+
+        // Verify that the correct checkbox (Sample Device Admin) is checked
+        for (int i = 0; i < size; i++) {
+
+            UiSelector sampleDeviceSelection = listViewSelector.childSelector(new
+                    UiSelector().index(i));
+
+            if(device.findObject(sampleDeviceSelection).getChild(
+                    new UiSelector().textContains(adminPolicyName)).exists()){
+
+                return device.findObject(sampleDeviceSelection).getChild(
+                        new UiSelector().className("android.widget.CheckBox")).isChecked();
+            }
+        }
+        return false;
+    }
 }
