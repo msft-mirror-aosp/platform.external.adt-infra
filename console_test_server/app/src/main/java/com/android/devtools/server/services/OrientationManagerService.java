@@ -19,10 +19,10 @@ package com.android.devtools.server.services;
 import com.android.devtools.server.model.RestServiceModel;
 import com.android.devtools.server.model.Result;
 import com.android.devtools.server.model.OrientationManagerModel;
+import com.android.devtools.server.utils.Constants;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import android.content.Context;
 import android.support.test.uiautomator.UiDevice;
@@ -38,15 +38,9 @@ import android.view.WindowManager;
  */
 
 public class OrientationManagerService implements Service {
-
   private static final String TAG = OrientationManagerService.class.getSimpleName();
   private final Context mContext;
   private final UiDevice mDevice;
-  private static final String LAUNCHER_LIST_CONTAINER_RES =
-          "(com.android.launcher\\d*:id|com.google.android."
-          + "googlequicksearchbox\\d*:id|com.google.android.apps.nexuslauncher"
-          + "\\d*:id)/(all_apps_container|apps_customize_pane_content"
-          + "|apps_list_view)";
 
   public OrientationManagerService(Context context, UiDevice uiDevice) {
     mContext = context;
@@ -70,8 +64,8 @@ public class OrientationManagerService implements Service {
       return new Gson().toJson(result);
     }
 
-    OrientationManagerModel orientationModel = new Gson().fromJson(json,
-            OrientationManagerModel.class);
+    OrientationManagerModel orientationModel = new Gson()
+        .fromJson(json, OrientationManagerModel.class);
     if (orientationModel == null) {
       Log.e(TAG, "OrientationModel is null. Invalid POST Request body: " + json);
       result.setIsFail(true);
@@ -85,16 +79,14 @@ public class OrientationManagerService implements Service {
     //   ROTATION_180: 2
     //   ROTATION_270: 3
     //   ROTATION_90: 1
-    final int screenRotation = ((WindowManager)
-            mContext.getSystemService(Context.WINDOW_SERVICE)).
-            getDefaultDisplay().getRotation();
+    final int screenRotation = ((WindowManager) mContext
+        .getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
 
     // Screen orientation has two common values:
     // in android.content.res.Configuration:
     //   ORIENTATION_PORTRAIT: 1
     //   ORIENTATION_LANDSCAPE: 2
-    final int screenOrientation = mContext.getResources().
-            getConfiguration().orientation;
+    final int screenOrientation = mContext.getResources().getConfiguration().orientation;
 
     result.setScreenRotation(Integer.toString(screenRotation));
     result.setScreenOrientation(Integer.toString(screenOrientation));
@@ -109,17 +101,17 @@ public class OrientationManagerService implements Service {
     // For API 22, 23, 24, there is a tip on the screen. ('Got it')
     // It needs to be removed by clicking on it.
     try {
-      mDevice.findObject(new UiSelector().text("OK")).
-              clickAndWaitForNewWindow();
-      Log.d(TAG, "Welcome screen tip, OK clicked.");
+      mDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK))
+          .clickAndWaitForNewWindow();
+      Log.d(TAG, "Welcome screen tip, " + Constants.TIP_BUTTON_OK + " clicked.");
     } catch (UiObjectNotFoundException e) {
       Log.e(TAG, e.getMessage());
     }
 
     try {
-      mDevice.findObject(new UiSelector().text("GOT IT")).
-              clickAndWaitForNewWindow();
-      Log.d(TAG, "Welcome screen tip, GOT IT clicked.");
+      mDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_GOT_IT))
+          .clickAndWaitForNewWindow();
+      Log.d(TAG, "Welcome screen tip, " + Constants.TIP_BUTTON_GOT_IT + " clicked.");
     } catch (UiObjectNotFoundException e) {
       Log.e(TAG, e.getMessage());
     }
@@ -127,45 +119,42 @@ public class OrientationManagerService implements Service {
     // Launch pre-installed application: Calculator.
     final String appName = "Calculator";
 
-    mDevice.findObject(new UiSelector().descriptionContains("Apps")).
-            clickAndWaitForNewWindow();
+    mDevice.findObject(new UiSelector().descriptionContains(Constants.APPS))
+        .clickAndWaitForNewWindow();
 
     // For API 18, 19, 21, after opening Apps, there is another tip on the
     // the screen. It needs to be removed by clicking on it. ('OK')
     try {
-      mDevice.findObject(new UiSelector().text("OK")).
-              clickAndWaitForNewWindow();
-      Log.i(TAG, "Apps tip, OK clicked.");
+      mDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK))
+          .clickAndWaitForNewWindow();
+      Log.i(TAG, "Apps tip, " + Constants.TIP_BUTTON_OK + " clicked.");
     } catch (UiObjectNotFoundException e) {
       Log.e(TAG, e.getMessage());
     }
 
-    UiScrollable appList =
-            new UiScrollable(
-                    new UiSelector().resourceIdMatches(
-                            LAUNCHER_LIST_CONTAINER_RES));
+    UiScrollable appList = new UiScrollable(new UiSelector()
+        .resourceIdMatches(Constants.LAUNCHER_LIST_CONTAINER_RES));
 
     UiObject app;
     try {
       appList.setAsVerticalList();
       app = appList.getChildByText(
-              new UiSelector().className("android.widget.TextView"),
-              appName);
+          new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
+          appName);
     } catch (UiObjectNotFoundException e) {
       appList.setAsHorizontalList();
       app = appList.getChildByText(
-              new UiSelector().className("android.widget.TextView"),
-              appName);
+          new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
+          appName);
     }
     app.clickAndWaitForNewWindow();
   }
 
   @Override
   public String toString() {
-    return new Gson()
-            .toJson(
-                    new RestServiceModel(
-                            POST, "/OrientationManagerService",
-                            new OrientationManagerModel("String").toString()));
+    return new Gson().toJson(new RestServiceModel(
+        POST,
+        "/OrientationManagerService",
+        new OrientationManagerModel("String").toString()));
   }
 }
