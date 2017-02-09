@@ -28,6 +28,9 @@ public class Result {
   private String smsTextMessage;
   private String screenOrientation;
   private String screenRotation;
+  private String longitude;
+  private String latitude;
+  private String altitude;
 
   public boolean isFail() {
     return isFail;
@@ -98,6 +101,33 @@ public class Result {
 
   public Result setScreenRotation(String screenRotation) {
     this.screenRotation = screenRotation;
+    return this;
+  }
+
+  public String getLongitude() {
+    return longitude;
+  }
+
+  public Result setLongitude(String longitude) {
+    this.longitude = longitude;
+    return this;
+  }
+
+  public String getLatitude() {
+    return latitude;
+  }
+
+  public Result setLatitude(String latitude) {
+    this.latitude = latitude;
+    return this;
+  }
+
+  public String getAltitude() {
+    return altitude;
+  }
+
+  public Result setAltitude(String altitude) {
+    this.altitude = altitude;
     return this;
   }
 }
