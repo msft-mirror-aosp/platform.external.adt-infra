@@ -1,9 +1,10 @@
 package com.android.devtools.systemimage.uitest.utils;
-
 import android.app.Instrumentation;
 import android.graphics.Rect;
+import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
@@ -25,7 +26,8 @@ public class SettingsUtil {
      * Launches Settings and get the item list as a @{code UiScrollable}, ready to search for
      * clickable items.
      */
-    public static UiScrollable launchAndGetItemList(Instrumentation instrumentation) throws UiObjectNotFoundException {
+    public static UiScrollable launchAndGetItemList(
+            Instrumentation instrumentation) throws UiObjectNotFoundException {
         AppLauncher.launch(instrumentation, "Settings");
 
         UiScrollable itemList = new UiScrollable(new UiSelector().resourceIdMatches(
@@ -41,7 +43,8 @@ public class SettingsUtil {
      * Launches Settings and scroll to the item whose name contains the given text. Returns
      * @{code true} iff the item is there.
      */
-    public static boolean scrollToItem(Instrumentation instrumentation, String text) throws UiObjectNotFoundException {
+    public static boolean scrollToItem(
+            Instrumentation instrumentation, String text) throws UiObjectNotFoundException {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
         return itemList.scrollIntoView(new UiSelector().textContains(text));
     }
@@ -49,9 +52,11 @@ public class SettingsUtil {
     /**
      * Launches Settings and find the item with the given name. Returns the item.
      */
-    public static UiObject findItem(Instrumentation instrumentation, String name) throws UiObjectNotFoundException {
+    public static UiObject findItem(
+            Instrumentation instrumentation, String name) throws UiObjectNotFoundException {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
-        UiObject item = itemList.getChildByText(new UiSelector().className("android.widget.TextView"), name);
+        UiObject item = itemList.getChildByText(
+                new UiSelector().className("android.widget.TextView"), name);
         if (item.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
             return item;
         } else {
@@ -60,9 +65,10 @@ public class SettingsUtil {
     }
 
     /**
-     * Launches Settings and launch the item with the given name. Returns the result of the click call.
+     * Launches Settings and launch the item with the given name. Returns the result of the call.
      */
-    public static boolean openItem(Instrumentation instrumentation, String name) throws UiObjectNotFoundException {
+    public static boolean openItem(
+            Instrumentation instrumentation, String name) throws UiObjectNotFoundException {
         return findItem(instrumentation, name).clickAndWaitForNewWindow();
     }
 
@@ -140,6 +146,85 @@ public class SettingsUtil {
         UiObject okButton = device.findObject(new UiSelector().text("OK"));
         okButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
         okButton.click();
+    }
+
+     /**
+     * Enable or disable permissions settings for a given application type
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     * @param appType String describing the application type, as listed on the App permissions
+     *                screen.
+     * @param appName String describing the application name, as listed on the {appType}
+     *                permissions screen.
+     * @param enablePermissions boolean indicating whether the permissions should be enabled
+     *                          or disabled.
+     * @return void
+     * @throws UiObjectNotFoundException if it fails to find a UI object.
+     */
+    public static void setAppPermissions(
+            Instrumentation instrumentation, String appType,
+            String appName, boolean enablePermissions)
+            throws UiObjectNotFoundException {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        UiScrollable item;
+
+        openItem(instrumentation, "Apps");
+
+        if (SystemUtil.getApiLevel() >= 23) {
+            //click gear icon
+            device.findObject(new UiSelector().resourceId(
+                    Res.SETTINGS_ADVANCED_OPTION_RES)).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().text("App permissions")).clickAndWaitForNewWindow();
+            UiScrollable appPermissions = new UiScrollable(
+                    new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+            if (appPermissions.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+                appPermissions.setAsVerticalList();
+                appPermissions.scrollIntoView(new UiSelector().text(appType));
+            } else {
+                throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
+            }
+
+            device.findObject(new UiSelector().text(appType)).click();
+
+            UiScrollable locationPermissionsList = new UiScrollable(
+                    new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+
+            locationPermissionsList.setAsVerticalList();
+            locationPermissionsList.scrollIntoView(new UiSelector().text(appName));
+
+            UiObject2 permissionsBtn = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.Switch"),
+                    By.text(appName),
+                    By.clazz("android.widget.LinearLayout"),
+                    2);
+
+            if (!permissionsBtn.isChecked() && enablePermissions)
+                permissionsBtn.click();
+
+            else if ((permissionsBtn.isChecked() && !enablePermissions)) {
+                permissionsBtn.click();
+
+                final UiObject denyButton;
+                if (SystemUtil.getApiLevel() == 23) {
+                    denyButton = device.findObject(new UiSelector().text("Deny"));
+                } else
+                    denyButton = device.findObject(new UiSelector().text("DENY ANYWAY"));
+                try {
+                    boolean dialogLaunched =
+                            new Wait().until(new Wait.ExpectedCondition() {
+                                @Override
+                                public boolean isTrue() throws UiObjectNotFoundException {
+                                    return denyButton.exists();
+                                }
+                            });
+                    if (dialogLaunched)
+                        denyButton.click();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
 
