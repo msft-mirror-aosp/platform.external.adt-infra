@@ -512,16 +512,25 @@ public class SettingsTest {
             }));
         // Disable automatic time zone option.
         widget.click();
+        final UiObject selectTimeZone = device.findObject(
+                new UiSelector().text("Select time zone"));
         assertTrue("Failed to enable select time zone",
-            new Wait().until(new Wait.ExpectedCondition() {
+                new Wait().until(new Wait.ExpectedCondition() {
                 @Override
                 public boolean isTrue() throws Exception {
-                    return device.findObject(new UiSelector().text("Select time zone")).isEnabled();
+                    return selectTimeZone.isEnabled();
                 }
             }));
-        device.findObject(new UiSelector().text("Select time zone")).clickAndWaitForNewWindow();
-        assertTrue("Failed to find Select time zone title.",
-                device.findObject(new UiSelector().text("Select time zone")).exists());
+        selectTimeZone.clickAndWaitForNewWindow();
+
+        assertTrue("Failed to load Select time zone screen.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(
+                                new UiSelector().text("Select time zone")).exists();
+                    }
+                }));
         UiScrollable timeZoneList =
                 new UiScrollable(
                         new UiSelector().className("android.widget.ListView"));
