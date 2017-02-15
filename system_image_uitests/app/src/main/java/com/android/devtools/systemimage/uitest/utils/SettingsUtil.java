@@ -171,26 +171,24 @@ public class SettingsUtil {
         openItem(instrumentation, "Apps");
 
         if (SystemUtil.getApiLevel() >= 23) {
-            //click gear icon
             device.findObject(new UiSelector().resourceId(
                     Res.SETTINGS_ADVANCED_OPTION_RES)).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().text("App permissions")).clickAndWaitForNewWindow();
             UiScrollable appPermissions = new UiScrollable(
                     new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
             if (appPermissions.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
-                appPermissions.setAsVerticalList();
-                appPermissions.scrollIntoView(new UiSelector().text(appType));
+                appPermissions.getChildByText(
+                        new UiSelector().className("android.widget.TextView"), appType);
             } else {
                 throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
             }
 
             device.findObject(new UiSelector().text(appType)).click();
 
-            UiScrollable locationPermissionsList = new UiScrollable(
+            UiScrollable locationPermissions = new UiScrollable(
                     new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
-
-            locationPermissionsList.setAsVerticalList();
-            locationPermissionsList.scrollIntoView(new UiSelector().text(appName));
+            locationPermissions.getChildByText(
+                    new UiSelector().className("android.widget.TextView"), appName);
 
             UiObject2 permissionsBtn = UiAutomatorPlus.findObjectByRelative(
                     instrumentation,
