@@ -145,7 +145,7 @@ public class SettingsUtil {
         actionButton.click();
         UiObject okButton = device.findObject(new UiSelector().text("OK"));
         okButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
-        okButton.click();
+        okButton.clickAndWaitForNewWindow();
     }
 
      /**
