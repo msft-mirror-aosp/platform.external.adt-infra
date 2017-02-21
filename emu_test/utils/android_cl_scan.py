@@ -116,7 +116,7 @@ def generate_git_information(poller):
     return 'git_master', 'sdk_gphone_x86-sdk_addon'
   elif 'emulator_2.3_linux_poller' in poller or 'emulator_2.3_windows_poller' in poller:
     return 'aosp-emu-2.3-release', 'sdk_tools_linux'
-  elif 'emulator_2.3_windows_poller' in poller:
+  elif 'emulator_2.3_mac_poller' in poller:
     return 'aosp-emu-2.3-release', 'sdk_tools_mac'
   else:
     raise NotImplementedError('The passed in poller: %s, does not have a '
