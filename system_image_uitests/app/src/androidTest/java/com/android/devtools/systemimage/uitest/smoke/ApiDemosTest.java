@@ -37,6 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 
 
@@ -71,6 +72,10 @@ public class ApiDemosTest {
      *      Minimum Length: 6 Minimum.
      *      Minimum Letters: 1.
      *      Minimum Numeric: 1.
+     *      Minimum Lower case: 1.
+     *      Minimum Upper Case: 1.
+     *      Minimum Symbols: 1.
+     *      Minimum non-Letters: 1.
      *   Verify:
      *   1. Settings —> Security —> Screen Lock —> Set it to Password.
      *      You are asked to set password according to rules mentioned above.
@@ -95,34 +100,56 @@ public class ApiDemosTest {
         itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 "Password quality").clickAndWaitForNewWindow();
 
-        //Specify list items to choose from "PASSWORD QUALITY".
+        // Set the criteria for password to 'Complex' type.
         itemList.getChildByText(
                 new UiSelector().className("android.widget.RelativeLayout"), "Password quality")
                 .clickAndWaitForNewWindow();
         device.findObject(new UiSelector().text("Complex")).clickAndWaitForNewWindow();
 
-        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                "Minimum length").clickAndWaitForNewWindow();
-        editText = device.findObject(new UiSelector().className("android.widget.EditText"));
-        editText.setText("6");
-        device.findObject(new UiSelector().text("OK")).click();
+        // Set minimum length to 6.
+        setPasswordCriteria(device, "Minimum length", "6");
 
-        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                "Minimum letters").clickAndWaitForNewWindow();
-        editText = device.findObject(new UiSelector().className("android.widget.EditText"));
-        editText.setText("1");
-        device.findObject(new UiSelector().text("OK")).click();
+        // Set minimum letters to 1.
+        setPasswordCriteria(device, "Minimum letters", "1");
 
-        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                "Minimum numeric").clickAndWaitForNewWindow();
-        editText = device.findObject(new UiSelector().className("android.widget.EditText"));
-        editText.setText("1");
-        device.findObject(new UiSelector().text("OK")).click();
+        // Set minimum numerics to 1.
+        setPasswordCriteria(device, "Minimum numeric", "1");
+
+        // Set minimum lower case letters to 1.
+        setPasswordCriteria(device, "Minimum lower case", "1");
+
+        // Set minimum upper case letters  to 1.
+        setPasswordCriteria(device, "Minimum upper case", "1");
+
+        // Set minimum special symbols to 1.
+        setPasswordCriteria(device, "Minimum symbols", "1");
+
+        // Set minimum non-letter to 1.
+        setPasswordCriteria(device, "Minimum non-letter", "1");
 
         //Verify that setting the password meets the "PASSWORD QUALITY" criteria.
         verifyPasswordQuality(instrumentation, device);
 
     }
+
+
+    /**
+     *  Set the criteria for password.
+     */
+    private void setPasswordCriteria(
+            UiDevice device,
+            String criteria,
+            String value) throws Exception{
+        UiScrollable itemList =
+                new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES));
+        itemList.setAsVerticalList();
+        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                criteria).clickAndWaitForNewWindow();
+        UiObject editText = device.findObject(new UiSelector().className("android.widget.EditText"));
+        editText.setText(value);
+        device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
+    }
+
 
     /**
      *  Verify the functionality of "PASSWORD QUALITY".
@@ -144,22 +171,48 @@ public class ApiDemosTest {
 
         UiObject passwordField = device.findObject(
                 new UiSelector().className("android.widget.EditText"));
+        passwordField.waitForExists(TimeUnit.SECONDS.toMillis(3L));
 
         //Assert "Minimum Length".
-        passwordField.setText("ab!1b");
-        Assert.assertTrue(
-                device.findObject(
-                        new UiSelector().textContains("Must be at least 6 characters")).exists());
-        pressDeleteKey(device, 5);
+        validateWrongPassword(device, "aB!1b", "Must be at least 6 characters");
+
+        //Assert "Minimum Upper Case".
+        validateWrongPassword(device, "abc1!d", "Must contain at least 1 uppercase letter");
+
+        //Assert "Minimum Lower Case".
+        validateWrongPassword(device, "ABC1!D", "Must contain at least 1 lowercase letter");
+
+        //Assert "Minimum Numerical Digits".
+        validateWrongPassword(device, "AaBC!D", "Must contain at least 1 numerical digit");
+
+        //Assert "Minimum Special Symbols".
+        validateWrongPassword(device, "AaBC1D", "Must contain at least 1 special symbol");
 
         //Assertion for a valid password that meets all the "PASSWORD QUALITY" criteria.
-        passwordField.setText("abc1!d");
+        passwordField.setText("Abc1!d");
         UiObject ContinueButton = device.findObject(
                 new UiSelector().className("android.widget.Button").textContains("Continue"));
         ContinueButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
         Assert.assertTrue(ContinueButton.isEnabled());
-
     }
+
+
+    /**
+     * Assert the wrong password value with the correct error message.
+     */
+    private void validateWrongPassword(UiDevice device,
+                                       String password,
+                                       String errorMessage) throws Exception {
+        UiObject passwordField = device.findObject(
+                new UiSelector().className("android.widget.EditText"));
+
+        passwordField.setText(password);
+        Assert.assertTrue(
+                device.findObject(
+                        new UiSelector().textContains(errorMessage)).exists());
+        pressDeleteKey(device, password.length());
+    }
+
 
     /**
      * Common code to delete all the characters in the password field.
