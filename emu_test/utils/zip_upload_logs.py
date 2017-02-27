@@ -46,13 +46,15 @@ def zip_and_upload():
 
     # if it is adb stress test log, zip and upload to GCS
     if 'adb_stress_logs' in args.log_dir:
-      verbose_call(['zip', '-r', args.zip_name, args.log_dir])
+      full_zip_path = os.path.join(args.build_dir, args.zip_name)
+      full_log_path = os.path.join(args.build_dir, args.log_dir)
+      verbose_call(['zip', '-r', full_zip_path, full_log_path])
       adb_stress_gs_dst = 'gs://adb_test_traces/%s/' % builderName
-      verbose_call(['python', gsutil_path, 'cp', args.zip_name, adb_stress_gs_dst])
+      verbose_call(['python', gsutil_path, 'cp', full_zip_path, adb_stress_gs_dst])
       # remove log zip files
       try:
-        print "Delete log zip %s" % args.zip_name
-        os.remove(args.zip_name)
+        print "Delete log zip %s" % full_zip_path
+        os.remove(full_zip_path)
       except Exception as e:
         print "Error in deleting log zip %r" % e
 
