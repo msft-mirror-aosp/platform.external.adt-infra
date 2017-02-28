@@ -61,7 +61,7 @@ def RunSteps(api):
                        '--build-dir', build_dir,
                        '--skiplog']
     if api.platform.is_win:
-      upload_log_args['--iswindows'] = True
+      upload_log_args.append('--iswindows')
     api.python("Zip and Upload Logs", log_util_path, upload_log_args)
 
 def GenTests(api):
