@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
@@ -26,6 +27,7 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -89,7 +91,7 @@ public class SettingsTest {
             device.findObject(new UiSelector().textContains("Yes")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().textContains("Location")).clickAndWaitForNewWindow();
         }
-            assertTrue("Failed to find Location title.",
+        assertTrue("Failed to find Location title.",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws Exception {
@@ -465,12 +467,12 @@ public class SettingsTest {
         if (!switchWidget.isChecked()) {
             switchWidget.click();
             assertTrue("Failed to find Now sign-in title and buttons.", new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_SCREEN_RES)).exists()
-                                && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
-                                && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
-                    }
+                @Override
+                public boolean isTrue() throws Exception {
+                    return device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_SCREEN_RES)).exists()
+                            && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
+                            && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
+                }
             }));
         }
     }
@@ -661,5 +663,131 @@ public class SettingsTest {
             }
         }
         return false;
+    }
+
+    private UiObject findObjectInScrollable(UiSelector selector) throws UiObjectNotFoundException {
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        scrollable.scrollIntoView(selector);
+        return scrollable.getChild(selector);
+    }
+
+    public void enableSampleDeviceAdmin() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = testFramework.getDevice();
+
+        AppLauncher.launch(instrumentation, "Settings");
+        findObjectInScrollable(new UiSelector().text("Security")).click();
+        findObjectInScrollable(new UiSelector().text("Device administrators")).click();
+
+        device.findObject(new UiSelector().text("Sample Device Admin")).click();
+
+        try {
+            if (testFramework.getApi() >= 24) {
+                findObjectInScrollable(new UiSelector().text(
+                        "Activate this device administrator")).click();
+            } else {
+                device.findObject(new UiSelector().text("Activate")).click();
+            }
+        } catch (UiObjectNotFoundException e) {
+            assertTrue("Could not find device adminstration buttons.",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return device.findObject(new UiSelector().text("Cancel")).exists();
+                        }
+                    }));
+            device.findObject(new UiSelector().text("Cancel")).click();
+        }
+
+        device.pressHome();
+    }
+
+    private void disableCamera() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = testFramework.getDevice();
+
+        AppLauncher.launch(instrumentation, "API Demos");
+        boolean widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                return device.findObject(new UiSelector().text("App")).exists();
+            }
+        });
+        if (widgetExists) {
+            device.findObject(new UiSelector().text("App")).click();
+        }
+        widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                return device.findObject(new UiSelector().text("Device Admin")).exists();
+            }
+        });
+
+        if (widgetExists) {
+            device.findObject(new UiSelector().text("Device Admin")).click();
+        }
+        widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                return device.findObject(new UiSelector().text("General")).exists();
+            }
+        });
+        if (widgetExists) {
+            device.findObject(new UiSelector().text("General")).click();
+        }
+
+        widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                return device.findObject(new UiSelector().text("Device cameras enabled")).exists();
+            }
+        });
+
+        if (widgetExists) {
+            device.findObject(new UiSelector().text("Device cameras enabled")).click();
+        }
+
+        device.pressHome();
+    }
+
+    private void gotoCameraApp() throws UiObjectNotFoundException {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        AppLauncher.launch(instrumentation, "Camera");
+    }
+
+    private boolean verifyCameraAppDisabled() {
+        UiDevice device = testFramework.getDevice();
+
+        return device.hasObject(By.textContains(
+                "Camera has been disabled because of security policies"));
+    }
+
+    /**
+     * Verify test Camera App is disabled in emulator when disabled in Device Admin.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578974
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start an emulator AVD.
+     *   2. Goto Settings —> Security —> Device Administration
+     *   3. Select Sample Device Admin.
+     *   4. Goto app API Demos —> App —> Device Admin —> General (Verify 1)
+     *   5. Select Disable all device Camera.
+     *   6. Goto Home screen —> Click on Camera Application (Verify 2)
+     *   Verify:
+     *   1. (Verify #1) see “Device Admin” option in API Demos.
+     *   2. (Verify #2) see a Pop Up Message “Camera has been disabled because of security policies.
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "C14578974")
+    public void testCameraAppDisabled() throws Exception {
+        enableSampleDeviceAdmin();
+        disableCamera();
+        gotoCameraApp();
+        Assert.assertTrue(verifyCameraAppDisabled());
     }
 }
