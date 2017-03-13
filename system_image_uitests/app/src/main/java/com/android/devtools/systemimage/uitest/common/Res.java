@@ -78,6 +78,10 @@ public class Res {
     public static final String NOW_SIGNIN_SCREEN_RES =
             "com.google.android.googlequicksearchbox\\d*:id/header_title";
 
+    public static final String SEARCH_TEXT_BOX =
+            "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)" +
+                    "/(search_omnibox_text_box|textbox|edit_textbox)";
+
     // Third-party application resource IDs
     public static final String APP_IMAGE_VIEW_ID =
             "com.example.android.rs.hellocompute:id/displayin";
