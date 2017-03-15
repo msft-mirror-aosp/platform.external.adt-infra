@@ -28,6 +28,7 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -445,6 +446,7 @@ public class SettingsTest {
      *   The show cards confirmation page opens.
      *   </pre>
      */
+    @Ignore("bug 35808476 - API 24G UI changed.")
     @Test
     @TestInfo(id = "14581322")
     public void confirmNowCardsPageOpen() throws Exception {
