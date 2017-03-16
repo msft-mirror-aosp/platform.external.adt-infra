@@ -33,6 +33,7 @@ import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -82,6 +83,7 @@ public class ApiDemosTest {
      *    </pre>
      *
      */
+    @Ignore("bug 36251611 - API 24G UI changed.")
     @Test
     @TestInfo(id = "T144630615")
     public void testPasswordQuality() throws Exception {
