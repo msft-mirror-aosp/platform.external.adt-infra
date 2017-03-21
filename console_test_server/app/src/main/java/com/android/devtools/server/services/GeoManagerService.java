@@ -228,9 +228,9 @@ public class GeoManagerService implements Service {
     Log.d(TAG, "Enabled GPS.");
 
     try {
-      uiDevice.findObject(new UiSelector().text(Constants.YES)).
+      uiDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK)).
               clickAndWaitForNewWindow();
-      Log.d(TAG, "2.3) Improve location accuracy, " + Constants.YES + " clicked.");
+      Log.d(TAG, "2.3) Improve location accuracy, " + Constants.TIP_BUTTON_OK + " clicked.");
     } catch (UiObjectNotFoundException e) {
       Log.e(TAG, e.getMessage());
     }
