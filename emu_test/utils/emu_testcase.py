@@ -172,7 +172,11 @@ class EmuBaseTestCase(LoggedTestCase):
                         self.m_logger.info('No emulator found, stopping logcat')
                         break
                 if (logcat_proc):
-                    logcat_proc.terminate()
+                   try:
+                       logcat_proc.terminate()
+                   except:
+                       # Could not terminate logcat; probably already dead.
+                       pass
 
         def readoutput_in_thread():
             with open(verbose_log_path, 'a') as verb_output:
