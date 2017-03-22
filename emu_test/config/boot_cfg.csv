@@ -82,6 +82,3 @@ API 15,default,armeabi-v7a,Nexus 4,2048,no,public,,,P,P,,,,,,,,,
 ,,x86,Nexus 4,2048,no,public,,,P,P,,,,,,,,,
 ,,x86,Nexus 4,2048,no,ics-mr1,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,google_apis,x86,Nexus 4,2048,no,ics-mr1,P,P,P,P,P,P,P,P,P,P,P,P,P
-API 10,default,x86,Nexus 4,2048,no,public,P,P,P,P,,,P,P,P,P,P,P,P
-,,x86,Nexus 4,2048,no,gb,P,P,P,P,P,P,P,P,P,P,P,P,P
-,google_apis,x86,Nexus 4,2048,no,gb,P,P,P,P,P,P,P,P,P,P,P,P,P
