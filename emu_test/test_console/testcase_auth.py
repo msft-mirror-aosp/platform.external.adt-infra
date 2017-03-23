@@ -174,20 +174,31 @@ class AuthTest(testcase_base.BaseConsoleTest):
 
     # save auth token value and empty contents of auth token file
     valid_auth_token = util.get_auth_token()
-    f = open(util.TOKEN_PATH, 'w')
-    f.close()
 
-    # telnet and verify
-    self.telnet = util.telnet_emulator()
-    self._verify_auth_command_by_enter_help_command(
-        util.REGEX_HELP_DISPLAY_AUTH)
+    try:
+      f = open(util.TOKEN_PATH, 'w')
+      f.close()
 
-    # reset auth token file
-    f = open(util.TOKEN_PATH, 'w')
-    f.write(valid_auth_token)
-    f.close()
+      # telnet and verify
+      self.telnet = util.telnet_emulator()
+      self._verify_auth_command_by_enter_help_command(
+          util.REGEX_HELP_DISPLAY_AUTH)
 
-    util.exit_emulator_console(self.telnet)
+      # reset auth token file
+      f = open(util.TOKEN_PATH, 'w')
+      f.write(valid_auth_token)
+      f.close()
+
+      util.exit_emulator_console(self.telnet)
+    except IOError as e:
+      print 'IOError on auth token file.'
+    finally:
+      print ('The failure on resetting auth token file back will affact other '
+             'tests running after this test. Hence, reset it again when '
+             'failure happens.')
+      f = open(util.TOKEN_PATH, 'w')
+      f.write(valid_auth_token)
+      f.close()
 
   def test_auth_change_auth_token_file_permissions(self):
     """Test command for: auth <auth_token>.
