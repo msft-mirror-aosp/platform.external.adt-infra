@@ -46,6 +46,7 @@ def zip_and_upload():
 
     # if it is adb stress test log, zip and upload to GCS
     if 'adb_stress_logs' in args.log_dir:
+      print 'Running command in directory: %s' % (os.getcwd())
       verbose_call(['zip', '-r', args.zip_name, args.log_dir])
       adb_stress_gs_dst = 'gs://adb_test_traces/%s/' % builderName
       verbose_call(['python', gsutil_path, 'cp', args.zip_name, adb_stress_gs_dst])
