@@ -38,10 +38,16 @@ def get_connected_devices():
     output, error = proc.communicate()
     connected = []
     # Collect connected devices.
-    for emulator_entry in output.split('\n')[1:]:
+    # Note that since Windows includes a carriage return, we
+    # do it in a seperate loop.
+    if platform.system() is not 'Windows':
+      for emulator_entry in output.split('\n')[1:]:
         if emulator_entry != '':
-            connected.append(emulator_entry.split('\t')[0])
-
+          connected.append(emulator_entry.split('\t')[0])
+    else:
+      for emulator_entry in output.split('\r\n')[1:]:
+        if emulator_entry != '':
+          connected.append(emulator_entry.split('\t')[0])
     return connected
 
 
