@@ -34,6 +34,10 @@ class GeoTest(testcase_base.BaseConsoleTest):
   def setUpClass(cls):
     util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
 
+  @classmethod
+  def tearDownClass(cls):
+    util.unstall_apps(TESTCASE_CALL_DIR)
+
   def _process_request_geo_service(self, payload):
     """Processes post request to geo service.
 
