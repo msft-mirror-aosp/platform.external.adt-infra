@@ -32,6 +32,7 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,6 +72,7 @@ public class MapsTest {
      *   2. Navigation overview is displayed.
      *   </pre>
      */
+    @Ignore("bug 36450156 - API 23, 23G does not have maps app")
     @Test
     @TestInfo(id = "145493594")
     public void testMapsApp() throws Exception {
