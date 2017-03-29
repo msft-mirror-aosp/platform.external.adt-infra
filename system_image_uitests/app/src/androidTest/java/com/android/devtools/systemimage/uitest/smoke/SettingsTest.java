@@ -20,6 +20,7 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
@@ -45,6 +46,9 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
+import android.widget.LinearLayout;
+import android.widget.Switch;
+import android.widget.TextView;
 
 /**
  * Test class for Android Settings page on Google API images.
@@ -793,5 +797,153 @@ public class SettingsTest {
         disableCamera();
         gotoCameraApp();
         Assert.assertTrue(verifyCameraAppDisabled());
+    }
+
+    /**
+     * To verify that "Reset app preferences" restores permission restrictions.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578841
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Launch an emulator avd with wipe data.
+     *   2. Open Settings > Apps.
+     *   3. Open the menu (3 vertical dots) and tap on "Show System".
+     *   4. Tap on any app, say Maps and select "Permissions".
+     *   5. Enable all available permissions for the app.
+     *   6. Press back button.
+     *   7. Open the menu > Reset app preferences > Reset apps.
+     *   Verify:
+     *   1. App settings for Maps are reset to default (Verify that Permissions and notification
+     *   settings for Maps are cleared).
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "C14578841")
+    public void modifyAndResetAppPermissions() throws Exception {
+
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = testFramework.getDevice();
+
+        String appName = "Maps";
+        String contactsText = "Contacts";
+        String locationText = "Location";
+        String phoneText = "Phone";
+        String storageText = "Storage";
+
+        // Variables to store the state of permissions.
+        boolean contactsSwitchState;
+        boolean locationSwitchState;
+        boolean phoneSwitchState;
+        boolean storageSwitchState;
+
+        //Check for Deny alert dialog button for location permissions.
+        UiObject denyButton;
+
+        if(testFramework.getApi() < 23){
+            return;
+        }
+
+        //Open System apps list.
+        AppManager.openSystemAppList(instrumentation);
+
+        // Find and click "Maps" in apps list.
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
+
+        itemList.scrollIntoView(new UiSelector().text(appName));
+        itemList.getChildByText(new UiSelector().className(TextView.class.getName()), appName)
+                .clickAndWaitForNewWindow();
+
+        //Get application info list.
+        UiScrollable appInfoList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+
+        //Choose permissions to edit them.
+        appInfoList.getChildByText(new UiSelector().
+                className(TextView.class.getName()),"Permissions").clickAndWaitForNewWindow();
+
+        UiScrollable permissionList;
+        if(testFramework.getApi() > 23 ){
+            permissionList =
+                    new UiScrollable(
+                            new UiSelector().resourceIdMatches(Res.ANDROID_LIST_RES)
+                    );
+        } else {
+            permissionList =
+                    new UiScrollable(
+                            new UiSelector().
+                                    resourceIdMatches("com.android.packageinstaller:id/list")
+                    );
+        }
+
+        //Get switch widgets UiObjects.
+        UiObject contactSwitch =
+                findObjectByRelative(permissionList,contactsText,LinearLayout.class.getName());
+        UiObject locationSwitch =
+                findObjectByRelative(permissionList,locationText,LinearLayout.class.getName());
+        UiObject phoneSwitch =
+                findObjectByRelative(permissionList,phoneText,LinearLayout.class.getName());
+        UiObject storageSwitch =
+                findObjectByRelative(permissionList,storageText,LinearLayout.class.getName());
+
+        //Store current permissions state of switch widgets.
+        contactsSwitchState = contactSwitch.isChecked();
+        locationSwitchState = locationSwitch.isChecked();
+        phoneSwitchState = phoneSwitch.isChecked();
+        storageSwitchState = storageSwitch.isChecked();
+
+        //Modify application permission.
+        contactSwitch.click();
+        phoneSwitch.click();
+        storageSwitch.click();
+        locationSwitch.clickAndWaitForNewWindow();
+
+        device.findObject(new UiSelector().textStartsWith("Deny")).clickAndWaitForNewWindow();
+
+        //Go back two times to go to system apps page to reset permissions.
+        device.pressBack();
+        device.pressBack();
+
+        //Reset app preferences from overflow menu.
+        device.pressMenu();
+        device.findObject(
+                new UiSelector().textContains("Reset app preferences")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().textContains("RESET APPS")).clickAndWaitForNewWindow();
+
+        //Open Maps info.
+        itemList.scrollIntoView(new UiSelector().text(appName));
+        itemList.getChildByText(new UiSelector().className(TextView.class.getName()), appName)
+                .clickAndWaitForNewWindow();
+
+        //Open permission and verify Contacts,Location,Phone and Storage.
+        //Verify that all the permission for the app are reset.
+        appInfoList.getChildByText(new UiSelector().
+                className(TextView.class.getName()),"Permissions").clickAndWaitForNewWindow();
+
+        assertEquals(contactsSwitchState,
+                findObjectByRelative(
+                        permissionList,"Contacts",LinearLayout.class.getName()).isChecked());
+        assertEquals(locationSwitchState,
+                findObjectByRelative(
+                        permissionList,"Location",LinearLayout.class.getName()).isChecked());
+        assertEquals(phoneSwitchState,
+                findObjectByRelative(
+                        permissionList,"Phone",LinearLayout.class.getName()).isChecked());
+        assertEquals(storageSwitchState,
+                findObjectByRelative(
+                        permissionList,"Storage",LinearLayout.class.getName()).isChecked());
+    }
+
+    private UiObject findObjectByRelative(UiScrollable verticalList, String childText, String classType) throws Exception{
+        UiObject uiObject = verticalList.getChildByText(new UiSelector().className(classType),childText);
+        return uiObject.getChild(new UiSelector().className(Switch.class.getName()));
     }
 }
