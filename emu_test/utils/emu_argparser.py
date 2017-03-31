@@ -43,5 +43,11 @@ def get_parser():
     parser.add_argument('--uitest-psc', type=str, dest='uitest_psc', action='store',
                         default=None,
                         help='test class and method for uitest presubmit check')
+    parser.add_argument('--cts-plan', type=str, dest='cts_plan', action='store',
+                        default=None,
+                        help='The plan.xml file to use for executing CTS tests')
+    parser.add_argument('--cts-dir', type=str, dest='cts_dir', action='store',
+                        default=None,
+                        help='specify the root directory of android cts tests, usually this ends in android-cts')
     parser.add_argument('unittest_args', nargs='*')
     return parser

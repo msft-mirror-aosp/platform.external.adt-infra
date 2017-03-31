@@ -94,6 +94,8 @@ class CTSTestCase(EmuBaseTestCase):
         home_dir = os.path.expanduser('~')
         if emu_argparser.emu_args.is_gts:
             return os.path.join(home_dir, 'Android', 'GTS', 'android-xts')
+        if emu_argparser.emu_args.cts_dir is not None:
+            return emu_argparser.emu_args.cts_dir
         cts_home = os.path.join(home_dir, 'Android', 'CTS')
         cts_dir = "%s-%s" % (api_to_android_version[avd.api], avd.abi)
         return os.path.join(cts_home, cts_dir, 'android-cts')
@@ -105,6 +107,8 @@ class CTSTestCase(EmuBaseTestCase):
 
     @staticmethod
     def get_cts_plan_dir(avd):
+        if emu_argparser.emu_args.cts_plan is not None:
+            return emu_argparser.emu_args.cts_plan
         return os.path.join(CTSTestCase.get_cts_root(avd), 'repository', 'plans')
 
     @staticmethod
@@ -405,6 +409,5 @@ emu_test.utils.emu_testcase.create_test_case_from_file("cts", CTSTestCase, CTSTe
 
 if __name__ == '__main__':
     emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
-    print emu_argparser.emu_args
     sys.argv[1:] = emu_args.unittest_args
     unittest.main()
