@@ -87,7 +87,7 @@ def setupLogger():
 def findSystemAVDs():
     """Find available AVDs in system"""
     # avd is searched in the order of $ANDROID_AVD_HOME,$ANDROID_SDK_HOME/.android/avd and $HOME/.android/avd
-    avd_list_proc = psutil.Popen(['emulator', "-list-avds"], stdout=PIPE, stderr=PIPE)
+    avd_list_proc = psutil.Popen([emu_argparser.emu_args.emulator_exec, "-list-avds"], stdout=PIPE, stderr=PIPE)
     (output, err) = avd_list_proc.communicate()
     logging.getLogger().debug(output)
     logging.getLogger().debug(err)

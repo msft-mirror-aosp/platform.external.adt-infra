@@ -389,7 +389,7 @@ class EmuBaseTestCase(LoggedTestCase):
             self.m_logger.exception('Check avd_template.ini')
             pass
         except:
-            self.m_logger.exception('Fails to create sdcard.img')
+            self.m_logger.exception('Failed to create sdcard.img, make sure you have mksdcard on your path ($ANDROID_SDK_ROOT/tools/mksdcard)')
             pass
 
     def create_avd(self, avd_config):
@@ -574,7 +574,8 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                 continue
             if reader.line_num == 2:
                 idx = [i for i, j in enumerate(row) if j in emu_argparser.emu_args.builder_name]
-                assert len(idx) == 1, "Unexpected builder name in config file"
+                assert len(idx) == 1, "Unexpected builder name {0} in line {1}, config file: {1}".format(
+                    emu_argparser.emu_args.builder_name, row, emu_argparser.emu_args.config_file)
                 builder_idx = idx[0]
             else:
                 if(row[0].strip() != ""):
