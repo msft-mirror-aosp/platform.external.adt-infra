@@ -95,9 +95,9 @@ EOF
 # So we chop of the last columns to get the numbers..
 
 # Get the first data point from the emulator, so we can use that in the title
-first=$(grep "Peak:" $option_in | awk '{print $(NF-2)}' | sed 's/,$//' | head -1)
+first=$(awk '/Epoch: [0-9]+, Peak: [0-9]+$/{print $(NF-2)}' $option_in | sed 's/,$//' | head -1)
 
 # Of course gnuplot doesn't use an epoch that starts in 1970, they start in 2000..
 make_plot $plotfile $(expr $first - 946684800)
 
-grep "Peak:" $option_in | awk '{print $(NF-2), $(NF)}' | gnuplot $plotfile  > $option_out
+awk '/Epoch: [0-9]+, Peak: [0-9]+$/{print $(NF-2), $(NF)}' $option_in | gnuplot $plotfile  > $option_out
