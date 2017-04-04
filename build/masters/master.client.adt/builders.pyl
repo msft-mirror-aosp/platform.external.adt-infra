@@ -350,8 +350,8 @@
      },
      "Win 10 64-bit Quadro 600 1": {
        "recipe": "adt/adt",
-       "slave_pools": ["win-10-64-nvidia-quadro-600-ui"],
-       "categories": ["UI"],
+       "slave_pools": ["win-10-64-nvidia-quadro-600-1"],
+       "categories": ["UI", "Console"],
        "tag": "Win",
      },
      "Mac 10.10.5 Intel HD 5000": {
@@ -378,10 +378,10 @@
        "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
        "tag": "Mac",
      },
-     "Mac 10.11.6 Iris Pro UI": {
+     "Mac 10.11.6 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-11-6-iris-pro-ui"],
-       "categories": ["UI"],
+       "categories": ["UI", "Console"],
        "tag": "Mac",
      },
      "Ubuntu 14.04 Intel HD 520": {
@@ -557,7 +557,7 @@
       },
       "slaves": ['chromeos1-row3-rack3-host4'],
     },
-    "win-10-64-nvidia-quadro-600-ui": {
+    "win-10-64-nvidia-quadro-600-1": {
       "slave_data": {
         "bits": 64,
         "os": "win",
