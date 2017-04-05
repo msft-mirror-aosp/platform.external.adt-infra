@@ -12,6 +12,7 @@ optional arguments:
 
 import os
 import subprocess
+import sys
 
 import util
 
@@ -69,5 +70,10 @@ def test_device(dut):
 
 if __name__ == '__main__':
     args = util.parse_args()
-    util.launcher(test_device, args.duration, args.count, is_print_progress=args.progress,
-                  log_dir=os.path.join(args.log_dir, 'adb_sleep_wake_stress'))
+    result = util.launcher(test_device, args.duration, args.count, is_print_progress=args.progress,
+                           log_dir=os.path.join(args.log_dir, 'adb_sleep_wake_stress'))
+
+    if result:
+        sys.exit(0)
+    else:
+        sys.exit(1)
