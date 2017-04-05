@@ -274,13 +274,18 @@
        "id": "_8",
        "scheduler": "adb_test_scheduler",
      },
+     "AVD": {
+       "name": "avd test",
+       "id": "_9",
+       "scheduler": "avd_test_scheduler",
+     },
   },
 
   "builders": {
      "Ubuntu 12.04 HD Graphics 4000": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-12_04-intel-hd-4000"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds", "Console"],
+       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds", "Console", "AVD"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400": {
@@ -432,6 +437,10 @@
     "adb_test_scheduler": {
       "type": "adb_cron",
       "every_x_hour": 4,
+    },
+    "avd_test_scheduler": {
+      "project": ["emu-master-dev"],
+      "type": "emu_scheduler",
     },
  },
 

@@ -38,6 +38,7 @@ def RunSteps(api):
   is_cts = 'CTS' in str(buildername)
   is_ui = 'UI' in str(buildername)
   is_console = "console" in str(api.properties.get('scheduler'))
+  is_avd = 'AVD' in str(buildername)
 
   # find android sdk root directory
   home_dir = os.path.expanduser('~')
@@ -69,7 +70,7 @@ def RunSteps(api):
   android_platform_dir = os.path.join(android_sdk_home, 'platform-tools')
   android_buildtools_dir = os.path.join(android_sdk_home, 'build-tools', '23.0.2')
   env_path += [android_tools_dir, android_platform_dir, android_buildtools_dir]
-  if is_console:
+  if is_console or is_avd:
     env_path += [os.path.join(home_dir, 'bin', 'jdk1.8.0_121', 'bin')]
   env = {'PATH': api.path.pathsep.join(env_path),
          'ANDROID_SDK_ROOT': android_sdk_home,
@@ -237,7 +238,7 @@ def RunSteps(api):
         else:
           emulator_path = api.path.join(emu_branch, 'tools', 'emulator')
         emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
-        if not is_cts and not is_ui and not is_console:
+        if not is_cts and not is_ui and not is_console and not is_avd:
           step_data = bootSteps[step]
           api.adt.PythonTestStep('Boot Test - %s System Image - %s' % (step_data.description, emu_desc),
                                  api.path.join(log_dir, 'boot_test_%s_sysimage-%s' % (step_data.description, emu_desc)),
@@ -261,6 +262,15 @@ def RunSteps(api):
                                  api.path.join(log_dir, 'Console_test'),
                                  'test_console.*',
                                  'console_cfg.csv',
+                                 '{"gpu": "yes"}',
+                                 emulator_path,
+                                 env,
+                                 True)
+        elif is_avd:
+          api.adt.PythonTestStep('Run AVD Launch Test',
+                                 api.path.join(log_dir, 'AVD_test'),
+                                 'launch_avd.*',
+                                 'avd_cfg.csv',
                                  '{"gpu": "yes"}',
                                  emulator_path,
                                  env,
