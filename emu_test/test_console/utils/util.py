@@ -59,7 +59,8 @@ CMD_HELP = 'help\n'
 REGEX_HELP_DISPLAY_NO_AUTH = (r'.*\n.*\n.*help.*\n.*avd.*\n.*auth.*\n'
                               r'.*quit\|exit.*\n.*\n.*\nOK')
 REGEX_HELP_DISPLAY_AUTH = (r'.*\n.*\n.*help.*\n.*event.*\n.*geo.*\n.*gsm.*\n'
-                           r'.*cdma.*\n.*crash.*\n.*kill.*\n.*network.*\n'
+                           r'.*cdma.*\n.*crash.*\n.*crash-on-exit.*\n'
+                           r'.*kill.*\n.*network.*\n'
                            r'.*power.*\n.*quit\|exit.*\n.*redir.*\n'
                            r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.'
                            r'*finger.*\n.*debug.*\n.*rotate.*\n.*\n.*\nOK')
