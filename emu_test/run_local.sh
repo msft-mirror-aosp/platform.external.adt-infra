@@ -25,10 +25,15 @@
 # To make sure the run will terminate (the tests sometimes get stuck) it is wise
 # to add an entry to kill the process
 # 08 02 * * * jansene pkill run_local
+
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 option_virtualenv=yes
-option_download_cts=yes
-option_emu_exec=$(realpath ${dir}/../../qemu/objs/emulator)
+option_download_cts=no
+if [ -f ${dir}../../qemu/objs/emulator ]; then
+  option_emu_exec=$(realpath ${dir}/../../qemu/objs/emulator)
+else
+  option_emu_exec=emulator
+fi
 option_emu_test=boot,cts
 option_python=python
 option_cts_dir=~/android-cts
@@ -36,10 +41,11 @@ option_cts_out=~/Downloads/cts/result
 option_cts_plan=${dir}/test_cts/tests
 option_cts_url=https://dl.google.com/dl/android/cts/android-cts-7.0_r7-linux_x86-x86.zip
 option_result_dest=${dir}
+option_local_build=no
+
 red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
-
 # Parse out the options
 for opt; do
   optarg=`expr "x$opt" : 'x[^=]*=\(.*\)'`
@@ -53,6 +59,9 @@ for opt; do
     --get-cts*) option_download_cts=yes;;
     --cts-url*) option_download_cts=yes; option_cts_url=${optarg} ;;
     --cts-out*) option_download_cts=yes; option_cts_out=${optarg/#\~/$HOME} ;;
+    --cts-build*) option_download_cts=yes; option_cts_build=${optarg} ;;
+    --img-build*) option_emu_img=${optarg} ;;
+    --emu-build*) option_emu_build=${optarg} ;;
     --local-build*) option_local_build=yes;;
     *)
     echo "unknown option '$opt', use --help"
@@ -77,6 +86,9 @@ if [ "$option_help" = "yes" ] ; then
     echo "  --get-cts                   Download cts if not found locally"
     echo "  --get-cts-url=...           Download url with cts test, implies --get-cts [$option_cts_url]"
     echo "  --get-cts-out=...           Directory to copy cts results to, implies --get-cts [$option_cts_out]"
+    echo "  --cts-build=...             Build number to fetch from build server, implies --get-cts"
+    echo "  --img-build=...             Build number to fetch from build server, will overwrite your existing emulator 24 image."
+    echo "  --emu-build=...             Build number to fetch from build server containing the emulator"
     echo
     echo "Make sure you have the following images available: "
     tail -n +3 config/local_cfg.csv  | awk -F "," '{ print $1 }'
@@ -102,11 +114,32 @@ if [ "$option_download_cts" = "yes" ]; then
 
   # Make sure we clean up the mess on exit.
   trap "{ rm -f $ctszip; cp $ctsdir/results/*zip $option_cts_out; rm -rf $ctsdir; }" EXIT
-  curl $option_cts_url -o $ctszip
+  if [ -z ${option_cts_build} ]; then
+    curl $option_cts_url -o $ctszip
+  else
+    echo "${green}Using cts with build id: ${option_cts_build}${reset}"
+    pushd /tmp
+    ctszip=/tmp/android-cts.zip
+    /google/data/ro/projects/android/fetch_artifact --bid ${option_cts_build} --target cts_x86_64 'android-cts.zip' || exit 1
+    popd
+  fi
 
   unzip $ctszip -d "${ctsdir}"
   rm -f $ctszip
   option_cts_dir=$ctsdir/android-cts
+fi
+
+# Download image
+if [ ! -z ${option_emu_img} ]; then
+  echo "${red}WARNING WARNING WARNING WARNING, this will overwrite your android-24 image with build: ${option_emu_img} !!${reset}"
+  ctsemu=$(mktemp -d /tmp/cts-dir-XXXXXXXXXXXXXXX)
+  pushd $ctsemu
+  /google/data/ro/projects/android/fetch_artifact --bid ${option_emu_img} --target sdk_gphone_x86-user 'sdk_gphone_x86-emulator-*.zip' || exit 1
+  emuzip=$(find $ctsemu -name 'sdk_gphone_x86-emulator-*.zip' | tail -n 1)
+  mkdir -p ${ANDROID_SDK_ROOT}/system-images/android-24/google_apis
+  unzip -o $emuzip -d ${ANDROID_SDK_ROOT}/system-images/android-24/google_apis/
+  popd
+  rm -rf $ctsemu
 fi
 
 if [ "$option_local_build" = "yes" ] ; then
@@ -114,6 +147,17 @@ if [ "$option_local_build" = "yes" ] ; then
     ${dir}/../../qemu/android/rebuild.sh || (echo "${red}Failed to build emulator!"; exit 1)
     option_emu_exec=$(realpath ${dir}/../../qemu/objs/emulator)
     echo "${green}Using emulator ${option_emu_exec}${reset}"
+fi
+
+if [ ! -z ${option_emu_build} ] ; then
+  echo "${green}Downloading emulator build ${option_emu_build}${reset}"
+  ctsemu=$(mktemp -d /tmp/cts-emu-XXXXXXXXXXXXXXX)
+  pushd $ctsemu
+  /google/data/ro/projects/android/fetch_artifact --bid ${option_emu_build} --target sdk_tools_linux 'sdk-repo-linux-emulator-*.zip' || exit 1
+  emuzip=$(find $ctsemu -name 'sdk-repo-linux-emulator-*.zip' | tail -n 1)
+  unzip -o $emuzip 
+  popd
+  option_emu_exec=$ctsemu/emulator/emulator
 fi
 
 if [ ! -f ${option_emu_exec} ]; then
