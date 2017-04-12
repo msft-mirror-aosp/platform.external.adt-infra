@@ -71,6 +71,10 @@ public class SystemImageTestFramework implements TestRule {
         return "google_apis".equals(getTag());
     }
 
+    public boolean isGoogleApiAndPlayImage() {
+        return "google_apis_playstore".equals(getTag());
+    }
+
     public String getOrigin() {
         return args.getString("origin");
     }

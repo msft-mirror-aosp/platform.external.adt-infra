@@ -84,7 +84,8 @@ public class SettingsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
 
-        if (!testFramework.isGoogleApiImage() || testFramework.getApi() < 23) {
+        if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage() ||
+                testFramework.getApi() < 23) {
             return;
         }
 
@@ -195,7 +196,7 @@ public class SettingsTest {
         final String appType = "Location";
         final String appName = "Maps";
 
-        if (!testFramework.isGoogleApiImage()) {
+        if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage()) {
             return;
         }
 
@@ -457,7 +458,8 @@ public class SettingsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
 
-        if (!testFramework.isGoogleApiImage() || testFramework.getApi() < 23) {
+        if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage() ||
+                testFramework.getApi() < 23) {
             return;
         }
 

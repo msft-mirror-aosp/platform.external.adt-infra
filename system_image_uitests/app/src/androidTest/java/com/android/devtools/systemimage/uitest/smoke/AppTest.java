@@ -112,7 +112,7 @@ public class AppTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
             AppLauncher.launch(instrumentation, "Chrome");
 
             // If this is the first launch, dismiss the "Welcome to Chrome" screen.

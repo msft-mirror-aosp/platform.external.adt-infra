@@ -109,7 +109,7 @@ public class NetworkIOTest {
             assertTrue("Failed to dismiss the loading bar.", isSuccess);
         }
         // verifyNetworkStatus does not work in API 24. No text or resource ID present in UI.
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
             device.openNotification();
             boolean hasCellularData =
                     device.wait(

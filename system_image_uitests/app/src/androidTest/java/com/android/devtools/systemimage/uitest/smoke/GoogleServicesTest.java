@@ -70,7 +70,7 @@ public class GoogleServicesTest {
     public void verifyGoogleApps() throws Exception{
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        if (!testFramework.isGoogleApiImage()) {
+        if (!testFramework.isGoogleApiAndPlayImage()) {
             return;
         }
 
