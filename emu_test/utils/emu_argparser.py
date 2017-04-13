@@ -49,5 +49,7 @@ def get_parser():
     parser.add_argument('--cts-dir', type=str, dest='cts_dir', action='store',
                         default=None,
                         help='specify the root directory of android cts tests, usually this ends in android-cts')
+    parser.add_argument('--cts-module', type=str, dest='cts_module', action='store',
+                        help='the individual cts module to execute when running the module test')
     parser.add_argument('unittest_args', nargs='*')
     return parser

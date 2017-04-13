@@ -182,6 +182,7 @@ class EmuBaseTestCase(LoggedTestCase):
             with open(verbose_log_path, 'a') as verb_output:
                 lines_iterator = iter(self.start_proc.stdout.readline, b"")
                 for line in lines_iterator:
+                    line = line.strip()
                     verb_output.write(line)
                     # Just write everything back to master builder as a heart-beat signal to avoid being killed
                     self.m_logger.info(line)
@@ -261,7 +262,7 @@ class EmuBaseTestCase(LoggedTestCase):
                 continue
             if counter % 60 is 0 or counter < 60:
                 self.m_logger.info('timeout is %s seconds', real_time_out)
-                self.m_logger.info('ping AVD %s for boot completion, output: %s error: %s', avd, output, err)
+                self.m_logger.info('ping AVD %s for boot completion, output: %s error: %s', avd, output.strip(), err.strip())
             counter = counter + 1
             if exit_code is 0:
                 completed = output.strip()
