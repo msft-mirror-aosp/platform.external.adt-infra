@@ -499,6 +499,7 @@ class EmuBaseTestCase(LoggedTestCase):
         android_exec = "android.bat" if os.name == "nt" else "android"
         cmd = [android_exec, "update", "sdk", "--no-ui", "--all", "--filter", filter]
         self.m_logger.debug("update sdk %s", ' '.join(cmd))
+        print "Command: %s" % (cmd)
         update_proc = psutil.Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE)
         output, err = update_proc.communicate(input='y\n')
         self.simple_logger.debug(output)
