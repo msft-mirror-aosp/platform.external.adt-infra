@@ -68,6 +68,13 @@ public class Res {
     public static final String NOTIFICATION_BAR_EXPAND_RES =
             "com.android.systemui:id/expand_indicator";
 
+    public static final String GOOGLE_PLAY_IDLE_RES = "com.android.vending:id/search_box_idle_text";
+    public static final String GOOGLE_PLAY_INPUT_RES =
+            "com.android.vending:id/search_box_text_input";
+    public static final String GOOGLE_PLAY_NAV_RES = "com.android.vending:id/navigation_button";
+    public static final String GOOGLE_PLAY_POSITIVE_BUTTON_RES =
+            "com.android.vending:id/positive_button";
+
     public static final String DIALER_BUTTON_RES =
             "com.android.dialer:id/dialpad_floating_action_button";
 

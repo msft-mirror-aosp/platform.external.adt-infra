@@ -28,7 +28,6 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
-import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 
 import org.junit.Rule;
 import org.junit.Test;

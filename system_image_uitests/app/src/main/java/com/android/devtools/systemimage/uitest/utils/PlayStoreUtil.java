@@ -1,0 +1,95 @@
+/*
+ * Copyright (c) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.devtools.systemimage.uitest.utils;
+
+import android.app.Instrumentation;
+import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiScrollable;
+import android.support.test.uiautomator.UiSelector;
+
+import java.util.concurrent.TimeUnit;
+
+
+/**
+ * Static utility methods pertaining to network status.
+ */
+public class PlayStoreUtil {
+
+    private PlayStoreUtil() {
+        throw new AssertionError();
+    }
+
+    /**
+     * Checks if Play Store has been installed.
+     * Returns true if Play Store has been installed, false if not.
+     */
+    public static boolean isPlayStoreInstalled(Instrumentation instrumentation) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        final String playStore = "Play Store";
+
+        device.pressHome();
+        device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
+
+        boolean isInstalled = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+
+                scrollable.scrollIntoView(new UiSelector().text(playStore));
+                return scrollable.getChild(new UiSelector().text(playStore)).exists();
+            }
+        });
+        return isInstalled;
+    }
+
+    /**
+     * Attempts to install an application from Google Play Store, if it is not already installed.
+     * Returns true if the application has been installed, false if not.
+     */
+    public static boolean installApplication(Instrumentation instrumentation) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        boolean isInstallable = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector()
+                        .text("INSTALL")).exists();
+            }
+        });
+
+        if (!isInstallable) {
+            return new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    return device.findObject(new UiSelector()
+                            .text("OPEN")).exists();
+                }
+            });
+        }
+
+
+        device.findObject(new UiSelector().text("INSTALL")).clickAndWaitForNewWindow();
+
+        UiObject openButton = device.findObject(new UiSelector().text("OPEN"));
+        boolean isAppInstalled = openButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
+
+        return isAppInstalled;
+    }
+
+}
