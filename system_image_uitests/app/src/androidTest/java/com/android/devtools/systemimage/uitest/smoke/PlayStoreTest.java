@@ -53,7 +53,7 @@ public class PlayStoreTest {
     public Timeout globalTimeout = Timeout.seconds(120);
 
     /**
-     * Verify that Google Play can install an app on the device.
+     * Verify that Google Play can install and uninstall an app on the device.
      * <p>
      * TR ID: C14578827
      * <p>
@@ -65,10 +65,11 @@ public class PlayStoreTest {
      *   5. Search for test app in store.
      *   6. If app is available for install, begin installation.
      *   Verify:
-     *      a. If Install button is displayed, allow installation to complete then
+     *      1a. If Install button is displayed, allow installation to complete then
      *      confirm that the Open button to launch the app is present.
-     *      b. If Install button is not displayed, confirm that the Open button to
+     *      1b. If Install button is not displayed, confirm that the Open button to
      *      launch the app is present.
+     *      2. Confirm that the app was subsequently uninstalled.
      *   </pre>
      */
     @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
@@ -163,6 +164,9 @@ public class PlayStoreTest {
 
                 assertTrue("Unable to install the application from Google Play",
                         PlayStoreUtil.installApplication(instrumentation));
+
+                assertTrue("Unable to uninstall the application from Google Play",
+                        PlayStoreUtil.uninstallApplication(instrumentation));
             }
         }
     }

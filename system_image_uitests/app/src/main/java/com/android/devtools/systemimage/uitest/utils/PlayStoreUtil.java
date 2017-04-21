@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * Static utility methods pertaining to network status.
+ * Static utility methods pertaining to the Google Play Store.
  */
 public class PlayStoreUtil {
 
@@ -83,7 +83,6 @@ public class PlayStoreUtil {
             });
         }
 
-
         device.findObject(new UiSelector().text("INSTALL")).clickAndWaitForNewWindow();
 
         UiObject openButton = device.findObject(new UiSelector().text("OPEN"));
@@ -92,4 +91,37 @@ public class PlayStoreUtil {
         return isAppInstalled;
     }
 
+    /**
+     * Attempts to uninstall an application from Google Play Store, if it is already installed.
+     * Returns true if the application has been uninstalled, false if not.
+     */
+    public static boolean uninstallApplication(Instrumentation instrumentation) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        boolean isUninstallable = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector()
+                        .text("UNINSTALL")).exists();
+            }
+        });
+
+        if (!isUninstallable) {
+            return new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    return device.findObject(new UiSelector()
+                            .text("INSTALL")).exists();
+                }
+            });
+        }
+
+        device.findObject(new UiSelector().text("UNINSTALL")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
+
+        UiObject installButton = device.findObject(new UiSelector().text("INSTALL"));
+        boolean isAppUninstalled = installButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
+
+        return isAppUninstalled;
+    }
 }
