@@ -183,11 +183,11 @@ class CTSTestCase(EmuBaseTestCase):
                 'cts_proc': None}
 
         def launch_in_thread():
-
             self.m_logger.info('executable path: ' + exec_path)
             vars['cts_proc'] = psutil.Popen(cts_cmd, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
             lines_iterator = iter(vars['cts_proc'].stdout.readline, b"")
             for line in lines_iterator:
+                line=line.strip()
                 self.simple_logger.info(line)
                 if re.match(result_re, line):
                     vars['result_line'] = line
