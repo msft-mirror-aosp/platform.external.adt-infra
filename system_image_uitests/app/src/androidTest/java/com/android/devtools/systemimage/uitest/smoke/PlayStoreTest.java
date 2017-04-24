@@ -29,6 +29,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.PlayStoreUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
+import com.android.devtools.systemimage.uitest.unittest.watchers.PlayStoreConfirmationWatcher;
 
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -53,7 +54,7 @@ public class PlayStoreTest {
     public Timeout globalTimeout = Timeout.seconds(120);
 
     /**
-     * Verify that Google Play can install and uninstall an app on the device.
+     * Verify that Google Play can install and uninstall a free app on the device.
      * <p>
      * TR ID: C14578827
      * <p>
@@ -62,7 +63,7 @@ public class PlayStoreTest {
      *   1. Start an emulator and launch home screen.
      *   2. Open Apps.
      *   3. Confirm that Play Store is present, then launch.
-     *   5. Search for test app in store.
+     *   5. Search for free app in store.
      *   6. If app is available for install, begin installation.
      *   Verify:
      *      1a. If Install button is displayed, allow installation to complete then
@@ -78,9 +79,7 @@ public class PlayStoreTest {
     public void testAppInstallation() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-        final String playStore = "Play Store";
-        final String appName = "Google Translate";
+        final String application = "Google Translate";
 
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
             device.pressHome();
@@ -89,78 +88,10 @@ public class PlayStoreTest {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
-                device.findObject(new UiSelector().text(playStore)).clickAndWaitForNewWindow();
+                PlayStoreUtil.searchGooglePlay(instrumentation, application);
+                PlayStoreUtil.selectFromGooglePlay(instrumentation, "App: "+application);
 
-                boolean backButtonExists = new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return device.findObject(
-                                new UiSelector().resourceId(Res.GOOGLE_PLAY_NAV_RES)
-                                        .description("Back")).exists();
-                    }
-                });
-
-                if (backButtonExists) {
-                    device.findObject(
-                            new UiSelector().resourceId(Res.GOOGLE_PLAY_NAV_RES)
-                                    .description("Back")).click();
-                }
-
-                boolean idleTextFieldExists = new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return device.findObject(
-                                new UiSelector().resourceId(Res.GOOGLE_PLAY_IDLE_RES)).exists();
-                    }
-                });
-
-                if (idleTextFieldExists) {
-                    device.findObject(
-                            new UiSelector().resourceId(Res.GOOGLE_PLAY_IDLE_RES)).click();
-                }
-
-                boolean inputTextFieldExists = new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return device.findObject(
-                                new UiSelector().resourceId(Res.GOOGLE_PLAY_INPUT_RES)).exists();
-                    }
-                });
-
-                if (inputTextFieldExists) {
-                    UiObject inputTextField = device.findObject(
-                            new UiSelector().resourceId(Res.GOOGLE_PLAY_INPUT_RES));
-                    inputTextField.clearTextField();
-                    inputTextField.setText(appName);
-                    device.pressEnter();
-                }
-
-                boolean isListed = new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return device.findObject(new UiSelector()
-                                .description("App: Google Translate")).exists();
-                    }
-                });
-
-                if (isListed) {
-                    device.findObject(new UiSelector()
-                            .description("App: Google Translate")).clickAndWaitForNewWindow();
-                }
-
-                boolean needsConfirmation = new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return device.findObject(new UiSelector()
-                                .resourceId(Res.GOOGLE_PLAY_POSITIVE_BUTTON_RES)).exists();
-                    }
-                });
-
-                if (needsConfirmation) {
-                    device.findObject(new UiSelector()
-                            .resourceId(Res.GOOGLE_PLAY_POSITIVE_BUTTON_RES))
-                            .clickAndWaitForNewWindow();
-                }
+                new PlayStoreConfirmationWatcher(device).checkForCondition();
 
                 assertTrue("Unable to install the application from Google Play",
                         PlayStoreUtil.installApplication(instrumentation));

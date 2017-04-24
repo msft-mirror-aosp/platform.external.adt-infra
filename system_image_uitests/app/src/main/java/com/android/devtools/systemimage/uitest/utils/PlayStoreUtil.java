@@ -23,6 +23,8 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
+import com.android.devtools.systemimage.uitest.common.Res;
+
 import java.util.concurrent.TimeUnit;
 
 
@@ -56,6 +58,82 @@ public class PlayStoreUtil {
             }
         });
         return isInstalled;
+    }
+
+    /**
+     * Launches Google Play and then searches for an application
+     */
+    public static void searchGooglePlay(Instrumentation instrumentation, String appName) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String playStore = "Play Store";
+        final String application = appName;
+        device.findObject(new UiSelector().text(playStore)).clickAndWaitForNewWindow();
+
+        boolean backButtonExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(
+                        new UiSelector().resourceId(Res.GOOGLE_PLAY_NAV_RES)
+                                .description("Back")).exists();
+            }
+        });
+
+        if (backButtonExists) {
+            device.findObject(
+                    new UiSelector().resourceId(Res.GOOGLE_PLAY_NAV_RES)
+                            .description("Back")).click();
+        }
+
+        boolean idleTextFieldExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(
+                        new UiSelector().resourceId(Res.GOOGLE_PLAY_IDLE_RES)).exists();
+            }
+        });
+
+        if (idleTextFieldExists) {
+            device.findObject(
+                    new UiSelector().resourceId(Res.GOOGLE_PLAY_IDLE_RES)).click();
+        }
+
+        boolean inputTextFieldExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(
+                        new UiSelector().resourceId(Res.GOOGLE_PLAY_INPUT_RES)).exists();
+            }
+        });
+
+        if (inputTextFieldExists) {
+            UiObject inputTextField = device.findObject(
+                    new UiSelector().resourceId(Res.GOOGLE_PLAY_INPUT_RES));
+            inputTextField.clearTextField();
+            inputTextField.setText(application);
+            device.pressEnter();
+        }
+    }
+
+    /**
+     * Selects an application listed in Google Play
+     */
+    public static void selectFromGooglePlay(Instrumentation instrumentation, String appDescription) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String playStore = "Play Store";
+        final String application = appDescription;
+
+        boolean isListed = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector()
+                        .description(application)).exists();
+            }
+        });
+
+        if (isListed) {
+            device.findObject(new UiSelector()
+                    .description(application)).clickAndWaitForNewWindow();
+        }
     }
 
     /**
