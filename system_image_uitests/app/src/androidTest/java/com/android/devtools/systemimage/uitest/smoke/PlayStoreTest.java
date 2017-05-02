@@ -19,9 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke;
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -29,7 +27,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.PlayStoreUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.unittest.watchers.PlayStoreConfirmationWatcher;
+import com.android.devtools.systemimage.uitest.watchers.PlayStoreConfirmationWatcher;
 
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -65,6 +63,7 @@ public class PlayStoreTest {
      *   3. Confirm that Play Store is present, then launch.
      *   5. Search for free app in store.
      *   6. If app is available for install, begin installation.
+     *   7. Uninstall the app.
      *   Verify:
      *      1a. If Install button is displayed, allow installation to complete then
      *      confirm that the Open button to launch the app is present.
@@ -98,6 +97,125 @@ public class PlayStoreTest {
 
                 assertTrue("Unable to uninstall the application from Google Play",
                         PlayStoreUtil.uninstallApplication(instrumentation));
+
+                PlayStoreUtil.resetPlayStore(instrumentation);
+                device.pressHome();
+            }
+        }
+    }
+
+    /**
+     * Verify that an app can be installed and launched from Play Store.
+     * <p>
+     * TR ID: C14603433
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start an emulator and launch home screen.
+     *   2. Open Apps.
+     *   3. Confirm that Play Store is present, then launch.
+     *   5. Search for free app in store.
+     *   6. If app is available for install, begin installation.
+     *   7. Launch the application.
+     *   7. Close and uninstall the app.
+     *   Verify:
+     *      1. App is installed without errors.
+     *      2. App is launched without errors.
+     *   </pre>
+     */
+    @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
+    @Test
+    @TestInfo(id = "14578827")
+    public void testAppInstallationAndLaunch() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String application = "Trello";
+
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+            device.pressHome();
+            device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
+
+            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
+
+            if (playStoreInstalled) {
+                PlayStoreUtil.searchGooglePlay(instrumentation, application);
+                PlayStoreUtil.selectFromGooglePlay(
+                        instrumentation, "App: "+application);
+
+                new PlayStoreConfirmationWatcher(device).checkForCondition();
+
+                assertTrue("Unable to install the application from Google Play",
+                        PlayStoreUtil.installApplication(instrumentation));
+
+                device.findObject(new UiSelector().text("OPEN")).clickAndWaitForNewWindow();
+                assertTrue("App could not be opened",
+                        new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() throws UiObjectNotFoundException {
+                                return device.findObject(new UiSelector()
+                                        .packageName("com.trello")).exists();
+                            }
+                        }));
+
+                device.pressBack();
+
+                assertTrue("Unable to uninstall the application from Google Play",
+                        PlayStoreUtil.uninstallApplication(instrumentation));
+
+                PlayStoreUtil.resetPlayStore(instrumentation);
+                device.pressHome();
+            }
+        }
+    }
+
+    /**
+     * Verify that Google Play can reach the payment method prompt during paid app installation.
+     * <p>
+     * TR ID: C14603432
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start an emulator and launch home screen.
+     *   2. Open Apps.
+     *   3. Confirm that Play Store is present, then launch.
+     *   4. Search for pay app in store.
+     *   Verify:
+     *      1. Confirm that user is presented with a Pay Button with a $.
+     *   </pre>
+     */
+    @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
+    @Test
+    @TestInfo(id = "14578827")
+    public void testPayAppVerification() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String application = "Weather Live";
+
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+            device.pressHome();
+            device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
+
+            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
+
+            if (playStoreInstalled) {
+                PlayStoreUtil.searchGooglePlay(instrumentation, application);
+                PlayStoreUtil.selectFromGooglePlay(instrumentation, "App: "+application);
+
+                new PlayStoreConfirmationWatcher(device).checkForCondition();
+
+                assertTrue(
+                        "Target application is not a pay app",  new Wait().until(
+                                new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws UiObjectNotFoundException {
+                        return device.findObject(new UiSelector()
+                                .resourceId(
+                                        Res.GOOGLE_PLAY_BUY_BUTTON_RES).textContains("$")).exists();
+                    }
+                }));
+
+                PlayStoreUtil.resetPlayStore(instrumentation);
+                device.pressHome();
             }
         }
     }

@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.devtools.systemimage.uitest.unittest.watchers;
-
+package com.android.devtools.systemimage.uitest.watchers;
 
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.UiWatcher;
 
-import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.utils.Wait;
+import java.util.concurrent.TimeUnit;
 
 /**
  * VPN app popup watcher that monitors and dismisses the VPN popup dialog.
@@ -40,21 +37,33 @@ public class PlayStoreConfirmationWatcher implements UiWatcher {
 
     @Override
     public boolean checkForCondition() {
-        UiObject confirmBox = mDevice.findObject(new UiSelector().text("CONFIRM"));
-        UiObject okBox = mDevice.findObject(new UiSelector().text("OK"));
+        boolean condition = false;
+        boolean isSuccess =
+                mDevice.findObject(new UiSelector().text("CONTINUE"))
+                        .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         try {
-            if (confirmBox.exists()) {
-                confirmBox.click();
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().text("CONTINUE")).click();
+                condition = true;
             }
-            if (okBox.exists()) {
-                okBox.click();
-                return true;
+            isSuccess =
+                    mDevice.findObject(new UiSelector().text("CONFIRM"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().text("CONFIRM")).click();
+                condition = true;
             }
-            else {
-                return false;
+            isSuccess =
+                    mDevice.findObject(new UiSelector().text("SKIP"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().text("SKIP")).click();
+                condition = true;
             }
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError("Failed to dismiss the VPN popup dialog");
         }
+        catch (UiObjectNotFoundException e) {
+            throw new AssertionError("Failed to dismiss the play store popup dialogs");
+        }
+        return condition;
     }
 }
