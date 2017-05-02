@@ -24,6 +24,7 @@ import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.common.Res;
+import com.android.devtools.systemimage.uitest.watchers.PlayStoreConfirmationWatcher;
 
 import java.util.concurrent.TimeUnit;
 
@@ -61,28 +62,28 @@ public class PlayStoreUtil {
     }
 
     /**
-     * Launches Google Play and then searches for an application
+     * Backtracks to the opening Play Store screen.
+     */
+    public static void resetPlayStore(Instrumentation instrumentation) {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        for (int i = 0; i < 5; i++) {
+            device.pressBack();
+        }
+    }
+
+    /**
+     * Launches Play Store and then searches for an application.
      */
     public static void searchGooglePlay(Instrumentation instrumentation, String appName) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String playStore = "Play Store";
         final String application = appName;
+
         device.findObject(new UiSelector().text(playStore)).clickAndWaitForNewWindow();
-
-        boolean backButtonExists = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
-                return device.findObject(
-                        new UiSelector().resourceId(Res.GOOGLE_PLAY_NAV_RES)
-                                .description("Back")).exists();
-            }
-        });
-
-        if (backButtonExists) {
-            device.findObject(
-                    new UiSelector().resourceId(Res.GOOGLE_PLAY_NAV_RES)
-                            .description("Back")).click();
-        }
+        resetPlayStore(instrumentation);
+        device.pressHome();
+        device.findObject(new UiSelector().text(playStore)).clickAndWaitForNewWindow();
 
         boolean idleTextFieldExists = new Wait().until(new Wait.ExpectedCondition() {
             @Override
@@ -115,7 +116,7 @@ public class PlayStoreUtil {
     }
 
     /**
-     * Selects an application listed in Google Play
+     * Selects an application listed in the Play Store.
      */
     public static void selectFromGooglePlay(Instrumentation instrumentation, String appDescription) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
@@ -162,6 +163,7 @@ public class PlayStoreUtil {
         }
 
         device.findObject(new UiSelector().text("INSTALL")).clickAndWaitForNewWindow();
+        new PlayStoreConfirmationWatcher(device).checkForCondition();
 
         UiObject openButton = device.findObject(new UiSelector().text("OPEN"));
         boolean isAppInstalled = openButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
