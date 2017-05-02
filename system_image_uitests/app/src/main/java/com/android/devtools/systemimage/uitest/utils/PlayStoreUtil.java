@@ -116,28 +116,6 @@ public class PlayStoreUtil {
     }
 
     /**
-     * Selects an application listed in the Play Store.
-     */
-    public static void selectFromGooglePlay(Instrumentation instrumentation, String appDescription) throws Exception {
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String playStore = "Play Store";
-        final String application = appDescription;
-
-        boolean isListed = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
-                return device.findObject(new UiSelector()
-                        .description(application)).exists();
-            }
-        });
-
-        if (isListed) {
-            device.findObject(new UiSelector()
-                    .description(application)).clickAndWaitForNewWindow();
-        }
-    }
-
-    /**
      * Attempts to install an application from Google Play Store, if it is not already installed.
      * Returns true if the application has been installed, false if not.
      */
