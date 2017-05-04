@@ -18,6 +18,8 @@ import unittest
 
 import util
 
+from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig
+
 log = logging.getLogger('launch_avd')
 
 def arg_parser():
@@ -27,9 +29,6 @@ def arg_parser():
     parser.add_argument('-t', '--timeout', type=int, dest='timeout_in_seconds', action='store',
                         default=600,
                         help='an integer for timeout in seconds, default is 600')
-    parser.add_argument('--avd', type=str, dest='avd', action='store',
-                        required=True,
-                        help='run test for given AVD')
     parser.add_argument('--exec', type=str, dest='emulator_exec', action='store',
                         default='emulator',
                         help='path of emulator executable, default is system emulator')
@@ -37,8 +36,7 @@ def arg_parser():
     return parser
 
 class TimeoutError(Exception):
-    """Exception raised for timeout
-
+    """Exception raised for timeout.    
     Attributes:
         cmd -- cmd which timed out
         timeout  -- value of timeout
@@ -49,12 +47,10 @@ class TimeoutError(Exception):
         self.timeout = timeout
 
 def run_with_timeout(cmd, timeout):
-    """Run command with specified timeout.
-
+    """Run command with specified timeout.    
     Args:
       cmd     - Required  : command to run
-      timeout - Required  : timeout (in seconds)
-
+      timeout - Required  : timeout (in seconds)      
     Returns:
       Tuple of form (returncode, output, err), where:
       * returncode is the exit code of the command
@@ -145,11 +141,12 @@ def launch_emu_and_wait(avd, emu_args):
     return success
 
 
-class LaunchAVDTest(unittest.TestCase):
-    def test_launch_avd(self):
+class LaunchAVDTest(EmuBaseTestCase):
+    def test_launch_avd(self, avd_config):
+        self.avd_config = avd_config
+        self.assertEqual(self.create_avd(avd_config), 0)
         args = arg_parser().parse_args()
-        avd = args.avd
-        return launch_emu_and_wait(avd, args)
+        return launch_emu_and_wait(avd_config, args)
 
 if __name__ == '__main__':
     console_handler = logging.StreamHandler(sys.stdout)
