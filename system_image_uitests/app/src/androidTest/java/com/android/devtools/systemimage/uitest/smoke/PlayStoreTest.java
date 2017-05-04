@@ -88,7 +88,7 @@ public class PlayStoreTest {
 
             if (playStoreInstalled) {
                 PlayStoreUtil.searchGooglePlay(instrumentation, application);
-                PlayStoreUtil.selectFromGooglePlay(instrumentation, "App: "+application);
+                selectFromGooglePlay(device, "App: "+application);
 
                 new PlayStoreConfirmationWatcher(device).checkForCondition();
 
@@ -125,7 +125,7 @@ public class PlayStoreTest {
      */
     @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
     @Test
-    @TestInfo(id = "14578827")
+    @TestInfo(id = "14603433")
     public void testAppInstallationAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
@@ -139,8 +139,7 @@ public class PlayStoreTest {
 
             if (playStoreInstalled) {
                 PlayStoreUtil.searchGooglePlay(instrumentation, application);
-                PlayStoreUtil.selectFromGooglePlay(
-                        instrumentation, "App: "+application);
+                selectFromGooglePlay(device, "App: "+application);
 
                 new PlayStoreConfirmationWatcher(device).checkForCondition();
 
@@ -185,7 +184,7 @@ public class PlayStoreTest {
      */
     @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
     @Test
-    @TestInfo(id = "14578827")
+    @TestInfo(id = "1460343")
     public void testPayAppVerification() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
@@ -199,7 +198,7 @@ public class PlayStoreTest {
 
             if (playStoreInstalled) {
                 PlayStoreUtil.searchGooglePlay(instrumentation, application);
-                PlayStoreUtil.selectFromGooglePlay(instrumentation, "App: "+application);
+                selectFromGooglePlay(device, "App: "+application);
 
                 new PlayStoreConfirmationWatcher(device).checkForCondition();
 
@@ -218,5 +217,80 @@ public class PlayStoreTest {
                 device.pressHome();
             }
         }
+    }
+
+    /**
+     * Verify apps can be searched through Play Store search bar.
+     * <p>
+     * TR ID: C14605490
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start an emulator and launch home screen.
+     *   2. Open Apps.
+     *   3. Confirm that Play Store is present, then launch.
+     *   4. Search for an app name on the main Play Store screen.
+     *   Verify:
+     *      1. Confirm app name displays the search string.
+     *   </pre>
+     */
+
+    @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
+    @Test
+    @TestInfo(id = "14605490")
+    public void testPlaySearch() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String application = "Facebook";
+
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+            device.pressHome();
+            device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
+
+            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
+
+            if (playStoreInstalled) {
+                PlayStoreUtil.searchGooglePlay(instrumentation, application);
+                assertTrue("Target application not found in search.",  new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return findInGooglePlay(device, "App: "+application);
+                    }
+                }));
+                PlayStoreUtil.resetPlayStore(instrumentation);
+                device.pressHome();
+            }
+        }
+    }
+
+    /**
+     * Selects an application listed in Play Store.
+     */
+    private static void selectFromGooglePlay(UiDevice testDevice, String appDescription) throws Exception {
+        final UiDevice device = testDevice;
+        final String application = appDescription;
+
+        boolean isFound = findInGooglePlay(device, appDescription);
+
+        if (isFound) {
+            device.findObject(new UiSelector()
+                    .description(application)).clickAndWaitForNewWindow();
+        }
+    }
+
+    /**
+     * Finds and application in Play Store. Returns true if it was found, false if not.
+     */
+    private static boolean findInGooglePlay(UiDevice testDevice, String appDescription) throws Exception {
+        final UiDevice device = testDevice;
+        final String application = appDescription;
+
+        return new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector()
+                        .description(application)).exists();
+            }
+        });
     }
 }
