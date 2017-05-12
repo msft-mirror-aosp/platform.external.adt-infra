@@ -46,9 +46,9 @@ public class GeoManagerService implements Service {
   private static final String GPS_PROVIDER = "gps";
   private static final String IMAGE_VIEW_CLASS_NAME =
           "android.widget.ImageView";
-  // This resouce id is only for API 25 & 24.
+  // This resouce id is only for API 25 & 24 & 23.
   private static final String LOCATION_BUTTON_R_ID =
-          "com.google.android.apps.maps:id/mylocation_button";
+          "com.google.android.apps.maps:id/mylocation_button | com.google.android.apps.gmm:id/mylocation_button";
   private static final String TAG = GeoManagerService.class.getSimpleName();
 
   private final Context mContext;

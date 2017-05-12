@@ -131,7 +131,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
 
     print 'api = ' + self.avd.api
 
-    if self.avd.api in ['25', '24']:
+    if self.avd.api in ['25', '24', '23']:
       self._initially_launch_google_maps_to_have_location_history({'Initial': 1})
 
       is_command_successful, output = util.execute_console_command(
@@ -142,9 +142,8 @@ class GeoTest(testcase_base.BaseConsoleTest):
       self._process_request_geo_service({})
       self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
     else:
-      # TODO: Spend more time in future when having bandwith for it.
-      print 'Currently, only test API greater than 23'
-      print 'API is below 24, skip geo test for now.'
+      # TODO: Add support for APIs below 23.
+      print 'API is below 23, skip geo test for now.'
       pass
 
 
