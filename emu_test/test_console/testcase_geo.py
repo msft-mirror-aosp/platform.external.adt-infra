@@ -132,7 +132,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
     print 'api = ' + self.avd.api
 
     if self.avd.api in ['25', '24', '23']:
-      self._initially_launch_google_maps_to_have_location_history({'Initial': 1})
+      self._initially_launch_google_maps_to_have_location_history({'api': self.avd.api})
 
       is_command_successful, output = util.execute_console_command(
         self.telnet, CMD_GEO_SF, '')
