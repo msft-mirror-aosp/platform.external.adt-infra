@@ -46,9 +46,12 @@ public class GeoManagerService implements Service {
   private static final String GPS_PROVIDER = "gps";
   private static final String IMAGE_VIEW_CLASS_NAME =
           "android.widget.ImageView";
-  // This resouce id is only for API 25 & 24 & 23.
-  private static final String LOCATION_BUTTON_R_ID =
-          "com.google.android.apps.maps:id/mylocation_button | com.google.android.apps.gmm:id/mylocation_button";
+  private static final String SKIP_LOGIN = "Skip";
+  // This resouce id is only for API 23 & 24 & 25.
+  private static final String LOCATION_BUTTON_R_ID_23 =
+          "com.google.android.apps.gmm:id/mylocation_button";
+  private static final String LOCATION_BUTTON_R_ID_24_25 =
+          "com.google.android.apps.maps:id/mylocation_button";
   private static final String TAG = GeoManagerService.class.getSimpleName();
 
   private final Context mContext;
@@ -110,7 +113,11 @@ public class GeoManagerService implements Service {
               " app, accpet the terms and conditions, " +
               "enable Location service, then Tap on My Location.");
       try {
-        this.launchGoogleMapsApp(mDevice);
+        // The json value passing from geo test is like: {'api': 'xx'},
+        // here we try to get the api level xx, the index is from 9 (inclusive) to 11 (exclusive).
+        String apiLevel = json.substring(9, 11);
+        Log.d(TAG, "For API " + apiLevel);
+        this.launchGoogleMapsApp(mDevice, Integer.parseInt(apiLevel));
       } catch (UiObjectNotFoundException e) {
         mDevice.pressHome();
         String errMsg = "Failed to launch " + GOOGLE_MAPS;
@@ -168,7 +175,7 @@ public class GeoManagerService implements Service {
     uiDevice.pressHome();
   }
 
-  public static void launchGoogleMapsApp(UiDevice uiDevice)
+  public static void launchGoogleMapsApp(UiDevice uiDevice, int apiLevel)
           throws UiObjectNotFoundException {
 
     Log.d(TAG, "1) Go to " + Constants.APPS + " screen.");
@@ -204,12 +211,34 @@ public class GeoManagerService implements Service {
       Log.e(TAG, e.getMessage());
     }
 
+    if (apiLevel == 23) {
+      Log.d(TAG, "2.1.1) It's the first time to launch " + GOOGLE_MAPS +
+              ", For API 23, we need to Skip login Maps.");
+      try {
+        uiDevice.findObject(new UiSelector().textMatches(SKIP_LOGIN)).
+                clickAndWaitForNewWindow();
+        Log.d(TAG, GOOGLE_MAPS + ": " + ACCEPT_AND_CONTINUE + " clicked.");
+      } catch (UiObjectNotFoundException e) {
+        Log.e(TAG, e.getMessage());
+      }
+    }
+
     // Enable location service.
     // The 'Location' icon neither has resource id nor text,
     // but it's parent's parent.
     // Hence, using it's parent's parent to get 'Location' item.
+    String locationButtonRId;
+    if (apiLevel == 23) {
+      locationButtonRId = LOCATION_BUTTON_R_ID_23;
+    } else if (apiLevel == 24 || apiLevel == 25) {
+      locationButtonRId = LOCATION_BUTTON_R_ID_24_25;
+    } else {
+      Log.e(TAG, "The AVD API level is " +  Integer.toString(apiLevel) + ", skip this test.");
+      return;
+    }
+
     Log.d(TAG, "2.2) Start to enable GPS.");
-    UiSelector pppParent = new UiSelector().resourceId(LOCATION_BUTTON_R_ID);
+    UiSelector pppParent = new UiSelector().resourceId(locationButtonRId);
 
     UiSelector ppParent = pppParent.index(0);
     Log.d(TAG, "Get ppParent.");
@@ -236,8 +265,7 @@ public class GeoManagerService implements Service {
     }
 
     // fix current location
-    UiSelector ppFrameLoayout = new UiSelector().resourceId(
-            LOCATION_BUTTON_R_ID);
+    UiSelector ppFrameLoayout = new UiSelector().resourceId(locationButtonRId);
 
     UiSelector pFrameLoayout = ppFrameLoayout.index(0);
     Log.d(TAG, "get pFrameLoayout.");
