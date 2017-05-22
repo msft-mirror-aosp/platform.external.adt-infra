@@ -191,7 +191,7 @@ fi
 # Download image
 if [ ! -z ${option_emu_img} ]; then
   echo "${red}WARNING WARNING WARNING WARNING, this will overwrite your android-24 image with build: ${option_emu_img} !!${reset}"
-  fetch_artifact ${option_emu_img} git_oc-emu-dev sdk_gphone_x86-user 'sdk_gphone_x86-emulator-*.zip' ${ANDROID_SDK_ROOT}/system-images/android-24/google_apis
+  fetch_artifact ${option_emu_img} git_oc-emu-dev sdk_gphone_x86-user 'sdk-repo-linux-system-images-*.zip' ${ANDROID_SDK_ROOT}/system-images/android-24/google_apis
 fi
 
 # Make sure the tools directory of the android_sdk_root is on the path so we can
