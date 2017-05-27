@@ -97,26 +97,29 @@ public class GeoManagerService implements Service {
       Log.d(TAG, "return");
       return new Gson().toJson(result);
     } else {
-      Log.e(TAG, "Initially, dismiss tips on welcome and Apps screens.");
-      try {
-        this.dismissTips(mDevice);
-      } catch (UiObjectNotFoundException e) {
-        mDevice.pressHome();
-        String errMsg = "Failed to dismiss tips.";
-        Log.e(TAG, errMsg);
-        result.setIsFail(true);
-        result.setDescription(errMsg);
-        return new Gson().toJson(result);
+      // The json value passing from geo test is like: {'api': 'xx'},
+      // here we try to get the api level xx, the index is from 9 (inclusive) to 11 (exclusive).
+      String apiLevel = json.substring(9, 11);
+      Log.d(TAG, "For API " + apiLevel);
+
+      if (apiLevel.equals("23") || apiLevel.equals("24")) {
+        Log.e(TAG, "Initially, dismiss tips on welcome and Apps screens.");
+        try {
+          this.dismissTips(mDevice);
+        } catch (UiObjectNotFoundException e) {
+          mDevice.pressHome();
+          String errMsg = "Failed to dismiss tips.";
+          Log.e(TAG, errMsg);
+          result.setIsFail(true);
+          result.setDescription(errMsg);
+          return new Gson().toJson(result);
+        }
       }
 
       Log.d(TAG, "Go to Apps window, launch " + GOOGLE_MAPS +
               " app, accpet the terms and conditions, " +
               "enable Location service, then Tap on My Location.");
       try {
-        // The json value passing from geo test is like: {'api': 'xx'},
-        // here we try to get the api level xx, the index is from 9 (inclusive) to 11 (exclusive).
-        String apiLevel = json.substring(9, 11);
-        Log.d(TAG, "For API " + apiLevel);
         this.launchGoogleMapsApp(mDevice, Integer.parseInt(apiLevel));
       } catch (UiObjectNotFoundException e) {
         mDevice.pressHome();
@@ -135,16 +138,17 @@ public class GeoManagerService implements Service {
 
   private static void dismissTips(UiDevice uiDevice)
           throws UiObjectNotFoundException {
-    Log.d(TAG, "For API 18, 19, 21, there is a tip on the screen. (\"OK\")\n" +
-            "For API 22, 23, 24, there is a tip on the screen. (\"GOT IT\")\n" +
-            "It needs to be removed by clicking on it.");
-    try {
-      uiDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK)).
-              clickAndWaitForNewWindow();
-      Log.d(TAG, "Welcome screen tip, " + Constants.TIP_BUTTON_OK + " clicked.");
-    } catch (UiObjectNotFoundException e) {
-      Log.e(TAG, e.getMessage());
-    }
+    Log.d(TAG, "For API 23, 24, there is a tip on the screen. (\"GOT IT\")\n" +
+               "It needs to be removed by clicking on it.");
+
+    // Keep the following commented code for future use for API below 23.
+//    try {
+//      uiDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK)).
+//              clickAndWaitForNewWindow();
+//      Log.d(TAG, "Welcome screen tip, " + Constants.TIP_BUTTON_OK + " clicked.");
+//    } catch (UiObjectNotFoundException e) {
+//      Log.e(TAG, e.getMessage());
+//    }
 
     try {
       uiDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_GOT_IT)).
@@ -155,24 +159,25 @@ public class GeoManagerService implements Service {
       Log.e(TAG, e.getMessage());
     }
 
-    Log.d(TAG, "Open and go to Apps window.");
-    uiDevice.findObject(new UiSelector().descriptionContains(Constants.APPS)).
-            clickAndWaitForNewWindow();
-
-    Log.d(TAG, "For API 18, 19, 21, after opening Apps, there is another \n" +
-            "tip on the the screen. It needs to be removed by clicking on " +
-            "it. (\"OK\")");
-    try {
-      uiDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK)).
-              clickAndWaitForNewWindow();
-      Log.d(TAG, "Apps screen tip, " + Constants.TIP_BUTTON_OK + " clicked.");
-    } catch (UiObjectNotFoundException e) {
-      Log.e(TAG, e.getMessage());
-    }
-
-    Log.d(TAG,
-          "After dismissing tips on welcome and Apps screen, go back to home.");
-    uiDevice.pressHome();
+    // Keep the following commented code for future use for API below 23.
+//    Log.d(TAG, "Open and go to Apps window.");
+//    uiDevice.findObject(new UiSelector().descriptionContains(Constants.APPS)).
+//            clickAndWaitForNewWindow();
+//
+//    Log.d(TAG, "For API 18, 19, 21, after opening Apps, there is another \n" +
+//            "tip on the the screen. It needs to be removed by clicking on " +
+//            "it. (\"OK\")");
+//    try {
+//      uiDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK)).
+//              clickAndWaitForNewWindow();
+//      Log.d(TAG, "Apps screen tip, " + Constants.TIP_BUTTON_OK + " clicked.");
+//    } catch (UiObjectNotFoundException e) {
+//      Log.e(TAG, e.getMessage());
+//    }
+//
+//    Log.d(TAG,
+//          "After dismissing tips on welcome and Apps screen, go back to home.");
+//    uiDevice.pressHome();
   }
 
   public static void launchGoogleMapsApp(UiDevice uiDevice, int apiLevel)
@@ -291,4 +296,3 @@ public class GeoManagerService implements Service {
         new GeoManagerModel("String").toString()));
   }
 }
-
