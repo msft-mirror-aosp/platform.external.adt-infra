@@ -44,6 +44,19 @@ def zip_and_upload():
       verbose_call(['ssh', remote_host, 'mkdir -p %s' % args.remote_dir])
       verbose_call(['scp', args.zip_name, remote_path])
 
+     # if it is emu psq test log, zip and upload to GCS
+    if 'emu_psq_logs' in args.log_dir:
+      print 'Running command in directory: %s' % (os.getcwd())
+      verbose_call(['zip', '-r', args.zip_name, args.log_dir])
+      emu_psq_gs_dst = 'gs://emu_psq_logs/'
+      verbose_call(['python', gsutil_path, 'cp', args.zip_name, emu_psq_gs_dst])
+      # remove log zip files
+      try:
+        print "Delete log zip %s" % args.zip_name
+        os.remove(args.zip_name)
+      except Exception as e:
+        print "Error in deleting log zip %r" % e
+
     # if it is adb stress test log, zip and upload to GCS
     if 'adb_stress_logs' in args.log_dir:
       print 'Running command in directory: %s' % (os.getcwd())

@@ -51,5 +51,13 @@ def get_parser():
                         help='specify the root directory of android cts tests, usually this ends in android-cts')
     parser.add_argument('--cts-module', type=str, dest='cts_module', action='store',
                         help='the individual cts module to execute when running the module test')
+    parser.add_argument('--build_id', type=str, dest='build_id', action='store',
+                        help='The Android Build id to use for the emulator test.')
+    parser.add_argument('--build_target', type=str, dest='build_target', action='store',
+                        help='The Build Target to download artifacts from.')
+    parser.add_argument('--branch', type=str, dest='branch', action='store',
+                        help='The TreeHugger branch that has initiated PSQ run.')
+    parser.add_argument('--run-target', type=str, dest='run_target', action='store',
+                        help='The run target of the TreeHugger invocation.')
     parser.add_argument('unittest_args', nargs='*')
     return parser

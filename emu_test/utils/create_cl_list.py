@@ -2,7 +2,6 @@ import os
 import argparse
 import subprocess
 import psutil
-import zipfile
 import shutil
 from android_cl_scan import query_ab
 

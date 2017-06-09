@@ -70,7 +70,10 @@ class LoggedTestCase(unittest.TestCase):
         logger = logging.getLogger(logger_name)
         logger.propagate = False
         logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
+        # If this is a PsqBootTestCase, we dont print to console.  This is to
+        # minimize output that swarming server must parse.
+        if cls.__name__ != 'PsqBootTestCase':
+          logger.addHandler(console_handler)
         logger.setLevel(logging.DEBUG)
 
         return logger
