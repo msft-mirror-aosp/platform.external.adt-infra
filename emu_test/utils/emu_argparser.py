@@ -57,7 +57,7 @@ def get_parser():
                         help='The Build Target to download artifacts from.')
     parser.add_argument('--branch', type=str, dest='branch', action='store',
                         help='The TreeHugger branch that has initiated PSQ run.')
-    parser.add_argument('--run-target', type=str, dest='run_target', action='store',
+    parser.add_argument('--run_target', type=str, dest='run_target', action='store',
                         help='The run target of the TreeHugger invocation.')
     parser.add_argument('unittest_args', nargs='*')
     return parser
