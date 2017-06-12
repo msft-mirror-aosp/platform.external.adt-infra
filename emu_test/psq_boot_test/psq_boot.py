@@ -114,8 +114,8 @@ def upload_to_gs():
   """
   build_source_root = os.path.join(ADT_INFRA_PATH, 'build')
   log_util_path = os.path.join(ADT_INFRA_PATH, 'emu_test', 'utils', 'zip_upload_logs.py')
-  upload_log_args = ['--dir', emu_args.session_dir,
-                     '--name', 'build_%s.zip' % os.path.basename(emu_args.session_dir),
+  upload_log_args = ['--dir', emu_argparser.emu_args.session_dir,
+                     '--name', 'build_%s.zip' % os.path.basename(emu_argparser.emu_args.session_dir),
                      '--ip', '', # Unused, but required by script
                      '--user', '', # Unused, but required by script
                      '--dst', '', # Unused, but required by script
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     test_result = test_runner.run(test_suite)
     test_end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     # Upload logs to GCS (gs://emu_psq_logs/)
-    upload_rc = upload_to_gs(emu_argparser.emu_args)
+    upload_rc = upload_to_gs()
     output = create_json_output(emu_argparser.emu_args.creation_time,
                                 test_start_time, test_end_time,
                                 len(test_result.errors) + len(test_result.passes),
