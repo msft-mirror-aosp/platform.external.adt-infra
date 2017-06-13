@@ -47,8 +47,9 @@ def zip_and_upload():
      # if it is emu psq test log, zip and upload to GCS
     if 'emu_psq_logs' in args.log_dir:
       print 'Running command in directory: %s' % (os.getcwd())
-      verbose_call(['zip', '-r', args.zip_name, args.log_dir])
-      emu_psq_gs_dst = 'gs://emu_psq_logs/'
+
+      verbose_call(['zip', '-jr', args.zip_name, args.log_dir])
+      emu_psq_gs_dst = 'gs://emu_psq_logs/%s/' % (args.zip_name[0:-4])
       verbose_call(['python', gsutil_path, 'cp', args.zip_name, emu_psq_gs_dst])
       # remove log zip files
       try:

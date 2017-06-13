@@ -115,7 +115,7 @@ def upload_to_gs():
   build_source_root = os.path.join(ADT_INFRA_PATH, 'build')
   log_util_path = os.path.join(ADT_INFRA_PATH, 'emu_test', 'utils', 'zip_upload_logs.py')
   upload_log_args = ['--dir', emu_argparser.emu_args.session_dir,
-                     '--name', 'build_%s.zip' % os.path.basename(emu_argparser.emu_args.session_dir),
+                     '--name', '%s.zip' % os.path.basename(emu_argparser.emu_args.session_dir),
                      '--ip', '', # Unused, but required by script
                      '--user', '', # Unused, but required by script
                      '--dst', '', # Unused, but required by script
@@ -156,7 +156,7 @@ def create_json_output(creation_time, test_start_time, test_end_time,
   json_output['tests_ended_on'] = test_end_time
   json_output['total_test_count'] = total_tests
   json_output['failed_test_count'] = failed_tests
-  json_output['logs_url'] = web_base + '%s.zip' % os.path.basename(session_dir)
+  json_output['logs_url'] = web_base + '%s' % os.path.basename(session_dir)
   output += json.dumps(json_output)
   output += '#JSON_END#'
   return output
