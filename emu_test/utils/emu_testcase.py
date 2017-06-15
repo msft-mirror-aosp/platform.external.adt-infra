@@ -340,7 +340,8 @@ class EmuBaseTestCase(LoggedTestCase):
                              'android-tv': 'Android TV',
                              'android-wear': 'Android Wear',
                              'default': 'Default',
-                             'google_apis': 'Google APIs'
+                             'google_apis': 'Google APIs',
+                             'google_apis_playstore': 'Google APIs Playstore'
                             }
         abi_to_cpu_arch = {
                            'x86': 'x86',
