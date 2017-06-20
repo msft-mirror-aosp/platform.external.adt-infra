@@ -250,7 +250,14 @@ public class GeoManagerService implements Service {
 
     UiSelector pParent = ppParent.index(0);
 
-    UiObject myLocationButton = uiDevice.findObject(pParent.childSelector(
+    UiSelector parent = pParent;
+    // Workaround for API 23 on Mac.
+    // TODO: requiring System info, e.g. Linux, Mac, Windows, to filter the condition.
+    if (apiLevel == 23) {
+      parent = ppParent;
+    }
+
+    UiObject myLocationButton = uiDevice.findObject(parent.childSelector(
             new UiSelector().className(IMAGE_VIEW_CLASS_NAME)));
     if (myLocationButton.exists()) {
       Log.d(TAG, "Get myLocationButton.");
