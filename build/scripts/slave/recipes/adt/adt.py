@@ -209,7 +209,7 @@ def RunSteps(api):
 
   if is_cts:
     file_list = "cts"
-  api.python("Download and Unzip Zips", image_util_path,
+  api.python("Download and Unzip Images", image_util_path,
              ['--file', file_list,
               '--build-dir', build_dir],
              env=env)
@@ -228,7 +228,7 @@ def RunSteps(api):
   with api.step.defer_results():
     for step in steps_to_run:
       if is_cross_build:
-        api.python("Download Zip - %s" % step, image_util_path,
+        api.python("Download Image - %s" % step, image_util_path,
                    ['--file', api.properties.get(step+'_file'),
                     '--build-dir', build_dir],
                    env=env)
@@ -258,9 +258,6 @@ def RunSteps(api):
                                  env,
                                  True)
         elif is_console:
-          # Update public system images to the newest
-          sdkmanager = api.path.join(android_sdk_home, 'tools', 'bin', 'sdkmanager')
-          api.step('Update installed SDK packages', [sdkmanager, '--update'])
           api.adt.PythonTestStep('Run Emulator Console Test',
                                  api.path.join(log_dir, 'Console_test'),
                                  'test_console.*',
