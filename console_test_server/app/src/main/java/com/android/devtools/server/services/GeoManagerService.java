@@ -243,20 +243,8 @@ public class GeoManagerService implements Service {
     }
 
     Log.d(TAG, "2.2) Start to enable GPS.");
-    UiSelector pppParent = new UiSelector().resourceId(locationButtonRId);
-
-    UiSelector ppParent = pppParent.index(0);
-    Log.d(TAG, "Get ppParent.");
-
-    UiSelector pParent = ppParent.index(0);
-
-    UiSelector parent = pParent;
-    // Workaround for API 23 on Mac.
-    // TODO: requiring System info, e.g. Linux, Mac, Windows, to filter the condition.
-    if (apiLevel == 23) {
-      parent = ppParent;
-    }
-
+    UiSelector parent = new UiSelector().resourceId(locationButtonRId);
+    Log.d(TAG, "Get parent.");
     UiObject myLocationButton = uiDevice.findObject(parent.childSelector(
             new UiSelector().className(IMAGE_VIEW_CLASS_NAME)));
     if (myLocationButton.exists()) {
