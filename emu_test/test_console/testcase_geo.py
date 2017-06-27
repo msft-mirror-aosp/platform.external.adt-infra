@@ -10,6 +10,8 @@ import requests
 import testcase_base
 from utils import util
 
+ITERATIONS = 8
+
 TESTCASE_CALL_DIR = os.path.dirname(os.path.realpath(__file__))
 SERVLET_GEO = 'http://localhost:8080/GeoManagerService'
 
@@ -19,6 +21,11 @@ SF_LATITUDE = 38
 SF_ALTITUDE = 0
 CMD_GEO_SF = ('%s %d %d %d\n' %
               (CMD_GEO_FIX_PREFIX, SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE))
+
+SF_INVALID_LONGITUDE = 200
+SF_INVALID_LATITUDE = 100
+CMD_GEO_INVALID = ('%s %d %d %d\n' % (CMD_GEO_FIX_PREFIX, SF_INVALID_LONGITUDE, SF_INVALID_LATITUDE, SF_ALTITUDE))
+
 
 class GeoTest(testcase_base.BaseConsoleTest):
   """This class aims to test geo-related emulator console commands."""
@@ -144,6 +151,32 @@ class GeoTest(testcase_base.BaseConsoleTest):
     else:
       # TODO: Add support for APIs below 23.
       print 'API is below 23, skip geo test for now.'
+      pass
+
+  def test_geo_stress(self):
+    """Stress geo location by attempting to send invalid coordinates."""
+    print 'Running test: %s' % (inspect.stack()[0][2])
+
+    if self.avd.api in ['24', '25']:
+      print 'Running test: %s' % (inspect.stack()[0][2])
+      self._initially_launch_google_maps_to_have_location_history({'api': self.avd.api})
+      is_command_successful, output = util.execute_console_command(self.telnet, CMD_GEO_SF, '')
+      self.assert_cmd_successful(is_command_successful, 'Failed to properly set geo info.',
+                                 False, '', '', output)
+      self._process_request_geo_service({})
+      self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
+
+      for i in range(ITERATIONS):
+        # Use telnet.write directly instead of execute_console_command since we expect this command to fail.
+        # Will produce 'KO' rather than 'OK'. (i.e. execute_console_command hangs waiting for 'OK').
+        self.telnet.write(CMD_GEO_INVALID)
+        self.telnet.read_until('KO:')
+        self.telnet.read_until('\n')
+        self._process_request_geo_service({})
+        self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
+    else:
+      # TODO: Add support for APIs below 24.
+      print 'Skip geo stress test for APIs below 24.'
       pass
 
 
