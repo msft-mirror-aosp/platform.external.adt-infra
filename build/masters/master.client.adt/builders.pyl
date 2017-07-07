@@ -242,10 +242,10 @@
        "id": "_1",
        "scheduler": "emu_master_dev_scheduler",
      },
-     "emu-2.3-release": {
+     "emu-2.4-release": {
        "name": "Emulator build on SDK images",
        "id": "_2",
-       "scheduler": "emu_2.3_release_scheduler",
+       "scheduler": "emu_2.4_release_scheduler",
      },
      "system-image-builds": {
        "name": "SDK emulator on system image builds",
@@ -287,13 +287,13 @@
      "Ubuntu 12.04 HD Graphics 4000": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-12_04-intel-hd-4000"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds", "Console", "AVD"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds", "Console", "AVD"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds", "UI"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds", "UI"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400 2": {
@@ -323,31 +323,31 @@
      "Win 7 32-bit HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["win-7-32-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
        "tag": "Win",
      },
      "Win 7 64-bit HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["win-7-64-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
        "tag": "Win",
      },
      "Win 8 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
        "tag": "Win",
      },
      "Win 8.1 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8_1-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-10-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600 1": {
@@ -359,25 +359,25 @@
      "Mac 10.10.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-intel-hd-5000"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.10.5 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-iris-pro"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.8.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-8-5-intel-hd-5000"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.11.1 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-11-1-iris-pro"],
-       "categories": ["emu-master-dev", "emu-2.3-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.11.6 Iris Pro": {
@@ -411,8 +411,8 @@
       "project": ["emu-master-dev"],
       "type": "emu_scheduler",
     },
-    "emu_2.3_release_scheduler": {
-      "project": ["emu-2.3-release"],
+    "emu_2.4_release_scheduler": {
+      "project": ["emu-2.4-release"],
       "type": "emu_scheduler",
     },
     "system_image_scheduler": {
@@ -433,7 +433,7 @@
     #  "type": "emu_scheduler",
     #},
     "console_scheduler": {
-      "project": ["emu-master-dev", "emu-2.3-release"],
+      "project": ["emu-master-dev", "emu-2.4-release"],
       "type": "emu_scheduler",
     },
     "adb_test_scheduler": {
