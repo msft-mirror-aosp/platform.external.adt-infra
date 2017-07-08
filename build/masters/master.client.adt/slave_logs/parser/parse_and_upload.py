@@ -80,6 +80,7 @@ api_to_image_branch = {
                        '23':'mnc-emu-dev',
                        '24':'nyc-emu-dev',
                        '25':'nyc-mr1-emu-dev',
+                       '26':'oc-emu-dev',
                       }
 
 def get_branches(builder, file_path, api):

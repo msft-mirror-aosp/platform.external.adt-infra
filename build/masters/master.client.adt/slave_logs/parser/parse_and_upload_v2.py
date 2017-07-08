@@ -54,6 +54,7 @@ _API_TO_IMAGE_BRANCH = {
         '23': 'mnc-emu-dev',
         '24': 'nyc-emu-dev',
         '25': 'nyc-mr1-emu-dev',
+        '26': 'oc-emu-dev',
 }
 def _get_branches(builder, file_path, api):
     if builder.endswith('_CTS'):
