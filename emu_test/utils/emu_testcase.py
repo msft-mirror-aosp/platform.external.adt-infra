@@ -506,7 +506,7 @@ class EmuBaseTestCase(LoggedTestCase):
     def update_sdk(self, filter):
         """Update sdk from command line with given filter"""
 
-        android_exec = "bin/sdkmanager.bat" if os.name == "nt" else "bin/sdkmanager"
+        android_exec = "sdkmanager.bat" if os.name == "nt" else "sdkmanager"
         cmd = [android_exec, '"' + filter + '"']
         self.m_logger.debug("update sdk %s", ' '.join(cmd))
         print "Command: %s" % (cmd)

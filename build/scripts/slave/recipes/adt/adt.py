@@ -67,9 +67,10 @@ def RunSteps(api):
     android_sdk_home += "_image-builds"
 
   android_tools_dir = os.path.join(android_sdk_home, 'tools')
+  android_tools_bin_dir = os.path.join(android_sdk_home, 'tools', 'bin')
   android_platform_dir = os.path.join(android_sdk_home, 'platform-tools')
   android_buildtools_dir = os.path.join(android_sdk_home, 'build-tools', '23.0.2')
-  env_path += [android_tools_dir, android_platform_dir, android_buildtools_dir]
+  env_path += [android_tools_dir, android_tools_bin_dir, android_platform_dir, android_buildtools_dir]
   if is_console or is_avd:
     env_path += [os.path.join(home_dir, 'bin', 'jdk1.8.0_121', 'bin')]
   env = {'PATH': api.path.pathsep.join(env_path),

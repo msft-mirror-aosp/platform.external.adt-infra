@@ -73,7 +73,7 @@ def clean_up():
 
 def update_sdk_with_timeout(timeout):
     def update_sdk():
-        android_exec = "bin/sdkmanager.bat" if os.name == "nt" else "bin/sdkmanager"
+        android_exec = "sdkmanager.bat" if os.name == "nt" else "sdkmanager"
 #update existing packages to latest version
         cmd = [android_exec, "--update"]
         logger.info("Update android sdk, cmd: %s", ' '.join(cmd))
