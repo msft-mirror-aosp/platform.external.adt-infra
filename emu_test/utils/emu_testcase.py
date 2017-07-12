@@ -479,12 +479,12 @@ class EmuBaseTestCase(LoggedTestCase):
             # try to download the system image
             api = avd_config.api
             self.update_sdk("android-%s" % api)
-            if "google" in avd_config.tag:
+            if "google_apis_playstore" in avd_config.tag:
+                self.update_sdk("system-images;android-%s;google_apis_playstore;%s"
+                                % (api, avd_config.abi))
+            elif "google" in avd_config.tag:
                 self.update_sdk("add-ons;addon-google_apis-google-%s" % api)
                 self.update_sdk("system-images;android-%s;google_apis;%s"
-                                % (api, avd_config.abi))
-            if "playstore" in avd_config.tag:
-                self.update_sdk("system-images;android-%s;google_apis_playstore;%s"
                                 % (api, avd_config.abi))
             elif "wear" in avd_config.tag:
                 self.update_sdk("system-images;android-%s;android-wear;%s"
