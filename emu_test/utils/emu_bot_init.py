@@ -71,10 +71,11 @@ def clean_up():
   # remove build directory
   remove_dir_content(args.build_dir)
 
-def update_sdk_with_timeout(filter, timeout):
+def update_sdk_with_timeout(timeout):
     def update_sdk():
-        android_exec = "android.bat" if os.name == "nt" else "android"
-        cmd = [android_exec, "update", "sdk", "-s", "--no-ui", "--filter", filter, "--force"]
+        android_exec = "bin/sdkmanager.bat" if os.name == "nt" else "bin/sdkmanager"
+#update existing packages to latest version
+        cmd = [android_exec, "--update"]
         logger.info("Update android sdk, cmd: %s", ' '.join(cmd))
         update_sdk.ps = psutil.Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=STDOUT, bufsize=1)
         with update_sdk.ps.stdout:
@@ -113,7 +114,7 @@ if __name__ == "__main__":
     clean_up()
   except:
     pass
-  rc = update_sdk_with_timeout('add-on,system-image,extra,platform-tool,platform,tool', 3600)
+  rc = update_sdk_with_timeout(3600)
 
   # kill adb process, during update of sdk tools, it will run adb start-server, which leaves
   # a child adb process, clean it up here to avoid hanging of script

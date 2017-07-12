@@ -480,15 +480,21 @@ class EmuBaseTestCase(LoggedTestCase):
             api = avd_config.api
             self.update_sdk("android-%s" % api)
             if "google" in avd_config.tag:
-                self.update_sdk("addon-google_apis-google-%s" % api)
-                self.update_sdk("sys-img-%s-google_apis-%s"
-                                % (avd_config.abi, api))
+                self.update_sdk("add-ons;addon-google_apis-google-%s" % api)
+                self.update_sdk("system-images;android-%s;google_apis;%s"
+                                % (api, avd_config.abi))
+            if "playstore" in avd_config.tag:
+                self.update_sdk("system-images;android-%s;google_apis_playstore;%s"
+                                % (api, avd_config.abi))
             elif "wear" in avd_config.tag:
-                self.update_sdk("sys-img-%s-android-wear-%s" % (avd_config.abi, api))
+                self.update_sdk("system-images;android-%s;android-wear;%s"
+                                % (api, avd_config.abi))
             elif "tv" in avd_config.tag:
-                self.update_sdk("sys-img-%s-android-tv-%s" % (avd_config.abi, api))
+                self.update_sdk("system-images;android-%s;android-tv;%s"
+                                % (api, avd_config.abi))
             else:
-                self.update_sdk("sys-img-%s-android-%s" % (avd_config.abi, api))
+                self.update_sdk("system-images;android-%s;default;%s"
+                                % (api, avd_config.abi))
             self.m_logger.debug("try create avd again after update sdk")
             ret = try_create_with_config()
         # last step, create config.ini
@@ -500,8 +506,8 @@ class EmuBaseTestCase(LoggedTestCase):
     def update_sdk(self, filter):
         """Update sdk from command line with given filter"""
 
-        android_exec = "android.bat" if os.name == "nt" else "android"
-        cmd = [android_exec, "update", "sdk", "--no-ui", "--all", "--filter", filter]
+        android_exec = "bin/sdkmanager.bat" if os.name == "nt" else "bin/sdkmanager"
+        cmd = [android_exec, '"' + filter + '"']
         self.m_logger.debug("update sdk %s", ' '.join(cmd))
         print "Command: %s" % (cmd)
         update_proc = psutil.Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE)
