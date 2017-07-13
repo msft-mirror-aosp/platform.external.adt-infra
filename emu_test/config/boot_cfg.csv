@@ -21,8 +21,7 @@ API 24,android-tv,x86,Android TV (1080p),2048,yes,nyc,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,google_apis,x86,Nexus 6P,2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,google_apis,x86_64,Nexus 6P,2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,google_apis_playstore,x86,Nexus 6P,2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
-API 23,android-tv,x86,Android TV (1080p),2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
-,,x86,Nexus 6P,2048,yes,mnc,P,P,P,P,P,P,P,P,P,P,P,P,P
+API 23,default,x86,Nexus 6P,2048,yes,mnc,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86,Nexus 5X,2048,yes,public,P,P,P,P,P,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 6P,2048,yes,mnc,P,P,P,P,S,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 5X,2048,yes,public,P,P,P,P,S,P,P,P,P,P,P,P,P
