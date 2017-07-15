@@ -25,6 +25,8 @@ def get_dst_dir(remote_path):
       tag = 'google_apis_playstore'
     elif 'google' in branch_name and 'addon' in branch_name:
       tag = 'google_apis'
+    elif 'gphone' in branch_name and 'addon' in branch_name:
+      tag = 'google_apis'
     elif 'google_atv' in branch_name:
       tag = 'android-tv'
     else:
