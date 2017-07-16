@@ -562,7 +562,7 @@ def create_test_case_from_file(desc, testcase_class, test_func):
 
     def create_test_case(avd_config, op):
         """ Swiftshader GPU rendering is currently only available within the emu-master-dev branch. """
-        if not is_cts and avd_config.gpu == "yes" and "emu-master-dev" in emu_argparser.emu_args.emulator_exec:
+        if not is_cts and avd_config.gpu == "yes":
             avd_config_swiftshader = avd_config._replace(gpu = "swiftshader")
             create_test_case(avd_config_swiftshader, op)
 
@@ -617,8 +617,10 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                     if not platform.machine().endswith('64'):
                         ram = str(min([int(ram), 768]))
                     # use qemu2 for top of tree images and public images above api 19
-                    # arm use qemu1 regardless of origin and api level
-                    if (ori != "public" or api >= "19") and abi != "armeabi-v7a":
+                    # arm use qemu1 for api <=25; for api >= 26, use qemu2
+                    if (api >= "26"):
+                      classic = "no"
+                    elif (ori != "public" or api >= "19") and abi != "armeabi-v7a":
                       classic = "no"
                     else:
                       classic = "yes"
