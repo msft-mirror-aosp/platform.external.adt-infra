@@ -25,12 +25,12 @@ import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.PlayStoreConfirmationWatcher;
+import com.android.devtools.systemimage.uitest.watchers.PlayStorePermissionsWatcher;
 
 import java.util.concurrent.TimeUnit;
 
-
 /**
- * Static utility methods pertaining to the Google Play Store.
+ * Static utility methods pertaining to the Google Play Store
  */
 public class PlayStoreUtil {
 
@@ -73,16 +73,16 @@ public class PlayStoreUtil {
     }
 
     /**
-     * Launches Play Store and then searches for an application.
+     * Launches Google Play Store, opening to the given application
      */
-    public static void searchGooglePlay(Instrumentation instrumentation, String appName) throws Exception {
+    public static void launchGooglePlay(Instrumentation instrumentation, String appName) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String playStore = "Play Store";
         final String application = appName;
-
         device.findObject(new UiSelector().text(playStore)).clickAndWaitForNewWindow();
+
         resetPlayStore(instrumentation);
-        device.pressHome();
+
         device.findObject(new UiSelector().text(playStore)).clickAndWaitForNewWindow();
 
         boolean idleTextFieldExists = new Wait().until(new Wait.ExpectedCondition() {
@@ -116,6 +116,77 @@ public class PlayStoreUtil {
     }
 
     /**
+     * Checks if test user is logged in to Google Play.  Logs in if not.
+     */
+    public static void loginGooglePlay(Instrumentation instrumentation) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String playStore = "Play Store";
+        final String email = "pstester1980@gmail.com";
+        final String password = "pst4lif3";
+        resetPlayStore(instrumentation);
+        device.findObject(new UiSelector().text(playStore)).clickAndWaitForNewWindow();
+
+        boolean hasSearchBox = new Wait(TimeUnit.SECONDS.toMillis(20)).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws UiObjectNotFoundException {
+                        return device.findObject(
+                                new UiSelector().resourceId(Res.GOOGLE_PLAY_IDLE_RES)).exists() ||
+                                device.findObject(
+                                        new UiSelector().resourceId(Res.GOOGLE_PLAY_ACTIVE_RES)).exists();
+                    }
+                });
+        if (hasSearchBox) {
+            device.pressHome();
+            return;
+        }
+
+        boolean needsEmail = new Wait().
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws UiObjectNotFoundException {
+                        return device.findObject(
+                                new UiSelector().description("Email or phone")).exists();
+                    }
+                });
+
+        if (!needsEmail) {
+            boolean needsPassword = new Wait().
+                    until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws UiObjectNotFoundException {
+                            return device.findObject(
+                                    new UiSelector().description("Sign in " + email)).exists();
+                        }
+                    });
+            if (!needsPassword) {
+                device.pressHome();
+                return;
+            }
+            UiObject inputPasswordField = device.findObject(new UiSelector().resourceId("password"));
+            inputPasswordField.clearTextField();
+            inputPasswordField.setText(password);
+            device.findObject(new UiSelector().description("NEXT")).clickAndWaitForNewWindow();
+            logInWithPassword(instrumentation, password);
+        }
+        else {
+            UiObject inputEmailField = device.findObject(new UiSelector().description("Email or phone"));
+            inputEmailField.clearTextField();
+            inputEmailField.setText(email);
+            device.findObject(new UiSelector().description("NEXT")).clickAndWaitForNewWindow();
+            logInWithPassword(instrumentation, password);
+        }
+        new PlayStorePermissionsWatcher(device).checkForCondition();
+        new PlayStoreConfirmationWatcher(device).checkForCondition();
+
+        device.pressHome();
+        device.findObject(new UiSelector().text(playStore)).clickAndWaitForNewWindow();
+        new PlayStorePermissionsWatcher(device).checkForCondition();
+        device.pressHome();
+        return;
+    }
+
+    /**
      * Attempts to install an application from Google Play Store, if it is not already installed.
      * Returns true if the application has been installed, false if not.
      */
@@ -135,7 +206,7 @@ public class PlayStoreUtil {
                 @Override
                 public boolean isTrue() throws UiObjectNotFoundException {
                     return device.findObject(new UiSelector()
-                            .text("OPEN")).exists();
+                            .text("UNINSTALL")).exists();
                 }
             });
         }
@@ -181,5 +252,17 @@ public class PlayStoreUtil {
         boolean isAppUninstalled = installButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
 
         return isAppUninstalled;
+    }
+
+
+    /**
+     * Helper function to log in to Google Play with test user password
+     */
+    private static void logInWithPassword(Instrumentation instrumentation, String password) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        UiObject inputPasswordField = device.findObject(new UiSelector().resourceId("password"));
+        inputPasswordField.clearTextField();
+        inputPasswordField.setText(password);
+        device.findObject(new UiSelector().description("NEXT")).clickAndWaitForNewWindow();
     }
 }
