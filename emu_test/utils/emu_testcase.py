@@ -561,10 +561,12 @@ def create_test_case_from_file(desc, testcase_class, test_func):
         return True
 
     def create_test_case(avd_config, op):
-        """ Swiftshader GPU rendering is currently only available within the emu-master-dev branch. """
         if not is_cts and avd_config.gpu == "yes":
             avd_config_swiftshader = avd_config._replace(gpu = "swiftshader")
             create_test_case(avd_config_swiftshader, op)
+            if avd_config.api >= "19" and avd_config.api <= "25" and "x86" in avd_config.abi:
+                avd_config_guestgpu = avd_config._replace(gpu = "guest")
+                create_test_case(avd_config_guestgpu, op)
 
         if op == "S" or op == "" or not valid_case(avd_config):
             return
