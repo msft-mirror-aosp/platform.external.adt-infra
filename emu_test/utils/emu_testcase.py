@@ -619,8 +619,8 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                     if not platform.machine().endswith('64'):
                         ram = str(min([int(ram), 768]))
                     # use qemu2 for top of tree images and public images above api 19
-                    # arm use qemu1 for api <=25; for api >= 26, use qemu2
-                    if (api >= "26"):
+                    # arm use qemu1 for api <=23; for api >= 24, use qemu2
+                    if (api >= "24"):
                       classic = "no"
                     elif (ori != "public" or api >= "19") and abi != "armeabi-v7a":
                       classic = "no"
