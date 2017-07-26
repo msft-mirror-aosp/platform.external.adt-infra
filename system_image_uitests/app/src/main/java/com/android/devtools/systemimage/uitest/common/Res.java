@@ -69,10 +69,11 @@ public class Res {
             "com.android.systemui:id/expand_indicator";
 
     public static final String GOOGLE_PLAY_IDLE_RES = "com.android.vending:id/search_box_idle_text";
+    public static final String GOOGLE_PLAY_ACTIVE_RES = "com.android.vending:id/search_box_active_text_view";
     public static final String GOOGLE_PLAY_INPUT_RES =
             "com.android.vending:id/search_box_text_input";
     public static final String GOOGLE_PLAY_BUY_BUTTON_RES = "com.android.vending:id/buy_button";
-    public static final String GOOGLE_PLAY_CONTINUE_BUTTON_RES = "com.android.vending:id/continue_button";
+    public static final String GOOGLE_PLAY_FILTER_TOGGLE_RES = "com.android.vending:id/content_filter_on_off_toggle";
 
     public static final String DIALER_BUTTON_RES =
             "com.android.dialer:id/dialpad_floating_action_button";

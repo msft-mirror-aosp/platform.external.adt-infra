@@ -24,9 +24,9 @@ import android.support.test.uiautomator.UiWatcher;
 import java.util.concurrent.TimeUnit;
 
 /**
- * VPN app popup watcher that monitors and dismisses the VPN popup dialog.
+ * Play Store popup watcher that monitors and dismisses Google Play Store confirmation popup dialogs.
  * <p>
- * Note that this watcher should only be registered before playing the VPN app.
+ * Note that this watcher should only be registered before using the Google Play Store app.
  */
 public class PlayStoreConfirmationWatcher implements UiWatcher {
     private final UiDevice mDevice;
@@ -60,9 +60,16 @@ public class PlayStoreConfirmationWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().text("SKIP")).click();
                 condition = true;
             }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().text("NEXT"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().text("NEXT")).click();
+                condition = true;
+            }
         }
         catch (UiObjectNotFoundException e) {
-            throw new AssertionError("Failed to dismiss the play store popup dialogs");
+            throw new AssertionError("Failed to dismiss the play store confirmation popup dialogs");
         }
         return condition;
     }

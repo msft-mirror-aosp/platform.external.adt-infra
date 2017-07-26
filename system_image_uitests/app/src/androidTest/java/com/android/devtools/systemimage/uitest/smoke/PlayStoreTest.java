@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke;
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
@@ -29,8 +30,8 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.PlayStoreUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.PlayStoreConfirmationWatcher;
+import com.android.devtools.systemimage.uitest.watchers.PlayStoreControlsWatcher;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -41,23 +42,21 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test to verify that Play Store services are available on Google API with Play Store images.
+ * Test to verify that Google services are available on Google API images
  */
 
 @RunWith(AndroidJUnit4.class)
 public class PlayStoreTest {
-    private static final String WIDGET_TEXT_VIEW_CLASS = "android.widget.TextView";
-
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(120);
+    public Timeout globalTimeout = Timeout.seconds(180);
 
     /**
      * Verify that Google Play can install and uninstall a free app on the device.
      * <p>
-     * TR ID: C14578827
+     * TT ID: cb0ccd97-f045-42fa-8293-a32e94e838aa
      * <p>
      *   <pre>
      *   Test Steps:
@@ -68,16 +67,16 @@ public class PlayStoreTest {
      *   6. If app is available for install, begin installation.
      *   7. Uninstall the app.
      *   Verify:
-     *      1a. If Install button is displayed, allow installation to complete then
+     *      1a. If Install button was displayed, allow installation to complete then
      *      confirm that the Open button to launch the app is present.
-     *      1b. If Install button is not displayed, confirm that the Open button to
+     *      1b. If Install button was not displayed, confirm that the Open button to
      *      launch the app is present.
      *      2. Confirm that the app was subsequently uninstalled.
      *   </pre>
      */
-    @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
+
     @Test
-    @TestInfo(id = "14578827")
+    @TestInfo(id = "cb0ccd97-f045-42fa-8293-a32e94e838aa")
     public void testAppInstallation() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
@@ -90,9 +89,8 @@ public class PlayStoreTest {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
-                PlayStoreUtil.searchGooglePlay(instrumentation, application);
-                selectFromGooglePlay(device, "App: "+application);
-
+                PlayStoreUtil.loginGooglePlay(instrumentation);
+                selectApplication(instrumentation, application);
                 new PlayStoreConfirmationWatcher(device).checkForCondition();
 
                 assertTrue("Unable to install the application from Google Play",
@@ -108,9 +106,9 @@ public class PlayStoreTest {
     }
 
     /**
-     * Verify that an app can be installed and launched from Play Store.
+     * Verify that Google Play can install and launch an app, then uninstall the app on the device.
      * <p>
-     * TR ID: C14603433
+     * TT ID: 924a0428-4e07-4794-b6a7-2c9d407204aa
      * <p>
      *   <pre>
      *   Test Steps:
@@ -120,30 +118,33 @@ public class PlayStoreTest {
      *   5. Search for free app in store.
      *   6. If app is available for install, begin installation.
      *   7. Launch the application.
-     *   7. Close and uninstall the app.
+     *   8. Close and uninstall the app.
      *   Verify:
-     *      1. App is installed without errors.
-     *      2. App is launched without errors.
+     *      1a. If Install button was displayed, allow installation to complete then
+     *      confirm that the Open button to launch the app is present.
+     *      1b. If Install button was not displayed, confirm that the Open button to
+     *      launch the app is present.
+     *      2. Confirm that application launch was successful.
+     *      3. Confirm that the app was subsequently uninstalled.
      *   </pre>
      */
-    @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
+
     @Test
-    @TestInfo(id = "14603433")
+    @TestInfo(id = "924a0428-4e07-4794-b6a7-2c9d407204aa")
     public void testAppInstallationAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String application = "Trello";
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
             device.pressHome();
             device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
 
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
-                PlayStoreUtil.searchGooglePlay(instrumentation, application);
-                selectFromGooglePlay(device, "App: "+application);
-
+                PlayStoreUtil.loginGooglePlay(instrumentation);
+                selectApplication(instrumentation, application);
                 new PlayStoreConfirmationWatcher(device).checkForCondition();
 
                 assertTrue("Unable to install the application from Google Play",
@@ -171,9 +172,9 @@ public class PlayStoreTest {
     }
 
     /**
-     * Verify that Google Play can reach the payment method prompt during paid app installation.
+     * Verify that Google Play can reach the payment method prompt during paid app installation
      * <p>
-     * TR ID: C14603432
+     * TT ID: bd9460a8-7b07-4cfc-901f-a99564533e51
      * <p>
      *   <pre>
      *   Test Steps:
@@ -185,34 +186,30 @@ public class PlayStoreTest {
      *      1. Confirm that user is presented with a Pay Button with a $.
      *   </pre>
      */
-    @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
+
     @Test
-    @TestInfo(id = "1460343")
+    @TestInfo(id = "bd9460a8-7b07-4cfc-901f-a99564533e51")
     public void testPayAppVerification() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Weather Live";
+        final String application = "Pocket Casts";
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
             device.pressHome();
             device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
 
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
-                PlayStoreUtil.searchGooglePlay(instrumentation, application);
-                selectFromGooglePlay(device, "App: "+application);
-
+                PlayStoreUtil.loginGooglePlay(instrumentation);
+                selectApplication(instrumentation, application);
                 new PlayStoreConfirmationWatcher(device).checkForCondition();
 
-                assertTrue(
-                        "Target application is not a pay app",  new Wait().until(
-                                new Wait.ExpectedCondition() {
+                assertTrue("Target application is not a pay app",  new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
                         return device.findObject(new UiSelector()
-                                .resourceId(
-                                        Res.GOOGLE_PLAY_BUY_BUTTON_RES).textContains("$")).exists();
+                                .resourceId(Res.GOOGLE_PLAY_BUY_BUTTON_RES).textContains("$")).exists();
                     }
                 }));
 
@@ -225,7 +222,7 @@ public class PlayStoreTest {
     /**
      * Verify apps can be searched through Play Store search bar.
      * <p>
-     * TR ID: C14605490
+     * TT ID: 50027a89-8043-44d7-b7ed-33c631903910
      * <p>
      *   <pre>
      *   Test Steps:
@@ -234,32 +231,26 @@ public class PlayStoreTest {
      *   3. Confirm that Play Store is present, then launch.
      *   4. Search for an app name on the main Play Store screen.
      *   Verify:
-     *      1. Confirm app name displays the search string.
+     *      1. Confirm that app name displays the search string.
      *   </pre>
      */
 
-    @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
     @Test
-    @TestInfo(id = "14605490")
+    @TestInfo(id = "50027a89-8043-44d7-b7ed-33c631903910")
     public void testPlaySearch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Facebook";
+        final String application = "Messenger";
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
             device.pressHome();
             device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
 
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
-                PlayStoreUtil.searchGooglePlay(instrumentation, application);
-                assertTrue("Target application not found in search.",  new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return findInGooglePlay(device, "App: "+application);
-                    }
-                }));
+                PlayStoreUtil.loginGooglePlay(instrumentation);
+                assertTrue("Application not found in search.", hasTestApp(instrumentation, application));
                 PlayStoreUtil.resetPlayStore(instrumentation);
                 device.pressHome();
             }
@@ -269,7 +260,7 @@ public class PlayStoreTest {
     /**
      * Verify that Google Play search can be limited through parental controls
      * <p>
-     * TR ID: C14605497
+     * TT ID: fe78dba5-a0f2-4acf-bcbb-10b1c15d3484
      * <p>
      *   <pre>
      *   Test Steps:
@@ -282,156 +273,87 @@ public class PlayStoreTest {
      *   7. Select restrictions for Apps and Games.
      *   8. Set and confirm a content PIN.
      *   9. Set controls to Everone 10+.
-     *   10. Search for adult app in Play Store, unsuccessfully.
-     *   11. Search for family app in Play Store, successfully.
-     *   12. Turn off Parental Controls.
+     *   10. Search for adult app and family app in Play Store, finding only family app.
+     *   11. Turn off Parental Controls.
      *   Verify:
      *      1. Confirm that search returns adult version of app without parental controls set.
-     *      2. Confirm that search does not return adult version of app with parental controls set.
-     *      3. Confirm that search does return family version of app with parental controls set.
+     *      2. Confirm that search does not return adult version of app with parental controls set,
+     *          but does return family version of app.
      *   </pre>
      */
-    @Ignore("Testing play store requires google login that may trigger 2-auth factor. Test to be initiated manually by tester.")
+
     @Test
-    @TestInfo(id = "14605497")
+    @TestInfo(id = "fe78dba5-a0f2-4acf-bcbb-10b1c15d3484")
     public void testParentalControls() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Truth or Dare";
+        final String adultApplication = "Truth or Dare Adult";
+        final String kidsApplication = "Truth or Dare Kids";
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+
+        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
             device.pressHome();
             device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
 
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
-                PlayStoreUtil.searchGooglePlay(instrumentation, application);
-                assertTrue("Adult application not found in search.",  new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return findInGooglePlay(device, "App: "+ application + " Adults");
-                    }
-                }));
+                PlayStoreUtil.loginGooglePlay(instrumentation);
+                assertTrue("Adult application not found in search.",
+                           hasTestApp(instrumentation,
+                                      adultApplication));
 
-                openParentalControls(device);
-
-                boolean controlsOff = new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return device.findObject(new UiSelector().text("Parental controls are off")).exists();
-                    }
-                });
-
-                if (controlsOff) {
-                    device.findObject(new UiSelector().text("Parental controls are off")).clickAndWaitForNewWindow();
-                    setParentalControlPin(device, "1111");
-                }
-
-                device.findObject(new UiSelector().text("Apps & games"))
-                        .waitForExists(TimeUnit.SECONDS.toMillis(3));
-                device.findObject(new UiSelector().text("Apps & games"))
-                        .clickAndWaitForNewWindow();
-
-                device.findObject(new UiSelector().text("Everyone 10+"))
-                        .waitForExists(TimeUnit.SECONDS.toMillis(3));
-                device.findObject(new UiSelector().text("Everyone 10+"))
-                        .clickAndWaitForNewWindow();
-
-                device.findObject(new UiSelector().text("OK"))
-                        .waitForExists(TimeUnit.SECONDS.toMillis(3));
-                device.findObject(new UiSelector().text("OK"))
-                        .clickAndWaitForNewWindow();
-
-                device.findObject(new UiSelector().text("SAVE"))
-                        .waitForExists(TimeUnit.SECONDS.toMillis(3));
-                device.findObject(new UiSelector().text("SAVE"))
-                        .clickAndWaitForNewWindow();
-
+                setRestrictions(device,  "Apps", "Everyone 10+");
                 device.pressHome();
 
-                PlayStoreUtil.searchGooglePlay(instrumentation, application);
-                assertTrue("Adult application found in search.",  new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return !findInGooglePlay(device, "App: "+ application + " Adults");
-                    }
-                }));
+                PlayStoreUtil.launchGooglePlay(instrumentation, adultApplication);
 
-                assertTrue("Family application not found in search.",  new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return findInGooglePlay(device, "App: "+ application + " Kids");
-                    }
-                }));
+                assertTrue("Adult application found in search.",
+                           new Wait().until(new Wait.ExpectedCondition() {
+                           @Override
+                           public boolean isTrue() throws UiObjectNotFoundException {
+                           return !device.findObject(new UiSelector()
+                                .descriptionContains(adultApplication)).exists() &&
+                                device.findObject(new UiSelector()
+                                  .descriptionContains(kidsApplication)).exists();
+                            }
+                        }));
 
-                openParentalControls(device);
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return device.findObject(new UiSelector().text("Apps & games")).exists();
-                    }
-                });
-                device.findObject(new UiSelector().text("Apps & games")).clickAndWaitForNewWindow();
-                setParentalControlPin(device, "1111");
-
-                device.findObject(new UiSelector().text("Allow all, including unrated"))
-                        .waitForExists(TimeUnit.SECONDS.toMillis(3));
-                device.findObject(new UiSelector().text("Allow all, including unrated"))
-                        .clickAndWaitForNewWindow();
-
-                device.findObject(new UiSelector().text("OK"))
-                        .waitForExists(TimeUnit.SECONDS.toMillis(3));
-                device.findObject(new UiSelector().text("OK"))
-                        .clickAndWaitForNewWindow();
-
-                device.findObject(new UiSelector().text("SAVE"))
-                        .waitForExists(TimeUnit.SECONDS.toMillis(3));
-                device.findObject(new UiSelector().text("SAVE"))
-                        .clickAndWaitForNewWindow();
-
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return device.findObject(new UiSelector().text("Parental controls are on")).exists();
-                    }
-                });
-
-                device.findObject(new UiSelector().text("Parental controls are on")).clickAndWaitForNewWindow();
-
-                PlayStoreUtil.resetPlayStore(instrumentation);
+                toggleParentalControls(device, false);
                 device.pressHome();
             }
         }
     }
 
     /**
-     * Selects an application listed in Play Store.
+     * Selects an application listed in Play Store, if found.
      */
-    private static void selectFromGooglePlay(UiDevice testDevice, String appDescription) throws Exception {
-        final UiDevice device = testDevice;
-        final String application = appDescription;
+    private static void selectApplication(Instrumentation instrumentation, String application) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        boolean isFound = findInGooglePlay(device, appDescription);
-
+        boolean isFound = hasTestApp(instrumentation, application);
         if (isFound) {
             device.findObject(new UiSelector()
-                    .description(application)).clickAndWaitForNewWindow();
+                    .descriptionContains(application)).clickAndWaitForNewWindow();
         }
     }
 
     /**
-     * Finds and application in Play Store. Returns true if it was found, false if not.
+     * Helper to search Google Play for an application by description.
+     * Return true if found, false if not.
      */
-    private static boolean findInGooglePlay(UiDevice testDevice, String appDescription) throws Exception {
-        final UiDevice device = testDevice;
-        final String application = appDescription;
+    private static boolean hasTestApp(Instrumentation instrumentation, String description)
+            throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String testDescription = description;
+
+        PlayStoreUtil.launchGooglePlay(instrumentation, testDescription);
 
         return new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
                 return device.findObject(new UiSelector()
-                        .description(application)).exists();
+                        .descriptionContains(testDescription)).exists();
             }
         });
     }
@@ -470,17 +392,65 @@ public class PlayStoreTest {
     }
 
     /**
+     * Toggles the Parental Controls button; on if true, off if false
+     */
+    private static void toggleParentalControls(UiDevice testDevice, boolean setChecked) throws Exception {
+        final UiDevice device = testDevice;
+        openParentalControls(device);
+
+        new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector().resourceId(Res.GOOGLE_PLAY_FILTER_TOGGLE_RES)).exists();
+            }
+        });
+
+        UiObject toggleButton = device.findObject(new UiSelector().resourceId(Res.GOOGLE_PLAY_FILTER_TOGGLE_RES));
+        if ((toggleButton.isChecked() != setChecked)) {
+            toggleButton.clickAndWaitForNewWindow();
+            setParentalControlPin(device, "1111");
+        }
+    }
+
+    /**
+     * Change parental control restrictions in an application category to the given ages
+     */
+    private static void setRestrictions(UiDevice testDevice, String category, String ages) throws Exception {
+        final UiDevice device = testDevice;
+        final String appCategory = category;
+        toggleParentalControls(device, true);
+
+        new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector().textStartsWith(appCategory)).exists();
+            }
+        });
+        device.findObject(new UiSelector().textStartsWith(appCategory)).clickAndWaitForNewWindow();
+        setParentalControlPin(device, "1111");
+        device.findObject(new UiSelector().text(ages))
+                .waitForExists(TimeUnit.SECONDS.toMillis(3));
+        device.findObject(new UiSelector().text(ages))
+                .clickAndWaitForNewWindow();
+
+        new PlayStoreControlsWatcher(device).checkForCondition();
+    }
+    /**
      * Sets and then confirms a parental control pin
      */
     private static void setParentalControlPin(UiDevice testDevice, String pin) throws Exception {
         final UiDevice device = testDevice;
 
-        new Wait().until(new Wait.ExpectedCondition() {
+        boolean hasPinDialog = new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
                 return device.findObject(new UiSelector().text("Type PIN")).exists();
             }
         });
+
+        if (!hasPinDialog) {
+            return;
+        }
 
         device.findObject(new UiSelector().text("Type PIN")).setText(pin);
         device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
