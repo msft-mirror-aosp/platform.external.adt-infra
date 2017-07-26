@@ -251,7 +251,7 @@ def RunSteps(api):
                                  env)
         elif is_ui:
           step_data = bootSteps[step]
-          api.adt.PythonTestStep('Run Emulator UI Test',
+          res = api.adt.PythonTestStep('Run Emulator UI Test',
                                  api.path.join(log_dir, 'UI_test'),
                                  'test_ui.*',
                                  'ui_cfg.csv',
@@ -259,8 +259,25 @@ def RunSteps(api):
                                  emulator_path,
                                  env,
                                  True)
+          # Here we upload the data on whether the build passed or failed to GCS
+          upload_data_path = api.path.join(script_root, 'utils', 'upload_test_stats_to_gcs.py')
+          upload_data_args = ['--test_type', 'system_image_ui',
+                              '--buildnum', buildnum,
+                              '--buildername', api.properties['buildername'],
+                              '--timestamp', api.properties['requestedAt'],
+                              ]
+          if res:
+            upload_data_args.append('--passed')
+          upload_data_args.append('--platform')
+          if api.platform.is_linux:
+            upload_data_args.append('lin')
+          elif api.platform.is_mac:
+            upload_data_args.append('mac')
+          elif api.platform.is_win:
+            upload_data_args.append('win')
+          api.python("Upload Test Results to GCS", upload_data_path, upload_data_args, env=env)
         elif is_console:
-          api.adt.PythonTestStep('Run Emulator Console Test',
+          res = api.adt.PythonTestStep('Run Emulator Console Test',
                                  api.path.join(log_dir, 'Console_test'),
                                  'test_console.*',
                                  'console_cfg.csv',
@@ -268,6 +285,24 @@ def RunSteps(api):
                                  emulator_path,
                                  env,
                                  True)
+          # Here we upload the data on whether the build passed or failed to GCS
+          upload_data_path = api.path.join(script_root, 'utils', 'upload_test_stats_to_gcs.py')
+          upload_data_args = ['--test_type', 'console',
+                              '--buildnum', buildnum,
+                              '--buildername', api.properties['buildername'],
+                              '--timestamp', api.properties['requestedAt'],
+                              ]
+          if res:
+            upload_data_args.append('--passed')
+          upload_data_args.append('--platform')
+          if api.platform.is_linux:
+            upload_data_args.append('lin')
+          elif api.platform.is_mac:
+            upload_data_args.append('mac')
+          elif api.platform.is_win:
+            upload_data_args.append('win')
+          api.python("Upload Test Results to GCS", upload_data_path, upload_data_args, env=env)
+
         elif is_avd:
           api.adt.PythonTestStep('Run AVD Launch Test',
                                  api.path.join(log_dir, 'AVD_test'),
