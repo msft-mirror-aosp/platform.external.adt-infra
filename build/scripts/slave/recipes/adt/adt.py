@@ -291,6 +291,7 @@ def RunSteps(api):
                               '--buildnum', buildnum,
                               '--buildername', api.properties['buildername'],
                               '--timestamp', api.properties['requestedAt'],
+                              '--build-dir', build_dir,
                               ]
           if res:
             upload_data_args.append('--passed')
