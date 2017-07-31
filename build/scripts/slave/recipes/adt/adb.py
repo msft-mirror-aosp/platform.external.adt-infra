@@ -37,7 +37,7 @@ def RunSteps(api):
   env = {'PATH': api.path.pathsep.join(env_path),
          'PYTHONPATH': api.path['slave_build'].join('development', 'python-packages')}
 
-  api.repo.init('persistent-https://android.googlesource.com/platform/manifest', '--depth=1')
+  api.repo.init('https://android.googlesource.com/platform/manifest', '--depth=1')
   api.repo.reset()
   api.repo.clean('-x')
   api.repo.sync('-c', 'system/core')
