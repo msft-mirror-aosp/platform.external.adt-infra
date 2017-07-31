@@ -15,7 +15,6 @@ class AdtApi(recipe_api.RecipeApi):
     script_root = self.m.path.join(build_dir, os.pardir, 'emu_test')
     dotest_path = self.m.path.join(script_root, 'dotest.py')
 
-    res = True # Result of whether the tests passed or failed. True for passed and False for failed
 
     test_args = ['-l', 'INFO', '-exec', emulator_path,
                  '-s', session_dir,
@@ -33,7 +32,6 @@ class AdtApi(recipe_api.RecipeApi):
         stderr_output = deferred_step_result.get_error().result.stderr
         lines = [line for line in stderr_output.split('\n')
                  if line.startswith('FAIL:') or line.startswith('TIMEOUT:')]
-        res = False # Test failed
         # Do not show empty links for UI tests since UI tests create these links to display test reports later.
         if "UI" not in description:
           for line in lines:
@@ -61,4 +59,3 @@ class AdtApi(recipe_api.RecipeApi):
         self.m.step.active_result.presentation.links['View XML'] = \
           self.m.path.join("..", "..", "..","Console_Result", buildername.replace(" ", "_"),
                            'build_%s-rev_%s' % (buildnum, rev), "consoleTestResult.xml")
-    return res

@@ -267,7 +267,7 @@ def RunSteps(api):
                               '--timestamp', api.properties['requestedAt'],
                               '--build-dir', build_dir,
                               ]
-          if res:
+          if res and res.is_ok:
             upload_data_args.append('--passed')
           upload_data_args.append('--platform')
           if api.platform.is_linux:
@@ -294,7 +294,7 @@ def RunSteps(api):
                               '--timestamp', api.properties['requestedAt'],
                               '--build-dir', build_dir,
                               ]
-          if res:
+          if res and res.is_ok:
             upload_data_args.append('--passed')
           upload_data_args.append('--platform')
           if api.platform.is_linux:
