@@ -37,20 +37,22 @@ def RunSteps(api):
   env = {'PATH': api.path.pathsep.join(env_path),
          'PYTHONPATH': api.path['slave_build'].join('development', 'python-packages')}
 
-  api.repo.init('https://android.googlesource.com/platform/manifest', '--depth=1')
-  api.repo.reset()
-  api.repo.clean('-x')
-  api.repo.sync('-c', 'system/core')
-  api.repo.sync('-c', 'development')
+  if api.platform.is_linux:
+    api.repo.init('https://android.googlesource.com/platform/manifest', '--depth=1')
+    api.repo.reset()
+    api.repo.clean('-x')
+    api.repo.sync('-c', 'system/core')
+    api.repo.sync('-c', 'development')
 
   # Run adb stree tests
   with api.step.defer_results():
-    for test in ['test_adb.py', 'test_device.py']:
-      test_path = api.path.join(api.path['slave_build'], 'system', 'core', 'adb', test)
-      deferred_step_result = api.python('Run %s' % test, test_path, env=env)
-      if not deferred_step_result.is_ok:  # pragma: no cover
-        stderr_output = deferred_step_result.get_error().result.stderr
-        print stderr_output
+    if api.platform.is_linux:
+      for test in ['test_adb.py', 'test_device.py']:
+        test_path = api.path.join(api.path['slave_build'], 'system', 'core', 'adb', test)
+        deferred_step_result = api.python('Run %s' % test, test_path, env=env)
+        if not deferred_step_result.is_ok:  # pragma: no cover
+          stderr_output = deferred_step_result.get_error().result.stderr
+          print stderr_output
 
     for test in ['adb_push_pull_stress.py', 'adb_reboot_stress.py', 'adb_sleep_wake_stress.py']:
       test_path = api.path.join(adb_test_dir, test)
