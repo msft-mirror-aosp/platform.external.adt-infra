@@ -1,4 +1,5 @@
 import os
+import datetime
 
 from recipe_engine import recipe_api
 
@@ -28,6 +29,7 @@ class AdtApi(recipe_api.RecipeApi):
       test_args.append('--is-gts')
     with self.m.step.defer_results():
       deferred_step_result = self.m.python(description, dotest_path, test_args, env=env, stderr=self.m.raw_io.output('err'))
+      res = True
       if not deferred_step_result.is_ok:
         stderr_output = deferred_step_result.get_error().result.stderr
         lines = [line for line in stderr_output.split('\n')
@@ -36,6 +38,7 @@ class AdtApi(recipe_api.RecipeApi):
         if "UI" not in description:
           for line in lines:
             self.m.step.active_result.presentation.logs[line] = ''
+        res = False
       else:
         stderr_output = deferred_step_result.get_result().stderr
       print stderr_output
@@ -59,3 +62,10 @@ class AdtApi(recipe_api.RecipeApi):
         self.m.step.active_result.presentation.links['View XML'] = \
           self.m.path.join("..", "..", "..","Console_Result", buildername.replace(" ", "_"),
                            'build_%s-rev_%s' % (buildnum, rev), "consoleTestResult.xml")
+
+      requestedDate = datetime.datetime.fromtimestamp(self.m.properties['requestedAt']).date()
+      filename = "{}-{}-{}_{}".format(requestedDate.month, requestedDate.day, requestedDate.year, buildnum)
+      f = open("/tmp/{}".format(filename), "w+")
+      f.write(buildername + "\n")
+      f.write("PASSED" if res else "FAILED")
+      f.close()

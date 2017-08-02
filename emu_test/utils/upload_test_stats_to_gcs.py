@@ -34,21 +34,19 @@ def upload_to_gcs():
     print 'Run command {}'.format(' '.join(cmd))
     subprocess.check_call(cmd)
   requested_date = datetime.datetime.fromtimestamp(args.timestamp).date()
-  filename = '{}_{}'.format(create_date_format(requested_date), args.buildnum)
+  filename = '/tmp/{}_{}'.format(create_date_format(requested_date), args.buildnum)
   gsutil_path = os.path.join(args.build_dir, 'third_party', 'gsutil', 'gsutil.py')
 
-  f = open(filename, 'w+')
-  f.write(args.buildername + "\n")
-  f.write('PASSED' if args.passed else 'FAILED')
-  f.close()
-
-  if args.test_type == 'console':
-    verbose_call(['python', gsutil_path, 'cp', filename, 'gs://console_si_test_results/emu_console_tests/{}/{}'.format(
-        get_platform_type(args.platform), filename)])
-  if args.test_type == 'system_image_ui':
-    verbose_call(['python', gsutil_path, 'cp', filename, 'gs://console_si_test_results/si_ui_tests/{}/{}'.format(
-        get_platform_type(args.platform), filename)])
-  verbose_call(['rm', filename])
+  if os.path.isfile(filename):
+    if args.test_type == 'console':
+      verbose_call(['python', gsutil_path, 'cp', filename, 'gs://console_si_test_results/emu_console_tests/{}/{}'.format(
+          get_platform_type(args.platform), filename)])
+    if args.test_type == 'system_image_ui':
+      verbose_call(['python', gsutil_path, 'cp', filename, 'gs://console_si_test_results/si_ui_tests/{}/{}'.format(
+          get_platform_type(args.platform), filename)])
+    verbose_call(['rm', filename])
+  else:
+    print "Uploading to GCS failed due to failure to find file"
 
   return 0
 
