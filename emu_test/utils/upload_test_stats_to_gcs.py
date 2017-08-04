@@ -37,7 +37,7 @@ def upload_to_gcs():
   filename = '{}_{}'.format(create_date_format(requested_date), args.buildnum)
   gsutil_path = os.path.join(args.build_dir, 'third_party', 'gsutil', 'gsutil.py')
 
-  if os.path.isfile(filename):
+  if os.path.isfile('/tmp/{}'.format(filename)):
     if args.test_type == 'console':
       verbose_call(['python', gsutil_path, 'cp', filename, 'gs://console_si_test_results/emu_console_tests/{}/{}'.format(
           get_platform_type(args.platform), filename)])
