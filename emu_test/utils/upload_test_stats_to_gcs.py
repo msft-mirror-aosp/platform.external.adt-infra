@@ -39,7 +39,7 @@ def upload_to_gcs():
 
   if os.path.isfile('/tmp/{}'.format(filename)):
     if args.test_type == 'console':
-      verbose_call(['python', gsutil_path, 'cp', filename, 'gs://console_si_test_results/emu_console_tests/{}/{}'.format(
+      verbose_call(['python', gsutil_path, 'cp', '/tmp/{}'.format(filename), 'gs://console_si_test_results/emu_console_tests/{}/{}'.format(
           get_platform_type(args.platform), filename)])
     if args.test_type == 'system_image_ui':
       verbose_call(['python', gsutil_path, 'cp', '/tmp/{}'.format(filename), 'gs://console_si_test_results/si_ui_tests/{}/{}'.format(
