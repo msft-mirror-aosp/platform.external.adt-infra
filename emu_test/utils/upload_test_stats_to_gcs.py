@@ -44,7 +44,6 @@ def upload_to_gcs():
     if args.test_type == 'system_image_ui':
       verbose_call(['python', gsutil_path, 'cp', '/tmp/{}'.format(filename), 'gs://console_si_test_results/si_ui_tests/{}/{}'.format(
           get_platform_type(args.platform), filename)])
-    verbose_call(['rm', filename])
   else:
     print "Uploading to GCS failed due to failure to find file"
 
