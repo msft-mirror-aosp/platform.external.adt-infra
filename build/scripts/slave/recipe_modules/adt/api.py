@@ -63,9 +63,12 @@ class AdtApi(recipe_api.RecipeApi):
           self.m.path.join("..", "..", "..","Console_Result", buildername.replace(" ", "_"),
                            'build_%s-rev_%s' % (buildnum, rev), "consoleTestResult.xml")
 
-      requestedDate = datetime.datetime.fromtimestamp(self.m.properties['requestedAt']).date()
-      filename = "{}-{}-{}_{}".format(requestedDate.month, requestedDate.day, requestedDate.year, buildnum)
-      f = open("/tmp/{}".format(filename), "w+")
-      f.write(buildername + "\n")
-      f.write("PASSED" if res else "FAILED")
-      f.close()
+      if "UI" in description or "Console" in description:
+        requestedDate = datetime.datetime.fromtimestamp(self.m.properties['requestedAt']).date()
+        filename = "{}-{}-{}_{}".format(requestedDate.month, requestedDate.day, requestedDate.year, buildnum)
+        # TODO(@harrisonding): add code for Windows
+        if not self.m.platform.is_win:
+          f = open("/tmp/{}".format(filename), "w+")
+          f.write(buildername + "\n")
+          f.write("PASSED" if res else "FAILED")
+          f.close()
