@@ -37,13 +37,15 @@ def upload_to_gcs():
   filename = '{}_{}'.format(create_date_format(requested_date), args.buildnum)
   gsutil_path = os.path.join(args.build_dir, 'third_party', 'gsutil', 'gsutil.py')
 
-  if os.path.isfile('/tmp/{}'.format(filename)):
+  cp_filename = '/tmp/{}'.format(filename) if args.platform != "win" else filename
+  if os.path.isfile(cp_filename):
     if args.test_type == 'console':
-      verbose_call(['python', gsutil_path, 'cp', '/tmp/{}'.format(filename), 'gs://console_si_test_results/emu_console_tests/{}/{}'.format(
+      verbose_call(['python', gsutil_path, 'cp', cp_filename, 'gs://console_si_test_results/emu_console_tests/{}/{}'.format(
           get_platform_type(args.platform), filename)])
     if args.test_type == 'system_image_ui':
-      verbose_call(['python', gsutil_path, 'cp', '/tmp/{}'.format(filename), 'gs://console_si_test_results/si_ui_tests/{}/{}'.format(
+      verbose_call(['python', gsutil_path, 'cp', cp_filename, 'gs://console_si_test_results/si_ui_tests/{}/{}'.format(
           get_platform_type(args.platform), filename)])
+    verbose_call('rm', cp_filename)
   else:
     print "Uploading to GCS failed due to failure to find file"
 
