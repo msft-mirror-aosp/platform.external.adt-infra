@@ -67,13 +67,8 @@ class AdtApi(recipe_api.RecipeApi):
         requestedDate = datetime.datetime.fromtimestamp(self.m.properties['requestedAt']).date()
         filename = "{}-{}-{}_{}".format(requestedDate.month, requestedDate.day, requestedDate.year, buildnum)
         # TODO(@harrisonding): add code for Windows
-        if "Win" not in self.m.buildername:
-          f = open("/tmp/{}".format(filename), "w+")
-          f.write(buildername + "\n")
-          f.write("PASSED" if res else "FAILED")
-          f.close()
-        else:
-          f = open(filename, "w+")
-          f.write(buildername + "\n")
-          f.write("PASSED" if res else "FAILED")
-          f.close()
+        modified_filename = "/tmp/{}".format(filename) if "Win" not in buildername else filename
+        f = open(modified_filename, "w+")
+        f.write(buildername + "\n")
+        f.write("PASSED" if res else "FAILED")
+        f.close()
