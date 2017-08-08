@@ -166,63 +166,59 @@ public class SettingsUtil {
             String appName, boolean enablePermissions)
             throws UiObjectNotFoundException {
         UiDevice device = UiDevice.getInstance(instrumentation);
-        UiScrollable item;
 
-        openItem(instrumentation, "Apps");
+        if (SystemUtil.getApiLevel() < 23) {
+            return;
+        } else if (SystemUtil.getApiLevel() >= 26) {
+            openItem(instrumentation, "Apps & notifications");
+        } else {
+            openItem(instrumentation, "Apps");
+            device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES)).clickAndWaitForNewWindow();
+        }
 
-        if (SystemUtil.getApiLevel() >= 23) {
-            device.findObject(new UiSelector().resourceId(
-                    Res.SETTINGS_ADVANCED_OPTION_RES)).clickAndWaitForNewWindow();
-            device.findObject(new UiSelector().text("App permissions")).clickAndWaitForNewWindow();
-            UiScrollable appPermissions = new UiScrollable(
-                    new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
-            if (appPermissions.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
-                appPermissions.getChildByText(
-                        new UiSelector().className("android.widget.TextView"), appType);
-            } else {
-                throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
-            }
+        device.findObject(new UiSelector().text("App permissions")).clickAndWaitForNewWindow();
+        UiScrollable appPermissions = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+        if (appPermissions.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+            appPermissions.getChildByText(new UiSelector().className("android.widget.TextView"), appType);
+        } else {
+            throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
+        }
 
-            device.findObject(new UiSelector().text(appType)).click();
+        device.findObject(new UiSelector().text(appType)).click();
 
-            UiScrollable locationPermissions = new UiScrollable(
-                    new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
-            locationPermissions.getChildByText(
-                    new UiSelector().className("android.widget.TextView"), appName);
+        UiScrollable locationPermissions = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+        locationPermissions.getChildByText(new UiSelector().className("android.widget.TextView"), appName);
 
-            UiObject2 permissionsBtn = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.Switch"),
-                    By.text(appName),
-                    By.clazz("android.widget.LinearLayout"),
-                    2);
+        UiObject2 permissionsBtn = UiAutomatorPlus.findObjectByRelative(
+                instrumentation,
+                By.clazz("android.widget.Switch"),
+                By.text(appName),
+                By.clazz("android.widget.LinearLayout"),
+                2);
 
-            if (!permissionsBtn.isChecked() && enablePermissions)
-                permissionsBtn.click();
+        if (!permissionsBtn.isChecked() && enablePermissions)
+            permissionsBtn.click();
 
-            else if ((permissionsBtn.isChecked() && !enablePermissions)) {
-                permissionsBtn.click();
+        else if ((permissionsBtn.isChecked() && !enablePermissions)) {
+            permissionsBtn.click();
 
-                final UiObject denyButton;
-                if (SystemUtil.getApiLevel() == 23) {
-                    denyButton = device.findObject(new UiSelector().text("Deny"));
-                } else
-                    denyButton = device.findObject(new UiSelector().text("DENY ANYWAY"));
-                try {
-                    boolean dialogLaunched =
-                            new Wait().until(new Wait.ExpectedCondition() {
-                                @Override
-                                public boolean isTrue() throws UiObjectNotFoundException {
-                                    return denyButton.exists();
-                                }
-                            });
-                    if (dialogLaunched)
-                        denyButton.click();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            final UiObject denyButton;
+            if (SystemUtil.getApiLevel() == 23) {
+                denyButton = device.findObject(new UiSelector().text("Deny"));
+            } else
+                denyButton = device.findObject(new UiSelector().text("DENY ANYWAY"));
+            try {
+                boolean dialogLaunched =
+                        new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() throws UiObjectNotFoundException {return denyButton.exists();
+                            }
+                        });
+                if (dialogLaunched)
+                    denyButton.click();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
 }
-
