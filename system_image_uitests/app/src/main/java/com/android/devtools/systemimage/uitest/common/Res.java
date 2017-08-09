@@ -45,7 +45,7 @@ public class Res {
                     + "/cling_dismiss_longpress_info";
     public static final String LAUNCHER_LIST_CONTAINER_RES =
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id|com.google.android.apps.nexuslauncher\\d*:id)"
-                    + "/(all_apps_container|apps_customize_pane_content|apps_list_view)";
+                    + "/(all_apps_container|all_apps_handle|apps_customize_pane_content|apps_list_view)";
 
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
             "com.android.settings:id/container_material";
@@ -75,8 +75,9 @@ public class Res {
     public static final String GOOGLE_PLAY_BUY_BUTTON_RES = "com.android.vending:id/buy_button";
     public static final String GOOGLE_PLAY_FILTER_TOGGLE_RES = "com.android.vending:id/content_filter_on_off_toggle";
 
-    public static final String DIALER_BUTTON_RES =
-            "com.android.dialer:id/dialpad_floating_action_button";
+    public static final String DIALER_PHONE_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/floating_action_button";
+    public static final String DIALER_PAD_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/dialpad_floating_action_button";
+    public static final String DIALER_DIGITS_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/digits";
 
     public static final String NOW_SIGNIN_ACCEPT_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/accept_button";

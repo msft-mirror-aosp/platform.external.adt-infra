@@ -89,19 +89,37 @@ public class SettingsTest {
             return;
         }
 
-        SettingsUtil.openItem(instrumentation, "Google");
-        device.findObject(new UiSelector().textContains("Location")).clickAndWaitForNewWindow();
-        boolean isLocationDisabled = device.wait(Until.hasObject(By.text("Yes")),
-                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        if (testFramework.getApi() >= 25) {
+            device.findObject(new UiSelector().resourceIdMatches(
+                    Res.LAUNCHER_LIST_CONTAINER_RES)).clickAndWaitForNewWindow();
+            findObjectInScrollable(new UiSelector().text("Settings")).clickAndWaitForNewWindow();
+            if (testFramework.getApi() >= 26) {
+                findObjectInScrollable(new UiSelector().text("Security & Location")).
+                        clickAndWaitForNewWindow();
+            }
+        } else {
+            SettingsUtil.openItem(instrumentation, "Google");
+        }
+
+        findObjectInScrollable(new UiSelector().text("Location")).clickAndWaitForNewWindow();
+        boolean isLocationDisabled = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector().textMatches("(?i)yes")).exists();
+            }
+        });
+
         if (isLocationDisabled) {
-            device.findObject(new UiSelector().textContains("Yes")).clickAndWaitForNewWindow();
-            device.findObject(new UiSelector().textContains("Location")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().textMatches("(?i)yes")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().textMatches("(?i)location")).clickAndWaitForNewWindow();
         }
         assertTrue("Failed to find Location title.",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().textContains("Location")).exists();
+                        return device.findObject(new UiSelector().text("Location")).exists() &&
+                                device.findObject(new UiSelector().text("Recent location requests"))
+                                        .exists();
                     }
                 }));
     }
@@ -111,7 +129,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14578843
+     * TT ID: 4f09278e-d1e3-47bb-a22c-70f236ac9a48
      * <p>
      *   <pre>
      *  1. Start the emulator.
@@ -128,42 +146,47 @@ public class SettingsTest {
      *   Verify:
      *   Dialog stating "This application cannot make outgoing calls without the Phone permission."
      *   </pre>
-     * <p>
-     * The test works on API 23 and greater. No gear menu and app permissions for APIs under 23.
+     * <p>The test works on API 23 and greater. No gear menu and app permissions for APIs under 23.
+     *
      */
     @Test
-    @TestInfo(id = "14578843")
+    @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void testPhonePermissions() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String app = "Phone";
 
-        if (testFramework.getApi() >= 23) {
-            SettingsUtil.openItem(instrumentation, "Apps");
-            SettingsUtil.setAppPermissions(instrumentation, app, app, false);
-
-            device.pressHome();
-            device.findObject(new UiSelector().text(app)).click();
-            device.findObject(new UiSelector().description("dial pad")).click();
-            for (int i=0; i<3; i++) {
-                device.findObject(new UiSelector().text("JKL")).click();
-            }
-            device.findObject(new UiSelector().resourceId(
-                    Res.DIALER_BUTTON_RES)).clickAndWaitForNewWindow();
-
-            assertTrue("Did not prompt for lack of Phone permission.",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return device.findObject(new UiSelector().text(
-                                    "This application cannot make outgoing calls " +
-                                            "without the Phone permission.")).exists();
-                        }
-                    }));
-
-            SettingsUtil.setAppPermissions(instrumentation, app, app, true);
-            device.pressHome();
+        if (testFramework.getApi() < 23) {
+            return;
         }
+
+        SettingsUtil.setAppPermissions(instrumentation, app, app, false);
+        device.pressHome();
+
+        if (testFramework.getApi() >= 25) {
+            device.findObject(new UiSelector().resourceIdMatches(
+                    Res.LAUNCHER_LIST_CONTAINER_RES)).clickAndWaitForNewWindow();
+        }
+
+        device.findObject(new UiSelector().text(app)).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_PHONE_RES)).
+                clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_DIGITS_RES)).setText("555");
+        device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_PAD_RES)).click();
+
+        assertTrue("Did not prompt for lack of Phone permission.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(new UiSelector().text(
+                                "This application cannot make outgoing calls without the Phone permission.")).
+                                exists();
+                    }
+                }));
+
+        SettingsUtil.setAppPermissions(instrumentation, app, app, true);
+        device.pressHome();
+
     }
 
     /**
@@ -171,7 +194,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14578843
+     * TT ID: 4f09278e-d1e3-47bb-a22c-70f236ac9a48
      * <p>
      *   <pre>
      *  1. Start the Emulator.
@@ -189,74 +212,53 @@ public class SettingsTest {
      * No gear menu and app permissions for APIs under 23, and no maps without google APIs.
      */
     @Test
-    @TestInfo(id = "14578843")
+    @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void testMapPermissions() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String appType = "Location";
         final String appName = "Maps";
 
-        if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage()) {
+        if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage() ||
+                testFramework.getApi() < 23) {
             return;
         }
 
-        if (testFramework.getApi() >= 23) {
-            SettingsUtil.setAppPermissions(instrumentation, appType, appName, false);
+        SettingsUtil.setAppPermissions(instrumentation, appType, appName, false);
+        device.pressHome();
 
-            device.pressHome();
+        if (testFramework.getApi() < 25) {
             device.findObject(new UiSelector().description("Apps"))
                     .clickAndWaitForNewWindow();
-            device.findObject(new UiSelector().text(appName))
-                    .clickAndWaitForNewWindow();
-
-            final UiObject acceptAndContinueButton;
-            if (testFramework.getApi() == 23) {
-                acceptAndContinueButton = device.findObject(
-                        new UiSelector().text("Accept & continue"));
-            } else {
-                acceptAndContinueButton = device.findObject(
-                        new UiSelector().text("ACCEPT & CONTINUE"));
-            }
-            if (acceptAndContinueButton.exists()) {
-                acceptAndContinueButton.clickAndWaitForNewWindow();
-            }
-
-            final UiObject skipButton;
-            if (testFramework.getApi() == 23) {
-                skipButton = device.findObject(new UiSelector().text("Skip"));
-            } else {
-                skipButton = device.findObject(new UiSelector().text("SKIP"));
-            }
-            if (skipButton.exists()) {
-                skipButton.clickAndWaitForNewWindow();
-            }
-
-            final UiObject gotItButton;
-            if (testFramework.getApi() == 23) {
-                gotItButton = device.findObject(new UiSelector().text("Got it"));
-            } else {
-                gotItButton = device.findObject(new UiSelector().text("GOT IT"));
-            }
-            if (gotItButton.exists()) {
-                gotItButton.clickAndWaitForNewWindow();
-            }
-
-            device.findObject(new UiSelector().description("Move to your location"))
-                    .clickAndWaitForNewWindow();
-
-            assertTrue("Did not prompt for lack of Maps permission.",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return device.findObject(new UiSelector()
-                                    .text("Allow Maps to access this device's location?")).exists();
-                        }
-                    }));
-
-            SettingsUtil.setAppPermissions(instrumentation, appType, appName, true);
-
-            device.pressHome();
         }
+        device.findObject(new UiSelector().text(appName))
+                .clickAndWaitForNewWindow();
+        final UiObject acceptAndContinueButton;
+        acceptAndContinueButton = device.findObject(new UiSelector().
+                textMatches("(?i)accept\\s&\\scontinue"));
+        if (acceptAndContinueButton.exists())
+            acceptAndContinueButton.clickAndWaitForNewWindow();
+        final UiObject skipButton;
+        skipButton = device.findObject(new UiSelector().textMatches("(?i)skip"));
+        if (skipButton.exists())
+            skipButton.clickAndWaitForNewWindow();
+        final UiObject gotItButton;
+        gotItButton = device.findObject(new UiSelector().textMatches("(?i)got\\sit"));
+        if (gotItButton.exists())
+            gotItButton.clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().description("Move to your location"))
+                .clickAndWaitForNewWindow();
+        assertTrue("Did not prompt for lack of Maps permission.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(new UiSelector()
+                                .text("Allow Maps to access this device's location?")).exists();
+                    }
+                }));
+
+        SettingsUtil.setAppPermissions(instrumentation, appType, appName, true);
+        device.pressHome();
     }
 
     /**
@@ -283,20 +285,26 @@ public class SettingsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (testFramework.getApi() >= 23) {
+        if (testFramework.getApi() < 23) {
+            return;
+        }
+        if (testFramework.getApi() >= 26) {
+            SettingsUtil.openItem(instrumentation, "Apps & notifications");
+        } else {
             SettingsUtil.openItem(instrumentation, "Apps");
             device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
                     .clickAndWaitForNewWindow();
-            device.findObject(new UiSelector().textContains("App permissions"))
-                    .clickAndWaitForNewWindow();
-
-            assertTrue(device.findObject(new UiSelector().textContains("App permissions")).exists()
-                    && device.findObject(new UiSelector().textContains("Calendar")).exists()
-                    && device.findObject(new UiSelector().textContains("Camera")).exists()
-                    && device.findObject(new UiSelector().textContains("Contacts")).exists()
-                    && device.findObject(new UiSelector().textContains("Phone")).exists()
-                    && device.findObject(new UiSelector().description("Navigate up")).exists());
         }
+
+        device.findObject(new UiSelector().textContains("App permissions"))
+                .clickAndWaitForNewWindow();
+
+        assertTrue(device.findObject(new UiSelector().textContains("App permissions")).exists()
+                && device.findObject(new UiSelector().textContains("Calendar")).exists()
+                && device.findObject(new UiSelector().textContains("Camera")).exists()
+                && device.findObject(new UiSelector().textContains("Contacts")).exists()
+                && device.findObject(new UiSelector().textContains("Phone")).exists()
+                && device.findObject(new UiSelector().description("Navigate up")).exists());
     }
 
     /**
@@ -331,7 +339,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14581295
+     * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
      * <p>
      *   <pre>
      *   1. Start the emulator.
@@ -345,7 +353,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "14581295")
+    @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
         int api = testFramework.getApi();
         final UiDevice device = testFramework.getDevice();
@@ -411,7 +419,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14581154
+     * TT ID: 4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e
      * <p>
      *   <pre>
      *   1. Start the emulator.
@@ -424,7 +432,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "14581154")
+    @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation)) {
@@ -451,7 +459,6 @@ public class SettingsTest {
      *   The show cards confirmation page opens.
      *   </pre>
      */
-    @Ignore("bug 35808476 - API 24G UI changed.")
     @Test
     @TestInfo(id = "14581322")
     public void confirmNowCardsPageOpen() throws Exception {
@@ -459,12 +466,12 @@ public class SettingsTest {
         final UiDevice device = testFramework.getDevice();
 
         if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage() ||
-                testFramework.getApi() < 23) {
+                testFramework.getApi() < 23 || testFramework.getApi() > 24) {
             return;
         }
 
         SettingsUtil.openItem(instrumentation, "Google");
-        device.findObject(new UiSelector().text("Search & Now")).click();
+        findObjectInScrollable(new UiSelector().textStartsWith("Search")).click();
         device.findObject(new UiSelector().text("Now cards")).click();
 
         UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
@@ -474,13 +481,17 @@ public class SettingsTest {
                 By.clazz("android.widget.ListView"));
         if (!switchWidget.isChecked()) {
             switchWidget.click();
-            assertTrue("Failed to find Now sign-in title and buttons.", new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws Exception {
-                    return device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_SCREEN_RES)).exists()
-                            && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
-                            && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
-                }
+            assertTrue("Failed to find Now sign-in title and buttons.",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return device.findObject(new UiSelector().resourceIdMatches(
+                                            Res.NOW_SIGNIN_SCREEN_RES)).exists()
+                                    && device.findObject(new UiSelector().resourceIdMatches(
+                                            Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
+                                    && device.findObject(new UiSelector().resourceIdMatches(
+                                            Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
+                        }
             }));
         }
     }
@@ -490,7 +501,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14581409
+     * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
      * <p>
      *   <pre>
      *   1. Start the emulator.
@@ -504,7 +515,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "14581409")
+    @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
         final UiDevice device = testFramework.getDevice();
         final UiObject2 widget = navigateToDateTimeSwitch("Automatic time zone");
@@ -559,7 +570,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14581410
+     * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
      * <p>
      *   <pre>
      *   1. Start the emulator.
@@ -572,7 +583,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "14581410")
+    @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
         final UiDevice device = testFramework.getDevice();
         final UiObject2 widget = navigateToDateTimeSwitch("Use 24-hour format");
@@ -776,7 +787,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14578974
+     * TT ID: 4db4a825-b584-4c68-a04d-c6a933b14e24
      * <p>
      *   <pre>
      *   Test Steps:
@@ -793,7 +804,7 @@ public class SettingsTest {
      */
     @Ignore("bug 36251611 - API 24G UI changed.")
     @Test
-    @TestInfo(id = "C14578974")
+    @TestInfo(id = "4db4a825-b584-4c68-a04d-c6a933b14e24")
     public void testCameraAppDisabled() throws Exception {
         enableSampleDeviceAdmin();
         disableCamera();
@@ -806,7 +817,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14578841
+     * TT ID: d49facce-9be7-47e0-afde-2052d3c57a25
      * <p>
      *   <pre>
      *   Test Steps:
@@ -823,7 +834,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "C14578841")
+    @TestInfo(id = "d49facce-9be7-47e0-afde-2052d3c57a25")
     public void modifyAndResetAppPermissions() throws Exception {
 
         Instrumentation instrumentation = testFramework.getInstrumentation();
