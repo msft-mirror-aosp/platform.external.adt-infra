@@ -15,12 +15,13 @@ PING_RESPONSE = 'I am alive!.*\nOK'
 class PingTest(testcase_base.BaseConsoleTest):
   """Tests for the ping command."""
 
-  def __init__(self, method_name=None, avd=None):
+  def __init__(self, method_name=None, avd=None, builder_name=None):
     if method_name:
       super(PingTest, self).__init__(method_name)
     else:
       super(PingTest, self).__init__()
     self.avd = avd
+    self.builder_name = builder_name
 
   def _execute_command_and_verify(self, command, expected_output, assert_msg):
     """Executes console command and verify output.

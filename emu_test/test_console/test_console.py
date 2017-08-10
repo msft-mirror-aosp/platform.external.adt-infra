@@ -192,7 +192,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
 
     return test_classes
 
-  def console_test_check(self, avd):
+  def console_test_check(self, avd, builder_name):
     """Checks console test.
 
     1) Run emulator with self.launch_emu_and_wait(avd)
@@ -211,7 +211,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
     for test_class in test_classes:
       for method in dir(test_class):
         if method.startswith('test_'):
-          emu_suite.addTest(test_class(method, avd))
+          emu_suite.addTest(test_class(method, avd, builder_name))
 
     emu_runner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
     emu_result = emu_runner.run(emu_suite)
@@ -219,7 +219,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
     self.assertTrue(emu_result.wasSuccessful(),
                     '%s was failed.' % self._testMethodName)
 
-  def run_console_test(self, avd_config):
+  def run_console_test(self, avd_config, builder_name):
     """Run console test.
 
     Run console test with the given avd_config.
@@ -230,7 +230,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
     """
     self.avd_config = avd_config
     self.assertEqual(self.create_avd(avd_config), 0)
-    self.console_test_check(avd_config)
+    self.console_test_check(avd_config, builder_name)
 
 
 if emu_argparser.emu_args.config_file is None:

@@ -22,16 +22,17 @@ GSM_DATA_ASSERT_MSG_PREFIX = 'Failed to set gsm data state to'
 class GSMTest(testcase_base.BaseConsoleTest):
   """Tests for gsm-related commands."""
 
-  def __init__(self, method_name=None, avd=None):
+  def __init__(self, method_name=None, avd=None, builder_name=None):
     if method_name:
       super(GSMTest, self).__init__(method_name)
     else:
       super(GSMTest, self).__init__()
     self.avd = avd
+    self.builder_name = builder_name
 
   def test_set_gsm_status(self):
     """Test for command: setting gsm data.
-    
+
     Test Rail ID: C14595296
     Test steps:
       1. Launch an emulator avd.
@@ -79,7 +80,7 @@ class GSMTest(testcase_base.BaseConsoleTest):
 
   def _get_gsm_data(self, command):
     """Gets the console output for 'gsm data <gsm data>' command.
-    
+
     Returns:
         output_gsm_data: The console output for 'gsm data <gsm data>' command.
     """
@@ -91,7 +92,7 @@ class GSMTest(testcase_base.BaseConsoleTest):
 
   def _get_gsm_status(self):
     """Gets the console output for 'gsm status' command.
-    
+
     Returns:
         output_gsm_status: The console output for 'gsm status' command.
     """

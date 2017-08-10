@@ -30,20 +30,22 @@ CMD_GEO_INVALID = ('%s %d %d %d\n' % (CMD_GEO_FIX_PREFIX, SF_INVALID_LONGITUDE, 
 class GeoTest(testcase_base.BaseConsoleTest):
   """This class aims to test geo-related emulator console commands."""
 
-  def __init__(self, method_name=None, avd=None):
+  def __init__(self, method_name=None, avd=None, builder_name=None):
     if method_name:
       super(GeoTest, self).__init__(method_name)
     else:
       super(GeoTest, self).__init__()
     self.avd = avd
+    self.builder_name = builder_name
 
-  @classmethod
-  def setUpClass(cls):
-    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
-
-  @classmethod
-  def tearDownClass(cls):
-    util.unstall_apps(TESTCASE_CALL_DIR)
+  # Comment out these class methods for future use when more APIs are added.
+  # @classmethod
+  # def setUpClass(cls):
+  #   util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+  #
+  # @classmethod
+  # def tearDownClass(cls):
+  #   util.unstall_apps(TESTCASE_CALL_DIR)
 
   def _process_request_geo_service(self, payload):
     """Processes post request to geo service.
@@ -138,7 +140,14 @@ class GeoTest(testcase_base.BaseConsoleTest):
 
     print 'api = ' + self.avd.api
 
+    if 'Mac' in self.builder_name and self.avd.api == '23':
+      print 'Skip geo test for API 23 on Mac.'
+      pass
+      return
+
     if self.avd.api in ['25', '24', '23']:
+      util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+
       self._initially_launch_google_maps_to_have_location_history({'api': self.avd.api})
 
       is_command_successful, output = util.execute_console_command(
@@ -148,6 +157,8 @@ class GeoTest(testcase_base.BaseConsoleTest):
         False, '', '', output)
       self._process_request_geo_service({})
       self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
+
+      util.unstall_apps(TESTCASE_CALL_DIR)
     else:
       # TODO: Add support for APIs below 23.
       print 'API is below 23, skip geo test for now.'
@@ -159,6 +170,9 @@ class GeoTest(testcase_base.BaseConsoleTest):
 
     if self.avd.api in ['24', '25']:
       print 'Running test: %s' % (inspect.stack()[0][2])
+
+      util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+
       self._initially_launch_google_maps_to_have_location_history({'api': self.avd.api})
       is_command_successful, output = util.execute_console_command(self.telnet, CMD_GEO_SF, '')
       self.assert_cmd_successful(is_command_successful, 'Failed to properly set geo info.',
@@ -174,6 +188,8 @@ class GeoTest(testcase_base.BaseConsoleTest):
         self.telnet.read_until('\n')
         self._process_request_geo_service({})
         self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
+
+      util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
     else:
       # TODO: Add support for APIs below 24.
       print 'Skip geo stress test for APIs below 24.'

@@ -14,12 +14,13 @@ EMPTY_OUTPUT = ''
 class QuitTest(testcase_base.BaseConsoleTest):
   """This class aims to test quit/exit-related emulator console commands."""
 
-  def __init__(self, method_name=None, avd=None):
+  def __init__(self, method_name=None, avd=None, builder_name=None):
     if method_name:
       super(QuitTest, self).__init__(method_name)
     else:
       super(QuitTest, self).__init__()
     self.avd = avd
+    self.builder_name = builder_name
 
   def tearDown(self):
     """Override superclass's method.

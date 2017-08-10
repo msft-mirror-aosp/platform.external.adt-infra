@@ -20,12 +20,13 @@ AVD_RUNNING = 'virtual device is running.*\nOK'
 class AvdTest(testcase_base.BaseConsoleTest):
   """This class aims to test avd-related emulator console commands."""
 
-  def __init__(self, method_name=None, avd=None):
+  def __init__(self, method_name=None, avd=None, builder_name=None):
     if method_name:
       super(AvdTest, self).__init__(method_name)
     else:
       super(AvdTest, self).__init__()
     self.avd = avd
+    self.builder_name = builder_name
 
   def test_help_avd(self):
     """Test command for: help avd.

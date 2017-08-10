@@ -560,7 +560,7 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                     return False
         return True
 
-    def create_test_case(avd_config, op):
+    def create_test_case(avd_config, op, builder_name=None, pattern=None):
         if not is_cts and avd_config.gpu == "yes":
             avd_config_swiftshader = avd_config._replace(gpu = "swiftshader")
             create_test_case(avd_config_swiftshader, op)
@@ -571,7 +571,12 @@ def create_test_case_from_file(desc, testcase_class, test_func):
         if op == "S" or op == "" or not valid_case(avd_config):
             return
 
-        func = lambda self: test_func(self, avd_config)
+        # For console tests, pass the builder name to it.
+        if pattern and 'console' in pattern:
+            func = lambda self: test_func(self, avd_config, builder_name)
+        else:
+            func = lambda self: test_func(self, avd_config)
+
         if op == "X":
             func = unittest.expectedFailure(func)
         # TODO: handle flakey tests
@@ -629,4 +634,4 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                     if device == "":
                       device = "default"
                     avd_config = AVDConfig(api, tag, abi, device, ram, gpu, classic, get_port(), is_cts, ori)
-                    create_test_case(avd_config, op)
+                    create_test_case(avd_config, op, emu_argparser.emu_args.builder_name, emu_argparser.emu_args.pattern)

@@ -27,12 +27,13 @@ GOOD_STATUS = 'good'
 class BatteryTest(testcase_base.BaseConsoleTest):
   """Tests for battery-related commands."""
 
-  def __init__(self, method_name=None, avd=None):
+  def __init__(self, method_name=None, avd=None, builder_name=None):
     if method_name:
       super(BatteryTest, self).__init__(method_name)
     else:
       super(BatteryTest, self).__init__()
     self.avd = avd
+    self.builder_name = builder_name
 
   def _reset_status_back_to_charging(self):
     self._set_battery_status(CHARGING_STATUS)
