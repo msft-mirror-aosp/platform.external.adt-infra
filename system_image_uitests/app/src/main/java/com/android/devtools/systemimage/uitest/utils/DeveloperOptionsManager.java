@@ -17,8 +17,10 @@
 package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
+import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 
 import android.app.Instrumentation;
+import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
@@ -36,16 +38,31 @@ public class DeveloperOptionsManager {
     /**
      * Enables developer options.
      *
-     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
-     *                        getInstrumentation}
+     * @param testFramework see {
+     *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
      * @throws UiObjectNotFoundException if it fails to find a UI widget.
      */
-    public static void enableDeveloperOptions(Instrumentation instrumentation)
+    public static void enableDeveloperOptions(SystemImageTestFramework testFramework)
             throws UiObjectNotFoundException {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
         try {
-            SettingsUtil.openItem(instrumentation, "About phone");
+            if (testFramework.getApi() >= 26) {
+                SettingsUtil.openItem(instrumentation, "System");
+                device.findObject(new UiSelector().text("About phone"))
+                        .clickAndWaitForNewWindow();
+            } else {
+                SettingsUtil.openItem(instrumentation, "About phone");
+            }
         } catch (UiObjectNotFoundException e) {
-            SettingsUtil.openItem(instrumentation, "About emulated device");
+            if (testFramework.getApi() >= 26) {
+                SettingsUtil.openItem(instrumentation, "System");
+                device.findObject(new UiSelector().text("About emulated device"))
+                        .clickAndWaitForNewWindow();
+            } else {
+                SettingsUtil.openItem(instrumentation, "About emulated device");
+            }
         }
 
         // Click "Build number"
@@ -70,14 +87,24 @@ public class DeveloperOptionsManager {
     /**
      * Checks if the developer options is enabled.
      *
-     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
-     *                        getInstrumentation}
+     * @param testFramework see {
+     *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
      * @return {@code true} if the developer options is enabled, or {@code false} otherwise.
      */
-    public static boolean isDeveloperOptionsEnabled(final Instrumentation instrumentation) {
+    public static boolean isDeveloperOptionsEnabled(SystemImageTestFramework testFramework) {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
         try {
-            SettingsUtil.findItem(instrumentation, "Developer options");
-            return true;
+            if (testFramework.getApi() >= 26) {
+                SettingsUtil.openItem(instrumentation, "System");
+                device.findObject(new UiSelector().text("About emulated device"))
+                        .clickAndWaitForNewWindow();
+                return true;
+            } else {
+                SettingsUtil.findItem(instrumentation, "Developer options");
+                return true;
+            }
         } catch (UiObjectNotFoundException e) {
             return false;
         }

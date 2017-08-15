@@ -78,7 +78,6 @@ public class ShellUtilTest {
     @TestInfo(id = "14578821")
     public void testShellUtilIntegrity() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = UiDevice.getInstance(instrumentation);
 
         String cmd = "ls /system/bin";
         ShellUtil.ShellResult result = ShellUtil.invokeCommand(cmd);
@@ -125,8 +124,8 @@ public class ShellUtilTest {
         if (testFramework.getApi() >= 21) {
             deleteBugReportFiles();
 
-            if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation)) {
-                DeveloperOptionsManager.enableDeveloperOptions(testFramework.getInstrumentation());
+            if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework)) {
+                DeveloperOptionsManager.enableDeveloperOptions(testFramework);
             }
 
             SettingsUtil.openItem(instrumentation, "Developer options");

@@ -43,12 +43,10 @@ public class DeveloperOptionsManagerTest {
     @Test
     @TestInfo()
     public void testDeveloperOptionsManager() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-
-        DeveloperOptionsManager.enableDeveloperOptions(instrumentation);
+        DeveloperOptionsManager.enableDeveloperOptions(testFramework);
         Assert.assertTrue(
                 "Failed to enable developer options.",
-                DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation)
+                DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework)
         );
     }
 }

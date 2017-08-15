@@ -312,26 +312,42 @@ public class SettingsTest {
      */
     private  UiObject2 navigateToDateTimeSwitch(String text) throws UiObjectNotFoundException {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
-        SettingsUtil.openItem(instrumentation, "Date & time");
+        final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        UiObject2 widget;
+        final String container = (testFramework.getApi() >= 24) ?
+                Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES :  Res.ANDROID_LIST_RES;
+        final String relative = text;
+        final String label = "Date & time";
+
+        if (testFramework.getApi() >= 26) {
+            SettingsUtil.openItem(instrumentation, "System");
+            device.findObject(new UiSelector().text(label))
+                    .clickAndWaitForNewWindow();
+        } else {
+            SettingsUtil.openItem(instrumentation, label);
+        }
+        UiObject2 dateTimeSwitch = null;
+
         try {
-            final String listViewClass = (
-                    testFramework.getApi() >= 24) ? "android.support.v7.widget.RecyclerView" :
-                    "android.widget.ListView";
-            widget = UiAutomatorPlus.findObjectByRelative(
+            final UiObject2 widget = UiAutomatorPlus.findObjectByRelative(
                     instrumentation,
                     By.clazz("android.widget.Switch"),
                     By.text(text),
-                    By.clazz(listViewClass));
-        } catch (UiObjectNotFoundException e) {
-            widget = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.CheckBox"),
-                    By.text(text),
-                    By.clazz("android.widget.ListView"));
+                    By.res(container));
+            dateTimeSwitch = widget;
+        } catch (UiObjectNotFoundException e1) {
+            try {
+                final UiObject2 widget = UiAutomatorPlus.findObjectByRelative(
+                        instrumentation,
+                        By.clazz("android.widget.CheckBox"),
+                        By.text(relative),
+                        By.res(container));
+                dateTimeSwitch = widget;
+            } catch (UiObjectNotFoundException e2)  {
+                assertTrue("Could not find Date Time switch", false);
+            }
         }
-        return widget;
+        return dateTimeSwitch;
     }
 
     /**
@@ -355,7 +371,6 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
-        int api = testFramework.getApi();
         final UiDevice device = testFramework.getDevice();
         final UiObject2 widget = navigateToDateTimeSwitch("Automatic date & time");
 
@@ -393,7 +408,7 @@ public class SettingsTest {
                     }
                 }));
         device.findObject(new UiSelector().text("Set date")).clickAndWaitForNewWindow();
-        if (api < 20) {
+        if (testFramework.getApi() < 20) {
             assertTrue(device.findObject(
                     new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES_19)).exists());
             device.findObject(new UiSelector().textContains("Done")).click();
@@ -434,14 +449,13 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation)) {
-            DeveloperOptionsManager.enableDeveloperOptions(instrumentation);
+        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework)) {
+            DeveloperOptionsManager.enableDeveloperOptions(testFramework);
         } else {
             return;
         }
         assertTrue("Failed to enable Developer options.",
-                DeveloperOptionsManager.isDeveloperOptionsEnabled(instrumentation));
+                DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework));
     }
 
     /**
@@ -643,7 +657,6 @@ public class SettingsTest {
     @TestInfo(id = "T144630613")
     public void activateDeactivatePolicy() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = testFramework.getDevice();
 
         // Activate "Sample Device Admin" policy
         SettingsUtil.activate(instrumentation, "Sample Device Admin");
@@ -709,7 +722,7 @@ public class SettingsTest {
                 device.findObject(new UiSelector().text("Activate")).click();
             }
         } catch (UiObjectNotFoundException e) {
-            assertTrue("Could not find device adminstration buttons.",
+            assertTrue("Could not find device administration buttons.",
                     new Wait().until(new Wait.ExpectedCondition() {
                         @Override
                         public boolean isTrue() throws Exception {
