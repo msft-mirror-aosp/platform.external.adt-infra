@@ -102,5 +102,6 @@ public class Res {
     public static final String ANDROID_TIME_HEADER_RES_19 = "android:id/timePicker";
     public static final String ANDROID_LIST_RES = "android:id/list";
     public static final String ANDROID_CONTENT_RES = "android:id/content";
+    public static final String ANDROID_TITLE_RES = "android:id/title";
     public static final String CELLULAR_DATA_SWITCH_RES = "android:id/switch_widget";
 }
