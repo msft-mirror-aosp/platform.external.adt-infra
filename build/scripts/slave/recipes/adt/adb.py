@@ -37,7 +37,7 @@ def RunSteps(api):
   env = {'PATH': api.path.pathsep.join(env_path),
          'PYTHONPATH': api.path['slave_build'].join('development', 'python-packages')}
 
-  if api.platform.is_linux:
+  if not api.platform.is_win:
     api.repo.init('https://android.googlesource.com/platform/manifest', '--depth=1')
     api.repo.reset()
     api.repo.clean('-x')
@@ -46,7 +46,7 @@ def RunSteps(api):
 
   # Run adb stree tests
   with api.step.defer_results():
-    if api.platform.is_linux:
+    if not api.platform.is_win:
       for test in ['test_adb.py', 'test_device.py']:
         test_path = api.path.join(api.path['slave_build'], 'system', 'core', 'adb', test)
         deferred_step_result = api.python('Run %s' % test, test_path, env=env)
