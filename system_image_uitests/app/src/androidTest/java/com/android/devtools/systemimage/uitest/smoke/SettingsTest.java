@@ -25,8 +25,7 @@ import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-
-import java.util.concurrent.TimeUnit;
+import com.android.devtools.systemimage.uitest.watchers.SettingsCameraPermissionsWatcher;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -45,7 +44,6 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.Until;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -69,7 +67,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14581163
+     * TT ID: 97d93bb7-63d2-4e89-9d18-0f232bbd51ab
      * <p>
      *   <pre>
      *   1. Start the emulator.
@@ -79,7 +77,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "14581163")
+    @TestInfo(id = "97d93bb7-63d2-4e89-9d18-0f232bbd51ab")
     public void testLocationSettingsPageOpen() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
@@ -266,7 +264,7 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: C14581153
+     * TT ID: 4f09278e-d1e3-47bb-a22c-70f236ac9a48
      * <p>
      *   <pre>
      *   1. Start the emulator.
@@ -280,7 +278,7 @@ public class SettingsTest {
      * The test works on API 23 and greater. No gear menu and app permissions for APIs under 23.
      */
     @Test
-    @TestInfo(id = "14581153")
+    @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void displayConfigureAppPermissions() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
@@ -709,17 +707,21 @@ public class SettingsTest {
         final UiDevice device = testFramework.getDevice();
 
         AppLauncher.launch(instrumentation, "Settings");
-        findObjectInScrollable(new UiSelector().text("Security")).click();
-        findObjectInScrollable(new UiSelector().text("Device administrators")).click();
+        findObjectInScrollable(new UiSelector().textContains("Security")).click();
+        if (testFramework.getApi() >= 24) {
+            findObjectInScrollable(new UiSelector().textContains("Device admin").
+                    resourceId(Res.ANDROID_TITLE_RES)).click();
+        } else {
+            findObjectInScrollable(new UiSelector().text("Device administrators")).click();
+        }
 
         device.findObject(new UiSelector().text("Sample Device Admin")).click();
 
         try {
             if (testFramework.getApi() >= 24) {
-                findObjectInScrollable(new UiSelector().text(
-                        "Activate this device administrator")).click();
+                findObjectInScrollable(new UiSelector().textContains("Activate")).click();
             } else {
-                device.findObject(new UiSelector().text("Activate")).click();
+                device.findObject(new UiSelector().textMatches("(?i)activate(?-i)")).click();
             }
         } catch (UiObjectNotFoundException e) {
             assertTrue("Could not find device administration buttons.",
@@ -743,11 +745,11 @@ public class SettingsTest {
         boolean widgetExists = new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws Exception {
-                return device.findObject(new UiSelector().text("App")).exists();
+                return device.findObject(new UiSelector().textContains("App")).exists();
             }
         });
         if (widgetExists) {
-            device.findObject(new UiSelector().text("App")).click();
+            device.findObject(new UiSelector().textContains("App")).click();
         }
         widgetExists = new Wait().until(new Wait.ExpectedCondition() {
             @Override
@@ -791,8 +793,9 @@ public class SettingsTest {
     private boolean verifyCameraAppDisabled() {
         UiDevice device = testFramework.getDevice();
 
-        return device.hasObject(By.textContains(
-                "Camera has been disabled because of security policies"));
+        return device.hasObject(By.
+                textContains("Camera has been disabled because of security policies")) ||
+                device.hasObject(By.text("Can't connect to the camera."));
     }
 
     /**
