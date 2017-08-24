@@ -650,7 +650,6 @@ public class SettingsTest {
      *   2. (Verify #4) that the sample device Admin policy is deactivated.
      *   </pre>
      */
-    @Ignore("bug 36251611 - API 24G UI changed.")
     @Test
     @TestInfo(id = "T144630613")
     public void activateDeactivatePolicy() throws Exception {
@@ -818,7 +817,6 @@ public class SettingsTest {
      *   2. (Verify #2) see a Pop Up Message “Camera has been disabled because of security policies.
      *   </pre>
      */
-    @Ignore("bug 36251611 - API 24G UI changed.")
     @Test
     @TestInfo(id = "4db4a825-b584-4c68-a04d-c6a933b14e24")
     public void testCameraAppDisabled() throws Exception {
