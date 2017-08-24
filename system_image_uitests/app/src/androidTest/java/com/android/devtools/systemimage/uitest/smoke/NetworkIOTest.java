@@ -110,21 +110,36 @@ public class NetworkIOTest {
         }
         // verifyNetworkStatus does not work in API 24. No text or resource ID present in UI.
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
+            String iconDesc = (testFramework.getApi() >= 26) ?
+                    "Mobile data" : "Mobile Cellular Data";
             device.openNotification();
             boolean hasCellularData =
                     device.wait(
-                            Until.hasObject(By.descContains("Mobile Cellular Data")),
+                            Until.hasObject(By.descContains(iconDesc)),
                                     TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
                     );
             assertTrue("Could not connect to the network.", hasCellularData);
             device.pressHome();
 
-            AppLauncher.launch(instrumentation, "Chrome");
+            if (testFramework.getApi() >= 26) {
+                device.wait(
+                        Until.hasObject(By.desc("Chrome").text("Chrome")),
+                        TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
+                );
+                device.findObject(new UiSelector().description("Chrome").text("Chrome")).
+                        clickAndWaitForNewWindow();
+            } else {
+                AppLauncher.launch(instrumentation, "Chrme");
+            }
             // If this is the first launch, dismiss the "Welcome to Chrome" screen.
-            UiObject acceptButton = device.findObject(new UiSelector().resourceId(
-                    Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-            if (acceptButton.exists()) {
-                acceptButton.clickAndWaitForNewWindow();
+            boolean hasAcceptButton =
+                device.wait(
+                        Until.hasObject(By.res(Res.CHROME_TERMS_ACCEPT_BUTTON_RES)),
+                        TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
+                );
+            if (hasAcceptButton) {
+                device.findObject(new UiSelector().resourceId(
+                        Res.CHROME_TERMS_ACCEPT_BUTTON_RES)).clickAndWaitForNewWindow();
             }
 
             // Dismiss the "Sign in to Chrome" screen if it's there.
@@ -162,15 +177,23 @@ public class NetworkIOTest {
     }
 
     private UiObject2 navigateToDataSwitch(Instrumentation instrumentation) throws UiObjectNotFoundException {
-        String containerRes = (testFramework.getApi() >= 24) ? Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES :
-                Res.NETWORK_SWITCHES_CONTAINER_RES;
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        String containerRes = (testFramework.getApi() >= 24) ?
+                Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES : Res.NETWORK_SWITCHES_CONTAINER_RES;
+        String dataSwitch = (testFramework.getApi() >= 26) ? "Mobile data" : "Cellular data";
+        String label = "Data usage";
 
-        SettingsUtil.openItem(instrumentation, "Data usage");
+        if (testFramework.getApi() >= 26) {
+            SettingsUtil.openItem(instrumentation, "Network & Internet");
+            device.findObject(new UiSelector().text(label)).clickAndWaitForNewWindow();
+        } else {
+            SettingsUtil.openItem(instrumentation, label);
+        }
 
         return UiAutomatorPlus.findObjectByRelative(
                 instrumentation,
                 By.clazz("android.widget.Switch"),
-                By.text("Cellular data"),
+                By.text(dataSwitch),
                 By.res(containerRes));
     }
 
@@ -226,8 +249,7 @@ public class NetworkIOTest {
             if (api < 24) {
                 assertFalse("Set cellular data limit text is visible.", device.findObject(
                         new UiSelector().textContains("Set cellular data limit")).exists());
-            }
-            if (api >= 24) {
+            } else {
                 assertFalse("Set cellular data is not turned off.", device.findObject(
                         new UiSelector().textContains("ON").resourceId(
                                 Res.CELLULAR_DATA_SWITCH_RES).className(
@@ -290,8 +312,7 @@ public class NetworkIOTest {
             if (api < 24) {
                 assertTrue("Set cellular data limit text is not visible.", device.findObject(
                         new UiSelector().textContains("Set cellular data limit")).exists());
-            }
-            if (api >= 24) {
+            } else {
                 assertTrue("Set cellular data is not turned on.", device.findObject(
                         new UiSelector().textContains("ON").resourceId(
                                 Res.CELLULAR_DATA_SWITCH_RES).className(
