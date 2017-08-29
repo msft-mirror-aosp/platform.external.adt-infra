@@ -191,7 +191,14 @@ public class AppManager {
      */
     public static void openAppList(Instrumentation instrumentation)
             throws UiObjectNotFoundException {
-        SettingsUtil.openItem(instrumentation, "Apps");
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        if (SystemUtil.getApiLevel() >= 26) {
+            SettingsUtil.openItem(instrumentation, "Apps & notifications");
+            device.findObject(new UiSelector().text("App info")).clickAndWaitForNewWindow();
+        } else {
+            SettingsUtil.openItem(instrumentation, "Apps");
+        }
     }
 
     /**

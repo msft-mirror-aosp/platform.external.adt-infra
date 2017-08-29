@@ -869,7 +869,7 @@ public class SettingsTest {
         //Check for Deny alert dialog button for location permissions.
         UiObject denyButton;
 
-        if(testFramework.getApi() < 23){
+        if (testFramework.getApi() < 23) {
             return;
         }
 
