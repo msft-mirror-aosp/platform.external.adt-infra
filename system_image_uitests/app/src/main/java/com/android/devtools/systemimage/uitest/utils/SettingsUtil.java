@@ -102,7 +102,12 @@ public class SettingsUtil {
     private static void changePolicyActivation(Instrumentation instrumentation, String adminName,
                                                String change) throws UiObjectNotFoundException {
 
-        SettingsUtil.openItem(instrumentation, "Security");
+        if (SystemUtil.getApiLevel() >= 26) {
+            SettingsUtil.openItem(instrumentation, "Security & Location");
+        } else {
+            SettingsUtil.openItem(instrumentation, "Security");
+        }
+
         UiDevice device = UiDevice.getInstance(instrumentation);
         UiScrollable itemList =
                 new UiScrollable(
@@ -110,8 +115,13 @@ public class SettingsUtil {
                 );
         itemList.setAsVerticalList();
         // Go to device administrators page.
-        itemList.getChildByText( new UiSelector().className("android.widget.TextView"),
-                "Device administrators").clickAndWaitForNewWindow();
+        if (SystemUtil.getApiLevel() >= 26) {
+            itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                    "Device admin apps").clickAndWaitForNewWindow();
+        } else {
+            itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                    "Device administrators").clickAndWaitForNewWindow();
+        }
 
         // Select admin option to activate/deactivate.
         device.findObject(new UiSelector().text(adminName)).clickAndWaitForNewWindow();
@@ -135,7 +145,7 @@ public class SettingsUtil {
 
         actionButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
 
-        Assert.assertTrue(actionButton.getText().contains(change));
+        Assert.assertTrue(actionButton.getText().toLowerCase().contains(change.toLowerCase()));
 
         if (change.equalsIgnoreCase("Activate")) {
             actionButton.clickAndWaitForNewWindow();
@@ -148,7 +158,7 @@ public class SettingsUtil {
         okButton.clickAndWaitForNewWindow();
     }
 
-     /**
+    /**
      * Enable or disable permissions settings for a given application type
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}

@@ -498,13 +498,13 @@ public class SettingsTest {
                         @Override
                         public boolean isTrue() throws Exception {
                             return device.findObject(new UiSelector().resourceIdMatches(
-                                            Res.NOW_SIGNIN_SCREEN_RES)).exists()
+                                    Res.NOW_SIGNIN_SCREEN_RES)).exists()
                                     && device.findObject(new UiSelector().resourceIdMatches(
-                                            Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
+                                    Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
                                     && device.findObject(new UiSelector().resourceIdMatches(
-                                            Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
+                                    Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
                         }
-            }));
+                    }));
         }
     }
 
@@ -537,23 +537,23 @@ public class SettingsTest {
             widget.click();
         }
         assertTrue("Failed to disable select time zone",
-            new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws Exception {
-                    return !device.findObject(new UiSelector().text("Select time zone")).isEnabled();
-                }
-            }));
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return !device.findObject(new UiSelector().text("Select time zone")).isEnabled();
+                    }
+                }));
         // Disable automatic time zone option.
         widget.click();
         final UiObject selectTimeZone = device.findObject(
                 new UiSelector().text("Select time zone"));
         assertTrue("Failed to enable select time zone",
                 new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws Exception {
-                    return selectTimeZone.isEnabled();
-                }
-            }));
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return selectTimeZone.isEnabled();
+                    }
+                }));
         selectTimeZone.clickAndWaitForNewWindow();
 
         assertTrue("Failed to load Select time zone screen.",
@@ -898,7 +898,7 @@ public class SettingsTest {
                 className(TextView.class.getName()),"Permissions").clickAndWaitForNewWindow();
 
         UiScrollable permissionList;
-        if(testFramework.getApi() > 23 ){
+        if(testFramework.getApi() > 23){
             permissionList =
                     new UiScrollable(
                             new UiSelector().resourceIdMatches(Res.ANDROID_LIST_RES)
