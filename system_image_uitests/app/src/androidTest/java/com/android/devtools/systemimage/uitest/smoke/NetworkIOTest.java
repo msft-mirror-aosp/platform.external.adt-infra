@@ -176,24 +176,19 @@ public class NetworkIOTest {
         }
     }
 
-    private UiObject2 navigateToDataSwitch(Instrumentation instrumentation) throws UiObjectNotFoundException {
+    private UiObject2 navigateToDataSwitch(Instrumentation instrumentation, String label) throws UiObjectNotFoundException {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         String containerRes = (testFramework.getApi() >= 24) ?
                 Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES : Res.NETWORK_SWITCHES_CONTAINER_RES;
-        String dataSwitch = (testFramework.getApi() >= 26) ? "Mobile data" : "Cellular data";
-        String label = "Data usage";
+        String[] path = testFramework.getApi() >= 26 ? new String[] {"Settings", "Network & Internet", "Data Usage"} :
+                new String[] {"Settings", "Data Usage"};
 
-        if (testFramework.getApi() >= 26) {
-            SettingsUtil.openItem(instrumentation, "Network & Internet");
-            device.findObject(new UiSelector().text(label)).clickAndWaitForNewWindow();
-        } else {
-            SettingsUtil.openItem(instrumentation, label);
-        }
+        AppLauncher.launchPath(instrumentation, path);
 
         return UiAutomatorPlus.findObjectByRelative(
                 instrumentation,
                 By.clazz("android.widget.Switch"),
-                By.text(dataSwitch),
+                By.text(label),
                 By.res(containerRes));
     }
 
@@ -221,10 +216,10 @@ public class NetworkIOTest {
     public void toggleCellularDataOff() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        // TODO: Add a fixture method in AppLauncher class to launch a specified path.
         int api = testFramework.getApi();
+        String label = "Cellular data";
         if (api >= 23) {
-            UiObject2 dataSwitch = navigateToDataSwitch(instrumentation);
+            UiObject2 dataSwitch = navigateToDataSwitch(instrumentation, label);
 
             // Test requires "Cellular data" switch widget to start in the on state.
             if (!dataSwitch.isChecked()) {
@@ -284,10 +279,11 @@ public class NetworkIOTest {
     public void toggleCellularDataOn() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        // TODO: Add a fixture method in AppLauncher class to launch a specified path.
         int api = testFramework.getApi();
+        String label = api >= 26 ? "Mobile data" : "Cellular data";
+
         if (api >= 23) {
-            UiObject2 dataSwitch = navigateToDataSwitch(instrumentation);
+            UiObject2 dataSwitch = navigateToDataSwitch(instrumentation, label);
 
             // Test requires "Cellular data" switch widget to start in the off state.
             if (dataSwitch.isChecked()) {

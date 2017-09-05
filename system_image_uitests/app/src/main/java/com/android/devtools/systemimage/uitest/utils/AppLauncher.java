@@ -69,4 +69,29 @@ public class AppLauncher {
         }
         app.clickAndWaitForNewWindow();
     }
+
+    /**
+     * Launches application in a specific path.
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     * @param appPath         the app path to launch
+     * @throws UiObjectNotFoundException if it fails to find a UI object.
+     */
+    public static void launchPath(Instrumentation instrumentation, String... appPath)
+            throws UiObjectNotFoundException {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        launch(instrumentation, appPath[0]);
+
+        for (int i = 1; i < appPath.length; ++i) {
+            UiSelector selector = new UiSelector().textMatches("(?i)"+appPath[i]);
+            try {
+                UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+                scrollable.scrollIntoView(selector);
+            } catch (UiObjectNotFoundException e) {
+
+          }
+            device.findObject(selector).clickAndWaitForNewWindow();
+        }
+    }
 }
