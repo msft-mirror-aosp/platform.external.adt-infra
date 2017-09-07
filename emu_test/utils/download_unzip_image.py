@@ -56,7 +56,7 @@ def get_dst_dir(remote_path):
     elif 'jb-mr2-emu' in branch_name:
       api = '18'
     elif 'master' in branch_name:
-      api = 'O'
+      api = 'P'
 
     else:
       raise ValueError("unsupported image %s", branch_name)
