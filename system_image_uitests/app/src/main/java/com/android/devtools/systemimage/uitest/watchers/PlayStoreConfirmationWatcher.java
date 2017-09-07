@@ -67,6 +67,13 @@ public class PlayStoreConfirmationWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().text("NEXT")).click();
                 condition = true;
             }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().description("NEXT"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().description("NEXT")).click();
+                condition = true;
+            }
         }
         catch (UiObjectNotFoundException e) {
             throw new AssertionError("Failed to dismiss the play store confirmation popup dialogs");
