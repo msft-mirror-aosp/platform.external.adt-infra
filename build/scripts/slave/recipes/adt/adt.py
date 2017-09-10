@@ -98,6 +98,7 @@ def RunSteps(api):
                'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
                'nyc-emu-dev': bootStep('NYC', '{"ori": "nyc"}'),
                'oc-emu-dev': bootStep('OC', '{"ori": "oc"}'),
+               'oc-mr1-emu-dev': bootStep('OC_MR1', '{"ori": "oc-mr1"}'),
                'lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
                'klp-emu-dev': bootStep('KLP', '{"ori": "klp"}'),
                'gb-emu-dev': bootStep('GB', '{"ori": "gb"}'),
