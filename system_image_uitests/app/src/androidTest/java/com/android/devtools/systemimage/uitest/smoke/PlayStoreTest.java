@@ -83,9 +83,6 @@ public class PlayStoreTest {
         final String application = "Google Translate";
 
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
-            device.pressHome();
-            device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
-
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
@@ -195,9 +192,6 @@ public class PlayStoreTest {
         final String application = "Pocket Casts";
 
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
-            device.pressHome();
-            device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
-
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {

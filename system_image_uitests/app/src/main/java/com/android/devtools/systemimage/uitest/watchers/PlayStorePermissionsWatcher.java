@@ -53,6 +53,13 @@ public class PlayStorePermissionsWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().text("ACCEPT")).click();
                 condition = true;
             }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().description("I AGREE"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().description("I AGREE")).click();
+                condition = true;
+            }
         } catch (UiObjectNotFoundException e) {
             throw new AssertionError("Failed to dismiss the play store permissions dialogs");
         }
