@@ -236,10 +236,7 @@ def RunSteps(api):
                     '--build-dir', build_dir],
                    env=env)
       for emu_branch in emulator_branch_to_use:
-        if 'emu-master-dev' in emu_branch or 'emu-2.4-release' in emu_branch:
-          emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
-        else:
-          emulator_path = api.path.join(emu_branch, 'tools', 'emulator')
+        emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
         emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
         if not is_cts and not is_ui and not is_console and not is_avd:
           step_data = bootSteps[step]
