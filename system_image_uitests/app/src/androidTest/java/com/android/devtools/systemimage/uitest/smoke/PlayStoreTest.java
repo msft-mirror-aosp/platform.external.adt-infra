@@ -27,6 +27,7 @@ import android.support.test.uiautomator.UiSelector;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.PlayStoreUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.PlayStoreConfirmationWatcher;
@@ -131,11 +132,9 @@ public class PlayStoreTest {
     public void testAppInstallationAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Trello";
+        final String application = "Allo";
 
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
-            device.pressHome();
-            device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
 
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
@@ -153,12 +152,11 @@ public class PlayStoreTest {
                             @Override
                             public boolean isTrue() throws UiObjectNotFoundException {
                                 return device.findObject(new UiSelector()
-                                        .packageName("com.trello")).exists();
+                                        .textContains(application)).exists();
                             }
                         }));
 
-                device.pressBack();
-
+                AppLauncher.launch(instrumentation, "Play Store");
                 assertTrue("Unable to uninstall the application from Google Play",
                         PlayStoreUtil.uninstallApplication(instrumentation));
 
@@ -281,13 +279,11 @@ public class PlayStoreTest {
     public void testParentalControls() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String adultApplication = "Truth or Dare Adult";
-        final String kidsApplication = "Truth or Dare Kids";
+        final String adultApplication = "Truth or Dare: Adults";
+        final String kidsApplication = "Truth or Dare: Kids";
 
 
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
-            device.pressHome();
-            device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
 
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
@@ -306,11 +302,15 @@ public class PlayStoreTest {
                            new Wait().until(new Wait.ExpectedCondition() {
                            @Override
                            public boolean isTrue() throws UiObjectNotFoundException {
-                           return !device.findObject(new UiSelector()
-                                .descriptionContains(adultApplication)).exists() &&
-                                device.findObject(new UiSelector()
-                                  .descriptionContains(kidsApplication)).exists();
-                            }
+                           return ((!device.findObject(new UiSelector().
+                                     description(adultApplication)).exists() ||
+                                   !device.findObject(new UiSelector().
+                                     text(adultApplication)).exists()) &&
+                                   (device.findObject(new UiSelector().
+                                      description(kidsApplication)).exists() ||
+                                   device.findObject(new UiSelector().
+                                      text(kidsApplication)).exists()));
+                           }
                         }));
 
                 toggleParentalControls(device, false);
