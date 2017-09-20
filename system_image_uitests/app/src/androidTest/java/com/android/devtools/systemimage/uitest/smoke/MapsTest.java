@@ -30,9 +30,9 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.watchers.MapsWatcher;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,7 +55,7 @@ public class MapsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
-     * TR ID: T145493594
+     * TT ID: 4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e
      * <p>
      * <pre>
      *   Test Steps:
@@ -72,33 +72,14 @@ public class MapsTest {
      *   2. Navigation overview is displayed.
      *   </pre>
      */
-    @Ignore("bug 36450156 - API 23, 23G does not have maps app")
     @Test
-    @TestInfo(id = "145493594")
+    @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void testMapsApp() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice mDevice = testFramework.getDevice();
 
         AppLauncher.launch(instrumentation, "Maps");
-        UiObject acceptButton =
-                mDevice.findObject(new UiSelector().textContains("ACCEPT & CONTINUE"));
-
-        // "Accept & Continue" occurs only on first time Maps gets launched.
-        if (acceptButton.exists()) {
-            acceptButton.clickAndWaitForNewWindow();
-        }
-
-        // SKIP button only exist's occurs only on first time Maps gets launched.
-        UiObject skipText = mDevice.findObject(new UiSelector().textContains("SKIP"));
-        if (skipText.exists()) {
-            skipText.clickAndWaitForNewWindow();
-        }
-
-        // "Got IT" only exist's only on first time Maps gets launched.
-        UiObject gotItTutorialButton = mDevice.findObject(new UiSelector().textContains("GOT IT"));
-        if (gotItTutorialButton.exists()) {
-            gotItTutorialButton.clickAndWaitForNewWindow();
-        }
+        new MapsWatcher(mDevice).checkForCondition();
 
         UiObject searchUiObject = mDevice.findObject(new UiSelector().
                 resourceIdMatches(Res.SEARCH_TEXT_BOX));
@@ -144,10 +125,22 @@ public class MapsTest {
 
         // Verify the directions/route link exists and clicking on it opens the directions page
         // verify query string is pre filled in the destination("to") field.
-        UiObject directions =
-                mDevice.findObject(new UiSelector().descriptionMatches(".*Directions.*|.*Route.*"));
+        UiObject directions;
+        boolean isSuccess = mDevice.findObject(new UiSelector().descriptionMatches(".*Directions.*|.*Route.*"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        if (isSuccess) {
+            directions = mDevice.findObject(new UiSelector().descriptionMatches(".*Directions.*|.*Route.*"));
+        } else {
+            directions = mDevice.findObject(new UiSelector().text("DIRECTIONS"));
+        }
+        Assert.assertTrue(directions.exists());
         directions.clickAndWaitForNewWindow();
+
         UiObject destination = mDevice.findObject(new UiSelector().textContains(QUERY_STRING));
         Assert.assertTrue(destination.exists());
+
+        for (int i = 0; i < 5; i++) {
+            mDevice.pressBack();
+        }
     }
 }
