@@ -29,6 +29,8 @@ def get_dst_dir(remote_path):
       tag = 'google_apis'
     elif 'google_atv' in branch_name:
       tag = 'android-tv'
+    elif 'oc-car-mr1' in branch_name:
+      tag = 'android-car'
     else:
       tag = 'default'
     if 'lmp-mr1' in branch_name:
