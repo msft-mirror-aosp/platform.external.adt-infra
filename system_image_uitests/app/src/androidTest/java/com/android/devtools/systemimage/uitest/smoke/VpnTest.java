@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 public class VpnTest {
     private static final String VPN_ACTIVATED_TEXT = "VPN is activated by TestVPN";
     private static final String NETWORK_MONITORED_TEXT = "Network may be monitored";
+    private static final String DEVICE_CONNECTED_TEXT = "Device connected to TestVPN";
 
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
@@ -64,7 +65,8 @@ public class VpnTest {
                     device.openNotification();
                     device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_BAR_EXPAND_RES)
                             .className("android.widget.ImageView")).click();
-                    return device.hasObject(By.text(NETWORK_MONITORED_TEXT));
+                    return device.hasObject(By.text(NETWORK_MONITORED_TEXT)) ||
+                            device.hasObject(By.text(DEVICE_CONNECTED_TEXT));
                 }
             });
         } else {

@@ -20,6 +20,7 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
+import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +34,9 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 /**
  * Test for adding a Google account.
@@ -80,15 +84,21 @@ public class AddGoogleAccountTest {
         } else {
             AppLauncher.launch(instrumentation, "People");
             // Check if the app is running for the first time.
-            UiObject notNow = mDevice.findObject(new UiSelector().textContains("Not now"));
-            if (notNow.exists()) {
-                notNow.click();
-            }
+            new AddGoogleAccountWatcher(mDevice).checkForCondition();
         }
+
         UiObject add_contact = UiAutomatorPlus.findObjectMatchingAny(instrumentation,
                 new UiSelector().className("android.widget.Button").textContains("new"),
                 new UiSelector().className("android.widget.ImageButton").descriptionContains("new"));
         add_contact.clickAndWaitForNewWindow();
-        mDevice.findObject(new UiSelector().textContains("Add account")).click();
+        assertFalse("Checking info failure",
+                mDevice.findObject(new UiSelector().textContains("Checking Info")).
+                        waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)));
+        new AddGoogleAccountWatcher(mDevice).checkForCondition();
+        assertTrue("Add Google account page not found",
+                UiAutomatorPlus.findObjectMatchingAny(instrumentation,
+                    new UiSelector().textContains("Add account"),
+                    new UiSelector().textContains("new contact"),
+                    new UiSelector().textContains("Sign in")).exists());
     }
 }
