@@ -337,6 +337,7 @@ class EmuBaseTestCase(LoggedTestCase):
                 config.set('Common', key, val)
 
         tag_id_to_display = {
+                             'android-car': 'Android Automotive',
                              'android-tv': 'Android TV',
                              'android-wear': 'Android Wear',
                              'default': 'Default',
@@ -491,6 +492,9 @@ class EmuBaseTestCase(LoggedTestCase):
                                 % (api, avd_config.abi))
             elif "tv" in avd_config.tag:
                 self.update_sdk("system-images;android-%s;android-tv;%s"
+                                % (api, avd_config.abi))
+            elif "car" in avd_config.tag:
+                self.update_sdk("system-images;android-%s;android-car;%s"
                                 % (api, avd_config.abi))
             else:
                 self.update_sdk("system-images;android-%s;default;%s"
