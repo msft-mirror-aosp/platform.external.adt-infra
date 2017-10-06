@@ -20,7 +20,8 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
-import com.android.devtools.systemimage.uitest.utils.SystemUtil;
+import com.android.devtools.systemimage.uitest.utils.Wait;
+import com.android.devtools.systemimage.uitest.watchers.AppWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,6 +33,7 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 
@@ -110,7 +112,7 @@ public class AppTest {
     @TestInfo(id = "14578831")
     public void bookmarkWebSiteInBrowser() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = UiDevice.getInstance(instrumentation);
+        final UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
             AppLauncher.launch(instrumentation, "Chrome");
@@ -147,12 +149,7 @@ public class AppTest {
                 searchBox.clickAndWaitForNewWindow();
             }
 
-            // Click the search box if it's there.
-            UiObject syncBookmarks = device.findObject(
-                    new UiSelector().text("Sync your bookmarks"));
-            if (syncBookmarks.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
-                device.findObject(new UiSelector().text("NO THANKS")).clickAndWaitForNewWindow();
-            }
+            new AppWatcher(device).checkForCondition();
 
             UiObject textField = device.findObject(
                     new UiSelector().resourceId(Res.CHROME_URL_BAR_RES));
@@ -164,8 +161,18 @@ public class AppTest {
             textField.setText("https://httpbin.org/?d=" + new Date().getTime());
             device.pressEnter();
             device.pressMenu();
-            device.findObject(new UiSelector().description("Bookmark this page")).click();
-            device.pressMenu();
+
+            boolean notBookmarked = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector().description("Bookmark this page")).exists();
+                }
+            });
+            if (notBookmarked) {
+                device.findObject(new UiSelector().description("Bookmark this page")).click();
+                new AppWatcher(device).checkForCondition();
+                device.pressMenu();
+            }
             // After bookmarking, the button description changes.
             assertTrue("Bookmark was not set",
                     device.findObject(new UiSelector().description("Edit bookmark")).exists());
@@ -173,8 +180,10 @@ public class AppTest {
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
             bookmarks.clickAndWaitForNewWindow();
+            new AppWatcher(device).checkForCondition();
+
             assertTrue("Cannot find bookmark",
-                    device.findObject(new UiSelector().text("Bookmarks")).exists() &&
+                    device.findObject(new UiSelector().textContains(("kmarks"))).exists() &&
                             device.findObject(new UiSelector().textContains(
                                     "httpbin").resourceId(
                                     Res.CHROME_TITLE_RES)).exists());
@@ -186,8 +195,8 @@ public class AppTest {
                     new UiSelector().description("Edit bookmark")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().description("Delete bookmarks")).click();
 
-        } else if (testFramework.getApi() >= 24) {
-            // API 24+ uses WebView Browser as the default browser. Does not have bookmarking
+        } else if (testFramework.getApi() == 24) {
+            // API 24 uses WebView Browser as the default browser. Does not have bookmarking
             // options.
             return;
         } else {
