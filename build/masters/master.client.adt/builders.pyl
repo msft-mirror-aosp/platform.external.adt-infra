@@ -355,6 +355,12 @@
        "categories": ["CTS"],
        "tag": "3",
      },
+     "Ubuntu 16.04 Quadro K1200 CTS 4" {
+       "recipe": "adt/adt",
+       "slave_pools": ["ubuntu-16_04-nvidia-quadro-k1200"],
+       "categories": ["CTS"],
+       "tag": "4",
+     },
      "Win 7 32-bit HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["win-7-32-intel-hd-4400"],
@@ -545,6 +551,14 @@
         "version": "trusty",
       },
       "slaves": ['chromeos1-row3-rack4-host5'],
+    },
+    "ubuntu-16_04-nvidia-quadro-k1200": {
+      "slave_data": {
+        "bits": 64,
+        "os": "linux",
+        "version": "trusty",
+      },
+      "slaves": ['chromeos1-row3-rack4-host6'],
     },
     "ubuntu-14_04-intel-hd-520": {
       "slave_data": {
