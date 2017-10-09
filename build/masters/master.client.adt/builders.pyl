@@ -146,7 +146,7 @@
     },
      "sys_image_master_poller": {
        "gs_bucket": "android-build-emu-sysimage",
-       "gs_path": ["builds/git_master-linux-sdk_gphone_x86_64-sdk_addon/",
+       "gs_path": ["builds/git_master-linux-sdk_phone_x86_64-sdk/",
                    "builds/git_master-mac-sdk_gphone_x86-sdk_addon_mac/",
                    "builds/git_master-mac-sdk_phone_armv7-sdk_mac/"],
        "pollInterval": 597,
