@@ -355,7 +355,7 @@
        "categories": ["CTS"],
        "tag": "3",
      },
-     "Ubuntu 16.04 Quadro K1200 CTS 4": {
+     "Ubuntu 16.04 Quadro K1200": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-16_04-nvidia-quadro-k1200"],
        "categories": ["CTS"],
