@@ -108,8 +108,8 @@ class GSMultiPoller(base.PollingChangeSource):
       count = len(list(objs))
       log.msg("%s: search %s, file count %d" % (self.name, path + build_version, count))
       if count == 0:
-        log.msg("%s: Build incomplete, couldn't find %s.  Will continue without." % (self.name, path + build_version))
-        continue
+        log.msg("%s: Build incomplete, couldn't find %s" % (self.name, path + build_version))
+        return None
       for obj in objs:
         if self.name_identifier in obj.name:
           file_list.append(obj.name)
