@@ -48,7 +48,9 @@ ORI_TO_API = {
   'git_mnc-emu-release': '23',
   'git_nyc-emu-release': '24',
   'git_nyc-preview-release': '25',  # Preview
-  'git_nyc-mr1-emu-release': '25'  # May not exist yet. Keep in advance.
+  'git_nyc-mr1-emu-release': '25',
+  'git_oc-emu-release': '26',
+  'git_oc-mr1-emu-release': '27'
 }
 
 # Variables needed to communicate with Gerrit REST API.
@@ -171,9 +173,7 @@ def RunSteps(api):
       invalid_test_configs.add(config_str)
       print traceback.print_exc()
       continue
-    # For API 25, we only test default.
-    if config['api'] == 'API 25' and config['tag'] == 'google_apis':
-      continue
+
     test_configs.append(config)
   print test_configs
 
