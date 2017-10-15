@@ -49,19 +49,15 @@ public class DeveloperOptionsManager {
 
         try {
             if (testFramework.getApi() >= 26) {
-                SettingsUtil.openItem(instrumentation, "System");
-                device.findObject(new UiSelector().text("About phone"))
-                        .clickAndWaitForNewWindow();
+                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
             } else {
-                SettingsUtil.openItem(instrumentation, "About phone");
+                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
             }
         } catch (UiObjectNotFoundException e) {
             if (testFramework.getApi() >= 26) {
-                SettingsUtil.openItem(instrumentation, "System");
-                device.findObject(new UiSelector().text("About emulated device"))
-                        .clickAndWaitForNewWindow();
+                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About emulated device"});
             } else {
-                SettingsUtil.openItem(instrumentation, "About emulated device");
+                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
             }
         }
 
@@ -98,8 +94,7 @@ public class DeveloperOptionsManager {
         try {
             if (testFramework.getApi() >= 26) {
                 SettingsUtil.openItem(instrumentation, "System");
-                device.findObject(new UiSelector().text("About emulated device"))
-                        .clickAndWaitForNewWindow();
+                device.findObject(new UiSelector().text("Developer options")).click();
                 return true;
             } else {
                 SettingsUtil.findItem(instrumentation, "Developer options");
