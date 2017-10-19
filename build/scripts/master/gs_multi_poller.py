@@ -90,11 +90,11 @@ class GSMultiPoller(base.PollingChangeSource):
     log.msg('%s: poll failed: %s. URL: %s' % (self.name, res, self.gs_path_list))
 
   # return the latest complete build
-  def find_latest_build(self, _no_use):
+  def find_latest_build_internal(self, img_index):
     bucket = boto.storage_uri(self.gs_bucket, 'gs').get_bucket()
     build_version = None
     last_modified_file = None
-    for obj in bucket.list(self.gs_path_list[0]):
+    for obj in bucket.list(self.gs_path_list[img_index]):
       if self.name_identifier in obj.name:
         # file path: "builds/[builder_name]/[build_version]/[random_hash]/[binary].zip"
         build_version = max(build_version, obj.name.split('/')[2])
@@ -114,6 +114,14 @@ class GSMultiPoller(base.PollingChangeSource):
         if self.name_identifier in obj.name:
           file_list.append(obj.name)
     return file_list
+
+  def find_latest_build(self):
+    log.msg('%s: last_change %s' % (self.name, self.last_change))
+    for img_index in range(len(self.gs_path_list)):
+      file_list = find_latest_build_internal(self, img_index)
+      if file_list != None:
+        return file_list;
+    return None;
 
   def _update_last_rev(self, new_revision):
     log.msg("%s: last revision changed from %s to %s" % (self.name, self.last_change, new_revision))
