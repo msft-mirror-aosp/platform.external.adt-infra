@@ -109,12 +109,12 @@
        "branch": "all",
        "name_identifier": "system-images",
     },
-     "sys_image_oc_car_mr1_release_poller": {
+     "sys_image_oc_mr1_car_support_release_poller": {
        "gs_bucket": "android-build-emu-sysimage",
-       "gs_path": ["builds/git_oc-car-mr1-release-linux-gcar_emu_x86-sdk_addon/"],
+       "gs_path": ["builds/git_oc-mr1-car-support-release-linux-gcar_emu_x86-sdk_addon/"],
        "pollInterval": 720,
        "type": "GSMultiPoller",
-       "project": "oc-car-mr1-release",
+       "project": "oc-mr1-car-support-release",
        "branch": "all",
        "name_identifier": "system-images",
      },
