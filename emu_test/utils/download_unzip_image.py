@@ -29,7 +29,7 @@ def get_dst_dir(remote_path):
       tag = 'google_apis'
     elif 'google_atv' in branch_name:
       tag = 'android-tv'
-    elif 'oc-car-mr1' in branch_name:
+    elif 'oc-mr1-car-support' in branch_name:
       tag = 'android-car'
     else:
       tag = 'default'
@@ -41,7 +41,7 @@ def get_dst_dir(remote_path):
       api = '25'
     elif 'nyc' in branch_name:
       api = '24'
-    elif 'oc-car-mr1' in branch_name:
+    elif 'oc-mr1-car-support' in branch_name:
       api = '27'
     elif 'oc-mr1' in branch_name:
       api = '27'

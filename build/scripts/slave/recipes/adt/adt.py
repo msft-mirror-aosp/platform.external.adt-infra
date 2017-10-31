@@ -97,7 +97,7 @@ def RunSteps(api):
                'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
                'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
                'nyc-emu-dev': bootStep('NYC', '{"ori": "nyc"}'),
-               'oc-car-mr1-release': bootStep('OC_CAR_MR1', '{"ori": "oc-car-mr1"}'),
+               'oc-mr1-car-support-release': bootStep('OC_MR1_CAR_SUPPORT', '{"ori": "oc-mr1-car-support"}'),
                'oc-emu-dev': bootStep('OC', '{"ori": "oc"}'),
                'oc-mr1-emu-dev': bootStep('OC_MR1', '{"ori": "oc-mr1"}'),
                'lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
