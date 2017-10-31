@@ -28,6 +28,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
+import com.android.devtools.systemimage.uitest.watchers.ApiDemosWatcher;
 
 import junit.framework.Assert;
 
@@ -83,13 +84,12 @@ public class ApiDemosTest {
      *    </pre>
      *
      */
-    @Ignore("bug 36251611 - API 24G UI changed.")
     @Test
     @TestInfo(id = "T144630615")
     public void testPasswordQuality() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
-        UiObject editText;
+
         AppLauncher.launch(instrumentation, "API Demos");
         UiScrollable itemList =
                 new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES));
@@ -158,7 +158,9 @@ public class ApiDemosTest {
      */
     private void verifyPasswordQuality(
             Instrumentation instrumentation, UiDevice device) throws Exception {
-        Assert.assertTrue(SettingsUtil.openItem(instrumentation, "Security"));
+
+        String securitySettings = testFramework.getApi() == 26 ? "Security & Location" : "Security";
+        Assert.assertTrue(SettingsUtil.openItem(instrumentation, securitySettings));
 
         UiScrollable itemList =
                 new UiScrollable(
@@ -171,6 +173,7 @@ public class ApiDemosTest {
         itemList.getChildByText( new UiSelector().className("android.widget.TextView"),
                 "Password").clickAndWaitForNewWindow();
 
+        new ApiDemosWatcher(device).checkForCondition();
         UiObject passwordField = device.findObject(
                 new UiSelector().className("android.widget.EditText"));
         passwordField.waitForExists(TimeUnit.SECONDS.toMillis(3L));

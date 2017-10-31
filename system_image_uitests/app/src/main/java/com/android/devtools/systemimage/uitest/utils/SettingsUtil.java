@@ -102,7 +102,7 @@ public class SettingsUtil {
     private static void changePolicyActivation(Instrumentation instrumentation, String adminName,
                                                String change) throws UiObjectNotFoundException {
 
-        if (SystemUtil.getApiLevel() >= 26) {
+        if (SystemUtil.getApiLevel() == 26) {
             SettingsUtil.openItem(instrumentation, "Security & Location");
         } else {
             SettingsUtil.openItem(instrumentation, "Security");
@@ -115,7 +115,7 @@ public class SettingsUtil {
                 );
         itemList.setAsVerticalList();
         // Go to device administrators page.
-        if (SystemUtil.getApiLevel() >= 26) {
+        if (SystemUtil.getApiLevel() == 26) {
             itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                     "Device admin apps").clickAndWaitForNewWindow();
         } else {

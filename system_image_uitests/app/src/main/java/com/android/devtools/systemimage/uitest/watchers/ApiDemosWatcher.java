@@ -24,28 +24,37 @@ import android.support.test.uiautomator.UiWatcher;
 import java.util.concurrent.TimeUnit;
 
 /**
- * AppTest popup watcher that monitors and dismisses confirmation popup dialog.
+ * Api Demos Test popup watcher that monitors and dismisses secure start-up confirmation popup dialogs.
  */
-public class AppWatcher implements UiWatcher {
+public class ApiDemosWatcher implements UiWatcher {
     private final UiDevice mDevice;
+    private static final String NO_THANKS_CASE_INSENSITIVE = "(?i)no thanks(?-i)";
+    private static final String CONTINUE_CASE_INSENSITIVE = "(?i)continue(?-i)";
 
-    public AppWatcher(UiDevice device) {
+    public ApiDemosWatcher(UiDevice device) {
         this.mDevice = device;
     }
 
     @Override
     public boolean checkForCondition() {
         boolean condition = false;
-        boolean isSuccess = mDevice.findObject(new UiSelector().textMatches(("(?i)no thanks(?-i)")))
+        boolean isSuccess = mDevice.findObject(new UiSelector().textMatches((NO_THANKS_CASE_INSENSITIVE)))
                 .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         try {
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().textMatches(("(?i)no thanks(?-i)"))).click();
+                mDevice.findObject(new UiSelector().textMatches((NO_THANKS_CASE_INSENSITIVE))).click();
+                condition = true;
+            }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().textMatches(CONTINUE_CASE_INSENSITIVE))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().textMatches(CONTINUE_CASE_INSENSITIVE)).click();
                 condition = true;
             }
         }
         catch (UiObjectNotFoundException e) {
-            throw new AssertionError("Failed to dismiss the AppTest popup dialog");
+            throw new AssertionError("Failed to dismiss the API Demos Test confirmation popup dialogs");
         }
         return condition;
     }

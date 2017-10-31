@@ -25,9 +25,7 @@ import android.support.test.uiautomator.UiWatcher;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Play Store popup watcher that monitors and dismisses Google Play Store confirmation popup dialogs.
- * <p>
- * Note that this watcher should only be registered before using the Google Play Store app.
+ * Camera permissions popup watcher that monitors and dismisses settings confirmation popup dialogs.
  */
 public class SettingsCameraPermissionsWatcher implements UiWatcher {
     private final UiDevice mDevice;
@@ -49,7 +47,7 @@ public class SettingsCameraPermissionsWatcher implements UiWatcher {
             }
         }
         catch (UiObjectNotFoundException e) {
-            throw new AssertionError("Failed to dismiss the play store confirmation popup dialogs");
+            throw new AssertionError("Failed to dismiss the Camera permissions settings confirmation popup dialogs");
         }
         return condition;
     }
