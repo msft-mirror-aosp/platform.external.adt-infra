@@ -29,13 +29,11 @@ public class Res {
     public static final String BROWSER_URL_TEXT_FIELD_RES = "com.android.browser:id/url";
 
     public static final String CHROME_TERMS_ACCEPT_BUTTON_RES = "com.android.chrome:id/terms_accept";
-    public static final String CHROME_SIGN_IN_TITLE_RES = "com.android.chrome:id/signin_title";
-    public static final String CHROME_NEGATIVE_BUTTON_RES = "com.android.chrome:id/negative_button";
     public static final String CHROME_SEARCH_BOX_RES = "com.android.chrome:id/search_box_text";
     public static final String CHROME_URL_BAR_RES = "com.android.chrome:id/url_bar";
     public static final String CHROME_CLOSE_MENU_BUTTON_RES = "com.android.chrome:id/close_menu_id";
     public static final String CHROME_TITLE_RES = "com.android.chrome:id/title";
-    public static final String CHROME_NO_THANKS_BUTTON = "com.android.chrome:id/no_thanks_button";
+    public static final String CHROME_NO_THANKS_BUTTON_RES = "com.android.chrome\\d*:id" + "/(no_thanks_button|negative_button)";
     public static final String CHROME_PROGRESS_BAR_RES = "com.android.chrome:id/progress";
 
     public static final String ANDROID_LAUNCHER_WELCOME_CLING_RES =

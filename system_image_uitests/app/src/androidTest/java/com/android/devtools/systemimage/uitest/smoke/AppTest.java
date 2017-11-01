@@ -127,17 +127,8 @@ public class AppTest {
             }
 
             // Dismiss the "Sign in to Chrome" screen if it's there.
-            UiObject signInScreen = device.findObject(
-                    new UiSelector().resourceId(Res.CHROME_SIGN_IN_TITLE_RES));
-            if (signInScreen.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
-                device.findObject(
-                        new UiSelector().resourceId(Res.CHROME_NEGATIVE_BUTTON_RES))
-                            .clickAndWaitForNewWindow();
-            }
-
-            // Dismiss the "Browse more for less" screen if it's there.
             UiObject noThanksButton = device.findObject(
-                    new UiSelector().resourceId(Res.CHROME_NO_THANKS_BUTTON));
+                    new UiSelector().resourceIdMatches(Res.CHROME_NO_THANKS_BUTTON_RES));
             if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
                 noThanksButton.clickAndWaitForNewWindow();
             }

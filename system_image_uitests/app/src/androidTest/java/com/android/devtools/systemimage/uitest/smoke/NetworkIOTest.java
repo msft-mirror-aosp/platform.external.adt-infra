@@ -143,9 +143,10 @@ public class NetworkIOTest {
             }
 
             // Dismiss the "Sign in to Chrome" screen if it's there.
-            if (device.hasObject(By.res(Res.CHROME_SIGN_IN_TITLE_RES))) {
-                device.findObject(new UiSelector().resourceId(
-                        Res.CHROME_NEGATIVE_BUTTON_RES)).clickAndWaitForNewWindow();
+            UiObject noThanksButton = device.findObject(new UiSelector().resourceIdMatches(
+                    Res.CHROME_NO_THANKS_BUTTON));
+            if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
+                noThanksButton.clickAndWaitForNewWindow();
             }
 
             UiObject searchBox = device.findObject(new UiSelector().resourceId(
@@ -217,7 +218,7 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
         int api = testFramework.getApi();
-        String label = "Cellular data";
+        String label = api >= 26 ? "Mobile data" : "Cellular data";
         if (api >= 23) {
             UiObject2 dataSwitch = navigateToDataSwitch(instrumentation, label);
 
@@ -227,7 +228,7 @@ public class NetworkIOTest {
             }
             // Disable "Cellular data" option.
             dataSwitch.click();
-            if (api < 24) {
+            if (api == 23) {
                 device.findObject(new UiSelector().text("OK")).click();
             }
             // Wait for data connection to turn off.
@@ -241,7 +242,7 @@ public class NetworkIOTest {
 
             assertFalse("Cellular data is enabled.",
                     NetworkUtil.hasCellularNetworkConnection(instrumentation));
-            if (api < 24) {
+            if (api == 23) {
                 assertFalse("Set cellular data limit text is visible.", device.findObject(
                         new UiSelector().textContains("Set cellular data limit")).exists());
             } else {
@@ -288,7 +289,7 @@ public class NetworkIOTest {
             // Test requires "Cellular data" switch widget to start in the off state.
             if (dataSwitch.isChecked()) {
                 dataSwitch.click();
-                if (api < 24) {
+                if (api == 23) {
                     device.findObject(new UiSelector().text("OK")).click();
                 }
             }
@@ -305,7 +306,7 @@ public class NetworkIOTest {
             assertTrue("Cellular data is disabled.",
                     NetworkUtil.hasCellularNetworkConnection(instrumentation));
 
-            if (api < 24) {
+            if (api == 23) {
                 assertTrue("Set cellular data limit text is not visible.", device.findObject(
                         new UiSelector().textContains("Set cellular data limit")).exists());
             } else {
