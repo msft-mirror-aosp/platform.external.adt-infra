@@ -6,8 +6,7 @@ import time
 
 from utils import util
 
-main_apk_package = 'com.android.devtools.server'
-launcher_class_name = '%s.Server' % main_apk_package
+launcher_class_name = '%s.Server' % util.MAIN_APK_PACKAGE
 instrumentation_runner = 'android.support.test.runner.AndroidJUnitRunner'
 
 num_trials = 1
@@ -21,7 +20,7 @@ while True:
                                          '-w', '-e' 'class',
                                          launcher_class_name,
                                          ('%s.test/%s'
-                                          % (main_apk_package,
+                                          % (util.MAIN_APK_PACKAGE,
                                              instrumentation_runner))])
     break
   except subprocess.CalledProcessError as err:

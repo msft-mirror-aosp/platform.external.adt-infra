@@ -49,7 +49,7 @@ public class AppTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(90);
+    public Timeout globalTimeout = Timeout.seconds(120);
 
     /**
      * Verifies an app runs on the emulator.
@@ -116,30 +116,42 @@ public class AppTest {
             AppLauncher.launch(instrumentation, "Chrome");
 
             // If this is the first launch, dismiss the "Welcome to Chrome" screen.
-            UiObject acceptButton = device.findObject(
-                    new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-            if (device.hasObject(By.res(Res.CHROME_WELCOME_TITLE_RES)) && acceptButton.exists()) {
-                acceptButton.clickAndWaitForNewWindow();
+            UiObject welcomeScreen = device.findObject(
+                    new UiSelector().text("Welcome to Chrome"));
+            if (welcomeScreen.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
+                device.findObject(
+                        new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES))
+                            .clickAndWaitForNewWindow();
             }
 
             // Dismiss the "Sign in to Chrome" screen if it's there.
-            if (device.hasObject(By.res(Res.CHROME_SIGN_IN_TITLE_RES))) {
-                device.findObject(new UiSelector().resourceId(
-                        Res.CHROME_NEGATIVE_BUTTON_RES)).clickAndWaitForNewWindow();
+            UiObject signInScreen = device.findObject(
+                    new UiSelector().resourceId(Res.CHROME_SIGN_IN_TITLE_RES));
+            if (signInScreen.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
+                device.findObject(
+                        new UiSelector().resourceId(Res.CHROME_NEGATIVE_BUTTON_RES))
+                            .clickAndWaitForNewWindow();
             }
 
             // Dismiss the "Browse more for less" screen if it's there.
             UiObject noThanksButton = device.findObject(
                     new UiSelector().resourceId(Res.CHROME_NO_THANKS_BUTTON));
-            if (noThanksButton.exists()) {
+            if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
                 noThanksButton.clickAndWaitForNewWindow();
             }
 
             // Click the search box if it's there.
             UiObject searchBox = device.findObject(new UiSelector().resourceId(
                     Res.CHROME_SEARCH_BOX_RES));
-            if (searchBox.exists()) {
+            if (searchBox.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
                 searchBox.clickAndWaitForNewWindow();
+            }
+
+            // Click the search box if it's there.
+            UiObject syncBookmarks = device.findObject(
+                    new UiSelector().text("Sync your bookmarks"));
+            if (syncBookmarks.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
+                device.findObject(new UiSelector().text("NO THANKS")).clickAndWaitForNewWindow();
             }
 
             UiObject textField = device.findObject(
@@ -165,7 +177,7 @@ public class AppTest {
                     device.findObject(new UiSelector().text("Bookmarks")).exists() &&
                             device.findObject(new UiSelector().textContains(
                                     "httpbin").resourceId(
-                                    Res.CHROME_BOOKMARKS_LABEL_RES)).exists());
+                                    Res.CHROME_TITLE_RES)).exists());
             device.findObject(new UiSelector().resourceId(
                     Res.CHROME_CLOSE_MENU_BUTTON_RES)).clickAndWaitForNewWindow();
             // Delete the bookmark.

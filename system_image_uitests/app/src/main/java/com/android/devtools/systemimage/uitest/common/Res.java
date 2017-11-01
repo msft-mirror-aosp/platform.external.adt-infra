@@ -28,14 +28,13 @@ public class Res {
     public static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
     public static final String BROWSER_URL_TEXT_FIELD_RES = "com.android.browser:id/url";
 
-    public static final String CHROME_WELCOME_TITLE_RES = "com.android.chrome:id/title";
     public static final String CHROME_TERMS_ACCEPT_BUTTON_RES = "com.android.chrome:id/terms_accept";
     public static final String CHROME_SIGN_IN_TITLE_RES = "com.android.chrome:id/signin_title";
     public static final String CHROME_NEGATIVE_BUTTON_RES = "com.android.chrome:id/negative_button";
     public static final String CHROME_SEARCH_BOX_RES = "com.android.chrome:id/search_box_text";
     public static final String CHROME_URL_BAR_RES = "com.android.chrome:id/url_bar";
     public static final String CHROME_CLOSE_MENU_BUTTON_RES = "com.android.chrome:id/close_menu_id";
-    public static final String CHROME_BOOKMARKS_LABEL_RES = "com.android.chrome:id/title";
+    public static final String CHROME_TITLE_RES = "com.android.chrome:id/title";
     public static final String CHROME_NO_THANKS_BUTTON = "com.android.chrome:id/no_thanks_button";
     public static final String CHROME_PROGRESS_BAR_RES = "com.android.chrome:id/progress";
 
@@ -69,12 +68,19 @@ public class Res {
     public static final String NOTIFICATION_BAR_EXPAND_RES =
             "com.android.systemui:id/expand_indicator";
 
+    public static final String DIALER_BUTTON_RES =
+            "com.android.dialer:id/dialpad_floating_action_button";
+
     public static final String NOW_SIGNIN_ACCEPT_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/accept_button";
     public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
     public static final String NOW_SIGNIN_SCREEN_RES =
             "com.google.android.googlequicksearchbox\\d*:id/header_title";
+
+    public static final String SEARCH_TEXT_BOX =
+            "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)" +
+                    "/(search_omnibox_text_box|textbox|edit_textbox)";
 
     // Third-party application resource IDs
     public static final String APP_IMAGE_VIEW_ID =
@@ -87,5 +93,6 @@ public class Res {
     public static final String ANDROID_TIME_HEADER_RES = "android:id/time_header";
     public static final String ANDROID_TIME_HEADER_RES_19 = "android:id/timePicker";
     public static final String ANDROID_LIST_RES = "android:id/list";
+    public static final String ANDROID_CONTENT_RES = "android:id/content";
     public static final String CELLULAR_DATA_SWITCH_RES = "android:id/switch_widget";
 }

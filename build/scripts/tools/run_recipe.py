@@ -45,7 +45,9 @@ import sys
 
 SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
 ROOT_PATH = os.path.abspath(os.path.join(SCRIPT_PATH, os.pardir, os.pardir))
-SLAVE_DIR = os.path.join(ROOT_PATH, 'slave', 'fake_slave', 'build')
+DEFAULT_SLAVE_DIR = os.path.abspath(os.path.join(os.path.expanduser('~'),
+                                                 'slave', 'fake_slave',
+                                                 'build'))
 
 RUNIT = os.path.join(SCRIPT_PATH, 'runit.py')
 ANNOTATED_RUN = os.path.join(ROOT_PATH, 'scripts', 'slave', 'annotated_run.py')
@@ -113,8 +115,9 @@ def main(args):
   properties, master_overrides_slave = parse_args(args)
   properties.setdefault('use_mirror', False)
 
-  if not os.path.exists(SLAVE_DIR):
-    os.makedirs(SLAVE_DIR)
+  slave_dir = os.environ.get('SLAVE_BUILD_DIR', DEFAULT_SLAVE_DIR)
+  if not os.path.exists(slave_dir):
+    os.makedirs(slave_dir)
 
   env = os.environ.copy()
   env['RUN_SLAVE_UPDATED_SCRIPTS'] = '1'
@@ -129,7 +132,7 @@ def main(args):
   if master_overrides_slave:
     cmd.append('--master-overrides-slave')
 
-  return subprocess.call(cmd, cwd=SLAVE_DIR, env=env)
+  return subprocess.call(cmd, cwd=slave_dir, env=env)
 
 
 if __name__ == '__main__':

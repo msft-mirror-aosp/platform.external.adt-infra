@@ -381,8 +381,8 @@ div.BuildWaterfall {
 
 .running,.waiting,td.building {
         color: #000;
-        background-color: #fd3;
-        border-color: #C5C56D;
+        background-color: #dddddd;
+        border-color: #cccccc;
 }
 
 .offline,td.offline {

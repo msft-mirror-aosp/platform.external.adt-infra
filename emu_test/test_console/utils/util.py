@@ -51,6 +51,7 @@ EVENTS_CODE_NO_ALIAS = 'no code aliases defined for this type\r\nOK'
 EVENTS_CODE_EV_KEY_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_CODE_EV_KEY')
 EVENTS_CODE_EV_REL_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_CODE_EV_REL')
 EVENTS_CODE_EV_ABS_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_CODE_EV_ABS')
+EVENTS_CODE_EV_SW_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_CODE_EV_SW')
 EVENTS_EV_TYPES_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_EV_TYPES')
 PORT_NO_REDIR = 'no active redirections\r\nOK'
 PORT_REDIR_ADD = 'tcp:5556  => 5554 \r\nOK'
@@ -61,14 +62,17 @@ REGEX_HELP_DISPLAY_AUTH = (r'.*\n.*\n.*help.*\n.*event.*\n.*geo.*\n.*gsm.*\n'
                            r'.*cdma.*\n.*crash.*\n.*kill.*\n.*network.*\n'
                            r'.*power.*\n.*quit\|exit.*\n.*redir.*\n'
                            r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.'
-                           r'*finger.*\n.*debug.*\n.*\n.*\nOK')
+                           r'*finger.*\n.*debug.*\n.*rotate.*\n.*\n.*\nOK')
 AUTH = 'auth'
 CMD_RANDOM_AUTH_TOKEN = '%s axxB123cc\n' % AUTH
 CMD_EMPTY_AUTH_TOKEN = '%s \n' % AUTH
 CMD_EXIT = 'exit\n'
 SCRIPT_TO_INSTALL_APK = 'install_apk.py'
 SCRIPT_TO_RUN_ADB_SHELL = 'run_adb_shell.py'
+SCRIPT_TO_UNINSTALL_APP = 'uninstall_app.py'
 PYTHON_INTERPRETER = 'python'
+CMD_ROTATE = 'rotate\n'
+MAIN_APK_PACKAGE = 'com.android.devtools.server'
 
 
 def check_read_until(console_output):
@@ -229,6 +233,10 @@ def execute_console_command(telnet, command, expected_output):
 
     if command == 'crash\n':
       output = telnet.read_all()
+    elif command == CMD_ROTATE: # No 'OK' output showing, only new line.
+      print 'command is rotate'
+      output = telnet.read_until('\n', 10)
+      print 'output = "%s"' % output
     elif command == CMD_EMPTY_AUTH_TOKEN:
       output = telnet.read_until('missing authentication token').strip()
     elif command == CMD_RANDOM_AUTH_TOKEN:
@@ -297,4 +305,14 @@ def run_script_run_adb_shell(testcase_call_dir):
                    '-e', 'forward', 'tcp:8080', 'tcp:8081'])
   subprocess.call([PYTHON_INTERPRETER, script_install_apk])
   subprocess.Popen([PYTHON_INTERPRETER, script_run_adb_shell])
+  time.sleep(SETUP_WAIT_TIMEOUT_S)
+
+def unstall_apps(testcase_call_dir):
+  """Run Python script to uninstall apps.
+
+  Args:
+    testcase_call_dir: The directory where the test case is called from.
+  """
+  subprocess.Popen([PYTHON_INTERPRETER,
+                    '%s/%s' % (testcase_call_dir, SCRIPT_TO_UNINSTALL_APP)])
   time.sleep(SETUP_WAIT_TIMEOUT_S)

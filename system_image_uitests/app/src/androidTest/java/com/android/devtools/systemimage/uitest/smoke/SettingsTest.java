@@ -19,6 +19,8 @@ package com.android.devtools.systemimage.uitest.smoke;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
@@ -26,6 +28,8 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -36,11 +40,15 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
+import android.widget.LinearLayout;
+import android.widget.Switch;
+import android.widget.TextView;
 
 /**
  * Test class for Android Settings page on Google API images.
@@ -88,13 +96,166 @@ public class SettingsTest {
             device.findObject(new UiSelector().textContains("Yes")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().textContains("Location")).clickAndWaitForNewWindow();
         }
-            assertTrue("Failed to find Location title.",
+        assertTrue("Failed to find Location title.",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(new UiSelector().textContains("Location")).exists();
                     }
                 }));
+    }
+
+    /**
+     * Verifies that the phone cannot dial out if phone privileges have been disabled.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578843
+     * <p>
+     *   <pre>
+     *  1. Start the emulator.
+     *  2. Open Settings > Apps
+     *  3. Click on the gear icon and select App permissions.
+     *  4. Click on "Phone"
+     *  5. Disable Phone permissions.
+     *  6. Click on DENY button.
+     *  7. Return to the main screen.
+     *  8. Launch the phone app.
+     *  9. Click on the dialer icon.
+     *  10. Type in a number.
+     *  11. Click on Call icon.
+     *   Verify:
+     *   Dialog stating "This application cannot make outgoing calls without the Phone permission."
+     *   </pre>
+     * <p>
+     * The test works on API 23 and greater. No gear menu and app permissions for APIs under 23.
+     */
+    @Test
+    @TestInfo(id = "14578843")
+    public void testPhonePermissions() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String app = "Phone";
+
+        if (testFramework.getApi() >= 23) {
+            SettingsUtil.openItem(instrumentation, "Apps");
+            SettingsUtil.setAppPermissions(instrumentation, app, app, false);
+
+            device.pressHome();
+            device.findObject(new UiSelector().text(app)).click();
+            device.findObject(new UiSelector().description("dial pad")).click();
+            for (int i=0; i<3; i++) {
+                device.findObject(new UiSelector().text("JKL")).click();
+            }
+            device.findObject(new UiSelector().resourceId(
+                    Res.DIALER_BUTTON_RES)).clickAndWaitForNewWindow();
+
+            assertTrue("Did not prompt for lack of Phone permission.",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return device.findObject(new UiSelector().text(
+                                    "This application cannot make outgoing calls " +
+                                            "without the Phone permission.")).exists();
+                        }
+                    }));
+
+            SettingsUtil.setAppPermissions(instrumentation, app, app, true);
+            device.pressHome();
+        }
+    }
+
+    /**
+     * Verifies that access must be confirmed if Maps location permissions are disabled.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578843
+     * <p>
+     *   <pre>
+     *  1. Start the Emulator.
+     *  2. Open Settings > Apps
+     *  3. Click on the gear icon and select App permissions.
+     *  4. Click on Location from App permissions screen.
+     *  5. Disable Maps.
+     *  6. Launch Maps app.
+     *  7. Click on the locator icon.
+     *   Verify:
+     *   Dialog asking "Allow Maps to access this device's location?"
+     *   </pre>
+     * <p>
+     * The test works on API 23 and greater, with google APIs only.
+     * No gear menu and app permissions for APIs under 23, and no maps without google APIs.
+     */
+    @Test
+    @TestInfo(id = "14578843")
+    public void testMapPermissions() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String appType = "Location";
+        final String appName = "Maps";
+
+        if (!testFramework.isGoogleApiImage()) {
+            return;
+        }
+
+        if (testFramework.getApi() >= 23) {
+            SettingsUtil.setAppPermissions(instrumentation, appType, appName, false);
+
+            device.pressHome();
+            device.findObject(new UiSelector().description("Apps"))
+                    .clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().text(appName))
+                    .clickAndWaitForNewWindow();
+
+            final UiObject acceptAndContinueButton;
+            if (testFramework.getApi() == 23) {
+                acceptAndContinueButton = device.findObject(
+                        new UiSelector().text("Accept & continue"));
+            } else {
+                acceptAndContinueButton = device.findObject(
+                        new UiSelector().text("ACCEPT & CONTINUE"));
+            }
+            if (acceptAndContinueButton.exists()) {
+                acceptAndContinueButton.clickAndWaitForNewWindow();
+            }
+
+            final UiObject skipButton;
+            if (testFramework.getApi() == 23) {
+                skipButton = device.findObject(new UiSelector().text("Skip"));
+            } else {
+                skipButton = device.findObject(new UiSelector().text("SKIP"));
+            }
+            if (skipButton.exists()) {
+                skipButton.clickAndWaitForNewWindow();
+            }
+
+            final UiObject gotItButton;
+            if (testFramework.getApi() == 23) {
+                gotItButton = device.findObject(new UiSelector().text("Got it"));
+            } else {
+                gotItButton = device.findObject(new UiSelector().text("GOT IT"));
+            }
+            if (gotItButton.exists()) {
+                gotItButton.clickAndWaitForNewWindow();
+            }
+
+            device.findObject(new UiSelector().description("Move to your location"))
+                    .clickAndWaitForNewWindow();
+
+            assertTrue("Did not prompt for lack of Maps permission.",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return device.findObject(new UiSelector()
+                                    .text("Allow Maps to access this device's location?")).exists();
+                        }
+                    }));
+
+            SettingsUtil.setAppPermissions(instrumentation, appType, appName, true);
+
+            device.pressHome();
+        }
     }
 
     /**
@@ -289,6 +450,7 @@ public class SettingsTest {
      *   The show cards confirmation page opens.
      *   </pre>
      */
+    @Ignore("bug 35808476 - API 24G UI changed.")
     @Test
     @TestInfo(id = "14581322")
     public void confirmNowCardsPageOpen() throws Exception {
@@ -311,12 +473,12 @@ public class SettingsTest {
         if (!switchWidget.isChecked()) {
             switchWidget.click();
             assertTrue("Failed to find Now sign-in title and buttons.", new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_SCREEN_RES)).exists()
-                                && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
-                                && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
-                    }
+                @Override
+                public boolean isTrue() throws Exception {
+                    return device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_SCREEN_RES)).exists()
+                            && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
+                            && device.findObject(new UiSelector().resourceIdMatches(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
+                }
             }));
         }
     }
@@ -358,16 +520,25 @@ public class SettingsTest {
             }));
         // Disable automatic time zone option.
         widget.click();
+        final UiObject selectTimeZone = device.findObject(
+                new UiSelector().text("Select time zone"));
         assertTrue("Failed to enable select time zone",
-            new Wait().until(new Wait.ExpectedCondition() {
+                new Wait().until(new Wait.ExpectedCondition() {
                 @Override
                 public boolean isTrue() throws Exception {
-                    return device.findObject(new UiSelector().text("Select time zone")).isEnabled();
+                    return selectTimeZone.isEnabled();
                 }
             }));
-        device.findObject(new UiSelector().text("Select time zone")).clickAndWaitForNewWindow();
-        assertTrue("Failed to find Select time zone title.",
-                device.findObject(new UiSelector().text("Select time zone")).exists());
+        selectTimeZone.clickAndWaitForNewWindow();
+
+        assertTrue("Failed to load Select time zone screen.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return device.findObject(
+                                new UiSelector().text("Select time zone")).exists();
+                    }
+                }));
         UiScrollable timeZoneList =
                 new UiScrollable(
                         new UiSelector().className("android.widget.ListView"));
@@ -434,5 +605,345 @@ public class SettingsTest {
                 }));
         // Clean up by disabling 24-hour format option.
         widget.click();
+    }
+
+    /**
+     * Verify that activating and deactivating Device Administrators setting works.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C144630613
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start an emulator AVD.
+     *   2. Goto Settings —> Security —> Device Administration.
+     *   3. Select Sample Device Admin.
+     *   4. Goto to setting and deactivate policy.
+     *   Verify:
+     *   1. (Verify #3) the "Sample Device Admin" policy is activated.
+     *   2. (Verify #4) that the sample device Admin policy is deactivated.
+     *   </pre>
+     */
+    @Ignore("bug 36251611 - API 24G UI changed.")
+    @Test
+    @TestInfo(id = "T144630613")
+    public void activateDeactivatePolicy() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = testFramework.getDevice();
+
+        // Activate "Sample Device Admin" policy
+        SettingsUtil.activate(instrumentation, "Sample Device Admin");
+        assertTrue(checkStatusOfPolicy(instrumentation, "Sample Device Admin"));
+
+        // Deactivate "Sample Device Admin" policy
+        SettingsUtil.deactivate(instrumentation, "Sample Device Admin");
+        assertFalse(checkStatusOfPolicy(instrumentation, "Sample Device Admin"));
+
+    }
+
+    /**
+     *Check if the the selected policy is checked or not.
+     */
+    private boolean checkStatusOfPolicy(Instrumentation instrumentation, String adminPolicyName)
+            throws Exception{
+
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        UiSelector listViewSelector = new UiSelector().resourceId(Res.ANDROID_LIST_RES);
+
+        assertTrue(device.findObject(listViewSelector).exists());
+
+        // Get all the available "Device administrators" options
+        int size = device.findObject(listViewSelector).getChildCount();
+
+        // Verify that the correct checkbox (Sample Device Admin) is checked
+        for (int i = 0; i < size; i++) {
+
+            UiSelector sampleDeviceSelection = listViewSelector.childSelector(new
+                    UiSelector().index(i));
+
+            if(device.findObject(sampleDeviceSelection).getChild(
+                    new UiSelector().textContains(adminPolicyName)).exists()){
+
+                return device.findObject(sampleDeviceSelection).getChild(
+                        new UiSelector().className("android.widget.CheckBox")).isChecked();
+            }
+        }
+        return false;
+    }
+
+    private UiObject findObjectInScrollable(UiSelector selector) throws UiObjectNotFoundException {
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        scrollable.scrollIntoView(selector);
+        return scrollable.getChild(selector);
+    }
+
+    public void enableSampleDeviceAdmin() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = testFramework.getDevice();
+
+        AppLauncher.launch(instrumentation, "Settings");
+        findObjectInScrollable(new UiSelector().text("Security")).click();
+        findObjectInScrollable(new UiSelector().text("Device administrators")).click();
+
+        device.findObject(new UiSelector().text("Sample Device Admin")).click();
+
+        try {
+            if (testFramework.getApi() >= 24) {
+                findObjectInScrollable(new UiSelector().text(
+                        "Activate this device administrator")).click();
+            } else {
+                device.findObject(new UiSelector().text("Activate")).click();
+            }
+        } catch (UiObjectNotFoundException e) {
+            assertTrue("Could not find device adminstration buttons.",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return device.findObject(new UiSelector().text("Cancel")).exists();
+                        }
+                    }));
+            device.findObject(new UiSelector().text("Cancel")).click();
+        }
+
+        device.pressHome();
+    }
+
+    private void disableCamera() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = testFramework.getDevice();
+
+        AppLauncher.launch(instrumentation, "API Demos");
+        boolean widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                return device.findObject(new UiSelector().text("App")).exists();
+            }
+        });
+        if (widgetExists) {
+            device.findObject(new UiSelector().text("App")).click();
+        }
+        widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                return device.findObject(new UiSelector().text("Device Admin")).exists();
+            }
+        });
+
+        if (widgetExists) {
+            device.findObject(new UiSelector().text("Device Admin")).click();
+        }
+        widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                return device.findObject(new UiSelector().text("General")).exists();
+            }
+        });
+        if (widgetExists) {
+            device.findObject(new UiSelector().text("General")).click();
+        }
+
+        widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                return device.findObject(new UiSelector().text("Device cameras enabled")).exists();
+            }
+        });
+
+        if (widgetExists) {
+            device.findObject(new UiSelector().text("Device cameras enabled")).click();
+        }
+
+        device.pressHome();
+    }
+
+    private void gotoCameraApp() throws UiObjectNotFoundException {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        AppLauncher.launch(instrumentation, "Camera");
+    }
+
+    private boolean verifyCameraAppDisabled() {
+        UiDevice device = testFramework.getDevice();
+
+        return device.hasObject(By.textContains(
+                "Camera has been disabled because of security policies"));
+    }
+
+    /**
+     * Verify test Camera App is disabled in emulator when disabled in Device Admin.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578974
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start an emulator AVD.
+     *   2. Goto Settings —> Security —> Device Administration
+     *   3. Select Sample Device Admin.
+     *   4. Goto app API Demos —> App —> Device Admin —> General (Verify 1)
+     *   5. Select Disable all device Camera.
+     *   6. Goto Home screen —> Click on Camera Application (Verify 2)
+     *   Verify:
+     *   1. (Verify #1) see “Device Admin” option in API Demos.
+     *   2. (Verify #2) see a Pop Up Message “Camera has been disabled because of security policies.
+     *   </pre>
+     */
+    @Ignore("bug 36251611 - API 24G UI changed.")
+    @Test
+    @TestInfo(id = "C14578974")
+    public void testCameraAppDisabled() throws Exception {
+        enableSampleDeviceAdmin();
+        disableCamera();
+        gotoCameraApp();
+        Assert.assertTrue(verifyCameraAppDisabled());
+    }
+
+    /**
+     * To verify that "Reset app preferences" restores permission restrictions.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14578841
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Launch an emulator avd with wipe data.
+     *   2. Open Settings > Apps.
+     *   3. Open the menu (3 vertical dots) and tap on "Show System".
+     *   4. Tap on any app, say Maps and select "Permissions".
+     *   5. Enable all available permissions for the app.
+     *   6. Press back button.
+     *   7. Open the menu > Reset app preferences > Reset apps.
+     *   Verify:
+     *   1. App settings for Maps are reset to default (Verify that Permissions and notification
+     *   settings for Maps are cleared).
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "C14578841")
+    public void modifyAndResetAppPermissions() throws Exception {
+
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = testFramework.getDevice();
+
+        String appName = "Maps";
+        String contactsText = "Contacts";
+        String locationText = "Location";
+        String phoneText = "Phone";
+        String storageText = "Storage";
+
+        // Variables to store the state of permissions.
+        boolean contactsSwitchState;
+        boolean locationSwitchState;
+        boolean phoneSwitchState;
+        boolean storageSwitchState;
+
+        //Check for Deny alert dialog button for location permissions.
+        UiObject denyButton;
+
+        if(testFramework.getApi() < 23){
+            return;
+        }
+
+        //Open System apps list.
+        AppManager.openSystemAppList(instrumentation);
+
+        // Find and click "Maps" in apps list.
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
+
+        itemList.scrollIntoView(new UiSelector().text(appName));
+        itemList.getChildByText(new UiSelector().className(TextView.class.getName()), appName)
+                .clickAndWaitForNewWindow();
+
+        //Get application info list.
+        UiScrollable appInfoList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+
+        //Choose permissions to edit them.
+        appInfoList.getChildByText(new UiSelector().
+                className(TextView.class.getName()),"Permissions").clickAndWaitForNewWindow();
+
+        UiScrollable permissionList;
+        if(testFramework.getApi() > 23 ){
+            permissionList =
+                    new UiScrollable(
+                            new UiSelector().resourceIdMatches(Res.ANDROID_LIST_RES)
+                    );
+        } else {
+            permissionList =
+                    new UiScrollable(
+                            new UiSelector().
+                                    resourceIdMatches("com.android.packageinstaller:id/list")
+                    );
+        }
+
+        //Get switch widgets UiObjects.
+        UiObject contactSwitch =
+                findObjectByRelative(permissionList,contactsText,LinearLayout.class.getName());
+        UiObject locationSwitch =
+                findObjectByRelative(permissionList,locationText,LinearLayout.class.getName());
+        UiObject phoneSwitch =
+                findObjectByRelative(permissionList,phoneText,LinearLayout.class.getName());
+        UiObject storageSwitch =
+                findObjectByRelative(permissionList,storageText,LinearLayout.class.getName());
+
+        //Store current permissions state of switch widgets.
+        contactsSwitchState = contactSwitch.isChecked();
+        locationSwitchState = locationSwitch.isChecked();
+        phoneSwitchState = phoneSwitch.isChecked();
+        storageSwitchState = storageSwitch.isChecked();
+
+        //Modify application permission.
+        contactSwitch.click();
+        phoneSwitch.click();
+        storageSwitch.click();
+        locationSwitch.clickAndWaitForNewWindow();
+
+        device.findObject(new UiSelector().textStartsWith("Deny")).clickAndWaitForNewWindow();
+
+        //Go back two times to go to system apps page to reset permissions.
+        device.pressBack();
+        device.pressBack();
+
+        //Reset app preferences from overflow menu.
+        device.pressMenu();
+        device.findObject(
+                new UiSelector().textContains("Reset app preferences")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().textContains("RESET APPS")).clickAndWaitForNewWindow();
+
+        //Open Maps info.
+        itemList.scrollIntoView(new UiSelector().text(appName));
+        itemList.getChildByText(new UiSelector().className(TextView.class.getName()), appName)
+                .clickAndWaitForNewWindow();
+
+        //Open permission and verify Contacts,Location,Phone and Storage.
+        //Verify that all the permission for the app are reset.
+        appInfoList.getChildByText(new UiSelector().
+                className(TextView.class.getName()),"Permissions").clickAndWaitForNewWindow();
+
+        assertEquals(contactsSwitchState,
+                findObjectByRelative(
+                        permissionList,"Contacts",LinearLayout.class.getName()).isChecked());
+        assertEquals(locationSwitchState,
+                findObjectByRelative(
+                        permissionList,"Location",LinearLayout.class.getName()).isChecked());
+        assertEquals(phoneSwitchState,
+                findObjectByRelative(
+                        permissionList,"Phone",LinearLayout.class.getName()).isChecked());
+        assertEquals(storageSwitchState,
+                findObjectByRelative(
+                        permissionList,"Storage",LinearLayout.class.getName()).isChecked());
+    }
+
+    private UiObject findObjectByRelative(UiScrollable verticalList, String childText, String classType) throws Exception{
+        UiObject uiObject = verticalList.getChildByText(new UiSelector().className(classType),childText);
+        return uiObject.getChild(new UiSelector().className(Switch.class.getName()));
     }
 }

@@ -34,7 +34,7 @@ def RunSteps(api):
   file_list = api.properties.get('file_list')
   download_path = api.path['slave_build'].join('')
   env_path = ['%(PATH)s']
-  emulator_branches = ['emu-master-dev', 'emu-2.2-release']
+  emulator_branches = ['emu-master-dev', 'emu-2.3-release']
   is_cts = 'CTS' in str(buildername)
   is_ui = 'UI' in str(buildername)
   is_console = "console" in str(api.properties.get('scheduler'))
@@ -70,7 +70,7 @@ def RunSteps(api):
   android_buildtools_dir = os.path.join(android_sdk_home, 'build-tools', '23.0.2')
   env_path += [android_tools_dir, android_platform_dir, android_buildtools_dir]
   if is_console:
-    env_path += [os.path.join(home_dir, 'bin', 'jdk1.7.0_79', 'bin')]
+    env_path += [os.path.join(home_dir, 'bin', 'jdk1.8.0_121', 'bin')]
   env = {'PATH': api.path.pathsep.join(env_path),
          'ANDROID_SDK_ROOT': android_sdk_home,
          'ANDROID_HOME': android_sdk_home}
@@ -89,7 +89,8 @@ def RunSteps(api):
 
   bootSteps = {
                'emu-master-dev': bootStep('public', '{"ori": "public"}'),
-               'emu-2.2-release': bootStep('public', '{"ori": "public"}'),
+               'emu-2.3-release': bootStep('public', '{"ori": "public"}'),
+               'master': bootStep('master', '{"ori": "master"}'),
                'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
                'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
                'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
@@ -231,7 +232,7 @@ def RunSteps(api):
                     '--build-dir', build_dir],
                    env=env)
       for emu_branch in emulator_branch_to_use:
-        if 'emu-master-dev' in emu_branch:
+        if 'emu-master-dev' in emu_branch or 'emu-2.3-release' in emu_branch:
           emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
         else:
           emulator_path = api.path.join(emu_branch, 'tools', 'emulator')

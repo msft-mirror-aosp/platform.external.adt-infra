@@ -172,7 +172,11 @@ class EmuBaseTestCase(LoggedTestCase):
                         self.m_logger.info('No emulator found, stopping logcat')
                         break
                 if (logcat_proc):
-                    logcat_proc.terminate()
+                   try:
+                       logcat_proc.terminate()
+                   except:
+                       # Could not terminate logcat; probably already dead.
+                       pass
 
         def readoutput_in_thread():
             with open(verbose_log_path, 'a') as verb_output:
@@ -357,7 +361,7 @@ class EmuBaseTestCase(LoggedTestCase):
         gpu = "no" if avd_config.gpu == "no" else "yes"
         set_val('hw.gpu.enabled', gpu)
         set_val('hw.ramSize', avd_config.ram)
-        api_target = avd_config.api
+        api_target = avd_config.api if avd_config.api != "26" else "O"
         set_val('image.sysdir.1',
                 'system-images/android-%s/%s/%s/' % (api_target, avd_config.tag, avd_config.abi))
         set_val('tag.display', tag_id_to_display[avd_config.tag])
@@ -399,7 +403,7 @@ class EmuBaseTestCase(LoggedTestCase):
         def try_create_with_sdk():
             android_exec = "android.bat" if os.name == "nt" else "android"
             avd_abi = "%s/%s" % (avd_config.tag, avd_config.abi)
-            api_target = avd_config.api
+            api_target = avd_config.api if avd_config.api != "26" else "O"
             if "google" in avd_config.tag:
                 avd_target = "Google Inc.:Google APIs:%s" % (api_target)
             else:

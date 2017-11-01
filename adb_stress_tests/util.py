@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import time
+import platform
 
 
 def print_progress(perc, prefix='',
@@ -31,6 +32,25 @@ def print_progress(perc, prefix='',
     sys.stdout.flush()
 
 
+def get_connected_devices():
+    """Returns list of adb device ids that are connected."""
+    proc = subprocess.Popen('adb devices'.split(), stdout=subprocess.PIPE)
+    output, error = proc.communicate()
+    connected = []
+    # Collect connected devices.
+    # Note that since Windows includes a carriage return, we
+    # do it in a seperate loop.
+    if platform.system() is not 'Windows':
+      for emulator_entry in output.split('\n')[1:]:
+        if emulator_entry != '':
+          connected.append(emulator_entry.split('\t')[0])
+    else:
+      for emulator_entry in output.split('\r\n')[1:]:
+        if emulator_entry != '':
+          connected.append(emulator_entry.split('\t')[0])
+    return connected
+
+
 def test_connected(devices):
     """Verify that the expected number of devices/emulators are still connected.
 
@@ -44,14 +64,9 @@ def test_connected(devices):
       The connected member contains a list of device serial numbers
       identifying the connected devices.
     """
-    proc = subprocess.Popen('adb devices'.split(), stdout=subprocess.PIPE)
-    output, error = proc.communicate()
-    connected = []
     # verify expected emulators/devices are present
-    for emulator_entry in output.split('\n')[1:]:
-        if emulator_entry != '':
-            connected.append(emulator_entry.split('\t')[0])
-
+    # Note that since Windows includes a carriage return, we do it in a seperate loop.
+    connected = get_connected_devices()
     success = True
     if len(connected) != devices:
         print('\n\nERROR:\nExpected number of connections: ' +
@@ -97,6 +112,7 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
     # ThreadPool for running the tests in parallel.
     # We choose the size to match the number of devices, so that every device can execute in parallel.
     thread_pool = pool.ThreadPool(processes = devices)
+    connected_devices = get_connected_devices()
 
     try:
         setup()
@@ -114,7 +130,18 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
 
             connection_success, connected = test_connected(devices)
             if not connection_success:
-                return False
+                failure_time = time.time() - start
+                for device in connected_devices:
+                    if device not in connected:
+                        filename = os.path.join(log_dir, device, str(iteration) + '.txt')
+                        msg = ("Device failed connection test for interation "
+                               + str(iteration)
+                               + "(at " + str(failure_time) + " seconds)")
+                        spit(filename, msg)
+
+                # if no devices are connected, then end test with failure.
+                        if not connected:
+                            return False
 
             # Run one iteration of the test against every device in parallel
             iteration += 1
@@ -128,8 +155,9 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
             # Capture logcat.
             logs = thread_pool.map(logcat, connected)
             for device,log in zip(connected, logs):
-                filename = os.path.join(log_dir, device, str(iteration) + '.txt')
-                spit(filename, log)
+                if log:
+                    filename = os.path.join(log_dir, device, str(iteration) + '.txt')
+                    spit(filename, log)
 
         # If we get here, the test completed successfully.
         if is_print_progress:
@@ -184,8 +212,11 @@ def logcat(dut):
     Returns:
       String containing the command's output.
     """
-    cmd = ['shell', 'logcat', '-d', '-v', 'threadtime']
-    return adb(dut, cmd)
+    try:
+        cmd = ['shell', 'logcat', '-d', '-v', 'threadtime']
+        return adb(dut, cmd)
+    except:
+        return None
 
 
 def spit(filename, text):

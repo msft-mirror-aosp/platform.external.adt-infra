@@ -49,17 +49,25 @@ public class UiAutomatorPlus {
      * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
     public static UiObject2 findObjectByRelative(Instrumentation instrumentation,
-                                            BySelector target,
-                                            BySelector relative,
-                                            BySelector container)
+                                                 BySelector target,
+                                                 BySelector relative,
+                                                 BySelector container,
+                                                 Integer... depth)
             throws UiObjectNotFoundException {
         UiDevice device = UiDevice.getInstance(instrumentation);
         List<UiObject2> containers = device.findObjects(container);
         List<UiObject2> matchedObjects = new ArrayList<>();
         for (UiObject2 object: containers) {
             for (UiObject2 cell: object.getChildren()) {
-                matchedObjects.addAll(
-                        cell.findObjects(By.hasDescendant(target).hasDescendant(relative)));
+                if (depth.length==0) {
+                    matchedObjects.addAll(
+                            cell.findObjects(By.hasDescendant(target).hasDescendant(relative)));
+                }
+                else {
+                    matchedObjects.addAll(
+                            cell.findObjects(By.hasDescendant(
+                                    target, depth[0]).hasDescendant(relative, depth[0])));
+                }
             }
         }
         if (matchedObjects.size() == 0) {

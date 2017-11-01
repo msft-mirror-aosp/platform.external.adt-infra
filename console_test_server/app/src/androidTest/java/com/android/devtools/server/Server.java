@@ -18,6 +18,8 @@ package com.android.devtools.server;
 
 import com.android.devtools.server.http.HttpServer;
 import com.android.devtools.server.http.UiAutomatorServlet;
+import com.android.devtools.server.services.GeoManagerService;
+import com.android.devtools.server.services.OrientationManagerService;
 import com.android.devtools.server.services.ServiceLocator;
 import com.android.devtools.server.services.SmsManagerService;
 import com.android.devtools.server.services.TelephonyManagerService;
@@ -82,5 +84,7 @@ public class Server {
   private void registerService() {
     ServiceLocator.register(new TelephonyManagerService(mContext));
     ServiceLocator.register(new SmsManagerService(mContext));
+    ServiceLocator.register(new OrientationManagerService(mContext, mDevice));
+    ServiceLocator.register(new GeoManagerService(mContext, mDevice));
   }
 }
