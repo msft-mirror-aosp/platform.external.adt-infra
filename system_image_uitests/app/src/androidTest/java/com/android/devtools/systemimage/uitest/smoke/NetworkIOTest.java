@@ -144,7 +144,7 @@ public class NetworkIOTest {
 
             // Dismiss the "Sign in to Chrome" screen if it's there.
             UiObject noThanksButton = device.findObject(new UiSelector().resourceIdMatches(
-                    Res.CHROME_NO_THANKS_BUTTON));
+                    Res.CHROME_NO_THANKS_BUTTON_RES));
             if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
                 noThanksButton.clickAndWaitForNewWindow();
             }

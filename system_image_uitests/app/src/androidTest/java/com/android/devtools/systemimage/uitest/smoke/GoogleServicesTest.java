@@ -123,11 +123,14 @@ public class GoogleServicesTest {
                 );
         itemList.setAsVerticalList();
         if(testFramework.getApi() > 18) {
-            UiObject item =
-                    itemList.getChildByText(
-                            new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
+            if(testFramework.getApi() >= 27) {
+                UiObject security = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
+                        "Security & location");
+                security.clickAndWaitForNewWindow();
+            }
+            UiObject location = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
                             "Location");
-            item.clickAndWaitForNewWindow();
+            location.clickAndWaitForNewWindow();
 
             assertTrue("Cannot find location toggle button", device.findObject(
                     new UiSelector().className("android.widget.Switch")).exists());
