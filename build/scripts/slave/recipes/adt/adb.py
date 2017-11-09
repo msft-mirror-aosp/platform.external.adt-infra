@@ -44,6 +44,9 @@ def RunSteps(api):
     api.repo.sync('-c', 'system/core')
     api.repo.sync('-c', 'development')
 
+  # Force a clean of the log dir to free space regardless of last run failure condition.
+  api.file.rmcontents(api.path.join(build_dir))
+
   # Run adb stree tests
   with api.step.defer_results():
     if not api.platform.is_win:
