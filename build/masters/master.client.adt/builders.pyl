@@ -457,7 +457,7 @@
       "type": "emu_scheduler",
     },
     "system_image_scheduler": {
-      "project": ["master", "klp-emu-dev", "lmp-mr1-emu-dev", "mnc-emu-dev", "oc-car-mr1-release", "oc-emu-dev", "oc-mr1-emu-dev","nyc-emu-dev", "nyc-mr1-emu-dev",
+      "project": ["master", "klp-emu-dev", "lmp-mr1-emu-dev", "mnc-emu-dev", "oc-emu-dev", "oc-mr1-car-support-release", "oc-mr1-emu-dev","nyc-emu-dev", "nyc-mr1-emu-dev",
                   "lmp-emu-dev", "gb-emu-dev", "ics-mr1-emu-dev", "jb-emu-dev", "jb-mr1.1-emu-dev", "jb-mr2-emu-dev"],
       "type": "emu_scheduler",
     },
