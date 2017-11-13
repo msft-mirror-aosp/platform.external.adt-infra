@@ -51,7 +51,7 @@ public class PlayStoreUtil {
 
         device.pressHome();
         if (SystemUtil.getApiLevel() <= 24) {
-            device.findObject(new UiSelector().description("Apps")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
             final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
             isInstalled = new Wait().until(new Wait.ExpectedCondition() {
                 @Override
@@ -135,6 +135,7 @@ public class PlayStoreUtil {
         final String password = "pst4lif3";
         resetPlayStore(instrumentation);
         device.findObject(new UiSelector().text(playStore)).clickAndWaitForNewWindow();
+        new PlayStorePermissionsWatcher(device).checkForCondition();
 
         boolean hasSearchBox = new Wait(TimeUnit.SECONDS.toMillis(20)).
                 until(new Wait.ExpectedCondition() {

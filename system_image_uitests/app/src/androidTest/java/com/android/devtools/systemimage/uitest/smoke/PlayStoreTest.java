@@ -132,10 +132,9 @@ public class PlayStoreTest {
     public void testAppInstallationAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Allo";
+        final String application = "Google Voice";
 
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
-
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
@@ -200,8 +199,10 @@ public class PlayStoreTest {
                 assertTrue("Target application is not a pay app",  new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
-                        return device.findObject(new UiSelector()
-                                .resourceId(Res.GOOGLE_PLAY_BUY_BUTTON_RES).textContains("$")).exists();
+                        UiSelector payButton = testFramework.getApi() >= 27 ?
+                                new UiSelector().className("android.widget.Button").packageName("com.android.vending") :
+                                new UiSelector().resourceId(Res.GOOGLE_PLAY_BUY_BUTTON_RES);
+                        return device.findObject(payButton.textContains("$")).exists();
                     }
                 }));
 
@@ -280,11 +281,10 @@ public class PlayStoreTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String adultApplication = "Truth or Dare: Adults";
-        final String kidsApplication = "Truth or Dare: Kids";
+        final String familyApplication = "(?i)truth or dare(?-i)";
 
 
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
-
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
@@ -307,9 +307,9 @@ public class PlayStoreTest {
                                    !device.findObject(new UiSelector().
                                      text(adultApplication)).exists()) &&
                                    (device.findObject(new UiSelector().
-                                      description(kidsApplication)).exists() ||
+                                      descriptionMatches(familyApplication)).exists() ||
                                    device.findObject(new UiSelector().
-                                      text(kidsApplication)).exists()));
+                                      textMatches(familyApplication)).exists()));
                            }
                         }));
 
