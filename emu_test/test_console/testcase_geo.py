@@ -136,6 +136,11 @@ class GeoTest(testcase_base.BaseConsoleTest):
     Verify:
       Check Maps location centers on San Francisco.
     """
+    if util.WIN_BUILDER_NAME in self.builder_name:
+      print 'Skip geo test on Win.'
+      pass
+      return
+
     print 'Running test: %s' % (inspect.stack()[0][3])
 
     print 'api = ' + self.avd.api
@@ -166,6 +171,11 @@ class GeoTest(testcase_base.BaseConsoleTest):
 
   def test_geo_stress(self):
     """Stress geo location by attempting to send invalid coordinates."""
+    if util.WIN_BUILDER_NAME in self.builder_name:
+      print 'Skip geo test on Win.'
+      pass
+      return
+
     print 'Running test: %s' % (inspect.stack()[0][2])
 
     if self.avd.api in ['24', '25']:
