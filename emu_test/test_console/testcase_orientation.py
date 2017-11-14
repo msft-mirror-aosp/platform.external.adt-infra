@@ -127,6 +127,11 @@ class OrientationTest(testcase_base.BaseConsoleTest):
     Verify:
       Check to orientation and rotation of the launched app.
     """
+    if util.WIN_BUILDER_NAME in self.builder_name:
+      print 'Skip orientation test on Win.'
+      pass
+      return
+
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._poll_orientation_rotation_and_verify(ORIENTATION_PORTRAIT, ROTATION_0)
     self._execute_rotate_command_and_verify(ORIENTATION_LANDSCAPE, ROTATION_270)

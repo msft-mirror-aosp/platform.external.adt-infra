@@ -108,6 +108,11 @@ class SmsTest(testcase_base.BaseConsoleTest):
     Verify:
       An sms is received from <phone number> with the text <text message>.
     """
+    if util.WIN_BUILDER_NAME in self.builder_name:
+      print 'Skip sms test on Win.'
+      pass
+      return
+
     print 'Running test: %s' % (inspect.stack()[0][3])
     is_command_successful, output = util.execute_console_command(
         self.telnet, CMD_SMS_SEND, util.OK)
@@ -131,6 +136,11 @@ class SmsTest(testcase_base.BaseConsoleTest):
         An sms is received from <expected phone number> with
         <expected text> ('How are you?').
     """
+    if util.WIN_BUILDER_NAME in self.builder_name:
+      print 'Skip sms test on Win.'
+      pass
+      return
+
     print 'Running test: %s' % (inspect.stack()[0][3])
     is_command_successful, output = util.execute_console_command(
         self.telnet, CMD_SMS_PDU, util.OK)

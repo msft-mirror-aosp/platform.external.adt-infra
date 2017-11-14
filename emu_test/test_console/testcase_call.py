@@ -116,6 +116,11 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
       1. Emulator displays an incoming call from the <phonenumber>
       2. Phone call is terminated.
     """
+    if util.WIN_BUILDER_NAME in self.builder_name:
+      print 'Skip call test on Win.'
+      pass
+      return
+
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._make_inbound_call()
     self._cancel_inbound_call()
@@ -136,6 +141,11 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
       1. Emulator displays an incoming call from the <phonenumber>
       2. Emulator displays that the incoming call is accepted
     """
+    if util.WIN_BUILDER_NAME in self.builder_name:
+      print 'Skip call test on Win.'
+      pass
+      return
+
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._make_inbound_call()
     self._accept_inbound_call()
@@ -159,6 +169,11 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
       3. Phone call is terminated. The emulator displays the phone
          hang-up icon in the notification bar.
     """
+    if util.WIN_BUILDER_NAME in self.builder_name:
+      print 'Skip call test on Win.'
+      pass
+      return
+
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._make_inbound_call()
     self._accept_inbound_call()
