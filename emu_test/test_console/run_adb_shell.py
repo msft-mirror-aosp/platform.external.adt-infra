@@ -22,18 +22,19 @@ while True:
                                          ('%s.test/%s'
                                           % (util.MAIN_APK_PACKAGE,
                                              instrumentation_runner))])
-
-    # Print GeoManagerService log for debugging geo test failure on API 23.
-    adb_logcat = subprocess.Popen('adb logcat'.split(), stdout=subprocess.PIPE)
-    print 'start: logcat'
-    while True:
-      line = adb_logcat.stdout.readline()
-      if not line:
-        break
-      if line.find("GeoManagerService") != -1:
-        print line
-    adb_logcat.terminate()
-
+    # Comment out these since geo test failure on API 23 is fixed.
+    # When needed, will re-enable it.
+    # # Print GeoManagerService log for debugging geo test failure on API 23.
+    # adb_logcat = subprocess.Popen('adb logcat'.split(), stdout=subprocess.PIPE)
+    # print 'start: logcat'
+    # while True:
+    #   line = adb_logcat.stdout.readline()
+    #   if not line:
+    #     break
+    #   if line.find("GeoManagerService") != -1:
+    #     print line
+    # adb_logcat.terminate()
+    #
     break
   except subprocess.CalledProcessError as err:
     print 'Subprocess call error: {0}'.format(err)
