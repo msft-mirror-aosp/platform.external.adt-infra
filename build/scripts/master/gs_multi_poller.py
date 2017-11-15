@@ -119,7 +119,7 @@ class GSMultiPoller(base.PollingChangeSource):
   def find_latest_build(self, _no_use):
     log.msg('%s: last_change %s' % (self.name, self.last_change))
     for img_index in range(len(self.gs_path_list)):
-      file_list = find_latest_build_internal(self, img_index)
+      file_list = self.find_latest_build_internal(self, img_index)
       if file_list != None:
         return file_list;
     return None;
