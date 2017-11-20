@@ -33,6 +33,10 @@ def zip_and_upload():
     return path.replace(os.path.sep, '/')
 
   try:
+    if args.is_windows:
+      zip_binary = "7z"
+    else:
+      zip_binary = "zip"
     args.remote_dir = args.remote_dir.replace(" ", "_")
     remote_host = '%s@%s' % (args.remote_user, args.remote_ip)
     remote_path = '%s:%s' % (remote_host, args.remote_dir)
@@ -40,7 +44,7 @@ def zip_and_upload():
     builderName = os.path.basename(os.path.normpath(args.remote_dir))
 
     if args.skiplog is False:
-      verbose_call(['zip', '-r', args.zip_name, args.log_dir])
+      verbose_call([zip_binary, '-r', args.zip_name, args.log_dir])
       verbose_call(['ssh', remote_host, 'mkdir -p %s' % args.remote_dir])
       verbose_call(['scp', args.zip_name, remote_path])
 
@@ -48,7 +52,7 @@ def zip_and_upload():
     if 'emu_psq_logs' in args.log_dir:
       print 'Running command in directory: %s' % (os.getcwd())
 
-      verbose_call(['zip', '-jr', args.zip_name, args.log_dir])
+      verbose_call([zip_binary, '-jr', args.zip_name, args.log_dir])
       emu_psq_gs_dst = 'gs://emu_psq_logs/%s/' % (args.zip_name[0:-4])
       verbose_call(['python', gsutil_path, 'cp', args.zip_name, emu_psq_gs_dst])
       # remove log zip files
@@ -61,7 +65,7 @@ def zip_and_upload():
     # if it is adb stress test log, zip and upload to GCS
     if 'adb_stress_logs' in args.log_dir:
       print 'Running command in directory: %s' % (os.getcwd())
-      verbose_call(['zip', '-r', args.zip_name, args.log_dir])
+      verbose_call([zip_binary, '-r', args.zip_name, args.log_dir])
       adb_stress_gs_dst = 'gs://adb_test_traces/%s/' % builderName
       verbose_call(['python', gsutil_path, 'cp', args.zip_name, adb_stress_gs_dst])
       # remove log zip files
