@@ -225,12 +225,7 @@ public class SettingsTest {
         SettingsUtil.setAppPermissions(instrumentation, appType, appName, false);
         device.pressHome();
 
-        if (testFramework.getApi() < 25) {
-            device.findObject(new UiSelector().description("Apps"))
-                    .clickAndWaitForNewWindow();
-        }
-        device.findObject(new UiSelector().text(appName))
-                .clickAndWaitForNewWindow();
+        AppLauncher.launch(instrumentation, appName);
         final UiObject acceptAndContinueButton;
         acceptAndContinueButton = device.findObject(new UiSelector().
                 textMatches("(?i)accept\\s&\\scontinue"));
