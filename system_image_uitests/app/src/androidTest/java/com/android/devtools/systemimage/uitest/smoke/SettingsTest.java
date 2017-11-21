@@ -87,19 +87,22 @@ public class SettingsTest {
             return;
         }
 
-        if (testFramework.getApi() >= 25) {
-            device.findObject(new UiSelector().resourceIdMatches(
-                    Res.LAUNCHER_LIST_CONTAINER_RES)).clickAndWaitForNewWindow();
-            findObjectInScrollable(new UiSelector().text("Settings")).clickAndWaitForNewWindow();
-            if (testFramework.getApi() >= 26) {
-                findObjectInScrollable(new UiSelector().text("Security & Location")).
-                        clickAndWaitForNewWindow();
-            }
-        } else {
-            SettingsUtil.openItem(instrumentation, "Google");
+        AppLauncher.launch(instrumentation, "Settings");
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
+        if(testFramework.getApi() >= 26) {
+            String securityLabel = testFramework.getApi() == 26 ? "Security & Location" : "Security & location";
+            UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                    securityLabel);
+            security.clickAndWaitForNewWindow();
         }
+        UiObject location =
+                itemList.getChildByText(new UiSelector().className("android.widget.TextView"), "Location");
+        location.clickAndWaitForNewWindow();
 
-        findObjectInScrollable(new UiSelector().text("Location")).clickAndWaitForNewWindow();
         boolean isLocationDisabled = new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
@@ -493,13 +496,13 @@ public class SettingsTest {
                         @Override
                         public boolean isTrue() throws Exception {
                             return device.findObject(new UiSelector().resourceIdMatches(
-                                    Res.NOW_SIGNIN_SCREEN_RES)).exists()
+                                            Res.NOW_SIGNIN_SCREEN_RES)).exists()
                                     && device.findObject(new UiSelector().resourceIdMatches(
-                                    Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
+                                            Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
                                     && device.findObject(new UiSelector().resourceIdMatches(
-                                    Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
+                                            Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
                         }
-                    }));
+            }));
         }
     }
 
@@ -700,6 +703,10 @@ public class SettingsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
 
+        if (testFramework.getApi() == 27) {
+            return;
+        }
+
         AppLauncher.launch(instrumentation, "Settings");
         findObjectInScrollable(new UiSelector().textContains("Security")).click();
         if (testFramework.getApi() >= 24) {
@@ -815,6 +822,11 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4db4a825-b584-4c68-a04d-c6a933b14e24")
     public void testCameraAppDisabled() throws Exception {
+
+        if (testFramework.getApi() == 27) {
+            return;
+        }
+        
         enableSampleDeviceAdmin();
         disableCamera();
         gotoCameraApp();

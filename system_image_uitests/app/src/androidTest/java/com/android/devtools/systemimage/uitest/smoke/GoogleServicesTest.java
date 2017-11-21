@@ -123,9 +123,10 @@ public class GoogleServicesTest {
                 );
         itemList.setAsVerticalList();
         if(testFramework.getApi() > 18) {
-            if(testFramework.getApi() >= 27) {
-                UiObject security = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
-                        "Security & location");
+            if(testFramework.getApi() >= 26) {
+                String securityLabel = testFramework.getApi() == 26 ? "Security & Location" : "Security & location";
+                UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                        securityLabel);
                 security.clickAndWaitForNewWindow();
             }
             UiObject location = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
