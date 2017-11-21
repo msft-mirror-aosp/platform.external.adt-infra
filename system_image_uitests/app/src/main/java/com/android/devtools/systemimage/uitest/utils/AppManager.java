@@ -195,7 +195,8 @@ public class AppManager {
 
         if (SystemUtil.getApiLevel() >= 26) {
             SettingsUtil.openItem(instrumentation, "Apps & notifications");
-            device.findObject(new UiSelector().text("App info")).clickAndWaitForNewWindow();
+            String appInfo = SystemUtil.getApiLevel() == 26 ? "App info" : "See all";
+            device.findObject(new UiSelector().textContains(appInfo)).clickAndWaitForNewWindow();
         } else {
             SettingsUtil.openItem(instrumentation, "Apps");
         }
