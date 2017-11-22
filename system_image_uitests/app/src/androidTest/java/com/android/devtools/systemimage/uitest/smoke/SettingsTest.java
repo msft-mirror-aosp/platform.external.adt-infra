@@ -826,7 +826,7 @@ public class SettingsTest {
         if (testFramework.getApi() == 27) {
             return;
         }
-        
+
         enableSampleDeviceAdmin();
         disableCamera();
         gotoCameraApp();

@@ -51,7 +51,6 @@ import java.util.concurrent.TimeUnit;
  */
 @RunWith(AndroidJUnit4.class)
 public class ShellUtilTest {
-    private final String BUG_REPORT_DIR = "/data/data/com.android.shell/files/bugreports";
     private final String TAG = "ShellUtilTest";
 
     @Rule
@@ -59,6 +58,10 @@ public class ShellUtilTest {
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(120);
+
+    private final String BUG_REPORT_DIR = testFramework.getApi() <= 26 ?
+            "/data/data/com.android.shell/files/bugreports" :
+            "/data/user_de/0/com.android.shell/files/bugreports" ;
 
     /**
      * Tests the integrity of Shell utilities.
@@ -122,7 +125,7 @@ public class ShellUtilTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         // Application crashes on API 25. Bug report files not generated due to the crash.
-        if (testFramework.getApi() >= 21) {
+        if (testFramework.getApi() >= 21 && testFramework.getApi() != 25) {
             deleteBugReportFiles();
 
             if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework)) {
