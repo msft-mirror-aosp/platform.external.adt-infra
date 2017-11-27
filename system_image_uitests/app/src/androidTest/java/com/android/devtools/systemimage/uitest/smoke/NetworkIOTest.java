@@ -129,7 +129,7 @@ public class NetworkIOTest {
                 device.findObject(new UiSelector().description("Chrome").text("Chrome")).
                         clickAndWaitForNewWindow();
             } else {
-                AppLauncher.launch(instrumentation, "Chrme");
+                AppLauncher.launch(instrumentation, "Chrome");
             }
             // If this is the first launch, dismiss the "Welcome to Chrome" screen.
             boolean hasAcceptButton =
