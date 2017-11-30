@@ -4,7 +4,7 @@ event <type> can be an integer or one of the following aliases
     EV_REL    (2 code aliases)
     EV_ABS    (27 code aliases)
     EV_MSC
-    EV_SW     (3 code aliases)
+    EV_SW     (4 code aliases)
     EV_LED
     EV_SND
     EV_REP
