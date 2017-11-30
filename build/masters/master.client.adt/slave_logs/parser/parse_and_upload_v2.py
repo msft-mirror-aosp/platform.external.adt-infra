@@ -41,7 +41,7 @@ import uuid
 
 # TODO(pprabhu) Clean this up. Include the image/revision specific information
 # completely build.props file
-_EMULATOR_BRANCHES = ["emu-master-dev", "emu-2.2-release", "emu-2.3-release", "emu-2.4-release"]
+_EMULATOR_BRANCHES = ["emu-master-dev", "emu-2.5-release"]
 _API_TO_IMAGE_BRANCH = {
         '10': 'gb-emu-dev',
         '15': 'ics-mr1-emu-dev',
