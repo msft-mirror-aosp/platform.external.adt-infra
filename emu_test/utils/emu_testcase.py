@@ -21,10 +21,7 @@ import emu_test.utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
 
-# Hard code it for now.
-CROS_VERSION=64
-
-class AVDConfig(namedtuple('AVDConfig', 'api, tag, abi, device, ram, gpu, classic, port, cts, ori')):
+class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     __slots__ = ()
     def __str__(self):
         device = self.device if self.device != '' else 'defdev'
@@ -35,9 +32,10 @@ class AVDConfig(namedtuple('AVDConfig', 'api, tag, abi, device, ram, gpu, classi
           suffix = "-GTS"
         elif self.cts:
           suffix = "-CTS"
-        return str("%s-%s-%s-%s-gpu_%s-api%s%s" % (self.tag, self.abi,
-                                                 device, self.ram, self.gpu,
-                                                 self.api, suffix))
+        alt = '%s-' % self.alt_version if self.alt_version else ''
+        return str("%s-%s%s-%s-%s-gpu_%s-api%s%s" % (self.tag, alt, self.abi,
+                                                     device, self.ram, self.gpu,
+                                                     self.api, suffix))
     def name(self):
         return str(self)
 class LoggedTestCase(unittest.TestCase):
@@ -404,19 +402,19 @@ class EmuBaseTestCase(LoggedTestCase):
             pass
 
     def get_sub_dir(self, avd_config):
-        return 'android-%s' % avd_config.api if avd_config.tag != 'chromeos' else 'chromeos-%d' % CROS_VERSION
+        return 'android-%s' % avd_config.api if avd_config.tag != 'chromeos' else 'chromeos-%s' % avd_config.alt_version
 
-    def update_chromeos(self):
+    def update_chromeos(self, version):
         """Update chrome os images."""
 
         gsutil_path = os.path.join(os.path.dirname(__file__), '..', '..', 'build', 'third_party', 'gsutil', 'gsutil.py')
         dst_location = os.path.join(os.environ['ANDROID_SDK_ROOT'],
-                                    "system-images", "chromeos-%d" % CROS_VERSION, "chromeos")
+                                    "system-images", "chromeos-%s" % version, "chromeos")
         f = tempfile.NamedTemporaryFile(delete=False)
         tmp_zip = f.name
         f.close()
         cmd = ['python', gsutil_path, 'cp',
-               'gs://chromeos-emulator-test/images/system-%d.zip' % CROS_VERSION, tmp_zip]
+               'gs://chromeos-emulator-test/images/system-%s.zip' % version, tmp_zip]
         self.m_logger.debug("update chromeos %s", ' '.join(cmd))
         print "Command: %s" % (cmd)
         update_proc = psutil.Popen(cmd, stdout=PIPE, stderr=PIPE)
@@ -535,7 +533,7 @@ class EmuBaseTestCase(LoggedTestCase):
                 self.update_sdk("system-images;android-%s;android-car;%s"
                                 % (api, avd_config.abi))
             elif "chromeos" in avd_config.tag:
-                self.update_chromeos()
+                self.update_chromeos(avd_config.alt_version)
             else:
                 self.update_sdk("system-images;android-%s;default;%s"
                                 % (api, avd_config.abi))
@@ -643,8 +641,13 @@ def create_test_case_from_file(desc, testcase_class, test_func):
             else:
                 if(row[0].strip() != ""):
                     api = row[0].split("API", 1)[1].strip()
+                    if ':' in api:
+                        api, alt_version = api.split(':', 2)
+                    else:
+                        alt_version = ''
                 if(row[1].strip() != ""):
                     tag = row[1].strip()
+
                 if(row[2].strip() != ""):
                     abi = row[2].strip()
 
@@ -677,5 +680,5 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                       classic = "yes"
                     if device == "":
                       device = "default"
-                    avd_config = AVDConfig(api, tag, abi, device, ram, gpu, classic, get_port(), is_cts, ori)
+                    avd_config = AVDConfig(api, alt_version, tag, abi, device, ram, gpu, classic, get_port(), is_cts, ori)
                     create_test_case(avd_config, op, emu_argparser.emu_args.builder_name, emu_argparser.emu_args.pattern)
