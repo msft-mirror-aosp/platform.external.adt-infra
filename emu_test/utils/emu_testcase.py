@@ -12,6 +12,7 @@ import time
 import psutil
 import csv
 import platform
+import tempfile
 import threading
 import shutil
 import ConfigParser
@@ -19,6 +20,9 @@ from emu_error import *
 import emu_test.utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
+
+# Hard code it for now.
+CROS_VERSION=64
 
 class AVDConfig(namedtuple('AVDConfig', 'api, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     __slots__ = ()
@@ -400,7 +404,37 @@ class EmuBaseTestCase(LoggedTestCase):
             pass
 
     def get_sub_dir(self, avd_config):
-        return 'android-%s' % avd_config.api if avd_config.tag != 'chromeos' else 'chromeos-64'
+        return 'android-%s' % avd_config.api if avd_config.tag != 'chromeos' else 'chromeos-%d' % CROS_VERSION
+
+    def update_chromeos(self):
+        """Update chrome os images."""
+
+        gsutil_path = os.path.join(os.path.dirname(__file__), '..', '..', 'build', 'third_party', 'gsutil', 'gsutil.py')
+        dst_location = os.path.join(os.environ['ANDROID_SDK_ROOT'],
+                                    "system-images", "chromeos-%d" % CROS_VERSION, "chromeos")
+        f = tempfile.NamedTemporaryFile(delete=False)
+        tmp_zip = f.name
+        f.close()
+        cmd = ['python', gsutil_path, 'cp',
+               'gs://chromeos-emulator-test/images/system-%d.zip' % CROS_VERSION, tmp_zip]
+        self.m_logger.debug("update chromeos %s", ' '.join(cmd))
+        print "Command: %s" % (cmd)
+        update_proc = psutil.Popen(cmd, stdout=PIPE, stderr=PIPE)
+        output, err = update_proc.communicate()
+        self.simple_logger.debug(output)
+        self.simple_logger.debug(err)
+        self.m_logger.debug('return value of update proc: %s', update_proc.poll())
+        shutil.rmtree(dst_location, ignore_errors=True)
+        os.makedirs(dst_location)
+        cmd = ['unzip' , tmp_zip, '-d', dst_location]
+        print "Command: %s" % (cmd)
+        unzip_proc = psutil.Popen(cmd, stdout=PIPE, stderr=PIPE)
+        output, err = unzip_proc.communicate()
+        self.simple_logger.debug(output)
+        self.simple_logger.debug(err)
+        self.m_logger.debug('return value of update proc: %s', unzip_proc.poll())
+        os.unlink(tmp_zip)
+        return unzip_proc.poll()
 
     def create_avd(self, avd_config):
         """Create avd if doesn't exist
@@ -500,6 +534,8 @@ class EmuBaseTestCase(LoggedTestCase):
             elif "car" in avd_config.tag:
                 self.update_sdk("system-images;android-%s;android-car;%s"
                                 % (api, avd_config.abi))
+            elif "chromeos" in avd_config.tag:
+                self.update_chromeos()
             else:
                 self.update_sdk("system-images;android-%s;default;%s"
                                 % (api, avd_config.abi))
