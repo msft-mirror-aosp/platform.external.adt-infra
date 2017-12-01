@@ -123,7 +123,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
   def test_geo(self):
     """Test command for: geo fix xxx
 
-    Test Rail ID: C14595298
+    TT ID: caad94f5-1714-470c-829c-6df616dfa358
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>

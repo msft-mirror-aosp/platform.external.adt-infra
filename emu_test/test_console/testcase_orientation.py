@@ -113,7 +113,7 @@ class OrientationTest(testcase_base.BaseConsoleTest):
   def test_orientation(self):
     """Test command for: rotate
 
-    Test Rail ID: C14595295
+    TT ID: a802e7d8-75e6-44fd-ac9c-5af3f8d5d3a2
     Test steps:
       1. Launch an emulator avd
       2. Open any app, say Calculator, or maps

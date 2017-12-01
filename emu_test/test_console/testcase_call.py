@@ -104,7 +104,7 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
   def test_inbound_call(self):
     """Test for command: gsm call <phonenumber>.
 
-    Test Rail ID: C14595296
+    TT ID: 5c8892ba-e458-427c-a21d-19758e376749
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -128,7 +128,7 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
   def test_accept_call(self):
     """Test for command: gsm accept <phonenumber>.
 
-    Test Rail ID: C14595296
+    TT ID: 5c8892ba-e458-427c-a21d-19758e376749
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -154,7 +154,7 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
   def test_terminate_call(self):
     """Test for command: gsm cancel <phonenumber>.
 
-    Test Rail ID: C14595296
+    TT ID: 5c8892ba-e458-427c-a21d-19758e376749
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>

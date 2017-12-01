@@ -134,7 +134,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_power_display(self):
     """Test for command: power ac <on_or_off>.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -152,7 +152,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_ac_charge_state(self):
     """Test for command: power ac <on_or_off>.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -174,7 +174,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_status_to_unknown(self):
     """Test for command: power status unknown.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -191,7 +191,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_status_to_charging(self):
     """Test for command: power status charging.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -207,7 +207,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_status_to_discharging(self):
     """Test for command: power status discharging.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -224,7 +224,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_status_to_not_charging(self):
     """Test for command: power status not-charging.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -241,7 +241,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_status_to_full(self):
     """Test for command: power status full.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -258,7 +258,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_presence_state(self):
     """Test for command: power present <true_or_false>.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -277,7 +277,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_health_to_unknown(self):
     """Test for command: power health unknown.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -294,7 +294,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_health_to_good(self):
     """Test for command: power health good.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -310,7 +310,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_health_to_overheat(self):
     """Test for command: power health overheat.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -327,7 +327,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_health_to_dead(self):
     """Test for command: power health dead.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -344,7 +344,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_health_to_overvoltage(self):
     """Test for command: power health overvoltage.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -361,7 +361,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_battery_health_to_failure(self):
     """Test for command: power health failure.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -378,7 +378,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
   def test_set_remaining_battery_capacity(self):
     """Test for command: power capacity 75.
 
-    Test Rail ID: C14595300
+    TT ID: af55c29a-062a-41d9-a549-b8545840abad
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>

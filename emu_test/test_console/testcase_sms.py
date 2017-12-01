@@ -98,7 +98,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
   def test_send_inbound_sms_text_message(self):
     """Test command for: sms send <phone number> <text message>.
 
-    Test Rail ID: C14595297
+    TT ID: f2c2aa1a-b793-4939-b156-0e7d82c85502
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -124,7 +124,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
   def test_send_inbound_sms_pdu(self):
     """Test command for: sms send <phone number> <text message>.
 
-    Test Rail ID: C14595297
+    TT ID: f2c2aa1a-b793-4939-b156-0e7d82c85502
     Test steps:
         1. Launch an emulator avd
         2. From command prompt, run: telnet localhost <port>

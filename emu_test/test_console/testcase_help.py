@@ -68,7 +68,7 @@ class HelpTest(testcase_base.BaseConsoleTest):
   def test_help_command(self):
     """Test command for: help.
 
-    Test Rail ID: C14578962
+    TT ID: b4bed6f1-062d-4a52-b8c2-b9eb0c445ab0
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>

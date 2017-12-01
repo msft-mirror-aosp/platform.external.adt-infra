@@ -33,7 +33,7 @@ class GSMTest(testcase_base.BaseConsoleTest):
   def test_set_gsm_status(self):
     """Test for command: setting gsm data.
 
-    Test Rail ID: C14595296
+    TT ID: 5c8892ba-e458-427c-a21d-19758e376749
     Test steps:
       1. Launch an emulator avd.
       2. From command prompt, run: telnet localhost <port>.

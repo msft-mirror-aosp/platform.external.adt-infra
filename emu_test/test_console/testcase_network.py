@@ -36,7 +36,7 @@ class NetworkTest(testcase_base.BaseConsoleTest):
   def test_set_network_speed(self):
     """Test for command: setting network speed.
 
-    Test Rail ID: C14595300
+    TT ID: 21ff15e0-e43d-47a0-b14a-365014e46a72
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
