@@ -238,6 +238,9 @@ def RunSteps(api):
                    env=env)
       for emu_branch in emulator_branch_to_use:
         emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
+        #for image from master branch, need tot emulator
+        if 'master' in step_data.description:
+            emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
         emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
         if not is_cts and not is_ui and not is_console and not is_avd:
           step_data = bootSteps[step]
