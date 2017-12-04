@@ -340,6 +340,7 @@ class EmuBaseTestCase(LoggedTestCase):
                              'android-car': 'Android Automotive',
                              'android-tv': 'Android TV',
                              'android-wear': 'Android Wear',
+                             'chromeos': 'Chrome OS',
                              'default': 'Default',
                              'google_apis': 'Google APIs',
                              'google_apis_playstore': 'Google APIs Playstore'
@@ -369,7 +370,7 @@ class EmuBaseTestCase(LoggedTestCase):
         set_val('hw.ramSize', avd_config.ram)
         api_target = avd_config.api
         set_val('image.sysdir.1',
-                'system-images/android-%s/%s/%s/' % (api_target, avd_config.tag, avd_config.abi))
+                'system-images/%s/%s/%s/' % (self.get_sub_dir(avd_config), avd_config.tag, avd_config.abi))
         set_val('tag.display', tag_id_to_display[avd_config.tag])
         set_val('tag.id', avd_config.tag)
 
@@ -397,6 +398,9 @@ class EmuBaseTestCase(LoggedTestCase):
         except:
             self.m_logger.exception('Failed to create sdcard.img, make sure you have mksdcard on your path ($ANDROID_SDK_ROOT/tools/mksdcard)')
             pass
+
+    def get_sub_dir(self, avd_config):
+        return 'android-%s' % avd_config.api if avd_config.tag != 'chromeos' else 'chromeos-64'
 
     def create_avd(self, avd_config):
         """Create avd if doesn't exist
@@ -450,7 +454,7 @@ class EmuBaseTestCase(LoggedTestCase):
             # 1. check userdata.img exists
             userimg_name = "userdata.img"
             userdata_src = os.path.join(os.environ['ANDROID_SDK_ROOT'],
-                                        "system-images", "android-%s" % api_target,
+                                        "system-images", self.get_sub_dir(avd_config),
                                         avd_config.tag, avd_config.abi, userimg_name)
             if not os.path.isfile(userdata_src):
               self.m_logger.error("userdata image %s does not exist! Try install system image." % userdata_src)
