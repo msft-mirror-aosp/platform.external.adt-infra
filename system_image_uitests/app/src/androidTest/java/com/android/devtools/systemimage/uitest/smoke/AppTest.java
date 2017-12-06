@@ -149,7 +149,7 @@ public class AppTest {
             textField.clearTextField();
             // Include a timestamp in the URL so it's not already bookmarked. (On Chrome, the UI
             // changes in that case.)
-            textField.setText("https://httpbin.org/?d=" + new Date().getTime());
+            textField.setText("http://espn.com");
             device.pressEnter();
             device.pressMenu();
 
@@ -170,13 +170,21 @@ public class AppTest {
             // Verify the new bookmark is in the list.
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
-            bookmarks.clickAndWaitForNewWindow();
+            if (bookmarks.exists())
+                bookmarks.clickAndWaitForNewWindow();
+            new AppWatcher(device).checkForCondition();
+
+            UiObject mobileBookmarks = device.findObject(new UiSelector().text("Mobile bookmarks")
+                    .resourceId(Res.CHROME_TITLE_RES));
+            mobileBookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
+            if (mobileBookmarks.exists())
+                mobileBookmarks.clickAndWaitForNewWindow();
             new AppWatcher(device).checkForCondition();
 
             assertTrue("Cannot find bookmark",
                     device.findObject(new UiSelector().textContains(("kmarks"))).exists() &&
                             device.findObject(new UiSelector().textContains(
-                                    "httpbin").resourceId(
+                                    "ESPN").resourceId(
                                     Res.CHROME_TITLE_RES)).exists());
             device.findObject(new UiSelector().resourceId(
                     Res.CHROME_CLOSE_MENU_BUTTON_RES)).clickAndWaitForNewWindow();
