@@ -114,12 +114,17 @@ class SmsTest(testcase_base.BaseConsoleTest):
       return
 
     print 'Running test: %s' % (inspect.stack()[0][3])
+
+    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+
     is_command_successful, output = util.execute_console_command(
         self.telnet, CMD_SMS_SEND, util.OK)
     self.assert_cmd_successful(
         is_command_successful, 'Failed to properly send sms text message',
         False, '', util.OK, output)
     self._poll_sms_and_verify(SENDER_PHONE_NUMBER, TEXT_MESSAGE)
+
+    util.unstall_apps(TESTCASE_CALL_DIR)
 
   def test_send_inbound_sms_pdu(self):
     """Test command for: sms send <phone number> <text message>.
@@ -141,6 +146,8 @@ class SmsTest(testcase_base.BaseConsoleTest):
       pass
       return
 
+    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+
     print 'Running test: %s' % (inspect.stack()[0][3])
     is_command_successful, output = util.execute_console_command(
         self.telnet, CMD_SMS_PDU, util.OK)
@@ -148,6 +155,8 @@ class SmsTest(testcase_base.BaseConsoleTest):
         is_command_successful, 'Failed to properly send sms pdu',
         False, '', util.OK, output)
     self._poll_sms_and_verify(PDU_PHONE_NUMBER, PDU_MESSAGE)
+
+    util.unstall_apps(TESTCASE_CALL_DIR)
 
 
 if __name__ == '__main__':

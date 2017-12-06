@@ -34,14 +34,6 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
     self.avd = avd
     self.builder_name = builder_name
 
-  @classmethod
-  def setUpClass(cls):
-    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
-
-  @classmethod
-  def tearDownClass(cls):
-    util.unstall_apps(TESTCASE_CALL_DIR)
-
   def _process_request_telephony_service(self, payload):
     r = requests.post(SERVLET_TELEPHONY, data=json.dumps(payload))
     if r.raise_for_status():
@@ -122,8 +114,13 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
       return
 
     print 'Running test: %s' % (inspect.stack()[0][3])
+
+    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+
     self._make_inbound_call()
     self._cancel_inbound_call()
+
+    util.unstall_apps(TESTCASE_CALL_DIR)
 
   def test_accept_call(self):
     """Test for command: gsm accept <phonenumber>.
@@ -147,9 +144,14 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
       return
 
     print 'Running test: %s' % (inspect.stack()[0][3])
+
+    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+
     self._make_inbound_call()
     self._accept_inbound_call()
     self._cancel_inbound_call()
+
+    util.unstall_apps(TESTCASE_CALL_DIR)
 
   def test_terminate_call(self):
     """Test for command: gsm cancel <phonenumber>.
@@ -175,9 +177,14 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
       return
 
     print 'Running test: %s' % (inspect.stack()[0][3])
+
+    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+
     self._make_inbound_call()
     self._accept_inbound_call()
     self._cancel_inbound_call_verification()
+
+    util.unstall_apps(TESTCASE_CALL_DIR)
 
 
 if __name__ == '__main__':
