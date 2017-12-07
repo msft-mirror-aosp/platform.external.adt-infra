@@ -122,7 +122,7 @@ public class ShellUtilTest {
 
         if (testFramework.getApi() == 25) {
             BUG_REPORT_DIR = "/bugreports";
-        } else if (testFramework.getApi() == 27) {
+        } else if (testFramework.getApi() >= 26) {
             BUG_REPORT_DIR = "/data/user_de/0/com.android.shell/files/bugreports";
         } else {
             BUG_REPORT_DIR = "/data/data/com.android.shell/files/bugreports";
@@ -155,11 +155,9 @@ public class ShellUtilTest {
                             public boolean isTrue() throws Exception {
                                 String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
                                 Log.d(TAG, "ls result " + result);
-                                boolean success = testFramework.getApi() >= 25 ?
+                                boolean success =
                                         result.matches("(?s).*bugreport.*\\.png.*")
-                                                && result.matches("(?s).*bugreport.*\\.zip.*") :
-                                        result.matches("(?s).*bugreport[-0-9]+\\.png.*")
-                                                && result.matches("(?s).*bugreport[-0-9]+\\.zip.*");
+                                                && result.matches("(?s).*bugreport.*\\.zip.*");
 
                                 return success;
                             }
@@ -181,8 +179,7 @@ public class ShellUtilTest {
         // don't work.
         String lsResult = device.executeShellCommand("ls " + reportDir);
         String[] files = lsResult.split("\\s+");
-        String filename = testFramework.getApi() >= 24 ? "bugreport.*\\.(png|zip)" :
-                "bugreport[-0-9]+\\.(png|zip)";
+        String filename = "bugreport.*\\.(png|zip)";
 
         for (String file : files) {
             if (file.matches(filename)) {
