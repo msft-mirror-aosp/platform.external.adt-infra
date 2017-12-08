@@ -89,4 +89,4 @@ API 15,default,armeabi-v7a,Nexus 4,2048,no,public,,,P,P,,,,,,,,,
 ,,x86,Nexus 4,2048,no,public,,,P,P,,,,,,,,,
 ,,x86,Nexus 4,2048,no,ics-mr1,P,P,P,P,P,P,P,P,P,S,P,S,S
 ,google_apis,x86,Nexus 4,2048,no,ics-mr1,P,P,P,P,P,P,P,P,P,S,P,S,S
-API 25:64,chromeos,x86,Chromebook Pixel 2015,2048,no,public,,,,,,,,,P,,,,
+API 25:64,chromeos,x86,Chromebook Pixel 2015,2048,no,public,,,,,,,,,,,P,,
