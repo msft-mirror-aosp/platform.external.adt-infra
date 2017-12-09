@@ -7,6 +7,7 @@ import argparse
 import os
 import subprocess
 import sys
+import threading
 import time
 import platform
 
@@ -30,6 +31,63 @@ def print_progress(perc, prefix='',
     if perc == 1:
         sys.stdout.write('\n')
     sys.stdout.flush()
+
+
+class ProgressPrinter(object):
+    """Class for printing time-based progress.
+    
+    Attributes:
+        start_time: Time which marks the start of progress.
+        stop_time: Time at which the progress is done.
+        refresh_delay_s: Time, in seconds, to delay between progress refreshes.
+    """
+    def __init__(self, start_time, stop_time, refresh_delay_s):
+        self.lock = threading.RLock()
+        self.start_time = start_time
+        self.stop_time = stop_time
+        self.refresh_delay_s = refresh_delay_s
+        self.is_running = False
+        self.timer = None
+
+    def refresh(self):
+        duration = self.stop_time - self.start_time
+        print_progress(float(time.time() - self.start_time) / duration, prefix='Progress:', suffix='Complete', bar_len=50)
+
+    @property
+    def seconds_remaining(self):
+        return max(0, self.stop_time - time.time())
+
+    def start(self):
+        """Start printing progress."""
+        with self.lock:
+            if not self.is_running:
+                self.is_running = True
+                self.tick()
+
+    def tick(self):
+        with self.lock:
+            if self.is_running and (time.time() < self.stop_time):
+                self.refresh()
+                self.timer = threading.Timer(self.refresh_delay_s, self.tick)
+                self.timer.start()
+
+    def stop(self):
+        """Stop printing progress.
+        
+        Stops printing progress, performing one final refresh."""
+        with self.lock:
+            if self.is_running:
+                self.kill()
+                self.refresh()
+
+    def kill(self):
+        """Immediately stops printing progress.
+        
+        Stops printing progress but no final refresh is performed."""
+        with self.lock:
+            if self.is_running:
+                self.is_running = False
+                self.timer.cancel()
 
 
 def get_connected_devices():
