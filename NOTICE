@@ -1,0 +1,37 @@
+./build/third_party/markupsafe/NOTICE
+./build/third_party/requests_1_2_3/NOTICE
+./build/third_party/gsutil/third_party/pyasn1-modules/NOTICE
+./build/third_party/gsutil/third_party/apitools/NOTICE
+./build/third_party/gsutil/third_party/pyasn1/NOTICE
+./build/third_party/gsutil/third_party/oauth2client/NOTICE
+./build/third_party/gsutil/third_party/crcmod/NOTICE
+./build/third_party/gsutil/third_party/socksipy-branch/NOTICE
+./build/third_party/gsutil/third_party/six/NOTICE
+./build/third_party/gsutil/third_party/rsa/NOTICE
+./build/third_party/gsutil/third_party/crcmod_osx/NOTICE
+./build/third_party/gsutil/third_party/boto/NOTICE
+./build/third_party/oauth2client/NOTICE
+./build/third_party/jinja2/NOTICE
+./build/third_party/google_api_python_client/NOTICE
+./build/third_party/twisted_10_2/NOTICE
+./build/third_party/mock-1.0.1/NOTICE
+./build/masters/master.client.adt/public_html/plotkit/NOTICE
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish, dis-
+tribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the fol-
+lowing conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
+ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
