@@ -27,6 +27,8 @@ public class Res {
     public static final String BROWSER_BOOKMARKS_LABEL_RES = "com.android.browser:id/label";
     public static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
     public static final String BROWSER_URL_TEXT_FIELD_RES = "com.android.browser:id/url";
+    public static final String BROWSER_TAB_SWITCHER_RES = "com.android.browser:id/tab_switcher";
+    public static final String BROWSER_CLOSE_TAB_RES = "com.android.browser:id/closetab";
 
     public static final String CHROME_TERMS_ACCEPT_BUTTON_RES = "com.android.chrome:id/terms_accept";
     public static final String CHROME_SEARCH_BOX_RES = "com.android.chrome:id/search_box_text";
