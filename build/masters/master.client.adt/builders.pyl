@@ -155,6 +155,17 @@
        "branch": "all",
        "name_identifier": "system-images",
     },
+    "sys_image_aosp_poller": {
+       "gs_bucket": "android-build-emu-sysimage",
+       "gs_path": ["builds/aosp-master-linux-sdk_x86_64-sdk/",
+                   "builds/aosp-master-linux-sdk_x86-sdk/",
+                   "builds/aosp-master-linux-sdk_arm64-sdk/"],
+       "pollInterval": 597,
+       "type": "GSMultiPoller",
+       "project": "aosp",
+       "branch": "all",
+       "name_identifier": "system-images",
+    },
     "sys_image_klp_poller": {
        "gs_bucket": "android-build-emu-sysimage",
        "gs_path": ["builds/git_klp-emu-dev-linux-google_sdk_x86-sdk_addon/"],
@@ -431,7 +442,7 @@
     },
     "system_image_scheduler": {
       "project": ["master", "klp-emu-dev", "lmp-mr1-emu-dev", "mnc-emu-dev", "oc-emu-dev", "oc-mr1-car-support-release", "oc-mr1-emu-dev","nyc-emu-dev", "nyc-mr1-emu-dev",
-                  "lmp-emu-dev", "gb-emu-dev", "ics-mr1-emu-dev", "jb-emu-dev", "jb-mr1.1-emu-dev", "jb-mr2-emu-dev"],
+                  "lmp-emu-dev", "gb-emu-dev", "ics-mr1-emu-dev", "jb-emu-dev", "jb-mr1.1-emu-dev", "jb-mr2-emu-dev", "aosp"],
       "type": "emu_scheduler",
     },
     "sysimage_release_psq_scheduler": {
