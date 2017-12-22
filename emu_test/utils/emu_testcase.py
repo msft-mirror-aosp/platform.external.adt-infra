@@ -150,6 +150,11 @@ class EmuBaseTestCase(LoggedTestCase):
             launch_cmd += ["-gpu", "swiftshader"]
         else:
             launch_cmd += ["-gpu", "host"]
+        # arm/mips is quit slow, disable boot animation
+        if 'arm' in str(avd):
+            launch_cmd += ["-no-boot-anim"]
+        if 'mips' in str(avd):
+            launch_cmd += ["-no-boot-anim"]
         # Launch emulator with "-dns-server 8.8.8.8" for CTS test
         # to make test_getByName in android.core.tests.libcore.package.libcore pass
         if avd.cts:
