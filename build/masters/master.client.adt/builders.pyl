@@ -609,7 +609,7 @@
         "os": "mac",
         "version": "yosemite",
       },
-      "slaves": ['chromeos1-row4-rack3-host2'],
+      "slaves": ['chromeos1-row4-rack3-host7'],
     },
     "mac-10-8-5-intel-hd-5000": {
       "slave_data": {
