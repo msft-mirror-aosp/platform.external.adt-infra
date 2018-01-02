@@ -346,12 +346,6 @@
        "categories": ["CTS"],
        "tag": "4",
      },
-     "Win 7 32-bit HD 4400": {
-       "recipe": "adt/adt",
-       "slave_pools": ["win-7-32-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.5-release", "system-image-builds", "cross-builds"],
-       "tag": "Win",
-     },
      "Win 7 64-bit HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["win-7-64-intel-hd-4400"],
@@ -554,14 +548,6 @@
         "version": "trusty",
       },
       "slaves": ['chromeos1-row3-rack4-host2'],
-    },
-    "win-7-32-intel-hd-4400": {
-      "slave_data": {
-        "bits": 32,
-        "os": "win",
-        "version": "win7",
-      },
-      "slaves": ['chromeos1-row3-rack3-host3'],
     },
     "win-7-64-intel-hd-4400": {
       "slave_data": {
