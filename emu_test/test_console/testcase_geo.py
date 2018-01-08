@@ -200,7 +200,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
         self._process_request_geo_service({})
         self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
 
-      util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+      util.unstall_apps(TESTCASE_CALL_DIR)
     else:
       # TODO: Add support for APIs below 24.
       print 'Skip geo stress test for APIs below 24.'
