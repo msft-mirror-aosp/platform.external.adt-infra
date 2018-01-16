@@ -27,27 +27,37 @@ def test_restart():
     """
     process = subprocess.Popen(['adb', 'kill-server'], stdout=subprocess.PIPE)
     output, error = process.communicate()
+    success = True
     if process.returncode != 0:
-        print('\NERROR:\nFAILED to kill ADB:')
-        print(output)
-        return False
+        success = False
 
     for line in output.split('\n'):
         if line.startswith('adb: error'):
-            print('\nERROR:\nFAILED to kill ADB:')
-            print(output)
-            return False
-    process = subprocess.Popen(['adb', 'start-server'], stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    if process.returncode != 0:
-        print('\NERROR:\nFAILED to kill ADB:')
+            success = False
+            break
+
+    if not success:
+        print('\nERROR:\nFAILED to kill ADB:')
         print(output)
         return False
+
+    process = subprocess.Popen(['adb', 'start-server'], stdout=subprocess.PIPE)
+    output, error = process.communicate()
+
+    success = True
+    if process.returncode != 0:
+        success = False
+
     for line in output.split('\n'):
-        if line.startswith('adb: error'):
-            print('\nERROR:\nFAILED to start ADB:')
-            print(output)
-            return False
+        if line.startswith('adb: error') or ("ADB server didn't ACK") in line:
+            success = False
+            break
+
+    if not success:
+        print('\nERROR:\nFAILED to start ADB:')
+        print(output)
+        return False
+
     return True
 
 
