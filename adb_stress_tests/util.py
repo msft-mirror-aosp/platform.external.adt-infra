@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ADB stress test utilities."""
+"""stress test utilities."""
 
 from multiprocessing import pool
 
@@ -133,6 +133,12 @@ def test_connected(devices):
         print('\n\nERROR:\nExpected number of connections: ' +
               str(devices))
         print('Found: ' + str(len(connected)))
+
+        output, error = shell(['adb', 'devices'])
+        print('\n<<<Begin Output of adb devices>>>')
+        print(output)
+        print('<<<End Output of adb devices>>>')
+
         success = False
 
     return success, connected
@@ -356,3 +362,17 @@ def spit(filename, text):
     out_file = open(filename, 'w+')
     out_file.write(text)
     out_file.close()
+
+def shell(cmd):
+    """Executes shell command, returning STDOUT as string and exit code.
+    
+    Args:
+        cmd: List containing command name and arguments.
+      
+    Returns:
+        Tuple (stdout, exit_code) where
+          stdout = STDOUT of process
+          exit_code = exit code of process
+    """
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    return proc.communicate()
