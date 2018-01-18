@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ADB stress test utilities."""
+"""stress test utilities."""
 
 from multiprocessing import pool
 
@@ -7,8 +7,12 @@ import argparse
 import os
 import subprocess
 import sys
+import threading
 import time
 import platform
+
+
+MAX_CONNECTION_FAILURES = 3
 
 
 def print_progress(perc, prefix='',
@@ -30,6 +34,63 @@ def print_progress(perc, prefix='',
     if perc == 1:
         sys.stdout.write('\n')
     sys.stdout.flush()
+
+
+class ProgressPrinter(object):
+    """Class for printing time-based progress.
+    
+    Attributes:
+        start_time: Time which marks the start of progress.
+        stop_time: Time at which the progress is done.
+        refresh_delay_s: Time, in seconds, to delay between progress refreshes.
+    """
+    def __init__(self, start_time, stop_time, refresh_delay_s):
+        self.lock = threading.RLock()
+        self.start_time = start_time
+        self.stop_time = stop_time
+        self.refresh_delay_s = refresh_delay_s
+        self.is_running = False
+        self.timer = None
+
+    def refresh(self):
+        duration = self.stop_time - self.start_time
+        print_progress(float(time.time() - self.start_time) / duration, prefix='Progress:', suffix='Complete', bar_len=50)
+
+    @property
+    def seconds_remaining(self):
+        return max(0, self.stop_time - time.time())
+
+    def start(self):
+        """Start printing progress."""
+        with self.lock:
+            if not self.is_running:
+                self.is_running = True
+                self.tick()
+
+    def tick(self):
+        with self.lock:
+            if self.is_running and (time.time() < self.stop_time):
+                self.refresh()
+                self.timer = threading.Timer(self.refresh_delay_s, self.tick)
+                self.timer.start()
+
+    def stop(self):
+        """Stop printing progress.
+        
+        Stops printing progress, performing one final refresh."""
+        with self.lock:
+            if self.is_running:
+                self.kill()
+                self.refresh()
+
+    def kill(self):
+        """Immediately stops printing progress.
+        
+        Stops printing progress but no final refresh is performed."""
+        with self.lock:
+            if self.is_running:
+                self.is_running = False
+                self.timer.cancel()
 
 
 def get_connected_devices():
@@ -72,6 +133,12 @@ def test_connected(devices):
         print('\n\nERROR:\nExpected number of connections: ' +
               str(devices))
         print('Found: ' + str(len(connected)))
+
+        output, error = shell(['adb', 'devices'])
+        print('\n<<<Begin Output of adb devices>>>')
+        print(output)
+        print('<<<End Output of adb devices>>>')
+
         success = False
 
     return success, connected
@@ -84,6 +151,37 @@ def noop():
     of the launcher function.
     """
     pass
+
+
+class Atom(object):
+    """Class for atomic access and updates to a shared value.
+    
+    Attributes:
+        value: Current state value.
+    """
+    def __init__(self, initial_value = None):
+        self.v = initial_value
+        self.lock = threading.Condition()
+
+    @property
+    def value(self):
+        with self:
+            return self.v
+
+    @value.setter
+    def value(self, v):
+        self.swap(lambda x: v)
+
+    def swap(self, f):
+        """Atomically applied f to current value and updates value to the result."""
+        with self:
+            self.v = f(self.v)
+
+    def __enter__(self):
+        return self.lock.__enter__()
+
+    def __exit__(self, *args):
+        return self.lock.__exit__(*args)
 
 
 def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_progress=False, log_dir='logs'):
@@ -112,61 +210,90 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
     # ThreadPool for running the tests in parallel.
     # We choose the size to match the number of devices, so that every device can execute in parallel.
     thread_pool = pool.ThreadPool(processes = devices)
-    connected_devices = get_connected_devices()
 
+    progress_printer = None
     try:
         setup()
         duration_sec = int(duration * 3600)
         start = time.time()
         stop = start + duration_sec
-        print_progress(0, prefix='Progress:', suffix='Complete', bar_len=50)
-        next_progress_time = start + 60
-        iteration = 0
-        while time.time() < stop:
-            if is_print_progress and time.time() > next_progress_time:
-                # Print the progress per minute
-                print_progress(float(time.time()-start)/duration_sec, prefix='Progress:', suffix='Complete', bar_len=50)
-                next_progress_time += 60
+        if is_print_progress:
+            progress_printer = ProgressPrinter(start, stop, 60)
+            progress_printer.start()
 
-            connection_success, connected = test_connected(devices)
-            if not connection_success:
-                failure_time = time.time() - start
-                for device in connected_devices:
-                    if device not in connected:
+        connection_success, connected = test_connected(devices)
+        if not connection_success:
+            return False
+
+        connected_devices = Atom(frozenset(connected))
+
+        def test_device(device):
+            connection_failures_remaining = MAX_CONNECTION_FAILURES
+            iteration = 0
+            success = True
+            while time.time() < stop:
+                connected = get_connected_devices()
+                if device in connected:
+                    if not connection_failures_remaining:
+                        with connected_devices:
+                            if not connected_devices.value:
+                                return False
+                            else:
+                                connected_devices.swap(lambda x: x.union([device]))
+
+                    # Reset remaining connection failures back to max.
+                    connection_failures_remaining = MAX_CONNECTION_FAILURES
+
+                    success = test_fn(device) and success
+                    log = logcat(device)
+
+                    # Capture logcat.
+                    if log:
                         filename = os.path.join(log_dir, device, str(iteration) + '.txt')
-                        msg = ("Device failed connection test for interation "
+                        spit(filename, log)
+                else:
+                    success = False
+
+                    if connection_failures_remaining:
+                        failure_time = time.time() - start
+                        filename = os.path.join(log_dir, device, str(iteration) + '.txt')
+                        msg = ("Device failed connection test for iteration"
                                + str(iteration)
-                               + "(at " + str(failure_time) + " seconds)")
+                               + "(at " + str(failure_time) + "seconds)")
                         spit(filename, msg)
 
-                # if no devices are connected, then end test with failure.
-                        if not connected:
-                            return False
+                    connection_failures_remaining = max(0, connection_failures_remaining - 1)
 
-            # Run one iteration of the test against every device in parallel
-            iteration += 1
-            results = thread_pool.map(test_fn, connected)
+                    if not connection_failures_remaining:
+                        with connected_devices:
+                             # Remove this device from set of connected devices.
+                             connected_devices.swap(lambda x: x.difference([device]))
+                             if not connected_devices.value:
+                                 return False
 
-            # Verify the results
-            for result in results:
-                if not result:
-                    return False
+                    time.sleep(5)
 
-            # Capture logcat.
-            logs = thread_pool.map(logcat, connected)
-            for device,log in zip(connected, logs):
-                if log:
-                    filename = os.path.join(log_dir, device, str(iteration) + '.txt')
-                    spit(filename, log)
+                iteration += 1
+
+            print('\nInteractions (%s): (%s\n' % (device, iteration))
+            return success
+
+        # Run test against every device in parallel.
+        results = thread_pool.map(test_device, connected)
+
+        # Verify the results.
+        for result in results:
+            if not result:
+                return False
 
         # If we get here, the test completed successfully.
-        if is_print_progress:
-            # Print the progress bar one last time, to show 100%.
-            print_progress(1, prefix='Progress:', suffix='Complete', bar_len=50)
+        if progress_printer:
+            progress_printer.stop()
         print('\nSUCCESS\n')
         return True
     finally:
-        print('\nIterations: %s\n' % iteration)
+        if progress_printer:
+            progress_printer.kill()
         cleanup()
 
 
@@ -235,3 +362,17 @@ def spit(filename, text):
     out_file = open(filename, 'w+')
     out_file.write(text)
     out_file.close()
+
+def shell(cmd):
+    """Executes shell command, returning STDOUT as string and exit code.
+    
+    Args:
+        cmd: List containing command name and arguments.
+      
+    Returns:
+        Tuple (stdout, exit_code) where
+          stdout = STDOUT of process
+          exit_code = exit code of process
+    """
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    return proc.communicate()

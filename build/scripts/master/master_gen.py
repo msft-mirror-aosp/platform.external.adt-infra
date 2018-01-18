@@ -122,7 +122,8 @@ def _ComputeBuilders(builders, m_annotator, actual_builders, cat):
                                      util.safeTranslate(cat))
     factory = m_annotator.BaseFactory(
         recipe=builder_data['recipe'],
-        factory_properties=builder_data.get('properties')
+        factory_properties=builder_data.get('properties'),
+        max_time=builder_data.get('max_timeout', None)
     )
     actual_builders.append({
         'auto_reboot': builder_data.get('auto_reboot', False),

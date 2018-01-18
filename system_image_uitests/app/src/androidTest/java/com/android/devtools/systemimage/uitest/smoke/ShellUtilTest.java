@@ -19,7 +19,6 @@ package com.android.devtools.systemimage.uitest.smoke;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
-import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.Wait;
@@ -58,10 +57,6 @@ public class ShellUtilTest {
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(120);
-
-    private final String BUG_REPORT_DIR = testFramework.getApi() <= 26 ?
-            "/data/data/com.android.shell/files/bugreports" :
-            "/data/user_de/0/com.android.shell/files/bugreports" ;
 
     /**
      * Tests the integrity of Shell utilities.
@@ -123,10 +118,18 @@ public class ShellUtilTest {
     public void createBugReport() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String BUG_REPORT_DIR;
 
-        // Application crashes on API 25. Bug report files not generated due to the crash.
-        if (testFramework.getApi() >= 21 && testFramework.getApi() != 25) {
-            deleteBugReportFiles();
+        if (testFramework.getApi() == 25) {
+            BUG_REPORT_DIR = "/bugreports";
+        } else if (testFramework.getApi() >= 26) {
+            BUG_REPORT_DIR = "/data/user_de/0/com.android.shell/files/bugreports";
+        } else {
+            BUG_REPORT_DIR = "/data/data/com.android.shell/files/bugreports";
+        }
+
+        if (testFramework.getApi() >= 21) {
+            deleteBugReportFiles(BUG_REPORT_DIR);
 
             if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework)) {
                 DeveloperOptionsManager.enableDeveloperOptions(testFramework);
@@ -152,23 +155,21 @@ public class ShellUtilTest {
                             public boolean isTrue() throws Exception {
                                 String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
                                 Log.d(TAG, "ls result " + result);
-                                boolean success = testFramework.getApi() >= 24 ?
+                                boolean success =
                                         result.matches("(?s).*bugreport.*\\.png.*")
-                                                && result.matches("(?s).*bugreport.*\\.zip.*") :
-                                        result.matches("(?s).*bugreport[-0-9]+\\.png.*")
-                                                && result.matches("(?s).*bugreport[-0-9]+\\.zip.*");
+                                                && result.matches("(?s).*bugreport.*\\.zip.*");
 
                                 return success;
                             }
                         });
                 Assert.assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
             } finally {
-                deleteBugReportFiles();
+                deleteBugReportFiles(BUG_REPORT_DIR);
             }
         }
     }
 
-    public void deleteBugReportFiles() throws Exception {
+    public void deleteBugReportFiles(String reportDir) throws Exception {
         Log.i(TAG, "Deleting any existing bug report files");
 
         Instrumentation instrumentation = testFramework.getInstrumentation();
@@ -176,14 +177,13 @@ public class ShellUtilTest {
 
         // Delete all png and zip bug reports. Delete the files one at a time, as wildcards
         // don't work.
-        String lsResult = device.executeShellCommand("ls " + BUG_REPORT_DIR);
+        String lsResult = device.executeShellCommand("ls " + reportDir);
         String[] files = lsResult.split("\\s+");
-        String filename = testFramework.getApi() >= 24 ? "bugreport.*\\.(png|zip)" :
-                "bugreport[-0-9]+\\.(png|zip)";
+        String filename = "bugreport.*\\.(png|zip)";
 
         for (String file : files) {
             if (file.matches(filename)) {
-                device.executeShellCommand(String.format("rm %s/%s", BUG_REPORT_DIR, file));
+                device.executeShellCommand(String.format("rm %s/%s", reportDir, file));
             }
         }
     }

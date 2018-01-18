@@ -16,7 +16,7 @@ args = parser.parse_args()
 
 def get_dst_dir(remote_path):
   file_name = os.path.basename(remote_path)
-  emulator_branches = ["emu-master-dev", "emu-2.2-release", "emu-2.3-release", "emu-2.4-release"]
+  emulator_branches = ["emu-master-dev", "emu-2.5-release"]
   # sdk_google_phone contains the playstore system images.
   if file_name.startswith('sdk-repo-linux-system-images') or file_name.startswith('sdk-repo-linux-addon') \
       or file_name.startswith('sdk-repo-darwin-system-images') or file_name.startswith('sdk_google_phone'):
@@ -61,6 +61,8 @@ def get_dst_dir(remote_path):
       api = '17'
     elif 'jb-mr2-emu' in branch_name:
       api = '18'
+    elif 'aosp-master' in branch_name:
+      api = 'P'
     elif 'master' in branch_name:
       api = 'P'
 

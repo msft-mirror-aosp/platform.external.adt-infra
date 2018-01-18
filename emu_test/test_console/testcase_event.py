@@ -88,7 +88,7 @@ class EventTest(testcase_base.BaseConsoleTest):
   def test_list_event_aliases(self):
     """Test for command: event types.
 
-    Test Rail ID: C14595360
+    TT ID: b15436dd-dd0a-4943-aee7-41301cbe18e3
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -123,7 +123,7 @@ class EventTest(testcase_base.BaseConsoleTest):
   def test_list_all_code_aliases(self):
     """Test for command: event codes <type>" (for example: event codes EV_REL).
 
-    Test Rail ID: C14595360
+    TT ID: b15436dd-dd0a-4943-aee7-41301cbe18e3
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -141,7 +141,7 @@ class EventTest(testcase_base.BaseConsoleTest):
   def test_simulate_key_presses(self):
     """Test for command: event text <message>.
 
-    Test Rail ID: C14595360
+    TT ID: b15436dd-dd0a-4943-aee7-41301cbe18e3
     """
     # b/204884
     print 'Running test: %s' % (inspect.stack()[0][3])

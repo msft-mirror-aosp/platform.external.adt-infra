@@ -123,7 +123,7 @@ public class AppTest {
             if (welcomeScreen.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
                 device.findObject(
                         new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES))
-                            .clickAndWaitForNewWindow();
+                        .clickAndWaitForNewWindow();
             }
 
             // Dismiss the "Sign in to Chrome" screen if it's there.
@@ -149,14 +149,14 @@ public class AppTest {
             textField.clearTextField();
             // Include a timestamp in the URL so it's not already bookmarked. (On Chrome, the UI
             // changes in that case.)
-            textField.setText("https://httpbin.org/?d=" + new Date().getTime());
+            textField.setText("http://espn.com");
             device.pressEnter();
             device.pressMenu();
 
             boolean notBookmarked = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
-                return device.findObject(new UiSelector().description("Bookmark this page")).exists();
+                @Override
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    return device.findObject(new UiSelector().description("Bookmark this page")).exists();
                 }
             });
             if (notBookmarked) {
@@ -170,13 +170,21 @@ public class AppTest {
             // Verify the new bookmark is in the list.
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
-            bookmarks.clickAndWaitForNewWindow();
+            if (bookmarks.exists())
+                bookmarks.clickAndWaitForNewWindow();
+            new AppWatcher(device).checkForCondition();
+
+            UiObject mobileBookmarks = device.findObject(new UiSelector().text("Mobile bookmarks")
+                    .resourceId(Res.CHROME_TITLE_RES));
+            mobileBookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
+            if (mobileBookmarks.exists())
+                mobileBookmarks.clickAndWaitForNewWindow();
             new AppWatcher(device).checkForCondition();
 
             assertTrue("Cannot find bookmark",
                     device.findObject(new UiSelector().textContains(("kmarks"))).exists() &&
                             device.findObject(new UiSelector().textContains(
-                                    "httpbin").resourceId(
+                                    "ESPN").resourceId(
                                     Res.CHROME_TITLE_RES)).exists());
             device.findObject(new UiSelector().resourceId(
                     Res.CHROME_CLOSE_MENU_BUTTON_RES)).clickAndWaitForNewWindow();
@@ -220,6 +228,100 @@ public class AppTest {
             // Delete the bookmark.
             device.findObject(new UiSelector().text("Delete bookmark")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
+        }
+    }
+
+    /**
+     * Verify bookmarked website is set as the home page.
+     * <p/>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p/>
+     * TT ID: 8649851d-da41-45f8-8e73-82b98ea418d0
+     * <p/>
+     *   <pre>
+     *   (Note: Test currently supports APIs 23 and below.
+     *   Does not work on Chrome, which is used in later APIs.)
+     *   1. Launch emulator.
+     *   2. Open Browser app.
+     *   3. Tap on the address bar and enter espn.com
+     *   4. Open menu (3 vertical dots).
+     *   5. Go to Settings > General > Set Homepage.
+     *   6. Select Other.
+     *   7. Set Homepage to new target website.
+     *   8. Relaunch browser.
+     *   Verify:
+     *   The selected website is correctly set as browser home page.
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "8649851d-da41-45f8-8e73-82b98ea418d0")
+    public void setHomePageInBrowser() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        String homepage = "espn.com";
+        String appName = "Browser";
+
+        if (testFramework.getApi() >= 17 && testFramework.getApi() <= 23) {
+            AppLauncher.launch(instrumentation, appName);
+            setHomePage(device, "Other", "http://" + homepage);
+            device.pressHome();
+
+            AppLauncher.launch(instrumentation, appName);
+            device.findObject(new UiSelector().resourceId(Res.BROWSER_TAB_SWITCHER_RES))
+                    .clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().resourceId(Res.BROWSER_CLOSE_TAB_RES))
+                    .clickAndWaitForNewWindow();
+            device.pressHome();
+
+            AppLauncher.launch(instrumentation, appName);
+            UiObject urlField = device.findObject(
+                    new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES));
+            urlField.waitForExists(TimeUnit.SECONDS.toMillis(5));
+
+            assertTrue("Homepage not set correctly",
+                    urlField.exists() && urlField.getText().contains(homepage));
+
+            device.pressHome();
+            AppLauncher.launch(instrumentation, appName);
+            setHomePage(device, "Default page");
+        }
+    }
+
+    /**
+     * Helper method to set a homepage.  Homepage vararg optionally takes 2 arguments,
+     * the homepage type (ie. "Other", "Default page", etc.), and the target website url.
+     * Note that a selection of "Default page" would not require a url to be given.
+     */
+    private void setHomePage(UiDevice device, String ...homepage) throws Exception {
+        device.pressMenu();
+
+        UiObject settings = device.findObject(new UiSelector().text("Settings"));
+        settings.waitForExists(TimeUnit.SECONDS.toMillis(5));
+        settings.clickAndWaitForNewWindow();
+
+        UiObject general = device.findObject(new UiSelector().text("General"));
+        general.waitForExists(TimeUnit.SECONDS.toMillis(5));
+        general.clickAndWaitForNewWindow();
+
+        UiObject setHomepage = device.findObject(new UiSelector().text("Set homepage"));
+        setHomepage.waitForExists(TimeUnit.SECONDS.toMillis(5));
+        setHomepage.clickAndWaitForNewWindow();
+
+        UiObject type = device.findObject(new UiSelector().text(homepage[0]));
+        type.waitForExists(TimeUnit.SECONDS.toMillis(5));
+        type.clickAndWaitForNewWindow();
+
+        if (homepage.length > 1) {
+            UiObject textField = device.findObject(
+                    new UiSelector().className("android.widget.EditText").
+                            packageName("com.android.browser"));
+            textField.click();
+            textField.clearTextField();
+            textField.setText(homepage[1]);
+
+            UiObject ok = device.findObject(new UiSelector().text("OK"));
+            ok.waitForExists(TimeUnit.SECONDS.toMillis(5));
+            ok.clickAndWaitForNewWindow();
         }
     }
 }

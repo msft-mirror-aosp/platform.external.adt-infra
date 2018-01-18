@@ -12,6 +12,7 @@ import time
 import psutil
 import csv
 import platform
+import tempfile
 import threading
 import shutil
 import ConfigParser
@@ -20,7 +21,7 @@ import emu_test.utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
 
-class AVDConfig(namedtuple('AVDConfig', 'api, tag, abi, device, ram, gpu, classic, port, cts, ori')):
+class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     __slots__ = ()
     def __str__(self):
         device = self.device if self.device != '' else 'defdev'
@@ -31,9 +32,10 @@ class AVDConfig(namedtuple('AVDConfig', 'api, tag, abi, device, ram, gpu, classi
           suffix = "-GTS"
         elif self.cts:
           suffix = "-CTS"
-        return str("%s-%s-%s-%s-gpu_%s-api%s%s" % (self.tag, self.abi,
-                                                 device, self.ram, self.gpu,
-                                                 self.api, suffix))
+        alt = '%s-' % self.alt_version if self.alt_version else ''
+        return str("%s-%s%s-%s-%s-gpu_%s-api%s%s" % (self.tag, alt, self.abi,
+                                                     device, self.ram, self.gpu,
+                                                     self.api, suffix))
     def name(self):
         return str(self)
 class LoggedTestCase(unittest.TestCase):
@@ -148,6 +150,11 @@ class EmuBaseTestCase(LoggedTestCase):
             launch_cmd += ["-gpu", "swiftshader"]
         else:
             launch_cmd += ["-gpu", "host"]
+        # arm/mips is quit slow, disable boot animation
+        if 'arm' in str(avd):
+            launch_cmd += ["-no-boot-anim"]
+        if 'mips' in str(avd):
+            launch_cmd += ["-no-boot-anim"]
         # Launch emulator with "-dns-server 8.8.8.8" for CTS test
         # to make test_getByName in android.core.tests.libcore.package.libcore pass
         if avd.cts:
@@ -340,6 +347,7 @@ class EmuBaseTestCase(LoggedTestCase):
                              'android-car': 'Android Automotive',
                              'android-tv': 'Android TV',
                              'android-wear': 'Android Wear',
+                             'chromeos': 'Chrome OS',
                              'default': 'Default',
                              'google_apis': 'Google APIs',
                              'google_apis_playstore': 'Google APIs Playstore'
@@ -369,7 +377,7 @@ class EmuBaseTestCase(LoggedTestCase):
         set_val('hw.ramSize', avd_config.ram)
         api_target = avd_config.api
         set_val('image.sysdir.1',
-                'system-images/android-%s/%s/%s/' % (api_target, avd_config.tag, avd_config.abi))
+                'system-images/%s/%s/%s/' % (self.get_sub_dir(avd_config), avd_config.tag, avd_config.abi))
         set_val('tag.display', tag_id_to_display[avd_config.tag])
         set_val('tag.id', avd_config.tag)
 
@@ -397,6 +405,39 @@ class EmuBaseTestCase(LoggedTestCase):
         except:
             self.m_logger.exception('Failed to create sdcard.img, make sure you have mksdcard on your path ($ANDROID_SDK_ROOT/tools/mksdcard)')
             pass
+
+    def get_sub_dir(self, avd_config):
+        return 'android-%s' % avd_config.api if avd_config.tag != 'chromeos' else 'chromeos-%s' % avd_config.alt_version
+
+    def update_chromeos(self, version):
+        """Update chrome os images."""
+
+        gsutil_path = os.path.join(os.path.dirname(__file__), '..', '..', 'build', 'third_party', 'gsutil', 'gsutil.py')
+        dst_location = os.path.join(os.environ['ANDROID_SDK_ROOT'],
+                                    "system-images", "chromeos-%s" % version, "chromeos")
+        f = tempfile.NamedTemporaryFile(delete=False)
+        tmp_zip = f.name
+        f.close()
+        cmd = ['python', gsutil_path, 'cp',
+               'gs://chromeos-emulator-test/images/system-%s.zip' % version, tmp_zip]
+        self.m_logger.debug("update chromeos %s", ' '.join(cmd))
+        print "Command: %s" % (cmd)
+        update_proc = psutil.Popen(cmd, stdout=PIPE, stderr=PIPE)
+        output, err = update_proc.communicate()
+        self.simple_logger.debug(output)
+        self.simple_logger.debug(err)
+        self.m_logger.debug('return value of update proc: %s', update_proc.poll())
+        shutil.rmtree(dst_location, ignore_errors=True)
+        os.makedirs(dst_location)
+        cmd = ['unzip' , tmp_zip, '-d', dst_location]
+        print "Command: %s" % (cmd)
+        unzip_proc = psutil.Popen(cmd, stdout=PIPE, stderr=PIPE)
+        output, err = unzip_proc.communicate()
+        self.simple_logger.debug(output)
+        self.simple_logger.debug(err)
+        self.m_logger.debug('return value of update proc: %s', unzip_proc.poll())
+        os.unlink(tmp_zip)
+        return unzip_proc.poll()
 
     def create_avd(self, avd_config):
         """Create avd if doesn't exist
@@ -450,7 +491,7 @@ class EmuBaseTestCase(LoggedTestCase):
             # 1. check userdata.img exists
             userimg_name = "userdata.img"
             userdata_src = os.path.join(os.environ['ANDROID_SDK_ROOT'],
-                                        "system-images", "android-%s" % api_target,
+                                        "system-images", self.get_sub_dir(avd_config),
                                         avd_config.tag, avd_config.abi, userimg_name)
             if not os.path.isfile(userdata_src):
               self.m_logger.error("userdata image %s does not exist! Try install system image." % userdata_src)
@@ -496,6 +537,8 @@ class EmuBaseTestCase(LoggedTestCase):
             elif "car" in avd_config.tag:
                 self.update_sdk("system-images;android-%s;android-car;%s"
                                 % (api, avd_config.abi))
+            elif "chromeos" in avd_config.tag:
+                self.update_chromeos(avd_config.alt_version)
             else:
                 self.update_sdk("system-images;android-%s;default;%s"
                                 % (api, avd_config.abi))
@@ -603,8 +646,13 @@ def create_test_case_from_file(desc, testcase_class, test_func):
             else:
                 if(row[0].strip() != ""):
                     api = row[0].split("API", 1)[1].strip()
+                    if ':' in api:
+                        api, alt_version = api.split(':', 2)
+                    else:
+                        alt_version = ''
                 if(row[1].strip() != ""):
                     tag = row[1].strip()
+
                 if(row[2].strip() != ""):
                     abi = row[2].strip()
 
@@ -637,5 +685,5 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                       classic = "yes"
                     if device == "":
                       device = "default"
-                    avd_config = AVDConfig(api, tag, abi, device, ram, gpu, classic, get_port(), is_cts, ori)
+                    avd_config = AVDConfig(api, alt_version, tag, abi, device, ram, gpu, classic, get_port(), is_cts, ori)
                     create_test_case(avd_config, op, emu_argparser.emu_args.builder_name, emu_argparser.emu_args.pattern)

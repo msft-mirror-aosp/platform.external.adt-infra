@@ -47,7 +47,7 @@ class QuitTest(testcase_base.BaseConsoleTest):
   def test_quit_command(self):
     """Test command for: quit.
 
-    Test Rail ID: 14595303
+    TT ID: 7a62bc63-b9ff-4895-b216-56f9d2c55b10
     Steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -64,7 +64,7 @@ class QuitTest(testcase_base.BaseConsoleTest):
   def test_exit_command(self):
     """Test command for: exit.
 
-    Test Rail ID: 14595303
+    TT ID: 7a62bc63-b9ff-4895-b216-56f9d2c55b10
     Steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>

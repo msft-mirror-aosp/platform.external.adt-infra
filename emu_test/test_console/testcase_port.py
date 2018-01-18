@@ -87,7 +87,7 @@ class PortTest(testcase_base.BaseConsoleTest):
   def test_list_port_redir(self):
     """Test for command: redir list.
 
-    TR ID: C14594979
+    TT ID: fa2c6127-83e8-4f36-b5d9-8f87b42ed8eb
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._list_redir_cmd()
@@ -97,7 +97,7 @@ class PortTest(testcase_base.BaseConsoleTest):
 
     redir add <tcp_or_udp>:<5556>:<port_of_emulator>
     redir def <tcp_or_udp>:<5556>
-    TR ID: C14594979
+    TT ID: fa2c6127-83e8-4f36-b5d9-8f87b42ed8eb
     b/210442:
       command "redir del" doesn't work on API 23/24 on Windows; but Linux.
     """

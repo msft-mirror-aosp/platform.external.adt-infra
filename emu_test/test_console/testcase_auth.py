@@ -61,7 +61,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
   def test_auth_token_file_exists(self):
     """Test command for: auth <auth_token>.
 
-    Test Rail ID: C14595293
+    TT ID: a808dfe9-b0ff-4b77-9db5-24d8b2aa44ea
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -78,7 +78,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
   def test_auth_without_authorization(self):
     """Test command for: auth <auth_token>.
 
-    Test Rail ID: C14595293
+    TT ID: a808dfe9-b0ff-4b77-9db5-24d8b2aa44ea
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -96,7 +96,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
   def test_auth_user_with_random_auth_token(self):
     """Test command for: auth <auth_token>.
 
-    Test Rail ID: C14595293
+    TT ID: a808dfe9-b0ff-4b77-9db5-24d8b2aa44ea
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -115,7 +115,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
   def test_auth_user_with_empty_auth_token(self):
     """Test command for: auth <auth_token>.
 
-    Test Rail ID: C14595293
+    TT ID: a808dfe9-b0ff-4b77-9db5-24d8b2aa44ea
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -135,7 +135,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
   def test_auth_user_with_valid_auth_token(self):
     """Test command for: auth <auth_token>.
 
-    Test Rail ID: C14595293
+    TT ID: a808dfe9-b0ff-4b77-9db5-24d8b2aa44ea
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
@@ -159,7 +159,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
   def test_auth_empty_auth_token_file(self):
     """Test command for: auth <auth_token>.
 
-    Test Rail ID: C14595293
+    TT ID: a808dfe9-b0ff-4b77-9db5-24d8b2aa44ea
     Test steps:
       0. Save valid auth token, and empty the contents of auth token file
       1. Launch an emulator avd
@@ -204,7 +204,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
   def test_auth_change_auth_token_file_permissions(self):
     """Test command for: auth <auth_token>.
 
-    Test Rail ID: C14595293
+    TT ID: a808dfe9-b0ff-4b77-9db5-24d8b2aa44ea
     Test steps:
       0. Deny read and write permissions on the auth token file,
          chmod 000 .emulator_console_auth_token

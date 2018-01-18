@@ -155,6 +155,17 @@
        "branch": "all",
        "name_identifier": "system-images",
     },
+    "sys_image_aosp_poller": {
+       "gs_bucket": "android-build-emu-sysimage",
+       "gs_path": ["builds/aosp-master-linux-sdk_x86_64-sdk/",
+                   "builds/aosp-master-linux-sdk_x86-sdk/",
+                   "builds/aosp-master-linux-sdk_arm64-sdk/"],
+       "pollInterval": 597,
+       "type": "GSMultiPoller",
+       "project": "aosp",
+       "branch": "all",
+       "name_identifier": "system-images",
+    },
     "sys_image_klp_poller": {
        "gs_bucket": "android-build-emu-sysimage",
        "gs_path": ["builds/git_klp-emu-dev-linux-google_sdk_x86-sdk_addon/"],
@@ -201,57 +212,30 @@
        "branch": "Mac",
        "name_identifier": "sdk-repo-darwin",
     },
-    "emulator_2.4_linux_poller": {
+    "emulator_2.5_linux_poller": {
        "gs_bucket": "android-build-emu",
-       "gs_path": ["builds/aosp-emu-2.4-release-linux-sdk_tools_linux/"],
+       "gs_path": ["builds/aosp-emu-2.5-release-linux-sdk_tools_linux/"],
        "pollInterval": 347,
        "type": "GSMultiPoller",
-       "project": "emu-2.4-release",
+       "project": "emu-2.5-release",
        "branch": "Ubuntu",
        "name_identifier": "sdk-repo-linux",
     },
-    "emulator_2.4_windows_poller": {
+    "emulator_2.5_windows_poller": {
        "gs_bucket": "android-build-emu",
-       "gs_path": ["builds/aosp-emu-2.4-release-linux-sdk_tools_linux/"],
+       "gs_path": ["builds/aosp-emu-2.5-release-linux-sdk_tools_linux/"],
        "pollInterval": 487,
        "type": "GSMultiPoller",
-       "project": "emu-2.4-release",
+       "project": "emu-2.5-release",
        "branch": "Win",
        "name_identifier": "sdk-repo-windows",
     },
-    "emulator_2.4_mac_poller": {
+    "emulator_2.5_mac_poller": {
        "gs_bucket": "android-build-emu",
-       "gs_path": ["builds/aosp-emu-2.4-release-mac-sdk_tools_mac/"],
+       "gs_path": ["builds/aosp-emu-2.5-release-mac-sdk_tools_mac/"],
        "pollInterval": 439,
        "type": "GSMultiPoller",
-       "project": "emu-2.4-release",
-       "branch": "Mac",
-       "name_identifier": "sdk-repo-darwin",
-    },
-    "emulator_2.3_linux_poller": {
-       "gs_bucket": "android-build-emu",
-       "gs_path": ["builds/aosp-emu-2.3-release-linux-sdk_tools_linux/"],
-       "pollInterval": 347,
-       "type": "GSMultiPoller",
-       "project": "emu-2.3-release",
-       "branch": "Ubuntu",
-       "name_identifier": "sdk-repo-linux",
-    },
-    "emulator_2.3_windows_poller": {
-       "gs_bucket": "android-build-emu",
-       "gs_path": ["builds/aosp-emu-2.3-release-linux-sdk_tools_linux/"],
-       "pollInterval": 487,
-       "type": "GSMultiPoller",
-       "project": "emu-2.3-release",
-       "branch": "Win",
-       "name_identifier": "sdk-repo-windows",
-    },
-    "emulator_2.3_mac_poller": {
-       "gs_bucket": "android-build-emu",
-       "gs_path": ["builds/aosp-emu-2.3-release-mac-sdk_tools_mac/"],
-       "pollInterval": 439,
-       "type": "GSMultiPoller",
-       "project": "emu-2.3-release",
+       "project": "emu-2.5-release",
        "branch": "Mac",
        "name_identifier": "sdk-repo-darwin",
      },
@@ -277,44 +261,119 @@
        "id": "_1",
        "scheduler": "emu_master_dev_scheduler",
      },
-     "emu-2.4-release": {
+     "emu-2.5-release": {
        "name": "Emulator build on SDK images",
        "id": "_2",
-       "scheduler": "emu_2.4_release_scheduler",
-     },
-     "system-image-builds": {
-       "name": "SDK emulator on system image builds",
-       "id": "_3",
-       "scheduler": "system_image_scheduler",
+       "scheduler": "emu_2.5_release_scheduler",
      },
      "cross-builds": {
        "name": "cross",
-       "id": "_4",
+       "id": "_3",
      },
      "UI": {
        "name": "emulator ui test",
-       "id": "_5",
+       "id": "_4",
        "scheduler": "system_image_scheduler",
      },
      "Console": {
        "name": "emulator console test",
-       "id": "_6",
+       "id": "_5",
        "scheduler": "console_scheduler",
      },
      "System Image Release": {
         "name": "system image release test",
-        "id": "_7",
+        "id": "_6",
         "scheduler": "sysimage_release_psq_scheduler",
      },
      "ADB": {
        "name": "adb stress test",
-       "id": "_8",
+       "id": "_7",
        "scheduler": "adb_test_scheduler",
      },
      "AVD": {
        "name": "avd test",
-       "id": "_9",
+       "id": "_8",
        "scheduler": "avd_test_scheduler",
+     },
+     "sysimg-master": {
+       "name": "sysimg-master",
+       "id": "_9",
+       "scheduler": "sysimg-master",
+     },
+     "sysimg-klp": {
+       "name": "sysimg-klp",
+       "id": "_10",
+       "scheduler": "sysimg-klp",
+     },
+     "sysimg-lmp-mr1": {
+       "name": "sysimg-lmp-mr1",
+       "id": "_11",
+       "scheduler": "sysimg-lmp-mr1",
+     },
+     "sysimg-mnc": {
+       "name": "sysimg-mnc",
+       "id": "_12",
+       "scheduler": "sysimg-mnc",
+     },
+     "sysimg-oc": {
+       "name": "sysimg-oc",
+       "id": "_13",
+       "scheduler": "sysimg-oc",
+     },
+     "sysimg-oc-mr1-car-support-release": {
+       "name": "sysimg-oc-mr1-car-support-release",
+       "id": "_14",
+       "scheduler": "sysimg-oc-mr1-car-support-release",
+     },
+     "sysimg-oc-mr1": {
+       "name": "sysimg-oc-mr1",
+       "id": "_15",
+       "scheduler": "sysimg-oc-mr1",
+     },
+     "sysimg-nyc": {
+       "name": "sysimg-nyc",
+       "id": "_16",
+       "scheduler": "sysimg-nyc",
+     },
+     "sysimg-nyc-mr1": {
+       "name": "sysimg-nyc-mr1",
+       "id": "_17",
+       "scheduler": "sysimg-nyc-mr1",
+     },
+     "sysimg-lmp": {
+       "name": "sysimg-lmp",
+       "id": "_18",
+       "scheduler": "sysimg-lmp",
+     },
+     "sysimg-gb": {
+       "name": "sysimg-gb",
+       "id": "_19",
+       "scheduler": "sysimg-gb",
+     },
+     "sysimg-ics-mr1": {
+       "name": "sysimg-ics-mr1",
+       "id": "_20",
+       "scheduler": "sysimg-ics-mr1",
+     },
+     "sysimg-jb": {
+       "name": "sysimg-jb",
+       "id": "_21",
+       "scheduler": "sysimg-jb",
+     },
+     "sysimg-jb-mr1.1": {
+       "name": "sysimg-jb-mr1.1",
+       "id": "_22",
+       "scheduler": "sysimg-jb-mr1.1",
+     },
+     "sysimg-jb-mr2": {
+       "name": "sysimg-jb-mr2",
+       "id": "_23",
+       "scheduler": "sysimg-jb-mr2",
+     },
+     "sysimg-aosp": {
+       "name": "sysimg-aosp",
+       "id": "_24",
+       "scheduler": "sysimg-aosp",
      },
   },
 
@@ -322,13 +381,14 @@
      "Ubuntu 12.04 HD Graphics 4000": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-12_04-intel-hd-4000"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds", "Console", "AVD"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "", "cross-builds", "Console", "AVD"],
+       "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds", "UI"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds", "UI"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400 2": {
@@ -361,70 +421,66 @@
        "categories": ["CTS"],
        "tag": "4",
      },
-     "Win 7 32-bit HD 4400": {
-       "recipe": "adt/adt",
-       "slave_pools": ["win-7-32-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
-       "tag": "Win",
-     },
      "Win 7 64-bit HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["win-7-64-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
        "tag": "Win",
      },
      "Win 8 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
        "tag": "Win",
      },
      "Win 8.1 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8_1-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-10-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600 1": {
        "recipe": "adt/adt",
        "slave_pools": ["win-10-64-nvidia-quadro-600-1"],
        "categories": ["UI", "Console"],
+       "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Win",
      },
      "Mac 10.10.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-intel-hd-5000"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.10.5 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-iris-pro"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.8.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-8-5-intel-hd-5000"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.11.1 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-11-1-iris-pro"],
-       "categories": ["emu-master-dev", "emu-2.4-release", "system-image-builds", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.5-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.11.6 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-11-6-iris-pro-ui"],
        "categories": ["UI", "Console"],
+       "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Mac",
      },
      "Ubuntu 14.04 Intel HD 520": {
@@ -452,13 +508,8 @@
       "project": ["emu-master-dev"],
       "type": "emu_scheduler",
     },
-    "emu_2.4_release_scheduler": {
-      "project": ["emu-2.4-release"],
-      "type": "emu_scheduler",
-    },
-    "system_image_scheduler": {
-      "project": ["master", "klp-emu-dev", "lmp-mr1-emu-dev", "mnc-emu-dev", "oc-emu-dev", "oc-mr1-car-support-release", "oc-mr1-emu-dev","nyc-emu-dev", "nyc-mr1-emu-dev",
-                  "lmp-emu-dev", "gb-emu-dev", "ics-mr1-emu-dev", "jb-emu-dev", "jb-mr1.1-emu-dev", "jb-mr2-emu-dev"],
+    "emu_2.5_release_scheduler": {
+      "project": ["emu-2.5-release"],
       "type": "emu_scheduler",
     },
     "sysimage_release_psq_scheduler": {
@@ -469,12 +520,8 @@
       "project": ["no-branch"],
       "type": "emu_scheduler",
     },
-    #"ui_scheduler": {
-    #  "project": ["emu-master-dev"],
-    #  "type": "emu_scheduler",
-    #},
     "console_scheduler": {
-      "project": ["emu-master-dev", "emu-2.4-release"],
+      "project": ["emu-master-dev", "emu-2.5-release"],
       "type": "emu_scheduler",
     },
     "adb_test_scheduler": {
@@ -485,17 +532,77 @@
       "project": ["emu-master-dev"],
       "type": "emu_scheduler",
     },
+    "system_image_scheduler": {
+      "project": ["master", "klp-emu-dev", "lmp-mr1-emu-dev", "mnc-emu-dev", "oc-emu-dev", "oc-mr1-car-support-release", "oc-mr1-emu-dev","nyc-emu-dev" "nyc-mr1-emu-dev", "lmp-emu-dev", "gb-emu-dev", "ics-mr1-emu-dev", "jb-emu-dev", "jb-mr1.1-emu-dev", "jb-mr2-emu-dev", "aosp"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-master": {
+      "project": ["master"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-klp": {
+      "project": ["klp-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-lmp-mr1": {
+      "project": ["lmp-mr1-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-mnc": {
+      "project": ["mnc-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-oc": {
+      "project": ["oc-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-oc-mr1-car-support-release": {
+      "project": ["oc--mr1-car-support-release"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-oc-mr1": {
+      "project": ["oc-mr1-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-nyc": {
+      "project": ["nyc-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-nyc-mr1": {
+      "project": ["nyc-mr1-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-lmp": {
+      "project": ["lmp-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-gb": {
+      "project": ["gb-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-ics-mr1": {
+      "project": ["ics-mr1-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-jb": {
+      "project": ["jb-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-jb-mr1.1": {
+      "project": ["jb-mr1.1-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-jb-mr2": {
+      "project": ["jb-mr2-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-aosp": {
+      "project": ["aosp"],
+      "type": "emu_scheduler",
+    },
  },
 
   "slave_pools": {
-    #"adt-master": {
-     # "slave_data": {
-      #  "bits": 64,
-       # "os": "linux",
-        #"version": "trusty",
-      #},
-      #"slaves": ['chromeos1-row3-rack2-host1'],
-    #},
     "ubuntu-12_04-intel-hd-4000": {
       "slave_data": {
         "bits": 64,
@@ -568,14 +675,6 @@
       },
       "slaves": ['chromeos1-row3-rack4-host2'],
     },
-    "win-7-32-intel-hd-4400": {
-      "slave_data": {
-        "bits": 32,
-        "os": "win",
-        "version": "win7",
-      },
-      "slaves": ['chromeos1-row3-rack3-host3'],
-    },
     "win-7-64-intel-hd-4400": {
       "slave_data": {
         "bits": 64,
@@ -622,7 +721,7 @@
         "os": "mac",
         "version": "yosemite",
       },
-      "slaves": ['chromeos1-row4-rack3-host2'],
+      "slaves": ['chromeos1-row4-rack3-host7'],
     },
     "mac-10-8-5-intel-hd-5000": {
       "slave_data": {

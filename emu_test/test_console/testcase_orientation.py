@@ -35,14 +35,6 @@ class OrientationTest(testcase_base.BaseConsoleTest):
     self.avd = avd
     self.builder_name = builder_name
 
-  @classmethod
-  def setUpClass(cls):
-    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
-
-  @classmethod
-  def tearDownClass(cls):
-    util.unstall_apps(TESTCASE_CALL_DIR)
-
   def _process_request_orientation_service(self, payload):
     """Processes post request to orientation service.
 
@@ -113,7 +105,7 @@ class OrientationTest(testcase_base.BaseConsoleTest):
   def test_orientation(self):
     """Test command for: rotate
 
-    Test Rail ID: C14595295
+    TT ID: a802e7d8-75e6-44fd-ac9c-5af3f8d5d3a2
     Test steps:
       1. Launch an emulator avd
       2. Open any app, say Calculator, or maps
@@ -132,12 +124,16 @@ class OrientationTest(testcase_base.BaseConsoleTest):
       pass
       return
 
+    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
+
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._poll_orientation_rotation_and_verify(ORIENTATION_PORTRAIT, ROTATION_0)
     self._execute_rotate_command_and_verify(ORIENTATION_LANDSCAPE, ROTATION_270)
     self._execute_rotate_command_and_verify(ORIENTATION_PORTRAIT, ROTATION_0)
     self._execute_rotate_command_and_verify(ORIENTATION_LANDSCAPE, ROTATION_90)
     self._execute_rotate_command_and_verify(ORIENTATION_PORTRAIT, ROTATION_0)
+
+    util.unstall_apps(TESTCASE_CALL_DIR)
 
 
 if __name__ == '__main__':

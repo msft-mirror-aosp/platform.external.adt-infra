@@ -54,7 +54,7 @@ def RunSteps(api):
           stderr_output = deferred_step_result.get_error().result.stderr
           print stderr_output
 
-    for test in ['adb_push_pull_stress.py', 'adb_reboot_stress.py', 'adb_sleep_wake_stress.py']:
+    for test in ['adb_push_pull_stress.py', 'adb_reboot_stress.py', 'adb_restart_stress.py', 'adb_sleep_wake_stress.py']:
       test_path = api.path.join(adb_test_dir, test)
       deferred_step_result = api.python('Run %s' % test, test_path,
                                         ['--duration', '1',

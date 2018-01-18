@@ -31,7 +31,7 @@ class AvdTest(testcase_base.BaseConsoleTest):
   def test_help_avd(self):
     """Test command for: help avd.
 
-    Test Rail ID: C14595362
+    TT ID: 6610081f-54bb-4007-8cb5-b4b9fb2f29ec
     Test steps:
       1. Launch an emulator avd
       2. From command prompt, run: telnet localhost <port>
