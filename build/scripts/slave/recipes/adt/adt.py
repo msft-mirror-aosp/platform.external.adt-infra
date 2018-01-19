@@ -241,9 +241,9 @@ def RunSteps(api):
         emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
         #for image from master branch, need tot emulator
         step_data = bootSteps[step]
-        if 'master' in step_data.description:
+        if 'master' in step_data.description and not is_cross_build:
             emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
-        if 'aosp' in step_data.description:
+        if 'aosp' in step_data.description and not is_cross_build:
             emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
         emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
         if not is_cts and not is_ui and not is_console and not is_avd:
