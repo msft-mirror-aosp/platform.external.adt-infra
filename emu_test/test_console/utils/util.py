@@ -62,8 +62,8 @@ REGEX_HELP_DISPLAY_AUTH = (r'.*\n.*help.*\n.*help-verbose.*\n.*ping.*\n.*event.*
                            r'.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n.*crash-on-exit.*\n'
                            r'.*kill.*\n.*network.*\n'
                            r'.*power.*\n.*quit\|exit.*\n.*redir.*\n'
-                           r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.'
-                           r'*finger.*\n.*debug.*\n.*rotate.*\n.*\n.*\n.*\nOK')
+                           r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*physics.*\n'
+                           r'.*finger.*\n.*debug.*\n.*rotate.*\n.*screenrecord.*\n.*\n.*\n.*\nOK')
 CMD_HELP_VERBOSE = 'help-verbose\n'
 REGEX_HELP_VERBOSE_DISPLAY_NO_AUTH = (
         r'.*\n.*\n.*help.*\n.*help-verbose.*\n.*ping.*\n'
@@ -73,8 +73,8 @@ REGEX_HELP_VERBOSE_DISPLAY_AUTH = (
         r'.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n.*crash-on-exit.*\n'
         r'.*kill.*\n.*network.*\n'
         r'.*power.*\n.*quit\|exit.*\n.*redir.*\n'
-        r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.'
-        r'*finger.*\n.*debug.*\n.*rotate.*\n.*\n.*\nOK')
+        r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*physics.*\n'
+        r'.*finger.*\n.*debug.*\n.*rotate.*\n.*screenrecord.*\n.*\n.*\nOK')
 AUTH = 'auth'
 CMD_RANDOM_AUTH_TOKEN = '%s axxB123cc\n' % AUTH
 CMD_EMPTY_AUTH_TOKEN = '%s \n' % AUTH
