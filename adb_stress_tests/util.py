@@ -138,6 +138,8 @@ def test_connected(devices):
         print('\n<<<Begin Output of adb devices>>>')
         print(output)
         print('<<<End Output of adb devices>>>')
+        print('')
+        print('The following devices were detected: %s' % connected)
 
         success = False
 
@@ -223,7 +225,8 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
 
         connection_success, connected = test_connected(devices)
         if not connection_success:
-            return False
+            if devices != 1 or len(connected) == 0:
+                return False
 
         connected_devices = Atom(frozenset(connected))
 

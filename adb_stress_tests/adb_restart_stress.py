@@ -75,8 +75,10 @@ def launcher(duration, device_count):
     duration_sec = int(duration * 3600)
     end_time = start_time + duration_sec
     iteration = 0
-    if not util.test_connected(device_count):
-        return False
+    connection_success, connected = util.test_connected(device_count)
+    if not connection_success:
+        if device_count != 1 or len(connected) == 0:
+            return False
 
     while time.time() < end_time:
         print('Running iteration: %s' % iteration)
