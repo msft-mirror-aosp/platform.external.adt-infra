@@ -20,7 +20,6 @@ from emu_error import *
 import emu_test.utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
-from parse import parse
 
 class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     __slots__ = ()
@@ -248,26 +247,29 @@ class EmuBaseTestCase(LoggedTestCase):
         return vars['process'].returncode, vars['output'], vars['err']
 
     def launch_emu_and_wait(self, avd):
+        """Launch given avd and wait for boot completion, return boot time"""
+        """For ApiP, also check network connection"""
         def check_network_connectivity():
             ret, output, _ = run_with_timeout(["adb", "shell", "dumpsys", "connectivity"])
             hasNumNetwork = False
             dnsSuccess = False
+            networkCountKeyword = "Active default network: "
             for line in output:
-                numNetwork = parse("Active default network:{}", line)
-                if numNetwork:
+                pst = line.find(networkCountKeyword)
+                if pst != -1:
+                    pst = pst + len(networkCountKeyword)
+                    numNetwork = int(line[pst:])
                     if numNetwork == 0:
                         raise ValueError("No network connection")
                     else:
                         hasNumNetwork = True
-                if 'PROBE_DNS' in str and 'OK' in line:
+                if 'PROBE_DNS' in line and 'OK' in line:
                     dnsSuccess = True
             if not hasNumNetwork or not dnsSuccess:
                 self.m_logger.error('adb shell dumpsys connectivity retuns:')
                 self.m_logger.error('\n'.join(output))
                 raise Exception('Network check error')
 
-        """Launch given avd and wait for boot completion, return boot time"""
-        #self.launch_emu(avd)
         self.run_with_timeout(["adb", "kill-server"], 20)
         self.run_with_timeout(["adb", "start-server"], 20)
         launcher_emu = threading.Thread(target=self.launch_emu, args=[avd])
