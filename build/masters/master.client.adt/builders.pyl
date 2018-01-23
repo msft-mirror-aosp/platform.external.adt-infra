@@ -377,6 +377,13 @@
   },
 
   "builders": {
+     "Ubuntu 16.04 AMD Ryzen Vega": {
+       "recipe": "adt/adt",
+       "slave_pools": ["ubuntu-16_04-amd-ryzen-vega"],
+       "categories": ["emu-master-dev"],
+       "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
+       "tag": "Linux",
+     },
      "Ubuntu 12.04 HD Graphics 4000": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-12_04-intel-hd-4000"],
@@ -602,6 +609,14 @@
  },
 
   "slave_pools": {
+    "ubuntu-16_04-amd-ryzen-vega": {
+      "slave_data": {
+        "bits": 64,
+	"os": "linux",
+	"version": "precise",
+      },
+      "slaves": ['chromeos1-row4-rack4-host8'],
+    },
     "ubuntu-12_04-intel-hd-4000": {
       "slave_data": {
         "bits": 64,
