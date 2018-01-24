@@ -15,10 +15,3 @@ API 24,default,x86,Nexus 5,2048,yes,nyc,S,S,S
 ,google_apis_playstore,x86,Nexus 5X,2048,yes,nyc,P,P,P
 API 23,default,x86,Nexus 5,2048,yes,mnc,P,P,P
 ,google_apis,x86,Nexus 5,2048,yes,mnc,P,P,P
-API 22,default,x86,Nexus 5,2048,yes,lmp-mr1,P,P,P
-,google_apis,x86,Nexus 5,2048,yes,lmp-mr1,P,P,P
-API 21,default,x86,Nexus 5,2048,yes,lmp,P,P,P
-,google_apis,x86,Nexus 5,2048,yes,lmp,P,P,P
-API 19,default,x86,Nexus 5,2048,yes,klp,P,P,P
-,google_apis,x86,Nexus 5,2048,yes,klp,P,P,P
-API 18,default,x86,Nexus 5,2048,yes,jb-mr2,P,P,P
