@@ -246,30 +246,23 @@ class EmuBaseTestCase(LoggedTestCase):
         thread.join(timeout)
         return vars['process'].returncode, vars['output'], vars['err']
 
+    def check_network_connectivity(self):
+        ret, output, _ = self.run_with_timeout(["adb", "shell", "dumpsys", "connectivity"], 60)
+        numNetworkReg = r'Active default network: (?P<numNetworkStr>\d+)'
+        numNetworkMatch = re.search(numNetworkReg, output)
+        hasNumNetwork = numNetworkMatch and numNetworkMatch.group('numNetworkStr') > 0
+
+        dnsSuccessReg = r'PROBE_DNS (.*) OK';
+        dnsSuccess = re.search(dnsSuccessReg, output)
+
+        if not hasNumNetwork or not dnsSuccess:
+            self.m_logger.error('adb shell dumpsys connectivity retuns:')
+            self.m_logger.error(output)
+            raise Exception('Network check error')
+
     def launch_emu_and_wait(self, avd):
         """Launch given avd and wait for boot completion, return boot time"""
         """For ApiP, also check network connection"""
-        def check_network_connectivity():
-            ret, output, _ = self.run_with_timeout(["adb", "shell", "dumpsys", "connectivity"], 60)
-            hasNumNetwork = False
-            dnsSuccess = False
-            networkCountKeyword = "Active default network: "
-            for line in output:
-                pst = line.find(networkCountKeyword)
-                if pst != -1:
-                    pst = pst + len(networkCountKeyword)
-                    numNetwork = int(line[pst:])
-                    if numNetwork == 0:
-                        raise ValueError("No network connection")
-                    else:
-                        hasNumNetwork = True
-                if 'PROBE_DNS' in line and 'OK' in line:
-                    dnsSuccess = True
-            if not hasNumNetwork or not dnsSuccess:
-                self.m_logger.error('adb shell dumpsys connectivity retuns:')
-                self.m_logger.error('\n'.join(output))
-                raise Exception('Network check error')
-
         self.run_with_timeout(["adb", "kill-server"], 20)
         self.run_with_timeout(["adb", "start-server"], 20)
         launcher_emu = threading.Thread(target=self.launch_emu, args=[avd])
@@ -310,8 +303,10 @@ class EmuBaseTestCase(LoggedTestCase):
         self.boot_time = time.time() - start_time
         self.m_logger.info('AVD %s, boot time is %s', avd, self.boot_time)
         if 'apiP' in str(avd):
+            # sleep 30 seconds to wait for network
+            time.sleep(30)
             # Connectivity check for P
-            check_network_connectivity()
+            self.check_network_connectivity()
             # Success if no exception, otherwise throw the exception all the way up
             self.m_logger.info('ApiP network check succeeded.')
 
