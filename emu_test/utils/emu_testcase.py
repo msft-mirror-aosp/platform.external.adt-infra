@@ -250,7 +250,7 @@ class EmuBaseTestCase(LoggedTestCase):
         """Launch given avd and wait for boot completion, return boot time"""
         """For ApiP, also check network connection"""
         def check_network_connectivity():
-            ret, output, _ = run_with_timeout(["adb", "shell", "dumpsys", "connectivity"])
+            ret, output, _ = self.run_with_timeout(["adb", "shell", "dumpsys", "connectivity"])
             hasNumNetwork = False
             dnsSuccess = False
             networkCountKeyword = "Active default network: "
