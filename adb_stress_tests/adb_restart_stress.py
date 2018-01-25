@@ -91,6 +91,10 @@ def launcher(duration, device_count):
 
 
 if __name__ == '__main__':
+    import platform
+    if platform.system() == 'Windows':
+        print('Skipping adb_restart_stress on Windows')
+        sys.exit(0)
     args = util.parse_args()
     result = launcher(args.duration, args.count)
     if result:
