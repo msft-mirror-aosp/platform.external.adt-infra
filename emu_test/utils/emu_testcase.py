@@ -258,7 +258,8 @@ class EmuBaseTestCase(LoggedTestCase):
         if not hasNumNetwork or not dnsSuccess:
             self.m_logger.error('adb shell dumpsys connectivity retuns:')
             self.m_logger.error(output)
-            raise Exception('Network check error')
+            return False
+        return True
 
     def launch_emu_and_wait(self, avd):
         """Launch given avd and wait for boot completion, return boot time"""
@@ -303,12 +304,17 @@ class EmuBaseTestCase(LoggedTestCase):
         self.boot_time = time.time() - start_time
         self.m_logger.info('AVD %s, boot time is %s', avd, self.boot_time)
         if 'apiP' in str(avd):
-            # sleep 30 seconds to wait for network
-            time.sleep(30)
-            # Connectivity check for P
-            self.check_network_connectivity()
-            # Success if no exception, otherwise throw the exception all the way up
-            self.m_logger.info('ApiP network check succeeded.')
+            # spend 3 mins to check for network
+            network_succeeded = False
+            for i in range(18):
+                time.sleep(10)
+                # Connectivity check for P
+                network_succeeded = self.check_network_connectivity()
+                if network_succeeded:
+                    self.m_logger.info('ApiP network check succeeded.')
+                    break
+            if not network_succeeded:
+                raise Exception('Network check error')
 
         launcher_emu.join(10)
         if not emu_argparser.emu_args.skip_adb_perf:
