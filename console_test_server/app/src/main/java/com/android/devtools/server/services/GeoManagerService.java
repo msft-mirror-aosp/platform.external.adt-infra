@@ -182,26 +182,31 @@ public class GeoManagerService implements Service {
 
   public static void launchGoogleMapsApp(UiDevice uiDevice, int apiLevel)
           throws UiObjectNotFoundException {
-
-    Log.d(TAG, "1) Go to " + Constants.APPS + " screen.");
-    uiDevice.findObject(new UiSelector().descriptionContains(Constants.APPS)).
-            clickAndWaitForNewWindow();
-
-    UiScrollable appList = new UiScrollable(new UiSelector().resourceIdMatches(
-            Constants.LAUNCHER_LIST_CONTAINER_RES));
-
-    Log.d(TAG, "2) Launch " + GOOGLE_MAPS + " application.");
     UiObject app;
-    try {
-      appList.setAsVerticalList();
-      app = appList.getChildByText(
-              new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
-              GOOGLE_MAPS);
-    } catch (UiObjectNotFoundException e) {
-      appList.setAsHorizontalList();
-      app = appList.getChildByText(
-              new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
-              GOOGLE_MAPS);
+    if (apiLevel == 25) {
+      Log.d(TAG, "API 25: Launch " + GOOGLE_MAPS + " application from home screen.");
+      app = uiDevice.findObject(new UiSelector().text(GOOGLE_MAPS));
+    } else {
+      Log.d(TAG, "1) Go to " + Constants.APPS + " screen.");
+      uiDevice.findObject(new UiSelector().descriptionContains(Constants.APPS)).
+              clickAndWaitForNewWindow();
+
+      UiScrollable appList = new UiScrollable(new UiSelector().resourceIdMatches(
+              Constants.LAUNCHER_LIST_CONTAINER_RES));
+
+      Log.d(TAG, "2) Launch " + GOOGLE_MAPS + " application.");
+
+      try {
+        appList.setAsVerticalList();
+        app = appList.getChildByText(
+                new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
+                GOOGLE_MAPS);
+      } catch (UiObjectNotFoundException e) {
+        appList.setAsHorizontalList();
+        app = appList.getChildByText(
+                new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
+                GOOGLE_MAPS);
+      }
     }
     app.clickAndWaitForNewWindow();
 

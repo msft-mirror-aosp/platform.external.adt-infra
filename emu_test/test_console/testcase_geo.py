@@ -106,7 +106,8 @@ class GeoTest(testcase_base.BaseConsoleTest):
       print ('got_altitude = %s, expected_altitude = %s' %
              (got_altitude, expected_altitude))
       if (got_longitude == expected_longitude and
-              got_latitude == expected_latitude and
+            (got_latitude >= expected_latitude - 1 or
+              got_latitude <= expected_latitude + 1) and
             got_altitude == expected_altitude):
         got_expected = True
         break
