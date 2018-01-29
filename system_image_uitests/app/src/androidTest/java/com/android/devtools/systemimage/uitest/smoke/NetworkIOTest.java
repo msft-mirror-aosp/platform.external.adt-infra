@@ -181,8 +181,8 @@ public class NetworkIOTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         String containerRes = (testFramework.getApi() >= 24) ?
                 Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES : Res.NETWORK_SWITCHES_CONTAINER_RES;
-        String[] path = testFramework.getApi() >= 26 ? new String[] {"Settings", "Network & Internet", "Data Usage"} :
-                new String[] {"Settings", "Data Usage"};
+        String[] path = testFramework.getApi() >= 26 ? new String[] {"Settings", "Network & Internet", "Data Uuage"} :
+                new String[] {"Settings", "Data usage"};
 
         AppLauncher.launchPath(instrumentation, path);
 

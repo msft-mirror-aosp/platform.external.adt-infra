@@ -47,27 +47,35 @@ public class AppLauncher {
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
         device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
-        UiScrollable appList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.LAUNCHER_LIST_CONTAINER_RES)
-                );
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        UiSelector textSelector = new UiSelector().text(appName);
+        UiObject app = device.findObject(textSelector);
+        boolean isFound;
 
-        // Note that the direction of scrolling, even the res-id could change with future Android
-        // releases. We may need a check here to determine the launcher and res-id used to decide
-        // what appropriate gestures to perform.
-        UiObject app;
+        // Attempt to scroll through the list twice, first vertically, and then horizontally.
+        // If the target object cannot be found while scrolling, fling forward by a
+        // maximum of 5 swipes. The combination of these techniques is intended to mediate
+        // against any gesture-based failures, which can occur due to UI changes between APIs.
         try {
-            appList.setAsVerticalList();
-            app = appList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"),
-                    appName);
+            scrollable.setAsVerticalList();
+            isFound = scrollable.scrollIntoView(textSelector);
+            if (!isFound) {
+                scrollable.setAsHorizontalList();
+                isFound = scrollable.scrollIntoView(textSelector);
+            }
         } catch (UiObjectNotFoundException e) {
-            appList.setAsHorizontalList();
-            app = appList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"),
-                    appName);
+            device.pressHome();
+            device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
+            int swipes = 0;
+            while (!app.exists() && swipes < 5) {
+                scrollable.flingForward();
+                swipes++;
+            }
+            isFound = app.exists();
         }
-        app.clickAndWaitForNewWindow();
+        if (isFound) {
+            app.clickAndWaitForNewWindow();
+        }
     }
 
     /**
