@@ -177,6 +177,7 @@ public class NetworkIOTest {
         }
     }
 
+
     private UiObject2 navigateToDataSwitch(Instrumentation instrumentation, String label) throws UiObjectNotFoundException {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         String containerRes = (testFramework.getApi() >= 24) ?
@@ -315,6 +316,72 @@ public class NetworkIOTest {
                                 Res.CELLULAR_DATA_SWITCH_RES).className(
                                 "android.widget.Switch")).exists());
             }
+        }
+    }
+
+    /**
+     * Verifies toggling airplane mode on.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581152
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Open Settings.
+     *   3. Locate Airplane mode toggle switch.
+     *   4. Toggle Airplane mode on (verify).
+     *   5. Toggle Airplane mode off (cleanup).
+     *   Verify:
+     *   Airplane mode icon is present and enabled in notification tray.
+     *   </pre>
+     * <p>
+     * The test works on API 21 and greater.
+     */
+    @Test
+    @TestInfo(id = "14581152")
+    public void toggleAirplaneMode() throws Exception {
+        final Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        if (testFramework.getApi() >= 21) {
+            String[] path = testFramework.getApi() >= 26 ? new String[]{"Settings", "Network & Internet"} :
+                    new String[]{"Settings", "More"};
+            String switchLabel = testFramework.getApi() >= 24 ? "android:id/switch_widget" :
+                    "android:id/switchWidget";
+
+            AppLauncher.launchPath(instrumentation, path);
+            UiObject airplaneModeSwitch = device.findObject(
+                    new UiSelector().resourceId(switchLabel));
+
+            // Test requires "Airplane mode" switch widget to start in the off state.
+            if (airplaneModeSwitch.isChecked()) {
+                airplaneModeSwitch.click();
+            }
+            // Disable "Airplane mode" option.
+            airplaneModeSwitch.click();
+
+            final UiObject airplaneModeIcon = testFramework.getApi() >= 24 ?
+                    device.findObject(new UiSelector().description("Airplane mode")) :
+                    device.findObject(new UiSelector().resourceId("com.android.systemui:id/airplane"));
+
+            device.openNotification();
+
+            // Wait for airplane mode icon.
+            boolean airplaneModeActive = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return airplaneModeIcon.exists() && airplaneModeIcon.isEnabled();
+                }
+            });
+
+            assertTrue("Airplane mode is not enabled.", airplaneModeActive);
+
+            // Disable airplane mode.
+            AppLauncher.launchPath(instrumentation, path);
+            device.findObject(new UiSelector().resourceId(switchLabel)).click();
+
         }
     }
 }

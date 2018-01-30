@@ -55,6 +55,8 @@ public class Res {
             "com.android.settings:id/network_switches"; // Removed in API 24
     public static final String NETWORK_SWITCHES_RECYCLER_VIEW_RES =
             "com.android.settings:id/list"; // Added in API 24
+    public static final String NETWORK_AIRPLANE_MODE_RES =
+            "com.android.systemui:id/airplane";
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list|dashboard_container)";
