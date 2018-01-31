@@ -92,14 +92,22 @@ public class AppLauncher {
         launch(instrumentation, appPath[0]);
 
         for (int i = 1; i < appPath.length; ++i) {
-            UiSelector selector = new UiSelector().textMatches("(?i)"+appPath[i]);
+            UiSelector regexSelector = new UiSelector().textMatches(appPath[i]);
+            UiSelector textSelector = new UiSelector().textContains(appPath[i]);
+
+            UiObject target = device.findObject(regexSelector);
             try {
                 UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-                scrollable.scrollIntoView(selector);
-            } catch (UiObjectNotFoundException e) {
+                boolean isFound = scrollable.scrollIntoView(regexSelector);
+                if (!isFound) {
+                    target = device.findObject(textSelector);
+                    scrollable.scrollIntoView(textSelector);
+                }
+            }
+            catch (UiObjectNotFoundException e) {
 
-          }
-            device.findObject(selector).clickAndWaitForNewWindow();
+            }
+            target.clickAndWaitForNewWindow();
         }
     }
 }

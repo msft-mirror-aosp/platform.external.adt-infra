@@ -249,7 +249,7 @@ public class NetworkIOTest {
             } else {
                 assertFalse("Set cellular data is not turned off.", device.findObject(
                         new UiSelector().textContains("ON").resourceId(
-                                Res.CELLULAR_DATA_SWITCH_RES).className(
+                                Res.ANDROID_DATA_SWITCH_RES).className(
                                 "android.widget.Switch")).exists());
             }
             // Enable Cellular data.
@@ -313,7 +313,7 @@ public class NetworkIOTest {
             } else {
                 assertTrue("Set cellular data is not turned on.", device.findObject(
                         new UiSelector().textContains("ON").resourceId(
-                                Res.CELLULAR_DATA_SWITCH_RES).className(
+                                Res.ANDROID_DATA_SWITCH_RES).className(
                                 "android.widget.Switch")).exists());
             }
         }
@@ -337,7 +337,7 @@ public class NetworkIOTest {
      *   Airplane mode icon is present and enabled in notification tray.
      *   </pre>
      * <p>
-     * The test works on API 21 and greater.
+     * The test works on API 17 and greater.
      */
     @Test
     @TestInfo(id = "14581152")
@@ -345,15 +345,23 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (testFramework.getApi() >= 21) {
+        if (testFramework.getApi() >= 17) {
             String[] path = testFramework.getApi() >= 26 ? new String[]{"Settings", "Network & Internet"} :
                     new String[]{"Settings", "More"};
-            String switchLabel = testFramework.getApi() >= 24 ? "android:id/switch_widget" :
-                    "android:id/switchWidget";
+            String airplaneToggle;
+
+            if (testFramework.getApi() >= 24) {
+                airplaneToggle = "android:id/switch_widget";
+            } else if (testFramework.getApi() >= 21) {
+                airplaneToggle = "android:id/switchWidget";
+            } else {
+                airplaneToggle = "android:id/checkbox";
+            }
 
             AppLauncher.launchPath(instrumentation, path);
+
             UiObject airplaneModeSwitch = device.findObject(
-                    new UiSelector().resourceId(switchLabel));
+                    new UiSelector().resourceId(airplaneToggle));
 
             // Test requires "Airplane mode" switch widget to start in the off state.
             if (airplaneModeSwitch.isChecked()) {
@@ -380,7 +388,7 @@ public class NetworkIOTest {
 
             // Disable airplane mode.
             AppLauncher.launchPath(instrumentation, path);
-            device.findObject(new UiSelector().resourceId(switchLabel)).click();
+            device.findObject(new UiSelector().resourceId(airplaneToggle)).click();
 
         }
     }
