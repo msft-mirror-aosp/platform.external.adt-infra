@@ -271,8 +271,8 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
                         with connected_devices:
                              # Remove this device from set of connected devices.
                              connected_devices.swap(lambda x: x.difference([device]))
-                             if not connected_devices.value:
-                                 return False
+                             # Too many connection failures, stop the test.
+                             return False
 
                     time.sleep(5)
 
