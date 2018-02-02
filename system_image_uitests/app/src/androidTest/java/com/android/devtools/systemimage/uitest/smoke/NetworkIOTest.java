@@ -392,4 +392,62 @@ public class NetworkIOTest {
 
         }
     }
+
+    /**
+     * Verifies toggling 2G Data mode on.
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Open Settings.
+     *   3. Launch Preferred Network Type.
+     *   4. Enable 3G Data mode if not enabled.
+     *   5. Toggle 2G Data mode on. (verify)
+     *   6. Toggle 3G Data mode on to reset image.
+     *   Verify:
+     *   2G Data mode icon is set as the Preferred Network Type.
+     *   </pre>
+     * <p>
+     * The test works on API 23 and greater.
+     */
+    @Test
+    @TestInfo(id = "14581152")
+    public void toggle2GData() throws Exception {
+        final Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        if (testFramework.getApi() >= 23) {
+            String[] path = testFramework.getApi() >= 26 ?
+                    new String[]{"Settings", "Network & Internet", "Mobile network", "Preferred network type"} :
+                    new String[]{"Settings", "More", "Cellular Networks", "Preferred network type"};
+
+            AppLauncher.launchPath(instrumentation, path);
+
+            UiObject dataSwitch3G = device.findObject(new UiSelector().text("3G"));
+            UiObject dataSwitch2G = device.findObject(new UiSelector().text("2G"));
+
+            // Test requires image to start in 3G data mode.
+            if (!dataSwitch3G.isChecked()) {
+                dataSwitch3G.click();
+            }
+            // Enable 2G data mode option.
+            dataSwitch2G.click();
+
+            final UiObject data2GPreferred = device.findObject(new UiSelector().text("2G").
+                    packageName(Res.ANDROID_PHONE_RES));
+
+            // Wait for 2G data mode icon
+            boolean data2GModeActive = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return data2GPreferred.exists();
+                }
+            });
+
+            assertTrue("2G data mode is not enabled.", data2GModeActive);
+
+            // Reset 3G mode.
+            data2GPreferred.clickAndWaitForNewWindow();
+            dataSwitch3G.click();
+        }
+    }
 }
