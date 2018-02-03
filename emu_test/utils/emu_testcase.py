@@ -155,10 +155,10 @@ class EmuBaseTestCase(LoggedTestCase):
             launch_cmd += ["-no-boot-anim"]
         if 'mips' in str(avd):
             launch_cmd += ["-no-boot-anim"]
-        # Launch emulator with "-dns-server 8.8.8.8" for CTS test
-        # to make test_getByName in android.core.tests.libcore.package.libcore pass
-        if avd.cts:
-            launch_cmd += ["-dns-server", "8.8.8.8"]
+        # Launch emulator with "-dns-server 8.8.8.8"
+        # For CTS test to make test_getByName in android.core.tests.libcore.package.libcore pass
+        # Also windows and mac needs this to have network connection
+        launch_cmd += ["-dns-server", "8.8.8.8"]
         # The following flag is only in emu-master-dev
         # TODO: change it when https://android-review.googlesource.com/#/c/266872/ is merged to release branch or published.
         if "emu-master-dev" in exec_path:
