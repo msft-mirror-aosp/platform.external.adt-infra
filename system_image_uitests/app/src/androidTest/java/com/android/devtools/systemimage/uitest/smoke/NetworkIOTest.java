@@ -407,7 +407,7 @@ public class NetworkIOTest {
      *   2G Data mode icon is set as the Preferred Network Type.
      *   </pre>
      * <p>
-     * The test works on API 23 and greater.
+     * The test works on API 19 and greater.
      */
     @Test
     @TestInfo(id = "14581152")
@@ -415,10 +415,21 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (testFramework.getApi() >= 23) {
-            String[] path = testFramework.getApi() >= 26 ?
-                    new String[]{"Settings", "Network & Internet", "Mobile network", "Preferred network type"} :
-                    new String[]{"Settings", "More", "Cellular Networks", "Preferred network type"};
+        if (testFramework.getApi() >= 19) {
+            String[] path;
+            if (testFramework.getApi() >= 27) {
+                path = new String[]{"Settings", "Network & Internet", "Mobile network", "Advanced",
+                        "Preferred network type"};
+            } else if (testFramework.getApi() == 26) {
+                path = new String[]{"Settings", "Network & Internet", "Mobile network",
+                        "Preferred network type"};
+            } else if (testFramework.getApi() >= 21) {
+                path = new String[]{"Settings", "More", "Cellular networks",
+                        "Preferred network type"};
+            } else {
+                path = new String[]{"Settings", "More", "Mobile networks",
+                        "Preferred network type"};
+            }
 
             AppLauncher.launchPath(instrumentation, path);
 
@@ -427,7 +438,12 @@ public class NetworkIOTest {
 
             // Test requires image to start in 3G data mode.
             if (!dataSwitch3G.isChecked()) {
-                dataSwitch3G.click();
+                dataSwitch3G.clickAndWaitForNewWindow();
+                UiObject preferredNetwork = device.findObject(new UiSelector().text(
+                        "Preferred network type"));
+                if (preferredNetwork.exists()) {
+                    preferredNetwork.clickAndWaitForNewWindow();
+                }
             }
             // Enable 2G data mode option.
             dataSwitch2G.click();
