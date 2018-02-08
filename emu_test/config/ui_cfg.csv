@@ -7,11 +7,11 @@ API 27,google_apis,x86_64,Pixel 2,2048,yes,oc-mr1,P,P,P
 API 26,google_apis,x86,Pixel,2048,yes,oc,P,P,P
 ,google_apis,x86_64,Nexus 6P,2048,yes,oc,P,P,P
 ,google_apis_playstore,x86,Nexus 5X,2048,yes,oc,P,P,P
-API 25,google_apis,x86_64,Nexus 6P,2048,yes,nyc-mr1,P,P,P
-,google_apis_playstore,x86,Nexus 5,2048,yes,nyc-mr1,P,P,P
-,google_apis_playstore,x86,Nexus 5X,2048,yes,nyc-mr1,P,P,P
-API 24,default,x86,Nexus 6,2048,yes,nyc,P,P,P
-,google_apis_playstore,x86,Nexus 5,2048,yes,nyc,P,P,P
-,google_apis_playstore,x86,Nexus 5X,2048,yes,nyc,P,P,P
+API 25,google_apis,x86_64,Nexus 6P,2048,yes,oc-mr1,P,P,P
+,google_apis_playstore,x86,Nexus 5,2048,yes,oc-mr1,P,P,P
+,google_apis_playstore,x86,Nexus 5X,2048,yes,oc-mr1,P,P,P
+API 24,default,x86,Nexus 6,2048,yes,oc,P,P,P
+,google_apis_playstore,x86,Nexus 5,2048,yes,oc,P,P,P
+,google_apis_playstore,x86,Nexus 5X,2048,yes,oc,P,P,P
 API 23,default,x86,Nexus 5,2048,yes,mnc,P,P,P
 ,google_apis,x86,Nexus 5X,2048,yes,public,P,P,P
