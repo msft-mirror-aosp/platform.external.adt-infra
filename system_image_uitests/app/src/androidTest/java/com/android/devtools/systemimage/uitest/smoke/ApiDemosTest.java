@@ -95,17 +95,25 @@ public class ApiDemosTest {
                 new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES));
         itemList.setAsVerticalList();
         Assert.assertTrue(itemList.exists());
-        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                "App").clickAndWaitForNewWindow();
-        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                "Device Admin").clickAndWaitForNewWindow();
-        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                "Password quality").clickAndWaitForNewWindow();
+        UiObject appItem = itemList.getChildByText(
+                new UiSelector().className("android.widget.TextView"), "App");
+        appItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
+        appItem.click();
+        UiObject deviceAdminItem = itemList.getChildByText(
+                new UiSelector().className("android.widget.TextView"), "Device Admin");
+        deviceAdminItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
+        deviceAdminItem.click();
+        UiObject passwordQualityItem = itemList.getChildByText(
+                new UiSelector().className("android.widget.TextView"), "Password quality");
+        passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
+        passwordQualityItem.clickAndWaitForNewWindow(3L);
+
+        passwordQualityItem = itemList.getChildByText(
+                new UiSelector().className("android.widget.RelativeLayout"), "Password quality");
+        passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
+        passwordQualityItem.clickAndWaitForNewWindow(3L);
 
         // Set the criteria for password to 'Complex' type.
-        itemList.getChildByText(
-                new UiSelector().className("android.widget.RelativeLayout"), "Password quality")
-                .clickAndWaitForNewWindow();
         device.findObject(new UiSelector().text("Complex")).clickAndWaitForNewWindow();
 
         // Set minimum length to 6.
@@ -195,10 +203,10 @@ public class ApiDemosTest {
 
         //Assertion for a valid password that meets all the "PASSWORD QUALITY" criteria.
         passwordField.setText("Abc1!d");
-        UiObject ContinueButton = device.findObject(
+        UiObject continueButton = device.findObject(
                 new UiSelector().className("android.widget.Button").textContains("Continue"));
-        ContinueButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
-        Assert.assertTrue(ContinueButton.isEnabled());
+        continueButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
+        Assert.assertTrue(continueButton.isEnabled());
     }
 
 
@@ -212,9 +220,9 @@ public class ApiDemosTest {
                 new UiSelector().className("android.widget.EditText"));
 
         passwordField.setText(password);
-        Assert.assertTrue(
-                device.findObject(
-                        new UiSelector().textContains(errorMessage)).exists());
+        UiObject passwordError = device.findObject(new UiSelector().textContains(errorMessage));
+        passwordError.waitForExists(3L);
+        Assert.assertTrue(passwordError.exists());
         pressDeleteKey(device, password.length());
     }
 
