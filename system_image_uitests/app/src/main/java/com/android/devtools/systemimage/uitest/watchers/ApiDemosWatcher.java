@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class ApiDemosWatcher implements UiWatcher {
     private final UiDevice mDevice;
     private static final String NO_THANKS_CASE_INSENSITIVE = "(?i)no thanks(?-i)";
+    private static final String NO_CASE_INSENSITIVE = "(?i)no(?-i)";
     private static final String CONTINUE_CASE_INSENSITIVE = "(?i)continue(?-i)";
 
     public ApiDemosWatcher(UiDevice device) {
@@ -43,6 +44,13 @@ public class ApiDemosWatcher implements UiWatcher {
         try {
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().textMatches((NO_THANKS_CASE_INSENSITIVE))).click();
+                condition = true;
+            }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().textMatches(NO_CASE_INSENSITIVE))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().textMatches(NO_CASE_INSENSITIVE)).click();
                 condition = true;
             }
             isSuccess =
