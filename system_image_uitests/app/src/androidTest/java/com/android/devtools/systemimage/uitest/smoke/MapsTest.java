@@ -137,6 +137,8 @@ public class MapsTest {
         directions.clickAndWaitForNewWindow();
 
         UiObject destination = mDevice.findObject(new UiSelector().textContains(QUERY_STRING));
+        new MapsWatcher(mDevice).checkForCondition();
+
         Assert.assertTrue(destination.exists());
 
         for (int i = 0; i < 5; i++) {
