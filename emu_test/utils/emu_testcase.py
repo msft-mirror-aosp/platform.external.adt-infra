@@ -687,6 +687,9 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                 # P - config should be passing
                 # X - config is expected to fail
                 # S and everything else - Skip this config
+                if builder_idx >= len(row) or builder_idx < 0:
+                    continue
+
                 op = row[builder_idx].strip().upper()
                 if op in ["P", "X", "F"]:
                     device = row[3]
