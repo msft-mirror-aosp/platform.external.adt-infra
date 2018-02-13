@@ -211,7 +211,7 @@
        "branch": "Mac",
        "name_identifier": "sdk-repo-darwin",
     },
-    "emulator_2.5_linux_poller": {
+    "emulator_2.6_linux_poller": {
        "gs_bucket": "android-build-emu",
        "gs_path": ["builds/aosp-emu-2.5-release-linux-sdk_tools_linux/"],
        "pollInterval": 347,
@@ -220,7 +220,7 @@
        "branch": "Ubuntu",
        "name_identifier": "sdk-repo-linux",
     },
-    "emulator_2.5_windows_poller": {
+    "emulator_2.6_windows_poller": {
        "gs_bucket": "android-build-emu",
        "gs_path": ["builds/aosp-emu-2.5-release-linux-sdk_tools_linux/"],
        "pollInterval": 487,
@@ -229,7 +229,7 @@
        "branch": "Win",
        "name_identifier": "sdk-repo-windows",
     },
-    "emulator_2.5_mac_poller": {
+    "emulator_2.6_mac_poller": {
        "gs_bucket": "android-build-emu",
        "gs_path": ["builds/aosp-emu-2.5-release-mac-sdk_tools_mac/"],
        "pollInterval": 439,
