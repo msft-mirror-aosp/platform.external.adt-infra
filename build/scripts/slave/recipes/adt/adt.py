@@ -34,7 +34,7 @@ def RunSteps(api):
   file_list = api.properties.get('file_list')
   download_path = api.path['slave_build'].join('')
   env_path = ['%(PATH)s']
-  emulator_branches = ['emu-master-dev', 'emu-2.5-release']
+  emulator_branches = ['emu-master-dev', 'emu-2.6-release']
   is_cts = 'CTS' in str(buildername)
   is_ui = 'UI' in str(buildername)
   is_console = "console" in str(api.properties.get('scheduler'))
@@ -91,7 +91,7 @@ def RunSteps(api):
 
   bootSteps = {
                'emu-master-dev': bootStep('public', '{"ori": "public"}'),
-               'emu-2.5-release': bootStep('public', '{"ori": "public"}'),
+               'emu-2.6-release': bootStep('public', '{"ori": "public"}'),
                'master': bootStep('master', '{"ori": "master"}'),
                'aosp': bootStep('aosp', '{"ori": "aosp"}'),
                'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
