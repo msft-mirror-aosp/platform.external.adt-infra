@@ -71,11 +71,12 @@ public class Res {
     public static final String NOTIFICATION_BAR_EXPAND_RES =
             "com.android.systemui:id/expand_indicator";
 
+    public static final String GOOGLE_PLAY_VENDING_RES = "com.android.vending";
     public static final String GOOGLE_PLAY_IDLE_RES = "com.android.vending:id/search_box_idle_text";
     public static final String GOOGLE_PLAY_ACTIVE_RES = "com.android.vending:id/search_box_active_text_view";
     public static final String GOOGLE_PLAY_INPUT_RES =
             "com.android.vending:id/search_box_text_input";
-    public static final String GOOGLE_PLAY_BUY_BUTTON_RES = "com.android.vending:id/buy_button";
+    public static final String GOOGLE_PLAY_LIST_TITLE_RES = "com.android.vending:id/li_title";
     public static final String GOOGLE_PLAY_FILTER_TOGGLE_RES = "com.android.vending:id/content_filter_on_off_toggle";
 
     public static final String DIALER_PHONE_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/floating_action_button";
