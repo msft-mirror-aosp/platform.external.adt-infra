@@ -64,6 +64,9 @@ public class Res {
     public static final String SETTINGS_RECYCLER_VIEW_RES =
             "com.android.settings:id/dashboard_container"; // Added in API 24
 
+    public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";
+    public static final String CAMERA_PHOTO_THUMBNAIL_RES = "com.android.camera2:id/rounded_thumbnail_view";
+    public static final String CAMERA_PHOTO_DELETE_RES = "com.android.camera2:id/filmstrip_bottom_control_delete";
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
     public static final String MOBILE_TYPE_ICONS_RES = "com.android.systemui:id/mobile_type";
     public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
