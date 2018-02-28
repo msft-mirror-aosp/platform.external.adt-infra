@@ -147,7 +147,7 @@ class EmuBaseTestCase(LoggedTestCase):
         if avd.classic == "yes":
             launch_cmd += ["-engine", "classic"]
         if avd.gpu == "swiftshader":
-            launch_cmd += ["-gpu", "swiftshader"]
+            launch_cmd += ["-gpu", "swiftshader_indirect"]
         else:
             launch_cmd += ["-gpu", "host"]
         # arm/mips is quit slow, disable boot animation
