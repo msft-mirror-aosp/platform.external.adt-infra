@@ -19,8 +19,11 @@ package com.android.devtools.systemimage.uitest.smoke;
 import android.app.Instrumentation;
 import android.os.Environment;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObject2;
+import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
@@ -29,6 +32,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
+import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 
@@ -47,8 +51,6 @@ import java.util.concurrent.TimeUnit;
 @RunWith(AndroidJUnit4.class)
 public class CameraTest {
     private final String TAG = "CameraTest";
-    private final File dcimStorage = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-    private final String photoDir = dcimStorage.toString() + "/Camera";
 
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
@@ -57,62 +59,127 @@ public class CameraTest {
     public Timeout globalTimeout = Timeout.seconds(120);
 
     /**
-     * Tests the camera photo capture feature.
+     * Tests the photo capture functionality of the camera application.
      * <p>
      * TT ID: ab5f9585-433b-4261-bd15-5c7136f6127b
      * <p>
      *   <pre>
      *   Test Steps:
      *   1. Start the emulator.
-     *   2. Get list of photos already stored in the Gallery.
-     *   3. Open the Camera application.
-     *   4. Take a photo.
-     *   5. Get an updated list of photos stored in the Gallery.
-     *   6. Click on the photo thumbnail.
-     *   7. Delete the photo.
-     *   8. Get a final list of photos stored in the Gallery.
+     *   2. Open the Camera application.
+     *   3. Take a photo.
+     *   4. Delete the photo.
+     *   5. Get list of files stored in the Gallery.
+     *   6. Reopen the Camera application.
+     *   7. Take another photo.
+     *   8. Get an updated list of files stored in the Gallery.
+     *   9. Delete the photo.
+     *   10. Get a final list of files stored in the Gallery.
      *   Verify:
-     *      1. Confirm that after taking a photo, the current photo list does not match the original photo list.
-     *      2. Confirm that after deleting the photo, the final photo list does match the original photo list.
+     *      1. Confirm that after taking a photo, the current file list does not match the original file list,
+     *          and contains a file with a .jpg extension.
+     *      2. Confirm that after deleting the photo, the final file list match the original file list.
      */
     @Test
     @TestInfo(id = "ab5f9585-433b-4261-bd15-5c7136f6127b")
     public void testPhotoCapture() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        String originalPhotoList = listPhotos(instrumentation);
 
         if (testFramework.getApi() >= 24) {
-            AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
-            new CameraAccessPermissionsWatcher(device).checkForCondition();
-            UiObject shutterButton = device.findObject(new UiSelector().resourceId(Res.CAMERA_SHUTTER_BUTTON_RES));
-            if (shutterButton.waitForExists(3L)) {
-                shutterButton.clickAndWaitForNewWindow();
-            }
-
-            String newPhotoList = listPhotos(instrumentation);
-            Assert.assertFalse("Photo gallery has not been updated", originalPhotoList.equals(newPhotoList));
-
-            UiObject photoThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_PHOTO_THUMBNAIL_RES));
-            if (photoThumbnail.waitForExists(3L)) {
-                photoThumbnail.clickAndWaitForNewWindow();
-            }
-
-            UiObject trashCan = device.findObject(new UiSelector().resourceId(Res.CAMERA_PHOTO_DELETE_RES));
-            if (trashCan.waitForExists(3L)) {
-                trashCan.click();
-            }
-            device.pressBack();
-            device.pressHome();
-
-            String lastPhotoList = listPhotos(instrumentation);
-            Assert.assertTrue("New photo was not deleted", originalPhotoList.equals(lastPhotoList));
+            boolean photoTestSuccess = useCamera(instrumentation, "Camera");
+            Assert.assertTrue("New photo was not deleted from the gallery", photoTestSuccess);
         }
     }
 
-    private String listPhotos(Instrumentation instrumentation) throws Exception {
+    /**
+     * Tests the video capture functionality of the camera application.
+     * <p>
+     * TT ID: ab5f9585-433b-4261-bd15-5c7136f6127b
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Open the Camera application and set to Video.
+     *   3. Take a video.
+     *   4. Delete the video.
+     *   5. Get list of files stored in the Gallery.
+     *   6. Reopen the Camera application.
+     *   7. Take another video.
+     *   8. Get an updated list of files stored in the Gallery.
+     *   9. Delete the video.
+     *   10. Get a final list of files stored in the Gallery.
+     *   Verify:
+     *      1. Confirm that after taking a video, the current file list does not match the original video list,
+     *          and contains a file with a .mp4 extension.
+     *      2. Confirm that after deleting the video, the final file list match the original video list.
+     */
+    @Test
+    @TestInfo(id = "ab5f9585-433b-4261-bd15-5c7136f6127b")
+    public void testVideoCapture() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+
+        if (testFramework.getApi() >= 24) {
+            boolean videoTestSuccess = useCamera(instrumentation, "Video");
+            Assert.assertTrue("New video was not deleted from the gallery", videoTestSuccess);
+        }
+    }
+
+    /* A helper method to perform the common camera actions of both the photo and video tests,
+     * based on the mode parameter */
+    private boolean useCamera(Instrumentation instrumentation, String mode) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String cmd = "ls " + photoDir;
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
+
+        device.pressBack();
+        device.pressHome();
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        UiObject cameraFrame = device.findObject(new UiSelector().resourceId(Res.CAMERA_FRAME_RES));
+        if (cameraFrame.waitForExists(3L)) {
+            cameraFrame.click();
+            cameraFrame.swipeRight(3);
+        }
+
+        try {
+            UiObject2 cameraModeButton = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.res("com.android.camera2:id/selector_icon"),
+                    By.text(mode),
+                    By.res("com.android.camera2:id/mode_list"));
+            cameraModeButton.click();
+        } catch(UiObjectNotFoundException e) {
+            Assert.assertTrue("Button to select " + mode + " mode not found", false);
+        }
+
+        createTestFile(device);
+        deleteTestFile(device);
+
+        String originalFileList = listGalleryFiles(instrumentation);
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
+
+        createTestFile(device);
+
+        String fileExt = mode.equals("Camera") ? ".jpg" : ".mp4";
+        String newFileList = listGalleryFiles(instrumentation);
+        Assert.assertTrue("New file was not added to the gallery",
+                !originalFileList.equals(newFileList) && newFileList.contains(fileExt));
+
+        deleteTestFile(device);
+
+        String lastFileList = listGalleryFiles(instrumentation);
+        return originalFileList.equals(lastFileList);
+    }
+
+    /* A helper method to list the contents on the external media files storage directory */
+    private String listGalleryFiles(Instrumentation instrumentation) throws Exception {
+        final File externalStorage = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        final String externalStorageDir = externalStorage.toString() + "/Camera";
+        final String cmd = "ls " + externalStorageDir;
 
         final ShellUtil.ShellResult result = ShellUtil.invokeCommand(cmd);
 
@@ -123,8 +190,37 @@ public class CameraTest {
                         return result != null && result.stderr != null && result.stderr.length() == 0;
                     }
                 });
-        Assert.assertTrue("Photo ls command failed", photosListed);
+        Assert.assertTrue("Media gallery 'ls' command failed", photosListed);
         Log.d(TAG, "ls result " + result.stdout);
         return result.stdout;
+    }
+
+    /* A helper method to generate either a new photo or video, and then select view it */
+    private void createTestFile(UiDevice device) throws UiObjectNotFoundException {
+        UiObject shutterButton = device.findObject(new UiSelector().resourceId(Res.CAMERA_SHUTTER_BUTTON_RES));
+        UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_THUMBNAIL_RES));
+
+        if (shutterButton.waitForExists(3L)) {
+            shutterButton.click();
+            if (!fileThumbnail.waitForExists(3L)) {
+                shutterButton.click();
+            }
+        }
+
+        if (fileThumbnail.waitForExists(3L)) {
+            fileThumbnail.clickAndWaitForNewWindow();
+        }
+    }
+
+    /* A helper method to delete a new photo or video */
+    private void deleteTestFile(UiDevice device) throws UiObjectNotFoundException {
+        UiObject trashCan = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_DELETE_RES));
+
+        if (trashCan.waitForExists(3L)) {
+            trashCan.click();
+        }
+
+        device.pressBack();
+        device.pressHome();
     }
 }
