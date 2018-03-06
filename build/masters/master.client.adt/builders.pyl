@@ -144,6 +144,16 @@
        "branch": "all",
        "name_identifier": "system-images",
     },
+    "sys_image_pi_dev_poller": {
+       "gs_bucket": "android-build-emu-sysimage",
+       "gs_path": ["builds/git_pi-dev-linux-sdk_phone_x86_64-sdk/",
+                   "builds/git_pi-dev-mac-sdk_gphone_x86-sdk_addon_mac/"],
+       "pollInterval": 597,
+       "type": "GSMultiPoller",
+       "project": "pi-dev",
+       "branch": "all",
+       "name_identifier": "system-images",
+    },
      "sys_image_master_poller": {
        "gs_bucket": "android-build-emu-sysimage",
        "gs_path": ["builds/git_master-linux-sdk_phone_x86_64-sdk/",
@@ -404,6 +414,11 @@
        "id": "_30",
        "scheduler": "sysimg-aosp",
      },
+     "sysimg-pi": {
+       "name": "sysimg-pi",
+       "id": "_25",
+       "scheduler": "sysimg-pi",
+     },
   },
 
   "builders": {
@@ -424,7 +439,7 @@
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400 2": {
@@ -460,25 +475,25 @@
      "Win 7 64-bit HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["win-7-64-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds"],
        "tag": "Win",
      },
      "Win 8 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds"],
        "tag": "Win",
      },
      "Win 8.1 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8_1-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-10-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600 1": {
@@ -491,25 +506,25 @@
      "Mac 10.10.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-intel-hd-5000"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.10.5 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-iris-pro"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.8.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-8-5-intel-hd-5000"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.11.1 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-11-1-iris-pro"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "cross-builds"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds"],
        "tag": "Mac",
      },
      "Mac 10.11.6 Iris Pro": {
@@ -542,6 +557,10 @@
   "schedulers": {
     "emu_master_dev_scheduler": {
       "project": ["emu-master-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-pi": {
+      "project": ["pi-dev"],
       "type": "emu_scheduler",
     },
     "emu_2.6_release_scheduler": {

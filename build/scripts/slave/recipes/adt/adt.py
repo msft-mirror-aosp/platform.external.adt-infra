@@ -94,6 +94,7 @@ def RunSteps(api):
                'emu-2.6-release': bootStep('public', '{"ori": "public"}'),
                'master': bootStep('master', '{"ori": "master"}'),
                'aosp': bootStep('aosp', '{"ori": "aosp"}'),
+               'pi-dev': bootStep('PI', '{"ori": "pi"}')
                'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
                'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
                'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
