@@ -637,7 +637,7 @@ def create_test_case_from_file(desc, testcase_class, test_func):
 
     def create_test_case(avd_config, op, builder_name=None, pattern=None):
         if not is_cts and avd_config.gpu == "yes":
-            avd_config_swiftshader = avd_config._replace(gpu = "swiftshader")
+            avd_config_swiftshader = avd_config._replace(gpu = "swiftshader_indirect")
             create_test_case(avd_config_swiftshader, op)
             if avd_config.api >= "19" and avd_config.api <= "25" and "x86" in avd_config.abi:
                 avd_config_guestgpu = avd_config._replace(gpu = "guest")

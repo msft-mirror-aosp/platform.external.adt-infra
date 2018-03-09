@@ -266,7 +266,7 @@ def RunSteps(api):
                                  api.path.join(log_dir, 'UI_test'),
                                  'test_ui.*',
                                  'ui_cfg.csv',
-                                 step_data.filter,
+                                 '{"gpu": "yes"}',
                                  emulator_path,
                                  env,
                                  True)
