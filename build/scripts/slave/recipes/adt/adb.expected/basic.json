@@ -127,6 +127,26 @@
     "cmd": [
       "python",
       "-u",
+      "[BUILD]/../adb_stress_tests/adb_restart_stress.py",
+      "--duration",
+      "1",
+      "--count",
+      "1",
+      "--progress",
+      "--log-dir",
+      "adb_stress_logs-build_12"
+    ],
+    "cwd": "[SLAVE_BUILD]",
+    "env": {
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools",
+      "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
+    },
+    "name": "Run adb_restart_stress.py"
+  },
+  {
+    "cmd": [
+      "python",
+      "-u",
       "[BUILD]/../adb_stress_tests/adb_sleep_wake_stress.py",
       "--duration",
       "1",

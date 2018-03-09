@@ -158,14 +158,14 @@
       "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
       "--profiler=win_pgo_profiler",
       "--browser=release",
-      "smoothness.tough_animation_cases"
+      "dromaeo.domcoretraverse"
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
       "PATH": "[DEPOT_TOOLS]\\win_toolchain\\vs2013_files\\VC\\bin;%(PATH)s",
       "PogoSafeMode": "1"
     },
-    "name": "Telemetry benchmark: smoothness.tough_animation_cases"
+    "name": "Telemetry benchmark: dromaeo.domcoretraverse"
   },
   {
     "cmd": [
@@ -190,14 +190,14 @@
       "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
       "--profiler=win_pgo_profiler",
       "--browser=release",
-      "dromaeo.jslibtraverseprototype"
+      "dromaeo.domcoremodify"
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
       "PATH": "[DEPOT_TOOLS]\\win_toolchain\\vs2013_files\\VC\\bin;%(PATH)s",
       "PogoSafeMode": "1"
     },
-    "name": "Telemetry benchmark: dromaeo.jslibtraverseprototype"
+    "name": "Telemetry benchmark: dromaeo.domcoremodify"
   },
   {
     "cmd": [
@@ -318,22 +318,6 @@
       "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
       "--profiler=win_pgo_profiler",
       "--browser=release",
-      "dromaeo.jslibattrprototype"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "env": {
-      "PATH": "[DEPOT_TOOLS]\\win_toolchain\\vs2013_files\\VC\\bin;%(PATH)s",
-      "PogoSafeMode": "1"
-    },
-    "name": "Telemetry benchmark: dromaeo.jslibattrprototype"
-  },
-  {
-    "cmd": [
-      "python",
-      "-u",
-      "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
-      "--profiler=win_pgo_profiler",
-      "--browser=release",
       "dromaeo.jslibeventprototype"
     ],
     "cwd": "[SLAVE_BUILD]",
@@ -414,14 +398,14 @@
       "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
       "--profiler=win_pgo_profiler",
       "--browser=release",
-      "dromaeo.domcoremodify"
+      "dromaeo.jslibattrprototype"
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
       "PATH": "[DEPOT_TOOLS]\\win_toolchain\\vs2013_files\\VC\\bin;%(PATH)s",
       "PogoSafeMode": "1"
     },
-    "name": "Telemetry benchmark: dromaeo.domcoremodify"
+    "name": "Telemetry benchmark: dromaeo.jslibattrprototype"
   },
   {
     "cmd": [
@@ -430,14 +414,30 @@
       "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
       "--profiler=win_pgo_profiler",
       "--browser=release",
-      "sunspider"
+      "dromaeo.jslibtraverseprototype"
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
       "PATH": "[DEPOT_TOOLS]\\win_toolchain\\vs2013_files\\VC\\bin;%(PATH)s",
       "PogoSafeMode": "1"
     },
-    "name": "Telemetry benchmark: sunspider"
+    "name": "Telemetry benchmark: dromaeo.jslibtraverseprototype"
+  },
+  {
+    "cmd": [
+      "python",
+      "-u",
+      "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
+      "--profiler=win_pgo_profiler",
+      "--browser=release",
+      "smoothness.tough_animation_cases"
+    ],
+    "cwd": "[SLAVE_BUILD]",
+    "env": {
+      "PATH": "[DEPOT_TOOLS]\\win_toolchain\\vs2013_files\\VC\\bin;%(PATH)s",
+      "PogoSafeMode": "1"
+    },
+    "name": "Telemetry benchmark: smoothness.tough_animation_cases"
   },
   {
     "cmd": [
@@ -462,22 +462,6 @@
       "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
       "--profiler=win_pgo_profiler",
       "--browser=release",
-      "dromaeo.domcoretraverse"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "env": {
-      "PATH": "[DEPOT_TOOLS]\\win_toolchain\\vs2013_files\\VC\\bin;%(PATH)s",
-      "PogoSafeMode": "1"
-    },
-    "name": "Telemetry benchmark: dromaeo.domcoretraverse"
-  },
-  {
-    "cmd": [
-      "python",
-      "-u",
-      "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
-      "--profiler=win_pgo_profiler",
-      "--browser=release",
       "dromaeo.jslibattrjquery"
     ],
     "cwd": "[SLAVE_BUILD]",
@@ -486,6 +470,22 @@
       "PogoSafeMode": "1"
     },
     "name": "Telemetry benchmark: dromaeo.jslibattrjquery"
+  },
+  {
+    "cmd": [
+      "python",
+      "-u",
+      "[SLAVE_BUILD]\\src\\tools\\perf\\run_benchmark",
+      "--profiler=win_pgo_profiler",
+      "--browser=release",
+      "sunspider"
+    ],
+    "cwd": "[SLAVE_BUILD]",
+    "env": {
+      "PATH": "[DEPOT_TOOLS]\\win_toolchain\\vs2013_files\\VC\\bin;%(PATH)s",
+      "PogoSafeMode": "1"
+    },
+    "name": "Telemetry benchmark: sunspider"
   },
   {
     "cmd": [
