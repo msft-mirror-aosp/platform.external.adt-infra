@@ -444,7 +444,7 @@
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "cross-builds", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400 2": {
@@ -504,7 +504,7 @@
      "Win 10 64-bit Quadro 600 1": {
        "recipe": "adt/adt",
        "slave_pools": ["win-10-64-nvidia-quadro-600-1"],
-       "categories": ["Console", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
+       "categories": ["Console", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
        "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Win",
      },
@@ -535,7 +535,7 @@
      "Mac 10.11.6 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-11-6-iris-pro-ui"],
-       "categories": ["Console", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
+       "categories": ["Console", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
        "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Mac",
      },
