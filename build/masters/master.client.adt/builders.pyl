@@ -279,149 +279,154 @@
        "name": "cross",
        "id": "_3",
      },
-     "Console": {
-       "name": "emulator console test",
+     "Console emu-master-dev": {
+       "name": "emulator console test for emu-master-dev",
        "id": "_4",
-       "scheduler": "console_scheduler",
+       "scheduler": "console_emu-master-dev-scheduler",
+     },
+     "Console emu-2.6-release": {
+       "name": "emulator console test for emu-2.6-release",
+       "id": "_5",
+       "scheduler": "console_emu-2.6-release-scheduler",
      },
      "System Image Release": {
         "name": "system image release test",
-        "id": "_5",
+        "id": "_6",
         "scheduler": "sysimage_release_psq_scheduler",
      },
      "ADB": {
        "name": "adb stress test",
-       "id": "_6",
+       "id": "_7",
        "scheduler": "adb_test_scheduler",
      },
      "AVD": {
        "name": "avd test",
-       "id": "_7",
+       "id": "_8",
        "scheduler": "avd_test_scheduler",
      },
      "UI_sysimg-master": {
        "name": "system image UI test master",
-       "id": "_8",
+       "id": "_9",
        "scheduler": "sysimg-master",
      },
      "UI_sysimg-aosp": {
        "name": "system image UI test aosp",
-       "id": "_9",
+       "id": "_10",
        "scheduler": "sysimg-aosp",
      },
      "UI_sysimg-pi": {
        "name": "system image UI test pi",
-       "id": "_10",
+       "id": "_11",
        "scheduler": "sysimg-pi",
      },
      "UI_sysimg-oc-mr1": {
        "name": "system image UI test oc-mr1",
-       "id": "_11",
+       "id": "_12",
        "scheduler": "sysimg-oc-mr1",
      },
      "UI_sysimg-oc": {
        "name": "system image UI test oc",
-       "id": "_12",
+       "id": "_13",
        "scheduler": "sysimg-oc",
      },
      "UI_sysimg-nyc-mr1": {
        "name": "system image UI test nyc-mr1",
-       "id": "_13",
+       "id": "_14",
        "scheduler": "sysimg-nyc-mr1",
      },
      "UI_sysimg-nyc": {
        "name": "system image UI test nyc",
-       "id": "_14",
+       "id": "_15",
        "scheduler": "sysimg-nyc",
      },
      "UI_sysimg-mnc": {
        "name": "system image UI test mnc",
-       "id": "_15",
+       "id": "_16",
        "scheduler": "sysimg-mnc",
      },
      "sysimg-master": {
        "name": "sysimg-master",
-       "id": "_16",
+       "id": "_17",
        "scheduler": "sysimg-master",
      },
      "sysimg-klp": {
        "name": "sysimg-klp",
-       "id": "_17",
+       "id": "_18",
        "scheduler": "sysimg-klp",
      },
      "sysimg-lmp-mr1": {
        "name": "sysimg-lmp-mr1",
-       "id": "_18",
+       "id": "_19",
        "scheduler": "sysimg-lmp-mr1",
      },
      "sysimg-mnc": {
        "name": "sysimg-mnc",
-       "id": "_19",
+       "id": "_20",
        "scheduler": "sysimg-mnc",
      },
      "sysimg-oc": {
        "name": "sysimg-oc",
-       "id": "_20",
+       "id": "_21",
        "scheduler": "sysimg-oc",
      },
      "sysimg-oc-mr1-car-support-release": {
        "name": "sysimg-oc-mr1-car-support-release",
-       "id": "_21",
+       "id": "_22",
        "scheduler": "sysimg-oc-mr1-car-support-release",
      },
      "sysimg-oc-mr1": {
        "name": "sysimg-oc-mr1",
-       "id": "_22",
+       "id": "_23",
        "scheduler": "sysimg-oc-mr1",
      },
      "sysimg-nyc": {
        "name": "sysimg-nyc",
-       "id": "_23",
+       "id": "_24",
        "scheduler": "sysimg-nyc",
      },
      "sysimg-nyc-mr1": {
        "name": "sysimg-nyc-mr1",
-       "id": "_24",
+       "id": "_25",
        "scheduler": "sysimg-nyc-mr1",
      },
      "sysimg-lmp": {
        "name": "sysimg-lmp",
-       "id": "_25",
+       "id": "_26",
        "scheduler": "sysimg-lmp",
      },
      "sysimg-gb": {
        "name": "sysimg-gb",
-       "id": "_26",
+       "id": "_27",
        "scheduler": "sysimg-gb",
      },
      "sysimg-ics-mr1": {
        "name": "sysimg-ics-mr1",
-       "id": "_27",
+       "id": "_28",
        "scheduler": "sysimg-ics-mr1",
      },
      "sysimg-jb": {
        "name": "sysimg-jb",
-       "id": "_28",
+       "id": "_29",
        "scheduler": "sysimg-jb",
      },
      "sysimg-jb-mr1.1": {
        "name": "sysimg-jb-mr1.1",
-       "id": "_29",
+       "id": "_30",
        "scheduler": "sysimg-jb-mr1.1",
      },
      "sysimg-jb-mr2": {
        "name": "sysimg-jb-mr2",
-       "id": "_30",
+       "id": "_31",
        "scheduler": "sysimg-jb-mr2",
      },
      "sysimg-aosp": {
        "name": "sysimg-aosp",
-       "id": "_31",
+       "id": "_32",
        "scheduler": "sysimg-aosp",
      },
      "sysimg-pi": {
        "name": "sysimg-pi",
-       "id": "_32",
+       "id": "_33",
        "scheduler": "sysimg-pi",
      },
   },
@@ -437,7 +442,7 @@
      "Ubuntu 12.04 HD Graphics 4000": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-12_04-intel-hd-4000"],
-       "categories": ["emu-master-dev", "emu-2.6-release", "", "cross-builds", "Console", "AVD"],
+       "categories": ["emu-master-dev", "emu-2.6-release", "", "cross-builds", "Console emu-master-dev", "Console emu-2.6-release", "AVD"],
        "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Linux",
      },
@@ -504,7 +509,7 @@
      "Win 10 64-bit Quadro 600 1": {
        "recipe": "adt/adt",
        "slave_pools": ["win-10-64-nvidia-quadro-600-1"],
-       "categories": ["Console", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
+       "categories": ["Console emu-master-dev", "Console emu-2.6-release", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
        "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Win",
      },
@@ -535,7 +540,7 @@
      "Mac 10.11.6 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-11-6-iris-pro-ui"],
-       "categories": ["Console", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
+       "categories": ["Console emu-master-dev", "Console emu-2.6-release", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
        "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Mac",
      },
@@ -580,8 +585,12 @@
       "project": ["no-branch"],
       "type": "emu_scheduler",
     },
-    "console_scheduler": {
-      "project": ["emu-master-dev", "emu-2.6-release"],
+    "console_emu-master-dev-scheduler": {
+      "project": ["emu-master-dev"],
+      "type": "emu_scheduler",
+    },
+    "console_emu-2.6-release-scheduler": {
+      "project": ["emu-2.6-release"],
       "type": "emu_scheduler",
     },
     "adb_test_scheduler": {
