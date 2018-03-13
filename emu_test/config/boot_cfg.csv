@@ -6,6 +6,7 @@ API P,google_apis,x86,Nexus 6P,2048,yes,master,P,P,P,P,P,P,P,P,P,P,P,P,P,P
 API P,default,x86_64,Nexus 6P,2048,yes,master,P,P,P,P,P,P,P,P,P,P,P,P,P,P
 API P,google_apis,x86,Pixel,2048,yes,pi,P,P,P,P,P,P,P,P,P,P,P,P,P,P
 API P,default,x86_64,Pixel,2048,yes,pi,P,P,P,P,P,P,P,P,P,P,P,P,P,P
+API P,android-wear,x86,wear_square_320,1024,yes,pi,P,P,P,P,P,P,P,P,P,P,P,P,P,P
 API 27,android-car,x86,Android Automotive,2048,yes,oc-mr1-car-support,S,P,P,S,S,S,S,S,S,S,S,S,S,S
 API 27,android-tv,x86,Android TV (1080p),2048,yes,oc-mr1,P,P,P,P,P,P,P,P,P,P,P,P,P,P
 API 27,google_apis,x86,Nexus 6P,2048,yes,oc-mr1,P,P,P,P,P,P,P,P,P,P,P,P,P,P
