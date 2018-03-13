@@ -359,6 +359,13 @@ def RunSteps(api):
       upload_log_args.append('--iswindows')
     api.python("Zip and Upload Logs", log_util_path, upload_log_args, env=env)
 
+    # Always force a clean of the *_image-builds/ directory to save space.  A single image download can be ~18 GB which we
+    # cannot leave on every machine.
+    if 'image-builds' in android_sdk_home:
+      image_dir = os.path.join(sdk_root, 'system-images')
+      print 'Remove system image directory: ', image_dir
+      shutil.rmtree(image_dir, True);
+
     # Trigger next CTS build, to make CTS builder run continously
     if is_cts:
       api.trigger({
