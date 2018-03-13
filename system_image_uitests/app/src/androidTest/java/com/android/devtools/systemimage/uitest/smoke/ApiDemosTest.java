@@ -27,8 +27,12 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.watchers.ApiDemosWatcher;
+
+import android.os.Build;
+import android.text.TextUtils;
 
 import junit.framework.Assert;
 
@@ -55,7 +59,18 @@ public class ApiDemosTest {
     @Before
     public void activateDeviceAdmin() throws Exception{
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = testFramework.getDevice();
+        String testPackageName = "com.example.android.apis";
+        String testPackageAPK32 = "ApiDemos_x86.apk";
+        String testPackageAPK64 = "ApiDemos_x86_64.apk";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String apk = TextUtils.join(", ", Build.SUPPORTED_ABIS).contains("64") ?
+                    testPackageAPK64 : testPackageAPK32;
+            boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(
+                    instrumentation, testPackageName);
+            if (!isAPIDemoInstalled)
+                PackageInstallationUtil.installApk(instrumentation, apk);
+        }
         SettingsUtil.activate(instrumentation, "Sample Device Admin");
     }
 
@@ -91,6 +106,11 @@ public class ApiDemosTest {
         UiDevice device = testFramework.getDevice();
 
         AppLauncher.launch(instrumentation, "API Demos");
+        for (int i = 0; i < 5; i++) {
+            device.pressBack();
+        }
+        AppLauncher.launch(instrumentation, "API Demos");
+
         UiScrollable itemList =
                 new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES));
         itemList.setAsVerticalList();
@@ -167,7 +187,16 @@ public class ApiDemosTest {
     private void verifyPasswordQuality(
             Instrumentation instrumentation, UiDevice device) throws Exception {
 
-        String securitySettings = testFramework.getApi() == 26 ? "Security & Location" : "Security";
+        String securitySettings;
+
+        if (testFramework.getApi() >= 27) {
+            securitySettings = "Security & location";
+        } else if (testFramework.getApi() == 26) {
+            securitySettings = "Security & Location";
+        } else {
+            securitySettings = "Security";
+        }
+
         Assert.assertTrue(SettingsUtil.openItem(instrumentation, securitySettings));
 
         UiScrollable itemList =
@@ -203,8 +232,15 @@ public class ApiDemosTest {
 
         //Assertion for a valid password that meets all the "PASSWORD QUALITY" criteria.
         passwordField.setText("Abc1!d");
+
+        String continueButtonLabel;
+        if (testFramework.getApi() == 27) {
+            continueButtonLabel = "NEXT";
+        } else {
+            continueButtonLabel = "Continue";
+        }
         UiObject continueButton = device.findObject(
-                new UiSelector().className("android.widget.Button").textContains("Continue"));
+                new UiSelector().className("android.widget.Button").textContains(continueButtonLabel));
         continueButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
         Assert.assertTrue(continueButton.isEnabled());
     }
