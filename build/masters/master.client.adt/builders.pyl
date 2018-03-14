@@ -623,7 +623,7 @@
       "type": "emu_scheduler",
     },
     "sysimg-oc-mr1-car-support-release": {
-      "project": ["oc--mr1-car-support-release"],
+      "project": ["oc-mr1-car-support-release"],
       "type": "emu_scheduler",
     },
     "sysimg-oc-mr1": {
