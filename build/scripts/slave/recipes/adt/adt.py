@@ -6,6 +6,7 @@
 
 from recipe_engine.types import freeze
 import os
+import shutil
 import csv
 import collections
 from slave.email_watcher import EmailRecipeWatcher
