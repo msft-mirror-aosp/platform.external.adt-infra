@@ -362,7 +362,7 @@ def RunSteps(api):
     # Always force a clean of the *_image-builds/ directory to save space.  A single image download can be ~18 GB which we
     # cannot leave on every machine.
     if 'image-builds' in android_sdk_home:
-      image_dir = os.path.join(sdk_root, 'system-images')
+      image_dir = os.path.join(android_sdk_home, 'system-images')
       print 'Remove system image directory: ', image_dir
       shutil.rmtree(image_dir, True);
 
