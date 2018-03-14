@@ -96,6 +96,7 @@ def RunSteps(api):
                'master': bootStep('master', '{"ori": "master"}'),
                'aosp': bootStep('aosp', '{"ori": "aosp"}'),
                'pi-dev': bootStep('PI', '{"ori": "pi"}'),
+               "pi-car-dev": bootStep('PI_CAR', '{"ori": "pi-car"}'),
                'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
                'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
                'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
