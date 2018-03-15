@@ -30,6 +30,8 @@ class AdtApi(recipe_api.RecipeApi):
     with self.m.step.defer_results():
       deferred_step_result = self.m.python(description, dotest_path, test_args, env=env, stderr=self.m.raw_io.output('err'))
       res = True
+      # Debug line to help us know that deferred step has properly returned.
+      print "Deferred Step Return Code: " + str(deferred_step_result.is_ok)
       if not deferred_step_result.is_ok:
         stderr_output = deferred_step_result.get_error().result.stderr
         lines = [line for line in stderr_output.split('\n')
