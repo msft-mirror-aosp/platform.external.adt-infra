@@ -70,8 +70,8 @@ class BootTestCase(EmuBaseTestCase):
 
     def run_boot_test(self, avd_config):
         self.avd_config = avd_config
-        self.assertEqual(self.create_avd(avd_config), 0)
-        self.boot_check(avd_config)
+        if self.create_avd(avd_config) == 0:
+            self.boot_check(avd_config)
 
 
 def create_test_case_for_avds():
