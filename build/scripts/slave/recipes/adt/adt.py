@@ -96,6 +96,7 @@ def RunSteps(api):
                'master': bootStep('master', '{"ori": "master"}'),
                'aosp': bootStep('aosp', '{"ori": "aosp"}'),
                'pi-dev': bootStep('PI', '{"ori": "pi"}'),
+               "pi-car-dev": bootStep('PI_CAR', '{"ori": "pi-car"}'),
                'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
                'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
                'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
@@ -250,6 +251,8 @@ def RunSteps(api):
         if 'oc-mr1' in step_data.description and not is_cross_build:
             emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
         if 'OC_MR1' in step_data.description and not is_cross_build:
+            emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
+        if 'pi-dev' in step_data.description and not is_cross_build:
             emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
         emu_desc = "sdk emulator" if emu_branch not in emulator_branches else emu_branch
         if not is_cts and not is_ui and not is_console and not is_avd:
