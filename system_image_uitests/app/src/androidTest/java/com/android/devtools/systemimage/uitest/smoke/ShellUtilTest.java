@@ -120,10 +120,8 @@ public class ShellUtilTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String BUG_REPORT_DIR;
 
-        if (testFramework.getApi() == 25) {
+        if (testFramework.getApi() > 23) {
             BUG_REPORT_DIR = "/bugreports";
-        } else if (testFramework.getApi() >= 26) {
-            BUG_REPORT_DIR = "/data/user_de/0/com.android.shell/files/bugreports";
         } else {
             BUG_REPORT_DIR = "/data/data/com.android.shell/files/bugreports";
         }
