@@ -23,14 +23,18 @@ import com.android.devtools.server.utils.Constants;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.util.List;
 
+import android.app.ActivityManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
@@ -102,26 +106,12 @@ public class GeoManagerService implements Service {
       String apiLevel = json.substring(9, 11);
       Log.d(TAG, "For API " + apiLevel);
 
-      if (apiLevel.equals("23") || apiLevel.equals("24")) {
-        Log.e(TAG, "Initially, dismiss tips on welcome and Apps screens.");
-        try {
-          this.dismissTips(mDevice);
-        } catch (UiObjectNotFoundException e) {
-          mDevice.pressHome();
-          String errMsg = "Failed to dismiss tips.";
-          Log.e(TAG, errMsg);
-          result.setIsFail(true);
-          result.setDescription(errMsg);
-          return new Gson().toJson(result);
-        }
-      }
-
       Log.d(TAG, "Go to Apps window, launch " + GOOGLE_MAPS +
               " app, accpet the terms and conditions, " +
               "enable Location service, then Tap on My Location.");
       try {
         this.launchGoogleMapsApp(mDevice, Integer.parseInt(apiLevel));
-      } catch (UiObjectNotFoundException e) {
+      } catch (Exception e) {
         mDevice.pressHome();
         String errMsg = "Failed to launch " + GOOGLE_MAPS;
         Log.e(TAG, errMsg);
@@ -136,79 +126,25 @@ public class GeoManagerService implements Service {
     }
   }
 
-  private static void dismissTips(UiDevice uiDevice)
-          throws UiObjectNotFoundException {
-    Log.d(TAG, "For API 23, 24, there is a tip on the screen. (\"GOT IT\")\n" +
-               "It needs to be removed by clicking on it.");
+  public void launchGoogleMapsApp(UiDevice uiDevice, int apiLevel)
+          throws Exception {
+    final PackageManager pm = mContext.getPackageManager();
+    String packageName = "com.google.android.apps.maps";
+    Intent launchIntent = pm.getLaunchIntentForPackage(packageName);
+    mContext.startActivity(launchIntent);
 
-    // Keep the following commented code for future use for API below 23.
-//    try {
-//      uiDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK)).
-//              clickAndWaitForNewWindow();
-//      Log.d(TAG, "Welcome screen tip, " + Constants.TIP_BUTTON_OK + " clicked.");
-//    } catch (UiObjectNotFoundException e) {
-//      Log.e(TAG, e.getMessage());
-//    }
+    // Wait for the app is running in the foreground.
+    int maxTry = 3;
+    for (int i = 0; i < maxTry; i++) {
+      ActivityManager manager = (ActivityManager) mContext.getSystemService(mContext.ACTIVITY_SERVICE);
+      List<ActivityManager.RunningTaskInfo> runningTaskInfo = manager.getRunningTasks(1);
 
-    try {
-      uiDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_GOT_IT)).
-              clickAndWaitForNewWindow();
-      Log.d(TAG, "Welcome screen tip, " + Constants.TIP_BUTTON_GOT_IT +
-              " clicked.");
-    } catch (UiObjectNotFoundException e) {
-      Log.e(TAG, e.getMessage());
-    }
-
-    // Keep the following commented code for future use for API below 23.
-//    Log.d(TAG, "Open and go to Apps window.");
-//    uiDevice.findObject(new UiSelector().descriptionContains(Constants.APPS)).
-//            clickAndWaitForNewWindow();
-//
-//    Log.d(TAG, "For API 18, 19, 21, after opening Apps, there is another \n" +
-//            "tip on the the screen. It needs to be removed by clicking on " +
-//            "it. (\"OK\")");
-//    try {
-//      uiDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK)).
-//              clickAndWaitForNewWindow();
-//      Log.d(TAG, "Apps screen tip, " + Constants.TIP_BUTTON_OK + " clicked.");
-//    } catch (UiObjectNotFoundException e) {
-//      Log.e(TAG, e.getMessage());
-//    }
-//
-//    Log.d(TAG,
-//          "After dismissing tips on welcome and Apps screen, go back to home.");
-//    uiDevice.pressHome();
-  }
-
-  public static void launchGoogleMapsApp(UiDevice uiDevice, int apiLevel)
-          throws UiObjectNotFoundException {
-    UiObject app;
-    if (apiLevel == 25) {
-      Log.d(TAG, "API 25: Launch " + GOOGLE_MAPS + " application from home screen.");
-      app = uiDevice.findObject(new UiSelector().text(GOOGLE_MAPS));
-    } else {
-      Log.d(TAG, "1) Go to " + Constants.APPS + " screen.");
-      uiDevice.findObject(new UiSelector().descriptionContains(Constants.APPS)).
-              clickAndWaitForNewWindow();
-
-      UiScrollable appList = new UiScrollable(new UiSelector().resourceIdMatches(
-              Constants.LAUNCHER_LIST_CONTAINER_RES));
-
-      Log.d(TAG, "2) Launch " + GOOGLE_MAPS + " application.");
-
-      try {
-        appList.setAsVerticalList();
-        app = appList.getChildByText(
-                new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
-                GOOGLE_MAPS);
-      } catch (UiObjectNotFoundException e) {
-        appList.setAsHorizontalList();
-        app = appList.getChildByText(
-                new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
-                GOOGLE_MAPS);
+      ComponentName componentInfo = runningTaskInfo.get(0).topActivity;
+      if (componentInfo.getPackageName().equals(packageName)) {
+        break;
       }
+      Thread.sleep(1500);
     }
-    app.clickAndWaitForNewWindow();
 
     Log.d(TAG, "2.1) It's the first time to launch " + GOOGLE_MAPS +
             ", we need to accept the terms and enable location service. " +
