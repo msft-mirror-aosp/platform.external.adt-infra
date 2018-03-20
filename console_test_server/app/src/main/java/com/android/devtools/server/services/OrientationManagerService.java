@@ -19,17 +19,18 @@ package com.android.devtools.server.services;
 import com.android.devtools.server.model.RestServiceModel;
 import com.android.devtools.server.model.Result;
 import com.android.devtools.server.model.OrientationManagerModel;
-import com.android.devtools.server.utils.Constants;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.util.List;
 
+import android.app.ActivityManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.provider.Settings;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiScrollable;
-import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 import android.view.WindowManager;
 
@@ -52,11 +53,14 @@ public class OrientationManagerService implements Service {
     boolean isSuccess = false;
     Result result = new Result();
 
+    // Enable Display Auto Rotate.
+    Settings.System.putInt( mContext.getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 1);
+
     // In order to get screen orientation and rotation, an application with UI
     // needs to be launched.
     try {
-      this.launchAppWithUI();
-    } catch (UiObjectNotFoundException e) {
+      this.launchApp();
+    } catch (Exception e) {
       mDevice.pressHome();
       Log.e(TAG, "Failed to launch app with UI.");
       result.setIsFail(true);
@@ -96,58 +100,24 @@ public class OrientationManagerService implements Service {
     return new Gson().toJson(result);
   }
 
-  private void launchAppWithUI() throws UiObjectNotFoundException {
-    // For API 18, 19, 21, there is a tip on the screen. ('OK')
-    // For API 22, 23, 24, there is a tip on the screen. ('Got it')
-    // It needs to be removed by clicking on it.
-    try {
-      mDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK))
-          .clickAndWaitForNewWindow();
-      Log.d(TAG, "Welcome screen tip, " + Constants.TIP_BUTTON_OK + " clicked.");
-    } catch (UiObjectNotFoundException e) {
-      Log.e(TAG, e.getMessage());
+  private void launchApp() throws Exception {
+    final PackageManager pm = mContext.getPackageManager();
+    String packageName = "com.android.calculator2";
+    Intent launchIntent = pm.getLaunchIntentForPackage(packageName);
+    mContext.startActivity(launchIntent);
+
+    // Wait for the app is running in the foreground.
+    int maxTry = 3;
+    for (int i = 0; i < maxTry; i++) {
+      ActivityManager manager = (ActivityManager) mContext.getSystemService(mContext.ACTIVITY_SERVICE);
+      List<ActivityManager.RunningTaskInfo> runningTaskInfo = manager.getRunningTasks(1);
+
+      ComponentName componentInfo = runningTaskInfo.get(0).topActivity;
+      if (componentInfo.getPackageName().equals(packageName)) {
+        break;
+      }
+      Thread.sleep(1500);
     }
-
-    try {
-      mDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_GOT_IT))
-          .clickAndWaitForNewWindow();
-      Log.d(TAG, "Welcome screen tip, " + Constants.TIP_BUTTON_GOT_IT + " clicked.");
-    } catch (UiObjectNotFoundException e) {
-      Log.e(TAG, e.getMessage());
-    }
-
-    // Launch pre-installed application: Calculator.
-    final String appName = "Calculator";
-
-    mDevice.findObject(new UiSelector().descriptionContains(Constants.APPS))
-        .clickAndWaitForNewWindow();
-
-    // For API 18, 19, 21, after opening Apps, there is another tip on the
-    // the screen. It needs to be removed by clicking on it. ('OK')
-    try {
-      mDevice.findObject(new UiSelector().text(Constants.TIP_BUTTON_OK))
-          .clickAndWaitForNewWindow();
-      Log.i(TAG, "Apps tip, " + Constants.TIP_BUTTON_OK + " clicked.");
-    } catch (UiObjectNotFoundException e) {
-      Log.e(TAG, e.getMessage());
-    }
-
-    UiScrollable appList = new UiScrollable(new UiSelector()
-        .resourceIdMatches(Constants.LAUNCHER_LIST_CONTAINER_RES));
-
-    UiObject app;
-    try {
-      appList.setAsVerticalList();
-      app = appList.getChildByText(
-          new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
-          appName);
-    } catch (UiObjectNotFoundException e) {
-      appList.setAsHorizontalList();
-      app = appList.getChildByText(
-          new UiSelector().className(Constants.TEXT_VIEW_CLASS_NAME),
-          appName);
-    }
-    app.clickAndWaitForNewWindow();
   }
 
   @Override
