@@ -22,13 +22,14 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
+import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.SettingsCameraPermissionsWatcher;
+import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -36,6 +37,7 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
 import android.app.Instrumentation;
+import android.os.Build;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
@@ -44,6 +46,7 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.text.TextUtils;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -60,6 +63,25 @@ public class SettingsTest {
     // 120 seconds is a more reliable setup here.
     @Rule
     public Timeout globalTimeout = Timeout.seconds(120);
+
+    @Before
+    public void activateDeviceAdmin() throws Exception{
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        String testPackageName = "com.example.android.apis";
+        String testPackageAPK32 = "ApiDemos_x86.apk";
+        String testPackageAPK64 = "ApiDemos_x86_64.apk";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String apk = TextUtils.join(", ", Build.SUPPORTED_ABIS).contains("64") ?
+                    testPackageAPK64 : testPackageAPK32;
+            boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(
+                    instrumentation, testPackageName);
+
+            if (!isAPIDemoInstalled)
+                PackageInstallationUtil.installApk(instrumentation, apk);
+        }
+        SettingsUtil.activate(instrumentation, "Sample Device Admin");
+    }
 
 
     /**
@@ -703,10 +725,6 @@ public class SettingsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
 
-        if (testFramework.getApi() == 27) {
-            return;
-        }
-
         AppLauncher.launch(instrumentation, "Settings");
         findObjectInScrollable(new UiSelector().textContains("Security")).click();
         if (testFramework.getApi() >= 24) {
@@ -823,13 +841,12 @@ public class SettingsTest {
     @TestInfo(id = "4db4a825-b584-4c68-a04d-c6a933b14e24")
     public void testCameraAppDisabled() throws Exception {
 
-        if (testFramework.getApi() == 27) {
-            return;
-        }
+        final UiDevice device = testFramework.getDevice();
 
         enableSampleDeviceAdmin();
         disableCamera();
         gotoCameraApp();
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
         Assert.assertTrue(verifyCameraAppDisabled());
     }
 
