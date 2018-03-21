@@ -86,7 +86,8 @@ class OrientationTest(testcase_base.BaseConsoleTest):
         got_expected = True
         break
       else:
-        time.sleep(util.TRIAL_WAIT_TIMEOUT_S)
+        # Emulator needs some time to update the rotation of it's display.
+        time.sleep(2)
 
     self.assertTrue(got_expected,
                     'Max tries reached, failed to get expected values.')
