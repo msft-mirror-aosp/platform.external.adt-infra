@@ -67,11 +67,10 @@ public class Res {
     public static final String CAMERA_FILE_THUMBNAIL_RES = "com.android.camera2:id/rounded_thumbnail_view";
     public static final String CAMERA_FILE_DELETE_RES = "com.android.camera2:id/filmstrip_bottom_control_delete";
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
-    public static final String MOBILE_TYPE_ICONS_RES = "com.android.systemui:id/mobile_type";
-    public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
-    public static final String WIFI_ICONS_RES = "com.android.systemui:id/wifi_signal";
-    public static final String NOTIFICATION_BAR_EXPAND_RES =
-            "com.android.systemui:id/expand_indicator";
+    public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";;
+    public static final String SETTINGS_BUTTON_RES = "com.android.systemui:id/settings_button";
+    public static final String NOTIFICATION_BAR_EXPAND_RES = "com.android.systemui:id/expand_indicator";
+    public static final String NOTIFICATION_BAR_HEADER_RES = "com.android.systemui:id/header";
 
     public static final String GOOGLE_PLAY_VENDING_RES = "com.android.vending";
     public static final String GOOGLE_PLAY_IDLE_RES = "com.android.vending:id/search_box_idle_text";
