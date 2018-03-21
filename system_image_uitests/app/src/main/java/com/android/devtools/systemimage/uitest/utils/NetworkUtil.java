@@ -17,83 +17,73 @@
 package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
-
-import org.junit.Rule;
+import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
 
 import android.app.Instrumentation;
 import android.content.Context;
-import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.Until;
+import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiSelector;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 
-import java.util.concurrent.TimeUnit;
+import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import org.junit.Rule;
 
 /**
  * Static utility methods pertaining to network status.
  */
 public class NetworkUtil {
-
     private NetworkUtil() {
         throw new AssertionError();
     }
 
-    /**
-     * Checks network status.
-     *
-     * @param device see {@link UiDevice#getInstance(android.app.Instrumentation) getInstance}
-     * @return True if the emulator is connected to the internet via WiFi or mobile data.
-     */
-    public static boolean verifyNetworkStatus(UiDevice device) {
-        // Verify that a mobile data or WiFi icon is on the status bar.
-        device.openNotification();
-        boolean hasWifi = verifyWifi(device);
-        if (hasWifi) {
-            device.pressHome();
-            return true;
-        }
-        boolean hasMobileData = verifyMobileData(device);
-        if (hasMobileData) {
-            device.pressHome();
-            return true;
-        }
-        device.pressHome();
-        return false;
-    }
+    private static final String TAG = "NetworkUtil";
 
-    private static boolean verifyWifi(UiDevice device) {
-        // Wait to check the notification bar items. Opening notification is an animation.
-        boolean isTrue =
-                device.wait(
-                        Until.hasObject(By.res(Res.WIFI_ICONS_RES)),
-                        TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
-                );
-        return isTrue;
-    }
-
-    private static boolean verifyMobileData(UiDevice device) {
-        // Wait to check the notification bar items. Opening notification is an animation.
-        boolean isTrue =
-                device.wait(
-                        Until.hasObject(By.res(Res.MOBILE_TYPE_ICONS_RES)),
-                        TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
-                );
-        return isTrue;
-    }
+    @Rule
+    public final static SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     public static boolean hasCellularNetworkConnection(Instrumentation instrumentation) {
-
         TelephonyManager tm = (TelephonyManager) instrumentation.getContext().getSystemService(
                 Context.TELEPHONY_SERVICE);
 
-        if (tm.getDataState() != TelephonyManager.DATA_DISCONNECTED) {
+        return tm.getDataState() != TelephonyManager.DATA_DISCONNECTED;
+    }
+
+    public static boolean isAirplaneModeEnabled(UiDevice device) throws Exception {
+        final UiObject airplaneModeIcon = testFramework.getApi() >= 24 ?
+                device.findObject(new UiSelector().description("Airplane mode")) :
+                device.findObject(new UiSelector().resourceId("com.android.systemui:id/airplane"));
+        openExtendedNotificationsPanel(device);
+
+        if (airplaneModeIcon.waitForExists(5L) && airplaneModeIcon.getText().toLowerCase().contains("on")) {
             return true;
         } else {
-            return false;
+            UiObject airplaneModeView = device.findObject(new UiSelector().descriptionStartsWith(("Airplane mode")));
+            return airplaneModeView.waitForExists(5L) && airplaneModeView.getContentDescription().toLowerCase().contains("on");
         }
     }
 
+    public static void openExtendedNotificationsPanel(UiDevice device) throws UiObjectNotFoundException {
+        new NetworkUtilPopupWatcher(device).checkForCondition();
+        device.openNotification();
+        new NetworkUtilPopupWatcher(device).checkForCondition();
+
+        UiObject expandIndicator = device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_BAR_EXPAND_RES));
+        if (expandIndicator.waitForExists(5L)) {
+            expandIndicator.clickAndWaitForNewWindow();
+        } else {
+            Log.d(TAG, "tray expander icon not found");
+        }
+
+        UiObject notificationHeader = device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_BAR_HEADER_RES));
+        if (notificationHeader.waitForExists(5L)) {
+            notificationHeader.click();
+            notificationHeader.swipeDown(3);
+        } else {
+            Log.d(TAG, "notification bar header not found");
+        }
+    }
 }

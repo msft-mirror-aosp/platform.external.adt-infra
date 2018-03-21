@@ -21,9 +21,9 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.NetworkUtil;
-import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
+import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,6 +32,7 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
 import android.app.Instrumentation;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
@@ -42,6 +43,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 import android.telephony.TelephonyManager;
+import android.provider.Settings;
 
 import java.util.concurrent.TimeUnit;
 
@@ -50,11 +52,13 @@ import java.util.concurrent.TimeUnit;
  */
 @RunWith(AndroidJUnit4.class)
 public class NetworkIOTest {
+    private final String TAG = "NetworkIOTest";
+
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(60);
+    public Timeout globalTimeout = Timeout.seconds(240);
 
     public final TelephonyManager tm = (TelephonyManager)
             testFramework.getInstrumentation().getContext().getSystemService(
@@ -85,7 +89,7 @@ public class NetworkIOTest {
         UiDevice device = testFramework.getDevice();
 
         // Check network connectivity.
-        if (NetworkUtil.verifyNetworkStatus(device) && testFramework.getApi() < 24) {
+        if (NetworkUtil.hasCellularNetworkConnection(instrumentation) && testFramework.getApi() < 24) {
             AppLauncher.launch(instrumentation, "Browser");
             device.findObject(new UiSelector().resourceId(
                     Res.BROWSER_URL_TEXT_FIELD_RES)).click();
@@ -110,42 +114,28 @@ public class NetworkIOTest {
         }
         // verifyNetworkStatus does not work in API 24. No text or resource ID present in UI.
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
-            String iconDesc = (testFramework.getApi() >= 26) ?
-                    "Mobile data" : "Mobile Cellular Data";
             device.openNotification();
+            String cellularData = testFramework.getApi() >= 26 ? "Mobile data" : "Mobile Cellular Data";
             boolean hasCellularData =
                     device.wait(
-                            Until.hasObject(By.descContains(iconDesc)),
-                                    TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
+                            Until.hasObject(By.descContains(cellularData)),
+                            TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
                     );
             assertTrue("Could not connect to the network.", hasCellularData);
             device.pressHome();
 
-            if (testFramework.getApi() >= 26) {
-                device.wait(
-                        Until.hasObject(By.desc("Chrome").text("Chrome")),
-                        TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
-                );
-                device.findObject(new UiSelector().description("Chrome").text("Chrome")).
-                        clickAndWaitForNewWindow();
-            } else {
-                AppLauncher.launch(instrumentation, "Chrome");
-            }
+            AppLauncher.launch(instrumentation, "Chrome");
             // If this is the first launch, dismiss the "Welcome to Chrome" screen.
-            boolean hasAcceptButton =
-                device.wait(
-                        Until.hasObject(By.res(Res.CHROME_TERMS_ACCEPT_BUTTON_RES)),
-                        TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
-                );
-            if (hasAcceptButton) {
-                device.findObject(new UiSelector().resourceId(
-                        Res.CHROME_TERMS_ACCEPT_BUTTON_RES)).clickAndWaitForNewWindow();
+            UiObject acceptButton = device.findObject(new UiSelector().resourceId(
+                    Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
+            if (acceptButton.exists()) {
+                acceptButton.clickAndWaitForNewWindow();
             }
 
             // Dismiss the "Sign in to Chrome" screen if it's there.
             UiObject noThanksButton = device.findObject(new UiSelector().resourceIdMatches(
                     Res.CHROME_NO_THANKS_BUTTON_RES));
-            if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
+            if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))  ) {
                 noThanksButton.clickAndWaitForNewWindow();
             }
 
@@ -178,10 +168,10 @@ public class NetworkIOTest {
     }
 
 
+
     private UiObject2 navigateToDataSwitch(Instrumentation instrumentation, String label) throws UiObjectNotFoundException {
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        String containerRes = (testFramework.getApi() >= 24) ?
-                Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES : Res.NETWORK_SWITCHES_CONTAINER_RES;
+        String containerRes = (testFramework.getApi() >= 24) ? Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES :
+                Res.NETWORK_SWITCHES_CONTAINER_RES;
         String[] path = testFramework.getApi() >= 26 ? new String[] {"Settings", "Network & Internet", "Data usage"} :
                 new String[] {"Settings", "Data usage"};
 
@@ -220,29 +210,38 @@ public class NetworkIOTest {
         UiDevice device = UiDevice.getInstance(instrumentation);
         int api = testFramework.getApi();
         String label = api >= 26 ? "Mobile data" : "Cellular data";
+
         if (api >= 23) {
             UiObject2 dataSwitch = navigateToDataSwitch(instrumentation, label);
 
             // Test requires "Cellular data" switch widget to start in the on state.
             if (!dataSwitch.isChecked()) {
                 dataSwitch.click();
+                new NetworkUtilPopupWatcher(device).checkForCondition();
+
+                // Wait for data connection to turn on.
+                boolean isDataOn = new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return NetworkUtil.hasCellularNetworkConnection(instrumentation);
+                    }
+                });
+                assertTrue("Cellular data is disabled.", isDataOn);
             }
+
             // Disable "Cellular data" option.
             dataSwitch.click();
-            if (api == 23) {
-                device.findObject(new UiSelector().text("OK")).click();
-            }
+            new NetworkUtilPopupWatcher(device).checkForCondition();
+
             // Wait for data connection to turn off.
-            new Wait().until(new Wait.ExpectedCondition() {
+            boolean isDataOff = new Wait().until(new Wait.ExpectedCondition() {
                 @Override
                 public boolean isTrue() throws Exception {
-
                     return !NetworkUtil.hasCellularNetworkConnection(instrumentation);
                 }
             });
 
-            assertFalse("Cellular data is enabled.",
-                    NetworkUtil.hasCellularNetworkConnection(instrumentation));
+            assertTrue("Cellular data is enabled.", isDataOff);
             if (api == 23) {
                 assertFalse("Set cellular data limit text is visible.", device.findObject(
                         new UiSelector().textContains("Set cellular data limit")).exists());
@@ -252,6 +251,7 @@ public class NetworkIOTest {
                                 Res.ANDROID_DATA_SWITCH_RES).className(
                                 "android.widget.Switch")).exists());
             }
+
             // Enable Cellular data.
             dataSwitch.click();
         }
@@ -290,22 +290,30 @@ public class NetworkIOTest {
             // Test requires "Cellular data" switch widget to start in the off state.
             if (dataSwitch.isChecked()) {
                 dataSwitch.click();
-                if (api == 23) {
-                    device.findObject(new UiSelector().text("OK")).click();
-                }
+                new NetworkUtilPopupWatcher(device).checkForCondition();
+
+                // Wait for data connection to turn off.
+                boolean isDataOff = new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return !NetworkUtil.hasCellularNetworkConnection(instrumentation);
+                    }
+                });
+                assertTrue("Cellular data is enabled.", isDataOff);
             }
+
             // Enable Cellular data.
             dataSwitch.click();
-            // Wait for data connection to turn off.
-            new Wait().until(new Wait.ExpectedCondition() {
+            new NetworkUtilPopupWatcher(device).checkForCondition();
+
+            // Wait for data connection to turn on.
+            boolean isDataOn = new Wait().until(new Wait.ExpectedCondition() {
                 @Override
                 public boolean isTrue() throws Exception {
-
                     return NetworkUtil.hasCellularNetworkConnection(instrumentation);
                 }
             });
-            assertTrue("Cellular data is disabled.",
-                    NetworkUtil.hasCellularNetworkConnection(instrumentation));
+            assertTrue("Cellular data is disabled.", isDataOn);
 
             if (api == 23) {
                 assertTrue("Set cellular data limit text is not visible.", device.findObject(
@@ -320,115 +328,80 @@ public class NetworkIOTest {
     }
 
     /**
-     * Verifies toggling airplane mode on.
-     * <p>
-     * This is run to qualify releases. Please involve the test team in substantial changes.
-     * <p>
-     * TR ID: C14581152
-     * <p>
+     * Verifies enabling airplane mode
      *   <pre>
      *   Test Steps:
      *   1. Start the emulator.
-     *   2. Open Settings.
+     *   2. Open Settings
      *   3. Locate Airplane mode toggle switch.
-     *   4. Toggle Airplane mode on (verify).
-     *   5. Toggle Airplane mode off (cleanup).
+     *   4. Toggle Airplane mode on.
      *   Verify:
-     *   Airplane mode icon is present and enabled in notification tray.
+     *   Airplane mode icon is present and enabled in notification tray
+     *   5. Toggle Airplane mode off.
      *   </pre>
      * <p>
-     * The test works on API 17 and greater.
+     * The test works on API 23 and greater.
      */
     @Test
     @TestInfo(id = "14581152")
-    public void toggleAirplaneMode() throws Exception {
+    public void enableAirplaneMode() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (testFramework.getApi() >= 17) {
+        if (testFramework.getApi() >= 23) {
             String[] path = testFramework.getApi() >= 26 ? new String[]{"Settings", "Network & Internet"} :
                     new String[]{"Settings", "More"};
-            String airplaneToggle;
-
-            if (testFramework.getApi() >= 24) {
-                airplaneToggle = "android:id/switch_widget";
-            } else if (testFramework.getApi() >= 21) {
-                airplaneToggle = "android:id/switchWidget";
-            } else {
-                airplaneToggle = "android:id/checkbox";
-            }
-
             AppLauncher.launchPath(instrumentation, path);
 
-            UiObject airplaneModeSwitch = device.findObject(
-                    new UiSelector().resourceId(airplaneToggle));
-
             // Test requires "Airplane mode" switch widget to start in the off state.
-            if (airplaneModeSwitch.isChecked()) {
-                airplaneModeSwitch.click();
+            if (NetworkUtil.isAirplaneModeEnabled(device)) {
+                AppLauncher.launchPath(instrumentation, path);
+                toggleAirplaneMode(device);
             }
-            // Disable "Airplane mode" option.
-            airplaneModeSwitch.click();
+            assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device));
 
-            final UiObject airplaneModeIcon = testFramework.getApi() >= 24 ?
-                    device.findObject(new UiSelector().description("Airplane mode")) :
-                    device.findObject(new UiSelector().resourceId("com.android.systemui:id/airplane"));
-
-            device.openNotification();
-
-            // Wait for airplane mode icon.
-            boolean airplaneModeActive = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws Exception {
-                    return airplaneModeIcon.exists() && airplaneModeIcon.isEnabled();
-                }
-            });
-
-            assertTrue("Airplane mode is not enabled.", airplaneModeActive);
+            AppLauncher.launchPath(instrumentation, path);
+            toggleAirplaneMode(device);
+            assertTrue("Airplane mode is not enabled.", NetworkUtil.isAirplaneModeEnabled(device));
 
             // Disable airplane mode.
             AppLauncher.launchPath(instrumentation, path);
-            device.findObject(new UiSelector().resourceId(airplaneToggle)).click();
-
+            toggleAirplaneMode(device);
         }
     }
 
     /**
-     * Verifies toggling 2G Data mode on.
+     * Verifies disabling 3G Data mode
      *   <pre>
      *   Test Steps:
      *   1. Start the emulator.
-     *   2. Open Settings.
-     *   3. Launch Preferred Network Type.
+     *   2. Open Settings
+     *   3. Launch Preferred Network Type
      *   4. Enable 3G Data mode if not enabled.
-     *   5. Toggle 2G Data mode on. (verify)
-     *   6. Toggle 3G Data mode on to reset image.
+     *   5. Toggle 2G Data mode on.
      *   Verify:
-     *   2G Data mode icon is set as the Preferred Network Type.
+     *   2G Data mode icon is set as the Preferred Network Type
+     *   6. Toggle 3G Data mode on to reset image.
      *   </pre>
      * <p>
      * The test works on API 19 and greater.
      */
     @Test
     @TestInfo(id = "14581152")
-    public void toggle2GData() throws Exception {
+    public void disable3GData() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (testFramework.getApi() >= 19) {
             String[] path;
             if (testFramework.getApi() >= 27) {
-                path = new String[]{"Settings", "Network & Internet", "Mobile network", "Advanced",
-                        "Preferred network type"};
+                path = new String[]{"Settings", "Network & Internet", "Mobile network", "Advanced", "Preferred network type"};
             } else if (testFramework.getApi() == 26) {
-                path = new String[]{"Settings", "Network & Internet", "Mobile network",
-                        "Preferred network type"};
-            } else if (testFramework.getApi() >= 21) {
-                path = new String[]{"Settings", "More", "Cellular networks",
-                        "Preferred network type"};
+                path = new String[]{"Settings", "Network & Internet", "Mobile network", "Preferred network type"};
+            } else if (testFramework.getApi() >= 21){
+                path = new String[]{"Settings", "More", "Cellular networks", "Preferred network type"};
             } else {
-                path = new String[]{"Settings", "More", "Mobile networks",
-                        "Preferred network type"};
+                path = new String[]{"Settings", "More", "Mobile networks", "Preferred network type"};
             }
 
             AppLauncher.launchPath(instrumentation, path);
@@ -439,8 +412,7 @@ public class NetworkIOTest {
             // Test requires image to start in 3G data mode.
             if (!dataSwitch3G.isChecked()) {
                 dataSwitch3G.clickAndWaitForNewWindow();
-                UiObject preferredNetwork = device.findObject(new UiSelector().text(
-                        "Preferred network type"));
+                UiObject preferredNetwork = device.findObject(new UiSelector().text("Preferred network type"));
                 if (preferredNetwork.exists()) {
                     preferredNetwork.clickAndWaitForNewWindow();
                 }
@@ -459,11 +431,102 @@ public class NetworkIOTest {
                 }
             });
 
-            assertTrue("2G data mode is not enabled.", data2GModeActive);
+            assertTrue("3G data mode is not disabled.", data2GModeActive);
 
             // Reset 3G mode.
             data2GPreferred.clickAndWaitForNewWindow();
             dataSwitch3G.click();
+        }
+    }
+
+    /**
+     * Verifies disabling data roaming mode
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Open Settings
+     *   3. Launch Mobile network
+     *   4. Enable data Roaming if not enabled.
+     *   5. Toggle data Roaming mode off.
+     *   Verify:
+     *   Data Roaming is not set in the Telephony manager
+     *   6. Toggle data roaming on to reset image.
+     *   </pre>
+     * <p>
+     * The test works on API 18-25.
+     * Note: This test cannot be run on API's 26 and greater due to a security exception thrown
+     * by Settings.Global in checkRoamingStatus();
+     */
+    @Test
+    @TestInfo(id = "14581152")
+    public void disableDataRoaming() throws Exception {
+        final Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        Context context = testFramework.getInstrumentation().getContext();
+
+        if (testFramework.getApi() >= 18 && testFramework.getApi() <= 25) {
+            String[] path;
+            if (testFramework.getApi() >= 21) {
+                path = new String[]{"Settings", "More", "Cellular networks"};
+            } else {
+                path = new String[]{"Settings", "More", "Mobile networks"};
+            }
+
+            AppLauncher.launchPath(instrumentation, path);
+
+            // Test requires image to start with data roaming active.
+            if (!isDataRoamingEnabled(context)) {
+                toggleRoaming(device);
+            }
+
+            assertTrue("Data roaming is not enabled.", isDataRoamingEnabled(context));
+
+            // Disable data roaming option.
+            toggleRoaming(device);
+
+            assertFalse("Data roaming is not disabled.", isDataRoamingEnabled(context));
+
+            toggleRoaming(device);
+
+        }
+    }
+
+    /**
+     * Helper class to toggle the active data roaming status
+     */
+    private void toggleAirplaneMode(UiDevice device) throws UiObjectNotFoundException {
+        UiObject airplaneModeText = device.findObject(
+                new UiSelector().text("Airplane mode"));
+        boolean isFound = airplaneModeText.waitForExists(3L);
+        if (isFound) {
+            airplaneModeText.clickAndWaitForNewWindow();
+        }
+    }
+
+
+    /**
+     * Helper class to determine if data roaming is enabled
+     * Note: this method is blocked on API's 26 and higher by a java.lang.SecurityException
+     */
+    private boolean isDataRoamingEnabled(Context context) throws Exception {
+        try {
+            String key = Settings.Global.DATA_ROAMING;
+            ContentResolver cr = context.getContentResolver();
+            return Settings.Global.getInt(cr, key, 0) == 1 ? true : false;
+        } catch (Exception exception) {
+            return false;
+        }
+    }
+
+    /**
+     * Helper class to toggle the active data roaming status
+     */
+    private void toggleRoaming(UiDevice device) throws UiObjectNotFoundException {
+        UiObject dataRoamingSwitch = device.findObject(new UiSelector().text("Data roaming"));
+        dataRoamingSwitch.clickAndWaitForNewWindow();
+        UiObject allowRoaming = device.findObject(new UiSelector().text("OK"));
+        if (allowRoaming.exists()) {
+            allowRoaming.clickAndWaitForNewWindow();
         }
     }
 }
