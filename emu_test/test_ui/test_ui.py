@@ -70,6 +70,34 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.m_logger.info('adb_pull_stdout:\n' + out)
         self.m_logger.info('adb_pull_stderr:\n' + err)
 
+    def _launch_single_class_ui_test_with_avd_configs(self, avd, class_name):
+        """Launch a new AVD per class of tests.
+
+        Each class of tests will run in it's own instance of the emulator.
+        Without this method, the entire suite of tests (all classes) run in
+        one instance of the emulator.
+
+        Args:
+            avd: The AVD configuration.
+            class_name: Class name of UI tests.
+
+        Returns the process.
+
+        """
+        test_args_prefix = '-Pandroid.testInstrumentationRunnerArguments'
+        test_class = test_args_prefix + '.class=com.android.devtools.systemimage.uitest.smoke.' +\
+                     class_name
+        test_api = '%s.api=%s' % (test_args_prefix, avd.api)
+        test_abi = test_args_prefix + '.abi=' + avd.abi
+        test_tag = test_args_prefix + '.tag=' + avd.tag
+        test_ori = test_args_prefix + '.origin=' + avd.ori
+        self.m_logger.debug('Calling gradle with cwd %r params: %r', self.uitest_dir,
+                            [self.gradle, 'cAT', test_class, test_api, test_abi, test_tag,
+                             test_ori])
+        return psutil.Popen([self.gradle, 'cAT', test_class, test_api, test_abi, test_tag,
+                             test_ori], cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE,
+                            shell=self.use_shell)
+
     def _launch_ui_test_with_avd_configs(self, avd):
         test_args_prefix = '-Pandroid.testInstrumentationRunnerArguments'
         test_package = test_args_prefix + '.package=com.android.devtools.systemimage.uitest.smoke'
@@ -99,7 +127,11 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.m_logger.info('instrumentation_test_stderr:\n' + err)
         self.assertTrue(p.poll() == 0 and 'FAILURES!!!' not in out, "%s failed." % test_method)
 
-    def ui_test_check(self, avd):
+    def ui_test_check(self, avd, class_name=None):
+        """Runs all UI tests for the AVD described by 'avd' and the class 'class_name'.
+
+        Runs all tests if class_name is None.
+        """
         self.launch_emu_and_wait(avd)
         self.m_logger.info('System image UI tests (%s) start.' % self._testMethodName)
         if os.name is 'nt':
@@ -125,7 +157,8 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             return
 
         # run tests using gradle script
-        proc = self._launch_ui_test_with_avd_configs(avd)
+        self.m_logger.info('Test class: %s', class_name)
+        proc = self._launch_single_class_ui_test_with_avd_configs(avd, class_name)
         (out, err) = proc.communicate()
         self.m_logger.info('gradle_stdout:\n' + out)
         self.m_logger.info('gradle_stderr:\n' + err)
@@ -142,16 +175,48 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.m_logger.info('System image UI tests (%s) end.' % self._testMethodName)
         self.assertTrue(err is None or len(err.strip()) == 0, "The UI tests failed.")
 
-    def run_ui_test(self, avd_config):
+    def run_ui_test(self, avd_config, class_name=None):
+        """Creates an AVD described by 'avd_config' and runs UI tests.
+
+        If the 'class_name' is provided, runs only the tests in that class.
+        Otherwise all UI tests run.
+        """
         self.avd_config = avd_config
         self.assertEqual(self.create_avd(avd_config), 0)
-        self.ui_test_check(avd_config)
+        self.ui_test_check(avd_config, class_name)
+
+
+def get_ui_test_class_names():
+    """Get the names of test classes in the com.android.devtools.systemimage.uitest.smoke package.
+
+    Takes the directory listing of all files that end in '.java'.
+
+    Return: The name of the test classes in the package.
+
+    """
+    uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                              '..', '..', 'system_image_uitests')
+    package_path = os.path.join(uitest_dir, 'app', 'src', 'androidTest', 'java', 'com',
+                                'android', 'devtools', 'systemimage', 'uitest', 'smoke')
+    classes = [filename[:-5:] for filename in os.listdir(package_path)
+               if filename.endswith('.java')]
+    return classes
 
 
 if emu_args.config_file is None:
     sys.exit(0)
 else:
-    create_test_case_from_file("ui", UiAutomatorBaseTestCase, UiAutomatorBaseTestCase.run_ui_test)
+    # When not running a local presubmit test, find the names of all test
+    # classes and create an individual test case function for each class. This
+    # allows us to launch a new emulator for each test class, which is more
+    # robust in the case of emulator hangs or other such failures.
+    if emu_args.uitest_psc is not None:
+        test_class_names = None
+    else:
+        test_class_names = get_ui_test_class_names()
+    create_test_case_from_file("ui", UiAutomatorBaseTestCase, UiAutomatorBaseTestCase.run_ui_test,
+                               test_class_names)
+
 
 if __name__ == '__main__':
     os.environ["SHELL"] = "/bin/bash"

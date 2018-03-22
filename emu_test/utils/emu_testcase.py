@@ -605,9 +605,18 @@ class EmuBaseTestCase(LoggedTestCase):
         self.m_logger.debug('return value of update proc: %s', update_proc.poll())
         return update_proc.poll()
 
-def create_test_case_from_file(desc, testcase_class, test_func):
-    """ Create test case based on test configuration file. """
+def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
+    """ Create one or more test cases based on test configuration file.
 
+    If the `variants` parameter is included as an iterable, creates multiple
+    test cases, one for each variant, passing each variant as an extra parameter
+    to `test_func`. This is used, for example, in the UI tests to create a
+    separate test case for each test class.
+
+    Args:
+        test_class: The class to add the test cases.
+        test_func: The function to call.
+    """
     is_cts = True if desc == "cts" else False
     def get_port():
         if not hasattr(get_port, '_port'):
@@ -648,7 +657,7 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                     return False
         return True
 
-    def create_test_case(avd_config, op, builder_name=None, pattern=None):
+    def create_test_case(avd_config, op, builder_name=None, pattern=None, variant=None):
         if not is_cts and avd_config.gpu == "yes":
             avd_config_swiftshader = avd_config._replace(gpu = "swiftshader_indirect")
             create_test_case(avd_config_swiftshader, op)
@@ -661,9 +670,15 @@ def create_test_case_from_file(desc, testcase_class, test_func):
 
         # For console tests, pass the builder name to it.
         if pattern and 'console' in pattern:
-            func = lambda self: test_func(self, avd_config, builder_name)
+            if variant is not None:
+                func = lambda self: test_func(self, avd_config, builder_name, variant)
+            else:
+                func = lambda self: test_func(self, avd_config, builder_name)
         else:
-            func = lambda self: test_func(self, avd_config)
+            if variant is not None:
+                func = lambda self: test_func(self, avd_config, variant)
+            else:
+                func = lambda self: test_func(self, avd_config)
 
         if op == "X":
             func = unittest.expectedFailure(func)
@@ -671,7 +686,9 @@ def create_test_case_from_file(desc, testcase_class, test_func):
         elif op == "F":
             func = func
         qemu_str = "_qemu2" if avd_config.classic == "no" else "_qemu1"
-        setattr(testcase_class, "test_%s_%s%s" % (desc, str(avd_config), qemu_str), func)
+        variant_str = "_%s" % variant if variant is not None else ""
+        setattr(testcase_class, "test_%s_%s%s%s" % (desc, str(avd_config), qemu_str,
+                                                    variant_str), func)
 
     with open(emu_argparser.emu_args.config_file, "rb") as file:
         reader = csv.reader(file)
@@ -729,5 +746,8 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                       classic = "yes"
                     if device == "":
                       device = "default"
-                    avd_config = AVDConfig(api, alt_version, tag, abi, device, ram, gpu, classic, get_port(), is_cts, ori)
-                    create_test_case(avd_config, op, emu_argparser.emu_args.builder_name, emu_argparser.emu_args.pattern)
+                    avd_config = AVDConfig(api, alt_version, tag, abi, device, ram, gpu, classic,
+                                           get_port(), is_cts, ori)
+                    for variant in variants or [None]:
+                        create_test_case(avd_config, op, emu_argparser.emu_args.builder_name,
+                                         emu_argparser.emu_args.pattern, variant)
