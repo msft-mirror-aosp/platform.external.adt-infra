@@ -22,13 +22,17 @@ import com.android.devtools.server.model.OrientationManagerModel;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
@@ -83,17 +87,52 @@ public class OrientationManagerService implements Service {
     //   ROTATION_180: 2
     //   ROTATION_270: 3
     //   ROTATION_90: 1
-    final int screenRotation = ((WindowManager) mContext
-        .getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
+    final CountDownLatch latch1 = new CountDownLatch(1);
+    final List<Integer> screenRotation = new ArrayList<>(1);
+    new Handler(Looper.getMainLooper()).post(new Runnable() {
+      @Override
+      public void run() {
+        int rotation = ((WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
+        screenRotation.add(rotation);
+        latch1.countDown();
+      }
+    });
+    try {
+      latch1.await();
+    } catch (InterruptedException e) {
+      mDevice.pressHome();
+      Log.e(TAG, "Failed to wait for rotation updated.");
+      result.setIsFail(true);
+      result.setDescription("Failed to wait for rotation updated.");
+      return new Gson().toJson(result);
+    }
 
     // Screen orientation has two common values:
     // in android.content.res.Configuration:
     //   ORIENTATION_PORTRAIT: 1
     //   ORIENTATION_LANDSCAPE: 2
-    final int screenOrientation = mContext.getResources().getConfiguration().orientation;
+    final CountDownLatch latch2 = new CountDownLatch(1);
+    final List<Integer> screenOrientation = new ArrayList<>(1);
+    new Handler(Looper.getMainLooper()).post(new Runnable() {
+      @Override
+      public void run() {
+        int orientation = mContext.getResources().getConfiguration().orientation;
+        screenOrientation.add(orientation);
+        latch2.countDown();
+      }
+    });
+    try {
+      latch2.await();
+    } catch (InterruptedException e) {
+      mDevice.pressHome();
+      Log.e(TAG, "Failed to wait for ORI updated.");
+      result.setIsFail(true);
+      result.setDescription("Failed to wait for ORI updated.");
+      return new Gson().toJson(result);
+    }
 
-    result.setScreenRotation(Integer.toString(screenRotation));
-    result.setScreenOrientation(Integer.toString(screenOrientation));
+    result.setScreenRotation(Integer.toString(screenRotation.get(0)));
+    result.setScreenOrientation(Integer.toString(screenOrientation.get(0)));
     isSuccess = true;
     result.setIsFail(!isSuccess);
     mDevice.pressHome();
