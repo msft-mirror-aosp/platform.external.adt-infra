@@ -20,6 +20,7 @@ from emu_error import *
 import emu_test.utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
+import test_fingerprint
 
 class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     __slots__ = ()
@@ -315,6 +316,18 @@ class EmuBaseTestCase(LoggedTestCase):
                     break
             if not network_succeeded:
                 raise Exception('Network check error')
+            if 'wear' in str(avd) or 'tv' in str(avd) or 'car' in str(avd):
+                #do nothing
+                self.m_logger.info("skip fingerprint test for non-phone device")
+            elif 'google_apis' in str(avd):
+                self.m_logger.info("begin fingerprint test for phone device")
+                fingerprint_succeeded = test_fingerprint.do_fingerprint_test()
+                if not fingerprint_succeeded:
+                    # for now, just issue some message, later will turn it into exception
+                    self.m_logger.info("fingerprint test for phone device failed")
+                    #raise Exception('Fingerprint check error')
+                else:
+                    self.m_logger.info("fingerprint test for phone device succeeded")
 
         launcher_emu.join(10)
         if not emu_argparser.emu_args.skip_adb_perf:
