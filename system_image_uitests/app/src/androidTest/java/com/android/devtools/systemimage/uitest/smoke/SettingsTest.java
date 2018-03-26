@@ -22,6 +22,7 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
+import com.android.devtools.systemimage.uitest.utils.NetworkUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
@@ -495,16 +496,26 @@ public class SettingsTest {
     @TestInfo(id = "14581322")
     public void confirmNowCardsPageOpen() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = testFramework.getDevice();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage() ||
-                testFramework.getApi() < 23 || testFramework.getApi() > 24) {
+        if (!NetworkUtil.hasCellularNetworkConnection(instrumentation) || !testFramework.isGoogleApiImage()
+                || testFramework.getApi() < 23 || testFramework.getApi() > 24) {
             return;
         }
 
         SettingsUtil.openItem(instrumentation, "Google");
-        findObjectInScrollable(new UiSelector().textStartsWith("Search")).click();
-        device.findObject(new UiSelector().text("Now cards")).click();
+
+        UiObject searchItem = device.findObject(new UiSelector().textStartsWith("Search"));
+        searchItem.waitForExists(5L);
+        if (searchItem.exists()) {
+            searchItem.clickAndWaitForNewWindow();
+        }
+
+        UiObject nowCardsItem = device.findObject(new UiSelector().textStartsWith("Now cards"));
+        nowCardsItem.waitForExists(5L);
+        if (nowCardsItem.exists()) {
+            nowCardsItem.clickAndWaitForNewWindow();
+        }
 
         UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
                 instrumentation,
