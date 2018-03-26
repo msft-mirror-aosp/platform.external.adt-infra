@@ -21,6 +21,7 @@ import emu_test.utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
 import test_fingerprint
+import test_homescreen
 
 class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     __slots__ = ()
@@ -320,6 +321,15 @@ class EmuBaseTestCase(LoggedTestCase):
                 #do nothing
                 self.m_logger.info("skip fingerprint test for non-phone device")
             elif 'google_apis' in str(avd):
+                # do a homescreen test first
+                self.m_logger.info("begin homescreen test for phone device")
+                homescreen_succeeded = test_homescreen.do_homescreen_test()
+                if homescreen_succeeded:
+                    self.m_logger.info("homescreen test for phone device succeeded")
+                else:
+                    self.m_logger.info("homescreen test for phone device failed ")
+
+                # do a fingerprint test
                 self.m_logger.info("begin fingerprint test for phone device")
                 fingerprint_succeeded = test_fingerprint.do_fingerprint_test()
                 if not fingerprint_succeeded:
