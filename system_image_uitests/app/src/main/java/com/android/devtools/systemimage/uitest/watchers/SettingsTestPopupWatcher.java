@@ -25,12 +25,12 @@ import android.support.test.uiautomator.UiWatcher;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Dismisses pop up while opening the extended notifications tray for the network IO utility
+ * Dismisses pop up warning the user about disabling settings
  * */
-public class NetworkUtilPopupWatcher implements UiWatcher {
+public class SettingsTestPopupWatcher implements UiWatcher {
     private final UiDevice mDevice;
 
-    public NetworkUtilPopupWatcher(UiDevice device) {
+    public SettingsTestPopupWatcher(UiDevice device) {
         this.mDevice = device;
     }
 

@@ -27,6 +27,7 @@ import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
+import com.android.devtools.systemimage.uitest.watchers.SettingsTestPopupWatcher;
 import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 
 import org.junit.Assert;
@@ -677,14 +678,20 @@ public class SettingsTest {
      *   3. Select Sample Device Admin.
      *   4. Goto to setting and deactivate policy.
      *   Verify:
-     *   1. (Verify #3) the "Sample Device Admin" policy is activated.
-     *   2. (Verify #4) that the sample device Admin policy is deactivated.
+     *   1. (Verify #1) that the "Sample Device Admin" policy is deactivated.
+     *   2. (Verify #2) that the "Sample Device Admin" policy is activated.
+     *   3. (verify #3) that the "Sample Device Admin" policy is deactivated.
      *   </pre>
      */
     @Test
     @TestInfo(id = "T144630613")
     public void activateDeactivatePolicy() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
+
+        if (checkStatusOfPolicy(instrumentation, "Sample Device Admin")) {
+            SettingsUtil.deactivate(instrumentation, "Sample Device Admin");
+        }
+        assertFalse(checkStatusOfPolicy(instrumentation, "Sample Device Admin"));
 
         // Activate "Sample Device Admin" policy
         SettingsUtil.activate(instrumentation, "Sample Device Admin");
@@ -693,18 +700,18 @@ public class SettingsTest {
         // Deactivate "Sample Device Admin" policy
         SettingsUtil.deactivate(instrumentation, "Sample Device Admin");
         assertFalse(checkStatusOfPolicy(instrumentation, "Sample Device Admin"));
-
     }
 
     /**
-     *Check if the the selected policy is checked or not.
+     * Check if the the selected policy is checked or not.
      */
     private boolean checkStatusOfPolicy(Instrumentation instrumentation, String adminPolicyName)
-            throws Exception{
+            throws Exception {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
         UiSelector listViewSelector = new UiSelector().resourceId(Res.ANDROID_LIST_RES);
 
+        new SettingsTestPopupWatcher(device).checkForCondition();
         assertTrue(device.findObject(listViewSelector).exists());
 
         // Get all the available "Device administrators" options
@@ -712,15 +719,15 @@ public class SettingsTest {
 
         // Verify that the correct checkbox (Sample Device Admin) is checked
         for (int i = 0; i < size; i++) {
+            UiObject2 sampleDeviceAdminCheckbox = UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.CheckBox"),
+                    By.text(adminPolicyName),
+                    By.res(Res.ANDROID_LIST_RES));
 
-            UiSelector sampleDeviceSelection = listViewSelector.childSelector(new
-                    UiSelector().index(i));
-
-            if(device.findObject(sampleDeviceSelection).getChild(
-                    new UiSelector().textContains(adminPolicyName)).exists()){
-
-                return device.findObject(sampleDeviceSelection).getChild(
-                        new UiSelector().className("android.widget.CheckBox")).isChecked();
+            if (sampleDeviceAdminCheckbox != null) {
+                boolean isChecked = sampleDeviceAdminCheckbox.isChecked();
+                return isChecked;
             }
         }
         return false;
@@ -767,9 +774,14 @@ public class SettingsTest {
         device.pressHome();
     }
 
-    private void disableCamera() throws Exception {
+    private void setCameraEnabled(final boolean enableCameraDevices) throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
+        final boolean enableCameras = enableCameraDevices;
+        String cameraCheckboxLabel = enableCameras ? "Device cameras disabled" :
+                "Device cameras enabled";
+        final UiObject enableCamerasCheckbox = device.findObject(
+                new UiSelector().text(cameraCheckboxLabel));
 
         AppLauncher.launch(instrumentation, "API Demos");
         boolean widgetExists = new Wait().until(new Wait.ExpectedCondition() {
@@ -804,12 +816,12 @@ public class SettingsTest {
         widgetExists = new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws Exception {
-                return device.findObject(new UiSelector().text("Device cameras enabled")).exists();
+                return enableCamerasCheckbox.exists();
             }
         });
 
         if (widgetExists) {
-            device.findObject(new UiSelector().text("Device cameras enabled")).click();
+            enableCamerasCheckbox.click();
         }
 
         device.pressHome();
@@ -840,12 +852,16 @@ public class SettingsTest {
      *   1. Start an emulator AVD.
      *   2. Goto Settings —> Security —> Device Administration
      *   3. Select Sample Device Admin.
-     *   4. Goto app API Demos —> App —> Device Admin —> General (Verify 1)
-     *   5. Select Disable all device Camera.
-     *   6. Goto Home screen —> Click on Camera Application (Verify 2)
+     *   4. Goto app API Demos —> App —> Device Admin —> General
+     *   5. Select Enable All Device Cameras.
+     *   6. Repeat steps 2-4.
+     *   7. Select Disable All Device Cameras.
+     *   8. Goto Home screen —> Click on Camera Application.
+     *   9. Repeat steps 2-4.
+     *   10. Select Enable All Device Cameras.
      *   Verify:
-     *   1. (Verify #1) see “Device Admin” option in API Demos.
-     *   2. (Verify #2) see a Pop Up Message “Camera has been disabled because of security policies.
+     *   1. (Verify #1) camera app is enabled.
+     *   2. (Verify #2) camera app is disabled.
      *   </pre>
      */
     @Test
@@ -855,10 +871,17 @@ public class SettingsTest {
         final UiDevice device = testFramework.getDevice();
 
         enableSampleDeviceAdmin();
-        disableCamera();
+        if (verifyCameraAppDisabled()) {
+            setCameraEnabled(true);
+        }
+        Assert.assertFalse(verifyCameraAppDisabled());
+
+        setCameraEnabled(false);
         gotoCameraApp();
         new CameraAccessPermissionsWatcher(device).checkForCondition();
         Assert.assertTrue(verifyCameraAppDisabled());
+        setCameraEnabled(true);
+        Assert.assertFalse(verifyCameraAppDisabled());
     }
 
     /**
