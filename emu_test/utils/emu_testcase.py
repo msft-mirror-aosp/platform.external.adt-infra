@@ -22,6 +22,7 @@ from subprocess import PIPE, STDOUT
 from collections import namedtuple
 import test_fingerprint
 import test_homescreen
+import test_blackscreen
 
 class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     __slots__ = ()
@@ -317,11 +318,20 @@ class EmuBaseTestCase(LoggedTestCase):
                     break
             if not network_succeeded:
                 raise Exception('Network check error')
+
+            # do a black screen test on all avds
+            self.m_logger.info("begin blackscreen test for device " + str(avd))
+            blackscreen_succeeded = test_blackscreen.do_blackscreen_test()
+            if blackscreen_succeeded:
+                self.m_logger.info("blackscreen test succeeded: " + str(avd))
+            else:
+                self.m_logger.info("blackscreen test failed: " + str(avd))
+
             if 'wear' in str(avd) or 'tv' in str(avd) or 'car' in str(avd):
                 #do nothing
                 self.m_logger.info("skip fingerprint test for non-phone device")
             elif 'google_apis' in str(avd):
-                # do a homescreen test first
+                # do a homescreen test
                 self.m_logger.info("begin homescreen test for phone device")
                 homescreen_succeeded = test_homescreen.do_homescreen_test()
                 if homescreen_succeeded:
