@@ -4,7 +4,10 @@
 
 """Recipe for adb stress testing."""
 
+import datetime
 import os
+import shutil
+from glob import iglob
 
 DEPS = [
   'file',
@@ -18,6 +21,18 @@ DEPS = [
 
 MASTER_USER = 'user'
 MASTER_IP = '172.27.213.40'
+
+def clean_log_dirs():
+  """Deletes all log directories."""
+  for filename in iglob('adb_stress_logs-build_*'):
+      shutil.rmtree(filename)
+
+
+def clean_build_archives():
+  """Deletes all build archives."""
+  for filename in iglob('build_*.zip'):
+      os.unlink(filename)
+
 
 def RunSteps(api):
   build_dir = api.path['build']
@@ -80,6 +95,9 @@ def RunSteps(api):
     if api.platform.is_win:
       upload_log_args.append('--iswindows')
     api.python("Zip and Upload Logs", log_util_path, upload_log_args)
+    clean_log_dirs()
+    clean_build_archives()
+
 
 def GenTests(api):
   yield (
