@@ -23,6 +23,7 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.NetworkUtil;
+import com.android.devtools.systemimage.uitest.utils.ApiDemosInstaller;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
@@ -39,7 +40,6 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
 import android.app.Instrumentation;
-import android.os.Build;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
@@ -48,7 +48,6 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-import android.text.TextUtils;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -61,30 +60,18 @@ public class SettingsTest {
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
+    private Instrumentation instrumentation = testFramework.getInstrumentation();
+    private UiDevice device = UiDevice.getInstance(instrumentation);
+
     // Tests under this class may take more than 60 seconds depending on buildbot infrastructure.
     // 120 seconds is a more reliable setup here.
     @Rule
     public Timeout globalTimeout = Timeout.seconds(120);
 
     @Before
-    public void activateDeviceAdmin() throws Exception{
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        String testPackageName = "com.example.android.apis";
-        String testPackageAPK32 = "ApiDemos_x86.apk";
-        String testPackageAPK64 = "ApiDemos_x86_64.apk";
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            String apk = TextUtils.join(", ", Build.SUPPORTED_ABIS).contains("64") ?
-                    testPackageAPK64 : testPackageAPK32;
-            boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(
-                    instrumentation, testPackageName);
-
-            if (!isAPIDemoInstalled)
-                PackageInstallationUtil.installApk(instrumentation, apk);
-        }
-        SettingsUtil.activate(instrumentation, "Sample Device Admin");
+    public void activateDeviceAdmin() throws Exception {
+        ApiDemosInstaller.installApp(instrumentation);
     }
-
 
     /**
      * Verifies Location page opens on Google API images.
@@ -103,9 +90,6 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "97d93bb7-63d2-4e89-9d18-0f232bbd51ab")
     public void testLocationSettingsPageOpen() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = testFramework.getDevice();
-
         if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage() ||
                 testFramework.getApi() < 23) {
             return;
@@ -124,7 +108,8 @@ public class SettingsTest {
             security.clickAndWaitForNewWindow();
         }
         UiObject location =
-                itemList.getChildByText(new UiSelector().className("android.widget.TextView"), "Location");
+                itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                        "Location");
         location.clickAndWaitForNewWindow();
 
         boolean isLocationDisabled = new Wait().until(new Wait.ExpectedCondition() {
@@ -177,8 +162,6 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void testPhonePermissions() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
         final String app = "Phone";
 
         if (testFramework.getApi() < 23) {
@@ -239,8 +222,6 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void testMapPermissions() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
         final String appType = "Location";
         final String appName = "Maps";
 
@@ -302,9 +283,6 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void displayConfigureAppPermissions() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = UiDevice.getInstance(instrumentation);
-
         if (testFramework.getApi() < 23) {
             return;
         }
@@ -328,12 +306,96 @@ public class SettingsTest {
     }
 
     /**
+     * Verifies Developer options is displayed under the System section on the Systems page.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TT ID: 4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > About emulated device
+     *   3. Click on the Build number option 7 times.
+     *   4. Toast message indicating developer options is enabled. (Can't confirm due to b/26511336)
+     *   5. Navigate to Settings page.
+     *   Verify:
+     *   Developer options displayed under Systems section on the Settings page.
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
+    public void developerOptionsEnabled() throws Exception {
+        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework)) {
+            DeveloperOptionsManager.enableDeveloperOptions(testFramework);
+        } else {
+            return;
+        }
+        assertTrue("Failed to enable Developer options.",
+                DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework));
+    }
+
+    /**
+     * Verifies show cards confirmation page opens on Google API images.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TR ID: C14581322
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > Google > Search and Now > Now Cards
+     *   3. Enable Show cards.
+     *   Verify:
+     *   The show cards confirmation page opens.
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "14581322")
+    public void confirmNowCardsPageOpen() throws Exception {
+        if (!NetworkUtil.hasCellularNetworkConnection(instrumentation) || !testFramework.isGoogleApiImage()
+                || testFramework.getApi() < 23 || testFramework.getApi() > 24) {
+            return;
+        }
+        SettingsUtil.openItem(instrumentation, "Google");
+
+        UiObject searchItem = device.findObject(new UiSelector().textStartsWith("Search"));
+        searchItem.waitForExists(5L);
+        if (searchItem.exists()) {
+            searchItem.clickAndWaitForNewWindow();
+        }
+
+        UiObject nowCardsItem = device.findObject(new UiSelector().textStartsWith("Now cards"));
+        nowCardsItem.waitForExists(5L);
+        if (nowCardsItem.exists()) {
+            nowCardsItem.clickAndWaitForNewWindow();
+        }
+
+        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
+                instrumentation,
+                By.clazz("android.widget.Switch"),
+                By.text("Show cards"),
+                By.clazz("android.widget.ListView"));
+        if (!switchWidget.isChecked()) {
+            switchWidget.click();
+            assertTrue("Failed to find Now sign-in title and buttons.",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return device.findObject(new UiSelector().resourceIdMatches(
+                                    Res.NOW_SIGNIN_SCREEN_RES)).exists()
+                                    && device.findObject(new UiSelector().resourceIdMatches(
+                                    Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
+                                    && device.findObject(new UiSelector().resourceIdMatches(
+                                    Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
+                        }
+                    }));
+        }
+    }
+
+    /**
      * Common code for finding a checkbox/switch in the Date & time settings.
      */
     private  UiObject2 navigateToDateTimeSwitch(String text) throws UiObjectNotFoundException {
-        final Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-
         final String container = (testFramework.getApi() >= 24) ?
                 Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES :  Res.ANDROID_LIST_RES;
         final String relative = text;
@@ -391,7 +453,6 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
-        final UiDevice device = testFramework.getDevice();
         final UiObject2 widget = navigateToDateTimeSwitch("Automatic date & time");
 
         // Test requires "Automatic date & time" widget to start in the enabled state.
@@ -450,97 +511,6 @@ public class SettingsTest {
     }
 
     /**
-     * Verifies Developer options is displayed under the System section on the Systems page.
-     * <p>
-     * This is run to qualify releases. Please involve the test team in substantial changes.
-     * <p>
-     * TT ID: 4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e
-     * <p>
-     *   <pre>
-     *   1. Start the emulator.
-     *   2. Open Settings > About emulated device
-     *   3. Click on the Build number option 7 times.
-     *   4. Toast message indicating developer options is enabled. (Can't confirm due to b/26511336)
-     *   5. Navigate to Settings page.
-     *   Verify:
-     *   Developer options displayed under Systems section on the Settings page.
-     *   </pre>
-     */
-    @Test
-    @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
-    public void developerOptionsEnabled() throws Exception {
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions(testFramework);
-        } else {
-            return;
-        }
-        assertTrue("Failed to enable Developer options.",
-                DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework));
-    }
-
-    /**
-     * Verifies show cards confirmation page opens on Google API images.
-     * <p>
-     * This is run to qualify releases. Please involve the test team in substantial changes.
-     * <p>
-     * TR ID: C14581322
-     * <p>
-     *   <pre>
-     *   1. Start the emulator.
-     *   2. Open Settings > Google > Search and Now > Now Cards
-     *   3. Enable Show cards.
-     *   Verify:
-     *   The show cards confirmation page opens.
-     *   </pre>
-     */
-    @Test
-    @TestInfo(id = "14581322")
-    public void confirmNowCardsPageOpen() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-
-        if (!NetworkUtil.hasCellularNetworkConnection(instrumentation) || !testFramework.isGoogleApiImage()
-                || testFramework.getApi() < 23 || testFramework.getApi() > 24) {
-            return;
-        }
-
-        SettingsUtil.openItem(instrumentation, "Google");
-
-        UiObject searchItem = device.findObject(new UiSelector().textStartsWith("Search"));
-        searchItem.waitForExists(5L);
-        if (searchItem.exists()) {
-            searchItem.clickAndWaitForNewWindow();
-        }
-
-        UiObject nowCardsItem = device.findObject(new UiSelector().textStartsWith("Now cards"));
-        nowCardsItem.waitForExists(5L);
-        if (nowCardsItem.exists()) {
-            nowCardsItem.clickAndWaitForNewWindow();
-        }
-
-        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
-                instrumentation,
-                By.clazz("android.widget.Switch"),
-                By.text("Show cards"),
-                By.clazz("android.widget.ListView"));
-        if (!switchWidget.isChecked()) {
-            switchWidget.click();
-            assertTrue("Failed to find Now sign-in title and buttons.",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return device.findObject(new UiSelector().resourceIdMatches(
-                                            Res.NOW_SIGNIN_SCREEN_RES)).exists()
-                                    && device.findObject(new UiSelector().resourceIdMatches(
-                                            Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
-                                    && device.findObject(new UiSelector().resourceIdMatches(
-                                            Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
-                        }
-            }));
-        }
-    }
-
-    /**
      * Verifies Time Zone option can be enabled.
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
@@ -561,7 +531,6 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
-        final UiDevice device = testFramework.getDevice();
         final UiObject2 widget = navigateToDateTimeSwitch("Automatic time zone");
 
         // Initialize automatic time zone option to enabled state.
@@ -629,7 +598,6 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
-        final UiDevice device = testFramework.getDevice();
         final UiObject2 widget = navigateToDateTimeSwitch("Use 24-hour format");
 
         // Initialize 24-hour format option to disabled state.
@@ -680,35 +648,36 @@ public class SettingsTest {
      *   Verify:
      *   1. (Verify #1) that the "Sample Device Admin" policy is deactivated.
      *   2. (Verify #2) that the "Sample Device Admin" policy is activated.
-     *   3. (verify #3) that the "Sample Device Admin" policy is deactivated.
+     *   3. (Verify #3) that the "Sample Device Admin" policy is deactivated.
      *   </pre>
      */
     @Test
     @TestInfo(id = "T144630613")
     public void activateDeactivatePolicy() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
+        boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
+                "com.example.android.apis");
 
-        if (checkStatusOfPolicy(instrumentation, "Sample Device Admin")) {
+        if (isAPIDemoInstalled) {
+            if (checkStatusOfPolicy()) {
+                SettingsUtil.deactivate(instrumentation, "Sample Device Admin");
+            }
+            assertFalse(checkStatusOfPolicy());
+
+            // Activate "Sample Device Admin" policy
+            SettingsUtil.activate(instrumentation, "Sample Device Admin");
+            assertTrue(checkStatusOfPolicy());
+
+            // Deactivate "Sample Device Admin" policy
             SettingsUtil.deactivate(instrumentation, "Sample Device Admin");
+            assertFalse(checkStatusOfPolicy());
         }
-        assertFalse(checkStatusOfPolicy(instrumentation, "Sample Device Admin"));
-
-        // Activate "Sample Device Admin" policy
-        SettingsUtil.activate(instrumentation, "Sample Device Admin");
-        assertTrue(checkStatusOfPolicy(instrumentation, "Sample Device Admin"));
-
-        // Deactivate "Sample Device Admin" policy
-        SettingsUtil.deactivate(instrumentation, "Sample Device Admin");
-        assertFalse(checkStatusOfPolicy(instrumentation, "Sample Device Admin"));
     }
 
     /**
      * Check if the the selected policy is checked or not.
      */
-    private boolean checkStatusOfPolicy(Instrumentation instrumentation, String adminPolicyName)
+    private boolean checkStatusOfPolicy()
             throws Exception {
-
-        UiDevice device = UiDevice.getInstance(instrumentation);
         UiSelector listViewSelector = new UiSelector().resourceId(Res.ANDROID_LIST_RES);
 
         new SettingsTestPopupWatcher(device).checkForCondition();
@@ -719,10 +688,13 @@ public class SettingsTest {
 
         // Verify that the correct checkbox (Sample Device Admin) is checked
         for (int i = 0; i < size; i++) {
+            UiSelector sampleDeviceSelection = listViewSelector.childSelector(new
+                    UiSelector().index(i));
+
             UiObject2 sampleDeviceAdminCheckbox = UiAutomatorPlus.findObjectByRelative(
                     instrumentation,
                     By.clazz("android.widget.CheckBox"),
-                    By.text(adminPolicyName),
+                    By.text("Sample Device Admin"),
                     By.res(Res.ANDROID_LIST_RES));
 
             if (sampleDeviceAdminCheckbox != null) {
@@ -740,101 +712,102 @@ public class SettingsTest {
     }
 
     public void enableSampleDeviceAdmin() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = testFramework.getDevice();
+        boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
+                "com.example.android.apis");
 
-        AppLauncher.launch(instrumentation, "Settings");
-        findObjectInScrollable(new UiSelector().textContains("Security")).click();
-        if (testFramework.getApi() >= 24) {
-            findObjectInScrollable(new UiSelector().textContains("Device admin").
-                    resourceId(Res.ANDROID_TITLE_RES)).click();
-        } else {
-            findObjectInScrollable(new UiSelector().text("Device administrators")).click();
-        }
-
-        device.findObject(new UiSelector().text("Sample Device Admin")).click();
-
-        try {
+        if (isAPIDemoInstalled) {
+            AppLauncher.launch(instrumentation, "Settings");
+            findObjectInScrollable(new UiSelector().textContains("Security")).click();
             if (testFramework.getApi() >= 24) {
-                findObjectInScrollable(new UiSelector().textContains("Activate")).click();
+                findObjectInScrollable(new UiSelector().textContains("Device admin").
+                        resourceId(Res.ANDROID_TITLE_RES)).click();
             } else {
-                device.findObject(new UiSelector().textMatches("(?i)activate(?-i)")).click();
+                findObjectInScrollable(new UiSelector().text("Device administrators")).click();
             }
-        } catch (UiObjectNotFoundException e) {
-            assertTrue("Could not find device administration buttons.",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return device.findObject(new UiSelector().text("Cancel")).exists();
-                        }
-                    }));
-            device.findObject(new UiSelector().text("Cancel")).click();
-        }
 
-        device.pressHome();
+            device.findObject(new UiSelector().text("Sample Device Admin")).click();
+
+            try {
+                if (testFramework.getApi() >= 24) {
+                    findObjectInScrollable(new UiSelector().textContains("Activate")).click();
+                } else {
+                    device.findObject(new UiSelector().textMatches("(?i)activate(?-i)")).click();
+                }
+            } catch (UiObjectNotFoundException e) {
+                assertTrue("Could not find device administration buttons.",
+                        new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() throws Exception {
+                                return device.findObject(new UiSelector().text("Cancel")).exists();
+                            }
+                        }));
+                device.findObject(new UiSelector().text("Cancel")).click();
+            }
+            device.pressHome();
+        }
     }
 
     private void setCameraEnabled(final boolean enableCameraDevices) throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = testFramework.getDevice();
-        final boolean enableCameras = enableCameraDevices;
-        String cameraCheckboxLabel = enableCameras ? "Device cameras disabled" :
-                "Device cameras enabled";
-        final UiObject enableCamerasCheckbox = device.findObject(
-                new UiSelector().text(cameraCheckboxLabel));
+        boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
+                "com.example.android.apis");
 
-        AppLauncher.launch(instrumentation, "API Demos");
-        boolean widgetExists = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-                return device.findObject(new UiSelector().textContains("App")).exists();
+        if (isAPIDemoInstalled) {
+            final boolean enableCameras = enableCameraDevices;
+            String cameraCheckboxLabel = enableCameras ? "Device cameras disabled" :
+                    "Device cameras enabled";
+            final UiObject enableCamerasCheckbox = device.findObject(
+                    new UiSelector().text(cameraCheckboxLabel));
+
+            AppLauncher.launch(instrumentation, "API Demos");
+            boolean widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return device.findObject(new UiSelector().textContains("App")).exists();
+                }
+            });
+            if (widgetExists) {
+                device.findObject(new UiSelector().textContains("App")).click();
             }
-        });
-        if (widgetExists) {
-            device.findObject(new UiSelector().textContains("App")).click();
-        }
-        widgetExists = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-                return device.findObject(new UiSelector().text("Device Admin")).exists();
+            widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return device.findObject(new UiSelector().text("Device Admin")).exists();
+                }
+            });
+
+            if (widgetExists) {
+                device.findObject(new UiSelector().text("Device Admin")).click();
             }
-        });
-
-        if (widgetExists) {
-            device.findObject(new UiSelector().text("Device Admin")).click();
-        }
-        widgetExists = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-                return device.findObject(new UiSelector().text("General")).exists();
+            widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return device.findObject(new UiSelector().text("General")).exists();
+                }
+            });
+            if (widgetExists) {
+                device.findObject(new UiSelector().text("General")).click();
             }
-        });
-        if (widgetExists) {
-            device.findObject(new UiSelector().text("General")).click();
-        }
 
-        widgetExists = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-                return enableCamerasCheckbox.exists();
+            widgetExists = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return enableCamerasCheckbox.exists();
+                }
+            });
+
+            if (widgetExists) {
+                enableCamerasCheckbox.click();
             }
-        });
 
-        if (widgetExists) {
-            enableCamerasCheckbox.click();
+            device.pressHome();
         }
-
-        device.pressHome();
     }
 
     private void gotoCameraApp() throws UiObjectNotFoundException {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
         AppLauncher.launch(instrumentation, "Camera");
     }
 
     private boolean verifyCameraAppDisabled() {
-        UiDevice device = testFramework.getDevice();
-
         return device.hasObject(By.
                 textContains("Camera has been disabled because of security policies")) ||
                 device.hasObject(By.text("Can't connect to the camera."));
@@ -856,20 +829,18 @@ public class SettingsTest {
      *   5. Select Enable All Device Cameras.
      *   6. Repeat steps 2-4.
      *   7. Select Disable All Device Cameras.
-     *   8. Goto Home screen —> Click on Camera Application.
+     *   8. Goto Home screen —> Click on Camera Application
      *   9. Repeat steps 2-4.
      *   10. Select Enable All Device Cameras.
      *   Verify:
-     *   1. (Verify #1) camera app is enabled.
-     *   2. (Verify #2) camera app is disabled.
+     *   1. (Verify #1) camera app is enabled
+     *   2. (Verify #2) camera app is disabled
+     *   2. (Verify #2) camera app is enabled
      *   </pre>
      */
     @Test
     @TestInfo(id = "4db4a825-b584-4c68-a04d-c6a933b14e24")
     public void testCameraAppDisabled() throws Exception {
-
-        final UiDevice device = testFramework.getDevice();
-
         enableSampleDeviceAdmin();
         if (verifyCameraAppDisabled()) {
             setCameraEnabled(true);
@@ -908,10 +879,6 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "d49facce-9be7-47e0-afde-2052d3c57a25")
     public void modifyAndResetAppPermissions() throws Exception {
-
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = testFramework.getDevice();
-
         String appName = "Maps";
         String contactsText = "Contacts";
         String locationText = "Location";
@@ -956,7 +923,7 @@ public class SettingsTest {
                 className(TextView.class.getName()),"Permissions").clickAndWaitForNewWindow();
 
         UiScrollable permissionList;
-        if(testFramework.getApi() > 23){
+        if (testFramework.getApi() > 23) {
             permissionList =
                     new UiScrollable(
                             new UiSelector().resourceIdMatches(Res.ANDROID_LIST_RES)
