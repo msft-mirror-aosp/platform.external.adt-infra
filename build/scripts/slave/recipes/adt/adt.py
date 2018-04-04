@@ -24,7 +24,7 @@ DEPS = [
 ]
 
 # The emulator branches we currently poll.
-EMULATOR_BRANCHES = ['emu-master-dev', 'emu-2.6-release']
+EMULATOR_BRANCHES = ['emu-master-dev', 'emu-2.7-release']
 
 MASTER_USER = 'user'
 MASTER_IP = '172.27.213.40'
@@ -34,7 +34,7 @@ bootStep = collections.namedtuple('bootStep', 'description, filter')
 # Dictionary that keys between git branch and the *_cfg.csv information we will use for that build.
 BOOT_STEPS = {
         'emu-master-dev': bootStep('public', '{"ori": "public"}'),
-        'emu-2.6-release': bootStep('public', '{"ori": "public"}'),
+        'emu-2.7-release': bootStep('public', '{"ori": "public"}'),
         'master': bootStep('master', '{"ori": "master"}'),
         'aosp': bootStep('aosp', '{"ori": "aosp"}'),
         'pi-dev': bootStep('PI', '{"ori": "pi"}'),
