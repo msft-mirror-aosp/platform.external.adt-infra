@@ -24,13 +24,13 @@ MASTER_IP = '172.27.213.40'
 
 def clean_log_dirs():
   """Deletes all log directories."""
-  for filename in iglob('adb_stress_logs-build_*'):  # pragma: no cover
+  for filename in iglob('adb_stress_logs-build_*'):
       shutil.rmtree(filename)
 
 
 def clean_build_archives():
   """Deletes all build archives."""
-  for filename in iglob('build_*.zip'):  # pragma: no cover
+  for filename in iglob('build_*.zip'):
       os.unlink(filename)
 
 
@@ -99,10 +99,9 @@ def RunSteps(api):
     clean_build_archives()
 
 
-
 def GenTests(api):
   yield (
-    api.test('adb-linux') +
+    api.test('basic') +
     api.platform.name('linux') +
     api.properties(
       mastername='client.adt',
@@ -112,22 +111,12 @@ def GenTests(api):
     )
   )
   yield (
-    api.test('adb-mac') +
+    api.test('basic') +
     api.platform.name('mac') +
     api.properties(
         mastername='client.adt',
         project='master',
-        buildername='Mac 10.12.1 Intel HD 5000',
+        buildernae='Mac 10.12.1 Intel HD 5000',
         buildnumber='12',
     )
-  )
-  yield (
-      api.test('adb-win') +
-      api.platform.name('win') +
-      api.properties(
-          mastername='client.adt',
-          project='master',
-          buildername='Win 10 Intel HD 5000',
-          buildnumber='12',
-      )
   )

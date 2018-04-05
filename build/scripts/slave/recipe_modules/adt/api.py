@@ -7,8 +7,8 @@ class AdtApi(recipe_api.RecipeApi):
   def __init__(self, **kwargs):
     super(AdtApi, self).__init__(**kwargs)
 
-  def PythonTestStep(self, description, session_dir, test_pattern, cfg_file, cfg_filter,
-                     emulator_path, env, skip_adb_perf=False):
+  def PythonTestStep(self, description, session_dir, test_pattern, cfg_file, cfg_filter, emulator_path, env,
+                     skip_adb_perf=False):
     buildername = self.m.properties['buildername']
     buildnum = self.m.properties['buildnumber']
     rev = self.m.properties['revision']
@@ -28,14 +28,11 @@ class AdtApi(recipe_api.RecipeApi):
     if 'GTS' in description:
       test_args.append('--is-gts')
     with self.m.step.defer_results():
-      deferred_step_result = self.m.python(description, dotest_path, test_args, env=env,
-                                           stderr=self.m.raw_io.output('err'),
-                                           step_test_data=lambda: self.m.raw_io.test_api.stream_output(
-                                               'PASS: UI_TestCase', stream='stderr'))
+      deferred_step_result = self.m.python(description, dotest_path, test_args, env=env, stderr=self.m.raw_io.output('err'))
       res = True
       # Debug line to help us know that deferred step has properly returned.
       print "Deferred Step Return Code: " + str(deferred_step_result.is_ok)
-      if not deferred_step_result.is_ok: # pragma: no cover
+      if not deferred_step_result.is_ok:
         stderr_output = deferred_step_result.get_error().result.stderr
         lines = [line for line in stderr_output.split('\n')
                  if line.startswith('FAIL:') or line.startswith('TIMEOUT:')]
@@ -46,17 +43,15 @@ class AdtApi(recipe_api.RecipeApi):
         res = False
       else:
         stderr_output = deferred_step_result.get_result().stderr
+      print stderr_output
       if "UI" in description:
         lines = [line for line in stderr_output.split('\n')
-                 if line.startswith('FAIL:')
-                 or line.startswith('PASS:')
-                 or line.startswith('TIMEOUT:')]
+                 if line.startswith('FAIL:') or line.startswith('PASS:') or line.startswith('TIMEOUT:')]
         for line in lines:
           test_method = line.split(',')[0]
           self.m.step.active_result.presentation.links['[Report] ' + test_method] = \
             self.m.path.join("..", "..", "..", "UI_Result", buildername.replace(" ", "_"),
-                             'build_%s-rev_%s' % (buildnum, rev), test_method.split(' ')[1]
-                             + '_report', "index.html")
+                             'build_%s-rev_%s' % (buildnum, rev), test_method.split(' ')[1] + '_report', "index.html")
       if "CTS" in description:
         self.m.step.active_result.presentation.links['View XML'] = \
           self.m.path.join("..", "..", "..", "CTS_Result", buildername.replace(" ", "_"),
@@ -72,12 +67,10 @@ class AdtApi(recipe_api.RecipeApi):
 
       if "UI" in description or "Console" in description:
         requestedDate = datetime.datetime.fromtimestamp(self.m.properties['requestedAt']).date()
-        filename = "{}-{}-{}_{}".format(requestedDate.month, requestedDate.day,
-                                        requestedDate.year, buildnum)
+        filename = "{}-{}-{}_{}".format(requestedDate.month, requestedDate.day, requestedDate.year, buildnum)
         # TODO(@harrisonding): add code for Windows
         modified_filename = "/tmp/{}".format(filename) if "Win" not in buildername else filename
-        if not self.m.properties.get("TESTING"):  # pragma: no cover
-            f = open(modified_filename, "w+")
-            f.write(buildername + "\n")
-            f.write("PASSED" if res else "FAILED")
-            f.close()
+        f = open(modified_filename, "w+")
+        f.write(buildername + "\n")
+        f.write("PASSED" if res else "FAILED")
+        f.close()
