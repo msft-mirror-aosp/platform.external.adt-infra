@@ -76,7 +76,8 @@ def RunSteps(api):
   script_root = api.path.join(build_dir, os.pardir, 'emu_test')
   init_bot_util_path = api.path.join(script_root, 'utils', 'emu_bot_init.py')
   image_util_path = api.path.join(script_root, 'utils', 'download_unzip_image.py')
-  agentLib = AgentLib(HOST, COOKIE_PATH, PROJECTS, BRANCH, PATH)  # pragma: no cover
+  if not TESTING in api.properties: # pragma: no cover
+    agentLib = AgentLib(HOST, COOKIE_PATH, PROJECTS, BRANCH, PATH)
   psq_job_url = 'https://goto.google.com/adt-sysimage-release-test/builds/%s' % buildnum
 
   # Set up environment
@@ -133,7 +134,6 @@ def RunSteps(api):
     out_stream = 'Device Config\n'
     # Table header
     out_stream += 'API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,%s\n' % test_builder
-    print test_configs
     for config in test_configs:
       out_stream += '%s,%s,%s,%s,%s,%s,%s,P\n' \
                     % (config['api'], config['tag'], config['abi'], config['device'],
@@ -146,7 +146,6 @@ def RunSteps(api):
   for file in file_list:
     # gs://android-build-emu-sysimage/builds/git_[project]-emu-release-linux-[sdk*]_[ABI]-[sdk*]/[revision]/[hash]/*.zip
     # For some branches, arch is not included in target name. It is armeabi-v7a by default.
-    print file
     config_str = file[5:].split('/')[2]
     m = re.match('(.*)-linux-.*_(x86.*|arm.*|mips.*)-.*', config_str)
     # if the config does not match m, that means abi is 'armeabi-v7a' by default and it should match m2 below.
@@ -175,7 +174,6 @@ def RunSteps(api):
       continue
 
     test_configs.append(config)
-  print test_configs
 
   test_builder = buildername.split('_')[0]
   config_file = api.path.join(script_root, 'config', 'config.csv')
@@ -218,21 +216,35 @@ def RunSteps(api):
 
 
 def GenTests(api):
-  prop = api.properties(
-    mastername='client.adt',
-    project='sysimage-release-psq',
-    buildername='Ubuntu 14.04 HD 4400 2',
-    logs_dir='/home/slave_logs/',
-    buildnumber='3077',
-    revision='',
-  )
-  prop.properties[Constants.PRESUBMIT_FETCH_URL_ARRAY] = ""
-  prop.properties[Constants.PRESUBMIT_FETCH_REF_ARRAY] = ""
-  prop.properties["buildbotURL"] = "http://dummy.com"
-  prop.properties[Constants.CHANGE_FILES] = 'gs://android-build-emu-sysimage/builds/git_gb-emu-release-linux-sdk/3093079/54680383118eb5c95a11e1cc2a14aa572c86ee69/sdk-repo-linux-system-images-3093079.zip'
-  prop.properties[Constants.CHANGE_REVISION] = ''
-  prop.properties[Constants.CHANGE_ID] = ''
-  prop.properties[TESTING] = ""
-  yield ( api.test('basic') + api.platform.name('linux') + api.platform.bits(32) + prop )
+    def props(properties):
+        return api.properties(**properties)
 
+    yield (
+            api.test('linux-sysimage-release-psq') +
+            api.platform.name('linux') +
+            api.platform.bits(64) +
+            props({
+                'CHANGE_FILES': 'gs://android-build-emu-sysimage/builds/git_klp-emu-release-linux-sdk_x86-sdk/2872501/c9298a8eafceed3b8fa11071ba63a3d18e17fd8e/sdk-repo-linux-system-images-2872501.zip,gs://android-build-emu-sysimage/builds/git_lmp-emu-release-linux-sdk_phone_x86-sdk/2781484/3b78ad294aa1cdefa4be663d4af6c80d920ec49e/sdk-repo-linux-system-images-2781484.zip',
+                'CHANGE_ID': 'platform%2Ftools%2Fvendor%2Fgoogle~studio-master-dev~Ic16536ac454fba1a3a31277010ba38a48b16ab0f',
+                'CHANGE_REVISION': 'd2d143b1b04f39eb9b3154f3ad6f076c6b2add01',
+                'blamelist': [],
+                'branch': 'all',
+                'buildbotURL': 'http://chromeos1-row3-rack2-host1.cros.corp.google.com:8200/',
+                'buildername': 'Ubuntu System Image Release',
+                'buildnumber': '516',
+                'sysimage-release-psq': '4696395',
+                'got_revision': '4696395',
+                'logs_dir': '/home/user/buildbot/external/adt-infra/build/masters/master.client.adt/slave_logs/',
+                'mastername': 'client.adt',
+                'project': 'sysimage-release-psq',
+                'recipe': 'adt/sysimage_release_psq',
+                'repository': '',
+                'requestedAt': 1522746361,
+                'revision': '4696395',
+                'scheduler': 'sysimage_release_psq_scheduler',
+                'slavename': 'chromeos1-row3-rack3-host1',
+                'workdir': '/home/adt_build/Buildbot/adt-infra/build/slave/Console_emu-master-dev',
+                'TESTING': True,
+            })
+    )
 
