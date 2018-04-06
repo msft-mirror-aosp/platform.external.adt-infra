@@ -85,7 +85,7 @@ public class PackageInstallationUtil {
      *                        getInstrumentation}
      * @param apkName         the name of the apk to be installed (i.e. ApiDemos_x86.apk)
      */
-    @TargetApi(26)
+    @TargetApi(24)
     public static void installApk(Instrumentation instrumentation, String apkName) throws Exception {
         Context context = instrumentation.getTargetContext();
         AssetManager assetManager = context.getAssets();
