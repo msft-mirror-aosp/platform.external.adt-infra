@@ -690,8 +690,6 @@ def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
         # Group test results by ClassName_AVD-type.
         setattr(testcase_class, "%s%s_test_%s%s" % (variant_str, str(avd_config),
                                                     desc, qemu_str), func)
-        setattr(testcase_class, "test_%s_%s%s%s" % (desc, str(avd_config), qemu_str,
-                                                    variant_str), func)
 
     with open(emu_argparser.emu_args.config_file, "rb") as file:
         reader = csv.reader(file)
