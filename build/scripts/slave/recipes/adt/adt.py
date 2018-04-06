@@ -95,12 +95,14 @@ def create_env(api, android_sdk_home):
     Returns:
         Dictionary of the environment we need to run the current build.
     """
+    home_dir = os.path.expanduser('~')
     env_path = ['%(PATH)s']  # Current Path.  We will add to this, not replace it outright.
+    jdk_18 = os.path.join(home_dir, 'bin', 'jdk1.8.0_121', 'bin')
     android_tools_dir = os.path.join(android_sdk_home, 'tools')
     android_tools_bin_dir = os.path.join(android_sdk_home, 'tools', 'bin')
     android_platform_dir = os.path.join(android_sdk_home, 'platform-tools')
     android_buildtools_dir = os.path.join(android_sdk_home, 'build-tools', '23.0.2')
-    env_path = [android_tools_dir, android_tools_bin_dir, android_platform_dir, android_buildtools_dir] + env_path
+    env_path = env_path + [android_tools_dir, android_tools_bin_dir, android_platform_dir, android_buildtools_dir, jdk_18]
     if api.platform.is_win:
         # Just add both 32/64 bit bin directories.  No harm from PATH perspective and simpler.
         gnu_path64 = 'C:\\Program Files (x86)\\GnuWin32\\bin'
@@ -108,7 +110,7 @@ def create_env(api, android_sdk_home):
         cygwin_path = 'C:\\cygwin\\bin'
         cygwin_path64 = 'C:\\cygwin64\\bin'
         java_path = "C:\\ProgramData\\Oracle\\Java\\javapath"
-        env_path = [gnu_path, gnu_path64, cygwin_path, cygwin_path64, java_path] + env_path
+        env_path = env_path + [gnu_path, gnu_path64, cygwin_path, cygwin_path64, java_path]
     env = {'PATH': api.path.pathsep.join(env_path),
            'ANDROID_SDK_ROOT': android_sdk_home,
            'ANDROID_HOME': android_sdk_home}
@@ -265,7 +267,7 @@ def RunSteps(api):
 
     api.python("Download and Unzip Images", image_util_path,
                ['--file', api.properties.get('file_list') if api.properties.get('file_list') else "cts",
-               '--build-dir', build_dir],
+                '--build-dir', build_dir],
                env=env)
 
     if is_cts:

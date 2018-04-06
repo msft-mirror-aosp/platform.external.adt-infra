@@ -15,7 +15,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Initialize Bot"
   },
@@ -35,7 +35,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Create CL List"
   },
@@ -53,7 +53,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Download and Unzip Images"
   },
@@ -81,7 +81,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Boot Test - public System Image - emu-master-dev",
     "stderr": "/path/to/tmp/err"
@@ -108,7 +108,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Zip and Upload Logs"
   },

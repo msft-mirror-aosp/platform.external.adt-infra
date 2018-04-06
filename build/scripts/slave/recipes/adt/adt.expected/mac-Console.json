@@ -15,7 +15,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Initialize Bot"
   },
@@ -33,7 +33,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Download and Unzip Images"
   },
@@ -62,7 +62,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Run Emulator Console Test",
     "stderr": "/path/to/tmp/err",
@@ -92,7 +92,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Upload Test Results to GCS"
   },
@@ -119,7 +119,7 @@
     "env": {
       "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
       "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:%(PATH)s"
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Zip and Upload Logs"
   },
