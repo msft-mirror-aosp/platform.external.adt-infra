@@ -146,8 +146,8 @@ class GeoTest(testcase_base.BaseConsoleTest):
 
     print 'api = ' + self.avd.api
 
-    if 'Mac' in self.builder_name and self.avd.api == '23':
-      print 'Skip geo test for API 23 on Mac.'
+    if self.avd.api == '23':
+      print 'Skip geo test for API 23.'
       pass
       return
 
