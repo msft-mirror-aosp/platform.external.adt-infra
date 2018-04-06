@@ -686,10 +686,10 @@ def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
         elif op == "F":
             func = func
         qemu_str = "_qemu2" if avd_config.classic == "no" else "_qemu1"
-        variant_str = "_%s" % variant if variant is not None else ""
+        variant_str = "%s_" % variant if variant is not None else ""
         # Group test results by ClassName_AVD-type.
-        setattr(testcase_class, "%s%s_test_%s%s" % (variant_str, str(avd_config),
-                                                    desc, qemu_str), func)
+        test_name = "test_%s%s_test_%s%s" % (variant_str, str(avd_config), desc, qemu_str)
+        setattr(testcase_class, test_name, func)
 
     with open(emu_argparser.emu_args.config_file, "rb") as file:
         reader = csv.reader(file)
