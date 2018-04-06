@@ -59,6 +59,20 @@ def RunSteps(api):
     api.repo.sync('-c', 'system/core')
     api.repo.sync('-c', 'development')
 
+  script_root = api.path.join(build_dir, os.pardir, 'emu_test')
+  init_bot_util_path = api.path.join(script_root, 'utils', 'emu_bot_init.py')
+  try:
+      api.python('Initialize Bot', init_bot_util_path,
+                 ['--build-dir', api.path['slave_build'],
+                  '--props', api.json.dumps(api.properties.thaw()),
+                  '--log-dir', log_dir],
+                 env=env)
+  except api.step.StepFailure as f:  # pragma: no cover
+      # Not able to delete some files, it won't be the fault of emulator
+      # not a stopper to run actual tests
+      # so set status to "warning" and continue test
+      f.result.presentation.status = api.step.WARNING
+
   # Run adb stree tests
   with api.step.defer_results():
     if not api.platform.is_win:
