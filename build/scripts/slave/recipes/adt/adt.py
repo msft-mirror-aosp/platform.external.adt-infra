@@ -216,7 +216,7 @@ def RunSteps(api):
 
     # A Cross build is building newest emulator target vs newest image targets.
     # Whenever a new emulator build comes in we auto-trigger a cross build as well.
-    is_cross_build = api.properties.get('triggered') is True
+    is_cross_build = api.properties.get('triggered')
 
     # Get the directory of the Android SDK folder
     android_sdk_home = get_android_sdk_home(api, is_cross_build, is_cts)
