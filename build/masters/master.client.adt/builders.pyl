@@ -156,6 +156,7 @@
     "sys_image_pi_dev_poller": {
        "gs_bucket": "android-build-emu-sysimage",
        "gs_path": ["builds/git_pi-dev-mac-sdk_gphone_x86-sdk_addon_mac/",
+		   "builds/git_pi-dev-linux-sdk_gphone_x86_64-user/",
 		   "builds/git_pi-dev-linux-sdk_gwear_x86-sdk/"],
        "pollInterval": 597,
        "type": "GSMultiPoller",
@@ -165,7 +166,8 @@
     },
      "sys_image_master_poller": {
        "gs_bucket": "android-build-emu-sysimage",
-       "gs_path": [ "builds/git_master-mac-sdk_gphone_x86-sdk_addon_mac/"],
+       "gs_path": [ "builds/git_master-mac-sdk_gphone_x86-sdk_addon_mac/",
+		   "builds/git_master-linux-sdk_gphone_x86_64-user/"],
        "pollInterval": 597,
        "type": "GSMultiPoller",
        "project": "master",
