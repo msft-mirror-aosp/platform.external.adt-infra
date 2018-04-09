@@ -30,6 +30,7 @@ import com.android.devtools.systemimage.uitest.utils.ApiDemosInstaller;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
+import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.ApiDemosWatcher;
 import junit.framework.Assert;
 
@@ -178,15 +179,25 @@ public class ApiDemosTest {
 
         Assert.assertTrue(SettingsUtil.openItem(instrumentation, securitySettings));
 
+        Assert.assertTrue("Scrollable list not found",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return device.findObject(new UiSelector().
+                                resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)).exists();
+                    }
+                }));
+
         UiScrollable itemList =
                 new UiScrollable(
                         new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
                 );
+
         itemList.setAsVerticalList();
 
-        itemList.getChildByText( new UiSelector().className("android.widget.TextView"),
+        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 "Screen lock").clickAndWaitForNewWindow();
-        itemList.getChildByText( new UiSelector().className("android.widget.TextView"),
+        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 "Password").clickAndWaitForNewWindow();
 
         new ApiDemosWatcher(device).checkForCondition();
