@@ -182,10 +182,17 @@ public class AppTest {
             new AppWatcher(device).checkForCondition();
 
             assertTrue("Cannot find bookmark",
-                    device.findObject(new UiSelector().textContains(("kmarks"))).exists() &&
-                            device.findObject(new UiSelector().textContains(
-                                    "ESPN").resourceId(
-                                    Res.CHROME_TITLE_RES)).exists());
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return device.findObject(new UiSelector().textContains(("kmarks"))).exists() &&
+                                    device.findObject(new UiSelector().textContains(
+                                            "ESPN").resourceId(
+                                                    Res.CHROME_TITLE_RES)).exists();
+                        }
+                    })
+            );
+
             device.findObject(new UiSelector().resourceId(
                     Res.CHROME_CLOSE_MENU_BUTTON_RES)).clickAndWaitForNewWindow();
             // Delete the bookmark.
