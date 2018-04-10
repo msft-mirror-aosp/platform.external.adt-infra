@@ -278,7 +278,7 @@ def main():
     os.path.join(BUILD_DIR, 'third_party', 'requests_1_2_3'),
     os.path.join(BUILD_DIR, 'third_party', 'google_api_python_client'),
     os.path.join(BUILD_DIR, 'third_party', 'oauth2client'),
-    os.path.join(BUILD_DIR, 'third_party', 'httplib2'),
+    os.path.join(BUILD_DIR, 'third_party', 'httplib2' ,'python2'),
     os.path.join(BUILD_DIR, 'third_party', 'uritemplate'),
     os.path.join(ROOT_DIR, 'build_internal', 'site_config'),
     os.path.join(ROOT_DIR, 'build_internal', 'symsrc'),
