@@ -61,6 +61,25 @@
     "cmd": [
       "python",
       "-u",
+      "[BUILD]/../emu_test/utils/emu_bot_init.py",
+      "--build-dir",
+      "[SLAVE_BUILD]",
+      "--props",
+      "{\"buildername\": \"Mac 10.12.1 Intel HD 5000\", \"buildnumber\": \"12\", \"mastername\": \"client.adt\", \"project\": \"master\", \"recipe\": \"adt/adb\"}",
+      "--log-dir",
+      "adb_stress_logs-build_12"
+    ],
+    "cwd": "[SLAVE_BUILD]",
+    "env": {
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools",
+      "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
+    },
+    "name": "Initialize Bot"
+  },
+  {
+    "cmd": [
+      "python",
+      "-u",
       "[SLAVE_BUILD]/system/core/adb/test_adb.py"
     ],
     "cwd": "[SLAVE_BUILD]",

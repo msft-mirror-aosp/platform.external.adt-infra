@@ -17,6 +17,7 @@ DEPS = [
   'python',
   'repo',
   'step',
+  'json',
 ]
 
 MASTER_USER = 'user'
