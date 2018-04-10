@@ -45,6 +45,8 @@ import android.support.test.uiautomator.Until;
 import android.telephony.TelephonyManager;
 import android.provider.Settings;
 
+import junit.framework.Assert;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -145,8 +147,16 @@ public class NetworkIOTest {
                 searchBox.clickAndWaitForNewWindow();
             }
 
-            UiObject textField = device.findObject(new UiSelector().resourceId(
+            final UiObject textField = device.findObject(new UiSelector().resourceId(
                     Res.CHROME_URL_BAR_RES));
+            Assert.assertTrue("Chrome URL bar not found",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws Exception {
+                            return textField.exists();
+                        }
+                    }));
+
             textField.click();
             textField.clearTextField();
             textField.setText("google.com");
