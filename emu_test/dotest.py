@@ -28,45 +28,51 @@ from emu_test.utils import emu_unittest
 # Provides a regular expression for matching fail message
 TIMEOUT_REGEX = re.compile(r"(^\d+)([smhd])?$")
 
-main_logger = logging.getLogger()
-def printResult(emuResult):
+
+def printResult(result):
+    """
+    Prints out the results of the emulator test into the logger.
+    :param result: class python2.7.unittest.TextTestResult.
+    """
     def getTestName(id):
         return id.rsplit('.', 1)[-1]
     print
-    main_logger.info("Test Summary")
-    main_logger.info("Run %d tests (%d fail, %d pass, %d xfail, %d xpass)",
-           emuResult.testsRun, len(emuResult.failures)+len(emuResult.errors), len(emuResult.passes),
-           len(emuResult.expectedFailures), len(emuResult.unexpectedSuccesses))
-    if len(emuResult.errors) > 0 or len(emuResult.failures) > 0:
-        for x in emuResult.errors:
+    logging.getLogger().info("Test Summary")
+    logging.getLogger().info("Run %d tests (%d fail, %d pass, %d xfail, %d xpass)",
+                     result.testsRun, len(result.failures)+len(result.errors), len(result.passes),
+           len(result.expectedFailures), len(result.unexpectedSuccesses))
+    if len(result.errors) > 0 or len(result.failures) > 0:
+        for x in result.errors:
             if x[1].splitlines()[-1] == "TimeoutError":
-                main_logger.info("TIMEOUT: %s", getTestName(x[0].id()))
+                logging.getLogger().info("TIMEOUT: %s", getTestName(x[0].id()))
             else:
-                main_logger.info("FAIL: %s", getTestName(x[0].id()))
-        for x in emuResult.failures:
-            main_logger.info("FAIL: %s", getTestName(x[0].id()))
+                logging.getLogger().info("FAIL: %s", getTestName(x[0].id()))
+        for x in result.failures:
+            logging.getLogger().info("FAIL: %s", getTestName(x[0].id()))
 
-    if len(emuResult.passes) > 0:
-        main_logger.info('------------------------------------------------------')
-    for x in emuResult.passes:
-        main_logger.info("PASS: %s, boot time: %s", getTestName(x.id()), x.boot_time)
+    if len(result.passes) > 0:
+        logging.getLogger().info('------------------------------------------------------')
+    for x in result.passes:
+        logging.getLogger().info("PASS: %s, boot time: %s", getTestName(x.id()), x.boot_time)
 
-    if len(emuResult.expectedFailures) > 0:
-        main_logger.info('------------------------------------------------------')
-    for x in emuResult.expectedFailures:
-        main_logger.info("Expected Failure: %s", getTestName(x[0].id()))
+    if len(result.expectedFailures) > 0:
+        logging.getLogger().info('------------------------------------------------------')
+    for x in result.expectedFailures:
+        logging.getLogger().info("Expected Failure: %s", getTestName(x[0].id()))
 
-    if len(emuResult.unexpectedSuccesses) > 0:
-        main_logger.info('------------------------------------------------------')
-    for x in emuResult.unexpectedSuccesses:
-        main_logger.info("Unexpected Success: %s", getTestName(x.id()))
+    if len(result.unexpectedSuccesses) > 0:
+        logging.getLogger().info('------------------------------------------------------')
+    for x in result.unexpectedSuccesses:
+        logging.getLogger().info("Unexpected Success: %s", getTestName(x.id()))
 
-    main_logger.info('')
-    main_logger.info("Test successful - %s", emuResult.wasSuccessful())
+    logging.getLogger().info('')
+    logging.getLogger().info("Test successful - %s", result.wasSuccessful())
+
 
 def setupLogger():
-    """Create main_logger that will be used by test driver"""
-    global main_logger
+    """
+    Create logging.getLogger() that will be used by test driver
+    """
     log_formatter = logging.Formatter('%(message)s')
     file_name = 'main_%s.log' % time.strftime("%Y%m%d-%H%M%S")
     if emu_argparser.emu_args.session_dir is None:
@@ -80,34 +86,39 @@ def setupLogger():
     console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setFormatter(log_formatter)
 
-    main_logger.addHandler(file_handler)
-    main_logger.addHandler(console_handler)
-    main_logger.setLevel(getattr(logging, emu_argparser.emu_args.loglevel.upper()))
+    logging.getLogger().addHandler(file_handler)
+    logging.getLogger().addHandler(console_handler)
+    logging.getLogger().setLevel(getattr(logging, emu_argparser.emu_args.loglevel.upper()))
+
 
 def findSystemAVDs():
-    """Find available AVDs in system"""
+    """
+    Find available AVDs in system.  Found my calling -list-avds on target emulator.
+    """
     # avd is searched in the order of $ANDROID_AVD_HOME,$ANDROID_SDK_HOME/.android/avd and $HOME/.android/avd
     avd_list_proc = psutil.Popen([emu_argparser.emu_args.emulator_exec, "-list-avds"], stdout=PIPE, stderr=PIPE)
     (output, err) = avd_list_proc.communicate()
     logging.getLogger().debug(output)
     logging.getLogger().debug(err)
     avd_list = [x.strip() for x in output.splitlines()]
-    main_logger.info("Found %d AVDs - %s", len(avd_list), avd_list)
+    logging.getLogger().info("Found %d AVDs - %s", len(avd_list), avd_list)
     return avd_list
 
-# Run the test case
-if __name__ == '__main__':
 
+if __name__ == '__main__':
+    """
+    Main Execution.  For the passed arguments (held in emu_argparser) perform the requested tests.
+    """
     os.environ["SHELL"] = "/bin/bash"
 
     emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
     setupLogger()
-    main_logger.info(emu_argparser.emu_args)
+    logging.getLogger().info(emu_argparser.emu_args)
 
     if emu_argparser.emu_args.avd_list is None:
         emu_argparser.emu_args.avd_list = findSystemAVDs()
 
-    test_root_dir=os.path.dirname(os.path.realpath(__file__))
+    test_root_dir = os.path.dirname(os.path.realpath(__file__))
     emuSuite = unittest.TestLoader().discover(start_dir=test_root_dir, pattern=emu_argparser.emu_args.pattern)
     emuRunner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
     emuResult = emuRunner.run(emuSuite)
