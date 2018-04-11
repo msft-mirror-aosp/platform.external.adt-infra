@@ -18,12 +18,13 @@ class AdtApi(recipe_api.RecipeApi):
         dotest_path = self.m.path.join(script_root, 'dotest.py')
 
         # To see definitions for all arguments, see emu_argparser.py.
-        test_args = ['-l', 'INFO', '-exec', emulator_path,
-                     '-s', session_dir,
-                     '-p', test_pattern,
-                     '-c', self.m.path.join(script_root, 'config', cfg_file),
-                     '-n', buildername,
-                     '-f', cfg_filter]
+        test_args = ['--loglevel', 'INFO',
+                     '--emulator', emulator_path,
+                     '--session_dir', session_dir,
+                     '--file_pattern', test_pattern,
+                     '--config_file', self.m.path.join(script_root, 'config', cfg_file),
+                     '--buildername', buildername,
+                     '--filter', cfg_filter]
         if skip_adb_perf is True:
             test_args.append('--skip-adb-perf')
         if 'GTS' in description:
