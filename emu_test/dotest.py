@@ -108,6 +108,9 @@ def findSystemAVDs():
 if __name__ == '__main__':
     """
     Main Execution.  For the passed arguments (held in emu_argparser) perform the requested tests.
+    We find our test cases by searching for the passed in --file_pattern from the script execution directory.
+    For instance, for a boot test we search for files named test_boot.*py, which we will find under
+    test_boot/boot_test.py.  So this testcase would be found and run.
     """
     os.environ["SHELL"] = "/bin/bash"
 
