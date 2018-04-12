@@ -39,7 +39,7 @@ public class NetworkUtilPopupWatcher implements UiWatcher {
         boolean condition = false;
         boolean hasPopup =
                 mDevice.findObject(new UiSelector().textMatches("(?i)ok(?-i)"))
-                        .waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+                        .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         try {
             if (hasPopup) {
                 mDevice.findObject(new UiSelector().textMatches("(?i)ok(?-i)")).clickAndWaitForNewWindow();

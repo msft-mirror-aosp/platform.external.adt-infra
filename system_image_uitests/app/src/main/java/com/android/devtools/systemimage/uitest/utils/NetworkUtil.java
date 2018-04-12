@@ -43,11 +43,12 @@ public class NetworkUtil {
     private static final String TAG = "NetworkUtil";
 
     @Rule
-    public final static SystemImageTestFramework testFramework = new SystemImageTestFramework();
+    private final static SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     public static boolean hasCellularNetworkConnection(Instrumentation instrumentation) {
-        TelephonyManager tm = (TelephonyManager) instrumentation.getContext().getSystemService(
-                Context.TELEPHONY_SERVICE);
+        TelephonyManager tm = (TelephonyManager) instrumentation.getContext().
+                getSystemService(Context.TELEPHONY_SERVICE);
+        Log.i("NetworkUtil", "Cellular network state is: " + tm.getDataState());
 
         return tm.getDataState() != TelephonyManager.DATA_DISCONNECTED;
     }
