@@ -195,7 +195,7 @@ public class AppManager {
         if (SystemUtil.getApiLevel() >= 26) {
             SettingsUtil.openItem(instrumentation, "Apps & notifications");
             String appInfoText = SystemUtil.getApiLevel() == 26 ? "App info" : "See all";
-            final UiObject appInfoLabel = device.findObject(new UiSelector().textContains(appInfoText));
+            final UiObject appInfoLabel = device.findObject(new UiSelector().textStartsWith(appInfoText));
 
             Assert.assertTrue("Application info not found", new Wait().until(new Wait.ExpectedCondition() {
                 @Override

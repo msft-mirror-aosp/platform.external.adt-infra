@@ -52,8 +52,6 @@ public class Res {
             "com.android.settings:id/container_material";
     public static final String APPS_LIST_CONTAINER_RES = "com.android.settings:id/list_container";
     public static final String APPS_TAB_CONTAINER_RES = "com.android.settings:id/pager";
-    public static final String NETWORK_SWITCHES_CONTAINER_RES =
-            "com.android.settings:id/network_switches"; // Removed in API 24
     public static final String NETWORK_SWITCHES_RECYCLER_VIEW_RES =
             "com.android.settings:id/list"; // Added in API 24
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
@@ -68,7 +66,6 @@ public class Res {
     public static final String CAMERA_FILE_DELETE_RES = "com.android.camera2:id/filmstrip_bottom_control_delete";
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
     public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";;
-    public static final String SETTINGS_BUTTON_RES = "com.android.systemui:id/settings_button";
     public static final String NOTIFICATION_BAR_EXPAND_RES = "com.android.systemui:id/expand_indicator";
     public static final String NOTIFICATION_BAR_HEADER_RES = "com.android.systemui:id/header";
 
@@ -108,5 +105,4 @@ public class Res {
     public static final String ANDROID_LIST_RES = "android:id/list";
     public static final String ANDROID_CONTENT_RES = "android:id/content";
     public static final String ANDROID_TITLE_RES = "android:id/title";
-    public static final String ANDROID_DATA_SWITCH_RES = "android:id/switch_widget";
 }

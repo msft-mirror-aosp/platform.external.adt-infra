@@ -21,7 +21,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.NetworkUtil;
-import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
+import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
 
@@ -38,11 +38,10 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
-import android.telephony.TelephonyManager;
 import android.provider.Settings;
 
 import junit.framework.Assert;
@@ -62,10 +61,7 @@ public class NetworkIOTest {
     @Rule
     public Timeout globalTimeout = Timeout.seconds(240);
 
-    public final TelephonyManager tm = (TelephonyManager)
-            testFramework.getInstrumentation().getContext().getSystemService(
-                    Context.TELEPHONY_SERVICE);
-
+    private final int api = testFramework.getApi();
 
     /**
      * Verifies test browser successfully loads a web page.
@@ -91,111 +87,95 @@ public class NetworkIOTest {
         UiDevice device = testFramework.getDevice();
 
         // Check network connectivity.
-        if (NetworkUtil.hasCellularNetworkConnection(instrumentation) && testFramework.getApi() < 24) {
-            AppLauncher.launch(instrumentation, "Browser");
-            device.findObject(new UiSelector().resourceId(
-                    Res.BROWSER_URL_TEXT_FIELD_RES)).click();
-            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                    .clearTextField();
-            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                    .setText("google.com");
-            device.pressEnter();
+        if (NetworkUtil.hasCellularNetworkConnection(instrumentation)) {
+            if (api < 24) {
+                AppLauncher.launch(instrumentation, "Browser");
+                device.findObject(new UiSelector().resourceId(
+                        Res.BROWSER_URL_TEXT_FIELD_RES)).click();
+                device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
+                        .clearTextField();
+                device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
+                        .setText("google.com");
+                device.pressEnter();
 
-            // Verify if the load bar is there at first,
-            // then verify if the loading bar finishes in 3 seconds (default timeout on Wait()).
-            final UiObject progress =
-                    device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
-            boolean isSuccess =
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return !progress.exists();
-                        }
-                    });
-            assertTrue("Failed to dismiss the loading bar.", isSuccess);
+                // Verify if the load bar is there at first,
+                // then verify if the loading bar finishes in 3 seconds (default timeout on Wait()).
+                final UiObject progress =
+                        device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
+                boolean isSuccess =
+                        new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() throws Exception {
+                                return !progress.exists();
+                            }
+                        });
+                assertTrue("Failed to dismiss the loading bar.", isSuccess);
+            }  else if (testFramework.isGoogleApiImage()) {
+                device.openNotification();
+                String cellularData = api >= 26 ? "Mobile data" : "Mobile Cellular Data";
+                boolean hasCellularData =
+                        device.wait(
+                                Until.hasObject(By.descContains(cellularData)),
+                                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
+                        );
+                assertTrue("Could not connect to the network.", hasCellularData);
+                device.pressHome();
+
+                AppLauncher.launch(instrumentation, "Chrome");
+                // If this is the first launch, dismiss the "Welcome to Chrome" screen.
+                UiObject acceptButton = device.findObject(new UiSelector().resourceId(
+                        Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
+                if (acceptButton.exists()) {
+                    acceptButton.clickAndWaitForNewWindow();
+                }
+
+                // Dismiss the "Sign in to Chrome" screen if it's there.
+                UiObject noThanksButton = device.findObject(new UiSelector().resourceIdMatches(
+                        Res.CHROME_NO_THANKS_BUTTON_RES));
+                if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
+                    noThanksButton.clickAndWaitForNewWindow();
+                }
+
+                UiObject searchBox = device.findObject(new UiSelector().resourceId(
+                        Res.CHROME_SEARCH_BOX_RES));
+                if (searchBox.exists()) {
+                    searchBox.clickAndWaitForNewWindow();
+                }
+
+                final UiObject textField = device.findObject(new UiSelector().resourceId(
+                        Res.CHROME_URL_BAR_RES));
+                Assert.assertTrue("Chrome URL bar not found",
+                        new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() throws Exception {
+                                return textField.exists();
+                            }
+                        }));
+
+                textField.click();
+                textField.clearTextField();
+                textField.setText("google.com");
+                device.pressEnter();
+
+                // Verify if the load bar is there at first. Then verify if the loading bar
+                // finishes within the default timeout on Wait().
+                final UiObject progress =
+                        device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
+                boolean isSuccess =
+                        new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() throws Exception {
+                                return !progress.exists();
+                            }
+                        });
+                assertTrue("Failed to dismiss the loading bar.", isSuccess);
+
+            }
         }
-        // verifyNetworkStatus does not work in API 24. No text or resource ID present in UI.
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
-            device.openNotification();
-            String cellularData = testFramework.getApi() >= 26 ? "Mobile data" : "Mobile Cellular Data";
-            boolean hasCellularData =
-                    device.wait(
-                            Until.hasObject(By.descContains(cellularData)),
-                            TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
-                    );
-            assertTrue("Could not connect to the network.", hasCellularData);
-            device.pressHome();
-
-            AppLauncher.launch(instrumentation, "Chrome");
-            // If this is the first launch, dismiss the "Welcome to Chrome" screen.
-            UiObject acceptButton = device.findObject(new UiSelector().resourceId(
-                    Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-            if (acceptButton.exists()) {
-                acceptButton.clickAndWaitForNewWindow();
-            }
-
-            // Dismiss the "Sign in to Chrome" screen if it's there.
-            UiObject noThanksButton = device.findObject(new UiSelector().resourceIdMatches(
-                    Res.CHROME_NO_THANKS_BUTTON_RES));
-            if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))  ) {
-                noThanksButton.clickAndWaitForNewWindow();
-            }
-
-            UiObject searchBox = device.findObject(new UiSelector().resourceId(
-                    Res.CHROME_SEARCH_BOX_RES));
-            if (searchBox.exists()) {
-                searchBox.clickAndWaitForNewWindow();
-            }
-
-            final UiObject textField = device.findObject(new UiSelector().resourceId(
-                    Res.CHROME_URL_BAR_RES));
-            Assert.assertTrue("Chrome URL bar not found",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return textField.exists();
-                        }
-                    }));
-
-            textField.click();
-            textField.clearTextField();
-            textField.setText("google.com");
-            device.pressEnter();
-
-            // Verify if the load bar is there at first. Then verify if the loading bar
-            // finishes within the default timeout on Wait().
-            final UiObject progress =
-                    device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
-            boolean isSuccess =
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return !progress.exists();
-                        }
-                    });
-            assertTrue("Failed to dismiss the loading bar.", isSuccess);
-        }
-    }
-
-
-
-    private UiObject2 navigateToDataSwitch(Instrumentation instrumentation, String label) throws UiObjectNotFoundException {
-        String containerRes = (testFramework.getApi() >= 24) ? Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES :
-                Res.NETWORK_SWITCHES_CONTAINER_RES;
-        String[] path = testFramework.getApi() >= 26 ? new String[] {"Settings", "Network & Internet", "Data usage"} :
-                new String[] {"Settings", "Data usage"};
-
-        AppLauncher.launchPath(instrumentation, path);
-
-        return UiAutomatorPlus.findObjectByRelative(
-                instrumentation,
-                By.clazz("android.widget.Switch"),
-                By.text(label),
-                By.res(containerRes));
     }
 
     /**
-     * Verifies cellular data can be toggled off.
+     * Verifies cellular data can be enabled and disabled.
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
@@ -205,135 +185,69 @@ public class NetworkIOTest {
      *   Test Steps:
      *   1. Start the emulator.
      *   2. Open Settings > Wireless and Networks > Data Usage
-     *   3. Toggle Cellular data off.
+     *   3. Check if billing cycle is enabled, toggle Cellular data switch on if not.
+     *   4. Toggle Cellular data switch off.
+     *   5. Toggle Cellular data switch on.
      *   Verify:
-     *   Cellular data is turned off.
-     *   Text "Set cellular data limit" is on the page.
+     *   1. Cellular data is turned off.
+     *   1. Cellular data is turned on.
      *   </pre>
      * <p>
      * The test works on API 23 and greater.
      */
     @Test
     @TestInfo(id = "14581152")
-    public void toggleCellularDataOff() throws Exception {
+    public void toggleCellularDataMode() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        int api = testFramework.getApi();
+        String[] path = api >= 26 ? new String[] {"Settings", "Network & Internet", "Data usage"} :
+                new String[] {"Settings", "Data usage"};
         String label = api >= 26 ? "Mobile data" : "Cellular data";
+        final UiObject dataSwitch = device.findObject(new UiSelector().text(label));
+
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        final UiObject billingCycle = api >= 24 ? device.findObject(new UiSelector().text("Billing cycle")) :
+                device.findObject(new UiSelector().text("Set cellular data limit"));
 
         if (api >= 23) {
-            UiObject2 dataSwitch = navigateToDataSwitch(instrumentation, label);
+            AppLauncher.launchPath(instrumentation, path);
 
-            // Test requires "Cellular data" switch widget to start in the on state.
-            if (!dataSwitch.isChecked()) {
+            if (scrollable.waitForExists(3L)) {
+                scrollable.scrollIntoView(billingCycle);
+            }
+            assertTrue("Data switch not found.", new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() {
+                    return dataSwitch.exists();
+                }
+            }));
+
+            if (!billingCycle.exists() || !billingCycle.isEnabled()) {
                 dataSwitch.click();
                 new NetworkUtilPopupWatcher(device).checkForCondition();
-
-                // Wait for data connection to turn on.
-                boolean isDataOn = new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return NetworkUtil.hasCellularNetworkConnection(instrumentation);
-                    }
-                });
-                assertTrue("Cellular data is disabled.", isDataOn);
             }
 
-            // Disable "Cellular data" option.
+            // Disable Cellular data.
             dataSwitch.click();
             new NetworkUtilPopupWatcher(device).checkForCondition();
 
-            // Wait for data connection to turn off.
-            boolean isDataOff = new Wait().until(new Wait.ExpectedCondition() {
+            assertTrue("Disabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
                 @Override
-                public boolean isTrue() throws Exception {
-                    return !NetworkUtil.hasCellularNetworkConnection(instrumentation);
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    return !billingCycle.exists() || !billingCycle.isEnabled();
                 }
-            });
-
-            assertTrue("Cellular data is enabled.", isDataOff);
-            if (api == 23) {
-                assertFalse("Set cellular data limit text is visible.", device.findObject(
-                        new UiSelector().textContains("Set cellular data limit")).exists());
-            } else {
-                assertFalse("Set cellular data is not turned off.", device.findObject(
-                        new UiSelector().textContains("ON").resourceId(
-                                Res.ANDROID_DATA_SWITCH_RES).className(
-                                "android.widget.Switch")).exists());
-            }
-
-            // Enable Cellular data.
-            dataSwitch.click();
-        }
-    }
-
-    /**
-     * Verifies cellular data can be toggled on.
-     * <p>
-     * This is run to qualify releases. Please involve the test team in substantial changes.
-     * <p>
-     * TR ID: C14581408
-     * <p>
-     *   <pre>
-     *   Test Steps:
-     *   1. Start the emulator.
-     *   2. Open Settings > Wireless and Networks > Data Usage
-     *   3. Toggle Cellular data on.
-     *   Verify:
-     *   Cellular data is turned on.
-     *   Text "Set cellular data limit" is not on the page.
-     *   </pre>
-     * <p>
-     * The test works on API 23 and greater.
-     */
-    @Test
-    @TestInfo(id = "14581408")
-    public void toggleCellularDataOn() throws Exception {
-        final Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = UiDevice.getInstance(instrumentation);
-        int api = testFramework.getApi();
-        String label = api >= 26 ? "Mobile data" : "Cellular data";
-
-        if (api >= 23) {
-            UiObject2 dataSwitch = navigateToDataSwitch(instrumentation, label);
-
-            // Test requires "Cellular data" switch widget to start in the off state.
-            if (dataSwitch.isChecked()) {
-                dataSwitch.click();
-                new NetworkUtilPopupWatcher(device).checkForCondition();
-
-                // Wait for data connection to turn off.
-                boolean isDataOff = new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return !NetworkUtil.hasCellularNetworkConnection(instrumentation);
-                    }
-                });
-                assertTrue("Cellular data is enabled.", isDataOff);
-            }
+            }));
 
             // Enable Cellular data.
             dataSwitch.click();
             new NetworkUtilPopupWatcher(device).checkForCondition();
 
-            // Wait for data connection to turn on.
-            boolean isDataOn = new Wait().until(new Wait.ExpectedCondition() {
+            assertTrue("Enabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
                 @Override
-                public boolean isTrue() throws Exception {
-                    return NetworkUtil.hasCellularNetworkConnection(instrumentation);
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    return billingCycle.exists() && billingCycle.isEnabled();
                 }
-            });
-            assertTrue("Cellular data is disabled.", isDataOn);
-
-            if (api == 23) {
-                assertTrue("Set cellular data limit text is not visible.", device.findObject(
-                        new UiSelector().textContains("Set cellular data limit")).exists());
-            } else {
-                assertTrue("Set cellular data is not turned on.", device.findObject(
-                        new UiSelector().textContains("ON").resourceId(
-                                Res.ANDROID_DATA_SWITCH_RES).className(
-                                "android.widget.Switch")).exists());
-            }
+            }));
         }
     }
 
@@ -358,8 +272,8 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (testFramework.getApi() >= 23) {
-            String[] path = testFramework.getApi() >= 26 ? new String[]{"Settings", "Network & Internet"} :
+        if (api >= 23) {
+            String[] path = api >= 26 ? new String[]{"Settings", "Network & Internet"} :
                     new String[]{"Settings", "More"};
             AppLauncher.launchPath(instrumentation, path);
 
@@ -377,6 +291,56 @@ public class NetworkIOTest {
             // Disable airplane mode.
             AppLauncher.launchPath(instrumentation, path);
             toggleAirplaneMode(device);
+        }
+    }
+
+    /**
+     * Verifies repeatedly enabling and disabling airplane mode
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Open Settings
+     *   3. Locate Airplane mode toggle switch.
+     *   4. Toggle Airplane mode on.
+     *   Verify:
+     *   Airplane mode icon is present and enabled in notification tray
+     *   5. Toggle Airplane mode off.
+     *   6  Repeat steps 3-6 four more times.
+     *   </pre>
+     * <p>
+     * The test works on API 23 and greater.
+     */
+    @Test
+    @TestInfo(id = "14581152")
+    public void stressTestAirplaneMode() throws Exception {
+        final Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        int stressCount = 5;
+
+        if (api >= 23) {
+            String[] path = api >= 26 ? new String[]{"Settings", "Network & Internet"} :
+                    new String[]{"Settings", "More"};
+            AppLauncher.launchPath(instrumentation, path);
+
+            // Test requires "Airplane mode" switch widget to start in the off state.
+            if (NetworkUtil.isAirplaneModeEnabled(device)) {
+                AppLauncher.launchPath(instrumentation, path);
+                toggleAirplaneMode(device);
+            }
+            assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device));
+
+            for (int i = 0; i < stressCount; i++) {
+                AppLauncher.launchPath(instrumentation, path);
+                toggleAirplaneMode(device);
+                assertTrue("Airplane mode is not enabled.", NetworkUtil.isAirplaneModeEnabled(device));
+                new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+
+                // Disable airplane mode.
+                AppLauncher.launchPath(instrumentation, path);
+                toggleAirplaneMode(device);
+                assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device));
+                new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            }
         }
     }
 
@@ -402,13 +366,13 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (testFramework.getApi() >= 19) {
+        if (api >= 19) {
             String[] path;
-            if (testFramework.getApi() >= 27) {
+            if (api >= 27) {
                 path = new String[]{"Settings", "Network & Internet", "Mobile network", "Advanced", "Preferred network type"};
-            } else if (testFramework.getApi() == 26) {
+            } else if (api == 26) {
                 path = new String[]{"Settings", "Network & Internet", "Mobile network", "Preferred network type"};
-            } else if (testFramework.getApi() >= 21){
+            } else if (api >= 21){
                 path = new String[]{"Settings", "More", "Cellular networks", "Preferred network type"};
             } else {
                 path = new String[]{"Settings", "More", "Mobile networks", "Preferred network type"};
@@ -474,9 +438,9 @@ public class NetworkIOTest {
         UiDevice device = UiDevice.getInstance(instrumentation);
         Context context = testFramework.getInstrumentation().getContext();
 
-        if (testFramework.getApi() >= 18 && testFramework.getApi() <= 25) {
+        if (api >= 18 && api <= 25) {
             String[] path;
-            if (testFramework.getApi() >= 21) {
+            if (api >= 21) {
                 path = new String[]{"Settings", "More", "Cellular networks"};
             } else {
                 path = new String[]{"Settings", "More", "Mobile networks"};
