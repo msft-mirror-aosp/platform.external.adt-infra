@@ -91,6 +91,8 @@ public class Res {
     public static final String SEARCH_TEXT_BOX =
             "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)" +
                     "/(search_omnibox_text_box|textbox|edit_textbox)";
+    public static final String GOOGLE_AR_SNACKBAR_RES =
+            "com.google.ar.core.examples.c.helloar:id/snackbar_text";
 
     // Third-party application resource IDs
     public static final String APP_IMAGE_VIEW_ID =

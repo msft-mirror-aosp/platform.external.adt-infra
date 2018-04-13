@@ -31,6 +31,7 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
@@ -44,6 +45,8 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test on shell utility.
@@ -173,6 +176,55 @@ public class CameraTest {
 
         String lastFileList = listGalleryFiles(instrumentation);
         return originalFileList.equals(lastFileList);
+    }
+
+    /**
+     * Verifies that the augmented reality application can be installed and launched
+     * <p>
+     * TT ID: 61ba18b5-cfba-46a7-a3f2-abfc60e40303
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start the emulator.
+     *   2. Check if AR application is installed, and install if not found.
+     *   3. Open the AR application.
+     *   Verify:
+     *      Confirm that the application launches, and the target text is displayed
+     *
+     *   This test runs on API 27+ images with Google API's.
+     */
+    @Test
+    @TestInfo(id = "61ba18b5-cfba-46a7-a3f2-abfc60e40303")
+    public void launchARApp() throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = testFramework.getDevice();
+
+        if (testFramework.getApi() < 27 && !testFramework.isGoogleApiImage()) {
+            return;
+        }
+
+        String testPackageName = "com.google.ar.core.examples.c.helloar";
+        String apk = "HelloAr_C.apk";
+        String appName = "HelloAR C";
+        boolean isAPIDemoInstalled = PackageInstallationUtil.
+                isPackageInstalled(instrumentation, testPackageName);
+
+        if (!isAPIDemoInstalled) {
+            PackageInstallationUtil.installApk(instrumentation, apk);
+        }
+
+        AppLauncher.launchPath(instrumentation, new String[]{appName});
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
+
+        assertTrue("'Searching for surfaces...' text is not visible",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return device.findObject(new UiSelector().resourceId(
+                                Res.GOOGLE_AR_SNACKBAR_RES).text("Searching for surfaces...")).exists();
+                    }
+                })
+        );
     }
 
     /* A helper method to list the contents on the external media files storage directory */
