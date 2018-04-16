@@ -13,6 +13,7 @@ import psutil
 import csv
 import platform
 import tempfile
+import traceback
 import threading
 import shutil
 import ConfigParser
@@ -126,6 +127,7 @@ class EmuBaseTestCase(LoggedTestCase):
                     if proc.status() != psutil.STATUS_ZOMBIE:
                         return proc
             except psutil.NoSuchProcess:
+                print "Exception Thrown: " + traceback.format_exc()
                 pass
         return None
 
@@ -139,6 +141,7 @@ class EmuBaseTestCase(LoggedTestCase):
                         self.m_logger.info("kill_proc_by_name - %s, %s" % (proc.name(), proc.status()))
                         proc.kill()
             except psutil.NoSuchProcess:
+                print "Exception Thrown: " + traceback.format_exc()
                 pass
 
     def launch_emu(self, avd):
@@ -188,6 +191,7 @@ class EmuBaseTestCase(LoggedTestCase):
                     logcat_proc.terminate()
                   except:
                     # Could not terminate logcat; probably already dead.
+                    print "Exception Thrown: " + traceback.format_exc()
                     pass
 
         def readoutput_in_thread():
@@ -244,7 +248,8 @@ class EmuBaseTestCase(LoggedTestCase):
                 vars['process'].terminate()
                 self.kill_proc_by_name(["adb"])
             except Exception as e:
-                self.m_logger.error('exception terminate adb getprop process: %r', e)
+                self.m_logger.error('exception terminate adb getprop process.')
+                print "Exception Thrown: " + traceback.format_exc()
         thread.join(timeout)
         return vars['process'].returncode, vars['output'], vars['err']
 
@@ -284,8 +289,9 @@ class EmuBaseTestCase(LoggedTestCase):
             cmd = ["adb", "shell", "getprop", "sys.boot_completed"]
             try:
                 (exit_code, output, err) = self.run_with_timeout(cmd, 10)
-            except Exception as e:
-                self.m_logger.error('exception run_with_timeout adb getprop: %r', e)
+            except Exception:
+                self.m_logger.error('exception run_with_timeout adb getprop:')
+                print "Exception Thrown: " + traceback.format_exc()
                 continue
             if counter % 60 is 0 or counter < 60:
                 self.m_logger.info('timeout is %s seconds', real_time_out)
@@ -371,6 +377,7 @@ class EmuBaseTestCase(LoggedTestCase):
                   return
             except Exception as e:
                 self.m_logger.error('exception run_with_timeout %s: %r', ' '.join(cmd), e)
+                print "Exception Thrown: " + traceback.format_exc()
                 return
         self.m_logger.info('AVD %s, adb push: %s, adb pull: %s', avd, run_time[0], run_time[1])
 
@@ -452,9 +459,11 @@ class EmuBaseTestCase(LoggedTestCase):
             psutil.Popen(create_img_cmd, stdout=PIPE, stderr=PIPE).communicate()
         except ConfigParser.NoOptionError:
             self.m_logger.exception('Check avd_template.ini')
+            print "Exception Thrown: " + traceback.format_exc()
             pass
         except:
             self.m_logger.exception('Failed to create sdcard.img, make sure you have mksdcard on your path ($ANDROID_SDK_ROOT/tools/mksdcard)')
+            print "Exception Thrown: " + traceback.format_exc()
             pass
 
     def get_sub_dir(self, avd_config):
@@ -565,6 +574,7 @@ class EmuBaseTestCase(LoggedTestCase):
                os.makedirs(avd_dir)
             except OSError:
                assert os.path.isdir(avd_dir),"Unable to create avd directory %s, %r" % (avd_dir, OSError)
+               print "Exception Thrown: " + traceback.format_exc()
             return 0
 
         ret = try_create_with_config()
