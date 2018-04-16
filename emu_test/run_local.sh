@@ -159,7 +159,7 @@ run_test_suite() {
     echo "${green}Running the ${test} tests${reset}"
     tests="test_${test}.*"
 
-    $option_python $dir/dotest.py -c $dir/config/local_cfg.csv  -n 'localhost' -p $tests -exec $option_emu_exec  --cts-dir ${option_cts_dir} --cts-plan ${option_cts_plan} --cts-module ${option_cts_module} | tee "${log_dir}/${test}"
+    $option_python $dir/dotest.py --config_file $dir/config/local_cfg.csv  --buildername 'localhost' --file_pattern $tests --emulator $option_emu_exec  --cts-dir ${option_cts_dir} --cts-plan ${option_cts_plan} --cts-module ${option_cts_module} | tee "${log_dir}/${test}"
 
   done
 }

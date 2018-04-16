@@ -30,6 +30,7 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.MapsWatcher;
 
 import org.junit.Assert;
@@ -38,6 +39,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Sanity test for Maps App
@@ -78,71 +81,79 @@ public class MapsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice mDevice = testFramework.getDevice();
 
-        AppLauncher.launch(instrumentation, "Maps");
-        new MapsWatcher(mDevice).checkForCondition();
+        if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
+            AppLauncher.launch(instrumentation, "Maps");
 
-        UiObject searchUiObject = mDevice.findObject(new UiSelector().
-                resourceIdMatches(Res.SEARCH_TEXT_BOX));
+            new MapsWatcher(mDevice).checkForCondition();
 
-        // Adding extra wait to avoid the system freeze on API 24.
-        searchUiObject.waitForExists(TimeUnit.SECONDS.toMillis(3L));
-        searchUiObject.clickAndWaitForNewWindow();
+            final UiObject searchUiObject = mDevice.findObject(new UiSelector().
+                    resourceIdMatches(Res.SEARCH_TEXT_BOX));
+            assertTrue("Failed to find search text box", new Wait(5L).until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws Exception {
+                    return searchUiObject.exists();
+                }
+            }));
 
-        UiObject searchEditText;
-        UiObject selectedLocation;
+            searchUiObject.clickAndWaitForNewWindow();
 
-        if(testFramework.getApi() > 19) {
-            searchEditText =
-                    searchUiObject.getChild(new UiSelector().className(EditText.class.getName()));
-            searchEditText.setText(QUERY_STRING);
-            UiScrollable scrollView =
-                    new UiScrollable(new UiSelector().className(ScrollView.class.getName()));
-            scrollView.scrollIntoView(new UiSelector().text(QUERY_STRING));
-            selectedLocation =
-                    scrollView.getChildByText(new UiSelector()
-                            .className(TextView.class.getName()), QUERY_STRING);
-            Assert.assertTrue(selectedLocation.exists());
-            selectedLocation.clickAndWaitForNewWindow();
+            UiObject searchEditText;
+            UiObject selectedLocation;
 
-            // Verify the Query String is present after completing search.
-            UiObject searchTextView =
-                    searchUiObject.getChild(new UiSelector().className(TextView.class.getName()));
-            Assert.assertTrue(searchTextView.getText().contains(QUERY_STRING));
-        } else {
-            searchEditText =
-                    mDevice.findObject(new UiSelector().className(EditText.class.getName()));
-            searchEditText.setText(QUERY_STRING);
-            UiScrollable listViewSelector =
-                    new UiScrollable(new UiSelector().className(ListView.class.getName()));
-            selectedLocation =
-                    listViewSelector.getChildByText(new UiSelector()
-                            .className(TextView.class.getName()), QUERY_STRING);
-            selectedLocation.clickAndWaitForNewWindow();
+            if (testFramework.getApi() > 19) {
+                searchEditText =
+                        searchUiObject.getChild(new UiSelector().className(EditText.class.getName()));
+                searchEditText.setText(QUERY_STRING);
+                UiScrollable scrollView =
+                        new UiScrollable(new UiSelector().className(ScrollView.class.getName()));
+                scrollView.scrollIntoView(new UiSelector().text(QUERY_STRING));
+                selectedLocation =
+                        scrollView.getChildByText(new UiSelector()
+                                .className(TextView.class.getName()), QUERY_STRING);
+                Assert.assertTrue(selectedLocation.exists());
+                selectedLocation.clickAndWaitForNewWindow();
 
-            // Verify the Query String is present after completing search.
-            Assert.assertTrue(searchEditText.getText().contains(QUERY_STRING));
-        }
+                // Verify the Query String is present after completing search.
+                UiObject searchTextView =
+                        searchUiObject.getChild(new UiSelector().className(TextView.class.getName()));
+                Assert.assertTrue(searchTextView.getText().contains(QUERY_STRING));
+            } else {
+                searchEditText =
+                        mDevice.findObject(new UiSelector().className(EditText.class.getName()));
+                searchEditText.setText(QUERY_STRING);
+                UiScrollable listViewSelector =
+                        new UiScrollable(new UiSelector().className(ListView.class.getName()));
+                selectedLocation =
+                        listViewSelector.getChildByText(new UiSelector()
+                                .className(TextView.class.getName()), QUERY_STRING);
+                selectedLocation.clickAndWaitForNewWindow();
 
-        // Verify the directions/route link exists and clicking on it opens the directions page
-        // verify query string is pre filled in the destination("to") field.
-        UiObject directions;
-        boolean isSuccess = mDevice.findObject(new UiSelector().descriptionMatches(".*Directions.*|.*Route.*"))
-                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-        if (isSuccess) {
-            directions = mDevice.findObject(new UiSelector().descriptionMatches(".*Directions.*|.*Route.*"));
-        } else {
-            directions = mDevice.findObject(new UiSelector().text("DIRECTIONS"));
-        }
-        Assert.assertTrue(directions.exists());
-        directions.clickAndWaitForNewWindow();
+                // Verify the Query String is present after completing search.
+                Assert.assertTrue(searchEditText.getText().contains(QUERY_STRING));
+            }
 
-        UiObject destination = mDevice.findObject(new UiSelector().textContains(QUERY_STRING));
-        new MapsWatcher(mDevice).checkForCondition();
+            // Verify the directions/route link exists and clicking on it opens the directions page
+            // verify query string is pre filled in the destination("to") field.
+            UiObject directions;
+            boolean isSuccess = mDevice.findObject(new UiSelector().descriptionMatches(".*Directions.*|.*Route.*"))
+                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
 
-        Assert.assertTrue(destination.exists());
+            if (isSuccess) {
+                directions = mDevice.findObject(new UiSelector().descriptionMatches(".*Directions.*|.*Route.*"));
+            } else {
+                directions = mDevice.findObject(new UiSelector().text("DIRECTIONS"));
+            }
+            Assert.assertTrue(directions.exists());
+            directions.clickAndWaitForNewWindow();
 
-        for (int i = 0; i < 5; i++) {
-            mDevice.pressBack();
+            UiObject destination = mDevice.findObject(new UiSelector().textContains(QUERY_STRING));
+            new MapsWatcher(mDevice).checkForCondition();
+
+            Assert.assertTrue(destination.exists());
+
+            for (int i = 0; i < 5; i++) {
+                mDevice.pressBack();
+            }
         }
     }
 }

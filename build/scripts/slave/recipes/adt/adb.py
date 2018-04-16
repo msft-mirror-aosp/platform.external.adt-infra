@@ -4,7 +4,10 @@
 
 """Recipe for adb stress testing."""
 
+import datetime
 import os
+import shutil
+from glob import iglob
 
 DEPS = [
   'file',
@@ -14,10 +17,23 @@ DEPS = [
   'python',
   'repo',
   'step',
+  'json',
 ]
 
 MASTER_USER = 'user'
 MASTER_IP = '172.27.213.40'
+
+def clean_log_dirs():
+  """Deletes all log directories."""
+  for filename in iglob('adb_stress_logs-build_*'):  # pragma: no cover
+      shutil.rmtree(filename)
+
+
+def clean_build_archives():
+  """Deletes all build archives."""
+  for filename in iglob('build_*.zip'):  # pragma: no cover
+      os.unlink(filename)
+
 
 def RunSteps(api):
   build_dir = api.path['build']
@@ -44,16 +60,22 @@ def RunSteps(api):
     api.repo.sync('-c', 'system/core')
     api.repo.sync('-c', 'development')
 
+  script_root = api.path.join(build_dir, os.pardir, 'emu_test')
+  init_bot_util_path = api.path.join(script_root, 'utils', 'emu_bot_init.py')
+  try:
+      api.python('Initialize Bot', init_bot_util_path,
+                 ['--build-dir', api.path['slave_build'],
+                  '--props', api.json.dumps(api.properties.thaw()),
+                  '--log-dir', log_dir],
+                 env=env)
+  except api.step.StepFailure as f:  # pragma: no cover
+      # Not able to delete some files, it won't be the fault of emulator
+      # not a stopper to run actual tests
+      # so set status to "warning" and continue test
+      f.result.presentation.status = api.step.WARNING
+
   # Run adb stree tests
   with api.step.defer_results():
-    if not api.platform.is_win:
-      for test in ['test_adb.py', 'test_device.py']:
-        test_path = api.path.join(api.path['slave_build'], 'system', 'core', 'adb', test)
-        deferred_step_result = api.python('Run %s' % test, test_path, env=env)
-        if not deferred_step_result.is_ok:  # pragma: no cover
-          stderr_output = deferred_step_result.get_error().result.stderr
-          print stderr_output
-
     for test in ['adb_push_pull_stress.py', 'adb_reboot_stress.py', 'adb_restart_stress.py', 'adb_sleep_wake_stress.py']:
       test_path = api.path.join(adb_test_dir, test)
       deferred_step_result = api.python('Run %s' % test, test_path,
@@ -80,10 +102,14 @@ def RunSteps(api):
     if api.platform.is_win:
       upload_log_args.append('--iswindows')
     api.python("Zip and Upload Logs", log_util_path, upload_log_args)
+    clean_log_dirs()
+    clean_build_archives()
+
+
 
 def GenTests(api):
   yield (
-    api.test('basic') +
+    api.test('adb-linux') +
     api.platform.name('linux') +
     api.properties(
       mastername='client.adt',
@@ -93,12 +119,22 @@ def GenTests(api):
     )
   )
   yield (
-    api.test('basic') +
+    api.test('adb-mac') +
     api.platform.name('mac') +
     api.properties(
         mastername='client.adt',
         project='master',
-        buildernae='Mac 10.12.1 Intel HD 5000',
+        buildername='Mac 10.12.1 Intel HD 5000',
         buildnumber='12',
     )
+  )
+  yield (
+      api.test('adb-win') +
+      api.platform.name('win') +
+      api.properties(
+          mastername='client.adt',
+          project='master',
+          buildername='Win 10 Intel HD 5000',
+          buildnumber='12',
+      )
   )

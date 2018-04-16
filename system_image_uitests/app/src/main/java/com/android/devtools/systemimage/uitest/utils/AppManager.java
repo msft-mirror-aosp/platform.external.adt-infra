@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import junit.framework.Assert;
+
 public class AppManager {
 
     private AppManager() {
@@ -107,12 +109,11 @@ public class AppManager {
      * @param appName         the app name
      * @param pkgName         the app's package name which is used when the app (e.g., service) has
      *                        no name.
-     * @throws IOException               if File IO fails.
-     * @throws UiObjectNotFoundException if it fails to find a UI object.
+     * @throws Exception      if it fails to find a UI object.
      */
     @Deprecated
     public static void deprecateUninstallApp(Instrumentation instrumentation, String appName, String pkgName)
-            throws IOException, UiObjectNotFoundException {
+            throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         // Find and click "appName" or "pkgName" in Settings/Apps
@@ -153,8 +154,7 @@ public class AppManager {
      */
     public static boolean isAppInstalled(
             Instrumentation instrumentation, String appName, String pkgName)
-            throws UiObjectNotFoundException {
-        UiDevice device = UiDevice.getInstance(instrumentation);
+            throws Exception {
 
         // Looking for "appName" or "pkgName" in Settings/Apps
         openAppList(instrumentation);
@@ -187,16 +187,23 @@ public class AppManager {
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      *
-     * @throws UiObjectNotFoundException if it fails to find a UI widget.
+     * @throws Exception if it fails to find a UI widget.
      */
-    public static void openAppList(Instrumentation instrumentation)
-            throws UiObjectNotFoundException {
-        UiDevice device = UiDevice.getInstance(instrumentation);
+    public static void openAppList(Instrumentation instrumentation) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (SystemUtil.getApiLevel() >= 26) {
             SettingsUtil.openItem(instrumentation, "Apps & notifications");
-            String appInfo = SystemUtil.getApiLevel() == 26 ? "App info" : "See all";
-            device.findObject(new UiSelector().textContains(appInfo)).clickAndWaitForNewWindow();
+            String appInfoText = SystemUtil.getApiLevel() == 26 ? "App info" : "See all";
+            final UiObject appInfoLabel = device.findObject(new UiSelector().textStartsWith(appInfoText));
+
+            Assert.assertTrue("Application info not found", new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() {
+                    return appInfoLabel.exists();
+                }
+            }));
+            appInfoLabel.clickAndWaitForNewWindow();
         } else {
             SettingsUtil.openItem(instrumentation, "Apps");
         }
@@ -209,10 +216,9 @@ public class AppManager {
      *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
-     * @throws UiObjectNotFoundException if it fails to find a UI widget.
+     * @throws Exception if it fails to find a UI widget.
      */
-    public static void openSystemAppList(Instrumentation instrumentation)
-            throws UiObjectNotFoundException {
+    public static void openSystemAppList(Instrumentation instrumentation) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         // Launch the "Apps" page.

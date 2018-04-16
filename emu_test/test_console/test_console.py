@@ -23,6 +23,7 @@ import emu_test
 from emu_test.utils import emu_argparser
 from emu_test.utils import emu_testcase
 from emu_test.utils import emu_unittest
+from utils import util
 
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 CONSOLE_RESULT_XML_FILE = 'consoleTestResult.xml'
@@ -81,9 +82,14 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
                             CONSOLE_RESULT_XML_FILE)
     xsl_path = os.path.join(emu_argparser.emu_args.session_dir,
                             'console.xsl')
-    subprocess.call(['cp', CONSOLE_XSL_FILE, xsl_path])
     css_path = os.path.join(emu_argparser.emu_args.session_dir, 'console.css')
-    subprocess.call(['cp', CONSOLE_CSS_FILE, css_path])
+
+    if os.name == util.WINDOWS_OS_NAME:
+      subprocess.call(['copy', CONSOLE_XSL_FILE, xsl_path], shell=True)
+      subprocess.call(['copy', CONSOLE_CSS_FILE, css_path], shell=True)
+    else:
+      subprocess.call(['cp', CONSOLE_XSL_FILE, xsl_path])
+      subprocess.call(['cp', CONSOLE_CSS_FILE, css_path])
 
     result = ET.Element('result')
 

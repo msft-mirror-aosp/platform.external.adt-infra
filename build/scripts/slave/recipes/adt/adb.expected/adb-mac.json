@@ -61,27 +61,20 @@
     "cmd": [
       "python",
       "-u",
-      "[SLAVE_BUILD]/system/core/adb/test_adb.py"
+      "[BUILD]/../emu_test/utils/emu_bot_init.py",
+      "--build-dir",
+      "[SLAVE_BUILD]",
+      "--props",
+      "{\"buildername\": \"Mac 10.12.1 Intel HD 5000\", \"buildnumber\": \"12\", \"mastername\": \"client.adt\", \"project\": \"master\", \"recipe\": \"adt/adb\"}",
+      "--log-dir",
+      "adb_stress_logs-build_12"
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
-    "name": "Run test_adb.py"
-  },
-  {
-    "cmd": [
-      "python",
-      "-u",
-      "[SLAVE_BUILD]/system/core/adb/test_device.py"
-    ],
-    "cwd": "[SLAVE_BUILD]",
-    "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools",
-      "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
-    },
-    "name": "Run test_device.py"
+    "name": "Initialize Bot"
   },
   {
     "cmd": [
@@ -98,7 +91,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
     "name": "Run adb_push_pull_stress.py"
@@ -118,7 +111,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
     "name": "Run adb_reboot_stress.py"
@@ -138,7 +131,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
     "name": "Run adb_restart_stress.py"
@@ -158,7 +151,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
     "name": "Run adb_sleep_wake_stress.py"
@@ -177,7 +170,7 @@
       "--user",
       "user",
       "--dst",
-      "/home/user/buildbot/external/adt-infra/build/masters/master.client.adt/slave_logs/Ubuntu 14.04 Intel HD 520/",
+      "/home/user/buildbot/external/adt-infra/build/masters/master.client.adt/slave_logs/Mac 10.12.1 Intel HD 5000/",
       "--build-dir",
       "[BUILD]",
       "--skiplog"

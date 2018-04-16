@@ -114,9 +114,6 @@ class OrientationTest(testcase_base.BaseConsoleTest):
       4. Copy the auth_token value from ~/.emulator_console_auth_token
       5. Run: auth auth_token
       6. Run: rotate, and verify
-      7. Run: rotate, and verify
-      8. Run: rotate, and verify
-      9. Run: rotate, and verify
     Verify:
       Check to orientation and rotation of the launched app.
     """
@@ -130,9 +127,6 @@ class OrientationTest(testcase_base.BaseConsoleTest):
     print 'Running test: %s' % (inspect.stack()[0][3])
     self._poll_orientation_rotation_and_verify(ORIENTATION_PORTRAIT, ROTATION_0)
     self._execute_rotate_command_and_verify(ORIENTATION_LANDSCAPE, ROTATION_270)
-    self._execute_rotate_command_and_verify(ORIENTATION_PORTRAIT, ROTATION_0)
-    self._execute_rotate_command_and_verify(ORIENTATION_LANDSCAPE, ROTATION_90)
-    self._execute_rotate_command_and_verify(ORIENTATION_PORTRAIT, ROTATION_0)
 
     util.unstall_apps(TESTCASE_CALL_DIR)
 

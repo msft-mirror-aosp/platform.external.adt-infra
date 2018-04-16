@@ -21,6 +21,7 @@ import emu_test.utils.emu_argparser as emu_argparser
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
 import test_fingerprint
+import test_homescreen
 
 class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     __slots__ = ()
@@ -320,6 +321,15 @@ class EmuBaseTestCase(LoggedTestCase):
                 #do nothing
                 self.m_logger.info("skip fingerprint test for non-phone device")
             elif 'google_apis' in str(avd):
+                # do a homescreen test first
+                self.m_logger.info("begin homescreen test for phone device")
+                homescreen_succeeded = test_homescreen.do_homescreen_test()
+                if homescreen_succeeded:
+                    self.m_logger.info("homescreen test for phone device succeeded")
+                else:
+                    self.m_logger.info("homescreen test for phone device failed ")
+
+                # do a fingerprint test
                 self.m_logger.info("begin fingerprint test for phone device")
                 fingerprint_succeeded = test_fingerprint.do_fingerprint_test()
                 if not fingerprint_succeeded:
@@ -605,9 +615,18 @@ class EmuBaseTestCase(LoggedTestCase):
         self.m_logger.debug('return value of update proc: %s', update_proc.poll())
         return update_proc.poll()
 
-def create_test_case_from_file(desc, testcase_class, test_func):
-    """ Create test case based on test configuration file. """
+def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
+    """ Create one or more test cases based on test configuration file.
 
+    If the `variants` parameter is included as an iterable, creates multiple
+    test cases, one for each variant, passing each variant as an extra parameter
+    to `test_func`. This is used, for example, in the UI tests to create a
+    separate test case for each test class.
+
+    Args:
+        test_class: The class to add the test cases.
+        test_func: The function to call.
+    """
     is_cts = True if desc == "cts" else False
     def get_port():
         if not hasattr(get_port, '_port'):
@@ -648,22 +667,28 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                     return False
         return True
 
-    def create_test_case(avd_config, op, builder_name=None, pattern=None):
+    def create_test_case(avd_config, op, builder_name=None, pattern=None, variant=None):
         if not is_cts and avd_config.gpu == "yes":
             avd_config_swiftshader = avd_config._replace(gpu = "swiftshader_indirect")
-            create_test_case(avd_config_swiftshader, op)
+            create_test_case(avd_config_swiftshader, op, variant=variant)
             if avd_config.api >= "19" and avd_config.api <= "25" and "x86" in avd_config.abi:
                 avd_config_guestgpu = avd_config._replace(gpu = "guest")
-                create_test_case(avd_config_guestgpu, op)
+                create_test_case(avd_config_guestgpu, op, variant=variant)
 
         if op == "S" or op == "" or not valid_case(avd_config):
             return
 
         # For console tests, pass the builder name to it.
         if pattern and 'console' in pattern:
-            func = lambda self: test_func(self, avd_config, builder_name)
+            if variant is not None:
+                func = lambda self: test_func(self, avd_config, builder_name, variant)
+            else:
+                func = lambda self: test_func(self, avd_config, builder_name)
         else:
-            func = lambda self: test_func(self, avd_config)
+            if variant is not None:
+                func = lambda self: test_func(self, avd_config, variant)
+            else:
+                func = lambda self: test_func(self, avd_config)
 
         if op == "X":
             func = unittest.expectedFailure(func)
@@ -671,7 +696,10 @@ def create_test_case_from_file(desc, testcase_class, test_func):
         elif op == "F":
             func = func
         qemu_str = "_qemu2" if avd_config.classic == "no" else "_qemu1"
-        setattr(testcase_class, "test_%s_%s%s" % (desc, str(avd_config), qemu_str), func)
+        variant_str = "%s_" % variant if variant is not None else ""
+        # Group test results by ClassName_AVD-type.
+        test_name = "test_%s%s_test_%s%s" % (variant_str, str(avd_config), desc, qemu_str)
+        setattr(testcase_class, test_name, func)
 
     with open(emu_argparser.emu_args.config_file, "rb") as file:
         reader = csv.reader(file)
@@ -729,5 +757,8 @@ def create_test_case_from_file(desc, testcase_class, test_func):
                       classic = "yes"
                     if device == "":
                       device = "default"
-                    avd_config = AVDConfig(api, alt_version, tag, abi, device, ram, gpu, classic, get_port(), is_cts, ori)
-                    create_test_case(avd_config, op, emu_argparser.emu_args.builder_name, emu_argparser.emu_args.pattern)
+                    avd_config = AVDConfig(api, alt_version, tag, abi, device, ram, gpu, classic,
+                                           get_port(), is_cts, ori)
+                    for variant in variants or [None]:
+                        create_test_case(avd_config, op, emu_argparser.emu_args.builder_name,
+                                         emu_argparser.emu_args.pattern, variant)
