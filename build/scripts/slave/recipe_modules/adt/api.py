@@ -37,7 +37,10 @@ class AdtApi(recipe_api.RecipeApi):
                                                  step_test_data=lambda: self.m.raw_io.test_api.stream_output(
                                                      'PASS: UI_TestCase', stream='stderr'))
             if os.path.exists(stderr_backing_file): # pragma: no cover
-              os.unlink(stderr_backing_file)
+                try:
+                    os.unlink(stderr_backing_file)
+                except:
+                    pass
             res = True
             # Debug line to help us know that deferred step has properly returned.
             print "Deferred Step Return Code: " + str(deferred_step_result.is_ok)
