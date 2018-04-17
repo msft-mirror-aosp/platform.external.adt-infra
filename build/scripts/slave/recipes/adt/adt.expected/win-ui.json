@@ -85,7 +85,7 @@
       "PATH": "%(PATH)s;/usr/local/google/home/cpilch/Android/android-sdk_image-builds/tools;/usr/local/google/home/cpilch/Android/android-sdk_image-builds/tools/bin;/usr/local/google/home/cpilch/Android/android-sdk_image-builds/platform-tools;/usr/local/google/home/cpilch/Android/android-sdk_image-builds/build-tools/23.0.2;/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
     },
     "name": "Run Emulator UI Test",
-    "stderr": "/path/to/tmp/1523935678.81err",
+    "stderr": "/path/to/tmp/err",
     "~followup_annotations": [
       "@@@STEP_LINK@[Report] PASS: UI_TestCase@..\\..\\..\\UI_Result\\Win_UI_sysimg-oc\\build_1090-rev_4695513\\UI_TestCase_report\\index.html@@@"
     ]
