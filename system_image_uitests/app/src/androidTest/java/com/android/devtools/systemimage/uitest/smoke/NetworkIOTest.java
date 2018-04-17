@@ -25,6 +25,7 @@ import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -310,7 +311,7 @@ public class NetworkIOTest {
      * <p>
      * The test works on API 23 and greater.
      */
-    @Test
+    @Ignore
     @TestInfo(id = "14581152")
     public void stressTestAirplaneMode() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
