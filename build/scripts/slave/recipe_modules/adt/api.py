@@ -1,5 +1,6 @@
 import os
 import datetime
+import time
 
 from recipe_engine import recipe_api
 
@@ -34,12 +35,9 @@ class AdtApi(recipe_api.RecipeApi):
             # do not pass this data when running on Windows Machines.
             if os.name is not 'nt':
                 deferred_step_result = self.m.python(description, dotest_path, test_args, env=env,
-                                                     stderr=self.m.raw_io.output('err'),
+                                                     stderr=self.m.raw_io.output(str(time.time()) + 'err'),
                                                      step_test_data=lambda: self.m.raw_io.test_api.stream_output(
                                                          'PASS: UI_TestCase', stream='stderr'))
-            else:
-                deferred_step_result = self.m.python(description, dotest_path, test_args, env=env,
-                                                     stderr=self.m.raw_io.output('err'))
             res = True
             # Debug line to help us know that deferred step has properly returned.
             print "Deferred Step Return Code: " + str(deferred_step_result.is_ok)

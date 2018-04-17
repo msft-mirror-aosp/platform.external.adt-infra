@@ -71,7 +71,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
     "name": "Initialize Bot"
@@ -91,7 +91,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
     "name": "Run adb_push_pull_stress.py"
@@ -111,7 +111,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
     "name": "Run adb_reboot_stress.py"
@@ -131,7 +131,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
     "name": "Run adb_restart_stress.py"
@@ -151,7 +151,7 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools",
+      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools",
       "PYTHONPATH": "[SLAVE_BUILD]/development/python-packages"
     },
     "name": "Run adb_sleep_wake_stress.py"

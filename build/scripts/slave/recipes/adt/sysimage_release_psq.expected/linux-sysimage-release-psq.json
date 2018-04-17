@@ -76,7 +76,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/build-tools/23.0.2"
     },
     "name": "Run System Image UI Test",
-    "stderr": "/path/to/tmp/err",
+    "stderr": "/path/to/tmp/1523935678.84err",
     "~followup_annotations": [
       "@@@STEP_LINK@[Report] PASS: UI_TestCase@../../../UI_Result/Ubuntu_System_Image_Release/build_516-rev_4696395/UI_TestCase_report/index.html@@@"
     ]

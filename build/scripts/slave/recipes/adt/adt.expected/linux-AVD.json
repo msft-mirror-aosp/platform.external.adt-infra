@@ -65,7 +65,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Run AVD Launch Test",
-    "stderr": "/path/to/tmp/err"
+    "stderr": "/path/to/tmp/1523935678.82err"
   },
   {
     "cmd": [
