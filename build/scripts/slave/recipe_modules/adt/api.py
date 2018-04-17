@@ -1,7 +1,7 @@
 import os
 import datetime
 import traceback
-
+import uuid
 from recipe_engine import recipe_api
 
 
@@ -31,14 +31,13 @@ class AdtApi(recipe_api.RecipeApi):
         if 'GTS' in description:
             test_args.append('--is-gts')
         with self.m.step.defer_results():
-            try:
-                deferred_step_result = self.m.python(description, dotest_path, test_args, env=env,
-                                                     stderr=self.m.raw_io.output('err'),
-                                                     step_test_data=lambda: self.m.raw_io.test_api.stream_output(
-                                                         'PASS: UI_TestCase', stream='stderr'))
-            except WindowsError:
-                print "Windows Error: " + traceback.format_exc()
-
+            stderr_backing_file = uuid.uuid4().hex
+            deferred_step_result = self.m.python(description, dotest_path, test_args, env=env,
+                                                 stderr=self.m.raw_io.output('err', stderr_backing_file),
+                                                 step_test_data=lambda: self.m.raw_io.test_api.stream_output(
+                                                     'PASS: UI_TestCase', stream='stderr'))
+            if os.path.exists(stderr_backing_file): # pragma: no cover
+              os.unlink(stderr_backing_file)
             res = True
             # Debug line to help us know that deferred step has properly returned.
             print "Deferred Step Return Code: " + str(deferred_step_result.is_ok)

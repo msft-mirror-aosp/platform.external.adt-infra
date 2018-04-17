@@ -84,7 +84,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Boot Test - public System Image - emu-master-dev",
-    "stderr": "/path/to/tmp/err"
+    "stderr": "583af5089c5f4f37abe263aa2cce2455"
   },
   {
     "cmd": [

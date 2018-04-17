@@ -65,7 +65,7 @@
       "PATH": "%(PATH)s;/usr/local/google/home/cpilch/Android/android-sdk_public/tools;/usr/local/google/home/cpilch/Android/android-sdk_public/tools/bin;/usr/local/google/home/cpilch/Android/android-sdk_public/platform-tools;/usr/local/google/home/cpilch/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
     },
     "name": "Run Emulator Console Test",
-    "stderr": "/path/to/tmp/err",
+    "stderr": "c4bbb3a2cc2f401ab0ad27a432241f6a",
     "~followup_annotations": [
       "@@@STEP_LINK@View XML@..\\..\\..\\Console_Result\\Win_Console_emu-master-dev\\build_516-rev_4696395\\consoleTestResult.xml@@@"
     ]
