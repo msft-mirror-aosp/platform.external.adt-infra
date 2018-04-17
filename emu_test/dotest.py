@@ -17,7 +17,8 @@ import logging
 import re
 import time
 import psutil
-from subprocess import PIPE
+import traceback
+from subprocess import PIPE, check_call, CalledProcessError
 
 # Add parent directory to current module. Then, emu_test module is recognized.
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -111,6 +112,10 @@ if __name__ == '__main__':
     We find our test cases by searching for the passed in --file_pattern from the script execution directory.
     For instance, for a boot test we search for files named test_boot.*py, which we will find under
     test_boot/boot_test.py.  So this testcase would be found and run.
+    
+    When testcases are finished, we manually kill the ADB server.  This ensures a couple things:
+      1.  It ensures our next test is run with a fresh daemon.  We are not testing ADB in these tests.
+      2.  It ensures we do not hold up Buildbot code by holding on to a child process, blocking slave return.
     """
     os.environ["SHELL"] = "/bin/bash"
 
@@ -126,5 +131,9 @@ if __name__ == '__main__':
     emuRunner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
     emuResult = emuRunner.run(emuSuite)
     printResult(emuResult)
-
+    # Always attempt to kill the adb server.  We are now done testing with it.
+    try:
+        check_call(['adb', 'kill-server'], stdout=PIPE, stdin=PIPE)
+    except CalledProcessError:
+        print "Error shutting down adb.  Error: " + traceback.format_exc()
     sys.exit(not emuResult.wasSuccessful())
