@@ -65,7 +65,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Run Emulator Console Test",
-    "stderr": "/path/to/tmp/err",
+    "stderr": "aff1fc051b084bbea6f4aac6c571e1af",
     "~followup_annotations": [
       "@@@STEP_LINK@View XML@../../../Console_Result/Mac_Console_emu-master-dev/build_516-rev_4696395/consoleTestResult.xml@@@"
     ]
