@@ -21,7 +21,7 @@ def get_dst_dir(remote_path):
   if file_name.startswith('sdk-repo-linux-system-images') or file_name.startswith('sdk-repo-linux-addon') \
       or file_name.startswith('sdk-repo-darwin-system-images') or file_name.startswith('sdk_google_phone'):
     branch_name = remote_path.split('/')[-4]
-    if 'user' in branch_name:
+    if 'user' in branch_name and 'userdebug' not in branch_name:
       tag = 'google_apis_playstore'
     elif 'google' in branch_name and 'addon' in branch_name:
       tag = 'google_apis'
