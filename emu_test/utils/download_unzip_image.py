@@ -23,12 +23,14 @@ def get_dst_dir(remote_path):
     branch_name = remote_path.split('/')[-4]
     if 'user' in branch_name and 'userdebug' not in branch_name:
       tag = 'google_apis_playstore'
-    elif 'google' in branch_name and 'addon' in branch_name:
-      tag = 'google_apis'
-    elif 'gphone' in branch_name and 'addon' in branch_name:
-      tag = 'google_apis'
     elif 'google_atv' in branch_name:
       tag = 'android-tv'
+    elif 'google' in branch_name and 'addon' in branch_name:
+      tag = 'google_apis'
+    elif 'gphone' in branch_name:
+      tag = 'google_apis'
+    elif 'gwear' in branch_name:
+      tag = 'android-wear'
     elif 'oc-mr1-car-support' in branch_name:
       tag = 'android-car'
     else:
