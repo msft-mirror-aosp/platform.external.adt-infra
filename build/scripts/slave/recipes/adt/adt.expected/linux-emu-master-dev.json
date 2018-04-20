@@ -13,9 +13,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Initialize Bot"
   },
@@ -33,9 +33,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Create CL List"
   },
@@ -51,9 +51,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Download and Unzip Images"
   },
@@ -79,12 +79,12 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Boot Test - public System Image - emu-master-dev",
-    "stderr": "67ba564c3069481a88947a4bcdf29c84"
+    "stderr": "96e8ef8fd5be41b78c77a9dd0cc6cc89"
   },
   {
     "cmd": [
@@ -106,9 +106,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-linux_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-linux_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Zip and Upload Logs"
   },
