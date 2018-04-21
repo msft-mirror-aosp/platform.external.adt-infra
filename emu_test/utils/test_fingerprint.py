@@ -1,6 +1,6 @@
 """
 Please note that the below test should work on all screen sizes for Pi images.
-Requires environment varaible 'ANDROID_SDK_HOMR' to be set due to path_utils.
+Requires environment varaible 'ANDROID_SDK_ROOT' to be set due to path_utils.
 
 This file will attempt to create and then utilize a fingerprint based lock/unlock on the booted emulator image.
 """

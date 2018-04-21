@@ -161,7 +161,7 @@ def do_homescreen_test():
 
 if __name__ == '__main__':
     """
-    Note that environment variable "ANDROID_SDK_HOME" must be set to resolve location of ADB binary.
+    Note that environment variable "ANDROID_SDK_ROOT" must be set to resolve location of ADB binary.
     """
     if not do_homescreen_test():
         print 'Homescreen Test suite Failed.'
