@@ -13,9 +13,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Initialize Bot"
   },
@@ -33,9 +33,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Create CL List"
   },
@@ -51,9 +51,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Download and Unzip Images"
   },
@@ -79,12 +79,12 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Boot Test - public System Image - emu-master-dev",
-    "stderr": "583af5089c5f4f37abe263aa2cce2455"
+    "stderr": "cfc0eefcb23c4263afe7377627623749"
   },
   {
     "cmd": [
@@ -106,9 +106,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk-macosx_public",
-      "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk-macosx_public",
+      "PATH": "%(PATH)s:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/dyu/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin"
     },
     "name": "Zip and Upload Logs"
   },
