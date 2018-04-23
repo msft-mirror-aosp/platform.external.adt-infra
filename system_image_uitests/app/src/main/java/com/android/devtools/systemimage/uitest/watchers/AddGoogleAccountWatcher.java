@@ -43,6 +43,12 @@ public class AddGoogleAccountWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().textMatches(("(?i)not now(?-i)"))).click();
                 condition = true;
             }
+            isSuccess = mDevice.findObject(new UiSelector().text(("ACCEPT & CONTINUE")))
+                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().text(("ACCEPT & CONTINUE"))).click();
+                condition = true;
+            }
             isSuccess = mDevice.findObject(new UiSelector().textMatches(("(?i)ok(?-i)")))
                     .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {

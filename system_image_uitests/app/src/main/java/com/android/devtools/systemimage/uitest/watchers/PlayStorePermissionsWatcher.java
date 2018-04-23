@@ -40,7 +40,7 @@ public class PlayStorePermissionsWatcher implements UiWatcher {
         boolean condition = false;
         boolean isSuccess =
                 mDevice.findObject(new UiSelector().description("ACCEPT"))
-                        .waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+                        .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         try {
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().description("ACCEPT")).click();
@@ -48,14 +48,14 @@ public class PlayStorePermissionsWatcher implements UiWatcher {
             }
             isSuccess =
                     mDevice.findObject(new UiSelector().text("ACCEPT"))
-                            .waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().text("ACCEPT")).click();
                 condition = true;
             }
             isSuccess =
                     mDevice.findObject(new UiSelector().description("I AGREE"))
-                            .waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().description("I AGREE")).click();
                 condition = true;

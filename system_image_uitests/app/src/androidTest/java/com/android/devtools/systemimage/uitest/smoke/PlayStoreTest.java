@@ -54,6 +54,9 @@ public class PlayStoreTest {
     @Rule
     public Timeout globalTimeout = Timeout.seconds(300);
 
+    private final boolean hasGooglePlay = testFramework.getApi() >= 24 &&
+            testFramework.isGoogleApiAndPlayImage();
+
     /**
      * Verify apps can be searched through Play Store search bar.
      * <p>
@@ -77,7 +80,7 @@ public class PlayStoreTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String application = "Messenger";
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
+        if (hasGooglePlay) {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
@@ -119,7 +122,7 @@ public class PlayStoreTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String application = "Google Translate";
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
+        if (hasGooglePlay) {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
@@ -171,7 +174,7 @@ public class PlayStoreTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String application = "Google Voice";
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
+        if (hasGooglePlay) {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
@@ -226,7 +229,7 @@ public class PlayStoreTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String application = "Pocket Casts";
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
+        if (hasGooglePlay) {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
