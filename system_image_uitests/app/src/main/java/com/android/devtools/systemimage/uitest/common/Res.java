@@ -33,6 +33,9 @@ public class Res {
     public static final String CHROME_TERMS_ACCEPT_BUTTON_RES = "com.android.chrome:id/terms_accept";
     public static final String CHROME_SEARCH_BOX_RES = "com.android.chrome:id/search_box_text";
     public static final String CHROME_URL_BAR_RES = "com.android.chrome:id/url_bar";
+    public static final String CHROME_MENU_BUTTON_RES = "com.android.chrome:id/menu_button";
+    public static final String CHROME_MENU_ITEM_ICON_RES = "com.android.chrome:id/menu_item_icon";
+    public static final String CHROME_MORE_BUTTON_RES = "com.android.chrome:id/more_button";
     public static final String CHROME_CLOSE_MENU_BUTTON_RES = "com.android.chrome:id/close_menu_id";
     public static final String CHROME_TITLE_RES = "com.android.chrome:id/title";
     public static final String CHROME_NO_THANKS_BUTTON_RES = "com.android.chrome\\d*:id" + "/(no_thanks_button|negative_button)";
