@@ -11,6 +11,7 @@ import os
 import sys
 import unittest
 
+
 from emu_test.utils import emu_argparser
 from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig, create_test_case_from_file
 
@@ -24,7 +25,7 @@ class LaunchAVDTest(EmuBaseTestCase):
         """
         self.avd_config = avd_config
         self.assertEqual(self.create_avd(avd_config), 0)
-        self.launch_emu_and_wait(avd_config, emu_argparser.emu_args)
+        self.launch_emu_and_wait(avd_config)
 
 assert emu_argparser.emu_args.config_file is not None, "Config file must be provided."
 create_test_case_from_file('launch_avd', LaunchAVDTest, LaunchAVDTest.run_launch_avd_test)
