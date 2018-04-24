@@ -84,6 +84,13 @@ public class GoogleChromeConfirmationWatcher implements UiWatcher {
                 condition = true;
             }
             isSuccess =
+                    mDevice.findObject(new UiSelector().description("ACCEPT"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().description("ACCEPT")).click();
+                condition = true;
+            }
+            isSuccess =
                     mDevice.findObject(new UiSelector().description("I AGREE"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
