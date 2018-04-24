@@ -12,6 +12,7 @@ import subprocess
 import sys
 import telnetlib
 import time
+from emu_test.utils import path_utils
 
 NEWLINE = '\n'
 OK = 'OK'
@@ -314,8 +315,8 @@ def run_script_run_adb_shell(testcase_call_dir):
   script_run_adb_shell = ('%s/%s' %
                           (testcase_call_dir, SCRIPT_TO_RUN_ADB_SHELL))
   script_install_apk = '%s/%s' % (testcase_call_dir, SCRIPT_TO_INSTALL_APK)
-
-  subprocess.call(['adb', '-s', 'emulator-%s' % str(CONSOLE_PORT),
+  adb_binary = path_utils.get_adb_binary()
+  subprocess.call([adb_binary, '-s', 'emulator-%s' % str(CONSOLE_PORT),
                    '-e', 'forward', 'tcp:8080', 'tcp:8081'])
   subprocess.call([PYTHON_INTERPRETER, script_install_apk])
   subprocess.Popen([PYTHON_INTERPRETER, script_run_adb_shell])
