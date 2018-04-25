@@ -24,12 +24,10 @@ import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.watchers.PlayStoreConfirmationWatcher;
-import com.android.devtools.systemimage.uitest.watchers.PlayStorePermissionsWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertTrue;
 
 /**
  * Static utility methods pertaining to the Google Play Store
@@ -39,6 +37,8 @@ public class PlayStoreUtil {
     private PlayStoreUtil() {
         throw new AssertionError();
     }
+
+    private static final int api = SystemUtil.getApiLevel();
 
     /**
      * Checks if Play Store has been installed.
@@ -50,7 +50,7 @@ public class PlayStoreUtil {
         final String playStore = "Play Store";
 
         device.pressHome();
-        if (SystemUtil.getApiLevel() == 24) {
+        if (api == 24) {
             device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
             final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
             isInstalled = new Wait().until(new Wait.ExpectedCondition() {
@@ -128,11 +128,9 @@ public class PlayStoreUtil {
      */
     public static void loginGooglePlay(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String email = "pstester1980@gmail.com";
-        final String password = "pst4lif3";
         resetPlayStore(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
-        new PlayStorePermissionsWatcher(device).checkForCondition();
+        new GoogleAppConfirmationWatcher(device).checkForCondition();
 
         boolean hasSearchBox = new Wait(TimeUnit.SECONDS.toMillis(20)).
                 until(new Wait.ExpectedCondition() {
@@ -149,67 +147,13 @@ public class PlayStoreUtil {
             return;
         }
 
-        boolean needsEmail = new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        if (SystemUtil.getApiLevel() == 24) {
-                            return device.findObject(
-                                    new UiSelector().description("Email or phone")).exists();
-                        } else {
-                            return device.findObject(
-                                    new UiSelector().text("Email or phone")).exists();
-                        }
-                    }
-                });
+        GoogleAppUtil.loginGoogleApp(instrumentation);
 
-        if (!needsEmail) {
-            boolean needsPassword = new Wait().
-                    until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws UiObjectNotFoundException {
-                            if (SystemUtil.getApiLevel() == 24) {
-                                return device.findObject(
-                                        new UiSelector().description("Sign in " + email)).exists();
-                            } else {
-                                return device.findObject(
-                                        new UiSelector().text("Sign in " + email)).exists();
-                            }
-                        }
-                    });
-            if (!needsPassword) {
-                device.pressHome();
-                return;
-            }
-            UiObject inputPasswordField = device.findObject(new UiSelector().resourceId("password"));
-            inputPasswordField.clearTextField();
-            inputPasswordField.setText(password);
-            new PlayStoreConfirmationWatcher(device).checkForCondition();
-            logInWithPassword(instrumentation, password);
-        }
-        else {
-            UiObject inputEmailField;
-            if (SystemUtil.getApiLevel() == 24) {
-                inputEmailField = device.findObject(new UiSelector().description("Email or phone"));
-            } else {
-                inputEmailField = device.findObject(new UiSelector().text("Email or phone"));
-            }
-            inputEmailField.clearTextField();
-            inputEmailField.setText(email);
-            new PlayStoreConfirmationWatcher(device).checkForCondition();
-            logInWithPassword(instrumentation, password);
-        }
-        new PlayStorePermissionsWatcher(device).checkForCondition();
-        new PlayStoreConfirmationWatcher(device).checkForCondition();
-        resetPlayStore(instrumentation);
-        device.pressHome();
-
+        new GoogleAppConfirmationWatcher(device).checkForCondition();
         AppLauncher.launch(instrumentation, "Play Store");
-        new PlayStorePermissionsWatcher(device).checkForCondition();
-        new PlayStoreConfirmationWatcher(device).checkForCondition();
+        new GoogleAppConfirmationWatcher(device).checkForCondition();
         resetPlayStore(instrumentation);
         device.pressHome();
-        return;
     }
 
     /**
@@ -238,7 +182,7 @@ public class PlayStoreUtil {
         }
 
         device.findObject(new UiSelector().text("INSTALL")).clickAndWaitForNewWindow();
-        new PlayStoreConfirmationWatcher(device).checkForCondition();
+        new GoogleAppConfirmationWatcher(device).checkForCondition();
 
         UiObject openButton = device.findObject(new UiSelector().text("OPEN"));
         boolean isAppInstalled = openButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
@@ -278,22 +222,5 @@ public class PlayStoreUtil {
         boolean isAppUninstalled = installButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
 
         return isAppUninstalled;
-    }
-
-
-    /**
-     * Helper function to log in to Google Play with test user password
-     */
-    private static void logInWithPassword(Instrumentation instrumentation, String password) throws Exception {
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        UiObject inputPasswordField;
-        if (SystemUtil.getApiLevel() == 24) {
-            inputPasswordField = device.findObject(new UiSelector().resourceId("password"));
-        } else {
-            inputPasswordField = device.findObject(new UiSelector().className("android.widget.EditText"));
-        }
-        inputPasswordField.clearTextField();
-        inputPasswordField.setText(password);
-        new PlayStoreConfirmationWatcher(device).checkForCondition();
     }
 }

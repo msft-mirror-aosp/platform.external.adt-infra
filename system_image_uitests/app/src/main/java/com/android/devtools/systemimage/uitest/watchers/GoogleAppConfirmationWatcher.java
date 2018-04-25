@@ -28,10 +28,10 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Note that this watcher should only be registered before using the Google Play Store app.
  */
-public class PlayStoreConfirmationWatcher implements UiWatcher {
+public class GoogleAppConfirmationWatcher implements UiWatcher {
     private final UiDevice mDevice;
 
-    public PlayStoreConfirmationWatcher(UiDevice device) {
+    public GoogleAppConfirmationWatcher(UiDevice device) {
         this.mDevice = device;
     }
 
@@ -79,6 +79,27 @@ public class PlayStoreConfirmationWatcher implements UiWatcher {
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().textContains("YES")).click();
+                condition = true;
+            }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().description("ACCEPT"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().description("ACCEPT")).click();
+                condition = true;
+            }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().text("ACCEPT"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().text("ACCEPT")).click();
+                condition = true;
+            }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().description("I AGREE"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().description("I AGREE")).click();
                 condition = true;
             }
         }
