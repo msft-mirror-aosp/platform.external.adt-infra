@@ -22,7 +22,6 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
-import com.android.devtools.systemimage.uitest.utils.NetworkUtil;
 import com.android.devtools.systemimage.uitest.utils.ApiDemosInstaller;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
@@ -332,64 +331,6 @@ public class SettingsTest {
         }
         assertTrue("Failed to enable Developer options.",
                 DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework));
-    }
-
-    /**
-     * Verifies show cards confirmation page opens on Google API images.
-     * <p>
-     * This is run to qualify releases. Please involve the test team in substantial changes.
-     * <p>
-     * TR ID: C14581322
-     * <p>
-     *   <pre>
-     *   1. Start the emulator.
-     *   2. Open Settings > Google > Search and Now > Now Cards
-     *   3. Enable Show cards.
-     *   Verify:
-     *   The show cards confirmation page opens.
-     *   </pre>
-     */
-    @Test
-    @TestInfo(id = "14581322")
-    public void confirmNowCardsPageOpen() throws Exception {
-        if (!NetworkUtil.hasCellularNetworkConnection(instrumentation) || !testFramework.isGoogleApiImage()
-                || testFramework.getApi() < 23 || testFramework.getApi() > 24) {
-            return;
-        }
-        SettingsUtil.openItem(instrumentation, "Google");
-
-        UiObject searchItem = device.findObject(new UiSelector().textStartsWith("Search"));
-        searchItem.waitForExists(5L);
-        if (searchItem.exists()) {
-            searchItem.clickAndWaitForNewWindow();
-        }
-
-        UiObject nowCardsItem = device.findObject(new UiSelector().textStartsWith("Now cards"));
-        nowCardsItem.waitForExists(5L);
-        if (nowCardsItem.exists()) {
-            nowCardsItem.clickAndWaitForNewWindow();
-        }
-
-        UiObject2 switchWidget = UiAutomatorPlus.findObjectByRelative(
-                instrumentation,
-                By.clazz("android.widget.Switch"),
-                By.text("Show cards"),
-                By.clazz("android.widget.ListView"));
-        if (!switchWidget.isChecked()) {
-            switchWidget.click();
-            assertTrue("Failed to find Now sign-in title and buttons.",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return device.findObject(new UiSelector().resourceIdMatches(
-                                    Res.NOW_SIGNIN_SCREEN_RES)).exists()
-                                    && device.findObject(new UiSelector().resourceIdMatches(
-                                    Res.NOW_SIGNIN_DECLINE_BUTTON_RES)).exists()
-                                    && device.findObject(new UiSelector().resourceIdMatches(
-                                    Res.NOW_SIGNIN_ACCEPT_BUTTON_RES)).exists();
-                        }
-                    }));
-        }
     }
 
     /**

@@ -230,6 +230,7 @@ public class NetworkIOTest {
 
             // Disable Cellular data.
             dataSwitch.click();
+            TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
             new NetworkUtilPopupWatcher(device).checkForCondition();
 
             assertTrue("Disabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
@@ -241,6 +242,7 @@ public class NetworkIOTest {
 
             // Enable Cellular data.
             dataSwitch.click();
+            TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
             new NetworkUtilPopupWatcher(device).checkForCondition();
 
             assertTrue("Enabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
