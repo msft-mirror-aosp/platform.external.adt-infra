@@ -11,6 +11,7 @@ from subprocess import PIPE
 
 from emu_test.utils.emu_argparser import emu_args
 from emu_test.utils.emu_testcase import EmuBaseTestCase, create_test_case_from_file
+from emu_test.utils import path_utils
 
 class UiAutomatorBaseTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
@@ -23,7 +24,8 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
 
     def tearDown(self):
         self.m_logger.debug('First try - quit emulator by adb emu kill')
-        kill_proc = psutil.Popen(["adb", "emu", "kill"])
+        adb_binary = path_utils.get_adb_binary()
+        kill_proc = psutil.Popen([adb_binary, "emu", "kill"])
         # check emulator process is terminated
         result = self.term_check(timeout=5)
         if not result:
