@@ -283,6 +283,7 @@ def main():
     os.path.join(ROOT_DIR, 'build_internal', 'site_config'),
     os.path.join(ROOT_DIR, 'build_internal', 'symsrc'),
     SCRIPT_DIR,  # Include the current working directory by default.
+    BUILD_DIR, # Include the Build Dir for emu_test directory.
   ]
 
   # Need to update sys.path prior to the following imports.
