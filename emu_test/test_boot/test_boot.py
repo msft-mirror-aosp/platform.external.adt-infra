@@ -5,11 +5,13 @@ import os
 import time
 import psutil
 import shutil
+import traceback
 
 from emu_test.utils.emu_error import *
 from emu_test.utils.emu_argparser import emu_args
 import emu_test.utils.emu_testcase
 from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig
+import emu_test.utils.path_utils as path_utils
 
 class BootTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
@@ -21,15 +23,17 @@ class BootTestCase(EmuBaseTestCase):
 
     def kill_emulator(self):
         self.m_logger.debug('First try - quit emulator by adb emu kill')
-        kill_proc = psutil.Popen(["adb", "emu", "kill"])
+        adb_binary = path_utils.get_adb_binary()
+        kill_proc = psutil.Popen([adb_binary, "emu", "kill"]).communicate()
         # check emulator process is terminated
         result = self.term_check(timeout=5)
         if not result:
-            self.m_logger.debug('Second try - quit emulator by psutil')
+            self.m_logger.info('Second try - quit emulator by psutil')
             self.kill_proc_by_name(["emulator", "qemu-system"])
             result = self.term_check(timeout=10)
-            self.m_logger.debug("term_check after psutil.kill - %s", result)
+            self.m_logger.info("term_check after psutil.kill - %s" % result)
         return result
+
     def tearDown(self):
         result = self.kill_emulator()
         self.m_logger.info("Remove AVD inside of tear down")
@@ -43,29 +47,32 @@ class BootTestCase(EmuBaseTestCase):
             os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
             shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
         except Exception, e:
-            self.m_logger.error("Error in cleanup - %r", e)
+            self.m_logger.error("Error in cleanup - %r" % e)
             pass
 
     def boot_check(self, avd):
-        real_expected_boot_time = emu_args.expected_boot_time;
+        real_expected_boot_time = emu_args.expected_boot_time
         if 'swiftshader' in str(avd):
-            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time;
+            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time
         if 'arm' in str(avd):
-            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time;
+            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time
         if 'mips' in str(avd):
-            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time;
+            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time
         try:
             self.boot_time = self.launch_emu_and_wait(avd)
-            self.m_logger.error('AVD %s, boot time: %s, expected time: %s', avd, self.boot_time, real_expected_boot_time)
+            self.m_logger.error('AVD %s, boot time: %s, expected time: %s'
+                                % (avd, self.boot_time, real_expected_boot_time))
             self.assertLessEqual(self.boot_time, real_expected_boot_time)
             return
         except TimeoutError:
-            self.m_logger.error('AVD %s, time out, try one more time', avd)
-        except :
-            self.m_logger.error('AVD %s, exception, try one more time', avd)
+            self.m_logger.error('AVD %s, time out, try one more time' % str(avd))
+        except:
+            self.m_logger.error('AVD %s, exception, try one more time' % str(avd))
+            self.m_logger.error(traceback.format_exc())
         self.kill_emulator()
         self.boot_time = self.launch_emu_and_wait(avd)
-        self.m_logger.error('2nd try AVD %s, boot time: %s, expected time: %s', avd, self.boot_time, real_expected_boot_time)
+        self.m_logger.error('2nd try AVD %s, boot time: %s, expected time: %s'
+                            % (avd, self.boot_time, real_expected_boot_time))
         self.assertLessEqual(self.boot_time, real_expected_boot_time)
 
     def run_boot_test(self, avd_config):

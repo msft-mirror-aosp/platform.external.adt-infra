@@ -25,6 +25,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              os.pardir))
 from emu_test.utils import emu_argparser
 from emu_test.utils import emu_unittest
+from emu_test.utils import path_utils
 
 # Provides a regular expression for matching fail message
 TIMEOUT_REGEX = re.compile(r"(^\d+)([smhd])?$")
@@ -133,7 +134,8 @@ if __name__ == '__main__':
     printResult(emuResult)
     # Always attempt to kill the adb server.  We are now done testing with it.
     try:
-        check_call(['adb', 'kill-server'], stdout=PIPE, stdin=PIPE)
+        adb_binary = path_utils.get_adb_binary()
+        check_call([adb_binary, 'kill-server'], stdout=PIPE, stdin=PIPE)
     except CalledProcessError:
         print "Error shutting down adb.  Error: " + traceback.format_exc()
     sys.exit(not emuResult.wasSuccessful())
