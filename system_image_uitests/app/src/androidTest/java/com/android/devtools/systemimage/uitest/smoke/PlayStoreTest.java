@@ -30,7 +30,7 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.PlayStoreUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.PlayStoreConfirmationWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
 import com.android.devtools.systemimage.uitest.watchers.PlayStoreControlsWatcher;
 
 import org.junit.Rule;
@@ -128,7 +128,7 @@ public class PlayStoreTest {
             if (playStoreInstalled) {
                 PlayStoreUtil.loginGooglePlay(instrumentation);
                 selectApplication(instrumentation, application);
-                new PlayStoreConfirmationWatcher(device).checkForCondition();
+                new GoogleAppConfirmationWatcher(device).checkForCondition();
 
                 assertTrue("Unable to install the application from Google Play",
                         PlayStoreUtil.installApplication(instrumentation));
@@ -180,7 +180,7 @@ public class PlayStoreTest {
             if (playStoreInstalled) {
                 PlayStoreUtil.loginGooglePlay(instrumentation);
                 selectApplication(instrumentation, application);
-                new PlayStoreConfirmationWatcher(device).checkForCondition();
+                new GoogleAppConfirmationWatcher(device).checkForCondition();
 
                 assertTrue("Unable to install the application from Google Play",
                         PlayStoreUtil.installApplication(instrumentation));
@@ -235,7 +235,7 @@ public class PlayStoreTest {
             if (playStoreInstalled) {
                 PlayStoreUtil.loginGooglePlay(instrumentation);
                 selectApplication(instrumentation, application);
-                new PlayStoreConfirmationWatcher(device).checkForCondition();
+                new GoogleAppConfirmationWatcher(device).checkForCondition();
 
                 assertTrue("Target application is not a pay app",
                         new Wait().until(new Wait.ExpectedCondition() {

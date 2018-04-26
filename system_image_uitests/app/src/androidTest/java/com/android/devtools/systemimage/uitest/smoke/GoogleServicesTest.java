@@ -29,9 +29,9 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
+import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
-import com.android.devtools.systemimage.uitest.watchers.GoogleChromeConfirmationWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -188,8 +188,6 @@ public class GoogleServicesTest {
             return;
         }
 
-        final String email = "pstester1980@gmail.com";
-        final String password = "pst4lif3";
         final String username = "David Play";
 
         AppLauncher.launch(instrumentation, "Chrome");
@@ -208,35 +206,12 @@ public class GoogleServicesTest {
         // The SIGN IN button will not be displayed when Chrome launches.
         if (!hasSignInButton) {
             return;
-        }
+        };
+
         signInButton.clickAndWaitForNewWindow();
+        GoogleAppUtil.loginGoogleApp(instrumentation);
 
-        final UiObject inputPasswordField = api == 24 ? device.findObject(new UiSelector().resourceId("password")) :
-                device.findObject(new UiSelector().className("android.widget.EditText"));
-        final UiObject inputEmailField = api == 24 ? device.findObject(new UiSelector().description("Email or phone")) :
-                device.findObject(new UiSelector().text("Email or phone"));
-
-        boolean needsEmail = new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return inputEmailField.exists();
-                    }
-                });
-
-        if (needsEmail) {
-            inputEmailField.clearTextField();
-            inputEmailField.setText(email);
-            new GoogleChromeConfirmationWatcher(device).checkForCondition();
-        }
-
-        inputPasswordField.clearTextField();
-        inputPasswordField.setText(password);
-        new GoogleChromeConfirmationWatcher(device).checkForCondition();
-
-        device.pressHome();
         AppLauncher.launch(instrumentation, "Chrome");
-        new GoogleChromeConfirmationWatcher(device).checkForCondition();
 
         final UiObject moreButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_MORE_BUTTON_RES)
