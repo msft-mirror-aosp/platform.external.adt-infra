@@ -32,6 +32,7 @@ import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -175,7 +176,7 @@ public class GoogleServicesTest {
      *   6. Log user out of Chrome.
      *   Verify:
      *   1. Logged in user name is present.
-     *   2. Log in user prompt is present.
+     *   2. Log in user prompt or user promo is present.
      *   </pre>
      */
     @Test
@@ -194,7 +195,7 @@ public class GoogleServicesTest {
         new AddGoogleAccountWatcher(device).checkForCondition();
 
         final UiObject signInButton = device.findObject(new UiSelector().text("SIGN IN"));
-        boolean hasSignInButton = new Wait(5L).
+        final boolean hasSignInButton = new Wait(5L).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
@@ -204,130 +205,149 @@ public class GoogleServicesTest {
 
         // A different UI is presented if the user previously signed in.
         // The SIGN IN button will not be displayed when Chrome launches.
-        if (!hasSignInButton) {
-            return;
-        };
-
-        signInButton.clickAndWaitForNewWindow();
-        GoogleAppUtil.loginGoogleApp(instrumentation);
-
-        AppLauncher.launch(instrumentation, "Chrome");
+        if (hasSignInButton) {
+            signInButton.clickAndWaitForNewWindow();
+            GoogleAppUtil.loginGoogleApp(instrumentation);
+            AppLauncher.launch(instrumentation, "Chrome");
+            new GoogleAppConfirmationWatcher(device).checkForCondition();
+        }
 
         final UiObject moreButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_MORE_BUTTON_RES)
         );
 
-        if (new Wait().
-                until(new Wait.ExpectedCondition() {
+        if (new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
                         return moreButton.exists();
-                    }
-                })) {
+                }})) {
             moreButton.clickAndWaitForNewWindow();
         }
 
         final UiObject gotItButton = device.findObject(new UiSelector().text("OK, GOT IT"));
 
-        if (new Wait().
-                until(new Wait.ExpectedCondition() {
+        if (new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
                         return gotItButton.exists();
-                    }
-                })) {
+                }})) {
             gotItButton.clickAndWaitForNewWindow();
         }
 
         final UiObject chromeUpdateButton = device.findObject(
-                new UiSelector().resourceId(Res.CHROME_MENU_ITEM_ICON_RES)
+                new UiSelector().resourceId(Res.CHROME_MENU_BADGE_RES)
         );
 
-        if (new Wait().
-                until(new Wait.ExpectedCondition() {
+        if (new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
                         return chromeUpdateButton.exists();
-                    }
-                })) {
+                }})) {
             chromeUpdateButton.clickAndWaitForNewWindow();
         }
 
         final UiObject chromeMenuButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_MENU_BUTTON_RES));
 
-        if (new Wait().
-                until(new Wait.ExpectedCondition() {
+        if (new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
                         return chromeMenuButton.exists();
-                    }
-                })) {
+                }})) {
             chromeMenuButton.clickAndWaitForNewWindow();
         }
 
-        final UiObject settingsButton = device.findObject(
-                new UiSelector().text("Settings"));
+        final UiObject settingsButton = device.findObject(new UiSelector().text("Settings"));
 
-        if (new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return settingsButton.exists();
-                    }
-                })) {
+        if (new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return settingsButton.exists();
+            }})) {
             settingsButton.clickAndWaitForNewWindow();
         }
 
-        final UiObject signedInLabel = device.findObject(
-                new UiSelector().text(username));
+        final UiObject signInPromoButton = device.findObject(
+                new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_RES));
+
+        if (new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return signInPromoButton.exists();
+            }})) {
+            signInPromoButton.clickAndWaitForNewWindow();
+        }
+
+        final UiObject signInLabel = device.findObject(new UiSelector().text("Sign in to Chrome"));
+        if (!hasSignInButton) {
+            if (new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    return signInLabel.exists();
+                }})) {
+                signInLabel.clickAndWaitForNewWindow();
+            }
+            new GoogleAppConfirmationWatcher(device).checkForCondition();
+            if (new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    return gotItButton.exists();
+                }})) {
+                gotItButton.clickAndWaitForNewWindow();
+            }
+        }
+
+        final UiObject signedInLabel = device.findObject(new UiSelector().text(username));
 
         assertTrue("Google log in was unsuccessful", new Wait().
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
                         return signedInLabel.exists();
-                    }
-                }));
+                    }})
+        );
         signedInLabel.clickAndWaitForNewWindow();
+        final UiObject signOutLabel = device.findObject(new UiSelector().text("Sign out of Chrome"));
 
-        final UiObject signOutLabel = device.findObject(
-                new UiSelector().text("Sign out of Chrome"));
-
-        if (new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return signOutLabel.exists();
-                    }
-                })) {
+        if (new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return signOutLabel.exists();
+            }})) {
             signOutLabel.clickAndWaitForNewWindow();
         }
 
-        final UiObject signOutButton = device.findObject(
-                new UiSelector().text("SIGN OUT"));
+        final UiObject signOutButton = device.findObject(new UiSelector().text("SIGN OUT"));
 
-        if (new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return signOutButton.exists();
-                    }
-                })) {
+        if (new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return signOutButton.exists();
+            }})) {
             signOutButton.clickAndWaitForNewWindow();
         }
 
-        final UiObject signInLabel = device.findObject(
-                new UiSelector().text("Sign in to Chrome"));
+        final UiObject signInPromoCloseButton = device.findObject(
+                new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_CLOSE_RES));
+
+        if (new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return signInPromoCloseButton.exists();
+            }})) {
+            signInPromoCloseButton.clickAndWaitForNewWindow();
+        }
 
         assertTrue("Google log out was unsuccessful", new Wait().
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
-                        return signInLabel.exists();
-                    }
-                }));
-
-        signInLabel.clickAndWaitForNewWindow();
+                        return signInLabel.exists() || signInPromoCloseButton.exists();
+                    }}));
+        if (signInLabel.exists()) {
+            signInLabel.click();
+        } else {
+            signInPromoCloseButton.click();
+        }
     }
 }

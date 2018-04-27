@@ -24,9 +24,11 @@ import android.support.test.uiautomator.UiWatcher;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Play Store popup watcher that monitors and dismisses Google Play Store confirmation popup dialogs.
+ * This popup watcher monitors and dismisses confirmation popup dialogs that
+ * could be displayed when logging into a Google application.
  * <p>
- * Note that this watcher should only be registered before using the Google Play Store app.
+ * This watcher will be deployed when logging the Google test user into either
+ * Google Play Store or Google Chrome.
  */
 public class GoogleAppConfirmationWatcher implements UiWatcher {
     private final UiDevice mDevice;

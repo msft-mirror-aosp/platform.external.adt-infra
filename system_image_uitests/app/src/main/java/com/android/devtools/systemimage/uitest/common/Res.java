@@ -34,7 +34,9 @@ public class Res {
     public static final String CHROME_SEARCH_BOX_RES = "com.android.chrome:id/search_box_text";
     public static final String CHROME_URL_BAR_RES = "com.android.chrome:id/url_bar";
     public static final String CHROME_MENU_BUTTON_RES = "com.android.chrome:id/menu_button";
-    public static final String CHROME_MENU_ITEM_ICON_RES = "com.android.chrome:id/menu_item_icon";
+    public static final String CHROME_MENU_BADGE_RES = "com.android.chrome:id/menu_badge";
+    public static final String CHROME_SIGNIN_PROMO_RES = "com.android.chrome:id/signin_promo_signin_button";
+    public static final String CHROME_SIGNIN_PROMO_CLOSE_RES = "com.android.chrome:id/signin_promo_close_button";
     public static final String CHROME_MORE_BUTTON_RES = "com.android.chrome:id/more_button";
     public static final String CHROME_CLOSE_MENU_BUTTON_RES = "com.android.chrome:id/close_menu_id";
     public static final String CHROME_TITLE_RES = "com.android.chrome:id/title";
