@@ -23,8 +23,12 @@ def get_parser():
                         help='path of emulator executable, default is system emulator')
     parser.add_argument('--session_dir', type=str, dest='session_dir', action='store',
                         default=None,
-                        help=('specify the name of the dir created to store the session files of tests If not '
-                              'specified, the test driver uses the timestamp as the session dir name'))
+                        help=('specify the name of the dir created to store the group of test files of tests. '
+                              'If not specified, the test driver uses the timestamp as the session dir name.'))
+    parser.add_argument('--test_dir', type=str, dest='test_dir', action='store',
+                        default=None,
+                        help=('specify the name of the dir created to store the specific test files.  If not '
+                             'specificed, the test driver uses the testcase name as the test_dir name.'))
     parser.add_argument('--file_pattern', type=str, dest='pattern', action='store',
                         default='test*.py',
                         help='regex file name pattern for inclusion in the test suite')

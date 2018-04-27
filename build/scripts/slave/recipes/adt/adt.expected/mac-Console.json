@@ -47,7 +47,9 @@
       "--emulator",
       "emu-master-dev/emulator/emulator",
       "--session_dir",
-      "logs-build_516-rev_4696395/Console_test",
+      "logs-build_516-rev_4696395",
+      "--test_dir",
+      "Console_test",
       "--file_pattern",
       "test_console.*",
       "--config_file",
@@ -65,7 +67,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Run Emulator Console Test",
-    "stderr": "aff1fc051b084bbea6f4aac6c571e1af",
+    "stderr": "c42e1c0abfc44d0eaaad1ac6f260c33a",
     "~followup_annotations": [
       "@@@STEP_LINK@View XML@../../../Console_Result/Mac_Console_emu-master-dev/build_516-rev_4696395/consoleTestResult.xml@@@"
     ]

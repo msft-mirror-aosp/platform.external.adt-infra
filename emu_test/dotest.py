@@ -81,8 +81,15 @@ def setupLogger():
         emu_argparser.emu_args.session_dir = time.strftime("%Y%m%d-%H%M%S")
     if not os.path.exists(emu_argparser.emu_args.session_dir):
         os.makedirs(emu_argparser.emu_args.session_dir)
+    if emu_argparser.emu_args.test_dir is None:
+        emu_argparser.emu_args.test_dir = 'testcase_%s' % time.strftime("%Y%m%d-%H%M%S")
+    if not os.path.exists(emu_argparser.emu_args.test_dir):
+        os.makedirs(os.path.join(emu_argparser.emu_args.session_dir,
+                                 emu_argparser.emu_args.test_dir))
 
-    file_handler = logging.FileHandler(os.path.join(emu_argparser.emu_args.session_dir, file_name))
+    file_handler = logging.FileHandler(os.path.join(emu_argparser.emu_args.session_dir,
+                                                    emu_argparser.emu_args.test_dir,
+                                                    file_name))
     file_handler.setFormatter(log_formatter)
     # Test summary goes to standard error, since we rely on stderr to parse test results in buildbot
     console_handler = logging.StreamHandler(sys.stderr)
@@ -113,7 +120,7 @@ if __name__ == '__main__':
     We find our test cases by searching for the passed in --file_pattern from the script execution directory.
     For instance, for a boot test we search for files named test_boot.*py, which we will find under
     test_boot/boot_test.py.  So this testcase would be found and run.
-    
+
     When testcases are finished, we manually kill the ADB server.  This ensures a couple things:
       1.  It ensures our next test is run with a fresh daemon.  We are not testing ADB in these tests.
       2.  It ensures we do not hold up Buildbot code by holding on to a child process, blocking slave return.

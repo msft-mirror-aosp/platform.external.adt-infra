@@ -47,7 +47,9 @@
       "--emulator",
       "emu-master-dev/emulator/emulator",
       "--session_dir",
-      "logs-build_516-rev_4696395/AVD_test",
+      "logs-build_516-rev_4696395",
+      "--test_dir",
+      "AVD_test",
       "--file_pattern",
       "launch_avd.*",
       "--config_file",
@@ -65,7 +67,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Run AVD Launch Test",
-    "stderr": "971e3ecfba724b52b616e8c042a23634"
+    "stderr": "35a240b6a07b42dbb7f45724322b0698"
   },
   {
     "cmd": [

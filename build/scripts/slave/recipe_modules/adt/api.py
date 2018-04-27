@@ -9,7 +9,7 @@ class AdtApi(recipe_api.RecipeApi):
     def __init__(self, **kwargs):
         super(AdtApi, self).__init__(**kwargs)
 
-    def PythonTestStep(self, description, session_dir, test_pattern, cfg_file, cfg_filter,
+    def PythonTestStep(self, description, session_dir, test_dir, test_pattern, cfg_file, cfg_filter,
                        emulator_path, env, skip_adb_perf=False):
         buildername = self.m.properties['buildername']
         buildnum = self.m.properties['buildnumber']
@@ -22,6 +22,7 @@ class AdtApi(recipe_api.RecipeApi):
         test_args = ['--loglevel', 'INFO',
                      '--emulator', emulator_path,
                      '--session_dir', session_dir,
+                     '--test_dir', test_dir,
                      '--file_pattern', test_pattern,
                      '--config_file', self.m.path.join(script_root, 'config', cfg_file),
                      '--buildername', buildername,

@@ -47,7 +47,9 @@
       "--emulator",
       "emu-master-dev/emulator/emulator",
       "--session_dir",
-      "logs-build_516-rev_4696395/Console_test",
+      "logs-build_516-rev_4696395",
+      "--test_dir",
+      "Console_test",
       "--file_pattern",
       "test_console.*",
       "--config_file",
@@ -65,7 +67,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Run Emulator Console Test",
-    "stderr": "765624b6f01b4515842f2c8b86af38d0",
+    "stderr": "abe8ec003e5742158e36d24482141bf8",
     "~followup_annotations": [
       "@@@STEP_LINK@View XML@../../../Console_Result/Ubuntu_Console_emu-master-dev/build_516-rev_4696395/consoleTestResult.xml@@@"
     ]
