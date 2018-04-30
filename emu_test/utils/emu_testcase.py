@@ -378,8 +378,8 @@ class EmuBaseTestCase(LoggedTestCase):
         if completed is not "1":
             self.m_logger.info('ADB Failed to detect a booted emulator and timeout has been reached.')
             self.m_logger.info('Command: %s')
-            self.m.logger.info('stdout: %s' % stdout)
-            self.m.logger_info('stderr: %s' % stderr)
+            self.m_logger.info('stdout: %s' % stdout)
+            self.m_logger.info('stderr: %s' % stderr)
             self.m_logger.error('AVD %s didn\'t boot up within %s seconds' % (str(avd), real_time_out))
             self.boot_time = -1
             raise TimeoutError(avd, real_time_out)
