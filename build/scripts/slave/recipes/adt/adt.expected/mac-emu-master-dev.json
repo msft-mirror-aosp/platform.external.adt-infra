@@ -67,7 +67,9 @@
       "--emulator",
       "emu-master-dev/emulator/emulator",
       "--session_dir",
-      "('logs-build_1090-rev_4696395', 'boot_test_public_sysimage-emu-master-dev')",
+      "logs-build_1090-rev_4696395",
+      "--test_dir",
+      "boot_test_public_sysimage-emu-master-dev",
       "--file_pattern",
       "test_boot.*",
       "--config_file",
@@ -84,7 +86,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-macosx_public/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Boot Test - public System Image - emu-master-dev",
-    "stderr": "583af5089c5f4f37abe263aa2cce2455"
+    "stderr": "493ba8cd435e4baaa23d47af9a2eaf58"
   },
   {
     "cmd": [

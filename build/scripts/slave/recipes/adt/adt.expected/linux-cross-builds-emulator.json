@@ -85,7 +85,9 @@
       "--emulator",
       "emu-master-dev/emulator/emulator",
       "--session_dir",
-      "('logs-build_1090-rev_4696395', 'boot_test_aosp_sysimage-emu-master-dev')",
+      "logs-build_1090-rev_4696395",
+      "--test_dir",
+      "boot_test_aosp_sysimage-emu-master-dev",
       "--file_pattern",
       "test_boot.*",
       "--config_file",
@@ -102,7 +104,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Boot Test - aosp System Image - emu-master-dev",
-    "stderr": "9a84f9f67e88495e8f79697927d5f9bc"
+    "stderr": "4047d3d7f32f4d62bb69468d614851fa"
   },
   {
     "cmd": [

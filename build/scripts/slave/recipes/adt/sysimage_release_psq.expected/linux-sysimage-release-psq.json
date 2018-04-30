@@ -58,7 +58,9 @@
       "--emulator",
       "/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools/emulator",
       "--session_dir",
-      "logs-build_516-rev_4696395/UI_test",
+      "logs-build_516-rev_4696395",
+      "--test_dir",
+      "UI_test",
       "--file_pattern",
       "test_ui.*",
       "--config_file",
@@ -76,7 +78,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/build-tools/23.0.2"
     },
     "name": "Run System Image UI Test",
-    "stderr": "1462c68133274dc080470a3309f67709",
+    "stderr": "80638778d4c04efaaf3a30f913289d33",
     "~followup_annotations": [
       "@@@STEP_LINK@[Report] PASS: UI_TestCase@../../../UI_Result/Ubuntu_System_Image_Release/build_516-rev_4696395/UI_TestCase_report/index.html@@@"
     ]

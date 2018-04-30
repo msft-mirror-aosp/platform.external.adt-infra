@@ -55,7 +55,9 @@
       "--emulator",
       "emu-master-dev/emulator/emulator",
       "--session_dir",
-      "logs-build_7640-rev_LATEST/CTS_test",
+      "logs-build_7640-rev_LATEST",
+      "--test_dir",
+      "CTS_test",
       "--file_pattern",
       "test_cts.*",
       "--config_file",
@@ -73,7 +75,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Run Emulator CTS Test",
-    "stderr": "85ecd4f5cb034633b1c620a0f22dae46",
+    "stderr": "01b989ab25634ccf843c297e43598666",
     "~followup_annotations": [
       "@@@STEP_LINK@View XML@../../../CTS_Result/Ubuntu_CTS/build_7640-rev_LATEST/testResult.xml@@@"
     ]
@@ -88,7 +90,9 @@
       "--emulator",
       "emu-master-dev/emulator/emulator",
       "--session_dir",
-      "logs-build_7640-rev_LATEST/GTS_test",
+      "logs-build_7640-rev_LATEST",
+      "--test_dir",
+      "GTS_test",
       "--file_pattern",
       "test_cts.*",
       "--config_file",
@@ -107,7 +111,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Run Emulator GTS Test",
-    "stderr": "f515035070ae4510b5acfa1845a52eb3",
+    "stderr": "c39040a67bdf424dacc141ca4ffd15e5",
     "~followup_annotations": [
       "@@@STEP_LINK@View XML@../../../GTS_Result/Ubuntu_CTS/build_7640-rev_LATEST/xtsTestResult.xml@@@"
     ]
