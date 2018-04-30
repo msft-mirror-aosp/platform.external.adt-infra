@@ -352,6 +352,9 @@ class EmuBaseTestCase(LoggedTestCase):
         completed = '0'
         counter = 0
         real_time_out = emu_argparser.emu_args.timeout_in_seconds
+        # We wait 20 seconds after attempting to start the emulator before polling ADB.  This is because the ADB
+        # Daemon can be unresponsive on some machines during the startup period with the device.
+        time.sleep(20)
         # While loop implements the timeout check by constantly checking the current run time against timeout.
         while (time.time() - start_time) < real_time_out:
             # We use ADB to directly look at the emulator instance and see if its marked as booted.
