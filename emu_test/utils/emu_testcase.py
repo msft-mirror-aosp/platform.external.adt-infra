@@ -688,7 +688,7 @@ class EmuBaseTestCase(LoggedTestCase):
             # Step 2. If the destination directory already exists, remove it.
             if os.path.exists(avd_dir):
                 self.m_logger.info('Existing AVD found at %s.  Removing.' % avd_dir)
-                shutil.rmtree(avd_dir, ignore_errors=True)
+                shutil.rmtree(avd_dir)
             # Step 3. Create the AVD {avd_name}.ini file.
             ini_path = os.path.join(avd_base_dir, '%s.ini' % avd_name)
             self.m_logger.info("AVD .ini file path: %s" % ini_path)
