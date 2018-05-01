@@ -189,7 +189,8 @@ def RunSteps(api):
 
   with api.step.defer_results():
     api.adt.PythonTestStep('Run System Image UI Test',
-                           api.path.join(log_dir, 'UI_test'),
+                           log_dir,
+                           'UI_test',
                            'test_ui.*',
                            'config.csv',
                            # We run only x86 images for UI tests.

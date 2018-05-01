@@ -311,8 +311,8 @@ def RunSteps(api):
                 if not is_cts and not is_ui and not is_console and not is_avd:
                     step_data = BOOT_STEPS[step]
                     api.adt.PythonTestStep('Boot Test - %s System Image - %s' % (step_data.description, emu_desc),
-                                           api.path.join((log_dir, 'boot_test_%s_sysimage-%s' %
-                                                          (step_data.description, emu_desc))),
+                                           log_dir,
+                                           'boot_test_%s_sysimage-%s' % (step_data.description, emu_desc),
                                            'test_boot.*',
                                            'boot_cfg.csv',
                                            step_data.filter,
@@ -321,7 +321,8 @@ def RunSteps(api):
                 elif is_ui:
                     step_data = BOOT_STEPS[step]
                     res = api.adt.PythonTestStep('Run Emulator UI Test',
-                                                 api.path.join(log_dir, 'UI_test'),
+                                                 log_dir,
+                                                 'UI_test',
                                                  'test_ui.*',
                                                  'ui_cfg.csv',
                                                  step_data.filter,
@@ -348,7 +349,8 @@ def RunSteps(api):
                     api.python("Upload Test Results to GCS", upload_data_path, upload_data_args, env=env)
                 elif is_console:
                     res = api.adt.PythonTestStep('Run Emulator Console Test',
-                                                 api.path.join(log_dir, 'Console_test'),
+                                                 log_dir,
+                                                 'Console_test',
                                                  'test_console.*',
                                                  'console_cfg.csv',
                                                  '{"gpu": "yes"}',
@@ -376,7 +378,8 @@ def RunSteps(api):
 
                 elif is_avd:
                     api.adt.PythonTestStep('Run AVD Launch Test',
-                                           api.path.join(log_dir, 'AVD_test'),
+                                           log_dir,
+                                           'AVD_test',
                                            'launch_avd.*',
                                            'avd_cfg.csv',
                                            '{"gpu": "yes"}',
@@ -387,7 +390,8 @@ def RunSteps(api):
         if is_cts:
             emulator_path = api.path.join('emu-master-dev', 'emulator', 'emulator')
             api.adt.PythonTestStep('Run Emulator CTS Test',
-                                   api.path.join(log_dir, 'CTS_test'),
+                                   log_dir,
+                                   'CTS_test',
                                    'test_cts.*',
                                    'cts_cfg.csv',
                                    '{}',
@@ -396,7 +400,8 @@ def RunSteps(api):
                                    True)
 
             api.adt.PythonTestStep('Run Emulator GTS Test',
-                                   api.path.join(log_dir, 'GTS_test'),
+                                   log_dir,
+                                   'GTS_test',
                                    'test_cts.*',
                                    'cts_cfg.csv',
                                    '{}',

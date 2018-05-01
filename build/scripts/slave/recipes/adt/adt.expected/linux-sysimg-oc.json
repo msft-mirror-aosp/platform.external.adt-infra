@@ -67,7 +67,9 @@
       "--emulator",
       "/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/emulator/emulator",
       "--session_dir",
-      "('logs-build_1090-rev_4695513', 'boot_test_OC_sysimage-sdk emulator')",
+      "logs-build_1090-rev_4695513",
+      "--test_dir",
+      "boot_test_OC_sysimage-sdk emulator",
       "--file_pattern",
       "test_boot.*",
       "--config_file",
@@ -84,7 +86,7 @@
       "PATH": "%(PATH)s:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/tools/bin:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/platform-tools:/usr/local/google/home/cpilch/Android/android-sdk-linux_image-builds/build-tools/23.0.2:/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin"
     },
     "name": "Boot Test - OC System Image - sdk emulator",
-    "stderr": "b465806bf7a947d2b7c01630515a5153"
+    "stderr": "3877eebb5d4e472bb9583d1eb0a4e59c"
   },
   {
     "cmd": [

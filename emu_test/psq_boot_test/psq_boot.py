@@ -192,8 +192,11 @@ def set_emu_args(emu_binary):
                              (emu_argparser.emu_args.build_id,
                               emu_argparser.emu_args.build_target))
   emu_argparser.emu_args.session_dir = session_dir
+  emu_argparser.emu_args.test_dir = "psq_test"
   if not os.path.exists(emu_argparser.emu_args.session_dir):
     os.makedirs(emu_argparser.emu_args.session_dir)
+  if not os.path.exists(os.path.join(session_dir, emu_argparser.emu_args.test_dir)):
+    os.makedirs(os.path.join(session_dir, emu_argparser.emu_args.test_dir))
 
 
 if __name__ == '__main__':

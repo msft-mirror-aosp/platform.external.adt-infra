@@ -77,7 +77,9 @@ class LoggedTestCase(unittest.TestCase):
     @classmethod
     def setupLogger(cls, logger_name, file_name, formatter):
 
-        file_handler = logging.FileHandler(os.path.join(emu_argparser.emu_args.session_dir, file_name))
+        file_handler = logging.FileHandler(os.path.join(emu_argparser.emu_args.session_dir,
+                                                        emu_argparser.emu_args.test_dir,
+                                                        file_name))
         file_handler.setFormatter(formatter)
         file_handler.setLevel(logging.DEBUG)
         # Redirect message to standard out, these messages indicate test progress, they don't belong to stderr
@@ -185,7 +187,9 @@ class EmuBaseTestCase(LoggedTestCase):
             :return: Filepath of the logcat output file.
             """
             local_test_name = self.id().rsplit('.', 1)[-1]
-            logcat_filepath = os.path.join(emu_argparser.emu_args.session_dir, "%s_logcat.txt" % local_test_name)
+            logcat_filepath = os.path.join(emu_argparser.emu_args.session_dir,
+                                           emu_argparser.emu_args.test_dir,
+                                           "%s_logcat.txt" % local_test_name)
             return logcat_filepath
 
         def launch_logcat_in_thread(logcat_filepath):
@@ -256,7 +260,9 @@ class EmuBaseTestCase(LoggedTestCase):
         launch_cmd += ['-dns-server', '8.8.8.8']
         launch_cmd += ['-skip-adb-auth']
         test_name  = self.id().rsplit('.', 1)[-1]
-        verbose_log_path = os.path.join(emu_argparser.emu_args.session_dir, "%s_verbose.txt" % test_name)
+        verbose_log_path = os.path.join(emu_argparser.emu_args.session_dir,
+                                        emu_argparser.emu_args.test_dir,
+                                        "%s_verbose.txt" % test_name)
         self.m_logger.info('Launching AVD, cmd: %s' % ' '.join(launch_cmd))
         self.start_proc = psutil.Popen(launch_cmd, stdout=PIPE, stderr=STDOUT)
         self.m_logger.info('Done Launching AVD, cmd: %s' % ' '.join(launch_cmd))
@@ -346,6 +352,9 @@ class EmuBaseTestCase(LoggedTestCase):
         completed = '0'
         counter = 0
         real_time_out = emu_argparser.emu_args.timeout_in_seconds
+        # We wait 20 seconds after attempting to start the emulator before polling ADB.  This is because the ADB
+        # Daemon can be unresponsive on some machines during the startup period with the device.
+        time.sleep(20)
         # While loop implements the timeout check by constantly checking the current run time against timeout.
         while (time.time() - start_time) < real_time_out:
             # We use ADB to directly look at the emulator instance and see if its marked as booted.
@@ -372,8 +381,8 @@ class EmuBaseTestCase(LoggedTestCase):
         if completed is not "1":
             self.m_logger.info('ADB Failed to detect a booted emulator and timeout has been reached.')
             self.m_logger.info('Command: %s')
-            self.m.logger.info('stdout: %s' % stdout)
-            self.m.logger_info('stderr: %s' % stderr)
+            self.m_logger.info('stdout: %s' % stdout)
+            self.m_logger.info('stderr: %s' % stderr)
             self.m_logger.error('AVD %s didn\'t boot up within %s seconds' % (str(avd), real_time_out))
             self.boot_time = -1
             raise TimeoutError(avd, real_time_out)
@@ -682,7 +691,7 @@ class EmuBaseTestCase(LoggedTestCase):
             # Step 2. If the destination directory already exists, remove it.
             if os.path.exists(avd_dir):
                 self.m_logger.info('Existing AVD found at %s.  Removing.' % avd_dir)
-                shutil.rmtree(avd_dir, ignore_errors=True)
+                shutil.rmtree(avd_dir)
             # Step 3. Create the AVD {avd_name}.ini file.
             ini_path = os.path.join(avd_base_dir, '%s.ini' % avd_name)
             self.m_logger.info("AVD .ini file path: %s" % ini_path)
