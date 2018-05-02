@@ -19,16 +19,6 @@
        "branch": "all",
        "name_identifier": "system-images",
      },
-     "sys_image_gb_poller": {
-       "gs_bucket": "android-build-emu-sysimage",
-       "gs_path": ["builds/git_gb-emu-dev-linux-google_sdk_x86-sdk_addon/",
-                   "builds/git_gb-emu-dev-linux-sdk_x86-sdk/"],
-       "pollInterval": 439,
-       "type": "GSMultiPoller",
-       "project": "gb-emu-dev",
-       "branch": "all",
-       "name_identifier": "system-images",
-     },
      "sys_image_ics-mr1_poller": {
        "gs_bucket": "android-build-emu-sysimage",
        "gs_path": ["builds/git_ics-mr1-emu-dev-linux-google_sdk_x86-sdk_addon/",
@@ -275,34 +265,29 @@
        "id": "",
        "scheduler": "cts_scheduler",
      },
-     "emu-master-dev": {
+     "Emulator master dev": {
        "name": "emu-master-dev",
        "id": "_1",
        "scheduler": "emu_master_dev_scheduler",
      },
-     "emu-2.7-release": {
+     "Emulator 2.7 release": {
        "name": "Emulator build on SDK images",
        "id": "_2",
        "scheduler": "emu_2.7_release_scheduler",
      },
-     "cross-builds": {
+     "Cross Builds": {
        "name": "cross",
        "id": "_3",
      },
-     "Console emu-master-dev": {
+     "Console Tests on Emulator master dev": {
        "name": "emulator console test for emu-master-dev",
        "id": "_4",
        "scheduler": "console_emu-master-dev-scheduler",
      },
-     "Console emu-2.7-release": {
+     "Console Tests on Emulator 2.7 release": {
        "name": "emulator console test for emu-2.7-release",
        "id": "_5",
        "scheduler": "console_emu-2.7-release-scheduler",
-     },
-     "System Image Release": {
-        "name": "system image release test",
-        "id": "_6",
-        "scheduler": "sysimage_release_psq_scheduler",
      },
      "ADB": {
        "name": "adb stress test",
@@ -314,135 +299,130 @@
        "id": "_8",
        "scheduler": "avd_test_scheduler",
      },
-     "UI_sysimg-master": {
+     "UI Master": {
        "name": "system image UI test master",
        "id": "_9",
        "scheduler": "sysimg-master",
      },
-     "UI_sysimg-aosp": {
+     "UI AOSP": {
        "name": "system image UI test aosp",
        "id": "_10",
        "scheduler": "sysimg-aosp",
      },
-     "UI_sysimg-pi": {
+     "UI API P": {
        "name": "system image UI test pi",
        "id": "_11",
        "scheduler": "sysimg-pi",
      },
-     "UI_sysimg-oc-mr1": {
+     "UI API 27": {
        "name": "system image UI test oc-mr1",
        "id": "_12",
        "scheduler": "sysimg-oc-mr1",
      },
-     "UI_sysimg-oc": {
+     "UI API 26": {
        "name": "system image UI test oc",
        "id": "_13",
        "scheduler": "sysimg-oc",
      },
-     "UI_sysimg-nyc-mr1": {
+     "UI API 25": {
        "name": "system image UI test nyc-mr1",
        "id": "_14",
        "scheduler": "sysimg-nyc-mr1",
      },
-     "UI_sysimg-nyc": {
+     "UI API 24": {
        "name": "system image UI test nyc",
        "id": "_15",
        "scheduler": "sysimg-nyc",
      },
-     "UI_sysimg-mnc": {
+     "UI API 23": {
        "name": "system image UI test mnc",
        "id": "_16",
        "scheduler": "sysimg-mnc",
      },
-     "sysimg-master": {
+     "Boot Master": {
        "name": "sysimg-master",
        "id": "_17",
        "scheduler": "sysimg-master",
      },
-     "sysimg-klp": {
-       "name": "sysimg-klp",
-       "id": "_18",
-       "scheduler": "sysimg-klp",
-     },
-     "sysimg-lmp-mr1": {
-       "name": "sysimg-lmp-mr1",
-       "id": "_19",
-       "scheduler": "sysimg-lmp-mr1",
-     },
-     "sysimg-mnc": {
-       "name": "sysimg-mnc",
-       "id": "_20",
-       "scheduler": "sysimg-mnc",
-     },
-     "sysimg-oc": {
-       "name": "sysimg-oc",
-       "id": "_21",
-       "scheduler": "sysimg-oc",
-     },
-     "sysimg-oc-mr1-car-support-release": {
-       "name": "sysimg-oc-mr1-car-support-release",
-       "id": "_22",
-       "scheduler": "sysimg-oc-mr1-car-support-release",
-     },
-     "sysimg-oc-mr1": {
-       "name": "sysimg-oc-mr1",
-       "id": "_23",
-       "scheduler": "sysimg-oc-mr1",
-     },
-     "sysimg-nyc": {
-       "name": "sysimg-nyc",
-       "id": "_24",
-       "scheduler": "sysimg-nyc",
-     },
-     "sysimg-nyc-mr1": {
-       "name": "sysimg-nyc-mr1",
-       "id": "_25",
-       "scheduler": "sysimg-nyc-mr1",
-     },
-     "sysimg-lmp": {
-       "name": "sysimg-lmp",
-       "id": "_26",
-       "scheduler": "sysimg-lmp",
-     },
-     "sysimg-gb": {
-       "name": "sysimg-gb",
-       "id": "_27",
-       "scheduler": "sysimg-gb",
-     },
-     "sysimg-ics-mr1": {
-       "name": "sysimg-ics-mr1",
-       "id": "_28",
-       "scheduler": "sysimg-ics-mr1",
-     },
-     "sysimg-jb": {
-       "name": "sysimg-jb",
-       "id": "_29",
-       "scheduler": "sysimg-jb",
-     },
-     "sysimg-jb-mr1.1": {
-       "name": "sysimg-jb-mr1.1",
-       "id": "_30",
-       "scheduler": "sysimg-jb-mr1.1",
-     },
-     "sysimg-jb-mr2": {
-       "name": "sysimg-jb-mr2",
-       "id": "_31",
-       "scheduler": "sysimg-jb-mr2",
-     },
-     "sysimg-aosp": {
+     "Boot AOSP": {
        "name": "sysimg-aosp",
        "id": "_32",
        "scheduler": "sysimg-aosp",
      },
-     "sysimg-pi": {
+     "Boot API 15": {
+       "name": "sysimg-ics-mr1",
+       "id": "_28",
+       "scheduler": "sysimg-ics-mr1",
+     },
+     "Boot API 16": {
+       "name": "sysimg-jb",
+       "id": "_29",
+       "scheduler": "sysimg-jb",
+     },
+     "Boot API 17": {
+       "name": "sysimg-jb-mr1.1",
+       "id": "_30",
+       "scheduler": "sysimg-jb-mr1.1",
+     },
+     "Boot API 18": {
+       "name": "sysimg-jb-mr2",
+       "id": "_31",
+       "scheduler": "sysimg-jb-mr2",
+     },
+     "Boot API 19": {
+       "name": "sysimg-klp",
+       "id": "_18",
+       "scheduler": "sysimg-klp",
+     },
+     "Boot API 21": {
+       "name": "sysimg-lmp",
+       "id": "_26",
+       "scheduler": "sysimg-lmp",
+     },
+     "Boot API 22": {
+       "name": "sysimg-lmp-mr1",
+       "id": "_19",
+       "scheduler": "sysimg-lmp-mr1",
+     },
+     "Boot API 23": {
+       "name": "sysimg-mnc",
+       "id": "_20",
+       "scheduler": "sysimg-mnc",
+     },
+     "Boot API 24": {
+       "name": "sysimg-nyc",
+       "id": "_24",
+       "scheduler": "sysimg-nyc",
+     },
+     "Boot API 25": {
+       "name": "sysimg-nyc-mr1",
+       "id": "_25",
+       "scheduler": "sysimg-nyc-mr1",
+     },
+     "Boot API 26": {
+       "name": "sysimg-oc",
+       "id": "_21",
+       "scheduler": "sysimg-oc",
+     },
+     "Boot API 27": {
+       "name": "sysimg-oc-mr1",
+       "id": "_23",
+       "scheduler": "sysimg-oc-mr1",
+     },
+     "Boot API 27 - Auto": {
+       "name": "sysimg-oc-mr1-car-support-release",
+       "id": "_22",
+       "scheduler": "sysimg-oc-mr1-car-support-release",
+     },
+     "Boot API P": {
        "name": "sysimg-pi",
        "id": "_33",
        "scheduler": "sysimg-pi",
      },
-     "sysimg-pi-car-dev": {
+     "Boot API P - Auto": {
         "name": "sysimg-pi-car-dev",
-	"id": "_34",
-	"scheduler": "sysimg-pi-car-dev",
+	    "id": "_34",
+	    "scheduler": "sysimg-pi-car-dev",
      },
    },
 
@@ -450,27 +430,36 @@
      "Ubuntu 16.04 AMD Ryzen Vega": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-16_04-amd-ryzen-vega"],
-       "categories": ["emu-master-dev"],
+       "categories": ["Emulator master dev", "Emulator 2.7 release"],
        "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Linux",
      },
      "Ubuntu 12.04 HD Graphics 4000": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-12_04-intel-hd-4000"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "", "cross-builds", "Console emu-master-dev", "Console emu-2.7-release", "AVD"],
+       "categories": ["Console Tests on Emulator master dev", "Console Tests on Emulator 2.7 release"],
        "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Linux",
      },
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "sysimg-pi-car-dev", "cross-builds", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
+       "categories": ["UI API 25", "UI API 26", "UI API 27", "UI API P", "UI Master", "UI AOSP", "Boot API 25",
+                      "Boot API 26", "Boot API 27", "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto",
+                      "Boot Master", "Boot AOSP"],
        "tag": "Linux",
      },
-     "Ubuntu 14.04 HD 4400 2": {
-       "recipe": "adt/sysimage_release_psq",
-       "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["System Image Release"],
+     "Ubuntu 16.04 Thinkpad 2017": {
+       "recipe": "adt/adt",
+       "slave_pools": ["ubuntu-16_04-thinkpad-2017"],
+       "categories": ["Emulator master dev", "Emulator 2.7 release", "AVD"],
+       "tag": "Linux",
+     },
+     "Ubuntu 16.04 Thinkpad 2016": {
+       "recipe": "adt/adt",
+       "slave_pools": ["ubuntu-16_04-thinkpad-2016"],
+       "categories": ["UI API 22", "UI API 23", "UI API 24", "Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18",
+                      "Boot API 19", "Boot API 21", "Boot API 22", "Boot API 23", "Boot API 24", "Cross Builds"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 Quadro 600": {
@@ -500,62 +489,68 @@
      "Win 7 64-bit HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["win-7-64-intel-hd-4400"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "sysimg-pi-car-dev", "cross-builds"],
+       "categories": ["UI API 22", "UI API 23", "UI API 24", "Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18",
+                      "Boot API 19", "Boot API 21", "Boot API 22", "Boot API 23", "Boot API 24"],
        "tag": "Win",
      },
      "Win 8 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "sysimg-pi-car-dev", "cross-builds"],
+       "categories": ["Emulator master dev", "Emulator 2.7 release"],
        "tag": "Win",
      },
      "Win 8.1 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8_1-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "sysimg-pi-car-dev", "cross-builds"],
+       "categories": ["UI API 25", "UI API 26", "UI API 27", "UI API P", "UI Master", "UI AOSP", "Boot API 25",
+                      "Boot API 26", "Boot API 27", "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto",
+                      "Boot Master", "Boot AOSP"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-10-64-nvidia-quadro-600"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "sysimg-pi-car-dev", "cross-builds"],
+       "categories": ["Console Tests on Emulator master dev", "Console Tests on Emulator 2.7 release"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600 1": {
        "recipe": "adt/adt",
        "slave_pools": ["win-10-64-nvidia-quadro-600-1"],
-       "categories": ["Console emu-master-dev", "Console emu-2.7-release", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
+       "categories": ["Cross Builds"],
        "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Win",
      },
      "Mac 10.10.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-intel-hd-5000"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "sysimg-pi-car-dev", "cross-builds"],
+       "categories": ["UI API 25", "UI API 26", "UI API 27", "UI API P", "UI Master", "UI AOSP", "Boot API 25",
+                      "Boot API 26", "Boot API 27", "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto",
+                      "Boot Master", "Boot AOSP"],
        "tag": "Mac",
      },
      "Mac 10.10.5 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-iris-pro"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "sysimg-pi-car-dev", "cross-builds"],
+       "categories": ["Emulator master dev", "Emulator 2.7 release"],
        "tag": "Mac",
      },
      "Mac 10.8.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-8-5-intel-hd-5000"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "sysimg-pi-car-dev", "cross-builds"],
+       "categories": ["UI API 22", "UI API 23", "UI API 24", "Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18",
+                      "Boot API 19", "Boot API 21", "Boot API 22", "Boot API 23", "Boot API 24"],
        "tag": "Mac",
      },
      "Mac 10.11.1 Iris Pro": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-11-1-iris-pro"],
-       "categories": ["emu-master-dev", "emu-2.7-release", "sysimg-master", "sysimg-klp", "sysimg-lmp-mr1", "sysimg-mnc", "sysimg-oc", "sysimg-oc-mr1-car-support-release", "sysimg-oc-mr1", "sysimg-nyc", "sysimg-nyc-mr1", "sysimg-lmp", "sysimg-gb", "sysimg-ics-mr1", "sysimg-jb", "sysimg-jb-mr1.1", "sysimg-jb-mr2", "sysimg-aosp", "sysimg-pi", "sysimg-pi-car-dev", "cross-builds"],
+       "categories": ["Console Tests on Emulator master dev", "Console Tests on Emulator 2.7 release"],
        "tag": "Mac",
      },
      "Mac 10.11.6 Iris Pro": {
        "recipe": "adt/adt",
-       "slave_pools": ["mac-10-11-6-iris-pro-ui"],
-       "categories": ["Console emu-master-dev", "Console emu-2.7-release", "UI_sysimg-master", "UI_sysimg-aosp", "UI_sysimg-pi", "sysimg-pi-car-dev", "UI_sysimg-oc-mr1", "UI_sysimg-oc", "UI_sysimg-nyc-mr1", "UI_sysimg-nyc", "UI_sysimg-mnc"],
+       "slave_pools": ["mac-10-11-6-iris-pro"],
+       "categories": ["Cross Builds"],
        "max_timeout": 10800, # 3 hours (60 sec in minute * 60 minutes in hour * 3 hours)
        "tag": "Mac",
      },
@@ -594,10 +589,6 @@
     },
     "emu_2.7_release_scheduler": {
       "project": ["emu-2.7-release"],
-      "type": "emu_scheduler",
-    },
-    "sysimage_release_psq_scheduler": {
-      "project": ["sysimage-release-psq"],
       "type": "emu_scheduler",
     },
     "cts_scheduler": {
@@ -658,10 +649,6 @@
     },
     "sysimg-lmp": {
       "project": ["lmp-emu-dev"],
-      "type": "emu_scheduler",
-    },
-    "sysimg-gb": {
-      "project": ["gb-emu-dev"],
       "type": "emu_scheduler",
     },
     "sysimg-ics-mr1": {
@@ -767,6 +754,22 @@
       },
       "slaves": ['chromeos1-row3-rack4-host2'],
     },
+    "ubuntu-16_04-thinkpad-2016": {
+      "slave_data": {
+        "bits": 64,
+        "os": "linux",
+        "version": "trusty",
+      },
+      "slaves": ['chromeos1-row3-rack3-host7'],
+    },
+    "ubuntu-16_04-thinkpad-2017": {
+      "slave_data": {
+        "bits": 64,
+        "os": "linux",
+        "version": "trusty",
+      },
+      "slaves": ['chromeos1-row3-rack3-host8'],
+    },
     "win-7-64-intel-hd-4400": {
       "slave_data": {
         "bits": 64,
@@ -839,7 +842,7 @@
       },
       "slaves": ['chromeos1-row4-rack4-host3'],
     },
-    "mac-10-11-6-iris-pro-ui": {
+    "mac-10-11-6-iris-pro": {
       "slave_data": {
         "bits": 64,
         "os": "mac",
