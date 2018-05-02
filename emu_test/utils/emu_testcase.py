@@ -5,6 +5,7 @@
 
 import os
 import re
+import stat
 import sys
 import unittest
 import logging
@@ -690,8 +691,18 @@ class EmuBaseTestCase(LoggedTestCase):
                 return 1
             # Step 2. If the destination directory already exists, remove it.
             if os.path.exists(avd_dir):
+                def remove_readonly(func, path, excinfo):
+                    """
+                    On Windows, some of the files are read-only, so when rmtree() tries to
+                    remove them, an exception is thrown.  We attempt to set read/write and retry
+                    here.
+                    """
+                    os.chmod(path, stat.S_IWRITE)
+                    func(path)
                 self.m_logger.info('Existing AVD found at %s.  Removing.' % avd_dir)
-                shutil.rmtree(avd_dir)
+                # On Windows machines, we sometimes get a permssion error when trying to remove this dir.
+                # To work around this, we attempt to make sure the file isnt read-only.
+                shutil.rmtree(avd_dir, onerror=remove_readonly)
             # Step 3. Create the AVD {avd_name}.ini file.
             ini_path = os.path.join(avd_base_dir, '%s.ini' % avd_name)
             self.m_logger.info("AVD .ini file path: %s" % ini_path)
