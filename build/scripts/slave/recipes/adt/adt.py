@@ -183,23 +183,23 @@ def set_props(api, build_cache):
 # For case 4, if changes are in system-image branch, need to check against all of known good emulator branches, and
 #   on the triggering branch image.
 def get_test_config(project, android_sdk_home, cross_build):
-                # case 1
-                if project not in EMULATOR_BRANCHES and not cross_build:
-                    emulator_branch_to_use = [android_sdk_home]
-                    steps_to_run = [project]
-                # case 2
-                elif project in EMULATOR_BRANCHES and not cross_build:
-                    emulator_branch_to_use = [project]
-                    steps_to_run = [project]
-                # case 3
-                elif project in EMULATOR_BRANCHES and cross_build:
-                    emulator_branch_to_use = [project]
-                    steps_to_run = [x for x in BOOT_STEPS if x not in EMULATOR_BRANCHES]
-                # case 4
-                else:
-                    emulator_branch_to_use = [x for x in EMULATOR_BRANCHES]
-                    steps_to_run = [project]
-                return emulator_branch_to_use, steps_to_run
+    # case 1
+    if project not in EMULATOR_BRANCHES and not cross_build:
+        emulator_branch_to_use = [android_sdk_home]
+        steps_to_run = [project]
+    # case 2
+    elif project in EMULATOR_BRANCHES and not cross_build:
+        emulator_branch_to_use = [project]
+        steps_to_run = [project]
+    # case 3
+    elif project in EMULATOR_BRANCHES and cross_build:
+        emulator_branch_to_use = [project]
+        steps_to_run = [x for x in BOOT_STEPS if x not in EMULATOR_BRANCHES]
+    # case 4
+    else:
+        emulator_branch_to_use = [x for x in EMULATOR_BRANCHES]
+        steps_to_run = [project]
+    return emulator_branch_to_use, steps_to_run
 
 
 @EmailRecipeWatcher()
@@ -295,18 +295,7 @@ def RunSteps(api):
                            env=env)
             for emu_branch in emulator_branch_to_use:
                 emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
-                # for image from master branch, need tot emulator
                 step_data = BOOT_STEPS[step]
-                if 'master' in step_data.description and not is_cross_build:  # pragma: no cover
-                    emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
-                if 'aosp' in step_data.description and not is_cross_build:  # pragma: no cover
-                    emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
-                if 'oc-mr1' in step_data.description and not is_cross_build:  # pragma: no cover
-                    emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
-                if 'OC_MR1' in step_data.description and not is_cross_build:  # pragma: no cover
-                    emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
-                if 'pi-dev' in step_data.description and not is_cross_build:  # pragma: no cover
-                    emulator_path = api.path.join(emu_branch, 'emu-master-dev', 'emulator')
                 emu_desc = "sdk emulator" if emu_branch not in EMULATOR_BRANCHES else emu_branch
                 if not is_cts and not is_ui and not is_console and not is_avd:
                     step_data = BOOT_STEPS[step]
