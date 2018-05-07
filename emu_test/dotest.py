@@ -98,6 +98,7 @@ def setupLogger():
     logging.getLogger().addHandler(file_handler)
     logging.getLogger().addHandler(console_handler)
     logging.getLogger().setLevel(getattr(logging, emu_argparser.emu_args.loglevel.upper()))
+    logging.getLogger().info("Logger created and active.")
 
 
 def findSystemAVDs():
@@ -127,18 +128,22 @@ if __name__ == '__main__':
     """
     os.environ["SHELL"] = "/bin/bash"
 
-    emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
-    setupLogger()
-    logging.getLogger().info(emu_argparser.emu_args)
+    try:
+        emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
+        setupLogger()
+        logging.getLogger().info(emu_argparser.emu_args)
 
-    if emu_argparser.emu_args.avd_list is None:
-        emu_argparser.emu_args.avd_list = findSystemAVDs()
+        if emu_argparser.emu_args.avd_list is None:
+            emu_argparser.emu_args.avd_list = findSystemAVDs()
 
-    test_root_dir = os.path.dirname(os.path.realpath(__file__))
-    emuSuite = unittest.TestLoader().discover(start_dir=test_root_dir, pattern=emu_argparser.emu_args.pattern)
-    emuRunner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
-    emuResult = emuRunner.run(emuSuite)
-    printResult(emuResult)
+        test_root_dir = os.path.dirname(os.path.realpath(__file__))
+        emuSuite = unittest.TestLoader().discover(start_dir=test_root_dir, pattern=emu_argparser.emu_args.pattern)
+        emuRunner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
+        emuResult = emuRunner.run(emuSuite)
+        printResult(emuResult)
+    except Exception:
+        print "Error in dotest.py : " + traceback.format_exc()
+        
     # Always attempt to kill the adb server.  We are now done testing with it.
     try:
         adb_binary = path_utils.get_adb_binary()
