@@ -151,6 +151,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
             modified.write(('<?xml-stylesheet type="text/xsl" '
                             'href="console.xsl"?>\n<avd>%s</avd>'
                             % g_xml_string_result))
+            self.m_logger.info("Wrote %s" % dst_path)
 
     def print_console_result(self, emu_result):
         self.m_logger.info(
