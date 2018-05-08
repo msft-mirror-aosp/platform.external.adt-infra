@@ -23,6 +23,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 /**
  * Static utility method pertaining to Google Apps
@@ -61,12 +62,13 @@ public class GoogleAppUtil {
         if (needsEmail) {
             inputEmailField.clearTextField();
             inputEmailField.setText(email);
-            new GoogleAppConfirmationWatcher(device).checkForCondition();
+            new GoogleAppContinueWatcher(device).checkForCondition();
         }
 
         inputPasswordField.clearTextField();
         inputPasswordField.setText(password);
         new GoogleAppConfirmationWatcher(device).checkForCondition();
+        new GoogleAppContinueWatcher(device).checkForCondition();
 
         device.pressHome();
     }

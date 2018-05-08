@@ -132,7 +132,7 @@ public class PlayStoreUtil {
         AppLauncher.launch(instrumentation, "Play Store");
         new GoogleAppConfirmationWatcher(device).checkForCondition();
 
-        boolean hasSearchBox = new Wait(TimeUnit.SECONDS.toMillis(20)).
+        boolean hasSearchBox = new Wait(TimeUnit.SECONDS.toMillis(5)).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
@@ -149,7 +149,6 @@ public class PlayStoreUtil {
 
         GoogleAppUtil.loginGoogleApp(instrumentation);
 
-        new GoogleAppConfirmationWatcher(device).checkForCondition();
         AppLauncher.launch(instrumentation, "Play Store");
         new GoogleAppConfirmationWatcher(device).checkForCondition();
         resetPlayStore(instrumentation);
