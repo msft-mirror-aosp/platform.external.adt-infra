@@ -20,7 +20,6 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
@@ -198,7 +197,7 @@ public class GoogleServicesTest {
         final boolean hasSignInButton = new Wait(5L).
                 until(new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
+                    public boolean isTrue() {
                         return signInButton.exists();
                     }
                 });
@@ -218,7 +217,7 @@ public class GoogleServicesTest {
 
         if (new Wait().until(new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
+                    public boolean isTrue() {
                         return moreButton.exists();
                 }})) {
             moreButton.clickAndWaitForNewWindow();
@@ -228,7 +227,7 @@ public class GoogleServicesTest {
 
         if (new Wait().until(new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
+                    public boolean isTrue() {
                         return gotItButton.exists();
                 }})) {
             gotItButton.clickAndWaitForNewWindow();
@@ -240,7 +239,7 @@ public class GoogleServicesTest {
 
         if (new Wait().until(new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
+                    public boolean isTrue() {
                         return chromeUpdateButton.exists();
                 }})) {
             chromeUpdateButton.clickAndWaitForNewWindow();
@@ -251,7 +250,7 @@ public class GoogleServicesTest {
 
         if (new Wait().until(new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
+                    public boolean isTrue() {
                         return chromeMenuButton.exists();
                 }})) {
             chromeMenuButton.clickAndWaitForNewWindow();
@@ -261,7 +260,7 @@ public class GoogleServicesTest {
 
         if (new Wait().until(new Wait.ExpectedCondition() {
             @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
+            public boolean isTrue() {
                 return settingsButton.exists();
             }})) {
             settingsButton.clickAndWaitForNewWindow();
@@ -272,7 +271,7 @@ public class GoogleServicesTest {
 
         if (new Wait().until(new Wait.ExpectedCondition() {
             @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
+            public boolean isTrue() {
                 return signInPromoButton.exists();
             }})) {
             signInPromoButton.clickAndWaitForNewWindow();
@@ -282,7 +281,7 @@ public class GoogleServicesTest {
         if (!hasSignInButton) {
             if (new Wait().until(new Wait.ExpectedCondition() {
                 @Override
-                public boolean isTrue() throws UiObjectNotFoundException {
+                public boolean isTrue() {
                     return signInLabel.exists();
                 }})) {
                 signInLabel.clickAndWaitForNewWindow();
@@ -290,7 +289,7 @@ public class GoogleServicesTest {
             new GoogleAppConfirmationWatcher(device).checkForCondition();
             if (new Wait().until(new Wait.ExpectedCondition() {
                 @Override
-                public boolean isTrue() throws UiObjectNotFoundException {
+                public boolean isTrue() {
                     return gotItButton.exists();
                 }})) {
                 gotItButton.clickAndWaitForNewWindow();
@@ -302,7 +301,7 @@ public class GoogleServicesTest {
         assertTrue("Google log in was unsuccessful", new Wait().
                 until(new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
+                    public boolean isTrue() {
                         return signedInLabel.exists();
                     }})
         );
@@ -311,7 +310,7 @@ public class GoogleServicesTest {
 
         if (new Wait().until(new Wait.ExpectedCondition() {
             @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
+            public boolean isTrue() {
                 return signOutLabel.exists();
             }})) {
             signOutLabel.clickAndWaitForNewWindow();
@@ -321,7 +320,7 @@ public class GoogleServicesTest {
 
         if (new Wait().until(new Wait.ExpectedCondition() {
             @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
+            public boolean isTrue() {
                 return signOutButton.exists();
             }})) {
             signOutButton.clickAndWaitForNewWindow();
@@ -332,7 +331,7 @@ public class GoogleServicesTest {
 
         if (new Wait().until(new Wait.ExpectedCondition() {
             @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
+            public boolean isTrue() {
                 return signInPromoCloseButton.exists();
             }})) {
             signInPromoCloseButton.clickAndWaitForNewWindow();
@@ -341,7 +340,7 @@ public class GoogleServicesTest {
         assertTrue("Google log out was unsuccessful", new Wait().
                 until(new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
+                    public boolean isTrue() {
                         return signInLabel.exists() || signInPromoCloseButton.exists();
                     }}));
         if (signInLabel.exists()) {
