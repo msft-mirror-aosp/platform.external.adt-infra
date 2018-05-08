@@ -25,47 +25,55 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * This popup watcher monitors and dismisses popup dialogs that could be displayed when logging
- * into a Google application, by providing an affirmative response.
+ * into a Google application, with an indication to move to the next screen.
  * <p>
  * This watcher will be deployed when logging the Google test user into either
  * Google Play Store or Google Chrome.
  */
-public class GoogleAppConfirmationWatcher implements UiWatcher {
+public class GoogleAppContinueWatcher implements UiWatcher {
     private final UiDevice mDevice;
 
-    public GoogleAppConfirmationWatcher(UiDevice device) {
+    public GoogleAppContinueWatcher(UiDevice device) {
         this.mDevice = device;
     }
 
     @Override
     public boolean checkForCondition() {
         boolean condition = false;
-        boolean isSuccess = mDevice.findObject(new UiSelector().textContains("YES"))
+        boolean isSuccess =
+                mDevice.findObject(new UiSelector().text("CONTINUE"))
                         .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         try {
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().textContains("YES")).click();
+                mDevice.findObject(new UiSelector().text("CONTINUE")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().description("ACCEPT"))
+                    mDevice.findObject(new UiSelector().text("CONFIRM"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().description("ACCEPT")).click();
+                mDevice.findObject(new UiSelector().text("CONFIRM")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().text("ACCEPT"))
+                    mDevice.findObject(new UiSelector().text("SKIP"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().text("ACCEPT")).click();
+                mDevice.findObject(new UiSelector().text("SKIP")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().description("I AGREE"))
+                    mDevice.findObject(new UiSelector().text("NEXT"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().description("I AGREE")).click();
+                mDevice.findObject(new UiSelector().text("NEXT")).click();
+                condition = true;
+            }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().description("NEXT"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().description("NEXT")).click();
                 condition = true;
             }
         }
