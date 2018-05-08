@@ -53,6 +53,8 @@ public class AppTest {
     @Rule
     public Timeout globalTimeout = Timeout.seconds(120);
 
+    private int api = testFramework.getApi();
+
     /**
      * Verifies an app runs on the emulator.
      * <p/>
@@ -79,7 +81,7 @@ public class AppTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
         // Disable test for API 18. Enable when bug 30437951 is fixed.
-        if (testFramework.getApi() == 18) {
+        if (api == 18) {
             return;
         }
         AppLauncher.launch(instrumentation, "RsHelloCompute");
@@ -114,7 +116,7 @@ public class AppTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (testFramework.getApi() >= 24 && testFramework.isGoogleApiImage()) {
+        if (api >= 24 && (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage())) {
             AppLauncher.launch(instrumentation, "Chrome");
 
             // If this is the first launch, dismiss the "Welcome to Chrome" screen.
@@ -201,7 +203,7 @@ public class AppTest {
                     new UiSelector().description("Edit bookmark")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().description("Delete bookmarks")).click();
 
-        } else if (testFramework.getApi() == 24) {
+        } else if (api == 24) {
             // API 24 uses WebView Browser as the default browser. Does not have bookmarking
             // options.
             return;
@@ -268,7 +270,7 @@ public class AppTest {
         String homepage = "espn.com";
         String appName = "Browser";
 
-        if (testFramework.getApi() >= 17 && testFramework.getApi() <= 23) {
+        if (api >= 17 && api <= 23) {
             AppLauncher.launch(instrumentation, appName);
             setHomePage(device, "Other", "http://" + homepage);
             device.pressHome();
