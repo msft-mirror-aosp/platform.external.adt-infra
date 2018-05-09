@@ -19,7 +19,7 @@ package com.android.devtools.systemimage.uitest.unittest.watchers;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
-import com.android.devtools.systemimage.uitest.utils.AppManager;
+import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +49,12 @@ public class CrashWatcherTest {
     public void testCrashWatcher() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
+
+        // Install DisplayingBitmaps, if not already present.
+        if (!PackageInstallationUtil.isPackageInstalled(instrumentation,
+                "com.example.android.displayingbitmaps")) {
+            PackageInstallationUtil.installApk(instrumentation, "CrashExample.apk");
+        }
 
         // CrashWatcher has been registered in SystemImageTestFramework#apply()
         // Here we only need to trigger the crash event, and expect the assertion failure.

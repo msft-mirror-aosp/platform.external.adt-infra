@@ -20,6 +20,7 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.VpnPopupWatcher;
 
@@ -51,13 +52,14 @@ public class VpnTest {
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(120);
+    private int api = testFramework.getApi();
 
     private boolean verifyVpnStatus(final UiDevice device) throws Exception {
         // Verify that a VPN lock icon is on the status bar.
         // Need to wait for a while to check the notification bar items
         // because opening notification is an animation.
         boolean isTrue;
-        if (testFramework.getApi() >= 24) {
+        if (api >= 24) {
             // API 25 requires extra retry time to indentify VPN indicator.
             isTrue = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
                 @Override
@@ -109,9 +111,16 @@ public class VpnTest {
         UiDevice device = testFramework.getDevice();
 
         // Disable test for API 19. Enable when bug 30376641 is fixed.
-        if (testFramework.getApi() == 19) {
+        if (api == 19) {
             return;
         }
+
+        // Install TestVPN, if not already present.
+        if (!PackageInstallationUtil.isPackageInstalled(instrumentation,
+                "com.test.vpn")) {
+            PackageInstallationUtil.installApk(instrumentation, "FredVPN.apk");
+        }
+
         // Check if VPN is on. If true, skip.
         if (!verifyVpnStatus(device)) {
             AppLauncher.launch(instrumentation, "TestVPN");

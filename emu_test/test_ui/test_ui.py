@@ -144,15 +144,6 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             self.use_shell = False
         self.uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'system_image_uitests')
 
-        # install APKs required in UI tests
-        uitest_assets_dir = os.path.join(self.uitest_dir, 'app', 'src', 'main', 'assets')
-        for filename in os.listdir(uitest_assets_dir):
-            if filename.endswith('.apk'):
-                p = psutil.Popen(['adb', 'install', '-r', filename], cwd=uitest_assets_dir, stdout=PIPE, stderr=PIPE)
-                (out, err) = p.communicate()
-                self.m_logger.info('Install APK, stdout: %s, stderr: %s', out, err)
-                self.assertTrue(p.poll() == 0, "Failed to install %s." % filename)
-
         # check if it is a local presubmit test
         if emu_args.uitest_psc is not None:
             self._launch_local_presubmit_check(avd, emu_args.uitest_psc)

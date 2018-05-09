@@ -20,6 +20,7 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AppWatcher;
 
@@ -37,7 +38,6 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
@@ -84,6 +84,13 @@ public class AppTest {
         if (api == 18) {
             return;
         }
+
+        // Install RsHelloCompute, if not already present.
+        if (!PackageInstallationUtil.isPackageInstalled(instrumentation,
+                "com.example.android.rs.hellocompute")) {
+            PackageInstallationUtil.installApk(instrumentation, "HelloCompute.apk");
+        }
+
         AppLauncher.launch(instrumentation, "RsHelloCompute");
         assertTrue(testFramework.getDevice().findObject(new UiSelector().resourceId(
                 Res.APP_IMAGE_VIEW_ID)).exists());
