@@ -750,7 +750,7 @@ class EmuBaseTestCase(LoggedTestCase):
                 self.install_sdk_package("system-images;android-%s;default;%s"
                                          % (api, avd_config.abi))
             self.m_logger.info('Attempt number 2 at AVD creation now that package has been attempted to be installed.')
-            ret = try_create_with_config()
+            ret = try_create_with_config(avd_config)
         # last step, create config.ini
         if ret != 0:
             self.m_logger.error('Failed to create AVD, even after attempting package install.')
