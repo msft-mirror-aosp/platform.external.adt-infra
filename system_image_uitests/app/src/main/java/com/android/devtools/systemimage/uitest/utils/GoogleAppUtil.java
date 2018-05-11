@@ -22,7 +22,6 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
-import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 /**
@@ -44,12 +43,10 @@ public class GoogleAppUtil {
     public static void loginGoogleApp(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        final UiObject inputPasswordField = api == 24 ?
-                device.findObject(new UiSelector().resourceId("password")) :
-                device.findObject(new UiSelector().className("android.widget.EditText"));
+        String emailStr = "Email or phone";
         final UiObject inputEmailField = api == 24 ?
-                device.findObject(new UiSelector().description("Email or phone")) :
-                device.findObject(new UiSelector().text("Email or phone"));
+                device.findObject(new UiSelector().description(emailStr)) :
+                device.findObject(new UiSelector().text(emailStr));
 
         boolean needsEmail = new Wait().
                 until(new Wait.ExpectedCondition() {
@@ -65,9 +62,24 @@ public class GoogleAppUtil {
             new GoogleAppContinueWatcher(device).checkForCondition();
         }
 
-        inputPasswordField.clearTextField();
-        inputPasswordField.setText(password);
-        new GoogleAppConfirmationWatcher(device).checkForCondition();
+        final UiObject inputPasswordField = api == 24 ?
+                device.findObject(new UiSelector().resourceId("password")) :
+                device.findObject(new UiSelector().text("Enter your password"));
+
+        boolean needsPassword = new Wait().
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return inputPasswordField.exists();
+                    }
+                });
+
+        if (needsPassword) {
+            inputPasswordField.clearTextField();
+            inputPasswordField.setText(password);
+            new GoogleAppContinueWatcher(device).checkForCondition();
+        }
+
         new GoogleAppContinueWatcher(device).checkForCondition();
 
         device.pressHome();

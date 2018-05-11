@@ -189,12 +189,12 @@ public class AppManager {
      *
      * @throws Exception if it fails to find a UI widget.
      */
-    public static void openAppList(Instrumentation instrumentation) throws Exception {
+    private static void openAppList(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (SystemUtil.getApiLevel() >= 26) {
             SettingsUtil.openItem(instrumentation, "Apps & notifications");
-            String appInfoText = SystemUtil.getApiLevel() == 26 ? "App info" : "See all";
+            String appInfoText = SystemUtil.getApiLevel() >= 26 ? "App info" : "See all";
             final UiObject appInfoLabel = device.findObject(new UiSelector().textStartsWith(appInfoText));
 
             Assert.assertTrue("Application info not found", new Wait().until(new Wait.ExpectedCondition() {
