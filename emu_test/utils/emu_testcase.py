@@ -871,7 +871,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
         :param variant: Iterable.  If present, create test case for each variant.
         :return:
         """
-        if not is_cts and avd_config.gpu == "yes":
+        if not is_cts and avd_config.gpu == "yes" and not is_ui:
             avd_config_swiftshader = avd_config._replace(gpu = "swiftshader_indirect")
             create_test_case(avd_config_swiftshader, op, variant=variant)
             if avd_config.api >= "19" and avd_config.api <= "25" and "x86" in avd_config.abi:
@@ -906,6 +906,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
 
     # Function execution starts here.
     is_cts = True if desc == "cts" else False
+    is_ui = True if desc == "ui" else False
     with open(emu_argparser.emu_args.config_file, "rb") as file:
         reader = csv.reader(file)
         for row in reader:

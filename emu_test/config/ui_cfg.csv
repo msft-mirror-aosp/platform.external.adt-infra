@@ -3,17 +3,12 @@ API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,Ubuntu 14.04 HD 4400,Ubuntu 16.04 Thinkpad 201
 API P,default,x86_64,Pixel 2,2048,yes,pi,P,S,P,S,P,S
 ,google_apis,x86,Pixel XL,2048,yes,pi,P,S,P,S,P,S
 API 27,google_apis,x86_64,Pixel 2,2048,yes,oc-mr1,P,S,P,S,P,S
-,google_apis_playstore,x86,Pixel,2048,yes,oc-mr1,P,S,P,S,P,S
 ,google_apis_playstore,x86,Nexus 5X,2048,yes,oc-mr1,P,S,P,S,P,S
-,google_apis_playstore,x86,Nexus 6P,2048,yes,oc-mr1,P,S,P,S,P,S
 API 26,google_apis,x86,Pixel,2048,yes,oc,P,S,P,S,P,S
-,google_apis,x86_64,Nexus 6P,2048,yes,oc,P,S,P,S,P,S
 ,google_apis_playstore,x86,Nexus 5X,2048,yes,oc,P,S,P,S,P,S
 API 25,google_apis,x86_64,Nexus 6P,2048,yes,nyc-mr1,P,S,P,S,P,S
-,google_apis_playstore,x86,Nexus 5,2048,yes,nyc-mr1,P,S,P,S,P,S
 ,google_apis_playstore,x86,Nexus 5X,2048,yes,nyc-mr1,P,S,P,S,P,S
 API 24,default,x86,Nexus 6,2048,yes,nyc,S,P,S,P,S,P
-,google_apis_playstore,x86,Nexus 5,2048,yes,nyc,S,P,S,P,S,P
 ,google_apis_playstore,x86,Nexus 5X,2048,yes,nyc,S,P,S,P,S,P
 API 23,default,x86,Nexus 5,2048,yes,mnc,S,P,S,P,S,P
 ,google_apis,x86,Nexus 5X,2048,yes,mnc,S,P,S,P,S,P
