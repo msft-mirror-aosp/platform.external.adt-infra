@@ -52,19 +52,19 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         if not os.path.exists(gradle_report_path):
             self.m_logger.info('Failed to find gradle reports.')
             return
-        dst_path = os.path.join(emu_args.session_dir, test_method + '_report')
+        dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_report')
         if os.path.exists(dst_path):
             shutil.rmtree(dst_path)
         shutil.copytree(gradle_report_path, dst_path)
 
     def _save_adb_bug_report(self, test_method):
-        dst_path = os.path.join(emu_args.session_dir, test_method + '_bugreport.txt')
+        dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_bugreport.txt')
         with open(dst_path, 'w') as f:
             p = psutil.Popen(['adb', 'bugreport'], stdout=f, stderr=f)
             p.communicate()
 
     def _pull_log_details(self, test_method):
-        dst_path = os.path.join(emu_args.session_dir, test_method + '_details')
+        dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_details')
         p = psutil.Popen(['adb', 'pull',
                           '/sdcard/Logs', dst_path],
                          stdout=PIPE, stderr=PIPE)

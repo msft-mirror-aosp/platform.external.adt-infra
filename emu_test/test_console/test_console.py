@@ -84,10 +84,14 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
         g_avd_counter += 1
 
         dst_path = os.path.join(emu_argparser.emu_args.session_dir,
+                                emu_argparser.emu_args.test_dir,
                                 CONSOLE_RESULT_XML_FILE)
         xsl_path = os.path.join(emu_argparser.emu_args.session_dir,
+                                emu_argparser.emu_args.test_dir,
                                 'console.xsl')
-        css_path = os.path.join(emu_argparser.emu_args.session_dir, 'console.css')
+        css_path = os.path.join(emu_argparser.emu_args.session_dir,
+                                emu_argparser.emu_args.test_dir,
+                                'console.css')
 
         if os.name == util.WINDOWS_OS_NAME:
             subprocess.call(['copy', CONSOLE_XSL_FILE, xsl_path], shell=True)
