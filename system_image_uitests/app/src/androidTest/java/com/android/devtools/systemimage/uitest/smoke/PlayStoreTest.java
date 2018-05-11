@@ -52,7 +52,7 @@ public class PlayStoreTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(300);
+    public Timeout globalTimeout = Timeout.seconds(360);
 
     private final boolean hasGooglePlay = testFramework.getApi() >= 24 &&
             testFramework.isGoogleApiAndPlayImage();
@@ -269,7 +269,7 @@ public class PlayStoreTest {
      *   6. Turn on Parental Controls.
      *   7. Select restrictions for Apps and Games.
      *   8. Set and confirm a content PIN.
-     *   9. Set controls to Everone 10+.
+     *   9. Set controls to Everyone 10+.
      *   10. Search for adult app and family app in Play Store, finding only family app.
      *   11. Turn off Parental Controls.
      *   Verify:
@@ -284,15 +284,15 @@ public class PlayStoreTest {
     public void testParentalControls() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String familyApplication = "Truth or Dare";
-        final String restrictedApplication = "Truth or Dare Dirty";
+        final String familyApplication = "YouTube Kids";
+        final String restrictedApplication = "Tinder";
 
         if (testFramework.getApi() >= 24 && testFramework.isGoogleApiAndPlayImage()) {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
 
             if (playStoreInstalled) {
                 PlayStoreUtil.loginGooglePlay(instrumentation);
-                assertTrue("Adult application not found in search.",
+                assertTrue("Adult application is not found in search.",
                         hasTestApp(instrumentation, restrictedApplication));
 
                 setRestrictions(instrumentation,  "Apps", "Everyone 10+");
@@ -338,11 +338,8 @@ public class PlayStoreTest {
             @Override
             public boolean isTrue() {
                 boolean hasApplication =
-                        device.findObject(new UiSelector().textContains(appTitle).
-                                resourceId(Res.GOOGLE_PLAY_LIST_TITLE_RES)).exists() ||
-                                device.findObject(new UiSelector().descriptionContains(appTitle).
-                                        resourceId(Res.GOOGLE_PLAY_LIST_TITLE_RES)).exists();
-
+                        device.findObject(new UiSelector().text(appTitle).
+                                resourceId(Res.GOOGLE_PLAY_LIST_TITLE_RES)).exists();
                 return hasApplication;
             }
         });
