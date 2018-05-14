@@ -117,9 +117,13 @@ def zip_and_upload():
     if os.path.isdir(console_logdir):
         console_dst = os.path.join(args.remote_dir, "..", "..", "public_html", "Console_Result", builderName)
         console_dst = os.path.normpath(console_dst)
+        if args.is_windows is True:
+          console_dst = convert_path_to_posix(console_dst)
         verbose_call(['ssh', remote_host, 'mkdir -p %s' % console_dst])
+        path_name = os.path.join(console_dst, args.zip_name[:-4])
+        path_name = convert_path_to_posix(path_name) if args.is_windows else path_name
         verbose_call(['scp', '-r', os.path.join(console_logdir, ''), '%s:%s' %
-                      (remote_host, os.path.join(console_dst, args.zip_name[:-4]))])
+                      (remote_host, path_name)])
 
     # remove log directory
     try:
