@@ -444,9 +444,7 @@
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["UI API 25", "UI API 26", "UI API 27", "UI API P", "UI Master", "UI AOSP", "Boot API 25",
-                      "Boot API 26", "Boot API 27", "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto",
-                      "Boot Master", "Boot AOSP"],
+       "categories": ["UI API 25", "UI API 26", "UI API 27", "Cross Builds"],
        "tag": "Linux",
      },
      "Ubuntu 16.04 Thinkpad 2017": {
@@ -458,8 +456,9 @@
      "Ubuntu 16.04 Thinkpad 2016": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-16_04-thinkpad-2016"],
-       "categories": ["UI API 22", "UI API 23", "UI API 24", "Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18",
-                      "Boot API 19", "Boot API 21", "Boot API 22", "Boot API 23", "Boot API 24", "Cross Builds"],
+       "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
+       		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
+		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot AOSP"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 Quadro 600": {
@@ -489,8 +488,9 @@
      "Win 7 64-bit HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["win-7-64-intel-hd-4400"],
-       "categories": ["UI API 22", "UI API 23", "UI API 24", "Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18",
-                      "Boot API 19", "Boot API 21", "Boot API 22", "Boot API 23", "Boot API 24"],
+       "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
+       		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
+		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot AOSP"],
        "tag": "Win",
      },
      "Win 8 64-bit Quadro 600": {
@@ -502,9 +502,7 @@
      "Win 8.1 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8_1-64-nvidia-quadro-600"],
-       "categories": ["UI API 25", "UI API 26", "UI API 27", "UI API P", "UI Master", "UI AOSP", "Boot API 25",
-                      "Boot API 26", "Boot API 27", "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto",
-                      "Boot Master", "Boot AOSP"],
+       "categories": ["UI API 25", "UI API 26", "UI API 27"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600": {
@@ -523,9 +521,7 @@
      "Mac 10.10.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-intel-hd-5000"],
-       "categories": ["UI API 25", "UI API 26", "UI API 27", "UI API P", "UI Master", "UI AOSP", "Boot API 25",
-                      "Boot API 26", "Boot API 27", "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto",
-                      "Boot Master", "Boot AOSP"],
+       "categories": ["UI API 25", "UI API 26", "UI API 27"],
        "tag": "Mac",
      },
      "Mac 10.10.5 Iris Pro": {
@@ -537,8 +533,9 @@
      "Mac 10.8.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-8-5-intel-hd-5000"],
-       "categories": ["UI API 22", "UI API 23", "UI API 24", "Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18",
-                      "Boot API 19", "Boot API 21", "Boot API 22", "Boot API 23", "Boot API 24"],
+       "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
+       		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
+		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot AOSP"],
        "tag": "Mac",
      },
      "Mac 10.11.1 Iris Pro": {
