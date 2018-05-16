@@ -339,6 +339,26 @@
        "id": "_16",
        "scheduler": "sysimg-mnc",
      },
+     "UI API 21": {
+       "name": "system image UI test lmp",
+       "id": "_35",
+       "scheduler": "sysimg-lmp",
+     },
+     "UI API 19": {
+       "name": "system image UI test klp",
+       "id": "_36",
+       "scheduler": "sysimg-klp",
+     },
+     "UI API 18": {
+       "name": "system image UI test jb-mr2",
+       "id": "_37",
+       "scheduler": "sysimg-jb-mr2",
+     },
+     "UI API 17": {
+       "name": "system image UI test jb-mr1.1",
+       "id": "_38",
+       "scheduler": "sysimg-jb-mr1.1",
+     },
      "Boot Master": {
        "name": "sysimg-master",
        "id": "_17",
@@ -444,7 +464,7 @@
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["UI API 25", "UI API 26", "UI API 27", "Cross Builds"],
+       "categories": ["UI API 17", "UI API 18", "UI API 19", "UI API 21", "Cross Builds"],
        "tag": "Linux",
      },
      "Ubuntu 16.04 Thinkpad 2017": {
@@ -503,7 +523,7 @@
      "Win 8.1 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8_1-64-nvidia-quadro-600"],
-       "categories": ["UI API 25", "UI API 26", "UI API 27"],
+       "categories": ["UI API 17", "UI API 18", "UI API 19", "UI API 21"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600": {
@@ -522,7 +542,7 @@
      "Mac 10.10.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-intel-hd-5000"],
-       "categories": ["UI API 25", "UI API 26", "UI API 27"],
+       "categories": ["UI API 17", "UI API 18", "UI API 19", "UI API 21"],
        "tag": "Mac",
      },
      "Mac 10.10.5 Iris Pro": {
