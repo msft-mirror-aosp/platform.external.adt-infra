@@ -458,7 +458,8 @@
        "slave_pools": ["ubuntu-16_04-thinkpad-2016"],
        "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
        		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
-		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot AOSP"],
+		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot AOSP",
+		      "Cross Builds"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 Quadro 600": {
