@@ -92,6 +92,9 @@ public class Res {
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
     public static final String NOW_SIGNIN_SCREEN_RES =
             "com.google.android.googlequicksearchbox\\d*:id/header_title";
+    public static final String GOOGLE_BACKUP_SWITCH_RES =
+            "com.google.android.gms:id/suw_items_switch";
+    public static final String SIGN_IN_CONSENT_RES = "com.google.android.gms:id/signinconsentNext";
 
     public static final String SEARCH_TEXT_BOX =
             "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)" +

@@ -22,7 +22,11 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
+import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Static utility method pertaining to Google Apps
@@ -66,6 +70,13 @@ public class GoogleAppUtil {
                 device.findObject(new UiSelector().resourceId("password")) :
                 device.findObject(new UiSelector().text("Enter your password"));
 
+        boolean passwordFound = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+                public boolean isTrue() {
+                return inputPasswordField.exists();
+            }
+        });
+
         boolean needsPassword = new Wait().
                 until(new Wait.ExpectedCondition() {
                     @Override
@@ -80,7 +91,22 @@ public class GoogleAppUtil {
             new GoogleAppContinueWatcher(device).checkForCondition();
         }
 
-        new GoogleAppContinueWatcher(device).checkForCondition();
+        new GoogleAppConfirmationWatcher(device).checkForCondition();
+        UiObject signInConsentAgreeButton = device.findObject(new UiSelector().resourceId(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES));
+
+        if (signInConsentAgreeButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            signInConsentAgreeButton.clickAndWaitForNewWindow();
+        }
+
+        UiObject backupSwitch = device.findObject(new UiSelector().resourceId(Res.GOOGLE_BACKUP_SWITCH_RES));
+        if (backupSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            backupSwitch.clickAndWaitForNewWindow();
+        }
+
+        UiObject backupButton = device.findObject(new UiSelector().text("AGREE"));
+        if (backupButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            backupButton.clickAndWaitForNewWindow();
+        }
 
         device.pressHome();
     }
