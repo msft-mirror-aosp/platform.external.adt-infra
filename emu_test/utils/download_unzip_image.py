@@ -180,7 +180,11 @@ def download_and_unzip():
         if 'addon' in file_name:
           unzip_addon_dir(file_name, dst_dir)
         else:
-          verbose_call(['unzip', '-o', file_name, '-d', dst_dir])
+          if os.name == 'nt':
+            # Windows needs to use 7z to fix pkcompat issues with default unzip
+            verbose_call(['7z', 'x', '-aoa', file_name, ('-o%s' %  dst_dir)])
+          else:
+            verbose_call(['unzip', '-o', file_name, '-d', dst_dir])
         verbose_call(['rm', '-rf', file_name])
       else:
         raise ValueError('Error: Unknown branch!')
