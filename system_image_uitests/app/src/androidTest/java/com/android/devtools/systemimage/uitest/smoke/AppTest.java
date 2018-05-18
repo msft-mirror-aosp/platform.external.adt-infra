@@ -51,7 +51,7 @@ public class AppTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(120);
+    public Timeout globalTimeout = Timeout.seconds(180);
 
     private int api = testFramework.getApi();
 
