@@ -24,11 +24,13 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.util.Log;
 
 /**
  * Application launcher.
  */
 public class AppLauncher {
+    private final static String TAG = "AppLauncher";
 
     private AppLauncher() {
         throw new AssertionError();
@@ -46,11 +48,29 @@ public class AppLauncher {
             throws UiObjectNotFoundException {
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
-        device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
+
+        boolean appsLabelFound = false;
+        boolean appNameFound;
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         UiSelector textSelector = new UiSelector().text(appName);
         UiObject app = device.findObject(textSelector);
-        boolean isFound;
+        final UiObject appsLabel = device.findObject(new UiSelector().descriptionContains("Apps"));
+
+        try {
+            appsLabelFound = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() {
+                    return appsLabel.exists();
+                }
+            });
+        } catch(Exception error) {
+            Log.e(TAG, error.getMessage());
+            Log.e(TAG,"Launch: Apps label not found on first attempt");
+        }
+
+        if (appsLabelFound) {
+            device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
+        }
 
         // Attempt to scroll through the list twice, first vertically, and then horizontally.
         // If the target object cannot be found while scrolling, fling forward by a
@@ -58,22 +78,33 @@ public class AppLauncher {
         // against any gesture-based failures, which can occur due to UI changes between APIs.
         try {
             scrollable.setAsVerticalList();
-            isFound = scrollable.scrollIntoView(textSelector);
-            if (!isFound) {
+            appNameFound = scrollable.scrollIntoView(textSelector);
+            if (!appNameFound) {
                 scrollable.setAsHorizontalList();
-                isFound = scrollable.scrollIntoView(textSelector);
+                appNameFound = scrollable.scrollIntoView(textSelector);
             }
         } catch (UiObjectNotFoundException e) {
             device.pressHome();
-            device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
+            try {
+                appsLabelFound = new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return appsLabel.exists();
+                    }
+                });
+            } catch(Exception error) {
+                Log.e(TAG, error.getMessage());
+                Log.e(TAG,"Launch: Apps label not found on second attempt");
+            }
+
             int swipes = 0;
             while (!app.exists() && swipes < 5) {
                 scrollable.flingForward();
                 swipes++;
             }
-            isFound = app.exists();
+            appNameFound = app.exists();
         }
-        if (isFound) {
+        if (appNameFound) {
             app.clickAndWaitForNewWindow();
         }
     }
@@ -105,7 +136,7 @@ public class AppLauncher {
                 }
             }
             catch (UiObjectNotFoundException e) {
-
+                Log.e(TAG, e.getMessage());
             }
             target.clickAndWaitForNewWindow();
         }

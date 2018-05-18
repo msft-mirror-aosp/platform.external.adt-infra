@@ -99,38 +99,19 @@ public class MapsTest {
 
             UiObject searchEditText;
             UiObject selectedLocation;
+            searchEditText = searchUiObject.getChild(new UiSelector().className(EditText.class.getName()));
+            searchEditText.setText(QUERY_STRING);
+            UiScrollable scrollView = new UiScrollable(new UiSelector().className(ScrollView.class.getName()));
+            scrollView.scrollIntoView(new UiSelector().text(QUERY_STRING));
+            selectedLocation = scrollView.getChildByText(new UiSelector()
+                    .className(TextView.class.getName()), QUERY_STRING);
+            Assert.assertTrue(selectedLocation.exists());
+            selectedLocation.clickAndWaitForNewWindow();
 
-            if (testFramework.getApi() > 19) {
-                searchEditText =
-                        searchUiObject.getChild(new UiSelector().className(EditText.class.getName()));
-                searchEditText.setText(QUERY_STRING);
-                UiScrollable scrollView =
-                        new UiScrollable(new UiSelector().className(ScrollView.class.getName()));
-                scrollView.scrollIntoView(new UiSelector().text(QUERY_STRING));
-                selectedLocation =
-                        scrollView.getChildByText(new UiSelector()
-                                .className(TextView.class.getName()), QUERY_STRING);
-                Assert.assertTrue(selectedLocation.exists());
-                selectedLocation.clickAndWaitForNewWindow();
-
-                // Verify the Query String is present after completing search.
-                UiObject searchTextView =
-                        searchUiObject.getChild(new UiSelector().className(TextView.class.getName()));
-                Assert.assertTrue(searchTextView.getText().contains(QUERY_STRING));
-            } else {
-                searchEditText =
-                        mDevice.findObject(new UiSelector().className(EditText.class.getName()));
-                searchEditText.setText(QUERY_STRING);
-                UiScrollable listViewSelector =
-                        new UiScrollable(new UiSelector().className(ListView.class.getName()));
-                selectedLocation =
-                        listViewSelector.getChildByText(new UiSelector()
-                                .className(TextView.class.getName()), QUERY_STRING);
-                selectedLocation.clickAndWaitForNewWindow();
-
-                // Verify the Query String is present after completing search.
-                Assert.assertTrue(searchEditText.getText().contains(QUERY_STRING));
-            }
+            // Verify the Query String is present after completing search.
+            UiObject searchTextView =
+                    searchUiObject.getChild(new UiSelector().className(TextView.class.getName()));
+            Assert.assertTrue(searchTextView.getText().contains(QUERY_STRING));
 
             // Verify the directions/route link exists and clicking on it opens the directions page
             // verify query string is pre filled in the destination("to") field.

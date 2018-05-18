@@ -47,6 +47,7 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -61,6 +62,9 @@ public class SettingsTest {
 
     private Instrumentation instrumentation = testFramework.getInstrumentation();
     private UiDevice device = UiDevice.getInstance(instrumentation);
+
+    private int api = testFramework.getApi();
+    private final static String TAG = "SettingsTest";
 
     // Tests under this class may take more than 60 seconds depending on buildbot infrastructure.
     // 120 seconds is a more reliable setup here.
@@ -90,7 +94,7 @@ public class SettingsTest {
     @TestInfo(id = "97d93bb7-63d2-4e89-9d18-0f232bbd51ab")
     public void testLocationSettingsPageOpen() throws Exception {
         if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage() ||
-                testFramework.getApi() < 23) {
+                api < 23) {
             return;
         }
 
@@ -100,8 +104,8 @@ public class SettingsTest {
                         new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
                 );
         itemList.setAsVerticalList();
-        if(testFramework.getApi() >= 26) {
-            String securityLabel = testFramework.getApi() == 26 ? "Security & Location" : "Security & location";
+        if(api >= 26) {
+            String securityLabel = api == 26 ? "Security & Location" : "Security & location";
             UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                     securityLabel);
             security.clickAndWaitForNewWindow();
@@ -163,14 +167,14 @@ public class SettingsTest {
     public void testPhonePermissions() throws Exception {
         final String app = "Phone";
 
-        if (testFramework.getApi() < 23) {
+        if (api < 23) {
             return;
         }
 
         SettingsUtil.setAppPermissions(instrumentation, app, app, false);
         device.pressHome();
 
-        if (testFramework.getApi() >= 25) {
+        if (api >= 25) {
             device.findObject(new UiSelector().resourceIdMatches(
                     Res.LAUNCHER_LIST_CONTAINER_RES)).clickAndWaitForNewWindow();
         }
@@ -188,8 +192,9 @@ public class SettingsTest {
                         return device.findObject(new UiSelector().text(
                                 "This application cannot make outgoing calls without the Phone permission.")).
                                 exists();
-                    }
-                }));
+                        }
+                })
+        );
 
         SettingsUtil.setAppPermissions(instrumentation, app, app, true);
         device.pressHome();
@@ -225,7 +230,7 @@ public class SettingsTest {
         final String appName = "Maps";
 
         if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage() ||
-                testFramework.getApi() < 23) {
+                api < 23) {
             return;
         }
 
@@ -255,7 +260,8 @@ public class SettingsTest {
                         return device.findObject(new UiSelector()
                                 .text("Allow Maps to access this device's location?")).exists();
                     }
-                }));
+                })
+        );
 
         SettingsUtil.setAppPermissions(instrumentation, appType, appName, true);
         device.pressHome();
@@ -282,10 +288,10 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void displayConfigureAppPermissions() throws Exception {
-        if (testFramework.getApi() < 23) {
+        if (api < 23) {
             return;
         }
-        if (testFramework.getApi() >= 26) {
+        if (api >= 26) {
             SettingsUtil.openItem(instrumentation, "Apps & notifications");
         } else {
             SettingsUtil.openItem(instrumentation, "Apps");
@@ -337,12 +343,11 @@ public class SettingsTest {
      * Common code for finding a checkbox/switch in the Date & time settings.
      */
     private  UiObject2 navigateToDateTimeSwitch(String text) throws UiObjectNotFoundException {
-        final String container = (testFramework.getApi() >= 24) ?
+        final String container = (api >= 24) ?
                 Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES :  Res.ANDROID_LIST_RES;
-        final String relative = text;
         final String label = "Date & time";
 
-        if (testFramework.getApi() >= 26) {
+        if (api >= 26) {
             SettingsUtil.openItem(instrumentation, "System");
             device.findObject(new UiSelector().text(label))
                     .clickAndWaitForNewWindow();
@@ -363,7 +368,7 @@ public class SettingsTest {
                 final UiObject2 widget = UiAutomatorPlus.findObjectByRelative(
                         instrumentation,
                         By.clazz("android.widget.CheckBox"),
-                        By.text(relative),
+                        By.text(text),
                         By.res(container));
                 dateTimeSwitch = widget;
             } catch (UiObjectNotFoundException e2)  {
@@ -401,36 +406,40 @@ public class SettingsTest {
             widget.click();
         }
         assertTrue("Failed to disable set date.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return !device.findObject(new UiSelector().text("Set date")).isEnabled();
-                    }
-                }));
+                  }
+              })
+        );
         assertTrue("Failed to disable set time.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return !device.findObject(new UiSelector().text("Set time")).isEnabled();
-                    }
-                }));
+                  }
+              })
+        );
         widget.click();
         assertTrue("Failed to enable set date.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(new UiSelector().text("Set date")).isEnabled();
-                    }
-                }));
+                  }
+              })
+        );
         assertTrue("Failed to enable set time.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(new UiSelector().text("Set time")).isEnabled();
-                    }
-                }));
+                  }
+              })
+        );
         device.findObject(new UiSelector().text("Set date")).clickAndWaitForNewWindow();
-        if (testFramework.getApi() < 20) {
+        if (api < 20) {
             assertTrue(device.findObject(
                     new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES_19)).exists());
             device.findObject(new UiSelector().textContains("Done")).click();
@@ -479,39 +488,41 @@ public class SettingsTest {
             widget.click();
         }
         assertTrue("Failed to disable select time zone",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return !device.findObject(new UiSelector().text("Select time zone")).isEnabled();
-                    }
-                }));
+                  }
+              })
+        );
         // Disable automatic time zone option.
         widget.click();
         final UiObject selectTimeZone = device.findObject(
                 new UiSelector().text("Select time zone"));
         assertTrue("Failed to enable select time zone",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return selectTimeZone.isEnabled();
-                    }
-                }));
+                  }
+              })
+        );
         selectTimeZone.clickAndWaitForNewWindow();
 
         assertTrue("Failed to load Select time zone screen.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(
                                 new UiSelector().text("Select time zone")).exists();
                     }
-                }));
+              })
+        );
         UiScrollable timeZoneList =
-                new UiScrollable(
-                        new UiSelector().className("android.widget.ListView"));
+                new UiScrollable(new UiSelector().className("android.widget.ListView"));
 
         String timezoneOffset;
-        if (testFramework.getApi() <= 19)
+        if (api <= 19)
             timezoneOffset = "GMT-8:00";
         else
             timezoneOffset = "GMT-08:00";
@@ -546,29 +557,32 @@ public class SettingsTest {
             widget.click();
         }
         assertTrue("Failed to find Use 24-hour format.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(
                                 new UiSelector().text("Use 24-hour format")).exists();
-                    }
-                }));
+                  }
+              })
+        );
         assertTrue("Failed to find 1:00 PM.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(new UiSelector().text("1:00 PM")).exists();
-                    }
-                }));
+                  }
+              })
+        );
         // Enable 24-hour format.
         widget.click();
         assertTrue("Failed to find 13:00.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
+              new Wait().until(new Wait.ExpectedCondition() {
+                  @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(new UiSelector().text("13:00")).exists();
-                    }
-                }));
+                  }
+              })
+        );
         // Clean up by disabling 24-hour format option.
         widget.click();
     }
@@ -611,6 +625,8 @@ public class SettingsTest {
             // Deactivate "Sample Device Admin" policy
             SettingsUtil.deactivate(instrumentation, "Sample Device Admin");
             assertFalse(checkStatusOfPolicy());
+        } else {
+            Log.w(TAG,"activateDeactivatePolicy: required APK is missing");
         }
     }
 
@@ -659,7 +675,7 @@ public class SettingsTest {
         if (isAPIDemoInstalled) {
             AppLauncher.launch(instrumentation, "Settings");
             findObjectInScrollable(new UiSelector().textContains("Security")).click();
-            if (testFramework.getApi() >= 24) {
+            if (api >= 24) {
                 findObjectInScrollable(new UiSelector().textContains("Device admin").
                         resourceId(Res.ANDROID_TITLE_RES)).click();
             } else {
@@ -669,22 +685,25 @@ public class SettingsTest {
             device.findObject(new UiSelector().text("Sample Device Admin")).click();
 
             try {
-                if (testFramework.getApi() >= 24) {
+                if (api >= 24) {
                     findObjectInScrollable(new UiSelector().textContains("Activate")).click();
                 } else {
                     device.findObject(new UiSelector().textMatches("(?i)activate(?-i)")).click();
                 }
             } catch (UiObjectNotFoundException e) {
                 assertTrue("Could not find device administration buttons.",
-                        new Wait().until(new Wait.ExpectedCondition() {
-                            @Override
+                      new Wait().until(new Wait.ExpectedCondition() {
+                          @Override
                             public boolean isTrue() throws Exception {
                                 return device.findObject(new UiSelector().text("Cancel")).exists();
-                            }
-                        }));
+                          }
+                      })
+                );
                 device.findObject(new UiSelector().text("Cancel")).click();
             }
             device.pressHome();
+        } else {
+            Log.w(TAG, "enableSampleDeviceAdmin: required APK is missing");
         }
     }
 
@@ -741,16 +760,19 @@ public class SettingsTest {
             }
 
             device.pressHome();
+        } else {
+            Log.w(TAG, "setCameraEnabled: required APK is missing");
         }
     }
 
     private void gotoCameraApp() throws UiObjectNotFoundException {
         AppLauncher.launch(instrumentation, "Camera");
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
     }
 
     private boolean verifyCameraAppDisabled() {
-        return device.hasObject(By.
-                textContains("Camera has been disabled because of security policies")) ||
+        return device.hasObject(By.textContains(
+                "Camera has been disabled because of security policies")) ||
                 device.hasObject(By.text("Can't connect to the camera."));
     }
 
@@ -835,7 +857,7 @@ public class SettingsTest {
         //Check for Deny alert dialog button for location permissions.
         UiObject denyButton;
 
-        if (testFramework.getApi() < 23 || !testFramework.isGoogleApiImage()) {
+        if (api < 23) {
             return;
         }
 
@@ -864,17 +886,12 @@ public class SettingsTest {
                 className(TextView.class.getName()),"Permissions").clickAndWaitForNewWindow();
 
         UiScrollable permissionList;
-        if (testFramework.getApi() > 23) {
-            permissionList =
-                    new UiScrollable(
-                            new UiSelector().resourceIdMatches(Res.ANDROID_LIST_RES)
-                    );
+        if (api > 23) {
+            permissionList = new UiScrollable(new UiSelector().
+                    resourceIdMatches(Res.ANDROID_LIST_RES));
         } else {
-            permissionList =
-                    new UiScrollable(
-                            new UiSelector().
-                                    resourceIdMatches("com.android.packageinstaller:id/list")
-                    );
+            permissionList = new UiScrollable(new UiSelector().
+                    resourceIdMatches("com.android.packageinstaller:id/list"));
         }
 
         //Get switch widgets UiObjects.
