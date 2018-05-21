@@ -70,13 +70,6 @@ public class GoogleAppUtil {
                 device.findObject(new UiSelector().resourceId("password")) :
                 device.findObject(new UiSelector().text("Enter your password"));
 
-        boolean passwordFound = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-                public boolean isTrue() {
-                return inputPasswordField.exists();
-            }
-        });
-
         boolean needsPassword = new Wait().
                 until(new Wait.ExpectedCondition() {
                     @Override

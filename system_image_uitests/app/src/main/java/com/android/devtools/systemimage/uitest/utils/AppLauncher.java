@@ -49,12 +49,9 @@ public class AppLauncher {
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
+        final UiObject appsLabel = device.findObject(new UiSelector().descriptionContains("Apps"));
         boolean appsLabelFound = false;
         boolean appNameFound;
-        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-        UiSelector textSelector = new UiSelector().text(appName);
-        UiObject app = device.findObject(textSelector);
-        final UiObject appsLabel = device.findObject(new UiSelector().descriptionContains("Apps"));
 
         try {
             appsLabelFound = new Wait().until(new Wait.ExpectedCondition() {
@@ -69,13 +66,18 @@ public class AppLauncher {
         }
 
         if (appsLabelFound) {
-            device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
+            appsLabel.clickAndWaitForNewWindow();
         }
 
         // Attempt to scroll through the list twice, first vertically, and then horizontally.
         // If the target object cannot be found while scrolling, fling forward by a
         // maximum of 5 swipes. The combination of these techniques is intended to mediate
         // against any gesture-based failures, which can occur due to UI changes between APIs.
+
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        UiSelector textSelector = new UiSelector().text(appName);
+        UiObject app = device.findObject(textSelector);
+
         try {
             scrollable.setAsVerticalList();
             appNameFound = scrollable.scrollIntoView(textSelector);
@@ -95,6 +97,10 @@ public class AppLauncher {
             } catch(Exception error) {
                 Log.e(TAG, error.getMessage());
                 Log.e(TAG,"Launch: Apps label not found on second attempt");
+            }
+
+            if (appsLabelFound) {
+                appsLabel.clickAndWaitForNewWindow();
             }
 
             int swipes = 0;
