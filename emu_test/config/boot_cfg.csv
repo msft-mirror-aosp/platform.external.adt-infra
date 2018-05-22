@@ -73,12 +73,10 @@ API 18,default,armeabi-v7a,Nexus 5,2048,yes,public,S,S,S,S,S,S,S,S,S
 ,,x86,Nexus 5,2048,yes,jb-mr2,P,P,P,P,P,P,S,S,S
 ,google_apis,x86,Nexus 5,2048,yes,jb-mr2,S,S,S,S,S,S,S,S,S
 API 17,default,armeabi-v7a,Nexus 5,2048,yes,public,S,S,S,S,S,S,S,S,S
-,,mips,Nexus 5,2048,yes,public,P,P,P,P,P,P,P,P,P
 ,,x86,Nexus 5,2048,yes,public,P,P,P,P,P,P,P,P,P
 ,,x86,Nexus 5,2048,yes,jb-mr1.1,P,P,P,P,P,P,S,S,S
 ,google_apis,x86,Nexus 5,2048,yes,jb-mr1.1,S,S,S,S,S,S,S,S,S
 API 16,default,armeabi-v7a,Nexus 4,2048,yes,public,S,S,S,S,S,S,S,S,S
-,,mips,Nexus 4,2048,yes,public,P,P,P,P,P,P,P,P,P
 ,,x86,Nexus 4,2048,yes,public,P,P,P,P,P,P,P,P,P
 ,,x86,Nexus 4,2048,yes,jb,P,P,P,P,P,P,S,S,S
 ,google_apis,x86,Nexus 4,2048,yes,jb,S,S,S,S,S,S,S,S,S,S,S,S

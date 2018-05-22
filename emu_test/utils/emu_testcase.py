@@ -246,8 +246,6 @@ class EmuBaseTestCase(LoggedTestCase):
         self.m_logger.info('Launching Emulator with AVD, ...: %s', str(avd))
         emulator_bin = emu_argparser.emu_args.emulator_exec
         launch_cmd = [emulator_bin, "-avd", str(avd), "-verbose", "-show-kernel", "-wipe-data"]
-        if avd.classic == "yes":
-            launch_cmd += ["-engine", "classic"]
         if avd.gpu == "swiftshader":
             launch_cmd += ["-gpu", "swiftshader_indirect"]
         else:
@@ -433,7 +431,7 @@ class EmuBaseTestCase(LoggedTestCase):
         :param avd: The AVD we will be performing the test on.
         :return: None.  Results are printed to self.m_logger
         """
-        test_file = "small_file.zip" if avd.classic == "yes" else "large_file.zip"
+        test_file = "large_file.zip"
         local_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "adb_test_data", test_file)
         file_size = os.path.getsize(local_path)
         device_path = "/data/local/tmp/%s" % test_file
@@ -898,7 +896,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
         # TODO: handle flakey tests
         elif op == "F":
             func = func
-        qemu_str = "_qemu2" if avd_config.classic == "no" else "_qemu1"
+        qemu_str = "_qemu2"
         variant_str = "%s_" % variant if variant is not None else ""
         # Group test results by ClassName_AVD-type.
         test_name = "test_%s%s_test_%s%s" % (variant_str, str(avd_config), desc, qemu_str)
@@ -953,14 +951,8 @@ def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
                     # For 32 bit machine, ram should be less than 768MB
                     if not platform.machine().endswith('64'):
                         ram = str(min([int(ram), 768]))
-                    # use qemu2 for top of tree images and public images above api 19
-                    # arm use qemu1 for api <=23; for api >= 24, use qemu2
-                    if (api >= "24"):
-                      classic = "no"
-                    elif (ori != "public" or api >= "19") and abi != "armeabi-v7a":
-                      classic = "no"
-                    else:
-                      classic = "yes"
+                    # As of b/80137917 we no longer test qemu 1 for any tests.
+                    classic = "no"
                     if device == "":
                       device = "default"
                     avd_config = AVDConfig(api, alt_version, tag, abi, device, ram, gpu, classic,
