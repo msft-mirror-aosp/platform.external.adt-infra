@@ -63,7 +63,15 @@ public class GoogleAppUtil {
         if (needsEmail) {
             inputEmailField.clearTextField();
             inputEmailField.setText(email);
-            new GoogleAppContinueWatcher(device).checkForCondition();
+
+            UiObject nextButton = device.findObject(new UiSelector().text("NEXT"));
+            if (!nextButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+                nextButton = device.findObject(new UiSelector().description("NEXT"));
+            }
+
+            if (nextButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+                nextButton.clickAndWaitForNewWindow();
+            }
         }
 
         final UiObject inputPasswordField = api == 24 ?
