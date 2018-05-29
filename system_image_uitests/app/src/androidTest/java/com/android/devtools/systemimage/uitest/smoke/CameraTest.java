@@ -61,6 +61,8 @@ public class CameraTest {
     @Rule
     public Timeout globalTimeout = Timeout.seconds(120);
 
+    final private int api = testFramework.getApi();
+
     /**
      * Tests the photo capture functionality of the camera application.
      * <p>
@@ -87,9 +89,8 @@ public class CameraTest {
     @TestInfo(id = "ab5f9585-433b-4261-bd15-5c7136f6127b")
     public void testPhotoCapture() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (testFramework.getApi() >= 24) {
+        if (api >= 24) {
             boolean photoTestSuccess = useCamera(instrumentation, "Camera");
             Assert.assertTrue("New photo was not deleted from the gallery", photoTestSuccess);
         }
@@ -122,7 +123,7 @@ public class CameraTest {
     public void testVideoCapture() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        if (testFramework.getApi() >= 24) {
+        if (api >= 24) {
             boolean videoTestSuccess = useCamera(instrumentation, "Video");
             Assert.assertTrue("New video was not deleted from the gallery", videoTestSuccess);
         }
@@ -141,7 +142,7 @@ public class CameraTest {
 
         AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
         UiObject cameraFrame = device.findObject(new UiSelector().resourceId(Res.CAMERA_FRAME_RES));
-        if (cameraFrame.waitForExists(3L)) {
+        if (cameraFrame.waitForExists(5L)) {
             cameraFrame.click();
             cameraFrame.swipeRight(3);
         }
@@ -157,7 +158,7 @@ public class CameraTest {
             Assert.assertTrue("Button to select " + mode + " mode not found", false);
         }
 
-        createTestFile(device);
+        createTestFile(device, mode);
         deleteTestFile(device);
 
         String originalFileList = listGalleryFiles(instrumentation);
@@ -165,7 +166,7 @@ public class CameraTest {
         AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
         new CameraAccessPermissionsWatcher(device).checkForCondition();
 
-        createTestFile(device);
+        createTestFile(device, mode);
 
         String fileExt = mode.equals("Camera") ? ".jpg" : ".mp4";
         String newFileList = listGalleryFiles(instrumentation);
@@ -199,7 +200,7 @@ public class CameraTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
 
-        if (testFramework.getApi() < 27 || !(testFramework.isGoogleApiImage()) || testFramework.isGoogleApiAndPlayImage()) {
+        if (api < 27 && !testFramework.isGoogleApiImage()) {
             return;
         }
 
@@ -235,10 +236,11 @@ public class CameraTest {
 
         final ShellUtil.ShellResult result = ShellUtil.invokeCommand(cmd);
 
-        boolean photosListed = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(
-                new Wait.ExpectedCondition() {
+        boolean photosListed = new Wait(
+                TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(
+                    new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue() throws Exception {
+                    public boolean isTrue() {
                         return result != null && result.stderr != null && result.stderr.length() == 0;
                     }
                 });
@@ -248,25 +250,31 @@ public class CameraTest {
     }
 
     /* A helper method to generate either a new photo or video, and then select view it */
-    private void createTestFile(UiDevice device) throws UiObjectNotFoundException {
+    private void createTestFile(UiDevice device, String mode) throws UiObjectNotFoundException {
         UiObject shutterButton = device.findObject(new UiSelector().resourceId(Res.CAMERA_SHUTTER_BUTTON_RES));
         UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_THUMBNAIL_RES));
 
         if (shutterButton.waitForExists(3L)) {
             shutterButton.click();
-            if (!fileThumbnail.waitForExists(3L)) {
+            if (mode.equals("Video")) {
+                fileThumbnail.waitForExists(3L);
                 shutterButton.click();
             }
-        }
 
-        if (fileThumbnail.waitForExists(3L)) {
-            fileThumbnail.clickAndWaitForNewWindow();
+            if (fileThumbnail.waitForExists(3L)) {
+                fileThumbnail.clickAndWaitForNewWindow();
+            }
         }
     }
 
     /* A helper method to delete a new photo or video */
     private void deleteTestFile(UiDevice device) throws UiObjectNotFoundException {
         UiObject trashCan = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_DELETE_RES));
+        UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_THUMBNAIL_RES));
+
+        if (fileThumbnail.waitForExists(3L)) {
+            fileThumbnail.clickAndWaitForNewWindow();
+        }
 
         if (trashCan.waitForExists(3L)) {
             trashCan.click();

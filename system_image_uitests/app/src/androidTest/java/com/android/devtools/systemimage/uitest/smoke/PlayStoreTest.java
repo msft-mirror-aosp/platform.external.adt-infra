@@ -101,11 +101,11 @@ public class PlayStoreTest {
      *   <pre>
      *   Test Steps:
      *   1. Start an emulator and launch home screen.
-     *   2. Open Apps.
+     *   2. Open Apps drawer.
      *   3. Confirm that Play Store is present, then launch.
-     *   5. Search for free app in store.
-     *   6. If app is available for install, begin installation.
-     *   7. Uninstall the app.
+     *   4. Search for free app in store.
+     *   5. If app is available for install, begin installation.
+     *   6. Uninstall the app.
      *   Verify:
      *      1a. If Install button was displayed, allow installation to complete then
      *      confirm that the Open button to launch the app is present.
