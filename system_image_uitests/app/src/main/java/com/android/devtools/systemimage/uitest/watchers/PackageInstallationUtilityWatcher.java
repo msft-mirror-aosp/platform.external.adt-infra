@@ -37,16 +37,10 @@ public class PackageInstallationUtilityWatcher implements UiWatcher {
     @Override
     public boolean checkForCondition() {
         boolean condition = false;
-        boolean hasPopup =
-                mDevice.findObject(new UiSelector().textMatches("(?i)settings(?-i)"))
-                        .waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+        boolean hasPopup = mDevice.findObject(new UiSelector().textMatches("(?i)new(?-i)"))
+                .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+
         try {
-            if (hasPopup) {
-                mDevice.findObject(new UiSelector().textMatches("(?i)settings(?-i)")).clickAndWaitForNewWindow();
-                condition = true;
-            }
-            hasPopup = mDevice.findObject(new UiSelector().textMatches("(?i)new(?-i)"))
-                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (hasPopup) {
                 mDevice.findObject(new UiSelector().textMatches("(?i)new(?-i)")).clickAndWaitForNewWindow();
                 condition = true;
