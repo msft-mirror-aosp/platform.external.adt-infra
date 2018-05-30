@@ -200,7 +200,7 @@ public class CameraTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
 
-        if (api < 27 && !testFramework.isGoogleApiImage()) {
+        if (api < 27 || !(testFramework.isGoogleApiImage()) || testFramework.isGoogleApiAndPlayImage()) {
             return;
         }
 

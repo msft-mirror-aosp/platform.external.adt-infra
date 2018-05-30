@@ -194,16 +194,32 @@ public class AppManager {
 
         if (SystemUtil.getApiLevel() >= 26) {
             SettingsUtil.openItem(instrumentation, "Apps & notifications");
-            String appInfoText = SystemUtil.getApiLevel() >= 26 ? "App info" : "See all";
-            final UiObject appInfoLabel = device.findObject(new UiSelector().textStartsWith(appInfoText));
+            final UiObject appInfoLabel = device.findObject(new UiSelector().textStartsWith("App info"));
+            final UiObject seeAllLabel = device.findObject(new UiSelector().textStartsWith("See all"));
 
-            Assert.assertTrue("Application info not found", new Wait().until(new Wait.ExpectedCondition() {
+            boolean appInfoLabelFound = new Wait().until(new Wait.ExpectedCondition() {
                 @Override
                 public boolean isTrue() {
                     return appInfoLabel.exists();
                 }
-            }));
-            appInfoLabel.clickAndWaitForNewWindow();
+            });
+
+            if (appInfoLabelFound) {
+                appInfoLabel.clickAndWaitForNewWindow();
+            } else {
+                boolean seeAllLabelFound = new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return seeAllLabel.exists();
+                    }
+                });
+
+                if (seeAllLabelFound) {
+                    seeAllLabel.clickAndWaitForNewWindow();
+                }
+            }
+            Assert.assertTrue("Application info not found",
+                    appInfoLabel.exists() || seeAllLabel.exists());
         } else {
             SettingsUtil.openItem(instrumentation, "Apps");
         }
