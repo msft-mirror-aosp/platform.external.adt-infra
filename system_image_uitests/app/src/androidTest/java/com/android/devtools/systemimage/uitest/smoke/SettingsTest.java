@@ -66,10 +66,10 @@ public class SettingsTest {
     private int api = testFramework.getApi();
     private final static String TAG = "SettingsTest";
 
-    // Tests under this class may take more than 60 seconds depending on buildbot infrastructure.
-    // 120 seconds is a more reliable setup here.
+    // Tests under this class takes up to 240 seconds depending on the performance of the bot the
+    // tests run on.
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(120);
+    public Timeout globalTimeout = Timeout.seconds(240);
 
     @Before
     public void activateDeviceAdmin() throws Exception {
