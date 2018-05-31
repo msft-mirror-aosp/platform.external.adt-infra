@@ -32,7 +32,6 @@ import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
-import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -337,7 +336,15 @@ public class GoogleServicesTest {
             moreButton.clickAndWaitForNewWindow();
         }
 
-        new GoogleAppContinueWatcher(device).checkForCondition();
+        final UiObject continueButton = device.findObject(new UiSelector().text("CONTINUE"));
+
+        if (new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() {
+                return continueButton.exists();
+            }})) {
+            continueButton.clickAndWaitForNewWindow();
+        }
 
         final UiObject gotItButton = device.findObject(new UiSelector().text("OK, GOT IT"));
 
