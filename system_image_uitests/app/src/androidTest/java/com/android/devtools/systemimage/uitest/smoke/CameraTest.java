@@ -147,6 +147,7 @@ public class CameraTest {
             cameraFrame.swipeRight(3);
         }
 
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
         try {
             UiObject2 cameraModeButton = UiAutomatorPlus.findObjectByRelative(
                     instrumentation,
