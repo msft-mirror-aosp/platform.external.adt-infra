@@ -23,7 +23,6 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
 
 import java.util.concurrent.TimeUnit;
@@ -52,18 +51,15 @@ public class GoogleAppUtil {
                 device.findObject(new UiSelector().description(emailStr)) :
                 device.findObject(new UiSelector().text(emailStr));
 
-        boolean needsEmail = new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return inputEmailField.exists();
-                    }
-                });
+        clickNext(device);
+
+        boolean needsEmail = inputEmailField.waitForExists(
+                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
 
         if (needsEmail) {
             inputEmailField.clearTextField();
             inputEmailField.setText(email);
-            new GoogleAppContinueWatcher(device).checkForCondition();
+            clickNext(device);
         }
 
         final UiObject inputPasswordField = api == 24 ?
@@ -81,7 +77,7 @@ public class GoogleAppUtil {
         if (needsPassword) {
             inputPasswordField.clearTextField();
             inputPasswordField.setText(password);
-            new GoogleAppContinueWatcher(device).checkForCondition();
+            clickNext(device);
         }
 
         new GoogleAppConfirmationWatcher(device).checkForCondition();
@@ -102,5 +98,16 @@ public class GoogleAppUtil {
         }
 
         device.pressHome();
+    }
+
+    private static void clickNext(UiDevice device) throws UiObjectNotFoundException{
+        UiObject nextButton = device.findObject(new UiSelector().text("NEXT"));
+        if (!nextButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            nextButton = device.findObject(new UiSelector().description("NEXT"));
+        }
+
+        if (nextButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            nextButton.clickAndWaitForNewWindow();
+        }
     }
 }

@@ -103,7 +103,12 @@ public class PackageInstallationUtil {
         context.startActivity(intent);
 
         UiDevice device = UiDevice.getInstance(instrumentation);
-        new PackageInstallationUtilityWatcher(device).checkForCondition();
+        UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)"));
+
+        boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        if (hasSettings) {
+            settingsButton.clickAndWaitForNewWindow();
+        }
 
         UiObject allowSwitch = device.findObject(new UiSelector().className("android.widget.Switch"));
         boolean hasAllowSwitch = allowSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
@@ -112,9 +117,9 @@ public class PackageInstallationUtil {
                 allowSwitch.click();
             }
             device.pressBack();
+        } else {
+            Log.w(TAG, "Could not allow installation from outside sources");
         }
-
-        new PackageInstallationUtilityWatcher(device).checkForCondition();
 
         UiObject installButton = device.findObject(new UiSelector().textMatches("(?i)install(?-i)"));
         boolean hasInstallButton = installButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));

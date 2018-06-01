@@ -147,6 +147,7 @@ public class CameraTest {
             cameraFrame.swipeRight(3);
         }
 
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
         try {
             UiObject2 cameraModeButton = UiAutomatorPlus.findObjectByRelative(
                     instrumentation,
@@ -200,7 +201,7 @@ public class CameraTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
 
-        if (api < 27 && !testFramework.isGoogleApiImage()) {
+        if (api < 27 || !(testFramework.isGoogleApiImage()) || testFramework.isGoogleApiAndPlayImage()) {
             return;
         }
 

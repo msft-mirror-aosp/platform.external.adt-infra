@@ -25,7 +25,6 @@ import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
-import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 import java.util.concurrent.TimeUnit;
 
@@ -148,12 +147,10 @@ public class PlayStoreUtil {
             return;
         }
 
-        new GoogleAppContinueWatcher(device).checkForCondition();
         GoogleAppUtil.loginGoogleApp(instrumentation);
 
         AppLauncher.launch(instrumentation, "Play Store");
         new GoogleAppConfirmationWatcher(device).checkForCondition();
-        resetPlayStore(instrumentation);
         device.pressHome();
     }
 
