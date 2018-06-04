@@ -148,6 +148,7 @@ public class CameraTest {
         }
 
         new CameraAccessPermissionsWatcher(device).checkForCondition();
+
         try {
             UiObject2 cameraModeButton = UiAutomatorPlus.findObjectByRelative(
                     instrumentation,
@@ -171,12 +172,19 @@ public class CameraTest {
 
         String fileExt = mode.equals("Camera") ? ".jpg" : ".mp4";
         String newFileList = listGalleryFiles(instrumentation);
+
+        Log.d(TAG, "Test mode is " + mode);
+        Log.d(TAG, "Original gallery file list is " + originalFileList);
+        Log.d(TAG, "Gallery file list after create is " + newFileList);
+
         Assert.assertTrue("New file was not added to the gallery",
                 !originalFileList.equals(newFileList) && newFileList.contains(fileExt));
 
         deleteTestFile(device);
 
         String lastFileList = listGalleryFiles(instrumentation);
+        Log.d(TAG, "Gallery file list after delete is " + lastFileList);
+
         return originalFileList.equals(lastFileList);
     }
 
@@ -242,10 +250,17 @@ public class CameraTest {
                     new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
-                        return result != null && result.stderr != null && result.stderr.length() == 0;
+                        return result.stderr != null && result.stderr.length() == 0;
                     }
                 });
-        Assert.assertTrue("Media gallery 'ls' command failed", photosListed);
+
+        if (!photosListed) {
+            Log.e(TAG, "Gallery files not listed. Error: " + result.stderr);
+            Log.w(TAG, "External storage directory is " + externalStorageDir);
+            Log.w(TAG, "Shell command (" + cmd + ") results: " + result.stdout);
+        }
+
+        Assert.assertTrue("Media gallery 'ls' command failed.", photosListed);
         Log.d(TAG, "ls result " + result.stdout);
         return result.stdout;
     }
