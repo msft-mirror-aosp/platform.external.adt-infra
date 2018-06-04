@@ -45,13 +45,23 @@ public class GoogleAppUtil {
      */
     public static void loginGoogleApp(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
+        final UiObject signInButton = device.findObject(
+                new UiSelector().textMatches(("(?i)sign in(?-i)")));
+        boolean needsSignIn = new Wait().
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws UiObjectNotFoundException {
+                        return signInButton.exists();
+                    }
+                });
+        if (needsSignIn) {
+            signInButton.clickAndWaitForNewWindow();
+        }
 
         String emailStr = "Email or phone";
         final UiObject inputEmailField = api == 24 ?
                 device.findObject(new UiSelector().description(emailStr)) :
                 device.findObject(new UiSelector().text(emailStr));
-
-        clickNext(device);
 
         boolean needsEmail = inputEmailField.waitForExists(
                 TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
