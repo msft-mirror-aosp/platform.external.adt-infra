@@ -37,6 +37,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
+import android.util.Log;
 
 import java.util.concurrent.TimeUnit;
 
@@ -51,9 +52,10 @@ public class AppTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(180);
+    public Timeout globalTimeout = Timeout.seconds(240);
 
     private int api = testFramework.getApi();
+    private final String TAG = "AppTest";
 
     /**
      * Verifies an app runs on the emulator.
@@ -179,31 +181,40 @@ public class AppTest {
             // Verify the new bookmark is in the list.
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
-            if (bookmarks.exists())
+            if (bookmarks.exists()) {
                 bookmarks.clickAndWaitForNewWindow();
+            }
+
+            Log.d(TAG, "The bookmark is set");
             new AppWatcher(device).checkForCondition();
 
             UiObject mobileBookmarks = device.findObject(new UiSelector().text("Mobile bookmarks")
                     .resourceId(Res.CHROME_TITLE_RES));
             mobileBookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
-            if (mobileBookmarks.exists())
+            if (mobileBookmarks.exists()) {
                 mobileBookmarks.clickAndWaitForNewWindow();
+            }
+
+            Log.d(TAG, "Searching for bookmark...");
             new AppWatcher(device).checkForCondition();
 
             assertTrue("Cannot find bookmark",
                     new Wait().until(new Wait.ExpectedCondition() {
                         @Override
                         public boolean isTrue() {
-                            return device.findObject(new UiSelector().textContains(("kmarks"))).exists() &&
-                                    device.findObject(new UiSelector().textContains(
-                                            "ESPN").resourceId(
-                                                    Res.CHROME_TITLE_RES)).exists();
+                            return device.findObject(
+                                    new UiSelector().textContains(("kmarks"))).exists() &&
+                                    device.findObject(new UiSelector().textContains("ESPN").resourceId(
+                                            Res.CHROME_TITLE_RES)).exists();
                         }
                     })
             );
 
             device.findObject(new UiSelector().resourceId(
                     Res.CHROME_CLOSE_MENU_BUTTON_RES)).clickAndWaitForNewWindow();
+
+            Log.d(TAG, "Closing the menu");
+
             // Delete the bookmark.
             device.pressMenu();
             device.findObject(
