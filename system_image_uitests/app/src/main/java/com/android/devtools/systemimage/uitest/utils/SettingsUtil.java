@@ -27,7 +27,7 @@ public class SettingsUtil {
      * clickable items.
      */
     public static UiScrollable launchAndGetItemList(
-            Instrumentation instrumentation) throws UiObjectNotFoundException {
+            Instrumentation instrumentation) throws Exception {
         AppLauncher.launch(instrumentation, "Settings");
 
         UiScrollable itemList = new UiScrollable(new UiSelector().resourceIdMatches(
@@ -44,7 +44,7 @@ public class SettingsUtil {
      * @{code true} iff the item is there.
      */
     public static boolean scrollToItem(
-            Instrumentation instrumentation, String text) throws UiObjectNotFoundException {
+            Instrumentation instrumentation, String text) throws Exception {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
         return itemList.scrollIntoView(new UiSelector().textContains(text));
     }
@@ -53,7 +53,7 @@ public class SettingsUtil {
      * Launches Settings and find the item with the given name. Returns the item.
      */
     public static UiObject findItem(
-            Instrumentation instrumentation, String name) throws UiObjectNotFoundException {
+            Instrumentation instrumentation, String name) throws Exception {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
         UiObject item = itemList.getChildByText(
                 new UiSelector().className("android.widget.TextView"), name);
@@ -68,7 +68,7 @@ public class SettingsUtil {
      * Launches Settings and launch the item with the given name. Returns the result of the call.
      */
     public static boolean openItem(
-            Instrumentation instrumentation, String name) throws UiObjectNotFoundException {
+            Instrumentation instrumentation, String name) throws Exception {
         return findItem(instrumentation, name).clickAndWaitForNewWindow();
     }
 
@@ -78,10 +78,10 @@ public class SettingsUtil {
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      * @param adminName admin policy name
-     * @throws UiObjectNotFoundException if it fails to find a UI widget.
+     * @throws Exception if it fails to find a UI widget.
      */
     public static void activate(Instrumentation instrumentation, String adminName)
-            throws UiObjectNotFoundException {
+            throws Exception {
         changePolicyActivation(instrumentation, adminName, "Activate");
     }
 
@@ -91,16 +91,16 @@ public class SettingsUtil {
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      * @param adminName admin policy name
-     * @throws UiObjectNotFoundException if it fails to find a UI widget.
+     * @throws Exception if it fails to find a UI widget.
      */
     public static void deactivate(Instrumentation instrumentation, String adminName)
-            throws UiObjectNotFoundException {
+            throws Exception {
         changePolicyActivation(instrumentation, adminName, "Deactivate");
     }
 
 
     private static void changePolicyActivation(Instrumentation instrumentation, String adminName,
-                                               String change) throws UiObjectNotFoundException {
+                                               String change) throws Exception {
 
         if (SystemUtil.getApiLevel() >= 27) {
             SettingsUtil.openItem(instrumentation, "Security & location");
@@ -171,12 +171,12 @@ public class SettingsUtil {
      * @param enablePermissions boolean indicating whether the permissions should be enabled
      *                          or disabled.
      * @return void
-     * @throws UiObjectNotFoundException if it fails to find a UI object.
+     * @throws Exception if it fails to find a UI object.
      */
     public static void setAppPermissions(
             Instrumentation instrumentation, String appType,
             String appName, boolean enablePermissions)
-            throws UiObjectNotFoundException {
+            throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (SystemUtil.getApiLevel() < 23) {

@@ -44,8 +44,7 @@ public class AppLauncher {
      * @param appName         the app name to launch
      * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
-    public static void launch(Instrumentation instrumentation, String appName)
-            throws UiObjectNotFoundException {
+    public static void launch(Instrumentation instrumentation, String appName) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
@@ -74,16 +73,27 @@ public class AppLauncher {
         // maximum of 5 swipes. The combination of these techniques is intended to mediate
         // against any gesture-based failures, which can occur due to UI changes between APIs.
 
-        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-        UiSelector textSelector = new UiSelector().text(appName);
-        UiObject app = device.findObject(textSelector);
+        final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true)).setAsVerticalList();
+        final UiSelector appSelector = new UiSelector().text(appName);
+        final UiObject app = device.findObject(appSelector);
 
         try {
             scrollable.setAsVerticalList();
-            appNameFound = scrollable.scrollIntoView(textSelector);
+            appNameFound = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    return scrollable.scrollIntoView(appSelector);
+                }
+            });
+
             if (!appNameFound) {
                 scrollable.setAsHorizontalList();
-                appNameFound = scrollable.scrollIntoView(textSelector);
+                appNameFound = new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws UiObjectNotFoundException {
+                        return scrollable.scrollIntoView(appSelector);
+                    }
+                });
             }
         } catch (UiObjectNotFoundException e) {
             device.pressHome();
@@ -103,12 +113,28 @@ public class AppLauncher {
                 appsLabel.clickAndWaitForNewWindow();
             }
 
-            int swipes = 0;
-            while (!app.exists() && swipes < 5) {
-                scrollable.flingForward();
-                swipes++;
+            if (!app.exists()) {
+                final UiObject launcherList = device.findObject(new UiSelector().
+                        resourceId(Res.LAUNCHER_LIST_CONTAINER_RES));
+                boolean launcherListFound = new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return launcherList.exists();
+                    }
+                });
+                if (launcherListFound) {
+                    launcherList.clickAndWaitForNewWindow();
+                } else if (scrollable.exists()) {
+                    scrollable.flingForward();
+                }
             }
-            appNameFound = app.exists();
+
+            appNameFound = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() {
+                    return app.exists();
+                }
+            });
         }
         if (appNameFound) {
             app.clickAndWaitForNewWindow();
@@ -121,10 +147,10 @@ public class AppLauncher {
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      * @param appPath         the app path to launch
-     * @throws UiObjectNotFoundException if it fails to find a UI object.
+     * @throws Exception if it fails to find a UI object.
      */
     public static void launchPath(Instrumentation instrumentation, String... appPath)
-            throws UiObjectNotFoundException {
+            throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         launch(instrumentation, appPath[0]);
 

@@ -49,8 +49,8 @@ public class Res {
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
                     + "/cling_dismiss_longpress_info";
     public static final String LAUNCHER_LIST_CONTAINER_RES =
-            "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id|com.google.android.apps.nexuslauncher\\d*:id)"
-                    + "/(all_apps_container|all_apps_handle|apps_customize_pane_content|apps_list_view)";
+            "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id|com.google.android.apps.nexuslauncher\\d*:id|com.android.launcher3\\d*:id/active)"
+                    + "/(all_apps_container|all_apps_handle|apps_customize_pane_content|apps_list_view|drag_indicator)";
 
     public static final String ANDROID_PHONE_RES = "com.android.phone";
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =

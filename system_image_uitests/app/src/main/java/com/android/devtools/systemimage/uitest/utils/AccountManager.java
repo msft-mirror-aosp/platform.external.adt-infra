@@ -25,6 +25,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -37,6 +38,7 @@ public class AccountManager {
         throw new AssertionError();
     }
 
+    private final static String TAG = "AccountManager";
     /**
      * Adds a Google account in settings.
      *
@@ -66,7 +68,11 @@ public class AccountManager {
             br.close();
         }
 
-        openAccountList(instrumentation);
+        try {
+            openAccountList(instrumentation);
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
 
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.findObject(new UiSelector().text("Add account")).clickAndWaitForNewWindow();
@@ -137,7 +143,12 @@ public class AccountManager {
             username = br.readLine().trim();
             br.close();
         }
-        openAccountList(instrumentation);
+
+        try {
+            openAccountList(instrumentation);
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
 
         UiDevice device = UiDevice.getInstance(instrumentation);
         // Iterate over the list to find and remove the account.
@@ -167,8 +178,7 @@ public class AccountManager {
         }
     }
 
-    private static void openAccountList(Instrumentation instrumentation)
-            throws UiObjectNotFoundException {
+    private static void openAccountList(Instrumentation instrumentation) throws Exception {
         SettingsUtil.openItem(instrumentation, "Accounts");
     }
 }
