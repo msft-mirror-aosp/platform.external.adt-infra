@@ -20,6 +20,7 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
+import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 
 import org.junit.Rule;
@@ -31,12 +32,10 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
-import java.util.concurrent.TimeUnit;
-
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 /**
  * Test for adding a Google account.
@@ -47,7 +46,9 @@ public class AddGoogleAccountTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(60);
+    public Timeout globalTimeout = Timeout.seconds(120);
+
+    private int api = testFramework.getApi();
 
     /**
      * Verifies able to add a Google account using Contacts app.
@@ -61,7 +62,6 @@ public class AddGoogleAccountTest {
      *   1. Start the emulator.
      *   2. Open Contacts app.
      *   3. Tap on "Add Account"
-     *   4. Tap on "Add Contact" and choose "Add Account"
      *   Verify:
      *   User is prompted to sign in to a Google Account.
      *   </pre>
@@ -69,10 +69,10 @@ public class AddGoogleAccountTest {
     @Test
     @TestInfo(id = "14581151")
     public void testAddAccountUsingContactsApp() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice mDevice = testFramework.getDevice();
+        final Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice mDevice = testFramework.getDevice();
 
-        if (testFramework.getApi() > 19) {
+        if (api > 19) {
             AppLauncher.launch(instrumentation, "Contacts");
             // Check if the app is running for the first time.
             UiObject checkingInfo =
@@ -87,18 +87,24 @@ public class AddGoogleAccountTest {
             new AddGoogleAccountWatcher(mDevice).checkForCondition();
         }
 
-        UiObject add_contact = UiAutomatorPlus.findObjectMatchingAny(instrumentation,
-                new UiSelector().className("android.widget.Button").textContains("new"),
-                new UiSelector().className("android.widget.ImageButton").descriptionContains("new"));
-        add_contact.clickAndWaitForNewWindow();
-        assertFalse("Checking info failure",
-                mDevice.findObject(new UiSelector().textContains("Checking Info")).
-                        waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)));
+        UiObject addAccount = mDevice.findObject(
+                new UiSelector().textMatches(("(?i)add account(?-i)")));
+
+        boolean isFound = addAccount.waitForExists(5L);
+        if (isFound) {
+            addAccount.clickAndWaitForNewWindow();
+        }
+
         new AddGoogleAccountWatcher(mDevice).checkForCondition();
+
         assertTrue("Add Google account page not found",
-                UiAutomatorPlus.findObjectMatchingAny(instrumentation,
-                    new UiSelector().textContains("Add account"),
-                    new UiSelector().textContains("new contact"),
-                    new UiSelector().textContains("Sign in")).exists());
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws UiObjectNotFoundException {
+                        return UiAutomatorPlus.findObjectMatchingAny(instrumentation,
+                                new UiSelector().descriptionMatches(("(?i)sign in(?-i)")),
+                                new UiSelector().textMatches(("(?i)sign in(?-i)"))).exists();
+                    }
+                }));
     }
 }
