@@ -174,12 +174,8 @@ public class SettingsTest {
         SettingsUtil.setAppPermissions(instrumentation, app, app, false);
         device.pressHome();
 
-        if (api >= 25) {
-            device.findObject(new UiSelector().resourceIdMatches(
-                    Res.LAUNCHER_LIST_CONTAINER_RES)).clickAndWaitForNewWindow();
-        }
+        AppLauncher.launch(instrumentation, app);
 
-        device.findObject(new UiSelector().text(app)).clickAndWaitForNewWindow();
         device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_PHONE_RES)).
                 clickAndWaitForNewWindow();
         device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_DIGITS_RES)).setText("555");
@@ -191,7 +187,7 @@ public class SettingsTest {
                     public boolean isTrue() throws Exception {
                         return device.findObject(new UiSelector().text(
                                 "This application cannot make outgoing calls without the Phone permission.")).
-                                exists();
+                                        exists();
                         }
                 })
         );
@@ -347,13 +343,18 @@ public class SettingsTest {
                 Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES :  Res.ANDROID_LIST_RES;
         final String label = "Date & time";
 
-        if (api >= 26) {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text(label))
-                    .clickAndWaitForNewWindow();
-        } else {
-            SettingsUtil.openItem(instrumentation, label);
+        try {
+            if (api >= 26) {
+                SettingsUtil.openItem(instrumentation, "System");
+                device.findObject(new UiSelector().text(label))
+                        .clickAndWaitForNewWindow();
+            } else {
+                SettingsUtil.openItem(instrumentation, label);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
         }
+
         UiObject2 dateTimeSwitch = null;
 
         try {
@@ -765,7 +766,7 @@ public class SettingsTest {
         }
     }
 
-    private void gotoCameraApp() throws UiObjectNotFoundException {
+    private void gotoCameraApp() throws Exception {
         AppLauncher.launch(instrumentation, "Camera");
         new CameraAccessPermissionsWatcher(device).checkForCondition();
     }

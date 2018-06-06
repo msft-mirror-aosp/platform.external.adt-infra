@@ -19,10 +19,8 @@ package com.android.devtools.systemimage.uitest.smoke;
 import android.app.Instrumentation;
 import android.os.Environment;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
@@ -33,7 +31,6 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
-import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 
@@ -148,15 +145,20 @@ public class CameraTest {
         }
 
         new CameraAccessPermissionsWatcher(device).checkForCondition();
-        try {
-            UiObject2 cameraModeButton = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.res("com.android.camera2:id/selector_icon"),
-                    By.text(mode),
-                    By.res("com.android.camera2:id/mode_list"));
-            cameraModeButton.click();
-        } catch(UiObjectNotFoundException e) {
-            Assert.assertTrue("Button to select " + mode + " mode not found", false);
+
+        boolean cameraModeButtonExists = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() {
+                    return device.findObject(new UiSelector().descriptionStartsWith("Switch to")).exists();
+                }
+            });
+
+        Assert.assertTrue("Button to select " + mode + " mode not found", cameraModeButtonExists);
+
+        if (mode.equals("Camera")) {
+            device.findObject(new UiSelector().description("Switch to Camera Mode")).click();
+        } else {
+            device.findObject(new UiSelector().description("Switch to Video Camera")).click();
         }
 
         createTestFile(device, mode);
@@ -171,12 +173,19 @@ public class CameraTest {
 
         String fileExt = mode.equals("Camera") ? ".jpg" : ".mp4";
         String newFileList = listGalleryFiles(instrumentation);
+
+        Log.d(TAG, "Test mode is " + mode);
+        Log.d(TAG, "Original gallery file list is " + originalFileList);
+        Log.d(TAG, "Gallery file list after create is " + newFileList);
+
         Assert.assertTrue("New file was not added to the gallery",
                 !originalFileList.equals(newFileList) && newFileList.contains(fileExt));
 
         deleteTestFile(device);
 
         String lastFileList = listGalleryFiles(instrumentation);
+        Log.d(TAG, "Gallery file list after delete is " + lastFileList);
+
         return originalFileList.equals(lastFileList);
     }
 
@@ -242,10 +251,17 @@ public class CameraTest {
                     new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
-                        return result != null && result.stderr != null && result.stderr.length() == 0;
+                        return result.stderr != null && result.stderr.length() == 0;
                     }
                 });
-        Assert.assertTrue("Media gallery 'ls' command failed", photosListed);
+
+        if (!photosListed) {
+            Log.e(TAG, "Gallery files not listed. Error: " + result.stderr);
+            Log.w(TAG, "External storage directory is " + externalStorageDir);
+            Log.w(TAG, "Shell command (" + cmd + ") results: " + result.stdout);
+        }
+
+        Assert.assertTrue("Media gallery 'ls' command failed.", photosListed);
         Log.d(TAG, "ls result " + result.stdout);
         return result.stdout;
     }

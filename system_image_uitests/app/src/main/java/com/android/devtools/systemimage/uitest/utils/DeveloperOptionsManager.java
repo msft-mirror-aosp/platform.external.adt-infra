@@ -40,10 +40,10 @@ public class DeveloperOptionsManager {
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
-     * @throws UiObjectNotFoundException if it fails to find a UI widget.
+     * @throws Exception if it fails to find a UI widget.
      */
     public static void enableDeveloperOptions(SystemImageTestFramework testFramework)
-            throws UiObjectNotFoundException {
+            throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
@@ -86,8 +86,9 @@ public class DeveloperOptionsManager {
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
      * @return {@code true} if the developer options is enabled, or {@code false} otherwise.
+     * @throws Exception is it fails to find a UI widget.
      */
-    public static boolean isDeveloperOptionsEnabled(SystemImageTestFramework testFramework) {
+    public static boolean isDeveloperOptionsEnabled(SystemImageTestFramework testFramework) throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
