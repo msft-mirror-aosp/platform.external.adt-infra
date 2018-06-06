@@ -19,10 +19,8 @@ package com.android.devtools.systemimage.uitest.smoke;
 import android.app.Instrumentation;
 import android.os.Environment;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
@@ -33,7 +31,6 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
-import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 
@@ -149,15 +146,19 @@ public class CameraTest {
 
         new CameraAccessPermissionsWatcher(device).checkForCondition();
 
-        try {
-            UiObject2 cameraModeButton = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.res("com.android.camera2:id/selector_icon"),
-                    By.text(mode),
-                    By.res("com.android.camera2:id/mode_list"));
-            cameraModeButton.click();
-        } catch(UiObjectNotFoundException e) {
-            Assert.assertTrue("Button to select " + mode + " mode not found", false);
+        boolean cameraModeButtonExists = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() {
+                    return device.findObject(new UiSelector().descriptionStartsWith("Switch to")).exists();
+                }
+            });
+
+        Assert.assertTrue("Button to select " + mode + " mode not found", cameraModeButtonExists);
+
+        if (mode.equals("Camera")) {
+            device.findObject(new UiSelector().description("Switch to Camera Mode")).click();
+        } else {
+            device.findObject(new UiSelector().description("Switch to Video Camera")).click();
         }
 
         createTestFile(device, mode);
