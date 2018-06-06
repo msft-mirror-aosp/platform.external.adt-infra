@@ -184,7 +184,7 @@ public class GoogleServicesTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (api < 24 || !testFramework.isGoogleApiImage()) {
+        if (api < 24) {
             return;
         }
 
