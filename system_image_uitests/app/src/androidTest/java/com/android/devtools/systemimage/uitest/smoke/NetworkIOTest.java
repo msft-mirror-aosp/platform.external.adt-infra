@@ -111,7 +111,7 @@ public class NetworkIOTest {
                             }
                         });
                 assertTrue("Failed to dismiss the loading bar.", isSuccess);
-            }  else if (testFramework.isGoogleApiImage()) {
+            }  else if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
                 device.openNotification();
                 String cellularData = api >= 26 ? "Mobile data" : "Mobile Cellular Data";
                 boolean hasCellularData =
