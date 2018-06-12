@@ -169,6 +169,7 @@ public class PlayStoreTest {
      *   </pre>
      */
 
+    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "924a0428-4e07-4794-b6a7-2c9d407204aa")
     public void testAppInstallationAndLaunch() throws Exception {
@@ -281,6 +282,7 @@ public class PlayStoreTest {
      *   </pre>
      */
 
+    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "fe78dba5-a0f2-4acf-bcbb-10b1c15d3484")
     public void testParentalControls() throws Exception {
