@@ -33,6 +33,7 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
 import com.android.devtools.systemimage.uitest.watchers.PlayStoreControlsWatcher;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -115,6 +116,7 @@ public class PlayStoreTest {
      *   </pre>
      */
 
+    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "cb0ccd97-f045-42fa-8293-a32e94e838aa")
     public void testAppInstallation() throws Exception {
