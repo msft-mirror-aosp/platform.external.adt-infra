@@ -25,6 +25,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
+import android.view.KeyEvent;
 
 /**
  * Application launcher.
@@ -35,6 +36,8 @@ public class AppLauncher {
     private AppLauncher() {
         throw new AssertionError();
     }
+
+    private static final int api = SystemUtil.getApiLevel();
 
     /**
      * Launches application by launcher.
@@ -75,7 +78,7 @@ public class AppLauncher {
 
         final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true)).setAsVerticalList();
         final UiSelector appSelector = new UiSelector().text(appName);
-        final UiObject app = device.findObject(appSelector);
+        final UiObject appObject = device.findObject(appSelector);
 
         try {
             scrollable.setAsVerticalList();
@@ -113,31 +116,34 @@ public class AppLauncher {
                 appsLabel.clickAndWaitForNewWindow();
             }
 
-            if (!app.exists()) {
-                final UiObject launcherList = device.findObject(new UiSelector().
-                        resourceId(Res.LAUNCHER_LIST_CONTAINER_RES));
-                boolean launcherListFound = new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return launcherList.exists();
+            if (!appObject.exists()) {
+                if (api >= 28) {
+                    device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
+                } else {
+                    final UiObject launcherList = device.findObject(new UiSelector().
+                            resourceId(Res.LAUNCHER_LIST_CONTAINER_RES));
+                    boolean launcherListFound = new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return launcherList.exists();
+                        }
+                    });
+                    if (launcherListFound) {
+                        launcherList.clickAndWaitForNewWindow();
+                    } else if (scrollable.exists()) {
+                        scrollable.flingForward();
                     }
-                });
-                if (launcherListFound) {
-                    launcherList.clickAndWaitForNewWindow();
-                } else if (scrollable.exists()) {
-                    scrollable.flingForward();
                 }
             }
-
             appNameFound = new Wait().until(new Wait.ExpectedCondition() {
                 @Override
                 public boolean isTrue() {
-                    return app.exists();
+                    return appObject.exists();
                 }
             });
         }
         if (appNameFound) {
-            app.clickAndWaitForNewWindow();
+            appObject.clickAndWaitForNewWindow();
         }
     }
 
