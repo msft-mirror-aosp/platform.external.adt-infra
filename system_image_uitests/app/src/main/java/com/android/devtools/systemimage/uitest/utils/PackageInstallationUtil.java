@@ -45,7 +45,7 @@ import android.content.pm.ApplicationInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 
 /**
- * Package installation utility.
+ * Package installation utility
  */
 public class PackageInstallationUtil {
 
@@ -83,10 +83,10 @@ public class PackageInstallationUtil {
      *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
-     * @param apkName         the name of the apk to be installed (i.e. ApiDemos_x86.apk)
+     * @param apkName         the name of the apk to be installed (ie ApiDemos_x86.apk)
      */
-    @TargetApi(24)
-    public static void installApk(Instrumentation instrumentation, String apkName) throws Exception {
+    @TargetApi(26)
+    public static String installApk(Instrumentation instrumentation, String apkName) throws Exception {
         Context context = instrumentation.getTargetContext();
         AssetManager assetManager = context.getAssets();
         InputStream in = assetManager.open(apkName);
@@ -95,6 +95,8 @@ public class PackageInstallationUtil {
         copyFile(in, out);
         in.close();
         out.close();
+
+        String result = "";
 
         // Install app via Intent and UiAutomator
         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -108,6 +110,8 @@ public class PackageInstallationUtil {
         boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         if (hasSettings) {
             settingsButton.clickAndWaitForNewWindow();
+        } else {
+            result += "Could not find settings icon. ";
         }
 
         UiObject allowSwitch = device.findObject(new UiSelector().className("android.widget.Switch"));
@@ -118,13 +122,15 @@ public class PackageInstallationUtil {
             }
             device.pressBack();
         } else {
-            Log.w(TAG, "Could not allow installation from outside sources");
+            result += "Could not allow installation from outside sources. ";
         }
 
         UiObject installButton = device.findObject(new UiSelector().textMatches("(?i)install(?-i)"));
         boolean hasInstallButton = installButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         if (hasInstallButton) {
             installButton.clickAndWaitForNewWindow();
+        }  else {
+            result += "Could not find install button. ";
         }
 
         new PackageInstallationUtilityWatcher(device).checkForCondition();
@@ -133,7 +139,13 @@ public class PackageInstallationUtil {
         boolean hasDoneButton = doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         if (hasDoneButton) {
             doneButton.clickAndWaitForNewWindow();
+        } else {
+            result += "Could not find done button. ";
         }
+        if (!result.isEmpty()) {
+            Log.w(TAG, result);
+        }
+        return result;
     }
 
     private static void copyFile(InputStream in, OutputStream out) throws IOException {

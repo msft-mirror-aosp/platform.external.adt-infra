@@ -81,6 +81,9 @@ public class AppTest {
     @TestInfo(id = "14578823")
     public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
+        String testPackageName = "com.example.android.rs.hellocompute";
+        String apk = "HelloCompute.apk";
+        String result = "";
 
         // Disable test for API 18. Enable when bug 30437951 is fixed.
         if (api == 18) {
@@ -88,10 +91,18 @@ public class AppTest {
         }
 
         // Install RsHelloCompute, if not already present.
-        if (!PackageInstallationUtil.isPackageInstalled(instrumentation,
-                "com.example.android.rs.hellocompute")) {
-            PackageInstallationUtil.installApk(instrumentation, "HelloCompute.apk");
+        boolean isHelloComputeInstalled = PackageInstallationUtil.
+                isPackageInstalled(instrumentation, testPackageName);
+
+        if (!isHelloComputeInstalled) {
+            result = PackageInstallationUtil.installApk(instrumentation, apk);
+            isHelloComputeInstalled = PackageInstallationUtil.
+                    isPackageInstalled(instrumentation, testPackageName);
         }
+
+        assertTrue("Application " + apk + " is not installed. Result: " + result,
+                isHelloComputeInstalled);
+
 
         AppLauncher.launch(instrumentation, "RsHelloCompute");
         assertTrue(testFramework.getDevice().findObject(new UiSelector().resourceId(

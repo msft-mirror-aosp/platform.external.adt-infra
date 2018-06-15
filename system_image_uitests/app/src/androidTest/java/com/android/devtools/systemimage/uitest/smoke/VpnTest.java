@@ -38,6 +38,8 @@ import android.support.test.uiautomator.UiSelector;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * Test on VPN app.
  */
@@ -109,6 +111,9 @@ public class VpnTest {
     public void testVpn() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
+        String testPackageName = "com.test.vpn";
+        String apk = "FredVPN.apk";
+        String result = "";
 
         // Disable test for API 19. Enable when bug 30376641 is fixed.
         if (api == 19) {
@@ -116,10 +121,17 @@ public class VpnTest {
         }
 
         // Install TestVPN, if not already present.
-        if (!PackageInstallationUtil.isPackageInstalled(instrumentation,
-                "com.test.vpn")) {
-            PackageInstallationUtil.installApk(instrumentation, "FredVPN.apk");
+        boolean isTestVPNInstalled = PackageInstallationUtil.
+                isPackageInstalled(instrumentation, testPackageName);
+
+        if (!isTestVPNInstalled) {
+            result = PackageInstallationUtil.installApk(instrumentation, apk);
+            isTestVPNInstalled = PackageInstallationUtil.
+                    isPackageInstalled(instrumentation, testPackageName);
         }
+
+        assertTrue("Application " + apk + " is not installed. Result: " + result,
+                isTestVPNInstalled);
 
         // Check if VPN is on. If true, skip.
         if (!verifyVpnStatus(device)) {

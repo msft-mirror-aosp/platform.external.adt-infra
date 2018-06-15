@@ -31,6 +31,8 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiSelector;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * Unit test on {@link com.android.devtools.systemimage.uitest.watchers.CrashWatcher CrashWatcher}.
  * <p>
@@ -47,14 +49,25 @@ public class CrashWatcherTest {
     @Test
     @TestInfo()
     public void testCrashWatcher() throws Exception {
+        String testPackageName = "com.example.android.displayingbitmaps";
+        String apk = "CrashExample.apk";
+        String result = "";
+
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
 
         // Install DisplayingBitmaps, if not already present.
-        if (!PackageInstallationUtil.isPackageInstalled(instrumentation,
-                "com.example.android.displayingbitmaps")) {
-            PackageInstallationUtil.installApk(instrumentation, "CrashExample.apk");
+        boolean isCrashExampleInstalled = PackageInstallationUtil.
+                isPackageInstalled(instrumentation, testPackageName);
+
+        if (!isCrashExampleInstalled) {
+            result = PackageInstallationUtil.installApk(instrumentation, apk);
+            isCrashExampleInstalled = PackageInstallationUtil.
+                    isPackageInstalled(instrumentation, testPackageName);
         }
+
+        assertTrue("Application " + apk + " is not installed. Result: " + result,
+                isCrashExampleInstalled);
 
         // CrashWatcher has been registered in SystemImageTestFramework#apply()
         // Here we only need to trigger the crash event, and expect the assertion failure.

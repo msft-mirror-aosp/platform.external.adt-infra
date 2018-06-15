@@ -16,10 +16,13 @@
 
 package com.android.devtools.systemimage.uitest.utils;
 
-import android.annotation.TargetApi;
 import android.app.Instrumentation;
 import android.os.Build;
 import android.text.TextUtils;
+
+import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Install the ApiDemos application, based on chipset
@@ -32,24 +35,38 @@ public class ApiDemosInstaller {
 
     /**
      * Installs API Demos test onto image, if not present
-     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
-     * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
-    @TargetApi(24)
-    public static void installApp(Instrumentation instrumentation)
+
+    public static void installApp()
             throws Exception {
-        String testPackageName = "com.example.android.apis";
-        String testPackageAPK32 = "ApiDemos_x86.apk";
-        String testPackageAPK64 = "ApiDemos_x86_64.apk";
+        SystemImageTestFramework testFramework = new SystemImageTestFramework();
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        String result = "";
 
-        String apk = TextUtils.join(", ", Build.SUPPORTED_ABIS).contains("64") ?
-                testPackageAPK64 : testPackageAPK32;
-        boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
-                testPackageName);
+        if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
+            String testPackageName = "com.example.android.apis";
+            String testPackageAPK32 = "ApiDemos_x86.apk";
+            String testPackageAPK64 = "ApiDemos_x86_64.apk";
+            String apk = "";
+            boolean isAPIDemoInstalled = false;
 
-        if (!isAPIDemoInstalled)
-            PackageInstallationUtil.installApk(instrumentation, apk);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                apk = TextUtils.join(", ", Build.SUPPORTED_ABIS).contains("64") ?
+                        testPackageAPK64 : testPackageAPK32;
 
-        SettingsUtil.activate(instrumentation, "Sample Device Admin");
+                isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
+                        testPackageName);
+
+                if (!isAPIDemoInstalled) {
+                    result = PackageInstallationUtil.installApk(instrumentation, apk);
+                    isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
+                            testPackageName);
+                }
+            }
+
+            assertTrue("Application " + testPackageName + " (" + apk + ") is not installed. Result: " + result, isAPIDemoInstalled);
+
+            SettingsUtil.activate(instrumentation, "Sample Device Admin");
+        }
     }
 }

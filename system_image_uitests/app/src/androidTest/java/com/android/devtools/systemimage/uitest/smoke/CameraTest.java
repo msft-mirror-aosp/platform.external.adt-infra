@@ -217,12 +217,19 @@ public class CameraTest {
         String testPackageName = "com.google.ar.core.examples.c.helloar";
         String apk = "HelloAr_C.apk";
         String appName = "HelloAR C";
-        boolean isAPIDemoInstalled = PackageInstallationUtil.
+        String result = "";
+
+        boolean isHelloARInstalled = PackageInstallationUtil.
                 isPackageInstalled(instrumentation, testPackageName);
 
-        if (!isAPIDemoInstalled) {
-            PackageInstallationUtil.installApk(instrumentation, apk);
+        if (!isHelloARInstalled) {
+            result = PackageInstallationUtil.installApk(instrumentation, apk);
+            isHelloARInstalled = PackageInstallationUtil.
+                    isPackageInstalled(instrumentation, testPackageName);
         }
+
+        assertTrue("Application " + apk + " is not installed. Result: " + result,
+                isHelloARInstalled);
 
         AppLauncher.launchPath(instrumentation, new String[]{appName});
         new CameraAccessPermissionsWatcher(device).checkForCondition();
