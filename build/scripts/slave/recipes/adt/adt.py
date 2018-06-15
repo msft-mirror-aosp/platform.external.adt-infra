@@ -260,10 +260,7 @@ def RunSteps(api):
                    ['--poller', str(api.properties.get('blamelist')),
                     '--prevRevision', api.properties.get('prev_build'),
                     '--curRevision', api.properties.get('revision')],
-                   env=env,
-                   infra_step=True)
-    except api.step.InfraFailure as f: # pragma: no cover
-        raise
+                   env=env)
     except api.step.StepFailure as f: # pragma: no cover
         f.result.presentation.status = api.step.WARNING
     except TypeError: # pragma: no cover
