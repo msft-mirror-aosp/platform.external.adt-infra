@@ -243,7 +243,10 @@ def RunSteps(api):
                    ['--build-dir', api.path['slave_build'],
                     '--props', api.json.dumps(api.properties.thaw()),
                     '--log-dir', log_dir],
-                   env=env)
+                   env=env,
+                   infra_step=True)
+    except api.step.InfraFailure as f: # pragma: no cover
+        raise
     except api.step.StepFailure as f:  # pragma: no cover
         # Not able to delete some files, it won't be the fault of emulator
         # not a stopper to run actual tests
@@ -257,7 +260,10 @@ def RunSteps(api):
                    ['--poller', str(api.properties.get('blamelist')),
                     '--prevRevision', api.properties.get('prev_build'),
                     '--curRevision', api.properties.get('revision')],
-                   env=env)
+                   env=env,
+                   infra_step=True)
+    except api.step.InfraFailure as f: # pragma: no cover
+        raise
     except api.step.StepFailure as f: # pragma: no cover
         f.result.presentation.status = api.step.WARNING
     except TypeError: # pragma: no cover
@@ -265,10 +271,14 @@ def RunSteps(api):
         # We will continue execution ignoring this error for now.
         pass
 
-    api.python("Download and Unzip Images", image_util_path,
-               ['--file', api.properties.get('file_list') if api.properties.get('file_list') else "cts",
-                '--build-dir', build_dir],
-               env=env)
+    try:
+        api.python("Download and Unzip Images", image_util_path,
+                   ['--file', api.properties.get('file_list') if api.properties.get('file_list') else "cts",
+                    '--build-dir', build_dir],
+                   env=env,
+                   infra_step=True)
+    except api.step.InfraFailure as f: # pragma: no cover
+        raise
 
     if is_cts:
         rev_file_path = api.path.join(script_root, 'config', 'rev.txt')
@@ -289,10 +299,14 @@ def RunSteps(api):
     with api.step.defer_results():
         for step in steps_to_run:
             if is_cross_build:
-                api.python("Download Image - %s" % step, image_util_path,
-                           ['--file', api.properties.get(step + '_file'),
-                            '--build-dir', build_dir],
-                           env=env)
+                try:
+                    api.python("Download Image - %s" % step, image_util_path,
+                               ['--file', api.properties.get(step + '_file'),
+                                '--build-dir', build_dir],
+                               env=env,
+                               infra_step=True)
+                except api.step.InfraFailure as f: # pragma: no cover
+                    raise
             for emu_branch in emulator_branch_to_use:
                 emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
                 step_data = BOOT_STEPS[step]
@@ -462,6 +476,34 @@ def GenTests(api):
                     'TESTING': True,
                     'emu-master-dev': '4696395',
             })
+    )
+
+    yield (
+            api.test('linux-emu-master-dev-infra-fail') +
+            api.platform.name('linux') +
+            api.platform.bits(32) +
+            props({
+                    'blamelist': ['emulator_linux_poller'],
+                    'branch': 'Ubuntu',
+                    'buildbotURL': 'http://chromeos1-row3-rack2-host1.cros.corp.google.com:8200/',
+                    'buildername': 'Linux emu-master-dev',
+                    'buildnumber': '1090',
+                    'file_list': 'gs://android-build-emu/builds/aosp-emu-master-dev-linux-sdk_tools_linux/4696395/7e4b04c674e12fb492b0834b0b6b1f769629d234103b3703c3e74aa17ffe8e19/sdk-repo-linux-emulator-4696395.zip',
+                    'got_revision': '4696395',
+                    'logs_dir': '/home/user/buildbot/external/adt-infra/build/masters/master.client.adt/slave_logs/',
+                    'mastername': 'client.adt',
+                    'prev_build': '4696278',
+                    'project': 'emu-master-dev',
+                    'recipe': 'adt/adt',
+                    'repository': '',
+                    'requestedAt': 1522746361,
+                    'revision': '4696395',
+                    'scheduler': 'emu_master_dev_scheduler',
+                    'slavename': 'chromeos1-row3-rack3-host1',
+                    'workdir': '/home/adt_build/Buildbot/adt-infra/build/slave/emu-master-dev',
+                    'TESTING': True,
+                    'emu-master-dev': '4696395',
+            }) + api.step_data('Initialize Bot', retcode=1)
     )
 
     yield (
