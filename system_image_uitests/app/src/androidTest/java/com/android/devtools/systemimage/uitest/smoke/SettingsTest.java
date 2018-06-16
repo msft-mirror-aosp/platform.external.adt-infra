@@ -73,7 +73,7 @@ public class SettingsTest {
 
     @Before
     public void activateDeviceAdmin() throws Exception {
-        ApiDemosInstaller.installApp(instrumentation);
+        ApiDemosInstaller.installApp();
     }
 
     /**
