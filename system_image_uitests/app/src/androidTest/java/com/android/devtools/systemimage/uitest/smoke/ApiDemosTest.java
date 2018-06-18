@@ -58,7 +58,7 @@ public class ApiDemosTest {
 
     @Before
     public void activateDeviceAdmin() throws Exception {
-        ApiDemosInstaller.installApp(instrumentation);
+        ApiDemosInstaller.installApp();
     }
 
     /**
