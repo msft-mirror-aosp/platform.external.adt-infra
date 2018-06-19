@@ -19,7 +19,7 @@ class AdtApi(recipe_api.RecipeApi):
         dotest_path = self.m.path.join(script_root, 'dotest.py')
 
         # To see definitions for all arguments, see emu_argparser.py.
-        test_args = ['--loglevel', 'INFO',
+        test_args = ['--loglevel', 'DEBUG',
                      '--emulator', emulator_path,
                      '--session_dir', session_dir,
                      '--test_dir', test_dir,
