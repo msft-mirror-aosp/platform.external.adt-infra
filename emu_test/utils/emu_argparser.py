@@ -10,7 +10,7 @@ def get_parser():
                         default=600,
                         help='an integer for timeout in seconds, default is 600')
     parser.add_argument('--loglevel', type=str, dest='loglevel', action='store',
-                        choices=['DEBUG' , 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default='DEBUG',
+                        choices=['DEBUG' , 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default='INFO',
                         help='set the log level, default is INFO')
     parser.add_argument('--avd_list', type=str, nargs='+', dest='avd_list', action='store',
                         default=None,

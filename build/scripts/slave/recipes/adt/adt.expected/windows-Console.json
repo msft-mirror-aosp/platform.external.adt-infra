@@ -13,9 +13,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "PATH": "%(PATH)s;/usr/local/google/home/cpilch/Android/android-sdk_public/tools;/usr/local/google/home/cpilch/Android/android-sdk_public/tools/bin;/usr/local/google/home/cpilch/Android/android-sdk_public/platform-tools;/usr/local/google/home/cpilch/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "PATH": "%(PATH)s;/usr/local/google/home/dyu/Android/android-sdk_public/tools;/usr/local/google/home/dyu/Android/android-sdk_public/tools/bin;/usr/local/google/home/dyu/Android/android-sdk_public/platform-tools;/usr/local/google/home/dyu/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
     },
     "name": "Initialize Bot"
   },
@@ -31,9 +31,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "PATH": "%(PATH)s;/usr/local/google/home/cpilch/Android/android-sdk_public/tools;/usr/local/google/home/cpilch/Android/android-sdk_public/tools/bin;/usr/local/google/home/cpilch/Android/android-sdk_public/platform-tools;/usr/local/google/home/cpilch/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "PATH": "%(PATH)s;/usr/local/google/home/dyu/Android/android-sdk_public/tools;/usr/local/google/home/dyu/Android/android-sdk_public/tools/bin;/usr/local/google/home/dyu/Android/android-sdk_public/platform-tools;/usr/local/google/home/dyu/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
     },
     "name": "Download and Unzip Images"
   },
@@ -43,7 +43,7 @@
       "-u",
       "[BUILD]\\..\\emu_test\\dotest.py",
       "--loglevel",
-      "INFO",
+      "DEBUG",
       "--emulator",
       "emu-master-dev\\emulator\\emulator",
       "--session_dir",
@@ -62,12 +62,12 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "PATH": "%(PATH)s;/usr/local/google/home/cpilch/Android/android-sdk_public/tools;/usr/local/google/home/cpilch/Android/android-sdk_public/tools/bin;/usr/local/google/home/cpilch/Android/android-sdk_public/platform-tools;/usr/local/google/home/cpilch/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "PATH": "%(PATH)s;/usr/local/google/home/dyu/Android/android-sdk_public/tools;/usr/local/google/home/dyu/Android/android-sdk_public/tools/bin;/usr/local/google/home/dyu/Android/android-sdk_public/platform-tools;/usr/local/google/home/dyu/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
     },
     "name": "Run Emulator Console Test",
-    "stderr": "9b2bab4b235745929ed248740fb3b73a",
+    "stderr": "8f4248a14f904b4b969397b279a48cc8",
     "~followup_annotations": [
       "@@@STEP_LINK@View XML@..\\..\\..\\Console_Result\\Win_Console_emu-master-dev\\build_516-rev_4696395\\consoleTestResult.xml@@@"
     ]
@@ -92,9 +92,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "PATH": "%(PATH)s;/usr/local/google/home/cpilch/Android/android-sdk_public/tools;/usr/local/google/home/cpilch/Android/android-sdk_public/tools/bin;/usr/local/google/home/cpilch/Android/android-sdk_public/platform-tools;/usr/local/google/home/cpilch/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "PATH": "%(PATH)s;/usr/local/google/home/dyu/Android/android-sdk_public/tools;/usr/local/google/home/dyu/Android/android-sdk_public/tools/bin;/usr/local/google/home/dyu/Android/android-sdk_public/platform-tools;/usr/local/google/home/dyu/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
     },
     "name": "Upload Test Results to GCS"
   },
@@ -120,9 +120,9 @@
     ],
     "cwd": "[SLAVE_BUILD]",
     "env": {
-      "ANDROID_HOME": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "ANDROID_SDK_ROOT": "/usr/local/google/home/cpilch/Android/android-sdk_public",
-      "PATH": "%(PATH)s;/usr/local/google/home/cpilch/Android/android-sdk_public/tools;/usr/local/google/home/cpilch/Android/android-sdk_public/tools/bin;/usr/local/google/home/cpilch/Android/android-sdk_public/platform-tools;/usr/local/google/home/cpilch/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/cpilch/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
+      "ANDROID_HOME": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "ANDROID_SDK_ROOT": "/usr/local/google/home/dyu/Android/android-sdk_public",
+      "PATH": "%(PATH)s;/usr/local/google/home/dyu/Android/android-sdk_public/tools;/usr/local/google/home/dyu/Android/android-sdk_public/tools/bin;/usr/local/google/home/dyu/Android/android-sdk_public/platform-tools;/usr/local/google/home/dyu/Android/android-sdk_public/build-tools/23.0.2;/usr/local/google/home/dyu/bin/jdk1.8.0_121/bin;C:\\Program Files\\GnuWin32\\bin;C:\\Program Files (x86)\\GnuWin32\\bin;C:\\cygwin\\bin;C:\\cygwin64\\bin;C:\\ProgramData\\Oracle\\Java\\javapath"
     },
     "name": "Zip and Upload Logs"
   },
