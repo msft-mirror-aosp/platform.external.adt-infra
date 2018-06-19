@@ -680,13 +680,14 @@ class EmuBaseTestCase(LoggedTestCase):
             else:
                 avd_target = 'android-%s' % api_target
             # Step 1.  Check if the requested API image exists.  We cannot create AVD without necessary image.
-            userdata_src = os.path.join(os.environ['ANDROID_SDK_ROOT'],
-                                        'system-images', self.get_sub_dir(avd_config_instance),
-                                        avd_config_instance.tag, avd_config_instance.abi, 'userdata.img')
-            if not os.path.isfile(userdata_src):
-                self.m_logger.error('The userdata.img file %s does not exist! Must be installed to continue.'
-                                    % userdata_src)
-                return 1
+# userdata.img is not included in P and goog-Master, skip the check; emulator should create it automatically anyway
+#userdata_src = os.path.join(os.environ['ANDROID_SDK_ROOT'],
+#                                        'system-images', self.get_sub_dir(avd_config_instance),
+#                                        avd_config_instance.tag, avd_config_instance.abi, 'userdata.img')
+#            if not os.path.isfile(userdata_src):
+#                self.m_logger.error('The userdata.img file %s does not exist! Must be installed to continue.'
+#                                    % userdata_src)
+#                return 1
             # Step 2. If the destination directory already exists, remove it.
             if os.path.exists(avd_dir):
                 def remove_readonly(func, path, excinfo):
