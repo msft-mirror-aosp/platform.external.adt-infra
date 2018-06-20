@@ -33,6 +33,7 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -174,10 +175,11 @@ public class GoogleServicesTest {
      *   5. Find logged user name.
      *   6. Log user out of Chrome.
      *   Verify:
-     *   1. Logged in user name is present.
+     *   1. Logged in user's name is present.
      *   2. Log in user prompt or user promo is present.
      *   </pre>
      */
+    @Ignore("Bug in API 26. b/110433630")
     @Test
     @TestInfo(id = "d7f5673a-a3d0-4f50-856a-dfa10ce5c21c")
     public void loginGoogleChrome() throws Exception {
