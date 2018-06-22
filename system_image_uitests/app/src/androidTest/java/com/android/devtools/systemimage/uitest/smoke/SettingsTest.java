@@ -295,6 +295,18 @@ public class SettingsTest {
                     .clickAndWaitForNewWindow();
         }
 
+        final UiObject advancedMenu = device.findObject(new UiSelector().text("Advanced"));
+        boolean hasAdvancedMenu = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() {
+                return advancedMenu.exists();
+            }
+        });
+
+        if (hasAdvancedMenu) {
+            advancedMenu.click();
+        }
+
         device.findObject(new UiSelector().textContains("App permissions"))
                 .clickAndWaitForNewWindow();
 

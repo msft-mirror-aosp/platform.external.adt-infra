@@ -177,6 +177,7 @@ public class SettingsUtil {
             Instrumentation instrumentation, String appType,
             String appName, boolean enablePermissions)
             throws Exception {
+
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (SystemUtil.getApiLevel() < 23) {
@@ -186,6 +187,18 @@ public class SettingsUtil {
         } else {
             openItem(instrumentation, "Apps");
             device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES)).clickAndWaitForNewWindow();
+        }
+
+        final UiObject advancedMenu = device.findObject(new UiSelector().text("Advanced"));
+        boolean hasAdvancedMenu = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() {
+                return advancedMenu.exists();
+            }
+        });
+
+        if (hasAdvancedMenu) {
+            advancedMenu.click();
         }
 
         device.findObject(new UiSelector().text("App permissions")).clickAndWaitForNewWindow();
