@@ -136,7 +136,7 @@ public class PackageInstallationUtil {
         new PackageInstallationUtilityWatcher(device).checkForCondition();
 
         UiObject doneButton = device.findObject(new UiSelector().textMatches("(?i)done(?-i)"));
-        boolean hasDoneButton = doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        boolean hasDoneButton = doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(60L, TimeUnit.SECONDS));
         if (hasDoneButton) {
             doneButton.clickAndWaitForNewWindow();
         } else {
