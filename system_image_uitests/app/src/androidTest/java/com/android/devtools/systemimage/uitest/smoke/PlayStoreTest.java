@@ -74,6 +74,7 @@ public class PlayStoreTest {
      *   </pre>
      */
 
+    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "50027a89-8043-44d7-b7ed-33c631903910")
     public void testPlaySearch() throws Exception {
@@ -225,6 +226,7 @@ public class PlayStoreTest {
      *   </pre>
      */
 
+    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "bd9460a8-7b07-4cfc-901f-a99564533e51")
     public void testPayAppVerification() throws Exception {
