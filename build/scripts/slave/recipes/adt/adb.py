@@ -78,15 +78,21 @@ def RunSteps(api):
   with api.step.defer_results():
     for test in ['adb_push_pull_stress.py', 'adb_reboot_stress.py', 'adb_restart_stress.py', 'adb_sleep_wake_stress.py']:
       test_path = api.path.join(adb_test_dir, test)
+      if api.platform.is_win:
+        print('testing %s', test)
       deferred_step_result = api.python('Run %s' % test, test_path,
                                         ['--duration', '1',
                                          '--count', '1',
                                          '--progress',
                                          '--log-dir', log_dir],
                                         env=env)
+      if api.platform.is_win:
+        print('returned from %s', test)
       if not deferred_step_result.is_ok: # pragma: no cover
         stderr_output = deferred_step_result.get_error().result.stderr
         print stderr_output
+      if api.platform.is_win:
+        print('iteration complete')
 
     # Upload logs to GCS (gs://adb_test_traces/)
     script_root = api.path.join(build_dir, os.pardir, 'emu_test')
