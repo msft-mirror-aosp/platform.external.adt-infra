@@ -119,6 +119,17 @@ public class AppLauncher {
             if (!appObject.exists()) {
                 if (api >= 28) {
                     device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
+                    final UiObject launcherDismiss = device.findObject(new UiSelector().
+                            resourceId(Res.LAUNCHER_LIST_DISMISS_RES));
+                    boolean launcherDismissFound = new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return launcherDismiss.exists();
+                        }
+                    });
+                    if (launcherDismissFound) {
+                        launcherDismiss.clickAndWaitForNewWindow();
+                    }
                 } else {
                     final UiObject launcherList = device.findObject(new UiSelector().
                             resourceId(Res.LAUNCHER_LIST_CONTAINER_RES));
@@ -172,11 +183,14 @@ public class AppLauncher {
                     target = device.findObject(textSelector);
                     scrollable.scrollIntoView(textSelector);
                 }
+                target.clickAndWaitForNewWindow();
             }
             catch (UiObjectNotFoundException e) {
-                Log.e(TAG, e.getMessage());
+                Log.w(TAG, e.getMessage());
+                if (target.exists()) {
+                    target.clickAndWaitForNewWindow();
+                }
             }
-            target.clickAndWaitForNewWindow();
         }
     }
 }

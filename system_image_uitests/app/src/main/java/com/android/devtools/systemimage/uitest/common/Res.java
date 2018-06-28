@@ -51,7 +51,7 @@ public class Res {
     public static final String LAUNCHER_LIST_CONTAINER_RES =
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id|com.google.android.apps.nexuslauncher\\d*:id|com.android.launcher3\\d*:id/active)"
                     + "/(all_apps_container|all_apps_handle|apps_customize_pane_content|apps_list_view|drag_indicator)";
-
+    public static final String LAUNCHER_LIST_DISMISS_RES = "com.google.android.apps.nexuslauncher:id/dismiss";
     public static final String ANDROID_PHONE_RES = "com.android.phone";
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
             "com.android.settings:id/container_material";
@@ -62,8 +62,6 @@ public class Res {
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list|dashboard_container)";
-    public static final String SETTINGS_RECYCLER_VIEW_RES =
-            "com.android.settings:id/dashboard_container"; // Added in API 24
 
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";
     public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";
