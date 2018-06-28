@@ -8,6 +8,7 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 
@@ -26,7 +27,7 @@ public class SettingsUtil {
      * Launches Settings and get the item list as a @{code UiScrollable}, ready to search for
      * clickable items.
      */
-    public static UiScrollable launchAndGetItemList(
+    private static UiScrollable launchAndGetItemList(
             Instrumentation instrumentation) throws Exception {
         AppLauncher.launch(instrumentation, "Settings");
 
@@ -34,14 +35,13 @@ public class SettingsUtil {
                 Res.SETTINGS_LIST_CONTAINER_RES));
         if (!itemList.exists()) {
             itemList = new UiScrollable(new UiSelector().resourceIdMatches(
-                    Res.SETTINGS_RECYCLER_VIEW_RES));
+                    Res.LAUNCHER_LIST_CONTAINER_RES));
         }
         return itemList.setAsVerticalList();
     }
 
     /**
-     * Launches Settings and scroll to the item whose name contains the given text. Returns
-     * @{code true} iff the item is there.
+     * Launches Settings and scroll to the item whose name contains the given text.
      */
     public static boolean scrollToItem(
             Instrumentation instrumentation, String text) throws Exception {
@@ -52,8 +52,7 @@ public class SettingsUtil {
     /**
      * Launches Settings and find the item with the given name. Returns the item.
      */
-    public static UiObject findItem(
-            Instrumentation instrumentation, String name) throws Exception {
+    public static UiObject findItem(Instrumentation instrumentation, String name) throws Exception {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
         UiObject item = itemList.getChildByText(
                 new UiSelector().className("android.widget.TextView"), name);
@@ -170,7 +169,6 @@ public class SettingsUtil {
      *                permissions screen.
      * @param enablePermissions boolean indicating whether the permissions should be enabled
      *                          or disabled.
-     * @return void
      * @throws Exception if it fails to find a UI object.
      */
     public static void setAppPermissions(
@@ -189,17 +187,7 @@ public class SettingsUtil {
             device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES)).clickAndWaitForNewWindow();
         }
 
-        final UiObject advancedMenu = device.findObject(new UiSelector().text("Advanced"));
-        boolean hasAdvancedMenu = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return advancedMenu.exists();
-            }
-        });
-
-        if (hasAdvancedMenu) {
-            advancedMenu.click();
-        }
+        clickAdvancedMenu(device);
 
         device.findObject(new UiSelector().text("App permissions")).clickAndWaitForNewWindow();
         UiScrollable appPermissions = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
@@ -244,6 +232,20 @@ public class SettingsUtil {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public static void clickAdvancedMenu(UiDevice device) throws Exception {
+        final UiObject advancedMenu = device.findObject(new UiSelector().text("Advanced"));
+        boolean hasAdvancedMenu = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() {
+                return advancedMenu.exists();
+            }
+        });
+
+        if (hasAdvancedMenu) {
+            advancedMenu.click();
         }
     }
 }

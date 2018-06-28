@@ -18,6 +18,7 @@ package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+import com.android.devtools.systemimage.uitest.watchers.SettingsTestPopupWatcher;
 
 import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
@@ -45,21 +46,23 @@ public class DeveloperOptionsManager {
     public static void enableDeveloperOptions(SystemImageTestFramework testFramework)
             throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
+        UiDevice device = UiDevice.getInstance(instrumentation);
 
         try {
-            if (testFramework.getApi() >= 26) {
-                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
-            } else {
-                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
-            }
-        } catch (UiObjectNotFoundException e) {
             if (testFramework.getApi() >= 26) {
                 AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About emulated device"});
             } else {
                 AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
             }
+        } catch (UiObjectNotFoundException e) {
+            if (testFramework.getApi() >= 26) {
+                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
+            } else {
+                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
+            }
         }
+
+        SettingsUtil.clickAdvancedMenu(device);
 
         // Click "Build number"
         UiScrollable itemList =
@@ -92,9 +95,12 @@ public class DeveloperOptionsManager {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
+        new SettingsTestPopupWatcher(device).checkForCondition();
+
         try {
             if (testFramework.getApi() >= 26) {
                 SettingsUtil.openItem(instrumentation, "System");
+                SettingsUtil.clickAdvancedMenu(device);
                 device.findObject(new UiSelector().text("Developer options")).click();
                 return true;
             } else {

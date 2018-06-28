@@ -295,17 +295,7 @@ public class SettingsTest {
                     .clickAndWaitForNewWindow();
         }
 
-        final UiObject advancedMenu = device.findObject(new UiSelector().text("Advanced"));
-        boolean hasAdvancedMenu = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return advancedMenu.exists();
-            }
-        });
-
-        if (hasAdvancedMenu) {
-            advancedMenu.click();
-        }
+        SettingsUtil.clickAdvancedMenu(device);
 
         device.findObject(new UiSelector().textContains("App permissions"))
                 .clickAndWaitForNewWindow();
@@ -661,9 +651,14 @@ public class SettingsTest {
             UiSelector sampleDeviceSelection = listViewSelector.childSelector(new
                     UiSelector().index(i));
 
+            String switchWidget = "android.widget.CheckBox";
+            if (api >= 28) {
+                switchWidget = "android.widget.Switch";
+            }
+
             UiObject2 sampleDeviceAdminCheckbox = UiAutomatorPlus.findObjectByRelative(
                     instrumentation,
-                    By.clazz("android.widget.CheckBox"),
+                    By.clazz(switchWidget),
                     By.text("Sample Device Admin"),
                     By.res(Res.ANDROID_LIST_RES));
 
