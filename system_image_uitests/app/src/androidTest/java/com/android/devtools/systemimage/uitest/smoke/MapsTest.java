@@ -102,16 +102,40 @@ public class MapsTest {
             searchEditText = searchUiObject.getChild(new UiSelector().className(EditText.class.getName()));
             searchEditText.setText(QUERY_STRING);
             UiScrollable scrollView = new UiScrollable(new UiSelector().className(ScrollView.class.getName()));
-            scrollView.scrollIntoView(new UiSelector().text(QUERY_STRING));
+
+            final UiObject locationString = mDevice.findObject(new UiSelector().text(QUERY_STRING));
+            boolean hasLocationString = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() {
+                    return locationString.exists();
+                }
+            });
+
+            if (hasLocationString) {
+                scrollView.scrollIntoView(locationString);
+            }
+
             selectedLocation = scrollView.getChildByText(new UiSelector()
                     .className(TextView.class.getName()), QUERY_STRING);
-            Assert.assertTrue(selectedLocation.exists());
+            Assert.assertTrue("Selected location " + QUERY_STRING + " not found.",
+                    selectedLocation.exists());
             selectedLocation.clickAndWaitForNewWindow();
 
             // Verify the Query String is present after completing search.
-            UiObject searchTextView =
+            final UiObject searchTextView =
                     searchUiObject.getChild(new UiSelector().className(TextView.class.getName()));
-            Assert.assertTrue(searchTextView.getText().contains(QUERY_STRING));
+
+            boolean hasSearchText = new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() {
+                    return searchTextView.exists();
+                }
+            });
+
+            if (hasSearchText) {
+                Assert.assertTrue("Search string " + QUERY_STRING + " not found.",
+                        searchTextView.getText().contains(QUERY_STRING));
+            }
 
             // Verify the directions/route link exists and clicking on it opens the directions page
             // verify query string is pre filled in the destination("to") field.
