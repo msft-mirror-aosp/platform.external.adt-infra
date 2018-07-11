@@ -243,14 +243,15 @@ public class PlayStoreTest {
                 new GoogleAppConfirmationWatcher(device).checkForCondition();
 
                 assertTrue("Target application is not a pay app",
-                        new Wait().until(new Wait.ExpectedCondition() {
+                        new Wait(TimeUnit.MILLISECONDS.convert(10L,
+                                TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
-                        UiSelector payButton = new UiSelector()
+                            UiSelector payButton = new UiSelector()
                                 .className("android.widget.Button").packageName(
                                         Res.GOOGLE_PLAY_VENDING_RES);
-                        return device.findObject(payButton.textContains("$")).exists();
-                    }
+                            return device.findObject(payButton.textContains("$")).exists();
+                        }
                 }));
 
                 PlayStoreUtil.resetPlayStore(instrumentation);
