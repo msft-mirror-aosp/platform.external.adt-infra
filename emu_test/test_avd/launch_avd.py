@@ -18,6 +18,8 @@ import unittest
 
 import util
 
+import emu_test
+from emu_test.utils import emu_argparser
 from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig
 
 log = logging.getLogger('launch_avd')
@@ -142,16 +144,22 @@ def launch_emu_and_wait(avd, emu_args):
 
 
 class LaunchAVDTest(EmuBaseTestCase):
-    def test_launch_avd(self, avd_config):
+    def launch_avd(self, avd_config):
         self.avd_config = avd_config
         self.assertEqual(self.create_avd(avd_config), 0)
-        args = arg_parser().parse_args()
-        return launch_emu_and_wait(avd_config, args)
+        return launch_emu_and_wait(avd_config, emu_argparser.emu_args)
+
+
+if emu_argparser.emu_args.config_file is None:
+    sys.exit(-1)
+else:
+    emu_test.utils.emu_testcase.create_test_case_from_file(
+        'launch_avd', LaunchAVDTest, LaunchAVDTest.launch_avd)
+
 
 if __name__ == '__main__':
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.DEBUG)
-    log.addHandler(console_handler)
-    log.setLevel(logging.DEBUG)
-    suite = unittest.TestLoader().loadTestsFromTestCase(LaunchAVDTest)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    os.environ['SHELL'] = '/bin/bash'
+    emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
+    log.info(emu_argparser.emu_args)
+    sys.argv[1:] = emu_argparser.emu_args.unittest_args
+    unittest.main()
