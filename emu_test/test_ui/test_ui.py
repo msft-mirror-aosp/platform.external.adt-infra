@@ -88,7 +88,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         """
         test_args_prefix = '-Pandroid.testInstrumentationRunnerArguments'
         test_class = test_args_prefix + '.class=com.android.devtools.systemimage.uitest.smoke.' +\
-                     class_name
+                     'api' + avd.api + '.' + class_name
         test_api = '%s.api=%s' % (test_args_prefix, avd.api)
         test_abi = test_args_prefix + '.abi=' + avd.abi
         test_tag = test_args_prefix + '.tag=' + avd.tag
@@ -102,7 +102,8 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
 
     def _launch_ui_test_with_avd_configs(self, avd):
         test_args_prefix = '-Pandroid.testInstrumentationRunnerArguments'
-        test_package = test_args_prefix + '.package=com.android.devtools.systemimage.uitest.smoke'
+        test_package = test_args_prefix + '.package=com.android.devtools.systemimage.uitest.smoke.' +\
+                       'api' + avd.api
         test_api = test_args_prefix + '.api=' + avd.api
         test_abi = test_args_prefix + '.abi=' + avd.abi
         test_tag = test_args_prefix + '.tag=' + avd.tag
@@ -145,8 +146,9 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'system_image_uitests')
 
         # check if it is a local presubmit test
-        if emu_args.uitest_psc is not None:
-            self._launch_local_presubmit_check(avd, emu_args.uitest_psc)
+        if emu_args.uitest_psc_pkg is not None:
+            test = emu_args.uitest_psc_pkg + '.api' + avd.api + '.' + emu_args.uitest_psc_test
+            self._launch_local_presubmit_check(avd, test)
             return
 
         # run tests using gradle script
@@ -179,23 +181,6 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.ui_test_check(avd_config, class_name)
 
 
-def get_ui_test_class_names():
-    """Get the names of test classes in the com.android.devtools.systemimage.uitest.smoke package.
-
-    Takes the directory listing of all files that end in '.java'.
-
-    Return: The name of the test classes in the package.
-
-    """
-    uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                              '..', '..', 'system_image_uitests')
-    package_path = os.path.join(uitest_dir, 'app', 'src', 'androidTest', 'java', 'com',
-                                'android', 'devtools', 'systemimage', 'uitest', 'smoke')
-    classes = [filename[:-5:] for filename in os.listdir(package_path)
-               if filename.endswith('.java')]
-    return classes
-
-
 if emu_args.config_file is None:
     sys.exit(0)
 else:
@@ -203,12 +188,8 @@ else:
     # classes and create an individual test case function for each class. This
     # allows us to launch a new emulator for each test class, which is more
     # robust in the case of emulator hangs or other such failures.
-    if emu_args.uitest_psc is not None:
-        test_class_names = None
-    else:
-        test_class_names = get_ui_test_class_names()
     create_test_case_from_file("ui", UiAutomatorBaseTestCase, UiAutomatorBaseTestCase.run_ui_test,
-                               test_class_names)
+                               emu_args.uitest_psc_pkg is None)
 
 
 if __name__ == '__main__':

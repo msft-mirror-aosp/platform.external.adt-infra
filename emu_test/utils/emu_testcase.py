@@ -790,19 +790,18 @@ class EmuBaseTestCase(LoggedTestCase):
         return update_proc.poll()
 
 
-def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
+def create_test_case_from_file(desc, testcase_class, test_func, generate_test_class=False):
     """
     TODO. Refactor and Restructure the below functions and input files.
     Create one or more test cases based on test configuration file.
 
-    If the `variants` parameter is included as an iterable, creates multiple
-    test cases, one for each variant, passing each variant as an extra parameter
-    to `test_func`. This is used, for example, in the UI tests to create a
-    separate test case for each test class.
+    If the `generate_test_class` parameter is included and set to true, create multiple
+    test cases, passing each as an extra parameter to `test_func`. This is used, for example, 
+    in the UI tests to create a separate test case for each test class.
     :param desc: Description of the testcase_class.
     :param testcase_class: The class to add the test cases to.
     :param test_func: The function to call.
-    :param variants: Iterable.  If present, create test case for each variant.
+    :param generate_test_class: Whether to create test cases or not.
     :return:
     """
     def get_port():
@@ -903,6 +902,22 @@ def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
         test_name = "test_%s%s_test_%s%s" % (variant_str, str(avd_config), desc, qemu_str)
         setattr(testcase_class, test_name, func)
 
+    def get_ui_test_class_names(api):
+        """Get the names of test classes in the com.android.devtools.systemimage.uitest.smoke package.
+
+        Takes the directory listing of all files that end in '.java'.
+
+        Return: The name of the test classes in the package.
+
+        """
+        uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                  '..', '..', 'system_image_uitests')
+        package_path = os.path.join(uitest_dir, 'app', 'src', 'androidTest', 'java', 'com',
+                                    'android', 'devtools', 'systemimage', 'uitest', 'smoke', 'api'+api)
+        classes = [filename[:-5:] for filename in os.listdir(package_path)
+                   if filename.endswith('.java')]
+        return classes
+
     # Function execution starts here.
     is_cts = True if desc == "cts" else False
     is_ui = True if desc == "ui" else False
@@ -958,6 +973,9 @@ def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
                       device = "default"
                     avd_config = AVDConfig(api, alt_version, tag, abi, device, ram, gpu, classic,
                                            get_port(), is_cts, ori)
+                    variants = None
+                    if generate_test_class:
+                        variants = get_ui_test_class_names(api)
                     for variant in variants or [None]:
                         create_test_case(avd_config, op, emu_argparser.emu_args.builder_name,
                                          emu_argparser.emu_args.pattern, variant)
