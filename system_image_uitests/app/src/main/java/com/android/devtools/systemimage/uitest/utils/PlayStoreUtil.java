@@ -22,6 +22,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.view.KeyEvent;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
@@ -61,12 +62,21 @@ public class PlayStoreUtil {
                 }
             });
         } else {
-            isInstalled = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws UiObjectNotFoundException {
-                    return device.findObject(new UiSelector().text(playStore)).exists();
-                }
-            });
+            if (api == 28) {
+                device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
+            }
+
+            isInstalled = new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)).
+                    until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws UiObjectNotFoundException {
+                            return device.findObject(new UiSelector().text(playStore)).exists() ||
+                                    device.findObject(new UiSelector().description(playStore)).exists();
+                        }
+                    });
+            if (api == 28) {
+                device.pressHome();
+            }
         }
         return isInstalled;
     }
@@ -161,7 +171,7 @@ public class PlayStoreUtil {
     public static boolean installApplication(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        boolean isInstallable = new Wait().until(new Wait.ExpectedCondition() {
+        boolean isInstallable = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
                 return device.findObject(new UiSelector()
@@ -195,7 +205,7 @@ public class PlayStoreUtil {
     public static boolean uninstallApplication(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        boolean isUninstallable = new Wait().until(new Wait.ExpectedCondition() {
+        boolean isUninstallable = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
                 return device.findObject(new UiSelector()

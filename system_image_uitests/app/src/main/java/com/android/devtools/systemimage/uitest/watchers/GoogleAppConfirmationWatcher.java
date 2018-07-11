@@ -41,7 +41,7 @@ public class GoogleAppConfirmationWatcher implements UiWatcher {
     public boolean checkForCondition() {
         boolean condition = false;
         boolean isSuccess = mDevice.findObject(new UiSelector().textContains("YES"))
-                        .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+                .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         try {
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().textContains("YES")).click();
@@ -68,6 +68,14 @@ public class GoogleAppConfirmationWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().description("I AGREE")).click();
                 condition = true;
             }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().text("I AGREE"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().text("I AGREE")).click();
+                condition = true;
+            }
+
         }
         catch (UiObjectNotFoundException e) {
             throw new AssertionError("Failed to dismiss the play store confirmation popup dialogs");

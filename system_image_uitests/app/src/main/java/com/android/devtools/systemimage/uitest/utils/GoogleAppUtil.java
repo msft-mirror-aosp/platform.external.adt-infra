@@ -58,35 +58,36 @@ public class GoogleAppUtil {
             signInButton.clickAndWaitForNewWindow();
         }
 
-        String emailStr = "Email or phone";
-        final UiObject inputEmailField = api == 24 ?
-                device.findObject(new UiSelector().description(emailStr)) :
-                device.findObject(new UiSelector().text(emailStr));
+        UiObject inputEmailField = device.findObject(new UiSelector().description("Email or phone"));
+        UiObject forgotEmailLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot email?")) :
+                device.findObject(new UiSelector().description("Forgot email?"));
 
-        boolean needsEmail = inputEmailField.waitForExists(
+        boolean needsEmail = api == 24 ? inputEmailField.waitForExists(
+                TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)) :
+                forgotEmailLink.waitForExists(
+                        TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+
+                UiObject editInput = device.findObject(new UiSelector().className("android.widget.EditText"));
+                boolean hasEditInput = editInput.waitForExists(
                 TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
 
-        if (needsEmail) {
-            inputEmailField.clearTextField();
-            inputEmailField.setText(email);
+        if (needsEmail && hasEditInput) {
+            editInput.clearTextField();
+            editInput.setText(email);
             clickNext(device);
         }
 
-        final UiObject inputPasswordField = api == 24 ?
-                device.findObject(new UiSelector().resourceId("password")) :
-                device.findObject(new UiSelector().text("Enter your password"));
+        UiObject forgotPasswordLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot password?")) :
+                device.findObject(new UiSelector().description("Forgot password?"));
+        boolean needsPassword = forgotPasswordLink.waitForExists(
+                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
 
-        boolean needsPassword = new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return inputPasswordField.exists();
-                    }
-                });
+        hasEditInput = editInput.waitForExists(
+                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
 
-        if (needsPassword) {
-            inputPasswordField.clearTextField();
-            inputPasswordField.setText(password);
+        if (needsPassword && hasEditInput) {
+            editInput.clearTextField();
+            editInput.setText(password);
             clickNext(device);
         }
 
@@ -100,6 +101,11 @@ public class GoogleAppUtil {
         UiObject backupSwitch = device.findObject(new UiSelector().resourceId(Res.GOOGLE_BACKUP_SWITCH_RES));
         if (backupSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             backupSwitch.clickAndWaitForNewWindow();
+        }
+
+        UiObject moreButton = device.findObject(new UiSelector().text("MORE"));
+        if (moreButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            moreButton.clickAndWaitForNewWindow();
         }
 
         UiObject backupButton = device.findObject(new UiSelector().text("AGREE"));
