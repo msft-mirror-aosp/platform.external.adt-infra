@@ -117,12 +117,12 @@ public class GoogleAppUtil {
     }
 
     private static void clickNext(UiDevice device) throws UiObjectNotFoundException{
-        UiObject nextButton = device.findObject(new UiSelector().text("NEXT"));
+        UiObject nextButton = device.findObject(new UiSelector().textMatches(("(?i)next(?-i)")));
         if (!nextButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             nextButton = device.findObject(new UiSelector().description("NEXT"));
         }
 
-        if (nextButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+        if (nextButton.exists()) {
             nextButton.clickAndWaitForNewWindow();
         }
     }
