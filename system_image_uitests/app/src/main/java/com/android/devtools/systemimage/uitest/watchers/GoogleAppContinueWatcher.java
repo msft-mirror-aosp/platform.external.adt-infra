@@ -41,39 +41,39 @@ public class GoogleAppContinueWatcher implements UiWatcher {
     public boolean checkForCondition() {
         boolean condition = false;
         boolean isSuccess =
-                mDevice.findObject(new UiSelector().text("CONTINUE"))
+                mDevice.findObject(new UiSelector().textContains("(?i)continue(?-i)"))
                         .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         try {
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().text("CONTINUE")).click();
+                mDevice.findObject(new UiSelector().textContains("(?i)continue(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().text("CONFIRM"))
+                    mDevice.findObject(new UiSelector().textContains("(?i)confirm(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().text("CONFIRM")).click();
+                mDevice.findObject(new UiSelector().textContains("(?i)confirm(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().text("SKIP"))
+                    mDevice.findObject(new UiSelector().textContains("(?i)skip(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().text("SKIP")).click();
+                mDevice.findObject(new UiSelector().textContains("(?i)skip(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().text("NEXT"))
+                    mDevice.findObject(new UiSelector().textContains("(?i)next(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().text("NEXT")).click();
+                mDevice.findObject(new UiSelector().textContains("(?i)next(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().description("NEXT"))
+                    mDevice.findObject(new UiSelector().descriptionContains("(?i)next(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().description("NEXT")).click();
+                mDevice.findObject(new UiSelector().descriptionContains("(?i)next(?-i)")).click();
                 condition = true;
             }
         }

@@ -103,12 +103,12 @@ public class GoogleAppUtil {
             backupSwitch.clickAndWaitForNewWindow();
         }
 
-        UiObject moreButton = device.findObject(new UiSelector().text("MORE"));
+        UiObject moreButton = device.findObject(new UiSelector().textMatches("(?i)more(?-i)"));
         if (moreButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             moreButton.clickAndWaitForNewWindow();
         }
 
-        UiObject backupButton = device.findObject(new UiSelector().text("AGREE"));
+        UiObject backupButton = device.findObject(new UiSelector().textMatches("(?i)agree(?-i)"));
         if (backupButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             backupButton.clickAndWaitForNewWindow();
         }

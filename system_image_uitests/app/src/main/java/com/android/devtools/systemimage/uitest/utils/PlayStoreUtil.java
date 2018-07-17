@@ -175,7 +175,7 @@ public class PlayStoreUtil {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
                 return device.findObject(new UiSelector()
-                        .text("INSTALL")).exists();
+                        .textContains("(?i)install(?-i)")).exists();
             }
         });
 
@@ -184,15 +184,15 @@ public class PlayStoreUtil {
                 @Override
                 public boolean isTrue() throws UiObjectNotFoundException {
                     return device.findObject(new UiSelector()
-                            .text("UNINSTALL")).exists();
+                            .textContains("(?i)uninstall(?-i)")).exists();
                 }
             });
         }
 
-        device.findObject(new UiSelector().text("INSTALL")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().textContains("(?i)install(?-i)")).clickAndWaitForNewWindow();
         new GoogleAppConfirmationWatcher(device).checkForCondition();
 
-        UiObject openButton = device.findObject(new UiSelector().text("OPEN"));
+        UiObject openButton = device.findObject(new UiSelector().textContains("(?i)open(?-i)"));
         boolean isAppInstalled = openButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
 
         return isAppInstalled;
@@ -209,7 +209,7 @@ public class PlayStoreUtil {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
                 return device.findObject(new UiSelector()
-                        .text("UNINSTALL")).exists();
+                        .textContains("(?i)uninstall(?-i)")).exists();
             }
         });
 
@@ -218,15 +218,16 @@ public class PlayStoreUtil {
                 @Override
                 public boolean isTrue() throws UiObjectNotFoundException {
                     return device.findObject(new UiSelector()
-                            .text("INSTALL")).exists();
+                            .textContains("(?i)install(?-i)")).exists();
                 }
             });
         }
 
-        device.findObject(new UiSelector().text("UNINSTALL")).clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().textContains("(?i)uninstall(?-i)")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().textContains("(?i)ok(?-i)")).clickAndWaitForNewWindow();
 
-        UiObject installButton = device.findObject(new UiSelector().text("INSTALL"));
+        UiObject installButton = device.findObject(new UiSelector()
+                .textContains("(?i)install(?-i)"));
         boolean isAppUninstalled = installButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
 
         return isAppUninstalled;

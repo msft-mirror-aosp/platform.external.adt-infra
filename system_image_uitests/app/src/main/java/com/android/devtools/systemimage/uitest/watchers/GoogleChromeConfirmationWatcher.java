@@ -41,60 +41,60 @@ public class GoogleChromeConfirmationWatcher implements UiWatcher {
     public boolean checkForCondition() {
         boolean condition = false;
         boolean isSuccess =
-                mDevice.findObject(new UiSelector().text("CONTINUE"))
+                mDevice.findObject(new UiSelector().textContains("(?i)continue(?-i)"))
                         .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         try {
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().text("CONTINUE")).click();
+                mDevice.findObject(new UiSelector().textContains("(?i)continue(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().text("CONFIRM"))
+                    mDevice.findObject(new UiSelector().textContains("(?i)confirm(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().text("CONFIRM")).click();
+                mDevice.findObject(new UiSelector().textContains("(?i)confirm(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().text("NEXT"))
+                    mDevice.findObject(new UiSelector().textContains("(?i)next(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().text("NEXT")).click();
+                mDevice.findObject(new UiSelector().textContains("(?i)next(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().description("NEXT"))
+                    mDevice.findObject(new UiSelector().descriptionContains("(?i)next(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().description("NEXT")).click();
+                mDevice.findObject(new UiSelector().descriptionContains("(?i)next(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().textContains("YES"))
+                    mDevice.findObject(new UiSelector().textContains("(?i)yes(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().textContains("YES")).click();
+                mDevice.findObject(new UiSelector().textContains("(?i)yes(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().text("ACCEPT"))
+                    mDevice.findObject(new UiSelector().textContains("(?i)accept(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().text("ACCEPT")).click();
+                mDevice.findObject(new UiSelector().textContains("(?i)accept(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().description("ACCEPT"))
+                    mDevice.findObject(new UiSelector().descriptionContains("(?i)accept(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().description("ACCEPT")).click();
+                mDevice.findObject(new UiSelector().descriptionContains("(?i)accept(?-i)")).click();
                 condition = true;
             }
             isSuccess =
-                    mDevice.findObject(new UiSelector().description("I AGREE"))
+                    mDevice.findObject(new UiSelector().descriptionContains("(?i)i agree(?-i)"))
                             .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().description("I AGREE")).click();
+                mDevice.findObject(new UiSelector().descriptionContains("(?i)i agree(?-i)")).click();
                 condition = true;
             }
         }
