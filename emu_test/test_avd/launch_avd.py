@@ -91,7 +91,7 @@ def launch_emu(avd, emu_args):
         launch_cmd += ["-skip-adb-auth"]
 
     log.info('Launching AVD, cmd: %s' % ' '.join(launch_cmd))
-    start_proc = subprocess.Popen(launch_cmd, stdout=PIPE, stderr=STDOUT)
+    start_proc = subprocess.Popen(launch_cmd)
     log.info('done Launching AVD, cmd: %s' % ' '.join(launch_cmd))
 
     if start_proc.poll():
@@ -125,7 +125,7 @@ def launch_emu_and_wait(avd, emu_args):
         if exit_code is 0:
             completed = output.strip()
         if completed is "1":
-            log.info('AVD %s is fully booted' % avd)
+            log.info('AVD %s is fully booted' % str(avd))
             break
         time.sleep(1)
     if completed is not "1":
