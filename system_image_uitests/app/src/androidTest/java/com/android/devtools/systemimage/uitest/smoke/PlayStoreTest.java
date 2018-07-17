@@ -74,7 +74,6 @@ public class PlayStoreTest {
      *   </pre>
      */
 
-    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "50027a89-8043-44d7-b7ed-33c631903910")
     public void testPlaySearch() throws Exception {
@@ -117,7 +116,6 @@ public class PlayStoreTest {
      *   </pre>
      */
 
-    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "cb0ccd97-f045-42fa-8293-a32e94e838aa")
     public void testAppInstallation() throws Exception {
@@ -170,7 +168,6 @@ public class PlayStoreTest {
      *   </pre>
      */
 
-    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "924a0428-4e07-4794-b6a7-2c9d407204aa")
     public void testAppInstallationAndLaunch() throws Exception {
@@ -226,7 +223,6 @@ public class PlayStoreTest {
      *   </pre>
      */
 
-    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "bd9460a8-7b07-4cfc-901f-a99564533e51")
     public void testPayAppVerification() throws Exception {
@@ -285,7 +281,6 @@ public class PlayStoreTest {
      *   </pre>
      */
 
-    @Ignore("Flaky test on API 26")
     @Test
     @TestInfo(id = "fe78dba5-a0f2-4acf-bcbb-10b1c15d3484")
     public void testParentalControls() throws Exception {
