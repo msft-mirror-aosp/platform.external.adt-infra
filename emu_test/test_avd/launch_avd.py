@@ -9,14 +9,16 @@ usage: launch_avd.py [-h] [-t TIMEOUT_IN_SECONDS] --avd AVD
 import argparse
 import logging
 import multiprocessing.pool
+import os
 import subprocess
-from subprocess import PIPE, STDOUT
+from subprocess import PIPE
 import sys
 import time
 import threading
 import unittest
 
 import util
+from utils.emu_error import LaunchError
 
 import emu_test
 from emu_test.utils import emu_argparser
@@ -81,7 +83,7 @@ def run_with_timeout(cmd, timeout):
     return vars['process'].returncode, vars['output'], vars['err']
 
 
-def launch_emu(avd, emu_args):
+def launch_emu(avd, emu_args, emu_log_stream):
     """Launch given avd and return immediately"""
     log.debug('call Launching AVD, ...: %s' % str(avd))
     exec_path = emu_args.emulator_exec
@@ -91,7 +93,9 @@ def launch_emu(avd, emu_args):
         launch_cmd += ["-skip-adb-auth"]
 
     log.info('Launching AVD, cmd: %s' % ' '.join(launch_cmd))
-    start_proc = subprocess.Popen(launch_cmd)
+    start_proc = subprocess.Popen(launch_cmd,
+                                  stderr=subprocess.STDOUT,
+                                  stdout=emu_log_stream)
     log.info('done Launching AVD, cmd: %s' % ' '.join(launch_cmd))
 
     if start_proc.poll():
@@ -100,12 +104,12 @@ def launch_emu(avd, emu_args):
     return start_proc
 
 
-def launch_emu_and_wait(avd, emu_args):
+def launch_emu_and_wait(avd, emu_args, emu_log_stream):
     """Launch given avd and wait for boot completion, return boot time"""
     run_with_timeout(["adb", "kill-server"], 20)
     run_with_timeout(["adb", "start-server"], 20)
     pool = multiprocessing.pool.ThreadPool(processes = 1)
-    launcher_emu = pool.apply_async(launch_emu, [avd, emu_args])
+    launcher_emu = pool.apply_async(launch_emu, [avd, emu_args, emu_log_stream])
     start_time = time.time()
     completed = "0"
     real_time_out = emu_args.timeout_in_seconds;
@@ -115,8 +119,14 @@ def launch_emu_and_wait(avd, emu_args):
         real_time_out = real_time_out + emu_args.timeout_in_seconds;
     if 'mips' in str(avd):
         real_time_out = real_time_out + emu_args.timeout_in_seconds;
+
+    # Initialize these to None, in case try block fails.
+    output = None
+    err = None
+
     while time.time()-start_time < real_time_out:
         cmd = ["adb", "shell", "getprop", "sys.boot_completed"]
+
         try:
             (exit_code, output, err) = run_with_timeout(cmd, 10)
         except Exception as e:
@@ -147,7 +157,15 @@ class LaunchAVDTest(EmuBaseTestCase):
     def launch_avd(self, avd_config):
         self.avd_config = avd_config
         self.assertEqual(self.create_avd(avd_config), 0)
-        return launch_emu_and_wait(avd_config, emu_argparser.emu_args)
+        test_name = self.id().rsplit('.', 1)[-1]
+        emu_log_path = os.path.join(emu_argparser.emu_args.session_dir,
+                                    emu_argparser.emu_args.test_dir,
+                                    "%s_verbose.txt" % test_name)
+
+        with open(emu_log_path, 'wb') as emu_log:
+            return launch_emu_and_wait(avd_config,
+                                       emu_argparser.emu_args,
+                                       emu_log)
 
 
 if emu_argparser.emu_args.config_file is None:
