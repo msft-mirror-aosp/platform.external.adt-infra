@@ -357,28 +357,29 @@ public class SettingsTest {
             Log.e(TAG, e.getMessage());
         }
 
-        UiObject2 dateTimeSwitch = null;
-
         try {
-            final UiObject2 widget = UiAutomatorPlus.findObjectByRelative(
-                    instrumentation,
-                    By.clazz("android.widget.Switch"),
-                    By.text(text),
-                    By.res(container));
-            dateTimeSwitch = widget;
+            if (api >= 28) {
+                return UiAutomatorPlus.findObjectMatchingAny(
+                        instrumentation, By.textContains(text));
+            } else {
+                return UiAutomatorPlus.findObjectByRelative(
+                        instrumentation,
+                        By.clazz("android.widget.Switch"),
+                        By.text(text),
+                        By.res(container));
+            }
         } catch (UiObjectNotFoundException e1) {
             try {
-                final UiObject2 widget = UiAutomatorPlus.findObjectByRelative(
+                return UiAutomatorPlus.findObjectByRelative(
                         instrumentation,
                         By.clazz("android.widget.CheckBox"),
                         By.text(text),
                         By.res(container));
-                dateTimeSwitch = widget;
-            } catch (UiObjectNotFoundException e2)  {
+            } catch (UiObjectNotFoundException e2) {
                 assertTrue("Could not find Date Time switch", false);
             }
         }
-        return dateTimeSwitch;
+        return null;
     }
 
     /**
@@ -521,16 +522,30 @@ public class SettingsTest {
                     }
               })
         );
+
+        UiObject timeZoneLabel = device.findObject(new UiSelector().text("Time zone").
+                resourceId(Res.ANDROID_TITLE_RES).packageName("com.android.settings"));
+        if (timeZoneLabel.waitForExists(3L)) {
+            timeZoneLabel.clickAndWaitForNewWindow();
+        }
         UiScrollable timeZoneList =
                 new UiScrollable(new UiSelector().className("android.widget.ListView"));
 
         String timezoneOffset;
-        if (api <= 19)
+        if (api <= 19) {
             timezoneOffset = "GMT-8:00";
-        else
+        } else {
             timezoneOffset = "GMT-08:00";
-        assertTrue(timeZoneList.getChildByText(
-                new UiSelector().className("android.widget.TextView"), timezoneOffset).exists());
+        }
+
+        if (api >= 28) {
+            assertTrue("Target time zone label not found",
+                    device.findObject(new UiSelector().textContains(timezoneOffset)).waitForExists(3L));
+        } else {
+            assertTrue("Target time zone label not found",
+                    timeZoneList.getChildByText(
+                            new UiSelector().className("android.widget.TextView"), timezoneOffset).exists());
+        }
     }
 
     /**
@@ -553,13 +568,38 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
-        final UiObject2 widget = navigateToDateTimeSwitch("Use 24-hour format");
+        String useTwentyFourHour = "Use 24-hour format";
+        final UiObject2 useTwentyFourSwitch = navigateToDateTimeSwitch(useTwentyFourHour);
+
+        assertTrue("Failed to find Use 24-hour format switch.",
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return useTwentyFourSwitch != null;
+                    }
+                })
+        );
+
+        boolean autoTwentyFourWasEnabled = false;
+        boolean useTwentyFourWasEnabled = false;
+        UiObject useTwentyFourLabel = device.findObject(new UiSelector().text(useTwentyFourHour));
+        UiObject autoTwentyFourLabel = device.findObject(new UiSelector().text("Use locale default"));
+        final UiObject thirteenHundredLabel = device.findObject(new UiSelector().text("13:00"));
+
+        if (api >= 28) {
+            // Initialize automatic format option to disabled state.
+            if (autoTwentyFourLabel.waitForExists(3L) && !useTwentyFourLabel.isEnabled()) {
+                autoTwentyFourWasEnabled = true;
+                autoTwentyFourLabel.click();
+            }
+        }
 
         // Initialize 24-hour format option to disabled state.
-        if (widget.isChecked()) {
-            widget.click();
+        if (thirteenHundredLabel.exists()) {
+            useTwentyFourWasEnabled = true;
+            useTwentyFourSwitch.click();
         }
-        assertTrue("Failed to find Use 24-hour format.",
+        assertTrue("Failed to find Use 24-hour format label.",
               new Wait().until(new Wait.ExpectedCondition() {
                   @Override
                     public boolean isTrue() throws Exception {
@@ -568,7 +608,7 @@ public class SettingsTest {
                   }
               })
         );
-        assertTrue("Failed to find 1:00 PM.",
+        assertTrue("Failed to find 1:00 PM label.",
               new Wait().until(new Wait.ExpectedCondition() {
                   @Override
                     public boolean isTrue() throws Exception {
@@ -577,17 +617,24 @@ public class SettingsTest {
               })
         );
         // Enable 24-hour format.
-        widget.click();
-        assertTrue("Failed to find 13:00.",
+        useTwentyFourSwitch.click();
+        assertTrue("Failed to find 13:00 label.",
               new Wait().until(new Wait.ExpectedCondition() {
                   @Override
                     public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("13:00")).exists();
+                      return thirteenHundredLabel.exists();
                   }
               })
         );
+
+        if (api >= 28 && autoTwentyFourWasEnabled && useTwentyFourLabel.isEnabled()) {
+            autoTwentyFourLabel.click();
+        }
+
         // Clean up by disabling 24-hour format option.
-        widget.click();
+        if (!useTwentyFourWasEnabled) {
+            useTwentyFourSwitch.click();
+        }
     }
 
     /**
