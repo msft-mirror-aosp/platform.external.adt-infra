@@ -287,25 +287,12 @@ public class SettingsTest {
         if (api < 23) {
             return;
         }
-        if (api >= 26) {
-            SettingsUtil.openItem(instrumentation, "Apps & notifications");
-        } else {
-            SettingsUtil.openItem(instrumentation, "Apps");
-            device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES))
-                    .clickAndWaitForNewWindow();
-        }
+        SettingsUtil.openAppList(instrumentation);
 
-        SettingsUtil.clickAdvancedMenu(device);
-
-        device.findObject(new UiSelector().textContains("App permissions"))
-                .clickAndWaitForNewWindow();
-
-        assertTrue(device.findObject(new UiSelector().textContains("App permissions")).exists()
-                && device.findObject(new UiSelector().textContains("Calendar")).exists()
-                && device.findObject(new UiSelector().textContains("Camera")).exists()
-                && device.findObject(new UiSelector().textContains("Contacts")).exists()
-                && device.findObject(new UiSelector().textContains("Phone")).exists()
-                && device.findObject(new UiSelector().description("Navigate up")).exists());
+        assertTrue(SettingsUtil.getAppPermissions(instrumentation, "Calendar").exists()
+                && SettingsUtil.getAppPermissions(instrumentation, "Camera").exists()
+                && SettingsUtil.getAppPermissions(instrumentation, "Camera").exists()
+                && SettingsUtil.getAppPermissions(instrumentation, "Phone").exists());
     }
 
     /**
@@ -663,6 +650,8 @@ public class SettingsTest {
                 "com.example.android.apis");
 
         if (isAPIDemoInstalled) {
+            SettingsUtil.launchDeviceAdminApps(instrumentation);
+
             if (checkStatusOfPolicy()) {
                 SettingsUtil.deactivate(instrumentation, "Sample Device Admin");
             }

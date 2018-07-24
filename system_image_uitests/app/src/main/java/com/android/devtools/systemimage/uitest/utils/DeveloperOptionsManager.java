@@ -36,6 +36,8 @@ public class DeveloperOptionsManager {
         throw new AssertionError();
     }
 
+    private static final int api = SystemUtil.getApiLevel();
+
     /**
      * Enables developer options.
      *
@@ -49,13 +51,13 @@ public class DeveloperOptionsManager {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         try {
-            if (testFramework.getApi() >= 26) {
+            if (api >= 26) {
                 AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About emulated device"});
             } else {
                 AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
             }
         } catch (UiObjectNotFoundException e) {
-            if (testFramework.getApi() >= 26) {
+            if (api >= 26) {
                 AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
             } else {
                 AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
@@ -98,7 +100,7 @@ public class DeveloperOptionsManager {
         new SettingsTestPopupWatcher(device).checkForCondition();
 
         try {
-            if (testFramework.getApi() >= 26) {
+            if (api >= 26) {
                 SettingsUtil.openItem(instrumentation, "System");
                 SettingsUtil.clickAdvancedMenu(device);
                 device.findObject(new UiSelector().text("Developer options")).click();

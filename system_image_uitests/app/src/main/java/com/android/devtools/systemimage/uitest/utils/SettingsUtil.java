@@ -97,10 +97,7 @@ public class SettingsUtil {
         changePolicyActivation(instrumentation, adminName, "Deactivate");
     }
 
-
-    private static void changePolicyActivation(Instrumentation instrumentation, String adminName,
-                                               String change) throws Exception {
-
+    public static void launchDeviceAdminApps(Instrumentation instrumentation) throws Exception {
         if (SystemUtil.getApiLevel() >= 27) {
             SettingsUtil.openItem(instrumentation, "Security & location");
         } else if (SystemUtil.getApiLevel() == 26) {
@@ -123,6 +120,13 @@ public class SettingsUtil {
             itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                     "Device administrators").clickAndWaitForNewWindow();
         }
+    }
+
+    private static void changePolicyActivation(
+            Instrumentation instrumentation, String adminName, String change) throws Exception {
+
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        launchDeviceAdminApps(instrumentation);
 
         // Select admin option to activate/deactivate.
         device.findObject(new UiSelector().text(adminName)).clickAndWaitForNewWindow();
@@ -160,6 +164,34 @@ public class SettingsUtil {
     }
 
     /**
+     * Fetch permissions settings for a given application type.
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     * @param appType String describing the application type, as listed on the App permissions
+     *                screen.
+     * @throws Exception if it fails to find a UI object.
+     */
+    public static UiObject getAppPermissions(
+            Instrumentation instrumentation, String appType)
+            throws Exception {
+
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        UiObject appPermissionsLabel = device.findObject(new UiSelector().text("App permissions"));
+        boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
+        if (hasAppPermissionsLabel) {
+            appPermissionsLabel.clickAndWaitForNewWindow();
+        }
+        UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+        if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+            return appPermissionsList.getChildByText(new UiSelector().className("android.widget.TextView"), appType);
+        } else {
+            throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
+        }
+    }
+
+    /**
      * Enable or disable permissions settings for a given application type
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
@@ -178,24 +210,8 @@ public class SettingsUtil {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (SystemUtil.getApiLevel() < 23) {
-            return;
-        } else if (SystemUtil.getApiLevel() >= 26) {
-            openItem(instrumentation, "Apps & notifications");
-        } else {
-            openItem(instrumentation, "Apps");
-            device.findObject(new UiSelector().resourceId(Res.SETTINGS_ADVANCED_OPTION_RES)).clickAndWaitForNewWindow();
-        }
-
-        clickAdvancedMenu(device);
-
-        device.findObject(new UiSelector().text("App permissions")).clickAndWaitForNewWindow();
-        UiScrollable appPermissions = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
-        if (appPermissions.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
-            appPermissions.getChildByText(new UiSelector().className("android.widget.TextView"), appType);
-        } else {
-            throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
-        }
+        openAppList(instrumentation);
+        getAppPermissions(instrumentation, appType);
 
         device.findObject(new UiSelector().text(appType)).click();
 
@@ -247,5 +263,11 @@ public class SettingsUtil {
         if (hasAdvancedMenu) {
             advancedMenu.click();
         }
+    }
+
+    public static void openAppList(Instrumentation instrumentation) throws Exception {
+        AppManager.openAppList(instrumentation);
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        clickAdvancedMenu(device);
     }
 }

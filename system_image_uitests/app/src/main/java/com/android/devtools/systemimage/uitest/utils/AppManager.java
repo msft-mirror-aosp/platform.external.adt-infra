@@ -189,7 +189,7 @@ public class AppManager {
      *
      * @throws Exception if it fails to find a UI widget.
      */
-    private static void openAppList(Instrumentation instrumentation) throws Exception {
+    public static void openAppList(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (SystemUtil.getApiLevel() >= 26) {
