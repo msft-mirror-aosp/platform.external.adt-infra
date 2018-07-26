@@ -287,7 +287,8 @@ public class SettingsTest {
         if (api < 23) {
             return;
         }
-        SettingsUtil.openAppList(instrumentation);
+        AppManager.openAppList(instrumentation);
+        SettingsUtil.clickAdvancedMenu(device);
 
         assertTrue(SettingsUtil.getAppPermissions(instrumentation, "Calendar").exists()
                 && SettingsUtil.getAppPermissions(instrumentation, "Camera").exists()
@@ -345,16 +346,11 @@ public class SettingsTest {
         }
 
         try {
-            if (api >= 28) {
-                return UiAutomatorPlus.findObjectMatchingAny(
-                        instrumentation, By.textContains(text));
-            } else {
-                return UiAutomatorPlus.findObjectByRelative(
-                        instrumentation,
-                        By.clazz("android.widget.Switch"),
-                        By.text(text),
-                        By.res(container));
-            }
+            return UiAutomatorPlus.findObjectByRelative(
+                    instrumentation,
+                    By.clazz("android.widget.Switch"),
+                    By.text(text),
+                    By.res(container));
         } catch (UiObjectNotFoundException e1) {
             try {
                 return UiAutomatorPlus.findObjectByRelative(

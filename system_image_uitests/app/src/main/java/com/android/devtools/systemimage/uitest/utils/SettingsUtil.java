@@ -8,13 +8,13 @@ import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 
 import junit.framework.Assert;
 
 import java.util.concurrent.TimeUnit;
+
 
 public class SettingsUtil {
     public static final String TAG = SettingsUtil.class.getName();
@@ -177,6 +177,11 @@ public class SettingsUtil {
             throws Exception {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
+        if (SystemUtil.getApiLevel() >= 26) {
+            SettingsUtil.openItem(instrumentation, "Apps & notifications");
+        } else {
+            SettingsUtil.openItem(instrumentation, "Apps");
+        }
 
         UiObject appPermissionsLabel = device.findObject(new UiSelector().text("App permissions"));
         boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
@@ -210,7 +215,6 @@ public class SettingsUtil {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        openAppList(instrumentation);
         getAppPermissions(instrumentation, appType);
 
         device.findObject(new UiSelector().text(appType)).click();
@@ -263,11 +267,5 @@ public class SettingsUtil {
         if (hasAdvancedMenu) {
             advancedMenu.click();
         }
-    }
-
-    public static void openAppList(Instrumentation instrumentation) throws Exception {
-        AppManager.openAppList(instrumentation);
-        UiDevice device = UiDevice.getInstance(instrumentation);
-        clickAdvancedMenu(device);
     }
 }
