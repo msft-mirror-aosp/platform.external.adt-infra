@@ -40,7 +40,7 @@ public class PlayStoreTestUtils {
                                           String application) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        boolean isFound = hasTestApp(instrumentation, application);
+        boolean isFound = hasTestApp(instrumentation, application, false);
         if (isFound) {
             device.findObject(new UiSelector()
                     .descriptionContains(application)).clickAndWaitForNewWindow();
@@ -51,10 +51,12 @@ public class PlayStoreTestUtils {
      * Helper to search Google Play for an application by description.
      * Return true if found, false if not.
      */
-    public static boolean hasTestApp(Instrumentation instrumentation, String application)
+    public static boolean hasTestApp(
+            Instrumentation instrumentation, String application, boolean strict)
             throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String appTitle = application;
+        final boolean exactMatch = strict;
 
         device.pressHome();
         PlayStoreUtil.launchGooglePlay(instrumentation, appTitle);
@@ -62,8 +64,10 @@ public class PlayStoreTestUtils {
         return new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() {
-                boolean hasApplication =
+                boolean hasApplication = exactMatch ?
                         device.findObject(new UiSelector().text(appTitle).
+                                resourceId(Res.GOOGLE_PLAY_LIST_TITLE_RES)).exists() :
+                        device.findObject(new UiSelector().textContains(appTitle).
                                 resourceId(Res.GOOGLE_PLAY_LIST_TITLE_RES)).exists();
                 return hasApplication;
             }
