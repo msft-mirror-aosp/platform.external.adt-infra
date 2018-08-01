@@ -82,7 +82,7 @@ public class PlayStoreTest {
             if (playStoreInstalled) {
                 PlayStoreUtil.loginGooglePlay(instrumentation);
                 assertTrue("Application not found in search.",
-                        PlayStoreTestUtils.hasTestApp(instrumentation, application, false));
+                        PlayStoreTestUtils.hasTestApp(instrumentation, application));
                 PlayStoreUtil.resetPlayStore(instrumentation);
                 device.pressHome();
             }
@@ -223,7 +223,7 @@ public class PlayStoreTest {
     public void testPayAppVerification() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Tasker";
+        final String application = "Pocket Casts";
 
         if (hasGooglePlay) {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled(instrumentation);
@@ -290,14 +290,14 @@ public class PlayStoreTest {
             if (playStoreInstalled) {
                 PlayStoreUtil.loginGooglePlay(instrumentation);
                 assertTrue("Adult application is not found in search.",
-                        PlayStoreTestUtils.hasTestApp(instrumentation, restrictedApplication, true));
+                        PlayStoreTestUtils.hasTestApp(instrumentation, restrictedApplication));
 
                 PlayStoreTestUtils.setRestrictions(instrumentation,  "Apps", "Everyone 10+");
 
 
                 assertTrue("Adult application found in search.",
-                        !PlayStoreTestUtils.hasTestApp(instrumentation, restrictedApplication, true) &&
-                                PlayStoreTestUtils.hasTestApp(instrumentation, familyApplication, true));
+                        !PlayStoreTestUtils.hasTestApp(instrumentation, restrictedApplication) &&
+                                PlayStoreTestUtils.hasTestApp(instrumentation, familyApplication));
 
                 PlayStoreTestUtils.toggleParentalControls(device, false);
             }
