@@ -55,6 +55,14 @@ public class SystemImageTestFramework implements TestRule {
         return mDevice;
     }
 
+    public int getApi() {
+        return Integer.parseInt(args.getString("api"));
+    }
+
+    public String getAbi() {
+        return args.getString("abi");
+    }
+
     public String getTag() {
         return args.getString("tag");
     }
@@ -65,6 +73,10 @@ public class SystemImageTestFramework implements TestRule {
 
     public boolean isGoogleApiAndPlayImage() {
         return "google_apis_playstore".equals(getTag());
+    }
+
+    public String getOrigin() {
+        return args.getString("origin");
     }
 
     private boolean isExternalStorageWritable() {
@@ -177,4 +189,5 @@ public class SystemImageTestFramework implements TestRule {
             }
         };
     }
+
 }

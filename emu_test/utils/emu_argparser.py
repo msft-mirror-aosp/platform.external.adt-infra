@@ -45,12 +45,9 @@ def get_parser():
                         help='when defined, skip adb performance test')
     parser.add_argument('--is-gts', action='store_true',
                         help='when defined, run gts instead of cts')
-    parser.add_argument('--uitest-presub-check-pkg', type=str, dest='uitest_psc_pkg', action='store',
+    parser.add_argument('--uitest-psc', type=str, dest='uitest_psc', action='store',
                         default=None,
-                        help='test package for uitest presubmit check')
-    parser.add_argument('--uitest-presub-check-test', type=str, dest='uitest_psc_test', action='store',
-                        default=None,
-                        help='test method for uitest presubmit check')
+                        help='test class and method for uitest presubmit check')
     parser.add_argument('--cts-plan', type=str, dest='cts_plan', action='store',
                         default=None,
                         help='The plan.xml file to use for executing CTS tests')
