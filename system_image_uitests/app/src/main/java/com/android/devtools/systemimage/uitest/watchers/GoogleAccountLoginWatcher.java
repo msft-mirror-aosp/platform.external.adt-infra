@@ -16,7 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.watchers;
 
-import com.android.devtools.systemimage.uitest.utils.api28.AccountManager;
+import com.android.devtools.systemimage.uitest.utils.AccountManager;
 
 import org.junit.Assert;
 

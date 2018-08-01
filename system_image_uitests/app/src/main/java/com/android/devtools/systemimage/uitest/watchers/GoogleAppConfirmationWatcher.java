@@ -75,13 +75,6 @@ public class GoogleAppConfirmationWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().textMatches(("(?i)i agree(?-i)"))).click();
                 condition = true;
             }
-            isSuccess =
-                    mDevice.findObject(new UiSelector().textMatches(("(?i)i agree(?-i)")))
-                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-            if (isSuccess) {
-                mDevice.findObject(new UiSelector().textMatches(("(?i)i agree(?-i)"))).click();
-                condition = true;
-            }
 
         }
         catch (UiObjectNotFoundException e) {
