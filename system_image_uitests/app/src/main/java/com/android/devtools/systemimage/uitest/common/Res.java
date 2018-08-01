@@ -68,8 +68,7 @@ public class Res {
     public static final String CAMERA_FILE_THUMBNAIL_RES = "com.android.camera2:id/rounded_thumbnail_view";
     public static final String CAMERA_FILE_DELETE_RES = "com.android.camera2:id/filmstrip_bottom_control_delete";
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
-    public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
-    public static final String NOTIFICATION_QUICK_PANEL_RES = "com.android.systemui:id/quick_qs_panel";
+    public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";;
     public static final String NOTIFICATION_BAR_EXPAND_RES = "com.android.systemui:id/expand_indicator";
     public static final String NOTIFICATION_BAR_HEADER_RES = "com.android.systemui:id/header";
 

@@ -64,8 +64,8 @@ public class VpnTest {
             @Override
             public boolean isTrue() throws Exception {
                 device.openNotification();
-                device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_QUICK_PANEL_RES))
-                        .swipeDown(10);
+                device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_BAR_EXPAND_RES)
+                        .className("android.widget.ImageView")).click();
                 return device.hasObject(By.text(NETWORK_MONITORED_TEXT)) ||
                         device.hasObject(By.text(DEVICE_CONNECTED_TEXT));
             }
@@ -119,7 +119,6 @@ public class VpnTest {
         if (!verifyVpnStatus(device)) {
             AppLauncher.launch(instrumentation, "TestVPN");
 
-            new VpnPopupWatcher(device).checkForCondition();
             device.findObject(new UiSelector().resourceId(Res.START_VPN_BUTTON_RES))
                     .clickAndWaitForNewWindow();
             new VpnPopupWatcher(device).checkForCondition();
