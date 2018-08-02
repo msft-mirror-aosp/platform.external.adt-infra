@@ -26,9 +26,9 @@ import android.view.KeyEvent;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
+import com.android.devtools.systemimage.uitest.watchers.PlayStoreControlsWatcher;
 
 import java.util.concurrent.TimeUnit;
-
 
 /**
  * Static utility methods pertaining to the Google Play Store
@@ -39,45 +39,82 @@ public class PlayStoreUtil {
         throw new AssertionError();
     }
 
-    private static final int api = SystemUtil.getApiLevel();
-
     /**
+     * Version 1 for api = 24
+     *
      * Checks if Play Store has been installed.
      * Returns true if Play Store has been installed, false if not.
      */
-    public static boolean isPlayStoreInstalled(Instrumentation instrumentation) throws Exception {
+    public static boolean isPlayStoreInstalled_v1(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         boolean isInstalled;
         final String playStore = "Play Store";
 
         device.pressHome();
-        if (api == 24) {
-            device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
-            final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-            isInstalled = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws UiObjectNotFoundException {
-                    scrollable.scrollIntoView(new UiSelector().text(playStore));
-                    return scrollable.getChild(new UiSelector().text(playStore)).exists();
-                }
-            });
-        } else {
-            if (api == 28) {
-                device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
-            }
+        device.findObject(new UiSelector().descriptionContains("Apps")).clickAndWaitForNewWindow();
 
-            isInstalled = new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)).
-                    until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws UiObjectNotFoundException {
-                            return device.findObject(new UiSelector().text(playStore)).exists() ||
-                                    device.findObject(new UiSelector().description(playStore)).exists();
-                        }
-                    });
-            if (api == 28) {
-                device.pressHome();
+        final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        isInstalled = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                scrollable.scrollIntoView(new UiSelector().text(playStore));
+                return scrollable.getChild(new UiSelector().text(playStore)).exists();
             }
-        }
+        });
+
+        return isInstalled;
+    }
+
+    /**
+     * Version 2 for 25 <= api <= 27
+     *
+     * Checks if Play Store has been installed.
+     * Returns true if Play Store has been installed, false if not.
+     */
+    public static boolean isPlayStoreInstalled_v2(Instrumentation instrumentation) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        boolean isInstalled;
+        final String playStore = "Play Store";
+
+        device.pressHome();
+
+        isInstalled = new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return device.findObject(new UiSelector().text(playStore)).exists() ||
+                                device.findObject(new UiSelector().description(playStore)).exists();
+                    }
+                });
+
+        return isInstalled;
+    }
+
+    /**
+     * Version 3 for api >= 28
+     *
+     * Checks if Play Store has been installed.
+     * Returns true if Play Store has been installed, false if not.
+     */
+    public static boolean isPlayStoreInstalled_v3(Instrumentation instrumentation) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        boolean isInstalled;
+        final String playStore = "Play Store";
+
+        device.pressHome();
+        device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
+
+        isInstalled = new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return device.findObject(new UiSelector().text(playStore)).exists() ||
+                                device.findObject(new UiSelector().description(playStore)).exists();
+                    }
+                });
+
+        device.pressHome();
+
         return isInstalled;
     }
 
@@ -231,5 +268,176 @@ public class PlayStoreUtil {
         boolean isAppUninstalled = installButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
 
         return isAppUninstalled;
+    }
+
+    /**
+     * Selects an application listed in Play Store, if found.
+     */
+    public static void selectApplication(Instrumentation instrumentation,
+                                          String application) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        boolean isFound = hasTestApp(instrumentation, application);
+        if (isFound) {
+            device.findObject(new UiSelector()
+                    .descriptionContains(application)).clickAndWaitForNewWindow();
+        }
+    }
+
+    /**
+     * Helper to search Google Play for an application by description.
+     * Return true if found, false if not.
+     */
+    public static boolean hasTestApp(Instrumentation instrumentation, String application)
+            throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String appTitle = application;
+
+        device.pressHome();
+        PlayStoreUtil.launchGooglePlay(instrumentation, appTitle);
+
+        return new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() {
+                boolean hasApplication =
+                        device.findObject(new UiSelector().text(appTitle).
+                                resourceId(Res.GOOGLE_PLAY_LIST_TITLE_RES)).exists();
+                return hasApplication;
+            }
+        });
+    }
+    /**
+     * Opens the Parental Controls menu
+     */
+    private static void openParentalControls(UiDevice testDevice) throws Exception {
+        final UiDevice device = testDevice;
+        device.findObject(new UiSelector().description("Back")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().description("Show navigation drawer"))
+                .waitForExists(TimeUnit.SECONDS.toMillis(3));
+        device.findObject(new UiSelector().description("Show navigation drawer"))
+                .clickAndWaitForNewWindow();
+
+        final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        final UiObject settingsLink = scrollable.getChild(new UiSelector().text("Settings"));
+        settingsLink.waitForExists(3L);
+        if (!settingsLink.exists()) {
+            new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    int swipes = 0;
+                    while (!settingsLink.exists() && swipes < 20) {
+                        scrollable.flingForward();
+                        swipes++;
+                    }
+                    return settingsLink.exists();
+                }
+            });
+        }
+        if (settingsLink.exists()) {
+            settingsLink.clickAndWaitForNewWindow();
+        }
+
+        final UiObject parentalControlsButton = scrollable.getChild(new UiSelector().text(
+                "Parental controls"));
+        parentalControlsButton.waitForExists(3L);
+        if (!parentalControlsButton.exists()) {
+            new Wait().until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() throws UiObjectNotFoundException {
+                    scrollable.scrollIntoView(parentalControlsButton);
+                    return parentalControlsButton.exists();
+                }
+            });
+        }
+        if (parentalControlsButton.exists()) {
+            parentalControlsButton.clickAndWaitForNewWindow();
+        }
+    }
+
+    /**
+     * Toggles the Parental Controls button; on if true, off if false
+     */
+    public static void toggleParentalControls(UiDevice testDevice, boolean setChecked) throws Exception {
+        final UiDevice device = testDevice;
+        openParentalControls(device);
+
+        final UiObject toggleButton = device.findObject(new UiSelector().resourceId(
+                Res.GOOGLE_PLAY_FILTER_TOGGLE_RES));
+
+        boolean toggleButtonExists = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() {
+                return toggleButton.exists();
+            }
+        });
+
+        if (toggleButtonExists && toggleButton.isChecked() != setChecked) {
+            toggleButton.clickAndWaitForNewWindow();
+            setParentalControlPin(device, "1111");
+        }
+    }
+
+    /**
+     * Change parental control restrictions in an application category to the given ages
+     */
+    public static void setRestrictions(Instrumentation instrumentation,
+                                        String category, String ages) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        final String appCategory = category;
+        toggleParentalControls(device, true);
+
+        new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() {
+                return device.findObject(new UiSelector().textStartsWith(appCategory)).exists();
+            }
+        });
+        device.findObject(new UiSelector().textStartsWith(appCategory)).clickAndWaitForNewWindow();
+        setParentalControlPin(device, "1111");
+        device.findObject(new UiSelector().text(ages))
+                .waitForExists(TimeUnit.SECONDS.toMillis(3));
+        device.findObject(new UiSelector().text(ages))
+                .clickAndWaitForNewWindow();
+        new PlayStoreControlsWatcher(device).checkForCondition();
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        scrollable.waitForExists(3L);
+        if (scrollable.exists()) {
+            scrollable.flingToEnd(5);
+        }
+        new PlayStoreControlsWatcher(device).checkForCondition();
+        PlayStoreUtil.resetPlayStore(instrumentation);
+        device.pressHome();
+    }
+    /**
+     * Sets and then confirms a parental control pin
+     */
+    public static void setParentalControlPin(UiDevice testDevice, String pin) throws Exception {
+        final UiDevice device = testDevice;
+
+        boolean hasPinDialog = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector().text("Type PIN")).exists();
+            }
+        });
+
+        if (!hasPinDialog) {
+            return;
+        }
+
+        device.findObject(new UiSelector().text("Type PIN")).setText(pin);
+        device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
+
+        boolean needsConfirmation = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws UiObjectNotFoundException {
+                return device.findObject(new UiSelector().text("Type PIN")).exists();
+            }
+        });
+
+        if (needsConfirmation) {
+            device.findObject(new UiSelector().text("Type PIN")).setText(pin);
+            device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
+        }
     }
 }

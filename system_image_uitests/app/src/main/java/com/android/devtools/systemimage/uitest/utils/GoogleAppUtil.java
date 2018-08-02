@@ -64,12 +64,11 @@ public class GoogleAppUtil {
 
         boolean needsEmail = api == 24 ? inputEmailField.waitForExists(
                 TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)) :
-                forgotEmailLink.waitForExists(
-                        TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+                forgotEmailLink.waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
 
-                UiObject editInput = device.findObject(new UiSelector().className("android.widget.EditText"));
-                boolean hasEditInput = editInput.waitForExists(
-                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        UiObject editInput = device.findObject(new UiSelector().className("android.widget.EditText"));
+        boolean hasEditInput = editInput.waitForExists(
+        TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
 
         if (needsEmail && hasEditInput) {
             editInput.clearTextField();

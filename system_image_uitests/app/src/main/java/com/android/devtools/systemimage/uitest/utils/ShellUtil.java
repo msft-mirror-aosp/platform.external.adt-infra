@@ -16,6 +16,12 @@
 
 package com.android.devtools.systemimage.uitest.utils;
 
+import android.app.Instrumentation;
+import android.support.test.uiautomator.UiDevice;
+import android.util.Log;
+
+import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -70,6 +76,25 @@ public class ShellUtil {
         public ShellResult(String stdout, String stderr) {
             this.stdout = stdout;
             this.stderr = stderr;
+        }
+    }
+
+    public static void deleteBugReportFiles(String reportDir, SystemImageTestFramework testFramework) throws Exception {
+        Log.i(TAG, "Deleting any existing bug report files");
+
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        // Delete all png and zip bug reports. Delete the files one at a time, as wildcards
+        // don't work.
+        String lsResult = device.executeShellCommand("ls " + reportDir);
+        String[] files = lsResult.split("\\s+");
+        String filename = "bugreport.*\\.(png|zip)";
+
+        for (String file : files) {
+            if (file.matches(filename)) {
+                device.executeShellCommand(String.format("rm %s/%s", reportDir, file));
+            }
         }
     }
 }

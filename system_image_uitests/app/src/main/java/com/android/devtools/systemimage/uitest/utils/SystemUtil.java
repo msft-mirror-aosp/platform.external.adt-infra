@@ -31,5 +31,4 @@ public class SystemUtil {
     public static int getApiLevel() {
         return android.os.Build.VERSION.SDK_INT;
     }
-
 }

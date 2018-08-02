@@ -29,7 +29,7 @@ import android.view.Surface;
  * Task Manager.
  */
 public class TaskManager {
-    private static final int DEFAULT_SWIPE_STEPS = 10;
+private static final int DEFAULT_SWIPE_STEPS = 10;
 
     private TaskManager() {
         throw new AssertionError();

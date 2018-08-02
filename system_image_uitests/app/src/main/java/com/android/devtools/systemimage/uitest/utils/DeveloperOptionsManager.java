@@ -36,34 +36,8 @@ public class DeveloperOptionsManager {
         throw new AssertionError();
     }
 
-    private static final int api = SystemUtil.getApiLevel();
-
-    /**
-     * Enables developer options.
-     *
-     * @param testFramework see {
-     *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
-     * @throws Exception if it fails to find a UI widget.
-     */
-    public static void enableDeveloperOptions(SystemImageTestFramework testFramework)
-            throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
+    private static void enableOptions(Instrumentation instrumentation) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
-
-        try {
-            if (api >= 26) {
-                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About emulated device"});
-            } else {
-                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
-            }
-        } catch (UiObjectNotFoundException e) {
-            if (api >= 26) {
-                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
-            } else {
-                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
-            }
-        }
-
         SettingsUtil.clickAdvancedMenu(device);
 
         // Click "Build number"
@@ -84,31 +58,95 @@ public class DeveloperOptionsManager {
             item.click();
         }
     }
+    /**
+     * Enables developer options.
+     *
+     * Version 1 for api <= 25
+     *
+     * @param testFramework see {
+     *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
+     * @throws Exception if it fails to find a UI widget.
+     */
+    public static void enableDeveloperOptions_v1(SystemImageTestFramework testFramework)
+            throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+
+        try {
+            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
+        } catch (UiObjectNotFoundException e) {
+            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
+        }
+
+        enableOptions(instrumentation);
+    }
+
+    /**
+     * Enables developer options.
+     *
+     * Version 2 for api >= 26
+     *
+     * @param testFramework see {
+     *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
+     * @throws Exception if it fails to find a UI widget.
+     */
+    public static void enableDeveloperOptions_v2(SystemImageTestFramework testFramework)
+            throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+
+        try {
+            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About emulated device"});
+        } catch (UiObjectNotFoundException e) {
+            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
+        }
+
+        enableOptions(instrumentation);
+    }
 
     /**
      * Checks if the developer options is enabled.
+     *
+     * Version 1 for api <= 25
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
      * @return {@code true} if the developer options is enabled, or {@code false} otherwise.
      * @throws Exception is it fails to find a UI widget.
      */
-    public static boolean isDeveloperOptionsEnabled(SystemImageTestFramework testFramework) throws Exception {
+    public static boolean isDeveloperOptionsEnabled_v1(SystemImageTestFramework testFramework) throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         new SettingsTestPopupWatcher(device).checkForCondition();
 
         try {
-            if (api >= 26) {
-                SettingsUtil.openItem(instrumentation, "System");
-                SettingsUtil.clickAdvancedMenu(device);
-                device.findObject(new UiSelector().text("Developer options")).click();
-                return true;
-            } else {
-                SettingsUtil.findItem(instrumentation, "Developer options");
-                return true;
-            }
+            SettingsUtil.findItem(instrumentation, "Developer options");
+            return true;
+        } catch (UiObjectNotFoundException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Checks if the developer options is enabled.
+     *
+     * Version 2 for api >= 26
+     *
+     * @param testFramework see {
+     *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
+     * @return {@code true} if the developer options is enabled, or {@code false} otherwise.
+     * @throws Exception is it fails to find a UI widget.
+     */
+    public static boolean isDeveloperOptionsEnabled_v2(SystemImageTestFramework testFramework) throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        new SettingsTestPopupWatcher(device).checkForCondition();
+
+        try {
+            SettingsUtil.openItem(instrumentation, "System");
+            SettingsUtil.clickAdvancedMenu(device);
+            device.findObject(new UiSelector().text("Developer options")).click();
+            return true;
         } catch (UiObjectNotFoundException e) {
             return false;
         }

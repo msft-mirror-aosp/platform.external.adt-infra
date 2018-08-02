@@ -37,7 +37,7 @@ public class ApiDemosInstaller {
      * Installs API Demos test onto image, if not present
      */
 
-    public static void installApp()
+    public static void installApp(String text1, String text2)
             throws Exception {
         SystemImageTestFramework testFramework = new SystemImageTestFramework();
         Instrumentation instrumentation = testFramework.getInstrumentation();
@@ -66,7 +66,7 @@ public class ApiDemosInstaller {
 
             assertTrue("Application " + testPackageName + " (" + apk + ") is not installed. Result: " + result, isAPIDemoInstalled);
 
-            SettingsUtil.activate(instrumentation, "Sample Device Admin");
+            SettingsUtil.activate(instrumentation, "Sample Device Admin", text1, text2);
         }
     }
 }

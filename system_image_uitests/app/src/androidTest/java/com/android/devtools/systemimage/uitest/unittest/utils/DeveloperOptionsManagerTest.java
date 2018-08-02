@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.unittest.utils;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
+import com.android.devtools.systemimage.uitest.utils.SystemUtil;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -26,7 +27,6 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
-import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 
 /**
@@ -43,10 +43,19 @@ public class DeveloperOptionsManagerTest {
     @Test
     @TestInfo()
     public void testDeveloperOptionsManager() throws Exception {
-        DeveloperOptionsManager.enableDeveloperOptions(testFramework);
-        Assert.assertTrue(
-                "Failed to enable developer options.",
-                DeveloperOptionsManager.isDeveloperOptionsEnabled(testFramework)
-        );
+        if (SystemUtil.getApiLevel() >= 26) {
+            DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
+            Assert.assertTrue(
+                    "Failed to enable developer options.",
+                    DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)
+            );
+        }
+        else {
+            DeveloperOptionsManager.enableDeveloperOptions_v1(testFramework);
+            Assert.assertTrue(
+                    "Failed to enable developer options.",
+                    DeveloperOptionsManager.isDeveloperOptionsEnabled_v1(testFramework)
+            );
+        }
     }
 }

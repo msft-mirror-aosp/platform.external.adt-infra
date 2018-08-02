@@ -53,10 +53,31 @@ public class NetworkUtil {
         return tm.getDataState() != TelephonyManager.DATA_DISCONNECTED;
     }
 
-    public static boolean isAirplaneModeEnabled(UiDevice device) throws Exception {
-        final UiObject airplaneModeIcon = testFramework.getApi() >= 24 ?
-                device.findObject(new UiSelector().description("Airplane mode")) :
-                device.findObject(new UiSelector().resourceId("com.android.systemui:id/airplane"));
+    /**
+     * Version 1 for api <= 23
+     *
+     * @param device
+     * @return
+     */
+    public static UiObject getAirplaneModeIcon_v1(UiDevice device) {
+        UiObject airplaneModeIcon = device.findObject(new UiSelector().resourceId("com.android.systemui:id/airplane"));
+
+        return airplaneModeIcon;
+    }
+
+    /**
+     * Version 2 for api >= 24
+     *
+     * @param device
+     * @return
+     */
+    public static UiObject getAirplaneModeIcon_v2(UiDevice device) {
+        UiObject airplaneModeIcon = device.findObject(new UiSelector().description("Airplane mode"));
+
+        return airplaneModeIcon;
+    }
+
+    public static boolean isAirplaneModeEnabled(UiDevice device, UiObject airplaneModeIcon) throws Exception {
         openExtendedNotificationsPanel(device);
 
         if (airplaneModeIcon.waitForExists(5L) && airplaneModeIcon.getText().toLowerCase().contains("on")) {

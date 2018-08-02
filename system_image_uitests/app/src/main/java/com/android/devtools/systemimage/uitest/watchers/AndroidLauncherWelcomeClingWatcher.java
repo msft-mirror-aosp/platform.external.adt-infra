@@ -58,5 +58,4 @@ public class AndroidLauncherWelcomeClingWatcher implements UiWatcher {
             return false;
         }
     }
-
 }
