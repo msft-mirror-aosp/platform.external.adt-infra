@@ -877,7 +877,13 @@ def create_test_case_from_file(desc, testcase_class, test_func, variants=None):
                 avd_config_guestgpu = avd_config._replace(gpu = "guest")
                 create_test_case(avd_config_guestgpu, op, variant=variant)
 
-        if op == "S" or op == "" or not valid_case(avd_config):
+        if avd_config.gpu == 'swiftshader_indirect':
+            # Set gpu back to its original value of 'yes' so that validate_case doesn't complain
+            # about "invalid case" in filter_dict.
+            checker_avd_config = avd_config._replace(gpu='yes')
+        else:
+            checker_avd_config = avd_config
+        if op == "S" or op == "" or not valid_case(checker_avd_config):
             return
 
         # For console tests, pass the builder name to it.
