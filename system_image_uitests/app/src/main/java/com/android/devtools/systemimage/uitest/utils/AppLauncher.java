@@ -47,7 +47,7 @@ public class AppLauncher {
      * @param appName         the app name to launch
      * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
-    public static void launch(Instrumentation instrumentation, String appName) throws Exception {
+    public static void launch(Instrumentation instrumentation, String appName) throws Exception  {
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
@@ -80,91 +80,102 @@ public class AppLauncher {
         final UiSelector appSelector = new UiSelector().text(appName);
         final UiObject appObject = device.findObject(appSelector);
 
-        try {
-            scrollable.setAsVerticalList();
-            appNameFound = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws UiObjectNotFoundException {
-                    return scrollable.scrollIntoView(appSelector);
-                }
-            });
-
-            if (!appNameFound) {
-                scrollable.setAsHorizontalList();
+        appNameFound = new Wait().until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() {
+                return appObject.exists();
+            }
+        });
+        if (appNameFound) {
+            appObject.clickAndWaitForNewWindow();
+        } else {
+            try {
+                scrollable.setAsVerticalList();
                 appNameFound = new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
                         return scrollable.scrollIntoView(appSelector);
                     }
                 });
-            }
-        } catch (UiObjectNotFoundException e) {
-            device.pressHome();
-            try {
-                appsLabelFound = new Wait().until(new Wait.ExpectedCondition() {
+
+                if (!appNameFound) {
+                    scrollable.setAsHorizontalList();
+                    appNameFound = new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() throws UiObjectNotFoundException {
+                            return scrollable.scrollIntoView(appSelector);
+                        }
+                    });
+                }
+            } catch (UiObjectNotFoundException e) {
+                device.pressHome();
+                try {
+                    appsLabelFound = new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return appsLabel.exists();
+                        }
+                    });
+                } catch (Exception error) {
+                    Log.e(TAG, error.getMessage());
+                    Log.e(TAG, "Launch: Apps label not found on second attempt");
+                }
+
+                if (appsLabelFound) {
+                    appsLabel.clickAndWaitForNewWindow();
+                }
+
+                if (!appObject.exists()) {
+                    if (api >= 28) {
+                        device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
+                        final UiObject launcherDismiss = device.findObject(new UiSelector().
+                                resourceId(Res.LAUNCHER_LIST_DISMISS_RES));
+                        boolean launcherDismissFound = new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() {
+                                return launcherDismiss.exists();
+                            }
+                        });
+                        if (launcherDismissFound) {
+                            launcherDismiss.clickAndWaitForNewWindow();
+                        }
+                    } else {
+                        final UiObject launcherList = device.findObject(new UiSelector().
+                                resourceId(Res.LAUNCHER_LIST_CONTAINER_RES));
+                        boolean launcherListFound = new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() {
+                                return launcherList.exists();
+                            }
+                        });
+                        if (launcherListFound) {
+                            launcherList.clickAndWaitForNewWindow();
+                        } else if (scrollable.exists()) {
+                            scrollable.flingForward();
+                        }
+                    }
+                }
+                appNameFound = new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
-                        return appsLabel.exists();
+                        return appObject.exists();
                     }
                 });
-            } catch(Exception error) {
-                Log.e(TAG, error.getMessage());
-                Log.e(TAG,"Launch: Apps label not found on second attempt");
             }
 
-            if (appsLabelFound) {
-                appsLabel.clickAndWaitForNewWindow();
+            if (appNameFound) {
+                appObject.clickAndWaitForNewWindow();
             }
-
-            if (!appObject.exists()) {
-                if (api >= 28) {
-                    device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
-                    final UiObject launcherDismiss = device.findObject(new UiSelector().
-                            resourceId(Res.LAUNCHER_LIST_DISMISS_RES));
-                    boolean launcherDismissFound = new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return launcherDismiss.exists();
-                        }
-                    });
-                    if (launcherDismissFound) {
-                        launcherDismiss.clickAndWaitForNewWindow();
-                    }
-                } else {
-                    final UiObject launcherList = device.findObject(new UiSelector().
-                            resourceId(Res.LAUNCHER_LIST_CONTAINER_RES));
-                    boolean launcherListFound = new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return launcherList.exists();
-                        }
-                    });
-                    if (launcherListFound) {
-                        launcherList.clickAndWaitForNewWindow();
-                    } else if (scrollable.exists()) {
-                        scrollable.flingForward();
-                    }
-                }
-            }
-            appNameFound = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return appObject.exists();
-                }
-            });
-        }
-        if (appNameFound) {
-            appObject.clickAndWaitForNewWindow();
         }
     }
 
     /**
-     * Launches application in a specific path.
+     * Launches application in path by launcher.
      *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      * @param appPath         the app path to launch
-     * @throws Exception if it fails to find a UI object.
+     * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
     public static void launchPath(Instrumentation instrumentation, String... appPath)
             throws Exception {

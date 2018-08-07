@@ -74,6 +74,12 @@ public class GoogleAppUtil {
             editInput.clearTextField();
             editInput.setText(email);
             clickNext(device);
+        } else {
+            boolean wasSignedOut = device.findObject(
+                    new UiSelector().descriptionContains("signed out")).exists();
+            if (wasSignedOut) {
+                clickNext(device);
+            }
         }
 
         UiObject forgotPasswordLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot password?")) :

@@ -79,7 +79,7 @@ public class PlayStoreTest {
             if (playStoreInstalled) {
                 PlayStoreUtil.loginGooglePlay(instrumentation);
                 assertTrue("Application not found in search.",
-                        PlayStoreUtil.hasTestApp(instrumentation, application));
+                        PlayStoreUtil.hasTestApp(instrumentation, application, false));
                 PlayStoreUtil.resetPlayStore(instrumentation);
                 device.pressHome();
             }
@@ -220,7 +220,7 @@ public class PlayStoreTest {
     public void testPayAppVerification() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Pocket Casts";
+        final String application = "Tasker";
 
         if (testFramework.isGoogleApiAndPlayImage()) {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v2(instrumentation);
@@ -287,14 +287,14 @@ public class PlayStoreTest {
             if (playStoreInstalled) {
                 PlayStoreUtil.loginGooglePlay(instrumentation);
                 assertTrue("Adult application is not found in search.",
-                        PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication));
+                        PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true));
 
                 PlayStoreUtil.setRestrictions(instrumentation,  "Apps", "Everyone 10+");
 
 
                 assertTrue("Adult application found in search.",
-                        !PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication) &&
-                                PlayStoreUtil.hasTestApp(instrumentation, familyApplication));
+                        !PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true) &&
+                                PlayStoreUtil.hasTestApp(instrumentation, familyApplication, true));
 
                 PlayStoreUtil.toggleParentalControls(device, false);
             }
