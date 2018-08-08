@@ -143,7 +143,7 @@ public class ApiDemosTest {
             ApiDemosTestUtil.setPasswordCriteria("Minimum non-letter", "1", device);
 
             //Verify that setting the password meets the "PASSWORD QUALITY" criteria.
-            ApiDemosTestUtil.verifyPasswordQuality(instrumentation, device);
+            ApiDemosTestUtil.verifyPasswordQuality(instrumentation, device, "Security & Location", "Continue");
         }
     }
 

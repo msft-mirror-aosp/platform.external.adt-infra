@@ -53,9 +53,7 @@ public class ApiDemosTestUtil {
     /**
      *  Verify the functionality of "PASSWORD QUALITY".
      */
-    public static void verifyPasswordQuality(Instrumentation instrumentation, final UiDevice device) throws Exception {
-        String securitySettings = "Security & location";
-
+    public static void verifyPasswordQuality(Instrumentation instrumentation, final UiDevice device, String securitySettings, String continueButtonLabel) throws Exception {
         Assert.assertTrue(SettingsUtil.openItem(instrumentation, securitySettings));
 
         Assert.assertTrue("Scrollable list not found",
@@ -102,7 +100,6 @@ public class ApiDemosTestUtil {
         //Assertion for a valid password that meets all the "PASSWORD QUALITY" criteria.
         passwordField.setText("Abc1!d");
 
-        String continueButtonLabel = "Continue";
         UiObject continueButton = device.findObject(
                 new UiSelector().className("android.widget.Button").textContains(continueButtonLabel));
         continueButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
