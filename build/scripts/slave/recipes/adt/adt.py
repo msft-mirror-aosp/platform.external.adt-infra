@@ -36,6 +36,7 @@ BOOT_STEPS = {
         'emu-master-dev': bootStep('public', '{"ori": "public"}'),
         'emu-2.7-release': bootStep('public', '{"ori": "public"}'),
         'master': bootStep('master', '{"ori": "master"}'),
+        "master-iot-dev": bootStep('master-iot', '{"ori": "master-iot"}'),
         'aosp': bootStep('aosp', '{"ori": "aosp"}'),
         'pi-dev': bootStep('PI', '{"ori": "pi"}'),
         "pi-car-dev": bootStep('PI_CAR', '{"ori": "pi-car"}'),

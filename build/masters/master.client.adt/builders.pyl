@@ -164,6 +164,15 @@
        "branch": "all",
        "name_identifier": "system-images",
     },
+     "sys_image_master_iot_dev_poller": {
+       "gs_bucket": "android-build-emu-sysimage",
+       "gs_path": ["builds/git_master-iot-dev-linux-sdk_iot_x86-userdebug/"],
+       "pollInterval": 1029,
+       "type": "GSMultiPoller",
+       "project": "master-iot-dev",
+       "branch": "all",
+       "name_identifier": "system-images",
+     },
     "sys_image_aosp_poller": {
        "gs_bucket": "android-build-emu-sysimage",
        "gs_path": ["builds/aosp-master-linux-sdk_x86_64-sdk/",
@@ -441,8 +450,13 @@
      },
      "Boot API P - Auto": {
         "name": "sysimg-pi-car-dev",
-	    "id": "_34",
-	    "scheduler": "sysimg-pi-car-dev",
+        "id": "_34",
+        "scheduler": "sysimg-pi-car-dev",
+     },
+     "Boot Master - IoT": {
+        "name": "sysimg-master-iot-dev",
+        "id": "_35",
+        "scheduler": "sysimg-master-iot-dev",
      },
    },
 
@@ -478,7 +492,7 @@
        "slave_pools": ["ubuntu-16_04-thinkpad-2016"],
        "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
        		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
-		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot AOSP",
+		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot Master - IoT", "Boot AOSP",
 		      "Cross Builds"],
        "tag": "Linux",
      },
@@ -511,7 +525,7 @@
        "slave_pools": ["win-7-64-intel-hd-4400"],
        "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
        		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
-		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot AOSP"],
+		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot Master - IoT", "Boot AOSP"],
        "tag": "Win",
      },
      "Win 8 64-bit Quadro 600": {
@@ -556,7 +570,7 @@
        "slave_pools": ["mac-10-8-5-intel-hd-5000"],
        "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
        		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
-		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot AOSP"],
+		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot Master - IoT", "Boot AOSP"],
        "tag": "Mac",
      },
      "Mac 10.11.1 Iris Pro": {
@@ -627,6 +641,10 @@
     },
     "avd_test_scheduler": {
       "project": ["emu-master-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-master-iot-dev": {
+      "project": ["master-iot-dev"],
       "type": "emu_scheduler",
     },
     "sysimg-master": {

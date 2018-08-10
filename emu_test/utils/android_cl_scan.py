@@ -124,6 +124,8 @@ def generate_git_information(poller):
     return 'git_pi-car-dev', 'aosp_car_x86_64-userdebug'
   elif 'sys_image_master_poller' in poller:
     return 'git_master', 'sdk_gphone_x86-sdk_addon'
+  elif 'sys_image_master_iot_dev_poller' in poller:
+    return 'git_master-iot-dev', 'sdk_iot_x86-userdebug'
   elif 'sys_image_aosp_poller' in poller:
     return 'aosp-master', 'sdk_x86-sdk'
   elif 'emulator_2.7_linux_poller' in poller or 'emulator_2.7_windows_poller' in poller:
