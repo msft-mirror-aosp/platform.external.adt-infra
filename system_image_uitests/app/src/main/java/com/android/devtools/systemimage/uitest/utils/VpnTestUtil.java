@@ -67,7 +67,7 @@ public class VpnTestUtil {
         // Verify that a VPN lock icon is on the status bar.
         // Need to wait for a while to check the notification bar items
         // because opening notification is an animation.
-        // API 25 requires extra retry time to indentify VPN indicator.
+        // API 25 requires extra retry time to identify VPN indicator.
         boolean isTrue = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws Exception {
@@ -93,12 +93,12 @@ public class VpnTestUtil {
         // Verify that a VPN lock icon is on the status bar.
         // Need to wait for a while to check the notification bar items
         // because opening notification is an animation.
+        // API 28 needs to drag the notification panel downwards to open it.
         boolean isTrue = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws Exception {
                 device.openNotification();
-                device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_QUICK_PANEL_RES))
-                        .swipeDown(10);
+                NetworkUtil.openNotificationQuickPanel(device);
                 return device.hasObject(By.text(NETWORK_MONITORED_TEXT)) ||
                         device.hasObject(By.text(DEVICE_CONNECTED_TEXT));
             }
