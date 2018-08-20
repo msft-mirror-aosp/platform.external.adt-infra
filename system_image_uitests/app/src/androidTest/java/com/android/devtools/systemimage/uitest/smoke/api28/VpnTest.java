@@ -89,14 +89,15 @@ public class VpnTest {
                 isTestVPNInstalled);
 
         // Check if VPN is on. If true, skip.
-        if (!VpnTestUtil.verifyVpnStatus_v2(device)) {
+        if (!VpnTestUtil.verifyVpnStatus_v3(device)) {
             AppLauncher.launch(instrumentation, "TestVPN");
 
+            new VpnPopupWatcher(device).checkForCondition();
             device.findObject(new UiSelector().resourceId(Res.START_VPN_BUTTON_RES))
                     .clickAndWaitForNewWindow();
             new VpnPopupWatcher(device).checkForCondition();
             Assert.assertTrue("Failed to find the VPN lock icon after starting VPN!",
-                    VpnTestUtil.verifyVpnStatus_v2(device));
+                    VpnTestUtil.verifyVpnStatus_v3(device));
         }
     }
 }

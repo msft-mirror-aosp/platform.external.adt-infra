@@ -57,7 +57,7 @@ public class VpnTestUtil {
     }
 
     /**
-     * Version 2 for api >= 24
+     * Version 2 for api >= 24 && <= 27.
      *
      * @param device
      * @return
@@ -74,6 +74,31 @@ public class VpnTestUtil {
                 device.openNotification();
                 device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_BAR_EXPAND_RES)
                         .className("android.widget.ImageView")).click();
+                return device.hasObject(By.text(NETWORK_MONITORED_TEXT)) ||
+                        device.hasObject(By.text(DEVICE_CONNECTED_TEXT));
+            }
+        });
+        device.pressHome();
+        return isTrue;
+    }
+
+    /**
+     * Version 3 for api >= 28.
+     *
+     * @param device
+     * @return
+     * @throws Exception
+     */
+    public static boolean verifyVpnStatus_v3(final UiDevice device) throws Exception {
+        // Verify that a VPN lock icon is on the status bar.
+        // Need to wait for a while to check the notification bar items
+        // because opening notification is an animation.
+        boolean isTrue = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() throws Exception {
+                device.openNotification();
+                device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_QUICK_PANEL_RES))
+                        .swipeDown(10);
                 return device.hasObject(By.text(NETWORK_MONITORED_TEXT)) ||
                         device.hasObject(By.text(DEVICE_CONNECTED_TEXT));
             }
