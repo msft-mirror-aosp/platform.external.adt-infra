@@ -38,7 +38,7 @@ public class VpnPopupWatcher implements UiWatcher {
     @Override
     public boolean checkForCondition() {
         UiObject checkBox = mDevice.findObject(new UiSelector().text("I trust this application."));
-        UiObject okButton = mDevice.findObject(new UiSelector().text("OK"));
+        UiObject okButton = mDevice.findObject(new UiSelector().textMatches("(?i)ok(?-i)"));
         try {
             if (checkBox.exists()) {
                 checkBox.click();

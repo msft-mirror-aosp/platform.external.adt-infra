@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke.api28;
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -89,15 +90,18 @@ public class VpnTest {
                 isTestVPNInstalled);
 
         // Check if VPN is on. If true, skip.
-        if (!VpnTestUtil.verifyVpnStatus_v3(device)) {
+        if (!VpnTestUtil.verifyVpnStatus_v2(device)) {
             AppLauncher.launch(instrumentation, "TestVPN");
 
             new VpnPopupWatcher(device).checkForCondition();
-            device.findObject(new UiSelector().resourceId(Res.START_VPN_BUTTON_RES))
-                    .clickAndWaitForNewWindow();
+            UiObject startVPN = device.findObject(
+                    new UiSelector().resourceId(Res.START_VPN_BUTTON_RES));
+            if (startVPN.waitForExists(3L)) {
+                startVPN.clickAndWaitForNewWindow();
+            }
             new VpnPopupWatcher(device).checkForCondition();
             Assert.assertTrue("Failed to find the VPN lock icon after starting VPN!",
-                    VpnTestUtil.verifyVpnStatus_v3(device));
+                    VpnTestUtil.verifyVpnStatus_v2(device));
         }
     }
 }
