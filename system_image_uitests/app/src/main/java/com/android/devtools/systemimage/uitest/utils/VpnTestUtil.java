@@ -20,6 +20,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 
 import java.util.concurrent.TimeUnit;
@@ -57,7 +58,7 @@ public class VpnTestUtil {
     }
 
     /**
-     * Version 2 for api >= 24 && <= 27.
+     * Version 2 for api >= 24 && <= 28.
      *
      * @param device
      * @return
@@ -72,33 +73,12 @@ public class VpnTestUtil {
             @Override
             public boolean isTrue() throws Exception {
                 device.openNotification();
-                device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_BAR_EXPAND_RES)
-                        .className("android.widget.ImageView")).click();
-                return device.hasObject(By.text(NETWORK_MONITORED_TEXT)) ||
-                        device.hasObject(By.text(DEVICE_CONNECTED_TEXT));
-            }
-        });
-        device.pressHome();
-        return isTrue;
-    }
 
-    /**
-     * Version 3 for api >= 28.
-     *
-     * @param device
-     * @return
-     * @throws Exception
-     */
-    public static boolean verifyVpnStatus_v3(final UiDevice device) throws Exception {
-        // Verify that a VPN lock icon is on the status bar.
-        // Need to wait for a while to check the notification bar items
-        // because opening notification is an animation.
-        // API 28 needs to drag the notification panel downwards to open it.
-        boolean isTrue = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-                device.openNotification();
-                NetworkUtil.openNotificationQuickPanel(device);
+                UiObject notificationExpander = device.findObject(new UiSelector().
+                        resourceId(Res.NOTIFICATION_BAR_EXPAND_RES).className("android.widget.ImageView"));
+
+                NetworkUtil.openExtendedNotificationsPanel(device);
+
                 return device.hasObject(By.text(NETWORK_MONITORED_TEXT)) ||
                         device.hasObject(By.text(DEVICE_CONNECTED_TEXT));
             }

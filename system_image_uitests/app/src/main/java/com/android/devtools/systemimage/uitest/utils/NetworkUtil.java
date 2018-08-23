@@ -105,34 +105,18 @@ public class NetworkUtil {
         }
     }
 
-    private static void openExtendedNotificationsPanel(UiDevice device) throws UiObjectNotFoundException {
+    public static void openExtendedNotificationsPanel(UiDevice device)
+            throws UiObjectNotFoundException {
         new NetworkUtilPopupWatcher(device).checkForCondition();
         device.openNotification();
         new NetworkUtilPopupWatcher(device).checkForCondition();
 
-        UiObject expandIndicator = device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_BAR_EXPAND_RES));
+        UiObject expandIndicator = device.findObject(
+                new UiSelector().resourceId(Res.NOTIFICATION_BAR_EXPAND_RES));
         if (expandIndicator.waitForExists(5L)) {
             expandIndicator.clickAndWaitForNewWindow();
-        } else {
-            Log.d(TAG, "tray expander icon not found");
         }
 
-        UiObject notificationHeader = device.findObject(new UiSelector().resourceId(Res.NOTIFICATION_BAR_HEADER_RES));
-        if (notificationHeader.waitForExists(5L)) {
-            notificationHeader.click();
-            notificationHeader.swipeDown(3);
-        } else {
-            Log.d(TAG, "notification bar header not found");
-        }
-
-        openNotificationQuickPanel(device);
-    }
-
-    /**
-     *The following is triggered when Res.NOTIFICATION_QUIC_PANEL_RES is found. This only
-     * happens in API 28. For lower APIs, the function will be called but nothing happens.
-     */
-    public static void openNotificationQuickPanel(UiDevice device) throws UiObjectNotFoundException{
         UiObject quickPanel = device.findObject(new UiSelector().
                 resourceId(Res.NOTIFICATION_QUICK_PANEL_RES));
         if (quickPanel.waitForExists(3L)) {
@@ -148,5 +132,4 @@ public class NetworkUtil {
             quickPanel.dragTo(0, maxY/2, 5);
         }
     }
-
 }
