@@ -244,7 +244,7 @@ public class NetworkIOTest {
         String[] path = new String[]{"Settings", "Network & Internet"};
         AppLauncher.launchPath(instrumentation, path);
 
-        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v2(device);
+        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v3(device);
 
         // Test requires "Airplane mode" switch widget to start in the off state.
         if (NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon)) {
@@ -287,7 +287,7 @@ public class NetworkIOTest {
         String[] path = new String[]{"Settings", "Network & Internet"};
         AppLauncher.launchPath(instrumentation, path);
 
-        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v2(device);
+        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v3(device);
 
         // Test requires "Airplane mode" switch widget to start in the off state.
         if (NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon)) {

@@ -21,12 +21,16 @@ import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
 
 import android.app.Instrumentation;
 import android.content.Context;
+import android.graphics.Point;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.telephony.TelephonyManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
 
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 
@@ -66,13 +70,26 @@ public class NetworkUtil {
     }
 
     /**
-     * Version 2 for api >= 24
+     * Version 2 for api >= 24 && <= 27.
      *
      * @param device
      * @return
      */
     public static UiObject getAirplaneModeIcon_v2(UiDevice device) {
         UiObject airplaneModeIcon = device.findObject(new UiSelector().description("Airplane mode"));
+
+        return airplaneModeIcon;
+    }
+
+    /**
+     * Version 3 for api >= 28.
+     *
+     * @param device
+     * @return
+     */
+    public static UiObject getAirplaneModeIcon_v3(UiDevice device) {
+        UiObject airplaneModeIcon = device.findObject(new UiSelector().description("Airplane mode").
+                className("android.widget.Switch"));
 
         return airplaneModeIcon;
     }
@@ -88,7 +105,7 @@ public class NetworkUtil {
         }
     }
 
-    public static void openExtendedNotificationsPanel(UiDevice device) throws UiObjectNotFoundException {
+    private static void openExtendedNotificationsPanel(UiDevice device) throws UiObjectNotFoundException {
         new NetworkUtilPopupWatcher(device).checkForCondition();
         device.openNotification();
         new NetworkUtilPopupWatcher(device).checkForCondition();
@@ -107,5 +124,29 @@ public class NetworkUtil {
         } else {
             Log.d(TAG, "notification bar header not found");
         }
+
+        openNotificationQuickPanel(device);
     }
+
+    /**
+     *The following is triggered when Res.NOTIFICATION_QUIC_PANEL_RES is found. This only
+     * happens in API 28. For lower APIs, the function will be called but nothing happens.
+     */
+    public static void openNotificationQuickPanel(UiDevice device) throws UiObjectNotFoundException{
+        UiObject quickPanel = device.findObject(new UiSelector().
+                resourceId(Res.NOTIFICATION_QUICK_PANEL_RES));
+        if (quickPanel.waitForExists(3L)) {
+            Context context = testFramework.getInstrumentation().getContext();
+            DisplayMetrics metrics = new DisplayMetrics();
+            WindowManager windowManager = (WindowManager) context.
+                    getSystemService(Context.WINDOW_SERVICE);
+            windowManager.getDefaultDisplay().getMetrics(metrics);
+            Display display = windowManager.getDefaultDisplay();
+            Point point = new Point();
+            display.getSize(point);
+            int maxY = point.y;
+            quickPanel.dragTo(0, maxY/2, 5);
+        }
+    }
+
 }
