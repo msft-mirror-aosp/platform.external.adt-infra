@@ -61,7 +61,7 @@ REGEX_HELP_DISPLAY_NO_AUTH = (r'.*\n.*help.*\n.*help-verbose.*\n.*ping.*\n'
                               r'.*avd.*\n.*auth.*\n.*quit\|exit.*\n.*\n.*\n.*\nOK')
 REGEX_HELP_DISPLAY_AUTH = (r'.*\n.*help.*\n.*help-verbose.*\n.*ping.*\n.*event.*\n'
                            r'.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n.*crash-on-exit.*\n'
-                           r'.*kill.*\n.*network.*\n'
+                           r'.*kill.*\n.*restart.*\n.*network.*\n'
                            r'.*power.*\n.*quit\|exit.*\n.*redir.*\n'
                            r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*physics.*\n'
                            r'.*finger.*\n.*debug.*\n.*rotate.*\n.*screenrecord.*\n.*\n.*\n.*\nOK')
@@ -72,7 +72,7 @@ REGEX_HELP_VERBOSE_DISPLAY_NO_AUTH = (
 REGEX_HELP_VERBOSE_DISPLAY_AUTH = (
         r'.*\n.*\n.*help.*\n.*help-verbose.*\n.*ping.*\n.*event.*\n'
         r'.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n.*crash-on-exit.*\n'
-        r'.*kill.*\n.*network.*\n'
+        r'.*kill.*\n.*restart.*\n.*network.*\n'
         r'.*power.*\n.*quit\|exit.*\n.*redir.*\n'
         r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*physics.*\n'
         r'.*finger.*\n.*debug.*\n.*rotate.*\n.*screenrecord.*\n.*\n.*\nOK')
