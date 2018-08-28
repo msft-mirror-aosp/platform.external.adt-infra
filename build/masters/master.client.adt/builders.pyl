@@ -318,7 +318,7 @@
        "id": "_10",
        "scheduler": "sysimg-aosp",
      },
-     "UI API P": {
+     "UI API 28": {
        "name": "system image UI test pi",
        "id": "_11",
        "scheduler": "sysimg-pi",
