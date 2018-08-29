@@ -43,6 +43,12 @@ public class AppWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().textMatches(("(?i)no thanks(?-i)"))).click();
                 condition = true;
             }
+            isSuccess = mDevice.findObject(new UiSelector().textMatches(("(?i)ok(?-i)")))
+                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().textMatches(("(?i)ok(?-i)"))).click();
+                condition = true;
+            }
         }
         catch (UiObjectNotFoundException e) {
             throw new AssertionError("Failed to dismiss the AppTest popup dialog");
