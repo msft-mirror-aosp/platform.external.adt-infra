@@ -33,8 +33,11 @@ class HelpTest(testcase_base.BaseConsoleTest):
     Args:
         expected_output: Expected console output for help commands.
     """
-    is_command_successful, output = util.execute_console_command(
-        self.telnet, util.CMD_HELP, expected_output)
+    output = util.execute_help_command(self.telnet, util.CMD_HELP)
+    is_command_successful = True
+    for cmd in expected_output:
+      if cmd not in output:
+        is_command_successful = False
 
     self.assert_cmd_successful(
         is_command_successful,
@@ -47,8 +50,11 @@ class HelpTest(testcase_base.BaseConsoleTest):
     Args:
         expected_output: Expected console output for help-vebose command.
     """
-    is_command_successful, output = util.execute_console_command(
-        self.telnet, util.CMD_HELP_VERBOSE, expected_output)
+    output = util.execute_help_command(self.telnet, util.CMD_HELP_VERBOSE)
+    is_command_successful = True
+    for cmd in expected_output:
+      if cmd not in output:
+        is_command_successful = False
 
     self.assert_cmd_successful(
         is_command_successful,
@@ -82,13 +88,13 @@ class HelpTest(testcase_base.BaseConsoleTest):
          gsm and rotate commands are available
     """
     print 'Running test: %s' % (inspect.stack()[0][3])
-    self._help_command(util.REGEX_HELP_DISPLAY_NO_AUTH)
-    self._help_verbose_command(util.REGEX_HELP_VERBOSE_DISPLAY_NO_AUTH)
+    self._help_command(util.CMDS_FOR_HELP_NO_AUTH)
+    self._help_verbose_command(util.CMDS_FOR_HELP_VERBOSE_NO_AUTH)
 
     self._auth_user_for_emulator_console()
 
-    self._help_command(util.REGEX_HELP_DISPLAY_AUTH)
-    self._help_verbose_command(util.REGEX_HELP_VERBOSE_DISPLAY_AUTH)
+    self._help_command(util.CMDS_FOR_HELP_AUTH)
+    self._help_verbose_command(util.CMDS_FOR_HELP_VERBOSE_DISPLAY_AUTH)
 
 
 if __name__ == '__main__':
