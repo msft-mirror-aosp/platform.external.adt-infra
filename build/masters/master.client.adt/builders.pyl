@@ -143,6 +143,15 @@
        "branch": "all",
        "name_identifier": "system-images",
     },
+     "sys_image_oc_mr1_iot_dev_poller": {
+       "gs_bucket": "android-build-emu-sysimage",
+       "gs_path": ["builds/git_oc-mr1-iot-dev-linux-sdk_google_iot_x86-userdebug/"],
+       "pollInterval": 1029,
+       "type": "GSMultiPoller",
+       "project": "oc-mr1-iot-dev",
+       "branch": "all",
+       "name_identifier": "system-images",
+     },
     "sys_image_pi_dev_poller": {
        "gs_bucket": "android-build-emu-sysimage",
        "gs_path": ["builds/git_pi-dev-mac-sdk_gphone_x86-sdk_addon_mac/",
@@ -443,6 +452,11 @@
        "id": "_22",
        "scheduler": "sysimg-oc-mr1-car-support-release",
      },
+     "Boot API 27 - IoT": {
+       "name": "sysimg-oc-mr1-iot-dev",
+       "id": "_36",
+       "scheduler": "sysimg-oc-mr1-iot-dev",
+     },
      "Boot API P": {
        "name": "sysimg-pi",
        "id": "_33",
@@ -492,8 +506,8 @@
        "slave_pools": ["ubuntu-16_04-thinkpad-2016"],
        "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
        		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
-		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot Master - IoT", "Boot AOSP",
-		      "Cross Builds"],
+		      "Boot API 27 - Auto", "Boot API 27 - IoT", "Boot API P", "Boot API P - Auto", "Boot Master",
+          "Boot Master - IoT", "Boot AOSP", "Cross Builds"],
        "tag": "Linux",
      },
      "Ubuntu 14.04 Quadro 600": {
@@ -525,7 +539,8 @@
        "slave_pools": ["win-7-64-intel-hd-4400"],
        "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
        		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
-		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot Master - IoT", "Boot AOSP"],
+		      "Boot API 27 - Auto", "Boot API 27 - IoT", "Boot API P", "Boot API P - Auto", "Boot Master",
+          "Boot Master - IoT", "Boot AOSP"],
        "tag": "Win",
      },
      "Win 8 64-bit Quadro 600": {
@@ -570,7 +585,8 @@
        "slave_pools": ["mac-10-8-5-intel-hd-5000"],
        "categories": ["Boot API 15", "Boot API 16", "Boot API 17", "Boot API 18", "Boot API 19", "Boot API 21",
        		      "Boot API 22", "Boot API 23", "Boot API 24", "Boot API 25", "Boot API 26", "Boot API 27",
-		      "Boot API 27 - Auto", "Boot API P", "Boot API P - Auto", "Boot Master", "Boot Master - IoT", "Boot AOSP"],
+		      "Boot API 27 - Auto", "Boot API 27 - IoT", "Boot API P", "Boot API P - Auto", "Boot Master",
+          "Boot Master - IoT", "Boot AOSP"],
        "tag": "Mac",
      },
      "Mac 10.11.1 Iris Pro": {
@@ -673,6 +689,10 @@
     },
     "sysimg-oc-mr1": {
       "project": ["oc-mr1-emu-dev"],
+      "type": "emu_scheduler",
+    },
+    "sysimg-oc-mr1-iot-dev": {
+      "project": ["oc-mr1-iot-dev"],
       "type": "emu_scheduler",
     },
     "sysimg-nyc": {
