@@ -64,7 +64,7 @@ def get_dst_dir(remote_path):
     elif 'jb-mr2-emu' in branch_name:
       api = '18'
     elif 'pi' in branch_name:
-      api = 'P'
+      api = '28'
     elif 'aosp-master' in branch_name:
       api = 'P'
     elif 'master' in branch_name:
