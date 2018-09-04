@@ -139,8 +139,6 @@ public class GoogleServicesTest {
 
         assertTrue("Cannot find location toggle button", device.findObject(
                 new UiSelector().className("android.widget.Switch")).exists());
-        assertTrue("Cannot find mode", device.findObject(new UiSelector().text(
-                "Mode")).exists());
         assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
                 "Recent location requests")).exists());
     }
