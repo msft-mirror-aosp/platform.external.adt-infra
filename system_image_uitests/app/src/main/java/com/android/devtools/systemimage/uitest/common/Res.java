@@ -114,4 +114,8 @@ public class Res {
     public static final String ANDROID_LIST_RES = "android:id/list";
     public static final String ANDROID_CONTENT_RES = "android:id/content";
     public static final String ANDROID_TITLE_RES = "android:id/title";
+
+    // Android TV Resources.
+    public static final String TV_LAUNCHER = "com.google.android.tvlauncher:id/button_icon";
+    public static final String TV_MAIN_FRAME = "com.android.tv.settings:id/main_frame";
 }
