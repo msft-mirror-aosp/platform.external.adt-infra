@@ -157,6 +157,7 @@
        "gs_path": ["builds/git_pi-emu-dev-mac-sdk_gphone_x86-sdk_addon_mac/",
 		   "builds/git_pi-emu-dev-linux-sdk_gphone_x86_64-userdebug/",
 		   "builds/git_pi-emu-dev-linux-sdk_gwear_x86-sdk/",
+		   "builds/git_pi-emu-dev-linux-sdk_atv_x86-sdk/",
 		   "builds/git_pi-emu-dev-linux-sdk_gphone_x86-user/"],
        "pollInterval": 597,
        "type": "GSMultiPoller",
@@ -473,6 +474,11 @@
         "id": "_35",
         "scheduler": "sysimg-master-iot-dev",
      },
+     "UI TV API 28": {
+       "name": "system image UI tv test pi",
+       "id": "_36",
+       "scheduler": "sysimg-pi",
+     },
    },
 
   "builders": {
@@ -493,7 +499,7 @@
      "Ubuntu 14.04 HD 4400": {
        "recipe": "adt/adt",
        "slave_pools": ["ubuntu-14_04-intel-hd-4400"],
-       "categories": ["UI API 26", "UI API 27", "UI API 28", "Cross Builds"],
+       "categories": ["UI API 26", "UI API 27", "UI API 28", "UI TV API 28", "Cross Builds"],
        "tag": "Linux",
      },
      "Ubuntu 16.04 Thinkpad 2017": {
@@ -553,7 +559,7 @@
      "Win 8.1 64-bit Quadro 600": {
        "recipe": "adt/adt",
        "slave_pools": ["win-8_1-64-nvidia-quadro-600"],
-       "categories": ["UI API 26", "UI API 27", "UI API 28"],
+       "categories": ["UI API 26", "UI API 27", "UI API 28", "UI TV API 28"],
        "tag": "Win",
      },
      "Win 10 64-bit Quadro 600": {
@@ -572,7 +578,7 @@
      "Mac 10.10.5 Intel HD 5000": {
        "recipe": "adt/adt",
        "slave_pools": ["mac-10-10-5-intel-hd-5000"],
-       "categories": ["UI API 26", "UI API 27", "UI API 28"],
+       "categories": ["UI API 26", "UI API 27", "UI API 28", "UI TV API 28"],
        "tag": "Mac",
      },
      "Mac 10.10.5 Iris Pro": {
