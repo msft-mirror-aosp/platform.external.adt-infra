@@ -118,4 +118,6 @@ public class Res {
     // Android TV Resources.
     public static final String TV_LAUNCHER = "com.google.android.tvlauncher:id/button_icon";
     public static final String TV_MAIN_FRAME = "com.android.tv.settings:id/main_frame";
+    public static final String TV_DATE_PICKER = "com.android.tv.settings:id/date_picker";
+    public static final String TV_TIME_PICKER = "com.android.tv.settings:id/time_picker";
 }
