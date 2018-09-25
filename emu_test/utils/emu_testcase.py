@@ -902,18 +902,26 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
         test_name = "test_%s%s_test_%s%s" % (variant_str, str(avd_config), desc, qemu_str)
         setattr(testcase_class, test_name, func)
 
-    def get_ui_test_class_names(api):
-        """Get the names of test classes in the com.android.devtools.systemimage.uitest.smoke package.
+    def get_ui_test_class_names(api, tag):
+        """Get the names of test classes in the com.android.devtools.systemimage.uitest package.
 
         Takes the directory listing of all files that end in '.java'.
 
+        :param api: api id
+        :param tag: tag for the test
         Return: The name of the test classes in the package.
 
         """
+        if 'android-tv' in tag:
+           pkg = 'tv'
+        elif 'android-wear' in test_tag:
+           pkg = 'wear'
+        else:
+           pkg = 'smoke'
         uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                   '..', '..', 'system_image_uitests')
         package_path = os.path.join(uitest_dir, 'app', 'src', 'androidTest', 'java', 'com',
-                                    'android', 'devtools', 'systemimage', 'uitest', 'smoke', 'api'+api)
+                                    'android', 'devtools', 'systemimage', 'uitest', pkg, 'api'+api)
         classes = [filename[:-5:] for filename in os.listdir(package_path)
                    if filename.endswith('.java')]
         return classes
@@ -975,7 +983,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
                                            get_port(), is_cts, ori)
                     variants = None
                     if generate_test_class:
-                        variants = get_ui_test_class_names(api)
+                        variants = get_ui_test_class_names(api, tag)
                     for variant in variants or [None]:
                         create_test_case(avd_config, op, emu_argparser.emu_args.builder_name,
                                          emu_argparser.emu_args.pattern, variant)

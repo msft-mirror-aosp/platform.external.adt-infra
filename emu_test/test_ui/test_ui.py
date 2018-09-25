@@ -86,9 +86,15 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         Returns the process.
 
         """
+        if 'android-tv' in test_tag:
+           pkg = 'tv'
+        elif 'android-wear' in test_tag:
+           pkg = 'wear'
+        else:
+           pkg = 'smoke'
         test_args_prefix = '-Pandroid.testInstrumentationRunnerArguments'
-        test_class = test_args_prefix + '.class=com.android.devtools.systemimage.uitest.smoke.' +\
-                     'api' + avd.api + '.' + class_name
+        test_class = test_args_prefix + '.class=com.android.devtools.systemimage.uitest.' +\
+                     pkg + '.api' + avd.api + '.' + class_name
         test_api = '%s.api=%s' % (test_args_prefix, avd.api)
         test_abi = test_args_prefix + '.abi=' + avd.abi
         test_tag = test_args_prefix + '.tag=' + avd.tag
@@ -101,9 +107,15 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
                             shell=self.use_shell)
 
     def _launch_ui_test_with_avd_configs(self, avd):
+        if 'android-tv' in test_tag:
+           pkg = 'tv'
+        elif 'android-wear' in test_tag:
+           pkg = 'wear'
+        else:
+           pkg = 'smoke'
         test_args_prefix = '-Pandroid.testInstrumentationRunnerArguments'
-        test_package = test_args_prefix + '.package=com.android.devtools.systemimage.uitest.smoke.' +\
-                       'api' + avd.api
+        test_package = test_args_prefix + '.package=com.android.devtools.systemimage.uitest.' +\
+                       pkg + '.api' + avd.api
         test_api = test_args_prefix + '.api=' + avd.api
         test_abi = test_args_prefix + '.abi=' + avd.abi
         test_tag = test_args_prefix + '.tag=' + avd.tag
