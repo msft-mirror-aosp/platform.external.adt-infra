@@ -34,22 +34,6 @@ class RestartTest(testcase_base.BaseConsoleTest):
             self.telnet.read_until(util.OK, util.TIMEOUT_S))):
       sys.exit(-1)
 
-  def _execute_command_and_verify(self, command, expected_output, assert_msg):
-    """Executes console command and verify output.
-
-    Args:
-        command: Console command to be executed.
-        expected_output: Expected console output.
-        assert_msg: Assertion message.
-    """
-    is_command_successful, output = util.execute_console_command(
-        self.telnet, command, expected_output)
-
-    print output
-
-    self.assert_cmd_successful(is_command_successful, assert_msg, False, '',
-                               'Pattern:\n%s' % expected_output, output)
-
   def test_restart_command(self):
     """Test command for: restart.
 
@@ -61,6 +45,11 @@ class RestartTest(testcase_base.BaseConsoleTest):
       4. Run: restart, and verify output
       5. Repeat step 2-3, and verify it works, which means emulator restarted
     """
+    if util.WIN_BUILDER_NAME in self.builder_name:
+      print 'Skip restart test on Win.'
+      pass
+      return
+
     print 'Running test: %s' % (inspect.stack()[0][3])
 
     self.telnet.write(RESTART_CMD)
