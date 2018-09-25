@@ -83,11 +83,13 @@ def run_with_timeout(cmd, timeout):
     return vars['process'].returncode, vars['output'], vars['err']
 
 
-def launch_emu(avd, emu_args, emu_log_stream):
+def launch_emu(avd, emu_args, emu_log_stream, additional_args=None):
     """Launch given avd and return immediately"""
     log.debug('call Launching AVD, ...: %s' % str(avd))
     exec_path = emu_args.emulator_exec
     launch_cmd = [exec_path, "-avd", str(avd), "-verbose", "-show-kernel"]
+    if additional_args:
+        launch_cmd.extend(additional_args)
 
     if "emu-master-dev" in exec_path:
         launch_cmd += ["-skip-adb-auth"]
@@ -104,12 +106,12 @@ def launch_emu(avd, emu_args, emu_log_stream):
     return start_proc
 
 
-def launch_emu_and_wait(avd, emu_args, emu_log_stream):
+def launch_emu_and_wait(avd, emu_args, emu_log_stream, additional_args=None):
     """Launch given avd and wait for boot completion, return boot time"""
     run_with_timeout(["adb", "kill-server"], 20)
     run_with_timeout(["adb", "start-server"], 20)
     pool = multiprocessing.pool.ThreadPool(processes = 1)
-    launcher_emu = pool.apply_async(launch_emu, [avd, emu_args, emu_log_stream])
+    launcher_emu = pool.apply_async(launch_emu, [avd, emu_args, emu_log_stream, additional_args])
     start_time = time.time()
     completed = "0"
     real_time_out = emu_args.timeout_in_seconds;
@@ -134,7 +136,7 @@ def launch_emu_and_wait(avd, emu_args, emu_log_stream):
             continue
         if exit_code is 0:
             completed = output.strip()
-        if completed is "1":
+        if completed == "1":
             log.info('AVD %s is fully booted' % str(avd))
             break
         time.sleep(1)
@@ -150,6 +152,7 @@ def launch_emu_and_wait(avd, emu_args, emu_log_stream):
     else:
         success = False
     emu_proc.terminate()
+    run_with_timeout(["adb", "kill-server"], 20)
     return success
 
 
