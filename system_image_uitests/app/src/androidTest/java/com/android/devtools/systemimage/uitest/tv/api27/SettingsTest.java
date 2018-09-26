@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.devtools.systemimage.uitest.smoke.tv.api28;
+package com.android.devtools.systemimage.uitest.tv.api27;
 
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
@@ -57,6 +57,8 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
+     * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
+     * <p>
      *   <pre>
      *   1. Start the emulator.
      *   2. Open Settings > Device Preferences > Date & time
@@ -70,6 +72,7 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
+
         this.openDateTimeSettings();
 
         UiObject use24 = device.findObject(new UiSelector().text("Use 24-hour format"));
@@ -105,7 +108,7 @@ public class SettingsTest {
         assertTrue("Failed to find 13:00 label.",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue(){
+                    public boolean isTrue() {
                         return thirteenHundredLabel.waitForExists(5L);
                     }
                 })
@@ -122,6 +125,8 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
+     * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
+     * <p>
      *   <pre>
      *   1. Start the emulator.
      *   2. Open Settings > Device Preferences > Date & time
@@ -137,6 +142,7 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void setTimeZone() throws Exception {
+
         this.openDateTimeSettings();
 
         UiObject originalTimeZone = device.findObject(new UiSelector().textContains("GMT"));
@@ -178,19 +184,21 @@ public class SettingsTest {
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
+     * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
+     * <p>
      *   <pre>
      *   1. Start the emulator.
-     *   2. Open Settings > Device Preferences > Date & time.
+     *   2. Open Settings > Device Preferences > Date & time
      *   3. Ensure that Automatic date & time option is enabled.
      *   4. Disable Automatic date & time option.
      *   5. Set date and Set time options are enabled.
      *   6. Click on Set date option and Set time option.
      *   Verify:
-     *   1. Automatic date & time is enabled.
-     *   2. Automatic date & time is disabled, Set date and Set time are enabled.
-     *   3. Calendar date picker is found.
-     *   4. Clock time picker is found.
-     *   5. Automatic date & time is re-enabled, Set date and Set time are disabled.
+     *   1. Automatic date & time is enabled
+     *   2. Automatic date & time is disabled, Set date and Set time are enabled
+     *   3. Calendar date picker is found
+     *   4. Clock time picker is found
+     *   5. Automatic date & time is re-enabled, Set date and Set time are disabled
      *   </pre>
      */
     @Test
@@ -206,7 +214,7 @@ public class SettingsTest {
         final UiObject setDate = device.findObject(new UiSelector().text("Set date"));
         final UiObject setTime = device.findObject(new UiSelector().text("Set time"));
 
-        if (automaticDateTime.waitForExists(5L) && !networkProvidedLabel.waitForExists(5L)) {
+        if (automaticDateTime.waitForExists(5L)) {
             automaticDateTime.clickAndWaitForNewWindow();
         }
 
@@ -290,7 +298,7 @@ public class SettingsTest {
     }
 
     private void openDateTimeSettings() throws UiObjectNotFoundException {
-        device.pressHome();
+        device.pressBack();
 
         UiObject tvLauncher = device.findObject(new UiSelector().resourceId(Res.TV_LAUNCHER));
         if (tvLauncher.waitForExists(5L)) {
