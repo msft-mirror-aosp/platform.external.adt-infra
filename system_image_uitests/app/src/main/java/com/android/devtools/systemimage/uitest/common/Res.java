@@ -22,7 +22,7 @@ package com.android.devtools.systemimage.uitest.common;
  * They could be String or regex String.
  */
 public class Res {
-    // System and Google application resource IDs ("com.android.*" or "com.google.*")
+    // System and Google application resource IDs ("com.android.*" or "com.google.*").
 
     public static final String BROWSER_BOOKMARKS_LABEL_RES = "com.android.browser:id/label";
     public static final String BROWSER_SEARCH_ICON_RES = "com.android.browser:/id/progress";
@@ -58,7 +58,7 @@ public class Res {
     public static final String APPS_LIST_CONTAINER_RES = "com.android.settings:id/list_container";
     public static final String APPS_TAB_CONTAINER_RES = "com.android.settings:id/pager";
     public static final String NETWORK_SWITCHES_RECYCLER_VIEW_RES =
-            "com.android.settings:id/list"; // Added in API 24
+            "com.android.settings:id/list";  // Added in API 24.
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list)";
@@ -101,12 +101,12 @@ public class Res {
     public static final String GOOGLE_AR_SNACKBAR_RES =
             "com.google.ar.core.examples.c.helloar:id/snackbar_text";
 
-    // Third-party application resource IDs
+    // Third-party application resource IDs.
     public static final String APP_IMAGE_VIEW_ID =
             "com.example.android.rs.hellocompute:id/displayin";
     public static final String START_VPN_BUTTON_RES = "com.test.vpn:id/start_vpn";
 
-    // Platform resource IDs ("android.*")
+    // Platform resource IDs ("android.*").
     public static final String ANDROID_DATE_PICKER_HEADER_RES = "android:id/date_picker_header";
     public static final String ANDROID_DATE_PICKER_HEADER_RES_19 = "android:id/datePicker";
     public static final String ANDROID_TIME_HEADER_RES = "android:id/time_header";
@@ -114,10 +114,14 @@ public class Res {
     public static final String ANDROID_LIST_RES = "android:id/list";
     public static final String ANDROID_CONTENT_RES = "android:id/content";
     public static final String ANDROID_TITLE_RES = "android:id/title";
+    public static final String ANDROID_SELECT_LIST = "android:id/select_dialog_listview";
 
     // Android TV Resources.
     public static final String TV_LAUNCHER = "com.google.android.tvlauncher:id/button_icon";
     public static final String TV_MAIN_FRAME = "com.android.tv.settings:id/main_frame";
     public static final String TV_DATE_PICKER = "com.android.tv.settings:id/date_picker";
     public static final String TV_TIME_PICKER = "com.android.tv.settings:id/time_picker";
+
+    // Android Wear Resources.
+    public static final String WEAR_LAUNCHER = "com.google.android.wearable.app:id/launcher_view";
 }
