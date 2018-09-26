@@ -58,8 +58,8 @@ public class SettingsTest {
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
      *   <pre>
-     *   1. Start the emulator.
-     *   2. Open Settings > Device Preferences > Date & time
+     *   1. Start the Android TV emulator.
+     *   2. Open Settings > Device Preferences > Date & time.
      *   3. Disable 24-hour format.
      *   4. Verify example time on screen shows 1:00 PM.
      *   5. Enable 24-hour format.
@@ -123,8 +123,8 @@ public class SettingsTest {
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
      *   <pre>
-     *   1. Start the emulator.
-     *   2. Open Settings > Device Preferences > Date & time
+     *   1. Start the Android TV emulator.
+     *   2. Open Settings > Device Preferences > Date & time.
      *   3. Store original time zone offset.
      *   4. Open Set time zone
      *   4. Set the time zone to GMT-5:00.
@@ -179,7 +179,7 @@ public class SettingsTest {
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
      *   <pre>
-     *   1. Start the emulator.
+     *   1. Start the Android TV emulator.
      *   2. Open Settings > Device Preferences > Date & time.
      *   3. Ensure that Automatic date & time option is enabled.
      *   4. Disable Automatic date & time option.
@@ -206,7 +206,7 @@ public class SettingsTest {
         final UiObject setDate = device.findObject(new UiSelector().text("Set date"));
         final UiObject setTime = device.findObject(new UiSelector().text("Set time"));
 
-        if (automaticDateTime.waitForExists(5L) && !networkProvidedLabel.waitForExists(5L)) {
+        if (automaticDateTime.waitForExists(5L)) {
             automaticDateTime.clickAndWaitForNewWindow();
         }
 
@@ -289,8 +289,9 @@ public class SettingsTest {
         );
     }
 
+    // Opens the Date & time Settings on Android TV.
     private void openDateTimeSettings() throws UiObjectNotFoundException {
-        device.pressHome();
+        device.pressBack();
 
         UiObject tvLauncher = device.findObject(new UiSelector().resourceId(Res.TV_LAUNCHER));
         if (tvLauncher.waitForExists(5L)) {
