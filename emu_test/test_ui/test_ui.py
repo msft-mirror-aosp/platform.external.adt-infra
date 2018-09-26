@@ -86,9 +86,9 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         Returns the process.
 
         """
-        if 'android-tv' in test_tag:
+        if 'android-tv' in avd.tag:
            pkg = 'tv'
-        elif 'android-wear' in test_tag:
+        elif 'android-wear' in avd.tag:
            pkg = 'wear'
         else:
            pkg = 'smoke'
@@ -107,9 +107,9 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
                             shell=self.use_shell)
 
     def _launch_ui_test_with_avd_configs(self, avd):
-        if 'android-tv' in test_tag:
+        if 'android-tv' in avd.tag:
            pkg = 'tv'
-        elif 'android-wear' in test_tag:
+        elif 'android-wear' in avd.tag:
            pkg = 'wear'
         else:
            pkg = 'smoke'

@@ -914,7 +914,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
         """
         if 'android-tv' in tag:
            pkg = 'tv'
-        elif 'android-wear' in test_tag:
+        elif 'android-wear' in tag:
            pkg = 'wear'
         else:
            pkg = 'smoke'
