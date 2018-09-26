@@ -60,8 +60,8 @@ public class SettingsTest {
      * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
      * <p>
      *   <pre>
-     *   1. Start the emulator.
-     *   2. Open Settings > Device Preferences > Date & time
+     *   1. Start the Android TV emulator.
+     *   2. Open Settings > Device Preferences > Date & time.
      *   3. Disable 24-hour format.
      *   4. Verify example time on screen shows 1:00 PM.
      *   5. Enable 24-hour format.
@@ -128,8 +128,8 @@ public class SettingsTest {
      * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
      * <p>
      *   <pre>
-     *   1. Start the emulator.
-     *   2. Open Settings > Device Preferences > Date & time
+     *   1. Start the Android TV emulator.
+     *   2. Open Settings > Device Preferences > Date & time.
      *   3. Store original time zone offset.
      *   4. Open Set time zone
      *   4. Set the time zone to GMT-5:00.
@@ -187,18 +187,18 @@ public class SettingsTest {
      * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
      * <p>
      *   <pre>
-     *   1. Start the emulator.
-     *   2. Open Settings > Device Preferences > Date & time
+     *   1. Start the Android TV emulator.
+     *   2. Open Settings > Device Preferences > Date & time.
      *   3. Ensure that Automatic date & time option is enabled.
      *   4. Disable Automatic date & time option.
      *   5. Set date and Set time options are enabled.
      *   6. Click on Set date option and Set time option.
      *   Verify:
-     *   1. Automatic date & time is enabled
-     *   2. Automatic date & time is disabled, Set date and Set time are enabled
-     *   3. Calendar date picker is found
-     *   4. Clock time picker is found
-     *   5. Automatic date & time is re-enabled, Set date and Set time are disabled
+     *   1. Automatic date & time is enabled.
+     *   2. Automatic date & time is disabled, Set date and Set time are enabled.
+     *   3. Calendar date picker is found.
+     *   4. Clock time picker is found.
+     *   5. Automatic date & time is re-enabled, Set date and Set time are disabled.
      *   </pre>
      */
     @Test
@@ -297,6 +297,7 @@ public class SettingsTest {
         );
     }
 
+    // Opens the Date & time Settings on Android TV.
     private void openDateTimeSettings() throws UiObjectNotFoundException {
         device.pressBack();
 
