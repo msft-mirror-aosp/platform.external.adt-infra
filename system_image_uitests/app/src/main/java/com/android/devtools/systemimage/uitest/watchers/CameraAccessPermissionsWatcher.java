@@ -57,6 +57,12 @@ public class CameraAccessPermissionsWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().textMatches("(?i)got it(?-i)")).clickAndWaitForNewWindow();
                 condition = true;
             }
+            hasPopup = mDevice.findObject(new UiSelector().textMatches("(?i)continue(?-i)"))
+                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (hasPopup) {
+                mDevice.findObject(new UiSelector().textMatches("(?i)continue(?-i)")).clickAndWaitForNewWindow();
+                condition = true;
+            }
         }
         catch (UiObjectNotFoundException e) {
             throw new AssertionError("Unable to grant camera privilege");

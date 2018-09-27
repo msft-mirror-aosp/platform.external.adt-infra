@@ -112,6 +112,8 @@ def generate_git_information(poller):
     return 'git_oc-emu-dev', 'sdk_gphone_x86-sdk_addon'
   elif 'sys_image_oc_mr1_dev_poller' in poller:
     return 'git_oc-mr1-emu-dev', 'sdk_gphone_x86-sdk_addon'
+  elif 'sys_image_oc_mr1_iot_dev_poller' in poller:
+    return 'git_oc-mr1-iot-dev', 'sdk_google_iot_x86-userdebug'
   elif 'sys_image_nyc_mr1_dev_poller' in poller:
     return 'git_nyc-mr1-emu-dev', 'sdk_google_phone_x86-sdk_addon'
   elif 'sys_image_klp_poller' in poller:

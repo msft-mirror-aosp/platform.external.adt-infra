@@ -57,25 +57,19 @@ EVENTS_EV_TYPES_FILENAME = os.path.join(EVENT_DIR, 'EVENTS_EV_TYPES')
 PORT_NO_REDIR = 'no active redirections\r\nOK'
 PORT_REDIR_ADD = 'tcp:5556  => 5554 \r\nOK'
 CMD_HELP = 'help\n'
-REGEX_HELP_DISPLAY_NO_AUTH = (r'.*\n.*help.*\n.*help-verbose.*\n.*ping.*\n'
-                              r'.*avd.*\n.*auth.*\n.*quit\|exit.*\n.*\n.*\n.*\nOK')
-REGEX_HELP_DISPLAY_AUTH = (r'.*\n.*help.*\n.*help-verbose.*\n.*ping.*\n.*event.*\n'
-                           r'.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n.*crash-on-exit.*\n'
-                           r'.*kill.*\n.*restart.*\n.*network.*\n'
-                           r'.*power.*\n.*quit\|exit.*\n.*redir.*\n'
-                           r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*physics.*\n'
-                           r'.*finger.*\n.*debug.*\n.*rotate.*\n.*screenrecord.*\n.*\n.*\n.*\nOK')
 CMD_HELP_VERBOSE = 'help-verbose\n'
-REGEX_HELP_VERBOSE_DISPLAY_NO_AUTH = (
-        r'.*\n.*\n.*help.*\n.*help-verbose.*\n.*ping.*\n'
-        r'.*avd.*\n.*auth.*\n.*quit\|exit.*\n.*\n.*\nOK')
-REGEX_HELP_VERBOSE_DISPLAY_AUTH = (
-        r'.*\n.*\n.*help.*\n.*help-verbose.*\n.*ping.*\n.*event.*\n'
-        r'.*geo.*\n.*gsm.*\n.*cdma.*\n.*crash.*\n.*crash-on-exit.*\n'
-        r'.*kill.*\n.*restart.*\n.*network.*\n'
-        r'.*power.*\n.*quit\|exit.*\n.*redir.*\n'
-        r'.*sms.*\n.*avd.*\n.*qemu.*\n.*sensor.*\n.*physics.*\n'
-        r'.*finger.*\n.*debug.*\n.*rotate.*\n.*screenrecord.*\n.*\n.*\nOK')
+CMDS_FOR_HELP_NO_AUTH = [
+  'help', 'help-verbose', 'ping', 'avd', 'auth', 'quit', 'exit'
+]
+CMDS_FOR_HELP_AUTH = [
+  'help', 'help-verbose', 'ping', 'event', 'geo', 'gsm', 'cdma', 'crash',
+  'crash-on-exit', 'kill', 'restart', 'network', 'power', 'quit', 'exit', 'redir',
+  'sms', 'avd', 'qemu', 'sensor', 'physics', 'finger', 'debug', 'rotate',
+  'screenrecord'
+]
+CMDS_FOR_HELP_VERBOSE_NO_AUTH = CMDS_FOR_HELP_NO_AUTH
+CMDS_FOR_HELP_VERBOSE_DISPLAY_AUTH = CMDS_FOR_HELP_AUTH
+
 AUTH = 'auth'
 CMD_RANDOM_AUTH_TOKEN = '%s axxB123cc\n' % AUTH
 CMD_EMPTY_AUTH_TOKEN = '%s \n' % AUTH
@@ -267,6 +261,41 @@ def execute_console_command(telnet, command, expected_output):
     time.sleep(TRIAL_WAIT_TIMEOUT_S)
 
   return is_command_successful, output
+
+
+def execute_help_command(telnet, command):
+  """Executes emulator console help related command.
+
+  Executes emulator console command through telnet connection,
+  compare command output and expected command output.
+
+  Args:
+    telnet: The telnet connection to emulator.
+    command: The console command to execute.
+
+  Returns:
+    output: The command output in the terminal.
+  """
+
+  print 'execute console command: %s' % (command.strip())
+
+  telnet.write(command)
+  time.sleep(CMD_WAIT_TIMEOUT_S)
+
+  if command == 'crash\n':
+    output = telnet.read_all()
+  elif command == CMD_ROTATE: # No 'OK' output showing, only new line.
+    print 'command is rotate'
+    output = telnet.read_until('\n', 10)
+    print 'output = "%s"' % output
+  elif command == CMD_EMPTY_AUTH_TOKEN:
+    output = telnet.read_until('missing authentication token').strip()
+  elif command == CMD_RANDOM_AUTH_TOKEN:
+    output = telnet.read_until('emulator_console_auth_token').strip()
+  else:
+    output = parse_output(telnet)
+
+  return output
 
 
 def get_auth_token():

@@ -79,8 +79,10 @@ public class AppTest {
     @TestInfo(id = "14578823")
     public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
         String testPackageName = "com.example.android.rs.hellocompute";
         String apk = "HelloCompute.apk";
+        String appName = "RsHelloCompute";
         String result = "";
 
         // Install RsHelloCompute, if not already present.
@@ -89,6 +91,7 @@ public class AppTest {
 
         if (!isHelloComputeInstalled) {
             result = PackageInstallationUtil.installApk(instrumentation, apk);
+            new AppWatcher(device).checkForCondition();
             isHelloComputeInstalled = PackageInstallationUtil.
                     isPackageInstalled(instrumentation, testPackageName);
         }
@@ -96,10 +99,11 @@ public class AppTest {
         assertTrue("Application " + apk + " is not installed. Result: " + result,
                 isHelloComputeInstalled);
 
+        AppLauncher.launch(instrumentation, appName);
+        boolean hasApplication = testFramework.getDevice().findObject(new UiSelector().resourceId(
+                Res.APP_IMAGE_VIEW_ID)).waitForExists(5L);
 
-        AppLauncher.launch(instrumentation, "RsHelloCompute");
-        assertTrue(testFramework.getDevice().findObject(new UiSelector().resourceId(
-                Res.APP_IMAGE_VIEW_ID)).exists());
+        assertTrue("Application " + appName + " did not launch", hasApplication);
     }
 
     /**

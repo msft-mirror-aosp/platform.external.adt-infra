@@ -41,8 +41,11 @@ class AuthTest(testcase_base.BaseConsoleTest):
                                False, '', expected_output, output)
 
   def _verify_auth_command_by_enter_help_command(self, expected_output):
-    is_command_successful, output = util.execute_console_command(
-        self.telnet, util.CMD_HELP, expected_output)
+    output = util.execute_help_command(self.telnet, util.CMD_HELP)
+    is_command_successful = True
+    for cmd in expected_output:
+      if cmd not in output:
+        is_command_successful = False
 
     self.assert_cmd_successful(
         is_command_successful, 'Failed to properly list all command options.',
@@ -90,7 +93,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
     print 'Running test: %s' % (inspect.stack()[0][3])
     self.telnet = util.telnet_emulator()
     self._verify_auth_command_by_enter_help_command(
-        util.REGEX_HELP_DISPLAY_NO_AUTH)
+        util.CMDS_FOR_HELP_NO_AUTH)
     util.exit_emulator_console(self.telnet)
 
   def test_auth_user_with_random_auth_token(self):
@@ -153,7 +156,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
     valid_auth_cmd = '%s %s\n' % (util.AUTH, auth_token)
     self._auth_user_for_emulator_console(valid_auth_cmd, AUTH_OUTPUT)
     self._verify_auth_command_by_enter_help_command(
-        util.REGEX_HELP_DISPLAY_AUTH)
+        util.CMDS_FOR_HELP_AUTH)
     util.exit_emulator_console(self.telnet)
 
   def test_auth_empty_auth_token_file(self):
@@ -183,7 +186,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
       # telnet and verify
       self.telnet = util.telnet_emulator()
       self._verify_auth_command_by_enter_help_command(
-          util.REGEX_HELP_DISPLAY_AUTH)
+          util.CMDS_FOR_HELP_AUTH)
 
       # reset auth token file
       f = open(util.TOKEN_PATH, 'w')

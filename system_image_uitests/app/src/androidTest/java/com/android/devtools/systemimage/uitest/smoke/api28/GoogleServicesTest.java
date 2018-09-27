@@ -139,8 +139,6 @@ public class GoogleServicesTest {
 
         assertTrue("Cannot find location toggle button", device.findObject(
                 new UiSelector().className("android.widget.Switch")).exists());
-        assertTrue("Cannot find mode", device.findObject(new UiSelector().text(
-                "Mode")).exists());
         assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
                 "Recent location requests")).exists());
     }
@@ -165,7 +163,6 @@ public class GoogleServicesTest {
      *   2. Log in user prompt or user promo is present.
      *   </pre>
      */
-    @Ignore("Bug in API 26. b/110433630")
     @Test
     @TestInfo(id = "d7f5673a-a3d0-4f50-856a-dfa10ce5c21c")
     public void loginGoogleChrome() throws Exception {
@@ -173,6 +170,7 @@ public class GoogleServicesTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         final String username = "David Play";
+        final String email = "pstester1980@gmail.com";
 
         AppLauncher.launch(instrumentation, "Chrome");
         new AddGoogleAccountWatcher(device).checkForCondition();
@@ -184,10 +182,10 @@ public class GoogleServicesTest {
         );
 
         if (new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return chromeUpdateButton.exists();
-                }})) {
+            @Override
+            public boolean isTrue() {
+                return chromeUpdateButton.exists();
+            }})) {
             chromeUpdateButton.clickAndWaitForNewWindow();
         }
 
@@ -195,10 +193,10 @@ public class GoogleServicesTest {
                 new UiSelector().resourceId(Res.CHROME_MENU_BUTTON_RES));
 
         if (new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return chromeMenuButton.exists();
-                }})) {
+            @Override
+            public boolean isTrue() {
+                return chromeMenuButton.exists();
+            }})) {
             chromeMenuButton.clickAndWaitForNewWindow();
         }
 
@@ -235,24 +233,31 @@ public class GoogleServicesTest {
 
         GoogleServiceTestUtil.signInToChrome(instrumentation);
 
-        final UiObject signedInLabel = device.findObject(new UiSelector().text(username));
-
-        assertTrue("Google log in was unsuccessful", new Wait().
+        final UiObject signedInName = device.findObject(new UiSelector().text(username));
+        boolean hasSignInName = new Wait().
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
-                        return signedInLabel.exists();
-                    }})
-        );
-        signedInLabel.clickAndWaitForNewWindow();
-        final UiObject signOutLabel = device.findObject(new UiSelector().text("Sign out of Chrome"));
+                        return signedInName.exists();
+                    }
+                });
 
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return signOutLabel.exists();
-            }})) {
-            signOutLabel.clickAndWaitForNewWindow();
+        if (hasSignInName) {
+            signedInName.clickAndWaitForNewWindow();
+        } else {
+            final UiObject signedInEmail = device.findObject(new UiSelector().text(email));
+            boolean hasSignInEmail = new Wait().
+                    until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return signedInEmail.exists();
+                        }
+                    });
+            if (hasSignInEmail) {
+                signedInEmail.clickAndWaitForNewWindow();
+            } else {
+                assertTrue("Google log in was unsuccessful", false);
+            }
         }
 
         final UiObject signOutButton = device.findObject(new UiSelector().text("SIGN OUT"));

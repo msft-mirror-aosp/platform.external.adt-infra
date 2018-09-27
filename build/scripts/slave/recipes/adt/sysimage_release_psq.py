@@ -50,7 +50,8 @@ ORI_TO_API = {
   'git_nyc-preview-release': '25',  # Preview
   'git_nyc-mr1-emu-release': '25',
   'git_oc-emu-release': '26',
-  'git_oc-mr1-emu-release': '27'
+  'git_oc-mr1-emu-release': '27',
+  'git_pi-emu-release': '28'
 }
 
 # Variables needed to communicate with Gerrit REST API.
@@ -194,7 +195,7 @@ def RunSteps(api):
                            'test_ui.*',
                            'config.csv',
                            # We run only x86 images for UI tests.
-                           # Besides, UiAutomation framework only supports API 18 or plus.
+                           # UiAutomation framework only supports API 18 or greater.
                            '{"abi": "x86", "api": ">=18"}',
                            emulator_path,
                            env,

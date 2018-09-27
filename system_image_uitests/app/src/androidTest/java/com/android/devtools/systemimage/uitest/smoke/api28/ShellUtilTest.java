@@ -54,7 +54,7 @@ public class ShellUtilTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(120);
+    public Timeout globalTimeout = Timeout.seconds(240);
 
     /**
      * Tests the integrity of Shell utilities.
@@ -124,7 +124,8 @@ public class ShellUtilTest {
             DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
         }
 
-        AppLauncher.launchPath(instrumentation, new String[] {"Settings", "System", "Developer options"});
+        AppLauncher.launchPath(instrumentation, new String[] {
+                "Settings", "System", "Advanced", "Developer options"});
         // Remove bug report files even if the test fails.
         try {
             device.findObject(

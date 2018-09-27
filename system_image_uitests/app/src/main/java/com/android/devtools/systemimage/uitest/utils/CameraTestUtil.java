@@ -52,18 +52,14 @@ public class CameraTestUtil {
         AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
         UiObject cameraFrame = device.findObject(new UiSelector().resourceId(Res.CAMERA_FRAME_RES));
         if (cameraFrame.waitForExists(5L)) {
-            cameraFrame.click();
-            cameraFrame.swipeRight(3);
+            cameraFrame.longClick();
+            cameraFrame.swipeRight(20);
         }
 
         new CameraAccessPermissionsWatcher(device).checkForCondition();
 
-        boolean cameraModeButtonExists = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return device.findObject(new UiSelector().descriptionStartsWith("Switch to")).exists();
-            }
-        });
+        boolean cameraModeButtonExists = device.findObject(new UiSelector()
+                .descriptionStartsWith("Switch to")).waitForExists(5L);
 
         org.junit.Assert.assertTrue("Button to select " + mode + " mode not found", cameraModeButtonExists);
 

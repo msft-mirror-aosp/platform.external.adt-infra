@@ -47,6 +47,7 @@ BOOT_STEPS = {
         'oc-mr1-car-support-release': bootStep('OC_MR1_CAR_SUPPORT', '{"ori": "oc-mr1-car-support"}'),
         'oc-emu-dev': bootStep('OC', '{"ori": "oc"}'),
         'oc-mr1-emu-dev': bootStep('OC_MR1', '{"ori": "oc-mr1"}'),
+        'oc-mr1-iot-dev': bootStep('OC_MR1_IOT', '{"ori": "oc-mr1-iot"}'),
         'lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
         'klp-emu-dev': bootStep('KLP', '{"ori": "klp"}'),
         'gb-emu-dev': bootStep('GB', '{"ori": "gb"}'),
