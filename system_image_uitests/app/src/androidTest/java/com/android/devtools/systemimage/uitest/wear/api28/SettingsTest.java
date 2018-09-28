@@ -54,6 +54,79 @@ public class SettingsTest {
     public Timeout globalTimeout = Timeout.seconds(120);
 
     /**
+     * Verifies that watch face type (analog/digital) can be changed.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
+     * <p>
+     *   <pre>
+     *   1. Start the Android Wear emulator.
+     *   2. Open Settings > Display > Change watch face.
+     *   3. Record the original watch face type.
+     *   4. Change the watch face type (either from analog to digital, or digital to analog).
+     *   5. Change the watch face back to its original type.
+     *   Verify:
+     *   1. The original watch face type was changed to a new type.
+     *   2. The watch face type was restored to the original setting.
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
+    public void adjustWatchFace() throws Exception {
+
+        boolean isOriginalAnalog = getWatchFaceType();
+
+        setWatchFaceType();
+
+        assertTrue("Original watch face was not changed",
+                getWatchFaceType() != isOriginalAnalog);
+
+        setWatchFaceType();
+
+        assertTrue("Original watch face was not restored",
+                getWatchFaceType() == isOriginalAnalog);
+
+        device.pressBack();
+        device.pressHome();
+    }
+
+
+    // Get the  watch face type.
+    private boolean getWatchFaceType() throws UiObjectNotFoundException {
+        openDisplaySetting();
+
+        UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
+                packageName("com.google.android.apps.wearable.settings"));
+        settingsList.setAsVerticalList();
+
+        UiSelector changeWatchFaceButton = new UiSelector().text("Change watch face");
+
+        if (settingsList.scrollIntoView(changeWatchFaceButton)) {
+            device.findObject(changeWatchFaceButton).clickAndWaitForNewWindow();
+        }
+
+        UiObject analogFace = device.findObject(new UiSelector().
+                resourceId(Res.WEAR_FACE_SETTINGS).descriptionContains("Analog"));
+
+        return analogFace.waitForExists(3L);
+    }
+
+    // Set the watch face type.
+    private void setWatchFaceType() throws UiObjectNotFoundException {
+        boolean isAnalogSet = getWatchFaceType();
+
+        String faceToActivate = isAnalogSet ?
+                "Activate Elements Digital" : "Activate Elements Analog";
+
+        UiObject newWatchFace = device.findObject(new UiSelector().
+                resourceId(Res.WEAR_PREVIEW_IMAGE).description(faceToActivate));
+        if (newWatchFace.waitForExists(3L)) {
+            newWatchFace.clickAndWaitForNewWindow();
+        }
+    }
+
+    /**
      * Verifies that the brightness of the watch can be adjusted.
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
@@ -76,26 +149,7 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void adjustBrightness() throws Exception {
-
-        device.pressHome();
-        device.pressBack();
-
-        UiScrollable wheelList = new UiScrollable(new UiSelector().resourceId(Res.WEAR_LAUNCHER));
-        wheelList.setAsVerticalList();
-
-        UiSelector settingsOption = new UiSelector().text("Settings");
-        if (wheelList.scrollIntoView(settingsOption)) {
-            device.findObject(settingsOption).clickAndWaitForNewWindow();
-        }
-
-        UiScrollable itemList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
-                packageName("com.google.android.apps.wearable.settings"));
-        itemList.setAsVerticalList();
-
-        UiSelector displayOption = new UiSelector().text("Display");
-        if (itemList.scrollIntoView(displayOption)) {
-            device.findObject(displayOption).clickAndWaitForNewWindow();
-        }
+        openDisplaySetting();
 
         String originalBrightness = getBrightness();
         if (originalBrightness.equals("Automatic")) {
@@ -127,32 +181,55 @@ public class SettingsTest {
         device.pressHome();
     }
 
-    // Open the adjust brightness setting.
-    private void openBrightness() throws UiObjectNotFoundException {
+    private void openDisplaySetting() throws UiObjectNotFoundException {
+        device.pressHome();
+
+        UiScrollable wheelList = new UiScrollable(new UiSelector().resourceId(Res.WEAR_LAUNCHER));
+        if (wheelList.waitForExists(3L)) {
+            wheelList.setAsVerticalList();
+        } else {
+            device.pressBack();
+            if (wheelList.waitForExists(3L)) {
+                wheelList.setAsVerticalList();
+            }
+        }
+
+        UiSelector settingsOption = new UiSelector().text("Settings");
+        if (wheelList.scrollIntoView(settingsOption)) {
+            device.findObject(settingsOption).clickAndWaitForNewWindow();
+        }
+
         UiScrollable itemList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
                 packageName("com.google.android.apps.wearable.settings"));
         itemList.setAsVerticalList();
 
-        UiSelector adjustBrightnessOption = new UiSelector().text("Adjust brightness");
-
-        if (itemList.scrollIntoView(adjustBrightnessOption)) {
-            device.findObject(adjustBrightnessOption).clickAndWaitForNewWindow();
+        UiSelector displayOption = new UiSelector().text("Display");
+        if (itemList.scrollIntoView(displayOption)) {
+            device.findObject(displayOption).clickAndWaitForNewWindow();
         }
     }
 
     // Get the brightness level.
     private String getBrightness() throws UiObjectNotFoundException {
-        openBrightness();
+        UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
+                packageName("com.google.android.apps.wearable.settings"));
+        settingsList.setAsVerticalList();
+
+        UiSelector adjustBrightnessOption = new UiSelector().text("Adjust brightness");
+
+        if (settingsList.scrollIntoView(adjustBrightnessOption)) {
+            device.findObject(adjustBrightnessOption).clickAndWaitForNewWindow();
+        }
 
         for (int i = 1; i <= MAX_BRIGHTNESS; i++) {
-            UiScrollable itemList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_SELECT_LIST).
+            UiScrollable brightnessList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_SELECT_LIST).
                     packageName("com.google.android.apps.wearable.settings"));
-            itemList.setAsVerticalList();
+            brightnessList.setAsVerticalList();
 
             UiSelector brightnessOption = new UiSelector()
                     .className("android.widget.CheckedTextView").text(Integer.toString(i));
 
-            if (itemList.scrollIntoView(brightnessOption)) {
+            if (brightnessList.scrollIntoView(brightnessOption)) {
                 UiObject brightness = device.findObject(brightnessOption);
                 if (brightness.waitForExists(3L) && brightness.isChecked()) {
                     return brightness.getText();

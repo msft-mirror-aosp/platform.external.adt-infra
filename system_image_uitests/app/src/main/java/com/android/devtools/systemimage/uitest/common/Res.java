@@ -124,4 +124,6 @@ public class Res {
 
     // Android Wear Resources.
     public static final String WEAR_LAUNCHER = "com.google.android.wearable.app:id/launcher_view";
+    public static final String WEAR_FACE_SETTINGS = "com.google.android.wearable.app:id/watchface_settings";
+    public static final String WEAR_PREVIEW_IMAGE = "com.google.android.wearable.app:id/preview_image";
 }
