@@ -73,10 +73,9 @@ public class SettingsTest {
      */
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
-    public void adjustWatchFace() throws Exception {
+    public void changeWatchFace() throws Exception {
 
         boolean isOriginalAnalog = getWatchFaceType();
-
         setWatchFaceType();
 
         assertTrue("Original watch face was not changed",
@@ -91,43 +90,8 @@ public class SettingsTest {
         device.pressHome();
     }
 
-
-    // Get the  watch face type.
-    private boolean getWatchFaceType() throws UiObjectNotFoundException {
-        openDisplaySetting();
-
-        UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
-                packageName("com.google.android.apps.wearable.settings"));
-        settingsList.setAsVerticalList();
-
-        UiSelector changeWatchFaceButton = new UiSelector().text("Change watch face");
-
-        if (settingsList.scrollIntoView(changeWatchFaceButton)) {
-            device.findObject(changeWatchFaceButton).clickAndWaitForNewWindow();
-        }
-
-        UiObject analogFace = device.findObject(new UiSelector().
-                resourceId(Res.WEAR_FACE_SETTINGS).descriptionContains("Analog"));
-
-        return analogFace.waitForExists(3L);
-    }
-
-    // Set the watch face type.
-    private void setWatchFaceType() throws UiObjectNotFoundException {
-        boolean isAnalogSet = getWatchFaceType();
-
-        String faceToActivate = isAnalogSet ?
-                "Activate Elements Digital" : "Activate Elements Analog";
-
-        UiObject newWatchFace = device.findObject(new UiSelector().
-                resourceId(Res.WEAR_PREVIEW_IMAGE).description(faceToActivate));
-        if (newWatchFace.waitForExists(3L)) {
-            newWatchFace.clickAndWaitForNewWindow();
-        }
-    }
-
     /**
-     * Verifies that the brightness of the watch can be adjusted.
+     * Verifies that the brightness of the watch can be changed.
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
      * <p>
@@ -148,7 +112,7 @@ public class SettingsTest {
      */
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
-    public void adjustBrightness() throws Exception {
+    public void changeBrightness() throws Exception {
         openDisplaySetting();
 
         String originalBrightness = getBrightness();
@@ -181,6 +145,93 @@ public class SettingsTest {
         device.pressHome();
     }
 
+    /**
+     * Verifies that the font size of the watch can be changed.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
+     * <p>
+     *   <pre>
+     *   1. Start the Android Wear emulator.
+     *   2. Open Settings > Display.
+     *   3. Record the original font size setting.
+     *   4. Open Font Size
+     *   4. Set the Font Size to Small.
+     *   5. Set the Font Size to Normal.
+     *   6. Set the Font Size to Large.
+     *   7. Reset the Font Size to the original value.
+     *   Verify:
+     *   1. The font size was set to Small.
+     *   2. The font size was set to Normal.
+     *   3. The font size was set to Large.
+     *   3. The original font size was restored.
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
+    public void changeFontSize() throws Exception {
+        openDisplaySetting();
+
+        String originalFontSize = getFontSize();
+        String originalFont = originalFontSize.substring(0,1).toUpperCase() +
+                originalFontSize.substring(1).toLowerCase();
+
+        setFontSize("Small");
+        assertTrue("Font size is not set to Small", "SMALL".equals(getFontSize()));
+
+        setFontSize("Normal");
+        assertTrue("Font size is not set to Normal", "NORMAL".equals(getFontSize()));
+
+        setFontSize("Large");
+        assertTrue("Font size is not set to Large", "LARGE".equals(getFontSize()));
+
+        setFontSize(originalFont);
+        assertTrue("Font size is not reset to " + originalFontSize,
+                originalFontSize.equals(getFontSize()));
+
+        device.pressBack();
+    }
+
+    /**
+     * Verifies that the Always-on screen setting can be changed.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     * TT ID: f83bf063-2a8c-4d1b-808b-20fd76933135
+     * <p>
+     *   <pre>
+     *   1. Start the Android Wear emulator.
+     *   2. Open Settings > Display.
+     *   3. Record the original always-on screen value.
+     *   4. Toggle the Always-on screen value.
+     *   5. Reset the Always-on screen setting to the original value.
+     *   Verify:
+     *   1. The Always-on screen value was changed.
+     *   3. The original Always-on screen value was restored.
+     *   </pre>
+     */
+    @Test
+    @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
+    public void changeAlwaysOnScreen() throws Exception {
+        openDisplaySetting();
+
+        boolean originalValue = getAlwaysOnValue();
+        setAlwaysOnValue(!originalValue);
+
+        assertTrue("Always-on value was not changed",
+                originalValue != getAlwaysOnValue());
+
+        setAlwaysOnValue(originalValue);
+
+        assertTrue("Always-on value was not restored",
+                originalValue == getAlwaysOnValue());
+
+        device.pressBack();
+        device.pressHome();
+    }
+
+    // Open the Display settings.
     private void openDisplaySetting() throws UiObjectNotFoundException {
         device.pressHome();
 
@@ -200,7 +251,7 @@ public class SettingsTest {
         }
 
         UiScrollable itemList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
-                packageName("com.google.android.apps.wearable.settings"));
+                packageName(Res.WEAR_SETTINGS));
         itemList.setAsVerticalList();
 
         UiSelector displayOption = new UiSelector().text("Display");
@@ -209,10 +260,44 @@ public class SettingsTest {
         }
     }
 
+    // Get the  watch face type.
+    private boolean getWatchFaceType() throws UiObjectNotFoundException {
+        openDisplaySetting();
+
+        UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
+                packageName(Res.WEAR_SETTINGS));
+        settingsList.setAsVerticalList();
+
+        UiSelector changeWatchFaceButton = new UiSelector().text("Change watch face");
+
+        if (settingsList.scrollIntoView(changeWatchFaceButton)) {
+            device.findObject(changeWatchFaceButton).clickAndWaitForNewWindow();
+        }
+
+        UiObject analogFace = device.findObject(new UiSelector().
+                resourceId(Res.WEAR_FACE_SETTINGS).descriptionContains("Analog"));
+
+        return analogFace.waitForExists(3L);
+    }
+
+    // Set the watch face type.
+    private void setWatchFaceType() throws UiObjectNotFoundException {
+        boolean isAnalogSet = getWatchFaceType();
+
+        String faceToActivate = isAnalogSet ?
+                "Activate Elements Digital" : "Activate Elements Analog";
+
+        UiObject newWatchFace = device.findObject(new UiSelector().
+                resourceId(Res.WEAR_PREVIEW_IMAGE).description(faceToActivate));
+        if (newWatchFace.waitForExists(3L)) {
+            newWatchFace.clickAndWaitForNewWindow();
+        }
+    }
+
     // Get the brightness level.
     private String getBrightness() throws UiObjectNotFoundException {
         UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
-                packageName("com.google.android.apps.wearable.settings"));
+                packageName(Res.WEAR_SETTINGS));
         settingsList.setAsVerticalList();
 
         UiSelector adjustBrightnessOption = new UiSelector().text("Adjust brightness");
@@ -223,7 +308,7 @@ public class SettingsTest {
 
         for (int i = 1; i <= MAX_BRIGHTNESS; i++) {
             UiScrollable brightnessList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_SELECT_LIST).
-                    packageName("com.google.android.apps.wearable.settings"));
+                    packageName(Res.WEAR_SETTINGS));
             brightnessList.setAsVerticalList();
 
             UiSelector brightnessOption = new UiSelector()
@@ -244,7 +329,7 @@ public class SettingsTest {
             throws UiObjectNotFoundException {
 
         UiScrollable itemList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_SELECT_LIST).
-                packageName("com.google.android.apps.wearable.settings"));
+                packageName(Res.WEAR_SETTINGS));
         itemList.setAsVerticalList();
 
         UiSelector brightnessOption = new UiSelector()
@@ -254,6 +339,99 @@ public class SettingsTest {
             UiObject brightness = device.findObject(brightnessOption);
             if (brightness.waitForExists(3L)) {
                 brightness.clickAndWaitForNewWindow();
+            }
+        }
+    }
+
+    // Get the font size level.
+    private String getFontSize() throws UiObjectNotFoundException {
+        String fontSizeValue = "";
+
+        UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
+                packageName(Res.WEAR_SETTINGS));
+        settingsList.setAsVerticalList();
+
+        UiSelector fontSizeLabel = new UiSelector().resourceId(Res.ANDROID_SUMMARY_RES).
+                packageName(Res.WEAR_SETTINGS);
+
+        if (settingsList.scrollIntoView(fontSizeLabel)) {
+            UiObject fontSizeOption = device.findObject(fontSizeLabel);
+            if (fontSizeOption.waitForExists(3L)) {
+                fontSizeValue = fontSizeOption.getText();
+            }
+        }
+        return fontSizeValue;
+    }
+
+    // Set the font size level as indicated.
+    private void setFontSize(String fontSize) throws UiObjectNotFoundException {
+        UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
+                packageName(Res.WEAR_SETTINGS));
+        settingsList.setAsVerticalList();
+
+        UiSelector setFontSize = new UiSelector().text("Font size");
+
+        if (settingsList.scrollIntoView(setFontSize)) {
+            device.findObject(setFontSize).clickAndWaitForNewWindow();
+        }
+
+        UiObject fontSizeOption = device.findObject(new UiSelector().text(fontSize));
+
+        if (fontSizeOption.waitForExists(3L)) {
+            fontSizeOption.clickAndWaitForNewWindow();
+        }
+    }
+
+
+    // Get the always-on screen value.
+    private boolean getAlwaysOnValue() throws UiObjectNotFoundException {
+        String fontSizeValue = "";
+
+        UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
+                packageName(Res.WEAR_SETTINGS));
+        settingsList.setAsVerticalList();
+
+        UiSelector alwaysOnLabel = new UiSelector().text("Always-on screen").
+                packageName(Res.WEAR_SETTINGS);
+        UiSelector alwaysOnSwitch = new UiSelector().resourceId(Res.ANDROID_SWITCH_WIDGET).
+                packageName(Res.WEAR_SETTINGS);
+
+        if (settingsList.scrollIntoView(alwaysOnLabel)) {
+            UiObject fontSizeOption = device.findObject(alwaysOnSwitch);
+            if (fontSizeOption.waitForExists(3L) &&
+                    "on".equals(fontSizeOption.getText().toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Set the always-on screen value as indicated.
+    private void setAlwaysOnValue(boolean alwaysOn) throws UiObjectNotFoundException {
+        String fontSizeValue = "";
+
+        UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
+                packageName(Res.WEAR_SETTINGS));
+        settingsList.setAsVerticalList();
+
+        UiSelector alwaysOnLabel = new UiSelector().text("Always-on screen").
+                packageName(Res.WEAR_SETTINGS);
+        UiSelector alwaysOnSwitch = new UiSelector().resourceId(Res.ANDROID_SWITCH_WIDGET).
+                packageName(Res.WEAR_SETTINGS);
+
+        if (settingsList.scrollIntoView(alwaysOnLabel)) {
+            UiObject fontSizeOption = device.findObject(alwaysOnSwitch);
+            if (fontSizeOption.waitForExists(3L)) {
+                if ((alwaysOn && "off".equals(fontSizeOption.getText().toLowerCase())) ||
+                        (!alwaysOn && "on".equals(fontSizeOption.getText().toLowerCase()))) {
+                    fontSizeOption.clickAndWaitForNewWindow();
+                    UiObject yesButton = device.findObject(new UiSelector().description("Yes").
+                            packageName(Res.WEAR_SETTINGS));
+
+                    if (yesButton.waitForExists(3L)) {
+                        yesButton.clickAndWaitForNewWindow();
+                    }
+                }
             }
         }
     }

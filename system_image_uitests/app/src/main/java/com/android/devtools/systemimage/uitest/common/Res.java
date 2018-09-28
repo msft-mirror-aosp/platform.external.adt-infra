@@ -115,6 +115,8 @@ public class Res {
     public static final String ANDROID_CONTENT_RES = "android:id/content";
     public static final String ANDROID_TITLE_RES = "android:id/title";
     public static final String ANDROID_SELECT_LIST = "android:id/select_dialog_listview";
+    public static final String ANDROID_SUMMARY_RES = "android:id/summary";
+    public static final String ANDROID_SWITCH_WIDGET = "android:id/switch_widget";
 
     // Android TV Resources.
     public static final String TV_LAUNCHER = "com.google.android.tvlauncher:id/button_icon";
@@ -123,6 +125,7 @@ public class Res {
     public static final String TV_TIME_PICKER = "com.android.tv.settings:id/time_picker";
 
     // Android Wear Resources.
+    public static final String WEAR_SETTINGS = "com.google.android.apps.wearable.settings";
     public static final String WEAR_LAUNCHER = "com.google.android.wearable.app:id/launcher_view";
     public static final String WEAR_FACE_SETTINGS = "com.google.android.wearable.app:id/watchface_settings";
     public static final String WEAR_PREVIEW_IMAGE = "com.google.android.wearable.app:id/preview_image";
