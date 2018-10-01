@@ -128,6 +128,11 @@ def launch_emu_and_wait(avd, emu_args, emu_log_stream, additional_args=None):
 
     while time.time()-start_time < real_time_out:
         cmd = ["adb", "shell", "getprop", "sys.boot_completed"]
+        if launcher_emu.ready():
+            emu_proc = launcher_emu.get()
+            if emu_proc.poll():
+                msg = 'Emulator process terminated with exit code {} before boot completed.'
+                raise LaunchError(msg.format(emu_proc.returncode))
 
         try:
             (exit_code, output, err) = run_with_timeout(cmd, 10)
