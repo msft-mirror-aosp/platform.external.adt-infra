@@ -48,14 +48,33 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             pass
 
     def _save_gradle_test_report(self, test_method):
+        # Copy HTML reports
         gradle_report_path = os.path.join(self.uitest_dir, 'app', 'build', 'reports', 'androidTests', 'connected', '')
         if not os.path.exists(gradle_report_path):
-            self.m_logger.info('Failed to find gradle reports.')
-            return
-        dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_report')
-        if os.path.exists(dst_path):
-            shutil.rmtree(dst_path)
-        shutil.copytree(gradle_report_path, dst_path)
+            self.m_logger.info('Failed to find gradle HTML reports.')
+        else:
+            dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_HTML_report')
+            if os.path.exists(dst_path):
+                shutil.rmtree(dst_path)
+            shutil.copytree(gradle_report_path, dst_path)
+
+        # Copy XML reports
+        gradle_report_path = os.path.join(self.uitest_dir, 'app', 'build', 'outputs', 'androidTest-results', 'connected', '')
+        if not os.path.exists(gradle_report_path):
+            self.m_logger.info('Failed to find gradle XML reports.')
+        else:
+            xml_file = ''
+            for filename in os.listdir(gradle_report_path):
+                if filename.endswith('.xml'):
+                    xml_file = filename
+            if not xml_file:
+                self.m_logger.info('Failed to find gradle XML report.')
+                return
+            src_file = os.path.join(gradle_report_path, xml_file)
+            dst_file = os.path.join(emu_args.session_dir, test_method + '.xml')
+            if os.path.isfile(dst_file):
+                os.remove(dst_file)
+            shutil.copyfile(src_file, dst_file)
 
     def _save_adb_bug_report(self, test_method):
         dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_bugreport.txt')
