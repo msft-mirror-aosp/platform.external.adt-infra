@@ -72,8 +72,8 @@ unzip -o ${SYSIMAGE_DIR}/sdk-repo-linux-system-images-*.zip -d ${ANDROID_HOME}/s
 mkdir -p ${SESSION_DIR}
 
 echo "Run test"
-echo "Run python -u ${ADT_INFRA}/emu_test/dotest.py --loglevel INFO --session_dir ${SESSION_DIR} --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir UI_test --file_pattern 'test_ui.*' --config_file ${ADT_INFRA}/emu_test/config/ui_cfg.csv --buildername 'Ubuntu 14.04 HD 4400' --filter ${FILTER} --skip-adb-perf"
-python -u ${ADT_INFRA}/emu_test/dotest.py --loglevel INFO --session_dir ${SESSION_DIR} --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir UI_test --file_pattern 'test_ui.*' --config_file ${ADT_INFRA}/emu_test/config/ui_cfg.csv --buildername 'Ubuntu 14.04 HD 4400' --filter ${FILTER} --skip-adb-perf
+echo "Run python -u ${ADT_INFRA}/emu_test/dotest.py --loglevel INFO --session_dir ${SESSION_DIR} --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir UI_test --file_pattern 'test_ui.*' --config_file ${ADT_INFRA}/emu_test/config/ui_cfg_gce.csv --buildername 'Ubuntu 14.04 HD 4400' --filter ${FILTER} --skip-adb-perf"
+python -u ${ADT_INFRA}/emu_test/dotest.py --loglevel INFO --session_dir ${SESSION_DIR} --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir UI_test --file_pattern 'test_ui.*' --config_file ${ADT_INFRA}/emu_test/config/ui_cfg_gce.csv --buildername 'Ubuntu 14.04 HD 4400' --filter ${FILTER} --skip-adb-perf
 
 result=$?
 
