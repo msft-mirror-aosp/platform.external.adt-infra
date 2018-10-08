@@ -745,7 +745,7 @@
         "os": "linux",
         "version": "precise",
       },
-      "slaves": ['chromeos1-row3-rack3-host1'],
+      "slaves": ['100.115.97.10'],
     },
     "mac-10-12-1-intel-hd-5000": {
       "slave_data": {
@@ -753,7 +753,7 @@
         "os": "mac",
         "version": "trusty",
       },
-      "slaves": ['chromeos1-row3-rack4-host3'],
+      "slaves": ['100.115.97.8'],
     },
     "win-10-intel-hd-4400": {
       "slave_data": {
@@ -761,7 +761,7 @@
         "os": "win",
         "version": "trusty",
       },
-      "slaves": ['chromeos1-row3-rack4-host4'],
+      "slaves": ['100.115.97.9'],
     },
     "ubuntu-14_04-intel-hd-4400": {
       "slave_data": {
@@ -769,7 +769,7 @@
         "os": "linux",
         "version": "trusty",
       },
-      "slaves": ['chromeos1-row3-rack3-host2'],
+      "slaves": ['100.115.97.11'],
     },
     "ubuntu-14_04-nvidia-quadro-600": {
       "slave_data": {
@@ -777,7 +777,7 @@
         "os": "linux",
         "version": "trusty",
       },
-      "slaves": ['chromeos1-row3-rack3-host5'],
+      "slaves": ['100.115.97.14'],
     },
     "ubuntu-14_04-nvidia-quadro-k600": {
       "slave_data": {
@@ -785,7 +785,7 @@
         "os": "linux",
         "version": "vivid",
       },
-      "slaves": ['chromeos1-row3-rack2-host2'],
+      "slaves": ['100.115.97.20'],
     },
     "ubuntu-14_04-nvidia-quadro-600-1": {
       "slave_data": {
@@ -793,7 +793,7 @@
         "os": "linux",
         "version": "trusty",
       },
-      "slaves": ['chromeos1-row3-rack4-host5'],
+      "slaves": ['100.115.97.15'],
     },
     "ubuntu-16_04-nvidia-quadro-k1200": {
       "slave_data": {
@@ -801,7 +801,7 @@
         "os": "linux",
         "version": "trusty",
       },
-      "slaves": ['chromeos1-row4-rack3-host6'],
+      "slaves": ['100.115.97.18'],
     },
     "ubuntu-14_04-intel-hd-520": {
       "slave_data": {
@@ -809,7 +809,7 @@
         "os": "linux",
         "version": "trusty",
       },
-      "slaves": ['chromeos1-row3-rack4-host2'],
+      "slaves": ['100.115.97.7'],
     },
     "ubuntu-16_04-thinkpad-2016": {
       "slave_data": {
@@ -817,7 +817,7 @@
         "os": "linux",
         "version": "trusty",
       },
-      "slaves": ['chromeos1-row3-rack3-host7'],
+      "slaves": ['100.115.97.12'],
     },
     "ubuntu-16_04-thinkpad-2017": {
       "slave_data": {
@@ -825,7 +825,7 @@
         "os": "linux",
         "version": "trusty",
       },
-      "slaves": ['chromeos1-row3-rack3-host8'],
+      "slaves": ['100.115.97.1'],
     },
     "win-7-64-intel-hd-4400": {
       "slave_data": {
@@ -833,7 +833,7 @@
         "os": "win",
         "version": "win7",
       },
-      "slaves": ['chromeos1-row3-rack2-host3'],
+      "slaves": ['100.115.97.21'],
     },
     "win-8-64-nvidia-quadro-600": {
       "slave_data": {
@@ -841,7 +841,7 @@
         "os": "win",
         "version": "win8",
       },
-      "slaves": ['chromeos1-row3-rack2-host5'],
+      "slaves": ['100.115.97.23'],
     },
     "win-8_1-64-nvidia-quadro-600": {
       "slave_data": {
@@ -849,7 +849,7 @@
         "os": "win",
         "version": "win8.1",
       },
-      "slaves": ['chromeos1-row3-rack2-host4'],
+      "slaves": ['100.115.97.22'],
     },
     "win-10-64-nvidia-quadro-600": {
       "slave_data": {
@@ -857,7 +857,7 @@
         "os": "win",
         "version": "win10",
       },
-      "slaves": ['chromeos1-row3-rack3-host4'],
+      "slaves": ['100.115.97.13'],
     },
     "win-10-64-nvidia-quadro-600-1": {
       "slave_data": {
@@ -865,7 +865,7 @@
         "os": "win",
         "version": "win10",
       },
-      "slaves": ['chromeos1-row3-rack4-host6'],
+      "slaves": ['100.115.97.16'],
     },
     "mac-10-10-5-intel-hd-5000": {
       "slave_data": {
@@ -873,7 +873,7 @@
         "os": "mac",
         "version": "yosemite",
       },
-      "slaves": ['chromeos1-row4-rack3-host7'],
+      "slaves": ['100.115.97.6'],
     },
     "mac-10-8-5-intel-hd-5000": {
       "slave_data": {
@@ -881,7 +881,7 @@
         "os": "mac",
         "version": "mountainlion",
       },
-      "slaves": ['chromeos1-row4-rack3-host4'],
+      "slaves": ['100.115.97.5'],
     },
     "mac-10-10-5-iris-pro": {
       "slave_data": {
@@ -889,7 +889,7 @@
         "os": "mac",
         "version": "yosemite",
       },
-      "slaves": ['chromeos1-row4-rack3-host3'],
+      "slaves": ['100.115.97.4'],
     },
     "mac-10-11-1-iris-pro": {
       "slave_data": {
@@ -897,7 +897,7 @@
         "os": "mac",
         "version": "elcapitan",
       },
-      "slaves": ['chromeos1-row4-rack4-host3'],
+      "slaves": ['100.115.97.2'],
     },
     "mac-10-11-6-iris-pro": {
       "slave_data": {
@@ -905,7 +905,7 @@
         "os": "mac",
         "version": "elcapitan",
       },
-      "slaves": ['chromeos1-row4-rack4-host4'],
+      "slaves": ['100.115.97.3'],
     },
   },
 }
