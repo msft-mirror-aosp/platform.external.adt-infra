@@ -27,7 +27,7 @@ DEPS = [
 EMULATOR_BRANCHES = ['emu-master-dev', 'emu-2.7-release']
 
 MASTER_USER = 'user'
-MASTER_IP = '172.27.213.40'
+MASTER_IP = '100.115.97.19'
 
 # Tuple that maps to columns in a *_cfg.csv file.  Determines what images we boot.
 bootStep = collections.namedtuple('bootStep', 'description, filter')

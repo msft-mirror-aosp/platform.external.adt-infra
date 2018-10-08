@@ -25,7 +25,7 @@ DEPS = [
 ]
 
 MASTER_USER = 'user'
-MASTER_IP = '172.27.213.40'
+MASTER_IP = '100.115.97.19'
 
 CPU_ARCH_TO_ABI = {
   'x86': 'x86',
