@@ -382,7 +382,7 @@ def RunSteps(api):
                     api.adt.PythonTestStep('Run AVD Launch Test',
                                            log_dir,
                                            'AVD_test',
-                                           'launch_avd.*',
+                                           '*launch_avd*.*',
                                            'avd_cfg.csv',
                                            '{"gpu": "yes"}',
                                            emulator_path,
