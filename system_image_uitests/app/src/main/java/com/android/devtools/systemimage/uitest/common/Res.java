@@ -129,4 +129,7 @@ public class Res {
     public static final String WEAR_LAUNCHER = "com.google.android.wearable.app:id/launcher_view";
     public static final String WEAR_FACE_SETTINGS = "com.google.android.wearable.app:id/watchface_settings";
     public static final String WEAR_PREVIEW_IMAGE = "com.google.android.wearable.app:id/preview_image";
+    public static final String WEAR_SHOW_ALL_BUTTON = "com.google.android.wearable.app:id/show_all_btn";
+    public static final String WEAR_WATCH_FACE_PICKER =
+            "com.google.android.wearable.app:id/watchface_picker_all_title";
 }
