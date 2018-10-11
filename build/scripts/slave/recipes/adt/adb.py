@@ -21,7 +21,7 @@ DEPS = [
 ]
 
 MASTER_USER = 'user'
-MASTER_IP = '172.27.213.40'
+MASTER_IP = '100.115.97.19'
 
 def clean_log_dirs():
   """Deletes all log directories."""
