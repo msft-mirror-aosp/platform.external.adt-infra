@@ -36,10 +36,10 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test class for Settings page on Android Wear API images.
+ * Test class for Display page on Android Wear API images.
  */
 @RunWith(AndroidJUnit4.class)
-public class SettingsTest {
+public class DisplayTest {
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
@@ -47,8 +47,6 @@ public class SettingsTest {
     private UiDevice device = UiDevice.getInstance(instrumentation);
 
     private int MAX_BRIGHTNESS = 5;
-
-    private final static String TAG = "SettingsTest";
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(120);
@@ -64,8 +62,9 @@ public class SettingsTest {
      *   1. Start the Android Wear emulator.
      *   2. Open Settings > Display > Change watch face.
      *   3. Record the original watch face type.
-     *   4. Change the watch face type (either from analog to digital, or digital to analog).
-     *   5. Change the watch face back to its original type.
+     *   4. Add new analog watch face if its not found.
+     *   5. Change the watch face type (either from analog to digital, or digital to analog).
+     *   6. Change the watch face back to its original type.
      *   Verify:
      *   1. The original watch face type was changed to a new type.
      *   2. The watch face type was restored to the original setting.
@@ -74,14 +73,13 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void changeWatchFace() throws Exception {
-
         boolean isOriginalAnalog = getWatchFaceType();
-        setWatchFaceType();
+        setWatchFaceType(false);
 
         assertTrue("Original watch face was not changed",
                 getWatchFaceType() != isOriginalAnalog);
 
-        setWatchFaceType();
+        setWatchFaceType(true);
 
         assertTrue("Original watch face was not restored",
                 getWatchFaceType() == isOriginalAnalog);
@@ -231,7 +229,7 @@ public class SettingsTest {
         device.pressHome();
     }
 
-    // Open the Display settings.
+    // Open the Display settings
     private void openDisplaySetting() throws UiObjectNotFoundException {
         device.pressHome();
 
@@ -260,8 +258,60 @@ public class SettingsTest {
         }
     }
 
-    // Get the  watch face type.
+    // Get the  watch face type
     private boolean getWatchFaceType() throws UiObjectNotFoundException {
+        openChangeWatchFace();
+
+        UiObject analogSettingsButton = device.findObject(new UiSelector()
+                .descriptionContains("Settings for Elements Analog").resourceId(
+                        Res.WEAR_FACE_SETTINGS));
+
+        return analogSettingsButton.waitForExists(3L);
+    }
+
+    // Set the watch face type, testing for the presence of analog watch face on initialization,
+    // and adding it if not found.
+    private void setWatchFaceType(boolean isInitialized) throws UiObjectNotFoundException {
+        boolean isAnalogSet = getWatchFaceType();
+
+        String faceToActivate = isAnalogSet ?
+                "Elements Digital" : "Elements Analog";
+        UiObject newWatchFace = device.findObject(new UiSelector().
+                resourceId(Res.WEAR_PREVIEW_IMAGE).descriptionContains(faceToActivate));
+
+        if (isInitialized) {
+            if (newWatchFace.waitForExists(3L)) {
+                newWatchFace.clickAndWaitForNewWindow();
+            }
+        } else {
+            device.pressBack();
+            openChangeWatchFace();
+            if (newWatchFace.waitForExists(3L)) {
+                device.pressBack();
+                device.pressHome();
+                setWatchFaceType(true);
+            } else {
+                UiObject showAllButton = device.findObject(new UiSelector().
+                        resourceId(Res.WEAR_SHOW_ALL_BUTTON));
+                if (showAllButton.waitForExists(2L)) {
+                    showAllButton.clickAndWaitForNewWindow();
+                }
+                String newLabel = isAnalogSet ?
+                        "Elements Digital" : "Elements Analog";
+                UiObject newWatchPicker = device.findObject(new UiSelector().
+                        resourceId(Res.WEAR_WATCH_FACE_PICKER).text(newLabel));
+                if (newWatchPicker.waitForExists(3L)) {
+                    newWatchPicker.clickAndWaitForNewWindow();
+                }
+
+                device.pressBack();
+                device.pressHome();
+                setWatchFaceType(true);
+            }
+        }
+    }
+
+    private void openChangeWatchFace() throws UiObjectNotFoundException {
         openDisplaySetting();
 
         UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
@@ -273,28 +323,9 @@ public class SettingsTest {
         if (settingsList.scrollIntoView(changeWatchFaceButton)) {
             device.findObject(changeWatchFaceButton).clickAndWaitForNewWindow();
         }
-
-        UiObject analogFace = device.findObject(new UiSelector().
-                resourceId(Res.WEAR_FACE_SETTINGS).descriptionContains("Analog"));
-
-        return analogFace.waitForExists(3L);
     }
 
-    // Set the watch face type.
-    private void setWatchFaceType() throws UiObjectNotFoundException {
-        boolean isAnalogSet = getWatchFaceType();
-
-        String faceToActivate = isAnalogSet ?
-                "Activate Elements Digital" : "Activate Elements Analog";
-
-        UiObject newWatchFace = device.findObject(new UiSelector().
-                resourceId(Res.WEAR_PREVIEW_IMAGE).description(faceToActivate));
-        if (newWatchFace.waitForExists(3L)) {
-            newWatchFace.clickAndWaitForNewWindow();
-        }
-    }
-
-    // Get the brightness level.
+    // Get the brightness level
     private String getBrightness() throws UiObjectNotFoundException {
         UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
                 packageName(Res.WEAR_SETTINGS));
@@ -324,7 +355,7 @@ public class SettingsTest {
         return "Automatic";
     }
 
-    // Set the brightness to the level provided.
+    // Set the brightness to the level provided
     private void setBrightness(String level)
             throws UiObjectNotFoundException {
 
@@ -343,7 +374,7 @@ public class SettingsTest {
         }
     }
 
-    // Get the font size level.
+    // Get the font size level
     private String getFontSize() throws UiObjectNotFoundException {
         String fontSizeValue = "";
 
@@ -363,7 +394,7 @@ public class SettingsTest {
         return fontSizeValue;
     }
 
-    // Set the font size level as indicated.
+    // Set the font size level as indicated
     private void setFontSize(String fontSize) throws UiObjectNotFoundException {
         UiScrollable settingsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES).
                 packageName(Res.WEAR_SETTINGS));
@@ -383,7 +414,7 @@ public class SettingsTest {
     }
 
 
-    // Get the always-on screen value.
+    // Get the always-on screen value
     private boolean getAlwaysOnValue() throws UiObjectNotFoundException {
         String fontSizeValue = "";
 
@@ -406,7 +437,7 @@ public class SettingsTest {
         return false;
     }
 
-    // Set the always-on screen value as indicated.
+    // Set the always-on screen value as indicated
     private void setAlwaysOnValue(boolean alwaysOn) throws UiObjectNotFoundException {
         String fontSizeValue = "";
 
