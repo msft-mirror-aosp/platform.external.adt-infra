@@ -19,6 +19,8 @@ import time
 import psutil
 import traceback
 from subprocess import PIPE, check_call, CalledProcessError
+import lxml.etree as ET
+
 
 # Add parent directory to current module. Then, emu_test module is recognized.
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -29,7 +31,48 @@ from emu_test.utils import path_utils
 
 # Provides a regular expression for matching fail message
 TIMEOUT_REGEX = re.compile(r"(^\d+)([smhd])?$")
+RESULT_XML_FILE = 'report.xml'
 
+def print_xml(emu_result):
+    def getTestName(id):
+        return id.rsplit('.', 1)[-1]
+    result = ET.Element('testsuite', name='BootTest')
+    result.set('tests', str(emu_result.testsRun))
+    result.set('failures', str(len(emu_result.failures)))
+    result.set('errors', str(len(emu_result.errors)))
+
+    for x in emu_result.passes:
+        ET.SubElement(result, 'testcase', name=getTestName(x.id()),
+                      test_result='pass')
+
+    for x in emu_result.failures:
+        ET.SubElement(result, 'testcase', name=getTestName(x.id()),
+                      test_result='fail')
+
+    for x in emu_result.errors:
+        ET.SubElement(result, 'testcase', name=getTestName(x.id()),
+                      test_result='error')
+
+    for x in emu_result.expectedFailures:
+        ET.SubElement(result, 'testcase',
+                      name=getTestName(x.id()),
+                      test_result='expected failure')
+
+    for x in emu_result.unexpectedSuccesses:
+        ET.SubElement(result, 'testcase',
+                      name=getTestName(x.id()),
+                      test_result='unexpected failure')
+
+    xml_string_result = ET.tostring(result)
+    # Saves each avd testing result to global variable: g_xml_string_result
+    g_xml_string_result = xml_string_result
+
+    dst_path = os.path.join(emu_argparser.emu_args.session_dir,
+                            emu_argparser.emu_args.test_dir,
+                            RESULT_XML_FILE)
+
+    with open(dst_path, 'w+') as modified:
+        modified.write('%s' % g_xml_string_result)
 
 def printResult(result):
     """
@@ -69,6 +112,10 @@ def printResult(result):
 
     logging.getLogger().info('')
     logging.getLogger().info("Test successful - %s", result.wasSuccessful())
+
+    if emu_argparser.emu_args.generate_xml:
+        logging.getLogger().info("Write XML report")
+        print_xml(result)
 
 
 def setupLogger():
