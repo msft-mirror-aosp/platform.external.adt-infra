@@ -71,7 +71,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
                 self.m_logger.info('Failed to find gradle XML report.')
                 return
             src_file = os.path.join(gradle_report_path, xml_file)
-            dst_file = os.path.join(emu_args.session_dir, test_method + '.xml')
+            dst_file = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '.xml')
             if os.path.isfile(dst_file):
                 os.remove(dst_file)
             shutil.copyfile(src_file, dst_file)
