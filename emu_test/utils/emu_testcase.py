@@ -245,7 +245,7 @@ class EmuBaseTestCase(LoggedTestCase):
         # Function execution starts below
         self.m_logger.info('Launching Emulator with AVD, ...: %s', str(avd))
         emulator_bin = emu_argparser.emu_args.emulator_exec
-        launch_cmd = [emulator_bin, "-avd", str(avd), "-verbose", "-show-kernel", "-wipe-data"]
+        launch_cmd = [emulator_bin, "-avd", str(avd), "-verbose", "-show-kernel"]
         if avd.gpu == "swiftshader":
             launch_cmd += ["-gpu", "swiftshader_indirect"]
         else:
@@ -626,6 +626,25 @@ class EmuBaseTestCase(LoggedTestCase):
         os.unlink(chromeos_tmp_zip)
         shutil.rmtree(chromeos_tmp_dir, ignore_errors=True)
         return unzip_proc.poll()
+
+    def copy_snapshot(self, avd_config):
+        """
+        Copy previously saved snapshot to avd location.
+        :param avd_config: Configuration representing the AVD
+        """
+        # copy snapshot here
+        try:
+            snap_dir = os.environ["SNAPSHOT_DIR"]
+            avd = avd_config.name()
+            avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
+            self.m_logger.info("copy %s to %s", os.path.join(snap_dir, avd+'.avd'), os.path.join(avd_dir, avd+'.avd'))
+            shutil.copytree(os.path.join(snap_dir, avd+'.avd'), os.path.join(avd_dir, avd+'.avd'))
+            self.m_logger.info("copy %s to %s", os.path.join(snap_dir, avd+'.ini'), os.path.join(avd_dir, avd+'.ini'))
+            shutil.copyfile(os.path.join(snap_dir, avd+'.ini'), os.path.join(avd_dir, avd+'.ini'))
+        except KeyError:
+            self.m_logger.error("Please set SNAPSHOT_DIR to provide destination directory for snapshots.")
+            return 1
+        return 0
 
     def create_avd(self, avd_config):
         """
