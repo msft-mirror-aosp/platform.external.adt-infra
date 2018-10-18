@@ -29,34 +29,6 @@ EMULATOR_BRANCHES = ['emu-master-dev', 'emu-2.7-release']
 MASTER_USER = 'user'
 MASTER_IP = '100.115.97.19'
 
-# Tuple that maps to columns in a *_cfg.csv file.  Determines what images we boot.
-bootStep = collections.namedtuple('bootStep', 'description, filter')
-# Dictionary that keys between git branch and the *_cfg.csv information we will use for that build.
-BOOT_STEPS = {
-        'emu-master-dev': bootStep('public', '{"ori": "public"}'),
-        'emu-2.7-release': bootStep('public', '{"ori": "public"}'),
-        'master': bootStep('master', '{"ori": "master"}'),
-        "master-iot-dev": bootStep('master-iot', '{"ori": "master-iot"}'),
-        'aosp': bootStep('aosp', '{"ori": "aosp"}'),
-        'pi-dev': bootStep('PI', '{"ori": "pi"}'),
-        "pi-car-dev": bootStep('PI_CAR', '{"ori": "pi-car"}'),
-        'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
-        'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
-        'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
-        'nyc-emu-dev': bootStep('NYC', '{"ori": "nyc"}'),
-        'oc-mr1-car-support-release': bootStep('OC_MR1_CAR_SUPPORT', '{"ori": "oc-mr1-car-support"}'),
-        'oc-emu-dev': bootStep('OC', '{"ori": "oc"}'),
-        'oc-mr1-emu-dev': bootStep('OC_MR1', '{"ori": "oc-mr1"}'),
-        'oc-mr1-iot-dev': bootStep('OC_MR1_IOT', '{"ori": "oc-mr1-iot"}'),
-        'lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
-        'klp-emu-dev': bootStep('KLP', '{"ori": "klp"}'),
-        'gb-emu-dev': bootStep('GB', '{"ori": "gb"}'),
-        'ics-mr1-emu-dev': bootStep('ICS_MR1', '{"ori": "ics-mr1"}'),
-        'jb-emu-dev': bootStep('JB', '{"ori": "jb"}'),
-        'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"ori": "jb-mr1.1"}'),
-        'jb-mr2-emu-dev': bootStep('JB_MR2', '{"ori": "jb-mr2"}'),
-    }
-
 
 def get_android_sdk_home(api, is_cross_build, is_cts):
     """Return the location of the Android SDK Folder this build will use.
@@ -142,9 +114,10 @@ def get_props(api, android_sdk_home, build_cache): # pragma: no cover
         with open(build_cache, 'r') as csvfile:
             filereader = csv.reader(csvfile)
             for row in filereader:
+                BOOT_STEPS = get_boot_steps(api)
                 if row[0] in BOOT_STEPS:
                     last_build[row[0]] = [row[1], row[2]]
-        emulators, steps = get_test_config(api.properties.get('project'), android_sdk_home, True)
+        emulators, steps = get_test_config(api, android_sdk_home, True)
         for k in last_build:
             if k in emulators:
                 props['file_list'] += last_build[k][1] + ','
@@ -184,7 +157,8 @@ def set_props(api, build_cache):
 #   image other than public.
 # For case 4, if changes are in system-image branch, need to check against all of known good emulator branches, and
 #   on the triggering branch image.
-def get_test_config(project, android_sdk_home, cross_build):
+def get_test_config(api, android_sdk_home, cross_build):
+    project = api.properties.get('project')
     # case 1
     if project not in EMULATOR_BRANCHES and not cross_build:
         emulator_branch_to_use = [android_sdk_home]
@@ -196,12 +170,143 @@ def get_test_config(project, android_sdk_home, cross_build):
     # case 3
     elif project in EMULATOR_BRANCHES and cross_build:
         emulator_branch_to_use = [project]
+        BOOT_STEPS = get_boot_steps(api)
         steps_to_run = [x for x in BOOT_STEPS if x not in EMULATOR_BRANCHES]
     # case 4
     else:
         emulator_branch_to_use = [x for x in EMULATOR_BRANCHES]
         steps_to_run = [project]
     return emulator_branch_to_use, steps_to_run
+
+
+def get_boot_steps(api):
+    # Tuple that maps to columns in a *_cfg.csv file.  Determines what images we boot.
+    bootStep = collections.namedtuple('bootStep', 'description, filter')
+    # Determine and return the correct the boot steps dictionary to be used to key between git branch and the *_cfg.csv information.
+    # Based on api props, the dictionary will include the android-wear or android-tv filter tag if required.
+    file_list = api.properties.get('file_list')
+    if "android-wear" in file_list:
+        return {
+            'emu-master-dev': bootStep('public', '{"tag": "android-wear", "ori": "public"}'),
+            'emu-2.7-release': bootStep('public', '{"tag": "android-wear", "ori": "public"}'),
+            'master': bootStep('master', '{"tag": "android-wear", "ori": "master"}'),
+            "master-iot-dev": bootStep('master-iot', '{"tag": "android-wear", "ori": "master-iot"}'),        
+            'aosp': bootStep('aosp', '{"tag": "android-wear", "ori": "aosp"}'),
+            'pi-emu-dev': bootStep('PI', '{"tag": "android-wear", "ori": "pi"}'),
+            "pi-car-dev": bootStep('PI_CAR', '{"tag": "android-wear", "ori": "pi-car"}'),
+            'mnc-emu-dev': bootStep('MNC', '{"tag": "android-weear", "ori": "mnc"}'),
+            'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"tag": "android-wear", "ori": "lmp-mr1"}'),
+            'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"tag": "android-wear", "ori": "nyc-mr1"}'),
+            'nyc-emu-dev': bootStep('NYC', '{"tag": "android-wear", "ori": "nyc"}'),
+            'oc-mr1-car-support-release': bootStep('OC_MR1_CAR_SUPPORT', '{"tag": "android-wear", "ori": "oc-mr1-car-support"}'),
+            'oc-emu-dev': bootStep('OC', '{"tag": "android-wear", "ori": "oc"}'),
+            'oc-mr1-emu-dev': bootStep('OC_MR1', '{"tag": "android-wear", "ori": "oc-mr1"}'),
+            'oc-mr1-iot-dev': bootStep('OC_MR1_IOT', '{"tag": "android-wear", "ori": "oc-mr1-iot"}'),
+            'lmp-emu-dev': bootStep('LMP', '{"tag": "android-wear", "ori": "lmp"}'),
+            'klp-emu-dev': bootStep('KLP', '{"tag": "android-wear", "ori": "klp"}'),
+            'gb-emu-dev': bootStep('GB', '{"tag": "android-wear", "ori": "gb"}'),
+            'ics-mr1-emu-dev': bootStep('ICS_MR1', '{"tag": "android-wear", "ori": "ics-mr1"}'),
+            'jb-emu-dev': bootStep('JB', '{"tag": "android-wear", "ori": "jb"}'),
+            'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "android-wear", "ori": "jb-mr1.1"}'),
+            'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "android-wear", "ori": "jb-mr2"}'),
+        }
+    elif "android-tv" in file_list:
+        return {
+            'emu-master-dev': bootStep('public', '{"tag": "android-tv", "ori": "public"}'),
+            'emu-2.7-release': bootStep('public', '{"tag": "android-tv", "ori": "public"}'),
+            'master': bootStep('master', '{"tag": "android-tv", "ori": "master"}'),
+            "master-iot-dev": bootStep('master-iot', '{"tag": "android-tv", "ori": "master-iot"}'),
+            'aosp': bootStep('aosp', '{"tag": "android-tv", "ori": "aosp"}'),
+            'pi-emu-dev': bootStep('PI', '{"tag": "android-tv", "ori": "pi"}'),
+            "pi-car-dev": bootStep('PI_CAR', '{"tag": "android-tv", "ori": "pi-car"}'),
+            'mnc-emu-dev': bootStep('MNC', '{"tag": "android-tv", "ori": "mnc"}'),
+            'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"tag": "android-tv", "ori": "lmp-mr1"}'),
+            'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"tag": "android-tv", "ori": "nyc-mr1"}'),
+            'nyc-emu-dev': bootStep('NYC', '{"tag": "android-tv", "ori": "nyc"}'),
+            'oc-mr1-car-support-release': bootStep('OC_MR1_CAR_SUPPORT', '{"tag": "android-tv", "ori": "oc-mr1-car-support"}'),
+            'oc-emu-dev': bootStep('OC', '{"tag": "android-tv", "ori": "oc"}'),
+            'oc-mr1-emu-dev': bootStep('OC_MR1', '{"tag": "android-tv", "ori": "oc-mr1"}'),
+            'oc-mr1-iot-dev': bootStep('OC_MR1_IOT', '{"tag": "android-tv", "ori": "oc-mr1-iot"}'),
+            'lmp-emu-dev': bootStep('LMP', '{"tag": "android-tv", "ori": "lmp"}'),
+            'klp-emu-dev': bootStep('KLP', '{"tag": "android-tv", "ori": "klp"}'),
+            'gb-emu-dev': bootStep('GB', '{"tag": "android-tv", "ori": "gb"}'),
+            'ics-mr1-emu-dev': bootStep('ICS_MR1', '{"tag": "android-tv", "ori": "ics-mr1"}'),
+            'jb-emu-dev': bootStep('JB', '{"tag": "android-tv", "ori": "jb"}'),
+            'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "android-tv", "ori": "jb-mr1.1"}'),
+            'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "android-tv", "ori": "jb-mr2"}'),
+    }
+    elif "google_apis_playstore" in file_list:
+        return {
+            'emu-master-dev': bootStep('public', '{"tag": "google_apis_playstore", "ori": "public"}'),
+            'emu-2.7-release': bootStep('public', '{"tag": "google_apis_playstore", "ori": "public"}'),
+            'master': bootStep('master', '{"tag": "google_apis_playstore", "ori": "master"}'),
+            "master-iot-dev": bootStep('master-iot', '{"tag": "google_apis_playstore", "ori": "master-iot"}'),
+            'aosp': bootStep('aosp', '{"tag": "google_apis_playstore", "ori": "aosp"}'),
+            'pi-emu-dev': bootStep('PI', '{"tag": "google_apis_playstore", "ori": "pi"}'),
+            'mnc-emu-dev': bootStep('MNC', '{"tag": "google_apis_playstore", "ori": "mnc"}'),
+            'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"tag": "google_apis_playstore", "ori": "lmp-mr1"}'),
+            'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"tag": "google_apis_playstore", "ori": "nyc-mr1"}'),
+            'nyc-emu-dev': bootStep('NYC', '{"tag": "google_apis_playstore", "ori": "nyc"}'),
+            'oc-emu-dev': bootStep('OC', '{"tag": "google_apis_playstore", "ori": "oc"}'),
+            'oc-mr1-emu-dev': bootStep('OC_MR1', '{"tag": "google_apis_playstore", "ori": "oc-mr1"}'),
+            'oc-mr1-iot-dev': bootStep('OC_MR1_IOT', '{"tag": "google_apis_playstore", "ori": "oc-mr1-iot"}'),
+            'lmp-emu-dev': bootStep('LMP', '{"tag": "google_apis_playstore", "ori": "lmp"}'),
+            'klp-emu-dev': bootStep('KLP', '{"tag": "google_apis_playstore", "ori": "klp"}'),
+            'gb-emu-dev': bootStep('GB', '{"tag": "google_apis_playstore", "ori": "gb"}'),
+            'ics-mr1-emu-dev': bootStep('ICS_MR1', '{"tag": "google_apis_playstore", "ori": "ics-mr1"}'),
+            'jb-emu-dev': bootStep('JB', '{"tag": "google_apis_playstore", "ori": "jb"}'),
+            'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "google_apis_playstore", "ori": "jb-mr1.1"}'),
+            'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "google_apis_playstore", "ori": "jb-mr2"}'),
+    }
+    elif "google_apis" in file_list:
+        return {
+            'emu-master-dev': bootStep('public', '{"tag": "google_apis", "ori": "public"}'),
+            'emu-2.7-release': bootStep('public', '{"tag": "google_apis", "ori": "public"}'),
+            'master': bootStep('master', '{"tag": "google_apis", "ori": "master"}'),
+            "master-iot-dev": bootStep('master-iot', '{"tag": "google_apis", "ori": "master-iot"}'),
+            'aosp': bootStep('aosp', '{"tag": "google_apis", "ori": "aosp"}'),
+            'pi-emu-dev': bootStep('PI', '{"tag": "google_apis", "ori": "pi"}'),
+            'mnc-emu-dev': bootStep('MNC', '{"tag": "google_apis", "ori": "mnc"}'),
+            'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"tag": "google_apis", "ori": "lmp-mr1"}'),
+            'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"tag": "google_apis", "ori": "nyc-mr1"}'),
+            'nyc-emu-dev': bootStep('NYC', '{"tag": "google_apis", "ori": "nyc"}'),
+            'oc-emu-dev': bootStep('OC', '{"tag": "google_apis", "ori": "oc"}'),
+            'oc-mr1-emu-dev': bootStep('OC_MR1', '{"tag": "google_apis", "ori": "oc-mr1"}'),
+            'oc-mr1-iot-dev': bootStep('OC_MR1_IOT', '{"tag": "google_apis", "ori": "oc-mr1-iot"}'),
+            'lmp-emu-dev': bootStep('LMP', '{"tag": "google_apis", "ori": "lmp"}'),
+            'klp-emu-dev': bootStep('KLP', '{"tag": "google_apis", "ori": "klp"}'),
+            'gb-emu-dev': bootStep('GB', '{"tag": "google_apis", "ori": "gb"}'),
+            'ics-mr1-emu-dev': bootStep('ICS_MR1', '{"tag": "google_apis", "ori": "ics-mr1"}'),
+            'jb-emu-dev': bootStep('JB', '{"tag": "google_apis", "ori": "jb"}'),
+            'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "google_apis", "ori": "jb-mr1.1"}'),
+            'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "google_apis", "ori": "jb-mr2"}'),
+    }
+    else:
+          return {
+              'emu-master-dev': bootStep('public', '{"ori": "public"}'),
+              'emu-2.7-release': bootStep('public', '{"ori": "public"}'),
+              'master': bootStep('master', '{"ori": "master"}'),
+              "master-iot-dev": bootStep('master-iot', '{"ori": "master-iot"}'),
+              'aosp': bootStep('aosp', '{"ori": "aosp"}'),
+              'pi-emu-dev': bootStep('PI', '{"ori": "pi"}'),
+              "pi-car-dev": bootStep('PI_CAR', '{"ori": "pi-car"}'),
+              'mnc-emu-dev': bootStep('MNC', '{"ori": "mnc"}'),
+              'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"ori": "lmp-mr1"}'),
+              'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"ori": "nyc-mr1"}'),
+              'nyc-emu-dev': bootStep('NYC', '{"ori": "nyc"}'),
+              'oc-mr1-car-support-release': bootStep('OC_MR1_CAR_SUPPORT', '{"ori": "oc-mr1-car-support"}'),
+              'oc-emu-dev': bootStep('OC', '{"ori": "oc"}'),
+              'oc-mr1-emu-dev': bootStep('OC_MR1', '{"ori": "oc-mr1"}'),
+              'oc-mr1-iot-dev': bootStep('OC_MR1_IOT', '{"ori": "oc-mr1-iot"}'),
+              'lmp-emu-dev': bootStep('LMP', '{"ori": "lmp"}'),
+              'klp-emu-dev': bootStep('KLP', '{"ori": "klp"}'),
+              'gb-emu-dev': bootStep('GB', '{"ori": "gb"}'),
+              'ics-mr1-emu-dev': bootStep('ICS_MR1', '{"ori": "ics-mr1"}'),
+              'jb-emu-dev': bootStep('JB', '{"ori": "jb"}'),
+              'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"ori": "jb-mr1.1"}'),
+              'jb-mr2-emu-dev': bootStep('JB_MR2', '{"ori": "jb-mr2"}'),
+          }
+
 
 
 @EmailRecipeWatcher()
@@ -288,7 +393,7 @@ def RunSteps(api):
             rev_str = "foo"
         api.step('Rev emu-img %s' % rev_str, ['echo', rev_str])
 
-    emulator_branch_to_use, steps_to_run = get_test_config(project, android_sdk_home, is_cross_build)
+    emulator_branch_to_use, steps_to_run = get_test_config(api, android_sdk_home, is_cross_build)
 
     # filter out unavailable branches
     steps_to_run = [x for x in steps_to_run if api.properties.get(x)]
@@ -308,6 +413,7 @@ def RunSteps(api):
                     raise
             for emu_branch in emulator_branch_to_use:
                 emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
+                BOOT_STEPS = get_boot_steps(api)
                 step_data = BOOT_STEPS[step]
                 emu_desc = "sdk emulator" if emu_branch not in EMULATOR_BRANCHES else emu_branch
                 if not is_cts and not is_ui and not is_console and not is_avd:
