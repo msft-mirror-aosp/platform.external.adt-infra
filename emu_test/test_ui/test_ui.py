@@ -27,7 +27,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         adb_binary = path_utils.get_adb_binary()
         kill_proc = psutil.Popen([adb_binary, "emu", "kill"])
         # check emulator process is terminated
-        result = self.term_check(timeout=5)
+        result = self.term_check(timeout=10)
         if not result:
             self.m_logger.debug('Second try - quit emulator by psutil')
             self.kill_proc_by_name(["emulator", "qemu-system"])
@@ -36,6 +36,18 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.m_logger.info("Remove AVD inside of tear down")
         # avd should be found $HOME/.android/avd/
         avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
+
+        if emu_args.save_snapshot:
+          try:
+              dist_dir = os.environ["SNAPSHOT_DIR"]
+              avd = self.avd_config.name()
+              self.m_logger.info("copy %s to %s", os.path.join(avd_dir, avd+'.avd'), os.path.join(dist_dir, avd+'.avd'))
+              shutil.copytree(os.path.join(avd_dir, avd+'.avd'), os.path.join(dist_dir, avd+'.avd'))
+              self.m_logger.info("copy %s to %s", os.path.join(avd_dir, avd+'.ini'), os.path.join(dist_dir, avd+'.ini'))
+              shutil.copyfile(os.path.join(avd_dir, avd+'.ini'), os.path.join(dist_dir, avd+'.ini'))
+          except KeyError:
+              self.m_logger.error("Please set SNAPSHOT_DIR to provide destination directory for snapshots.")
+
         try:
             if result and self.start_proc:
                 self.start_proc.wait()
@@ -202,25 +214,42 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.assertTrue(err is None or len(err.strip()) == 0, "The UI tests failed.")
 
     def run_ui_test(self, avd_config, class_name=None):
-        """Creates an AVD described by 'avd_config' and runs UI tests.
+        """Creates an AVD described by 'avd_config' or load a previously
+        saved snapshot and runs UI tests.
 
         If the 'class_name' is provided, runs only the tests in that class.
         Otherwise all UI tests run.
         """
         self.avd_config = avd_config
-        self.assertEqual(self.create_avd(avd_config), 0)
+        if emu_args.load_snapshot:
+            self.assertEqual(self.copy_snapshot(avd_config), 0)
+        else:
+            self.assertEqual(self.create_avd(avd_config), 0)
         self.ui_test_check(avd_config, class_name)
+
+    def save_snapshot(self, avd_config):
+        """Save snapshot for an AVD described by 'avd_config'
+        """
+        self.avd_config = avd_config
+        self.assertEqual(self.create_avd(avd_config), 0)
+        self.launch_emu_and_wait(avd_config)
 
 
 if emu_args.config_file is None:
     sys.exit(0)
 else:
+    # When running with save_snapshot option, it will save a snaphot for every
+    # AVD config defined by the config file.
+    # OR
     # When not running a local presubmit test, find the names of all test
     # classes and create an individual test case function for each class. This
     # allows us to launch a new emulator for each test class, which is more
     # robust in the case of emulator hangs or other such failures.
-    create_test_case_from_file("ui", UiAutomatorBaseTestCase, UiAutomatorBaseTestCase.run_ui_test,
-                               emu_args.uitest_psc_pkg is None)
+    if emu_args.save_snapshot:
+        create_test_case_from_file("ui", UiAutomatorBaseTestCase, UiAutomatorBaseTestCase.save_snapshot)
+    else:
+        create_test_case_from_file("ui", UiAutomatorBaseTestCase, UiAutomatorBaseTestCase.run_ui_test,
+                                   emu_args.uitest_psc_pkg is None)
 
 
 if __name__ == '__main__':
