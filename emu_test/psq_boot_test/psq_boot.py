@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """
 Driver for psq_boot_test.  Recieves a command via Swarming, runs boot tests on
-the images defined within PSQ_CONFIG_FILE, and returns a JSON representation to
+the images defined within PSQ_BOOT_CONFIG_FILE, and returns a JSON representation to
 stdout that is parsed via the SWARMING server and sent to ATP.
 """
 
@@ -33,8 +33,9 @@ ANDROID_SDK_PATHS = [
     os.path.join(ANDROID_SDK_ROOT, 'platform-tools'),
     os.path.join(ANDROID_SDK_ROOT, 'build_tools', '23.0.2')
 ]
-PSQ_CONFIG_FILE = os.path.join(ADT_INFRA_PATH, 'emu_test', 'config', 'psq_boot_cfg.csv')
-
+PSQ_BOOT_CONFIG_FILE = os.path.join(ADT_INFRA_PATH, 'emu_test', 'config', 'psq_boot_cfg.csv')
+PSQ_SNAPSHOT_RUNNER_CONFIG_FILE = os.path.join(ADT_INFRA_PATH, 'emu_test', 'config',
+                                               'psq_snapshot_runner_cfg.csv')
 
 def modify_env():
   """
@@ -60,6 +61,7 @@ Finish imports now that PYTHONPATH is properly set
 """
 import psq_helper
 from psq_boot_test import PsqBootTestCase
+from psq_snapshot_runner_test import PsqSnapshotRunnerTestCase
 import emu_test
 from emu_test.utils import emu_argparser, emu_unittest
 
@@ -80,14 +82,19 @@ def update_git():
 
 def create_test_case():
   """
-  Create the PsqBootTestCase classes that represent a single unittest. These
-  tests are created from the information within the PSQ_CONFIG_FILE file.
+  Create the PSQ test classes that represent a single unittest. These
+  tests are created from the information within the PSQ_*_CONFIG_FILE file.
 
   :return: None.
   """
-  emu_argparser.emu_args.config_file = PSQ_CONFIG_FILE
+  emu_argparser.emu_args.config_file = PSQ_BOOT_CONFIG_FILE
   emu_test.utils.emu_testcase.create_test_case_from_file("boot", PsqBootTestCase,
                                                          PsqBootTestCase.run_boot_test)
+  emu_argparser.emu_args.config_file = PSQ_SNAPSHOT_RUNNER_CONFIG_FILE
+  emu_test.utils.emu_testcase.create_test_case_from_file("snapshot_runner",
+                                                         PsqSnapshotRunnerTestCase,
+                                                         PsqSnapshotRunnerTestCase.
+                                                         run_snapshot_runner_test)
 
 
 def setup_build_environment(ab_buildid, target):
@@ -168,7 +175,7 @@ def get_hostname():
   machine (".mtv." in name) we 'fake out' the hostname to
   androidstudio-swarming-1 to allow testing.
 
-  :return: The hostname we will use when reading from the PSQ_CONFIG_FILE.
+  :return: The hostname we will use when reading from the PSQ_BOOT_CONFIG_FILE.
   """
   hostname = socket.gethostname()
   if '.mtv.' in hostname:
@@ -213,14 +220,16 @@ if __name__ == '__main__':
     emu_dir = setup_build_environment(emu_argparser.emu_args.build_id,
                                       emu_argparser.emu_args.build_target)
     emu_binary = os.path.join(emu_dir, "emulator", "emulator")
+    print 'Emulator binary %s' % emu_binary
     set_emu_args(emu_binary)
     create_test_case()
     sys.argv[1:] = emu_argparser.emu_args.unittest_args
-    test_start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    test_suite = unittest.TestLoader().loadTestsFromTestCase(PsqBootTestCase)
-    test_runner = emu_unittest.EmuTextTestRunner()
-    test_result = test_runner.run(test_suite)
-    test_end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    for testCase in [PsqBootTestCase, PsqSnapshotRunnerTestCase]:
+      test_start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+      test_suite = unittest.TestLoader().loadTestsFromTestCase(testCase)
+      test_runner = emu_unittest.EmuTextTestRunner()
+      test_result = test_runner.run(test_suite)
+      test_end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     # Upload logs to GCS (gs://emu_psq_logs/)
     upload_rc = upload_to_gs()
     output = create_json_output(emu_argparser.emu_args.creation_time,

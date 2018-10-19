@@ -174,7 +174,7 @@ class EmuBaseTestCase(LoggedTestCase):
                 print "Exception Thrown as psutil says no such process."
                 print traceback.format_exc()
 
-    def launch_emu(self, avd):
+    def launch_emu(self, avd, flags = None):
         """
         Launches the emulator using the passed avd.  The avd is a string created by the AVDConfig.name() function.
         Contains 3 inner functions related to launching and reading logcat output.  We push logcat information into a
@@ -257,7 +257,8 @@ class EmuBaseTestCase(LoggedTestCase):
         # For CTS test to make test_getByName in android.core.tests.libcore.package.libcore pass
         # Also windows and mac needs this to have network connection
         launch_cmd += ['-dns-server', '8.8.8.8']
-        launch_cmd += ['-skip-adb-auth']
+        if flags != None:
+            launch_cmd += flags
         test_name  = self.id().rsplit('.', 1)[-1]
         verbose_log_path = os.path.join(emu_argparser.emu_args.session_dir,
                                         emu_argparser.emu_args.test_dir,
@@ -332,20 +333,11 @@ class EmuBaseTestCase(LoggedTestCase):
             self.m_logger.error('adb shell dumpsys connectivity returns: %s' % stdout)
             return False
         return True
-
-    def launch_emu_and_wait(self, avd):
-        """
-        Attempts to launch the passed in AVD.  Emulator Binary and other system settings are contained within
-        emu_argparser.emy_args.  The emulator is started in a separate thread.  The timeout that is passed in via
-        emu_argparser.emu_args.timeout_in_seconds is the timeout value of the 'wait' -> it is not forever.
-        For API P, we also check network connection.
-        :param avd: AVD we wish to launch.
-        :return: Boot time (in seconds) it took to get a fully booted emulator.
-        """
+    def launch_emu_no_kill(self, avd, flags = None):
         adb_binary = path_utils.get_adb_binary()
         self.run_with_timeout([adb_binary, 'kill-server'], 20)
         self.run_with_timeout([adb_binary, 'start-server'], 20)
-        launcher_emu = threading.Thread(target=self.launch_emu, args=[avd])
+        launcher_emu = threading.Thread(target=self.launch_emu, args=[avd, flags])
         launcher_emu.start()
         start_time = time.time()
         completed = '0'
@@ -419,6 +411,19 @@ class EmuBaseTestCase(LoggedTestCase):
                     #raise Exception('Fingerprint check error')
                 else:
                     self.m_logger.info("Fingerprint test for phone device succeeded.")
+        return launcher_emu, self.boot_time
+
+
+    def launch_emu_and_wait(self, avd, flags = None):
+        """
+        Attempts to launch the passed in AVD.  Emulator Binary and other system settings are contained within
+        emu_argparser.emy_args.  The emulator is started in a separate thread.  The timeout that is passed in via
+        emu_argparser.emu_args.timeout_in_seconds is the timeout value of the 'wait' -> it is not forever.
+        For API P, we also check network connection.
+        :param avd: AVD we wish to launch.
+        :return: Boot time (in seconds) it took to get a fully booted emulator.
+        """
+        launcher_emu, _ = self.launch_emu_no_kill(avd, flags)
         launcher_emu.join(10)
         if not emu_argparser.emu_args.skip_adb_perf:
             self.run_adb_perf(avd)

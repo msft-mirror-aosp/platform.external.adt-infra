@@ -7,14 +7,14 @@ from emu_test.utils import emu_argparser
 from emu_test.utils.emu_testcase import EmuBaseTestCase
 from emu_test.utils.emu_error import *
 
-class PsqBootTestCase(EmuBaseTestCase):
+class PsqBootTestBase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
-        super(PsqBootTestCase, self).__init__(*args, **kwargs)
+        super(PsqBootTestBase, self).__init__(*args, **kwargs)
         self.avd_config = None
 
     @classmethod
     def setUpClass(cls):
-        super(PsqBootTestCase, cls).setUpClass()
+        super(PsqBootTestBase, cls).setUpClass()
 
     def kill_emulator(self):
         self.m_logger.debug('First try - quit emulator by adb emu kill')
@@ -43,6 +43,14 @@ class PsqBootTestCase(EmuBaseTestCase):
         except Exception, e:
             self.m_logger.error("Error in cleanup - %r", e)
             pass
+
+class PsqBootTestCase(PsqBootTestBase):
+    def __init__(self, *args, **kwargs):
+        super(PsqBootTestCase, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def setUpClass(cls):
+        super(PsqBootTestCase, cls).setUpClass()
 
     def boot_check(self, avd):
         real_expected_boot_time = emu_argparser.emu_args.expected_boot_time;
