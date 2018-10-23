@@ -177,12 +177,12 @@ public class NetworkIOTest {
         final UiObject dataSwitch = device.findObject(new UiSelector().text(label));
 
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-        final UiObject billingCycle = device.findObject(new UiSelector().text("Billing cycle"));
+        final UiObject dataWarning = device.findObject(new UiSelector().text("Data warning & limit"));
 
         AppLauncher.launchPath(instrumentation, path);
 
         if (scrollable.waitForExists(3L)) {
-            scrollable.scrollIntoView(billingCycle);
+            scrollable.scrollIntoView(dataWarning);
         }
         assertTrue("Data switch not found.", new Wait().until(new Wait.ExpectedCondition() {
             @Override
@@ -191,7 +191,7 @@ public class NetworkIOTest {
             }
         }));
 
-        if (!billingCycle.exists() || !billingCycle.isEnabled()) {
+        if (!dataWarning.exists() || !dataWarning.isEnabled()) {
             dataSwitch.click();
             new NetworkUtilPopupWatcher(device).checkForCondition();
         }
@@ -204,7 +204,7 @@ public class NetworkIOTest {
         assertTrue("Disabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
-                return !billingCycle.exists() || !billingCycle.isEnabled();
+                return !dataWarning.exists() || !dataWarning.isEnabled();
             }
         }));
 
@@ -216,7 +216,7 @@ public class NetworkIOTest {
         assertTrue("Enabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
-                return billingCycle.exists() && billingCycle.isEnabled();
+                return dataWarning.exists() && dataWarning.isEnabled();
             }
         }));
     }
@@ -277,7 +277,7 @@ public class NetworkIOTest {
      *   </pre>
      * <p>
      */
-    @Ignore
+    @Test
     @TestInfo(id = "14581152")
     public void stressTestAirplaneMode() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();

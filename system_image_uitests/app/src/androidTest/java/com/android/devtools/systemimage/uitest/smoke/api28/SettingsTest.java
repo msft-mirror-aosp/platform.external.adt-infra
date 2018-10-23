@@ -67,7 +67,7 @@ public class SettingsTest {
     // Tests under this class takes up to 240 seconds depending on the performance of the bot the
     // tests run on.
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(240);
+    public Timeout globalTimeout = Timeout.seconds(300);
 
     @Before
     public void activateDeviceAdmin() throws Exception {

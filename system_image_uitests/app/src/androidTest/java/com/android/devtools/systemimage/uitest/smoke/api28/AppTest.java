@@ -100,6 +100,7 @@ public class AppTest {
                 isHelloComputeInstalled);
 
         AppLauncher.launch(instrumentation, appName);
+        new AppWatcher(device).checkForCondition();
         boolean hasApplication = testFramework.getDevice().findObject(new UiSelector().resourceId(
                 Res.APP_IMAGE_VIEW_ID)).waitForExists(5L);
 
@@ -131,7 +132,6 @@ public class AppTest {
     public void bookmarkWebSiteInBrowser() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-
         if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
             AppLauncher.launch(instrumentation, "Chrome");
 
