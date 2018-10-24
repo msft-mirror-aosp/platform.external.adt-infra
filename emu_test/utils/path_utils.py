@@ -21,7 +21,7 @@ def get_mksdcard_binary():
     Using the current environment variable ANDROID_SDK_ROOT, return the location of the mkdscard command.
     :return: filesystem location of mksdcard binary command.
     """
-    mksdcard_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'tools', 'mksdcard')
+    mksdcard_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'emulator', 'mksdcard')
     return mksdcard_binary
 
 
