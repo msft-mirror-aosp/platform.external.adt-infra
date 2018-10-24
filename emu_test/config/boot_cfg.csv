@@ -63,7 +63,7 @@ API 22,default,armeabi-v7a,Nexus 4,2048,yes,public,S,S,S,S,S,S,P,P,P
 ,,x86,Nexus 5,2048,yes,public,P,P,P,P,P,P,P,P,P
 ,,x86_64,Nexus 5,2048,yes,public,P,P,P,P,P,P,P,P,P
 ,google_apis,armeabi-v7a,Nexus 5,2048,yes,public,S,S,S,S,S,S,S,S,S
-API 21,,x86,Nexus 5,2048,yes,lmp,P,P,P,P,P,P,S,S,S
+,,x86,Nexus 5,2048,yes,lmp,P,P,P,P,P,P,S,S,S
 ,,x86_64,Nexus 5,2048,yes,lmp,P,P,P,P,P,P,S,S,S
 API 19,default,armeabi-v7a,,,yes,public,S,S,S,S,S,S,S,S,S
 ,,x86,,,yes,public,S,S,S,S,S,S,S,S,S
