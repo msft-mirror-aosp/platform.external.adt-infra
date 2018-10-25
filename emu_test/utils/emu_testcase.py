@@ -888,13 +888,6 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
         :param variant: Iterable.  If present, create test case for each variant.
         :return:
         """
-        if not is_cts and avd_config.gpu == "yes" and not is_ui:
-            avd_config_swiftshader = avd_config._replace(gpu = "swiftshader_indirect")
-            create_test_case(avd_config_swiftshader, op, builder_name, pattern, variant)
-            if avd_config.api >= "19" and avd_config.api <= "25" and "x86" in avd_config.abi:
-                avd_config_guestgpu = avd_config._replace(gpu = "guest")
-                create_test_case(avd_config_guestgpu, op, builder_name, pattern, variant)
-
         if avd_config.gpu in ['swiftshader_indirect', 'guest']:
             # Set gpu back to its original value of 'yes' so that validate_case doesn't complain
             # about "invalid case" in filter_dict.
