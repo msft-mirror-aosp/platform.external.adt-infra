@@ -154,8 +154,7 @@
      },
     "sys_image_pi_dev_poller": {
        "gs_bucket": "android-build-emu-sysimage",
-       "gs_path": ["builds/git_pi-emu-dev-mac-sdk_gphone_x86-sdk_addon_mac/",
-		   "builds/git_pi-emu-dev-linux-sdk_gphone_x86_64-userdebug/",
+       "gs_path": ["builds/git_pi-emu-dev-linux-sdk_gphone_x86_64-userdebug/",
 		   "builds/git_pi-emu-dev-linux-sdk_gwear_x86-sdk/",
 		   "builds/git_pi-emu-dev-linux-sdk_google_atv_x86-sdk/",
 		   "builds/git_pi-emu-dev-linux-sdk_gphone_x86-user/"],
@@ -641,7 +640,7 @@
       "type": "emu_scheduler",
     },
     "sysimg-pi": {
-      "project": ["pi-dev"],
+      "project": ["pi-emu-dev"],
       "type": "emu_scheduler",
     },
     "sysimg-pi-car-dev": {
