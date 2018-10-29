@@ -132,9 +132,8 @@ public class PlayStoreUtil {
     /**
      * Launches Google Play Store, opening to the given application
      */
-    public static void launchGooglePlay(Instrumentation instrumentation, String appName) throws Exception {
+    private static void launchGooglePlay(Instrumentation instrumentation, String appName) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = appName;
         AppLauncher.launch(instrumentation, "Play Store");
 
         resetPlayStore(instrumentation);
@@ -165,7 +164,7 @@ public class PlayStoreUtil {
             UiObject inputTextField = device.findObject(
                     new UiSelector().resourceId(Res.GOOGLE_PLAY_INPUT_RES));
             inputTextField.clearTextField();
-            inputTextField.setText(application);
+            inputTextField.setText(appName);
             device.pressEnter();
         }
     }
@@ -414,7 +413,7 @@ public class PlayStoreUtil {
     /**
      * Sets and then confirms a parental control pin
      */
-    public static void setParentalControlPin(UiDevice testDevice, String pin) throws Exception {
+    private static void setParentalControlPin(UiDevice testDevice, String pin) throws Exception {
         final UiDevice device = testDevice;
 
         boolean hasPinDialog = new Wait().until(new Wait.ExpectedCondition() {

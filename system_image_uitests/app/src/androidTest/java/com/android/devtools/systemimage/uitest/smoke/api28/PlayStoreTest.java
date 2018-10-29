@@ -278,7 +278,7 @@ public class PlayStoreTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String familyApplication = "YouTube Kids";
-        final String restrictedApplication = "Tinder";
+        final String restrictedApplication = "Truth or Dare ? Dirty !";
 
         if (testFramework.isGoogleApiAndPlayImage()) {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v3(instrumentation);
