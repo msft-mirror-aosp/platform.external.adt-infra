@@ -12,7 +12,7 @@ CMD_AVD_START = 'avd start\n'
 CMD_AVD_STATUS = 'avd status\n'
 
 REGEX_HELP_AVD_DISPLAY = ('.*\n.*\n.*\n.*stop.*\n.*start.*\n.*status.*\n'
-                          '.*name.*\n.*snapshot.*\n.*\nOK')
+                          '.*heartbeat.*\n.*name.*\n.*snapshot.*\n.*\nOK')
 AVD_STOPPED = 'virtual device is stopped.*\nOK'
 AVD_RUNNING = 'virtual device is running.*\nOK'
 
