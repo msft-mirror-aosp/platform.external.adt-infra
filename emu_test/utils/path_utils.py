@@ -4,6 +4,7 @@ This file contains functions that return commonly used path locations used throu
 This file requires the environment variable 'ANDROID_SDK_ROOT' to be set, as most paths are relative to this path.
 """
 
+import inspect
 import os
 
 
@@ -59,3 +60,6 @@ def get_sdkmanager_binary():
     else:
         sdkmanager_binary = os.path.join(sdkmanager_binary, 'sdkmanager')
     return sdkmanager_binary
+
+def get_emu_test_path():
+    return os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
