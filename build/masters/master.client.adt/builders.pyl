@@ -154,9 +154,9 @@
      },
     "sys_image_pi_dev_poller": {
        "gs_bucket": "android-build-emu-sysimage",
-       "gs_path": ["builds/git_pi-emu-dev-linux-sdk_gphone_x86_64-userdebug/",
-		   "builds/git_pi-emu-dev-linux-sdk_gwear_x86-sdk/",
+       "gs_path": ["builds/git_pi-emu-dev-linux-sdk_gwear_x86-sdk/",
 		   "builds/git_pi-emu-dev-linux-sdk_google_atv_x86-sdk/",
+		   "builds/git_pi-emu-dev-linux-sdk_gphone_x86-sdk_addon/",
 		   "builds/git_pi-emu-dev-linux-sdk_gphone_x86-user/"],
        "pollInterval": 597,
        "type": "GSMultiPoller",
