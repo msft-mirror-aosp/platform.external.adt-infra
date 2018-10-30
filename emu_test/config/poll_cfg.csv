@@ -1,0 +1,3 @@
+#ORI, <bucket names>
+#supports only tv, wear, gphone-user, gphone-x86_64 and gphone-x86 images.
+oc-mr1, git_oc-mr1-emu-dev-linux-sdk_google_atv_x86-sdk, git_oc-mr1-emu-dev-linux-sdk_gphone_x86_64-sdk_addon, git_oc-mr1-emu-dev-linux-sdk_gphone_x86-sdk_addon, git_oc-mr1-emu-dev-linux-sdk_gphone_x86-user
