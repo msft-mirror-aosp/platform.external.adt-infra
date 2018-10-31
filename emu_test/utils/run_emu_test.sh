@@ -6,8 +6,8 @@
 DIST_DIR=$1
 BUILD_NUM=$2
 
-echo "Starting build for Emulator"
-tools/buildSrc/servers/build_tools.sh out $DIST_DIR $BUILD_NUM 80
+echo "Poll for Emulator build"
+python -u external/adt-infra/emu_test/utils/gs_poller.py public $BUILD_NUM $DIST_DIR
 if [ $? != 0 ];
 then
     exit 1

@@ -9,21 +9,22 @@ import csv
 import time
 import subprocess
 
-gs_bucket = 'gs://android-build-emu-sysimage/builds/'
+gs_bucket_sysimage = 'gs://android-build-emu-sysimage/builds/'
+gs_bucket_emubuild = 'gs://android-build-emu/builds/'
 
 adt_infra = os.environ["ADT_INFRA"]
 config_file = os.path.join(adt_infra, 'emu_test', 'config', 'poll_cfg.csv')
 
-def poll(build_name, build_num):
+def poll(build_name, build_num, gs_bucket):
     print "Polling for", build_name, build_num
 
     for counter in range(12):
        print "Polling Iteration", (counter+1)
-       time.sleep(600)
        gs_file_path = gs_bucket + build_name + '/' + build_num + '/'
        return_code = subprocess.call("gsutil ls %s" % gs_file_path, shell=True)
        if return_code == 0:
           break
+       time.sleep(600)
 
     return return_code
 
@@ -34,7 +35,15 @@ if __name__ == '__main__':
     build_num = sys.argv[2]
     build_dir = sys.argv[3]
 
-    print "Polling for", build_num
+    if ori == "public":
+       gs_bucket = gs_bucket_emubuild
+    else:
+       gs_bucket = gs_bucket_sysimage
+
+    print "Wait for 30 mins before starting to poll"
+    time.sleep(1800)
+
+    print "Polling for", build_num, "in", gs_bucket
     print "Copy builds in", build_dir
 
     with open(config_file, "rb") as file:
@@ -47,15 +56,17 @@ if __name__ == '__main__':
              if(row[0].strip() == ori):
                 for x in row[1:]:
                    x = x.strip()
-                   status = poll(x, build_num)
+                   status = poll(x, build_num, gs_bucket)
                    if status != 0:
-                      print x, build_num, "Not available in gs bucket"
+                      print x, build_num, "Not available in", gs_bucket
                       exit(status)
                    else:
                       time.sleep(60)
                       gs_file_path = gs_bucket + x + '/' + build_num + '/'
                       dst_path = build_dir
-                      if 'tv' in x:
+                      if 'aosp-emu' in x:
+                         dst_path = dst_path + '/'
+                      elif 'tv' in x:
                          dst_path = dst_path + '/' + 'tv-x86.zip'
                       elif 'wear' in x:
                          dst_path = dst_path + '/' + 'wear-x86.zip'
