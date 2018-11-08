@@ -23,6 +23,8 @@ def get_mksdcard_binary():
     :return: filesystem location of mksdcard binary command.
     """
     mksdcard_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'emulator', 'mksdcard')
+    if (not os.path.isfile(mksdcard_binary)):
+        mksdcard_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'tools', 'mksdcard')
     return mksdcard_binary
 
 

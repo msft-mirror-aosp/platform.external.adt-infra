@@ -574,6 +574,8 @@ class EmuBaseTestCase(LoggedTestCase):
             fout.writelines(data[1:])
         # Create the sdcard.img file for this AVD.
         try:
+            stdout = None
+            stderr = None
             img_path = os.path.join(avd_dir, 'sdcard.img')
             mksdcard_binary = path_utils.get_mksdcard_binary()
             create_img_cmd = [mksdcard_binary, config.get('Common', 'sdcard.size'), img_path]
