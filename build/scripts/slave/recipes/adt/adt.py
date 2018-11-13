@@ -185,6 +185,13 @@ def get_boot_steps(api):
     # Determine and return the correct the boot steps dictionary to be used to key between git branch and the *_cfg.csv information.
     # Based on api props, the dictionary will include the android-wear or android-tv filter tag if required.
     file_list = api.properties.get('file_list')
+    gs://android-build-emu-sysimage/builds/git_oc-emu-dev-linux-sdk_gphone_x86-sdk_addon/5118630/46b830e1a96f2c36468a7d1541169b2ae52b96a704b073aaa6c3558709fbd9ea/sdk-repo-linux-system-images-5118630.zip,
+    gs://android-build-emu-sysimage/builds/git_oc-emu-dev-linux-sdk_google_atv_x86-sdk/5118630/a2f5b6af4cedfb902a7909cd11fa611cc1a05bade4f0ba97e5b421a6e83b7a99/sdk-repo-linux-system-images-5118630.zip,
+    gs://android-build-emu-sysimage/builds/git_oc-emu-dev-linux-sdk_gphone_x86_64-sdk_addon/5118630/db23c9eca02b8dec7128e401a866b45c4e0b65dac1a16ffb8045b813ac19ab63/sdk-repo-linux-system-images-5118630.zip,
+    gs://android-build-emu-sysimage/builds/git_oc-emu-dev-linux-sdk_gphone_armv7-sdk_addon/5118630/c2c60dd9c3204809bd9cfa0fba03addcd15c9783f1c8764967dc5aa57fa24f47/sdk-repo-linux-system-images-5118630.zip,
+    gs://android-build-emu-sysimage/builds/git_oc-emu-dev-linux-sdk_gphone_arm64-sdk_addon/5118630/d10b8f09a3efcad574c32384bdf5ffaf6a29cd2676832f9143ee514d883508f7/sdk-repo-linux-system-images-5118630.zip,
+    gs://android-build-emu-sysimage/builds/git_oc-emu-dev-linux-sdk_gphone_x86-user/5118630/3ed4aaebe3f142afea0354d92269504e5dc6e7977ea33ac5202430487e7cc573/sdk-repo-linux-system-images-5118630.zip
+      
     if "android-wear" in file_list:
         return {
             'emu-master-dev': bootStep('public', '{"tag": "android-wear", "ori": "public"}'),
@@ -418,9 +425,9 @@ def RunSteps(api):
                 emu_desc = "sdk emulator" if emu_branch not in EMULATOR_BRANCHES else emu_branch
                 if not is_cts and not is_ui and not is_console and not is_avd:
                     step_data = BOOT_STEPS[step]
-                    api.adt.PythonTestStep('Boot Test - %s System Image - %s' % (step_data.description, emu_desc),
+                    api.adt.PythonTestStep('Boot Test System Image',
                                            log_dir,
-                                           'boot_test_%s_sysimage-%s' % (step_data.description, emu_desc),
+                                           'boot_test_sysimage',
                                            'test_boot.*',
                                            'boot_cfg.csv',
                                            step_data.filter,

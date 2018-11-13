@@ -5,10 +5,10 @@ API P,default,x86,Nexus 6P,2048,yes,aosp,P,P,P,P,P,P,S,S,S
 API P,default,x86_64,Nexus 6P,2048,yes,aosp,P,P,P,P,P,P,S,S,S
 API P,google_apis,x86,Nexus 6P,2048,yes,master,P,P,P,P,P,P,S,S,S
 API P,google_apis,x86_64,Nexus 6P,2048,yes,master,P,P,P,P,P,P,S,S,S
-API P,google_apis,x86,Pixel,2048,yes,pi,P,P,P,P,P,P,S,S,S
-API P,google_apis,x86_64,Pixel,2048,yes,pi,P,P,P,P,P,P,S,S,S
-API P,android-wear,x86,wear_square_320,1024,yes,pi,P,P,P,P,P,P,S,S,S
-API P,android-car,X86_64,Android Automotive,2048,yes,pi-car,P,P,P,P,P,P,S,S,S
+API 28,google_apis,x86,Pixel,2048,yes,pi,P,P,P,P,P,P,S,S,S
+API 28,google_apis,x86_64,Pixel,2048,yes,pi,P,P,P,P,P,P,S,S,S
+API 28,android-wear,x86,wear_square_320,1024,yes,pi,P,P,P,P,P,P,S,S,S
+API 28,android-car,X86_64,Android Automotive,2048,yes,pi-car,P,P,P,P,P,P,S,S,S
 API 27,android-car,x86,Android Automotive,2048,yes,oc-mr1-car-support,P,P,P,P,P,P,S,S,S
 API 27,default,x86,Nexus 4,2048,yes,oc-mr1-iot,S,P,P,P,S,S,S,S,S
 API 27,android-tv,x86,Android TV (1080p),2048,yes,oc-mr1,P,P,P,P,P,P,S,S,S
