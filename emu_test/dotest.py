@@ -19,7 +19,7 @@ import time
 import psutil
 import traceback
 from subprocess import PIPE, check_call, CalledProcessError
-import lxml.etree as ET
+import xml.etree.ElementTree as ET
 
 
 # Add parent directory to current module. Then, emu_test module is recognized.
