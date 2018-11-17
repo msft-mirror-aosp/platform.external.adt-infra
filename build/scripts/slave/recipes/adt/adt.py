@@ -114,7 +114,7 @@ def get_props(api, android_sdk_home, build_cache): # pragma: no cover
         with open(build_cache, 'r') as csvfile:
             filereader = csv.reader(csvfile)
             for row in filereader:
-                BOOT_STEPS = get_boot_steps(api)
+                BOOT_STEPS = get_boot_steps()
                 if row[0] in BOOT_STEPS:
                     last_build[row[0]] = [row[1], row[2]]
         emulators, steps = get_test_config(api, android_sdk_home, True)
@@ -170,7 +170,7 @@ def get_test_config(api, android_sdk_home, cross_build):
     # case 3
     elif project in EMULATOR_BRANCHES and cross_build:
         emulator_branch_to_use = [project]
-        BOOT_STEPS = get_boot_steps(api)
+        BOOT_STEPS = get_boot_steps()
         steps_to_run = [x for x in BOOT_STEPS if x not in EMULATOR_BRANCHES]
     # case 4
     else:
@@ -179,13 +179,12 @@ def get_test_config(api, android_sdk_home, cross_build):
     return emulator_branch_to_use, steps_to_run
 
 
-def get_boot_steps(api):
+def get_boot_steps(is_ui=False, is_tv=False, is_wear=False):
     # Tuple that maps to columns in a *_cfg.csv file.  Determines what images we boot.
     bootStep = collections.namedtuple('bootStep', 'description, filter')
     # Determine and return the correct the boot steps dictionary to be used to key between git branch and the *_cfg.csv information.
-    # Based on api props, the dictionary will include the android-wear or android-tv filter tag if required.
-    file_list = api.properties.get('file_list')
-    if "android-wear" in file_list:
+    # Based on the is_ui, is_tv and is_wear flags, the dictionary will include the android-tv or android-wear filter tag if required.
+    if "is_wear":
         return {
             'emu-master-dev': bootStep('public', '{"tag": "android-wear", "ori": "public"}'),
             'emu-2.7-release': bootStep('public', '{"tag": "android-wear", "ori": "public"}'),
@@ -210,7 +209,7 @@ def get_boot_steps(api):
             'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "android-wear", "ori": "jb-mr1.1"}'),
             'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "android-wear", "ori": "jb-mr2"}'),
         }
-    elif "android-tv" in file_list:
+    elif "is_tv":
         return {
             'emu-master-dev': bootStep('public', '{"tag": "android-tv", "ori": "public"}'),
             'emu-2.7-release': bootStep('public', '{"tag": "android-tv", "ori": "public"}'),
@@ -235,7 +234,7 @@ def get_boot_steps(api):
             'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "android-tv", "ori": "jb-mr1.1"}'),
             'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "android-tv", "ori": "jb-mr2"}'),
     }
-    elif "google_apis_playstore" in file_list:
+    elif "is_ui":
         return {
             'emu-master-dev': bootStep('public', '{"tag": "google_apis_playstore", "ori": "public"}'),
             'emu-2.7-release': bootStep('public', '{"tag": "google_apis_playstore", "ori": "public"}'),
@@ -257,29 +256,6 @@ def get_boot_steps(api):
             'jb-emu-dev': bootStep('JB', '{"tag": "google_apis_playstore", "ori": "jb"}'),
             'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "google_apis_playstore", "ori": "jb-mr1.1"}'),
             'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "google_apis_playstore", "ori": "jb-mr2"}'),
-    }
-    elif "google_apis" in file_list:
-        return {
-            'emu-master-dev': bootStep('public', '{"tag": "google_apis", "ori": "public"}'),
-            'emu-2.7-release': bootStep('public', '{"tag": "google_apis", "ori": "public"}'),
-            'master': bootStep('master', '{"tag": "google_apis", "ori": "master"}'),
-            "master-iot-dev": bootStep('master-iot', '{"tag": "google_apis", "ori": "master-iot"}'),
-            'aosp': bootStep('aosp', '{"tag": "google_apis", "ori": "aosp"}'),
-            'pi-emu-dev': bootStep('PI', '{"tag": "google_apis", "ori": "pi"}'),
-            'mnc-emu-dev': bootStep('MNC', '{"tag": "google_apis", "ori": "mnc"}'),
-            'lmp-mr1-emu-dev': bootStep('LMP_MR1', '{"tag": "google_apis", "ori": "lmp-mr1"}'),
-            'nyc-mr1-emu-dev': bootStep('NYC_MR1', '{"tag": "google_apis", "ori": "nyc-mr1"}'),
-            'nyc-emu-dev': bootStep('NYC', '{"tag": "google_apis", "ori": "nyc"}'),
-            'oc-emu-dev': bootStep('OC', '{"tag": "google_apis", "ori": "oc"}'),
-            'oc-mr1-emu-dev': bootStep('OC_MR1', '{"tag": "google_apis", "ori": "oc-mr1"}'),
-            'oc-mr1-iot-dev': bootStep('OC_MR1_IOT', '{"tag": "google_apis", "ori": "oc-mr1-iot"}'),
-            'lmp-emu-dev': bootStep('LMP', '{"tag": "google_apis", "ori": "lmp"}'),
-            'klp-emu-dev': bootStep('KLP', '{"tag": "google_apis", "ori": "klp"}'),
-            'gb-emu-dev': bootStep('GB', '{"tag": "google_apis", "ori": "gb"}'),
-            'ics-mr1-emu-dev': bootStep('ICS_MR1', '{"tag": "google_apis", "ori": "ics-mr1"}'),
-            'jb-emu-dev': bootStep('JB', '{"tag": "google_apis", "ori": "jb"}'),
-            'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "google_apis", "ori": "jb-mr1.1"}'),
-            'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "google_apis", "ori": "jb-mr2"}'),
     }
     else:
           return {
@@ -317,7 +293,9 @@ def RunSteps(api):
     buildnum = api.properties.get('buildnumber')
     rev = api.properties.get('revision')
     is_cts = 'CTS' in str(buildername)
-    is_ui = 'UI' in str(buildername)
+    is_tv = 'TV' in str(buildername)
+    is_wear = 'WEAR' in str(buildername)
+    is_ui = 'UI' in str(buildername) and not is_tv and not is_wear
     is_console = "console" in str(api.properties.get('scheduler'))
     is_avd = 'AVD' in str(buildername)
 
@@ -413,10 +391,10 @@ def RunSteps(api):
                     raise
             for emu_branch in emulator_branch_to_use:
                 emulator_path = api.path.join(emu_branch, 'emulator', 'emulator')
-                BOOT_STEPS = get_boot_steps(api)
+                BOOT_STEPS = get_boot_steps(is_ui, is_tv, is_wear)
                 step_data = BOOT_STEPS[step]
                 emu_desc = "sdk emulator" if emu_branch not in EMULATOR_BRANCHES else emu_branch
-                if not is_cts and not is_ui and not is_console and not is_avd:
+                if not is_cts and not is_ui and not is_tv and not is_wear and not is_console and not is_avd:
                     step_data = BOOT_STEPS[step]
                     api.adt.PythonTestStep('Boot Test System Image',
                                            log_dir,
@@ -524,7 +502,7 @@ def RunSteps(api):
                            '--user', MASTER_USER,
                            '--dst', '%s%s/' % (logs_dir, buildername),
                            '--build-dir', build_dir]
-        if is_ui or is_console:
+        if is_ui or is_tv or is_wear or is_console:
             upload_log_args.append('--skiplog')
         if api.platform.is_win:
             upload_log_args.append('--iswindows')
@@ -545,7 +523,7 @@ def RunSteps(api):
 
     # If this build is triggered by scheduler, and it passes above steps
     # trigger build on cross builders
-    if not is_cts and not is_ui and not is_console and not is_cross_build and not api.properties.get("TESTING"):  # pragma: no cover
+    if not is_cts and not is_ui and not is_tv and not is_wear and not is_console and not is_cross_build and not api.properties.get("TESTING"):  # pragma: no cover
         set_props(api, build_cache)
         api.trigger(get_props(api, android_sdk_home, build_cache))
 
