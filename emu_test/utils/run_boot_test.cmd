@@ -5,6 +5,8 @@ REM This is used to run system image BOOT tests.
 REM This will be invoked by system image source.
 REM {src}/platform_testing/ui_test/run_ui_test.cmd
 
+title run_test
+
 set DIST_DIR=%1
 set ORI=%2
 set API=%3
