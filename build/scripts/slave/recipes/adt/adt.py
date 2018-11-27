@@ -184,7 +184,7 @@ def get_boot_steps(is_ui=False, is_tv=False, is_wear=False):
     bootStep = collections.namedtuple('bootStep', 'description, filter')
     # Determine and return the correct the boot steps dictionary to be used to key between git branch and the *_cfg.csv information.
     # Based on the is_ui, is_tv and is_wear flags, the dictionary will include the android-tv or android-wear filter tag if required.
-    if "is_wear":
+    if is_wear:
         return {
             'emu-master-dev': bootStep('public', '{"tag": "android-wear", "ori": "public"}'),
             'emu-2.7-release': bootStep('public', '{"tag": "android-wear", "ori": "public"}'),
@@ -209,7 +209,7 @@ def get_boot_steps(is_ui=False, is_tv=False, is_wear=False):
             'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "android-wear", "ori": "jb-mr1.1"}'),
             'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "android-wear", "ori": "jb-mr2"}'),
         }
-    elif "is_tv":
+    elif is_tv:
         return {
             'emu-master-dev': bootStep('public', '{"tag": "android-tv", "ori": "public"}'),
             'emu-2.7-release': bootStep('public', '{"tag": "android-tv", "ori": "public"}'),
@@ -234,7 +234,7 @@ def get_boot_steps(is_ui=False, is_tv=False, is_wear=False):
             'jb-mr1.1-emu-dev': bootStep('JB_MR1.1', '{"tag": "android-tv", "ori": "jb-mr1.1"}'),
             'jb-mr2-emu-dev': bootStep('JB_MR2', '{"tag": "android-tv", "ori": "jb-mr2"}'),
     }
-    elif "is_ui":
+    elif is_ui:
         return {
             'emu-master-dev': bootStep('public', '{"tag": "google_apis_playstore", "ori": "public"}'),
             'emu-2.7-release': bootStep('public', '{"tag": "google_apis_playstore", "ori": "public"}'),
