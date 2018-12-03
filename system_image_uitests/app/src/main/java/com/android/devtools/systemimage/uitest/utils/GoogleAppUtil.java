@@ -24,6 +24,7 @@ import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 import java.util.concurrent.TimeUnit;
 
@@ -112,6 +113,8 @@ public class GoogleAppUtil {
         if (moreButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             moreButton.clickAndWaitForNewWindow();
         }
+
+        new GoogleAppContinueWatcher(device).checkForCondition();
 
         UiObject backupButton = device.findObject(new UiSelector().textMatches("(?i)agree(?-i)"));
         if (backupButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {

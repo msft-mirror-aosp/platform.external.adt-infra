@@ -18,6 +18,7 @@ package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
@@ -35,7 +36,8 @@ public class GoogleServiceTestUtil {
      */
     public static void signInToChrome(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final UiObject signInButton = device.findObject(new UiSelector().text("SIGN IN"));
+        final UiObject signInButton = device.findObject(new UiSelector().
+                resourceId(Res.CHROME_POSITIVE_BUTTON_RES));
         boolean hasSignInButton = new Wait(5L).until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() {
@@ -48,37 +50,6 @@ public class GoogleServiceTestUtil {
             GoogleAppUtil.loginGoogleApp(instrumentation);
             AppLauncher.launch(instrumentation, "Chrome");
             new GoogleAppConfirmationWatcher(device).checkForCondition();
-        }
-
-        final UiObject moreButton = device.findObject(
-                new UiSelector().resourceId(Res.CHROME_MORE_BUTTON_RES));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return moreButton.exists();
-            }})) {
-            moreButton.clickAndWaitForNewWindow();
-        }
-
-        final UiObject continueButton = device.findObject(new UiSelector().text("CONTINUE"));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return continueButton.exists();
-            }})) {
-            continueButton.clickAndWaitForNewWindow();
-        }
-
-        final UiObject gotItButton = device.findObject(new UiSelector().text("OK, GOT IT"));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return gotItButton.exists();
-            }})) {
-            gotItButton.clickAndWaitForNewWindow();
         }
     }
 }

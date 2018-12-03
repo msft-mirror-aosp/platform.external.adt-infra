@@ -42,6 +42,7 @@ public class Res {
     public static final String CHROME_TITLE_RES = "com.android.chrome:id/title";
     public static final String CHROME_NO_THANKS_BUTTON_RES = "com.android.chrome\\d*:id" + "/(no_thanks_button|negative_button)";
     public static final String CHROME_PROGRESS_BAR_RES = "com.android.chrome:id/progress";
+    public static final String CHROME_POSITIVE_BUTTON_RES = "com.android.chrome:id/positive_button";
 
     public static final String ANDROID_LAUNCHER_WELCOME_CLING_RES =
             "com.android.launcher\\d*:id/cling_dismiss";
@@ -80,6 +81,8 @@ public class Res {
             "com.android.vending:id/search_box_text_input";
     public static final String GOOGLE_PLAY_LIST_TITLE_RES = "com.android.vending:id/li_title";
     public static final String GOOGLE_PLAY_FILTER_TOGGLE_RES = "com.android.vending:id/content_filter_on_off_toggle";
+    public static final String GOOGLE_UNAUTHORIZED_SIGN_IN_RES = "com.android.vending:id/unauth_home_sign_in_button";
+    public static final String GOOGLE_PLAY_ONBOARD_BUTTON_RES = "com.android.vending:id/play_onboard_center_button";
 
     public static final String DIALER_PHONE_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/(floating_action_button|fab)";
     public static final String DIALER_PAD_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/dialpad_floating_action_button";
@@ -89,8 +92,6 @@ public class Res {
             "com.google.android.googlequicksearchbox\\d*:id/accept_button";
     public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
-    public static final String NOW_SIGNIN_SCREEN_RES =
-            "com.google.android.googlequicksearchbox\\d*:id/header_title";
     public static final String GOOGLE_BACKUP_SWITCH_RES =
             "com.google.android.gms:id/suw_items_switch";
     public static final String SIGN_IN_CONSENT_RES = "com.google.android.gms:id/signinconsentNext";

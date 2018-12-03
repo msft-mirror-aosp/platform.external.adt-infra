@@ -193,9 +193,39 @@ public class PlayStoreUtil {
             return;
         }
 
-        GoogleAppUtil.loginGoogleApp(instrumentation);
+        final UiObject unauthorizedUserButton = device.findObject(
+                new UiSelector().resourceId((Res.GOOGLE_UNAUTHORIZED_SIGN_IN_RES)));
+        boolean unauthorizedUser = new Wait().
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws UiObjectNotFoundException {
+                        return unauthorizedUserButton.exists();
+                    }
+                });
+        if (unauthorizedUser) {
+            unauthorizedUserButton.clickAndWaitForNewWindow();
+        }
 
+        GoogleAppUtil.loginGoogleApp(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
+
+        new GoogleAppConfirmationWatcher(device).checkForCondition();
+
+        final UiObject onboardButton = device.findObject(
+                new UiSelector().resourceId(Res.GOOGLE_PLAY_ONBOARD_BUTTON_RES));
+
+        boolean hasOnboardButton = new Wait(TimeUnit.SECONDS.toMillis(5)).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws UiObjectNotFoundException {
+                        return onboardButton.exists();
+                    }
+                });
+
+        if (hasOnboardButton) {
+            onboardButton.clickAndWaitForNewWindow();
+        }
+
         new GoogleAppConfirmationWatcher(device).checkForCondition();
         device.pressHome();
     }

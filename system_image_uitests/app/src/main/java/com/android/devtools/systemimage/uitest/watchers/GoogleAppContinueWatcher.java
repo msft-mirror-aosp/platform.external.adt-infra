@@ -21,6 +21,8 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.UiWatcher;
 
+import com.android.devtools.systemimage.uitest.common.Res;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,6 +48,13 @@ public class GoogleAppContinueWatcher implements UiWatcher {
         try {
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().textContains("(?i)continue(?-i)")).click();
+                condition = true;
+            }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES)).click();
                 condition = true;
             }
             isSuccess =

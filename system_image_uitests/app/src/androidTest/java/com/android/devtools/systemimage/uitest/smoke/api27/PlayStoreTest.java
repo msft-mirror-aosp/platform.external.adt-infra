@@ -165,7 +165,7 @@ public class PlayStoreTest {
     public void testAppInstallationAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Google Voice";
+        final String application = "WhatsApp";
 
         if (testFramework.isGoogleApiAndPlayImage()) {
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v2(instrumentation);
