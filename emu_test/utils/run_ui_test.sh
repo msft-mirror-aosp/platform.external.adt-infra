@@ -37,14 +37,17 @@ do
     mkdir -p $SESSION_DIR
 
     echo "Save Snapshots for $TARGET at $SNAPSHOT_DIR"
-    echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername 'Ubuntu 14.04 HD 4400' --filter $FILTER --skip-adb-perf --save_snapshot"
-    python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername 'Ubuntu 14.04 HD 4400' --filter $FILTER --skip-adb-perf --save_snapshot
+    echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername 'Linux_gce' --filter $FILTER --skip-adb-perf --save_snapshot"
+    python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername 'Linux_gce' --filter $FILTER --skip-adb-perf --save_snapshot
     rm -rf $SESSION_DIR/$TEST_DIR
 
     echo "Use Snapshots for $TARGET from $SNAPSHOT_DIR"
     echo "Run tests for $TARGET"
-    echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername 'Ubuntu 14.04 HD 4400' --filter $FILTER --skip-adb-perf --load_snapshot"
-    python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername 'Ubuntu 14.04 HD 4400' --filter $FILTER --skip-adb-perf --load_snapshot
+    echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername 'Linux_gce' --filter $FILTER --skip-adb-perf --load_snapshot"
+    python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername 'Linux_gce' --filter $FILTER --skip-adb-perf --load_snapshot
 done
 
+echo "Run rm -rf $SNAPSHOT_DIR"
 rm -rf $SNAPSHOT_DIR
+
+echo "UI test completed"

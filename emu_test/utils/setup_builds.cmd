@@ -26,6 +26,8 @@ echo.%%i | findstr /C:"user" 1>nul && set IMAGE_TYPE=google_apis_playstore
 echo "Run mkdir %ANDROID_HOME%\system-images\android-%API%\!IMAGE_TYPE!"
 mkdir %ANDROID_HOME%\system-images\android-%API%\!IMAGE_TYPE!
 
-echo "7z x -aoa %BUILD_DIR%\%%i -o%ANDROID_HOME%\system-images\android-%API%\!IMAGE_TYPE!"
-7z x -aoa %BUILD_DIR%\%%i -o%ANDROID_HOME%\system-images\android-%API%\!IMAGE_TYPE!
+echo "7z x -aoa %BUILD_DIR%\%%i\* -o%ANDROID_HOME%\system-images\android-%API%\!IMAGE_TYPE!"
+7z x -aoa %BUILD_DIR%\%%i\* -o%ANDROID_HOME%\system-images\android-%API%\!IMAGE_TYPE!
 )
+
+echo "setup complete"
