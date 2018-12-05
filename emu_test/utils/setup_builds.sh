@@ -32,6 +32,8 @@ do
     echo "Run mkdir -p $ANDROID_HOME/system-images/android-$API/$IMAGE_TYPE"
     mkdir -p $ANDROID_HOME/system-images/android-$API/$IMAGE_TYPE
 
-    echo "Run unzip -o $BUILD_DIR/$FILENAME -d $ANDROID_HOME/system-images/android-$API/$IMAGE_TYPE"
-    unzip -o $BUILD_DIR/$FILENAME -d $ANDROID_HOME/system-images/android-$API/$IMAGE_TYPE
+    echo "Run unzip -o $BUILD_DIR/$FILENAME/* -d $ANDROID_HOME/system-images/android-$API/$IMAGE_TYPE"
+    unzip -o $BUILD_DIR/$FILENAME/* -d $ANDROID_HOME/system-images/android-$API/$IMAGE_TYPE
 done
+
+echo "Setup complete"
