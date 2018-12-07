@@ -38,7 +38,7 @@ public class GoogleServiceTestUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final UiObject signInButton = device.findObject(new UiSelector().
                 resourceId(Res.CHROME_POSITIVE_BUTTON_RES));
-        boolean hasSignInButton = new Wait(5L).until(new Wait.ExpectedCondition() {
+        boolean hasSignInButton = new Wait(25L).until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() {
                 return signInButton.exists();
