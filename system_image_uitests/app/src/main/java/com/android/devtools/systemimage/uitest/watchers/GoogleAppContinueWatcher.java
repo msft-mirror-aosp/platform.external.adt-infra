@@ -52,7 +52,7 @@ public class GoogleAppContinueWatcher implements UiWatcher {
             }
             isSuccess =
                     mDevice.findObject(new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES))
-                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(23L, TimeUnit.SECONDS));
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES)).click();
                 condition = true;
