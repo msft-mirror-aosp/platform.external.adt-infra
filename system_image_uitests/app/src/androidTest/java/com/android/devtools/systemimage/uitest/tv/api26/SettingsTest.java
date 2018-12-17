@@ -302,7 +302,7 @@ public class SettingsTest {
         device.pressBack();
 
         UiObject tvLauncher = device.findObject(new UiSelector().resourceId(Res.TV_LAUNCHER));
-        if (tvLauncher.waitForExists(5L)) {
+        if (tvLauncher.waitForExists(10L)) {
             tvLauncher.clickAndWaitForNewWindow();
         }
 

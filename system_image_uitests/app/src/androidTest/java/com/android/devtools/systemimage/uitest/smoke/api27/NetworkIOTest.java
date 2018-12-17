@@ -99,7 +99,7 @@ public class NetworkIOTest {
                 // If this is the first launch, dismiss the "Welcome to Chrome" screen.
                 UiObject acceptButton = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-                if (acceptButton.exists()) {
+                if (acceptButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
                     acceptButton.clickAndWaitForNewWindow();
                 }
 
