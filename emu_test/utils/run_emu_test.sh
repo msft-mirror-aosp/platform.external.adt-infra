@@ -29,6 +29,10 @@ echo "Update SDK"
 echo "Run $ANDROID_HOME/tools/bin/sdkmanager --update"
 $ANDROID_HOME/tools/bin/sdkmanager --update
 
+echo "Remove existing System images"
+echo "Run rm -rf $ANDROID_HOME/system-images/*"
+rm -rf $ANDROID_HOME/system-images/*
+
 echo "Running Boot tests"
 echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir boot_test_public_sysimage-emu-master-dev --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'"
 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir boot_test_public_sysimage-emu-master-dev --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'

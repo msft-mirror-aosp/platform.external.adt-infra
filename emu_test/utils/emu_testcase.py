@@ -746,8 +746,7 @@ class EmuBaseTestCase(LoggedTestCase):
             return 0
         # Function execution starts here.
         avd_name = str(avd_config)
-        self.m_logger.info('Attempt to create AVD %s.' % avd_name)
-        ret = try_create_with_config(avd_config)
+        ret = self.check_system_image(avd_config)
         if ret == 1:
             # If we failed to create the AVD with a return of 1, we may be missing the required image.
             # Try to download it.
@@ -774,8 +773,8 @@ class EmuBaseTestCase(LoggedTestCase):
             else:
                 self.install_sdk_package("system-images;android-%s;default;%s"
                                          % (api, avd_config.abi))
-            self.m_logger.info('Attempt number 2 at AVD creation now that package has been attempted to be installed.')
-            ret = try_create_with_config(avd_config)
+        self.m_logger.info('Attempt to create AVD %s.' % avd_name)
+        ret = try_create_with_config(avd_config)
         # last step, create config.ini
         if ret != 0:
             self.m_logger.error('Failed to create AVD, even after attempting package install.')
@@ -783,6 +782,21 @@ class EmuBaseTestCase(LoggedTestCase):
             self.create_avd_config(avd_config)
 
         return ret
+
+    def check_system_image(self, avd_config):
+        """
+        Check if the required system image exists or not.
+        :avd_config: AVD config
+        :return: 0 if image exists otherwise 1
+        """
+        sys_img_dir = os.path.join(os.environ['ANDROID_SDK_ROOT'],
+                                   'system-images',
+                                   'android-%s' % avd_config.api,
+                                   avd_config.abi,
+                                   avd_config.tag)
+        if os.path.exists(sys_img_dir):
+           return 0
+        return 1
 
     def install_sdk_package(self, package):
         """

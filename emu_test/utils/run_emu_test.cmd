@@ -13,7 +13,7 @@ echo "Deploy emulator"
 echo "Run mkdir %SESSION_DIR%\emu-master-dev"
 mkdir %SESSION_DIR%\emu-master-dev
 
-set BUILD_DIR="out\prebuilt_cached\builds"
+set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%
 
 echo "Run 7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-*.zip -o%SESSION_DIR%\emu-master-dev"
 7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-*.zip -o%SESSION_DIR%\emu-master-dev
@@ -21,6 +21,9 @@ echo "Run 7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-*.zip -o%SESSION_DIR%\
 echo "Update SDK"
 echo "Run %ANDROID_HOME%\tools\bin\sdkmanager.bat --update"
 cmd.exe /c %ANDROID_HOME%\tools\bin\sdkmanager.bat --update
+
+echo "Remove existing system images"
+for /f %%d in ('dir /b %ANDROID_HOME%\prebuilt\system-images\') do (rmdir /s /q %ANDROID_HOME%\prebuilt\system-images\%%d)
 
 echo "Running Boot tests"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_gce.csv --buildername 'Windows_gce' --filter {\"ori\":\"public\"}"
