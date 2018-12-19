@@ -4,13 +4,13 @@
 # This will be invoked by aosp-emu-master-dev.
 
 DIST_DIR=$1
-BUILD_NUM=$2
 
-echo "Poll for Emulator build"
-python -u external/adt-infra/emu_test/utils/gs_poller.py public $BUILD_NUM $DIST_DIR
-if [ $? != 0 ];
+BUILDERNAME="Linux_gce"
+OS="linux"
+if [[ $OSTYPE == *"darwin"* ]]
 then
-    exit 1
+    BUILDERNAME="Mac"
+    OS="darwin"
 fi
 
 SESSION_DIR=$DIST_DIR/gtest
@@ -20,27 +20,39 @@ echo "Deploy emulator"
 echo "Run mkdir -p $SESSION_DIR/emu-master-dev"
 mkdir -p $SESSION_DIR/emu-master-dev
 
-echo "Run unzip -o $DIST_DIR/sdk-repo-linux-emulator-*.zip -d $SESSION_DIR/emu-master-dev"
-unzip -o $DIST_DIR/sdk-repo-linux-emulator-*.zip -d $SESSION_DIR/emu-master-dev
+BUILD_DIR="out/prebuilt_cached/builds"
+
+echo "Run unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-*.zip -d $SESSION_DIR/emu-master-dev"
+unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-*.zip -d $SESSION_DIR/emu-master-dev
 
 echo "Update SDK"
 echo "Run $ANDROID_HOME/tools/bin/sdkmanager --update"
 $ANDROID_HOME/tools/bin/sdkmanager --update
 
 echo "Running Boot tests"
-echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir boot_test_public_sysimage-emu-master-dev --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername 'Linux_gce' --filter '{"ori": "public"}'"
-python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir boot_test_public_sysimage-emu-master-dev --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername 'Linux_gce' --filter '{"ori": "public"}'
+echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir boot_test_public_sysimage-emu-master-dev --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'"
+python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir boot_test_public_sysimage-emu-master-dev --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'
 
 echo "Running AVD tests"
-echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_gce.csv --buildername 'Linux_gce' --skip-adb-perf"
-python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_gce.csv --buildername 'Linux_gce' --skip-adb-perf
+echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_gce.csv --buildername $BUILDERNAME --skip-adb-perf"
+python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_gce.csv --buildername $BUILDERNAME --skip-adb-perf
 
 echo "Running Console tests"
-echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_gce.csv --buildername 'Linux_gce' --skip-adb-perf"
-python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_gce.csv --buildername 'Linux_gce' --skip-adb-perf
+echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_gce.csv --buildername $BUILDERNAME --skip-adb-perf"
+python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_gce.csv --buildername $BUILDERNAME --skip-adb-perf
 
 echo "Remove deployed emulator"
 echo "Run rm -rf $SESSION_DIR/emu-master-dev"
 rm -rf $SESSION_DIR/emu-master-dev
+
+echo "Copy XML reports into a zip"
+mkdir -p $DIST_DIR/testlogs
+find $DIST_DIR/gtest -name "*.xml" -type f -exec cp {} $DIST_DIR/testlogs \;
+rename 's/test_/TEST-/g' $DIST_DIR/testlogs/*
+zip -j $DIST_DIR/testlogs/reports.zip $DIST_DIR/testlogs/*.xml
+rm -f $DIST_DIR/testlogs/*.xml
+
+echo "Cleanup prebuilts"
+rm -rf /buildbot/prebuilt/*
 
 exit 0
