@@ -26,15 +26,15 @@ echo.%%i | findstr /C:"playstore" 1>nul && set TARGET=gphone-user && set FILTER=
 
 if DEFINED TARGET (
 echo "Save snapshots for !TARGET! at %SNAPSHOT_DIR%"
-echo "Run python -u %ADT_INFRA%\emu_test\dotest.py --loglevel INFO --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir !TEST_DIR! --file_pattern test_ui.* --config_file %ADT_INFRA%\emu_test\config\ui_cfg_gce.csv --buildername 'Windows_gce' --filter !FILTER! --skip-adb-perf --save_snapshot"
-python -u %ADT_INFRA%\emu_test\dotest.py --loglevel INFO --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir !TEST_DIR! --file_pattern test_ui.* --config_file %ADT_INFRA%\emu_test\config\ui_cfg_gce.csv --buildername 'Windows_gce' --filter !FILTER! --skip-adb-perf --save_snapshot
+echo "Run python -u %ADT_INFRA%\emu_test\dotest.py --loglevel INFO --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir !TEST_DIR! --file_pattern test_ui.* --config_file %ADT_INFRA%\emu_test\config\ui_cfg_gce.csv --buildername 'Windows_gce' --filter !FILTER! --skip-adb-perf --save_snapshot --timeout_in_seconds 900"
+python -u %ADT_INFRA%\emu_test\dotest.py --loglevel INFO --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir !TEST_DIR! --file_pattern test_ui.* --config_file %ADT_INFRA%\emu_test\config\ui_cfg_gce.csv --buildername 'Windows_gce' --filter !FILTER! --skip-adb-perf --save_snapshot --timeout_in_seconds 900
 
 rmdir /s /q %SESSION_DIR%\!TEST_DIR!
 
 echo "Use Snapshots for !TARGET! from %SNAPSHOT_DIR%"
 echo "Run tests on !TARGET!"
-echo "Run python -u %ADT_INFRA%\emu_test\dotest.py --loglevel INFO --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir !TEST_DIR! --file_pattern test_ui.* --config_file %ADT_INFRA%\emu_test\config\ui_cfg_gce.csv --buildername 'Windows_gce' --filter !FILTER! --skip-adb-perf --load_snapshot"
-python -u %ADT_INFRA%\emu_test\dotest.py --loglevel INFO --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir !TEST_DIR! --file_pattern test_ui.* --config_file %ADT_INFRA%\emu_test\config\ui_cfg_gce.csv --buildername 'Windows_gce' --filter !FILTER! --skip-adb-perf --load_snapshot
+echo "Run python -u %ADT_INFRA%\emu_test\dotest.py --loglevel INFO --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir !TEST_DIR! --file_pattern test_ui.* --config_file %ADT_INFRA%\emu_test\config\ui_cfg_gce.csv --buildername 'Windows_gce' --filter !FILTER! --skip-adb-perf --load_snapshot --timeout_in_seconds 900"
+python -u %ADT_INFRA%\emu_test\dotest.py --loglevel INFO --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir !TEST_DIR! --file_pattern test_ui.* --config_file %ADT_INFRA%\emu_test\config\ui_cfg_gce.csv --buildername 'Windows_gce' --filter !FILTER! --skip-adb-perf --load_snapshot --timeout_in_seconds 900
 )
 
 set TARGET=
@@ -45,6 +45,7 @@ set TEST_DIR=
 echo "rmdir /s /q %SNAPSHOT_DIR%"
 rmdir /s /q %SNAPSHOT_DIR%
 
-echo "UI test completed"
+echo "UI test completed, kill adb server"
+cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
 
 exit 0
