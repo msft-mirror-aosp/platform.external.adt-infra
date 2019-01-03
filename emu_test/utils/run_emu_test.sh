@@ -13,7 +13,7 @@ then
     OS="darwin"
 fi
 
-SESSION_DIR=$DIST_DIR/gtest
+SESSION_DIR=$DIST_DIR/testlogs
 mkdir -p $SESSION_DIR
 
 echo "Deploy emulator"
@@ -48,13 +48,6 @@ python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $
 echo "Remove deployed emulator"
 echo "Run rm -rf $SESSION_DIR/emu-master-dev"
 rm -rf $SESSION_DIR/emu-master-dev
-
-echo "Copy XML reports into a zip"
-mkdir -p $DIST_DIR/testlogs
-find $DIST_DIR/gtest -name "*.xml" -type f -exec cp {} $DIST_DIR/testlogs \;
-rename 's/test_/TEST-/g' $DIST_DIR/testlogs/*
-zip -j $DIST_DIR/testlogs/reports.zip $DIST_DIR/testlogs/*.xml
-rm -f $DIST_DIR/testlogs/*.xml
 
 echo "Cleanup prebuilts"
 rm -rf /buildbot/prebuilt/*

@@ -792,8 +792,9 @@ class EmuBaseTestCase(LoggedTestCase):
         sys_img_dir = os.path.join(os.environ['ANDROID_SDK_ROOT'],
                                    'system-images',
                                    'android-%s' % avd_config.api,
-                                   avd_config.abi,
-                                   avd_config.tag)
+                                   avd_config.tag,
+                                   avd_config.abi)
+        self.m_logger.info('Check path %s.' % sys_img_dir)
         if os.path.exists(sys_img_dir):
            return 0
         return 1

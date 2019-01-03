@@ -13,7 +13,7 @@ set API=%3
 
 echo "Runnig BOOT test for %API%"
 
-set SESSION_DIR=%DIST_DIR%\gtest
+set SESSION_DIR=%DIST_DIR%\testlogs
 mkdir %SESSION_DIR%
 
 set FILTER={\"ori\":\"%ORI%\"}

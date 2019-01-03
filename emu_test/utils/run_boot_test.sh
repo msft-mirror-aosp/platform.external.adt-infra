@@ -16,7 +16,7 @@ fi
 
 echo "Running BOOT test for $API"
 
-SESSION_DIR=$DIST_DIR/gtest
+SESSION_DIR=$DIST_DIR/testlogs
 mkdir -p $SESSION_DIR
 
 FILTER={\"ori\":\"$ORI\"}

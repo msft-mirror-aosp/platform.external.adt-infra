@@ -31,7 +31,7 @@ from emu_test.utils import path_utils
 
 # Provides a regular expression for matching fail message
 TIMEOUT_REGEX = re.compile(r"(^\d+)([smhd])?$")
-RESULT_XML_FILE = 'report.xml'
+RESULT_XML_FILE = 'test_report.xml'
 
 def print_xml(emu_result):
     def getTestName(id):

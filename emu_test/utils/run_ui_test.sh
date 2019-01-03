@@ -38,7 +38,7 @@ do
         continue
     fi
 
-    SESSION_DIR=$DIST_DIR/gtest
+    SESSION_DIR=$DIST_DIR/testlogs
     TEST_DIR=UI_TEST_$TARGET
     mkdir -p $SESSION_DIR
 

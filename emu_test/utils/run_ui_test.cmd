@@ -16,7 +16,7 @@ echo "Running UI test for %API%"
 set SNAPSHOT_DIR=%DIST_DIR%\snaps
 mkdir %SNAPSHOT_DIR%
 
-set SESSION_DIR=%DIST_DIR%\gtest
+set SESSION_DIR=%DIST_DIR%\testlogs
 mkdir %SESSION_DIR%
 
 for /f %%i in ('dir /b %ANDROID_HOME%\system-images\android-%API%') do (

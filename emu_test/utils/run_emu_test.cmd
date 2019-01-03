@@ -6,7 +6,7 @@ REM This will be invoked by aosp-emu-master-dev.
 
 set DIST_DIR=%1
 
-set SESSION_DIR=%DIST_DIR%\gtest
+set SESSION_DIR=%DIST_DIR%\testlogs
 mkdir %SESSION_DIR%
 
 echo "Deploy emulator"
@@ -43,20 +43,6 @@ rmdir /s /q %SESSION_DIR%\emu-master-dev
 
 echo "Kill adb server"
 cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
-
-echo "Copy XML reports into a zip"
-mkdir %DIST_DIR%\testlogs
-
-Set "Pattern=test_"
-Set "Replace=TEST-"
-
-for /f %%i in ('dir /s /b %DIST_DIR%\gtest\*.xml') do (
-set File=%%~nxi
-set newFile=!File:%Pattern%=%Replace%!
-cp %%i %DIST_DIR%\testlogs\!newFile!
-)
-
-start /D %DIST_DIR%\testlogs\ /wait 7z a -tzip -sdel reports.zip *.xml
 
 echo "Cleanup prebuilts"
 for /f %%d in ('dir /b C:\buildbot\prebuilt') do (rmdir /s /q C:\buildbot\prebuilt\%%d)
