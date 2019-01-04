@@ -26,16 +26,16 @@ echo "Remove existing system images"
 for /f %%d in ('dir /b %ANDROID_HOME%\prebuilt\system-images\') do (rmdir /s /q %ANDROID_HOME%\prebuilt\system-images\%%d)
 
 echo "Running Boot tests"
-echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_gce.csv --buildername 'Windows_gce' --filter {\"ori\":\"public\"}" --timeout_in_seconds 900
-python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_gce.csv --buildername 'Windows_gce' --filter {\"ori\":\"public\"} --timeout_in_seconds 900
+echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_gce.csv --buildername 'Windows_gce' --filter {\"ori\":\"public\"} --timeout 900 --generate_xml"
+python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_gce.csv --buildername 'Windows_gce' --filter {\"ori\":\"public\"} --timeout 900 --generate_xml
 
 echo "Running AVD tests"
-echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir AVD_test --file_pattern *launch_avd*.* --config_file external\adt-infra\emu_test\config\avd_cfg_gce.csv --buildername 'Windows_gce' --skip-adb-perf --timeout_in_seconds 900"
-python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir AVD_test --file_pattern *launch_avd*.* --config_file external\adt-infra\emu_test\config\avd_cfg_gce.csv --buildername 'Windows_gce' --skip-adb-perf --timeout_in_seconds 900
+echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir AVD_test --file_pattern *launch_avd*.* --config_file external\adt-infra\emu_test\config\avd_cfg_gce.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900 --generate_xml"
+python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir AVD_test --file_pattern *launch_avd*.* --config_file external\adt-infra\emu_test\config\avd_cfg_gce.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900 --generate_xml
 
 echo "Running Console tests"
-echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Console_test --file_pattern test_console.* --config_file external\adt-infra\emu_test\config\console_cfg_gce.csv --buildername 'Windows_gce' --skip-adb-perf --timeout_in_seconds 900"
-python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Console_test --file_pattern test_console.* --config_file external\adt-infra\emu_test\config\console_cfg_gce.csv --buildername 'Windows_gce' --skip-adb-perf --timeout_in_seconds 900
+echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Console_test --file_pattern test_console.* --config_file external\adt-infra\emu_test\config\console_cfg_gce.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900"
+python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Console_test --file_pattern test_console.* --config_file external\adt-infra\emu_test\config\console_cfg_gce.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900
 
 echo "Remove deployed emulator"
 echo "Run rmdir /s /q %SESSION_DIR%\emu-master-dev"
@@ -44,7 +44,7 @@ rmdir /s /q %SESSION_DIR%\emu-master-dev
 echo "Kill adb server"
 cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
 
-echo "Cleanup prebuilts"
-for /f %%d in ('dir /b C:\buildbot\prebuilt') do (rmdir /s /q C:\buildbot\prebuilt\%%d)
+REM echo "Cleanup prebuilts"
+REM for /f %%d in ('dir /b C:\buildbot\prebuilt') do (rmdir /s /q C:\buildbot\prebuilt\%%d)
 
 exit 0

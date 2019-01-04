@@ -34,12 +34,12 @@ echo "Run rm -rf $ANDROID_HOME/system-images/*"
 rm -rf $ANDROID_HOME/system-images/*
 
 echo "Running Boot tests"
-echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir boot_test_public_sysimage-emu-master-dev --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'"
-python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir boot_test_public_sysimage-emu-master-dev --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'
+echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Boot_test --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter '{"ori": "public"}' --generate_xml"
+python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Boot_test --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter '{"ori": "public"}' --generate_xml
 
 echo "Running AVD tests"
-echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_gce.csv --buildername $BUILDERNAME --skip-adb-perf"
-python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_gce.csv --buildername $BUILDERNAME --skip-adb-perf
+echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_gce.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml"
+python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_gce.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
 
 echo "Running Console tests"
 echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_gce.csv --buildername $BUILDERNAME --skip-adb-perf"
