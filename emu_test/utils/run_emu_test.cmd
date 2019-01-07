@@ -13,7 +13,7 @@ echo "Deploy emulator"
 echo "Run mkdir %SESSION_DIR%\emu-master-dev"
 mkdir %SESSION_DIR%\emu-master-dev
 
-set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%
+set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%\sdk_tools_linux
 
 echo "Run 7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-*.zip -o%SESSION_DIR%\emu-master-dev"
 7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-*.zip -o%SESSION_DIR%\emu-master-dev
@@ -44,7 +44,7 @@ rmdir /s /q %SESSION_DIR%\emu-master-dev
 echo "Kill adb server"
 cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
 
-REM echo "Cleanup prebuilts"
-REM for /f %%d in ('dir /b C:\buildbot\prebuilt') do (rmdir /s /q C:\buildbot\prebuilt\%%d)
+echo "Cleanup prebuilts"
+for /f %%d in ('dir /b C:\buildbot\prebuilt') do (rmdir /s /q C:\buildbot\prebuilt\%%d)
 
 exit 0

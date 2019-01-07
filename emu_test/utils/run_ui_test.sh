@@ -14,6 +14,12 @@ then
     BUILDERNAME="Mac"
 fi
 
+ps cax | grep vnc > /dev/null
+if [ $? -eq 1 ]; then
+    echo "Start VNC server"
+    vncserver
+fi
+
 echo "Running UI test for $API"
 
 export SNAPSHOT_DIR=$DIST_DIR/snaps

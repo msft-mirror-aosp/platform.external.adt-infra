@@ -20,6 +20,12 @@ echo "Deploy emulator"
 echo "Run mkdir -p $SESSION_DIR/emu-master-dev"
 mkdir -p $SESSION_DIR/emu-master-dev
 
+ps cax | grep vnc > /dev/null
+if [ $? -eq 1 ]; then
+    echo "Start VNC server"
+    vncserver
+fi
+
 BUILD_DIR="out/prebuilt_cached/builds"
 
 echo "Run unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-*.zip -d $SESSION_DIR/emu-master-dev"
