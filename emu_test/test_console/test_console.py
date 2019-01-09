@@ -27,9 +27,7 @@ from emu_test.utils import path_utils
 from utils import util
 
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
-CONSOLE_RESULT_XML_FILE = 'consoleTestResult.xml'
-CONSOLE_CSS_FILE = os.path.join(CUR_DIR, 'static', 'console.css')
-CONSOLE_XSL_FILE = os.path.join(CUR_DIR, 'static', 'console.xsl')
+CONSOLE_RESULT_XML_FILE = 'test_consoleTestResult.xml'
 
 g_xml_string_result = ''
 g_avd_counter = 0
@@ -86,63 +84,31 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
         dst_path = os.path.join(emu_argparser.emu_args.session_dir,
                                 emu_argparser.emu_args.test_dir,
                                 CONSOLE_RESULT_XML_FILE)
-        xsl_path = os.path.join(emu_argparser.emu_args.session_dir,
-                                emu_argparser.emu_args.test_dir,
-                                'console.xsl')
-        css_path = os.path.join(emu_argparser.emu_args.session_dir,
-                                emu_argparser.emu_args.test_dir,
-                                'console.css')
 
-        if os.name == util.WINDOWS_OS_NAME:
-            subprocess.call(['copy', CONSOLE_XSL_FILE, xsl_path], shell=True)
-            subprocess.call(['copy', CONSOLE_CSS_FILE, css_path], shell=True)
-        else:
-            subprocess.call(['cp', CONSOLE_XSL_FILE, xsl_path])
-            subprocess.call(['cp', CONSOLE_CSS_FILE, css_path])
+        result = ET.Element('testsuite', name=self._testMethodName)
+        result.set('tests', str(emu_result.testsRun))
+        result.set('failures', str(len(emu_result.failures)))
+        result.set('errors', str(len(emu_result.errors)))
 
-        result = ET.Element('result')
-
-        # The avdCounter tag is used for indexing.
-        ET.SubElement(result, 'avdCounter', value=str(g_avd_counter))
-
-        ET.SubElement(result, 'testMethodName', name=self._testMethodName)
-        ET.SubElement(result, 'avdConfigName', name=self.avd_config.name())
-
-        result_summary = ET.SubElement(result, 'resultSummary')
-        ET.SubElement(result_summary, 'total', num=str(emu_result.testsRun))
-        ET.SubElement(result_summary, 'passes', num=str(len(emu_result.passes)))
-        ET.SubElement(result_summary, 'failures',
-                      num=str(len(emu_result.failures)))
-        ET.SubElement(result_summary, 'errors', num=str(len(emu_result.errors)))
-        ET.SubElement(result_summary, 'expectedFailures',
-                      num=str(len(emu_result.expectedFailures)))
-        ET.SubElement(result_summary, 'unexpectedSuccesses',
-                      num=str(len(emu_result.unexpectedSuccesses)))
-
-        passes = ET.SubElement(result, 'Passes')
         for x in emu_result.passes:
-            ET.SubElement(passes, 'test', name=self.get_test_name(x.id()),
+            ET.SubElement(result, 'testcase', name=self.get_test_name(x.id()),
                           test_result='pass')
 
-        failures = ET.SubElement(result, 'Failures')
         for x in emu_result.failures:
-            ET.SubElement(failures, 'test', name=self.get_test_name(x[0].id()),
+            ET.SubElement(result, 'testcase', name=self.get_test_name(x[0].id()),
                           test_result='fail')
 
-        errors = ET.SubElement(result, 'Errors')
         for x in emu_result.errors:
-            ET.SubElement(errors, 'test', name=self.get_test_name(x[0].id()),
+            ET.SubElement(result, 'testcase', name=self.get_test_name(x[0].id()),
                           test_result='error')
 
-        expected_failures = ET.SubElement(result, 'ExpectedFailures')
         for x in emu_result.expectedFailures:
-            ET.SubElement(expected_failures, 'test',
+            ET.SubElement(result, 'testcase',
                           name=self.get_test_name(x[0].id()),
                           test_result='expected failure')
 
-        unexpected_successes = ET.SubElement(result, 'UnexpectedSuccesses')
         for x in emu_result.unexpectedSuccesses:
-            ET.SubElement(unexpected_successes, 'test',
+            ET.SubElement(result, 'testcase',
                           name=self.get_test_name(x.id()),
                           test_result='unexpected failure')
 
@@ -152,9 +118,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
 
         # Refresh the current whole test result page.
         with open(dst_path, 'w+') as modified:
-            modified.write(('<?xml-stylesheet type="text/xsl" '
-                            'href="console.xsl"?>\n<avd>%s</avd>'
-                            % g_xml_string_result))
+            modified.write(('%s' % g_xml_string_result))
             self.m_logger.info("Wrote %s" % dst_path)
 
     def print_console_result(self, emu_result):
