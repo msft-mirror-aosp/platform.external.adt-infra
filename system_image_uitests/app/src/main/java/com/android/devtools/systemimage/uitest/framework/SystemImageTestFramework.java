@@ -155,13 +155,18 @@ public class SystemImageTestFramework implements TestRule {
                         File loggingDir = getLoggingDir(description.getTestClass().getSimpleName(),
                                 description.getMethodName());
 
+                        // Capture the window UI hierarchy when a test fails.
+                        mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy.xml"));
+
                         // Snap the screenshot when a test fails.
                         mDevice.takeScreenshot(new File(loggingDir, "screenshot.png"));
+
                         // Log the error message
                         PrintWriter error =
                                 new PrintWriter(new File(loggingDir, "error.txt").getPath(), "UTF-8");
                         t.printStackTrace(error);
                         error.close();
+
                         // Log the test case description
                         PrintWriter info =
                                 new PrintWriter(new File(loggingDir, "description.txt").getPath());
