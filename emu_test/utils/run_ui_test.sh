@@ -12,12 +12,12 @@ BUILDERNAME="Linux_gce"
 if [[ $OSTYPE == *"darwin"* ]]
 then
     BUILDERNAME="Mac"
-fi
-
-ps cax | grep vnc > /dev/null
-if [ $? -eq 1 ]; then
-    echo "Start VNC server"
-    vncserver
+else
+    ps cax | grep vnc > /dev/null
+    if [ $? -eq 1 ]; then
+        echo "Start VNC server"
+        vncserver
+    fi
 fi
 
 echo "Running UI test for $API"
@@ -49,14 +49,14 @@ do
     mkdir -p $SESSION_DIR
 
     echo "Save Snapshots for $TARGET at $SNAPSHOT_DIR"
-    echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --save_snapshot"
-    python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --save_snapshot
+    echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --save_snapshot"
+    python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --save_snapshot
     rm -rf $SESSION_DIR/$TEST_DIR
 
     echo "Use Snapshots for $TARGET from $SNAPSHOT_DIR"
     echo "Run tests for $TARGET"
-    echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --load_snapshot"
-    python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_gce.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --load_snapshot
+    echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --load_snapshot"
+    python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --load_snapshot
 done
 
 echo "Run rm -rf $SNAPSHOT_DIR"

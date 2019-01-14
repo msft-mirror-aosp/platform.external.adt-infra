@@ -1,0 +1,5 @@
+Device Config,,,,,,,Linux,,,,,Windows,,,,,
+API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,Linux_gce,Windows_gce,Mac
+API 27,google_apis_playstore,x86,Nexus 5X,2048,swiftshader,oc-mr1,P,P,P
+API 27,android-tv,x86,Android TV (1080p),2048,swiftshader,oc-mr1,P,P,P
+API 27,android-wear,x86,Android Wear Round,2048,swiftshader,oc-mr1,P,P,P

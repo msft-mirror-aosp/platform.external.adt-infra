@@ -12,6 +12,12 @@ BUILDERNAME="Linux_gce"
 if [[ $OSTYPE == *"darwin"* ]]
 then
     BUILDERNAME="Mac"
+else
+    ps cax | grep vnc > /dev/null
+    if [ $? -eq 1 ]; then
+        echo "Start VNC server"
+        vncserver
+    fi
 fi
 
 echo "Running BOOT test for $API"
@@ -21,13 +27,7 @@ mkdir -p $SESSION_DIR
 
 FILTER={\"ori\":\"$ORI\"}
 
-ps cax | grep vnc > /dev/null
-if [ $? -eq 1 ]; then
-    echo "Start VNC server"
-    vncserver
-fi
-
-echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml"
-python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_gce.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml
+echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml"
+python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml
 
 echo "Boot test completed"
