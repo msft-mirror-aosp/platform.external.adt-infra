@@ -53,7 +53,7 @@ public class ShellUtilTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(120);
+    public Timeout globalTimeout = Timeout.seconds(240);
 
     /**
      * Tests the integrity of Shell utilities.
@@ -128,12 +128,32 @@ public class ShellUtilTest {
         try {
             device.findObject(
                     new UiSelector().text("Take bug report")).clickAndWaitForNewWindow();
-            UiObject fullReportButton = device.findObject(new UiSelector().textMatches("(?i)full report(?-i)"));
-            if (fullReportButton.exists()) {
+
+            final UiObject fullReportButton = device.findObject(new UiSelector().
+                    textMatches("(?i)full report(?-i)"));
+            boolean fullReportButtonExists = new Wait(
+                    TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS)).until(
+                    new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return fullReportButton.exists();
+                        }
+                    });
+            if (fullReportButtonExists) {
                 fullReportButton.clickAndWaitForNewWindow();
             }
-            UiObject reportButton = device.findObject(new UiSelector().textMatches("(?i)report(?-i)"));
-            if (reportButton.exists()) {
+
+            final UiObject reportButton = device.findObject(new UiSelector().
+                    textMatches("(?i)report(?-i)"));
+            boolean reportButtonExists = new Wait(
+                    TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS)).until(
+                    new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return reportButton.exists();
+                        }
+                    });        
+            if (reportButtonExists) {
                 reportButton.click();
             }
             boolean gotPngAndZip = new Wait(
