@@ -110,9 +110,17 @@ public class NetworkIOTest {
                     noThanksButton.clickAndWaitForNewWindow();
                 }
 
-                UiObject searchBox = device.findObject(new UiSelector().resourceId(
+                final UiObject searchBox = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_SEARCH_BOX_RES));
-                if (searchBox.exists()) {
+
+                boolean searchBoxExists = new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() throws Exception {
+                        return searchBox.exists();
+                    }
+                });
+
+                if (searchBoxExists) {
                     searchBox.clickAndWaitForNewWindow();
                 }
 
