@@ -29,12 +29,14 @@ import com.android.devtools.systemimage.uitest.utils.PlayStoreUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
+
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -48,6 +50,18 @@ public class PlayStoreTest {
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(360);
+
+    @Before
+    public void verifyPlayStore() throws Exception {
+        if (testFramework.isGoogleApiAndPlayImage()) {
+            Instrumentation instrumentation = testFramework.getInstrumentation();
+
+            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v3(instrumentation);
+            boolean loggedInToPlayStore = playStoreInstalled &&
+                    PlayStoreUtil.loginGooglePlay(instrumentation);
+            assertTrue("PlayStore login failed.", loggedInToPlayStore);
+        }
+    }
 
     /**
      * Verify apps can be searched through Play Store search bar.
@@ -68,20 +82,15 @@ public class PlayStoreTest {
     @Test
     @TestInfo(id = "50027a89-8043-44d7-b7ed-33c631903910")
     public void testPlaySearch() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Messenger";
-
         if (testFramework.isGoogleApiAndPlayImage()) {
-            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v3(instrumentation);
+            Instrumentation instrumentation = testFramework.getInstrumentation();
+            final UiDevice device = UiDevice.getInstance(instrumentation);
+            final String application = "Messenger";
 
-            if (playStoreInstalled) {
-                PlayStoreUtil.loginGooglePlay(instrumentation);
-                assertTrue("Application not found in search.",
-                        PlayStoreUtil.hasTestApp(instrumentation, application, false));
-                PlayStoreUtil.resetPlayStore(instrumentation);
-                device.pressHome();
-            }
+            assertTrue("Application not found in search.",
+                    PlayStoreUtil.hasTestApp(instrumentation, application, false));
+            PlayStoreUtil.resetPlayStore(instrumentation);
+            device.pressHome();
         }
     }
 
@@ -110,28 +119,23 @@ public class PlayStoreTest {
     @Test
     @TestInfo(id = "cb0ccd97-f045-42fa-8293-a32e94e838aa")
     public void testAppInstallation() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Google Translate";
-
         if (testFramework.isGoogleApiAndPlayImage()) {
-            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v3(instrumentation);
+            Instrumentation instrumentation = testFramework.getInstrumentation();
+            final UiDevice device = UiDevice.getInstance(instrumentation);
+            final String application = "Google Translate";
 
-            if (playStoreInstalled) {
-                PlayStoreUtil.loginGooglePlay(instrumentation);
-                PlayStoreUtil.selectApplication(instrumentation, application);
-                new GoogleAppConfirmationWatcher(device).checkForCondition();
+            PlayStoreUtil.selectApplication(instrumentation, application);
+            new GoogleAppConfirmationWatcher(device).checkForCondition();
 
-                assertTrue("Unable to install the application from Google Play",
-                        PlayStoreUtil.installApplication(instrumentation));
+            assertTrue("Unable to install the application from Google Play",
+                    PlayStoreUtil.installApplication(instrumentation));
 
-                AppLauncher.launch(instrumentation, "Play Store");
-                assertTrue("Unable to uninstall the application from Google Play",
-                        PlayStoreUtil.uninstallApplication(instrumentation));
+            AppLauncher.launch(instrumentation, "Play Store");
+            assertTrue("Unable to uninstall the application from Google Play",
+                    PlayStoreUtil.uninstallApplication(instrumentation));
 
-                PlayStoreUtil.resetPlayStore(instrumentation);
-                device.pressHome();
-            }
+            PlayStoreUtil.resetPlayStore(instrumentation);
+            device.pressHome();
         }
     }
 
@@ -162,39 +166,33 @@ public class PlayStoreTest {
     @Test
     @TestInfo(id = "924a0428-4e07-4794-b6a7-2c9d407204aa")
     public void testAppInstallationAndLaunch() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "WhatsApp";
-
         if (testFramework.isGoogleApiAndPlayImage()) {
-            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v3(instrumentation);
+            Instrumentation instrumentation = testFramework.getInstrumentation();
+            final UiDevice device = UiDevice.getInstance(instrumentation);
+            final String application = "Google Voice";
 
-            if (playStoreInstalled) {
-                PlayStoreUtil.loginGooglePlay(instrumentation);
-                PlayStoreUtil.selectApplication(instrumentation, application);
-                new GoogleAppConfirmationWatcher(device).checkForCondition();
+            PlayStoreUtil.selectApplication(instrumentation, application);
+            new GoogleAppConfirmationWatcher(device).checkForCondition();
 
-                assertTrue("Unable to install the application from Google Play",
-                        PlayStoreUtil.installApplication(instrumentation));
+            assertTrue("Unable to install the application from Google Play",
+                    PlayStoreUtil.installApplication(instrumentation));
 
-                AppLauncher.launch(instrumentation, "Play Store");
-                device.findObject(new UiSelector().text("OPEN")).clickAndWaitForNewWindow();
-                assertTrue("App could not be opened",
-                        new Wait().until(new Wait.ExpectedCondition() {
-                            @Override
-                            public boolean isTrue() {
-                                return device.findObject(new UiSelector()
-                                        .textContains(application)).exists();
-                            }
-                        }));
+            AppLauncher.launch(instrumentation, "Play Store");
+            device.findObject(new UiSelector().text("OPEN")).clickAndWaitForNewWindow();
+            assertTrue("App could not be opened",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return device.findObject(new UiSelector()
+                                    .textContains(application)).exists(); }
+                    }));
 
-                AppLauncher.launch(instrumentation, "Play Store");
-                assertTrue("Unable to uninstall the application from Google Play",
-                        PlayStoreUtil.uninstallApplication(instrumentation));
+            AppLauncher.launch(instrumentation, "Play Store");
+            assertTrue("Unable to uninstall the application from Google Play",
+                    PlayStoreUtil.uninstallApplication(instrumentation));
 
-                PlayStoreUtil.resetPlayStore(instrumentation);
-                device.pressHome();
-            }
+            PlayStoreUtil.resetPlayStore(instrumentation);
+            device.pressHome();
         }
     }
 
@@ -217,33 +215,28 @@ public class PlayStoreTest {
     @Test
     @TestInfo(id = "bd9460a8-7b07-4cfc-901f-a99564533e51")
     public void testPayAppVerification() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String application = "Tasker";
-
         if (testFramework.isGoogleApiAndPlayImage()) {
-            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v3(instrumentation);
+            Instrumentation instrumentation = testFramework.getInstrumentation();
+            final UiDevice device = UiDevice.getInstance(instrumentation);
+            final String application = "Tasker";
 
-            if (playStoreInstalled) {
-                PlayStoreUtil.loginGooglePlay(instrumentation);
-                PlayStoreUtil.selectApplication(instrumentation, application);
-                new GoogleAppConfirmationWatcher(device).checkForCondition();
+            PlayStoreUtil.selectApplication(instrumentation, application);
+            new GoogleAppConfirmationWatcher(device).checkForCondition();
 
-                assertTrue("Target application is not a pay app",
-                        new Wait(TimeUnit.MILLISECONDS.convert(10L,
-                                TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                            UiSelector payButton = new UiSelector()
-                                .className("android.widget.Button").packageName(
-                                        Res.GOOGLE_PLAY_VENDING_RES);
+            assertTrue("Target application is not a pay app",
+                    new Wait(TimeUnit.MILLISECONDS.convert(10L,
+                            TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            UiSelector payButton = new UiSelector().
+                                    className("android.widget.Button").packageName(
+                                    Res.GOOGLE_PLAY_VENDING_RES);
                             return device.findObject(payButton.textContains("$")).exists();
                         }
-                }));
+                    }));
 
-                PlayStoreUtil.resetPlayStore(instrumentation);
-                device.pressHome();
-            }
+            PlayStoreUtil.resetPlayStore(instrumentation);
+            device.pressHome();
         }
     }
 
@@ -275,28 +268,23 @@ public class PlayStoreTest {
     @Test
     @TestInfo(id = "fe78dba5-a0f2-4acf-bcbb-10b1c15d3484")
     public void testParentalControls() throws Exception {
-        final Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String familyApplication = "YouTube Kids";
-        final String restrictedApplication = "Truth or Dare ? Dirty !";
-
         if (testFramework.isGoogleApiAndPlayImage()) {
-            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v3(instrumentation);
+            final Instrumentation instrumentation = testFramework.getInstrumentation();
+            final UiDevice device = UiDevice.getInstance(instrumentation);
+            final String familyApplication = "YouTube Kids";
+            final String restrictedApplication = "Truth or Dare ? Dirty !";
 
-            if (playStoreInstalled) {
-                PlayStoreUtil.loginGooglePlay(instrumentation);
-                assertTrue("Adult application is not found in search.",
-                        PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true));
+            assertTrue("Adult application is not found in search.",
+                    PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true));
 
-                PlayStoreUtil.setRestrictions(instrumentation,  "Apps", "Everyone 10+");
+            PlayStoreUtil.setRestrictions(instrumentation,  "Apps", "Everyone 10+");
 
 
-                assertTrue("Adult application found in search.",
-                        !PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true) &&
-                                PlayStoreUtil.hasTestApp(instrumentation, familyApplication, true));
+            assertTrue("Adult application found in search.",
+                    !PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true) &&
+                            PlayStoreUtil.hasTestApp(instrumentation, familyApplication, true));
 
-                PlayStoreUtil.toggleParentalControls(device, false);
-            }
+            PlayStoreUtil.toggleParentalControls(device, false);
             device.pressHome();
         }
     }

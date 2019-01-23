@@ -172,7 +172,7 @@ public class PlayStoreUtil {
     /**
      * Checks if test user is logged in to Google Play.  Logs in if not.
      */
-    public static void loginGooglePlay(Instrumentation instrumentation) throws Exception {
+    public static boolean loginGooglePlay(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         resetPlayStore(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
@@ -189,8 +189,7 @@ public class PlayStoreUtil {
                     }
                 });
         if (hasSearchBox) {
-            device.pressHome();
-            return;
+            return true;
         }
 
         final UiObject unauthorizedUserButton = device.findObject(
@@ -227,7 +226,8 @@ public class PlayStoreUtil {
         }
 
         new GoogleAppConfirmationWatcher(device).checkForCondition();
-        device.pressHome();
+        
+        return hasSearchBox;
     }
 
     /**

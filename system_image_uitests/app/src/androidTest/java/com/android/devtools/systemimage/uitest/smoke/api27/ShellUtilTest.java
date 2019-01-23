@@ -152,7 +152,7 @@ public class ShellUtilTest {
                         public boolean isTrue() {
                             return reportButton.exists();
                         }
-                    });        
+                    });
             if (reportButtonExists) {
                 reportButton.click();
             }
