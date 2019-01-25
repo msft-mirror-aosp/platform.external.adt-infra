@@ -21,6 +21,9 @@ else
 fi
 
 echo "Running BOOT test for $API"
+echo "Remove any existing AVDs"
+echo "sudo rm -rf $ANDROID_AVD_HOME/*"
+sudo rm -rf $ANDROID_AVD_HOME/*
 
 SESSION_DIR=$DIST_DIR/testlogs
 mkdir -p $SESSION_DIR

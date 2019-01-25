@@ -21,6 +21,9 @@ else
 fi
 
 echo "Running UI test for $API"
+echo "Remove any existing AVDs"
+echo "sudo rm -rf $ANDROID_AVD_HOME/*"
+sudo rm -rf $ANDROID_AVD_HOME/*
 
 export SNAPSHOT_DIR=$DIST_DIR/snaps
 mkdir -p $SNAPSHOT_DIR
