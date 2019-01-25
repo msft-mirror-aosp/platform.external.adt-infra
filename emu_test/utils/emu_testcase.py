@@ -257,6 +257,8 @@ class EmuBaseTestCase(LoggedTestCase):
         # For CTS test to make test_getByName in android.core.tests.libcore.package.libcore pass
         # Also windows and mac needs this to have network connection
         launch_cmd += ['-dns-server', '8.8.8.8']
+        if 'test_boot' in emu_argparser.emu_args.pattern:
+            launch_cmd += ['-no-snapshot']
         if flags != None:
             launch_cmd += flags
         test_name  = self.id().rsplit('.', 1)[-1]
