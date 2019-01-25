@@ -54,6 +54,7 @@ public class Res {
                     + "/(all_apps_container|all_apps_handle|apps_customize_pane_content|apps_list_view|drag_indicator)";
     public static final String LAUNCHER_LIST_DISMISS_RES = "com.google.android.apps.nexuslauncher:id/dismiss";
     public static final String ANDROID_PHONE_RES = "com.android.phone";
+    public static final String ANDROID_SETTINGS_RES = "com.android.settings";
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
             "com.android.settings:id/container_material";
     public static final String APPS_LIST_CONTAINER_RES = "com.android.settings:id/list_container";
