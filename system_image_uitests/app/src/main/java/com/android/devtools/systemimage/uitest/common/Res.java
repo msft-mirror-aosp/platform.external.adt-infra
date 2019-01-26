@@ -64,6 +64,8 @@ public class Res {
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list)";
+    public static final String Q_SETTINGS_LIST_CONTAINER_RES =
+            "(com.android.settings|android):id/(main_content_scrollable_container)";
 
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";
     public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";
