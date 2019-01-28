@@ -60,10 +60,9 @@ class BootTestCase(EmuBaseTestCase):
             real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time
         try:
             self.boot_time = self.launch_emu_and_wait(avd)
-            self.m_logger.error('AVD %s, boot time: %s, expected time: %s'
-                                % (avd, self.boot_time, real_expected_boot_time))
+            self.m_logger.info('AVD %s, boot time: %s, expected time: %s'
+                               % (avd, self.boot_time, real_expected_boot_time))
             self.assertLessEqual(self.boot_time, real_expected_boot_time)
-            return
         except TimeoutError:
             self.m_logger.error('AVD %s, time out, try one more time' % str(avd))
         except:
@@ -71,8 +70,8 @@ class BootTestCase(EmuBaseTestCase):
             self.m_logger.error(traceback.format_exc())
         self.kill_emulator()
         self.boot_time = self.launch_emu_and_wait(avd)
-        self.m_logger.error('2nd try AVD %s, boot time: %s, expected time: %s'
-                            % (avd, self.boot_time, real_expected_boot_time))
+        self.m_logger.info('2nd try AVD %s, boot time: %s, expected time: %s'
+                           % (avd, self.boot_time, real_expected_boot_time))
         self.assertLessEqual(self.boot_time, real_expected_boot_time)
 
     def run_boot_test(self, avd_config):
