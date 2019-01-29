@@ -4,4 +4,8 @@ API 27,android-tv,x86,Android TV (1080p),2048,swiftshader,oc-mr1,P,P,P
 API 27,google_apis,x86,Nexus 6P,2048,swiftshader,oc-mr1,P,P,P
 API 27,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,oc-mr1,P,P,P
 API 27,google_apis,x86_64,Nexus 6P,2048,swiftshader,oc-mr1,P,P,P
-API 26,google_apis,x86,Nexus 6P,2048,swiftshader,public,P,P,P
+API 26,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P
+API 25,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P
+API 24,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P
+API 23,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P
+API 22,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P
