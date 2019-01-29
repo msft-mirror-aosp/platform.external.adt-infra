@@ -53,6 +53,7 @@ public class PackageInstallationUtil {
         throw new AssertionError();
     }
     private final static String TAG = "PackageInstallationUtil";
+    private final static long INSTALL_WAIT = 10L;
 
     @Rule
     public final static SystemImageTestFramework testFramework = new SystemImageTestFramework();
@@ -107,7 +108,8 @@ public class PackageInstallationUtil {
         UiDevice device = UiDevice.getInstance(instrumentation);
         UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)"));
 
-        boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+        boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(
+                INSTALL_WAIT, TimeUnit.SECONDS));
         if (hasSettings) {
             settingsButton.clickAndWaitForNewWindow();
         } else {
@@ -115,7 +117,8 @@ public class PackageInstallationUtil {
         }
 
         UiObject allowSwitch = device.findObject(new UiSelector().className("android.widget.Switch"));
-        boolean hasAllowSwitch = allowSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        boolean hasAllowSwitch = allowSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(
+                INSTALL_WAIT, TimeUnit.SECONDS));
         if (hasAllowSwitch) {
             if (allowSwitch.getText().equals("OFF")) {
                 allowSwitch.click();
@@ -126,7 +129,8 @@ public class PackageInstallationUtil {
         }
 
         UiObject installButton = device.findObject(new UiSelector().textMatches("(?i)install(?-i)"));
-        boolean hasInstallButton = installButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        boolean hasInstallButton = installButton.waitForExists(TimeUnit.MILLISECONDS.convert(
+                INSTALL_WAIT, TimeUnit.SECONDS));
         if (hasInstallButton) {
             installButton.clickAndWaitForNewWindow();
         }  else {
@@ -136,7 +140,8 @@ public class PackageInstallationUtil {
         new PackageInstallationUtilityWatcher(device).checkForCondition();
 
         UiObject doneButton = device.findObject(new UiSelector().textMatches("(?i)done(?-i)"));
-        boolean hasDoneButton = doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(60L, TimeUnit.SECONDS));
+        boolean hasDoneButton = doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(
+                INSTALL_WAIT * 6L, TimeUnit.SECONDS));
         if (hasDoneButton) {
             doneButton.clickAndWaitForNewWindow();
         } else {
