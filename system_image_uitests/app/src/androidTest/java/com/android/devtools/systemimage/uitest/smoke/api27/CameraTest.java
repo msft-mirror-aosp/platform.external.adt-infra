@@ -47,7 +47,7 @@ public class CameraTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(120);
+    public Timeout globalTimeout = Timeout.seconds(240);
 
     /**
      * Tests the photo capture functionality of the camera application.
