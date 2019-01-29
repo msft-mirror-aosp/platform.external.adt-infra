@@ -107,7 +107,7 @@ public class PackageInstallationUtil {
         UiDevice device = UiDevice.getInstance(instrumentation);
         UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)"));
 
-        boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
         if (hasSettings) {
             settingsButton.clickAndWaitForNewWindow();
         } else {
