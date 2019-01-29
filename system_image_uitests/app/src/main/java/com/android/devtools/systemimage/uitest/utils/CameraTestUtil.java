@@ -46,6 +46,10 @@ public class CameraTestUtil {
         AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
         new CameraAccessPermissionsWatcher(device).checkForCondition();
 
+        if (SettingsUtil.verifyCameraAppDisabled(device)) {
+            SettingsUtil.setCameraEnabled(true, instrumentation, device);
+        }
+
         device.pressBack();
         device.pressHome();
 
