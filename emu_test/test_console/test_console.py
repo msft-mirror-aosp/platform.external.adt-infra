@@ -95,8 +95,11 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
                           test_result='pass')
 
         for x in emu_result.failures:
-            ET.SubElement(result, 'testcase', name=self.get_test_name(x[0].id()),
-                          test_result='fail')
+            testcase = ET.SubElement(result, 'testcase',
+                                     name=self.get_test_name(x[0].id()),
+                                     test_result='fail')
+            failure = ET.SubElement(testcase, 'failure')
+            failure.text = getattr(x[0].failureException, '__doc__', 'failed')
 
         for x in emu_result.errors:
             ET.SubElement(result, 'testcase', name=self.get_test_name(x[0].id()),
