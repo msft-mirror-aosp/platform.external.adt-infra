@@ -147,8 +147,10 @@ public class SettingsTest {
 
         UiObject originalTimeZone = device.findObject(new UiSelector().textContains("GMT"));
         String originalLabel = originalTimeZone.getText();
-        String originalOffset = originalLabel.substring(0, originalLabel.indexOf(" "));
-
+        int index = originalLabel.indexOf(" ");
+        if ( index == -1 ) index = originalLabel.length();
+        String originalOffset = originalLabel.substring(0, index);
+        
         UiObject setTimeZone = device.findObject(new UiSelector().text("Set time zone"));
         if (setTimeZone.waitForExists(5L)) {
             setTimeZone.clickAndWaitForNewWindow();
