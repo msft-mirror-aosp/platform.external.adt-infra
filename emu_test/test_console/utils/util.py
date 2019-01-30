@@ -41,6 +41,8 @@ ADB_NUM_MAX_TRIALS = 5
 
 TIMEOUT_S = 1
 
+CMD_AVD_SNAPSHOT_DELAY_VALUE = 5
+
 HOME = expanduser('~')
 CONSOLE_AUTH_TOKEN_FILE_NAME = '.emulator_console_auth_token'
 TOKEN_PATH = os.path.join(HOME, CONSOLE_AUTH_TOKEN_FILE_NAME)
@@ -81,6 +83,8 @@ CMD_ROTATE = 'rotate\n'
 MAIN_APK_PACKAGE = 'com.android.devtools.server'
 
 WIN_BUILDER_NAME = 'Win'
+
+CONTACT_PACKAGE_NAME = 'com.android.contacts'
 
 
 def check_read_until(console_output):
@@ -136,7 +140,7 @@ def pattern_match_output(output, regex):
   Returns:
     A boolean value: It indicates the pattern is found in the output or not.
   """
-  if re.match(regex, output):
+  if re.search(regex, output):
     return True
   else:
     return False
@@ -262,6 +266,14 @@ def execute_console_command(telnet, command, expected_output):
   return is_command_successful, output
 
 
+def check_running_app():
+  test_process = subprocess.check_output(['adb', 'shell', 'ps', '|',  'grep', CONTACT_PACKAGE_NAME])
+  time.sleep(CMD_AVD_SNAPSHOT_DELAY_VALUE)
+  if CONTACT_PACKAGE_NAME in str(test_process):
+    return True
+  else:
+    return False
+
 def execute_help_command(telnet, command):
   """Executes emulator console help related command.
 
@@ -359,3 +371,6 @@ def unstall_apps(testcase_call_dir):
   subprocess.Popen([PYTHON_INTERPRETER,
                     '%s/%s' % (testcase_call_dir, SCRIPT_TO_UNINSTALL_APP)])
   time.sleep(SETUP_WAIT_TIMEOUT_S)
+
+def launch_application(package_name):
+    subprocess.call(['adb', 'shell', 'am', 'start', package_name])
