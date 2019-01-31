@@ -35,9 +35,8 @@ public class Res {
     public static final String CHROME_URL_BAR_RES = "com.android.chrome:id/url_bar";
     public static final String CHROME_MENU_BUTTON_RES = "com.android.chrome:id/menu_button";
     public static final String CHROME_MENU_BADGE_RES = "com.android.chrome:id/menu_badge";
-    public static final String CHROME_SIGNIN_PROMO_RES = "com.android.chrome:id/signin_promo_signin_button";
+    public static final String CHROME_SIGNIN_PROMO_ACCOUNT_RES = "com.android.chrome:id/signin_promo_choose_account_button";
     public static final String CHROME_SIGNIN_PROMO_CLOSE_RES = "com.android.chrome:id/signin_promo_close_button";
-    public static final String CHROME_MORE_BUTTON_RES = "com.android.chrome:id/more_button";
     public static final String CHROME_CLOSE_MENU_BUTTON_RES = "com.android.chrome:id/close_menu_id";
     public static final String CHROME_TITLE_RES = "com.android.chrome:id/title";
     public static final String CHROME_NO_THANKS_BUTTON_RES = "com.android.chrome\\d*:id" + "/(no_thanks_button|negative_button)";
@@ -121,6 +120,7 @@ public class Res {
     public static final String ANDROID_SELECT_LIST = "android:id/select_dialog_listview";
     public static final String ANDROID_SUMMARY_RES = "android:id/summary";
     public static final String ANDROID_SWITCH_WIDGET = "android:id/switch_widget";
+    public static final String ANDROID_ICON_RES = "android:id/icon";
 
     // Android TV Resources.
     public static final String TV_LAUNCHER = "com.google.android.tvlauncher:id/button_icon";

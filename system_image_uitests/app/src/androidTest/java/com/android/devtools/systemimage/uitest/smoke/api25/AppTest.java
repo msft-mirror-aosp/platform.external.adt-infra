@@ -30,6 +30,7 @@ import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
+import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AppWatcher;
@@ -52,7 +53,7 @@ public class AppTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(240);
+    public Timeout globalTimeout = Timeout.seconds(360);
 
     private final String TAG = "AppTest";
 
@@ -129,23 +130,8 @@ public class AppTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
+            GoogleAppUtil.loginGoogleApp(instrumentation);
             AppLauncher.launch(instrumentation, "Chrome");
-
-            // If this is the first launch, dismiss the "Welcome to Chrome" screen.
-            UiObject welcomeScreen = device.findObject(
-                    new UiSelector().text("Welcome to Chrome"));
-            if (welcomeScreen.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
-                device.findObject(
-                        new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES))
-                        .clickAndWaitForNewWindow();
-            }
-
-            // Dismiss the "Sign in to Chrome" screen if it's there.
-            UiObject noThanksButton = device.findObject(
-                    new UiSelector().resourceIdMatches(Res.CHROME_NO_THANKS_BUTTON_RES));
-            if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
-                noThanksButton.clickAndWaitForNewWindow();
-            }
 
             // Click the search box if it's there.
             UiObject searchBox = device.findObject(new UiSelector().resourceId(
@@ -223,7 +209,6 @@ public class AppTest {
             device.findObject(
                     new UiSelector().description("Edit bookmark")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().description("Delete bookmarks")).click();
-
         } else {
             AppLauncher.launch(instrumentation, "Browser");
             UiObject textField = device.findObject(

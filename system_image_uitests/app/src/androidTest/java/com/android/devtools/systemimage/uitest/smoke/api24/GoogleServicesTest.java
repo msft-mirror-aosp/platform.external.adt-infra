@@ -28,7 +28,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
-import com.android.devtools.systemimage.uitest.utils.GoogleServiceTestUtil;
+import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 
@@ -151,136 +151,27 @@ public class GoogleServicesTest {
      *   Test Steps:
      *   1. Start an emulator with API 24+ Google APIs support.
      *   2. Launch Chrome.
-     *   3. Log into Chrome using the test account.
-     *   4. Open the Chrome menu > Settings.
-     *   5. Find logged user name.
-     *   6. Log user out of Chrome.
+     *   3. Log out of Chrome, if logged in already.
+     *   4. Log into Chrome using the test account.
+     *   5. Open the Chrome menu > Settings.
+     *   6. Find logged user name.
+     *   7. Log user out of Chrome.
      *   Verify:
-     *   1. Logged in user's name is present.
-     *   2. Log in user prompt or user promo is present.
+     *   1. Logging into Chrome was successful.
+     *   2. Logging out of Chrome was successful.
      *   </pre>
      */
-    @Ignore("Bug in API 26. b/110433630")
     @Test
     @TestInfo(id = "d7f5673a-a3d0-4f50-856a-dfa10ce5c21c")
     public void loginGoogleChrome() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        final String username = "David Play";
+        GoogleAppUtil.logoutGoogleChrome(instrumentation);
 
-        AppLauncher.launch(instrumentation, "Chrome");
-        new AddGoogleAccountWatcher(device).checkForCondition();
+        boolean logInSuccess = GoogleAppUtil.loginGoogleApp(instrumentation);
+        assertTrue("Google log in was unsuccessful", logInSuccess);
 
-        GoogleServiceTestUtil.signInToChrome(instrumentation);
-
-        final UiObject chromeUpdateButton = device.findObject(
-                new UiSelector().resourceId(Res.CHROME_MENU_BADGE_RES)
-        );
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return chromeUpdateButton.exists();
-                }})) {
-            chromeUpdateButton.clickAndWaitForNewWindow();
-        }
-
-        final UiObject chromeMenuButton = device.findObject(
-                new UiSelector().resourceId(Res.CHROME_MENU_BUTTON_RES));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return chromeMenuButton.exists();
-                }})) {
-            chromeMenuButton.clickAndWaitForNewWindow();
-        }
-
-        final UiObject settingsButton = device.findObject(new UiSelector().text("Settings"));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return settingsButton.exists();
-            }})) {
-            settingsButton.clickAndWaitForNewWindow();
-        }
-
-        final UiObject signInPromoButton = device.findObject(
-                new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_RES));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return signInPromoButton.exists();
-            }})) {
-            signInPromoButton.clickAndWaitForNewWindow();
-        }
-
-        final UiObject signInLabel = device.findObject(new UiSelector().text("Sign in to Chrome"));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return signInLabel.exists();
-            }})) {
-            signInLabel.clickAndWaitForNewWindow();
-        }
-
-        GoogleServiceTestUtil.signInToChrome(instrumentation);
-
-        final UiObject signedInLabel = device.findObject(new UiSelector().text(username));
-
-        assertTrue("Google log in was unsuccessful", new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return signedInLabel.exists();
-                    }})
-        );
-        signedInLabel.clickAndWaitForNewWindow();
-        final UiObject signOutLabel = device.findObject(new UiSelector().text("Sign out of Chrome"));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return signOutLabel.exists();
-            }})) {
-            signOutLabel.clickAndWaitForNewWindow();
-        }
-
-        final UiObject signOutButton = device.findObject(new UiSelector().text("SIGN OUT"));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return signOutButton.exists();
-            }})) {
-            signOutButton.clickAndWaitForNewWindow();
-        }
-
-        final UiObject signInPromoCloseButton = device.findObject(
-                new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_CLOSE_RES));
-
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return signInPromoCloseButton.exists();
-            }})) {
-            signInPromoCloseButton.clickAndWaitForNewWindow();
-        }
-
-        assertTrue("Google log out was unsuccessful", new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return signInLabel.exists() || signInPromoCloseButton.exists();
-                    }}));
-        if (signInLabel.exists()) {
-            signInLabel.click();
-        } else {
-            signInPromoCloseButton.click();
-        }
+        boolean logOutSuccess = GoogleAppUtil.logoutGoogleChrome(instrumentation);
+        assertTrue("Google log out was unsuccessful", logOutSuccess);
     }
 }
