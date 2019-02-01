@@ -151,7 +151,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
       pass
       return
 
-    if self.avd.api in ['25', '24', '23']:
+    if self.avd.api >= '23':
       util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
 
       self._initially_launch_google_maps_to_have_location_history({'api': self.avd.api})
@@ -180,7 +180,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
 
     print 'Running test: %s' % (inspect.stack()[0][2])
 
-    if self.avd.api in ['24', '25']:
+    if self.avd.api >= '24':
       print 'Running test: %s' % (inspect.stack()[0][2])
 
       util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
