@@ -8,16 +8,7 @@ import time
 from utils import util
 
 install_apk_script_dir = os.path.dirname(os.path.realpath(__file__))
-servlet_launcher_dir = os.path.join(install_apk_script_dir, os.pardir,
-                                    os.pardir, 'console_test_server')
-
-gradle = ''
-if os.name == util.WINDOWS_OS_NAME:
-  gradle = 'gradlew.bat'
-else:
-  gradle = './gradlew'
-
-os.chdir(servlet_launcher_dir)
+apk_dir = os.path.join(install_apk_script_dir, 'utils')
 
 num_trials = 1
 while True:
@@ -25,14 +16,10 @@ while True:
     sys.exit(-1)
   try:
     print 'Run APK install command, trial num: %s' % str(num_trials)
-    res_gradlew_build_main = subprocess.check_call([gradle, 'assemble'])
-    res_gradlew_build_android_test = (subprocess
-                                      .check_call([gradle,
-                                                   'assembleAndroidTest']))
-    res_gradlew_build_main = subprocess.check_call([gradle, 'installDebug'])
-    res_gradlew_build_android_test = (subprocess
-                                      .check_call([gradle,
-                                                   'installDebugAndroidTest']))
+    appDebug = os.path.join(apk_dir,'app-debug.apk')
+    appDebugAndroidTest = os.path.join(apk_dir,'app-debug-androidTest.apk')
+    subprocess.call(['adb', 'install', appDebug])
+    subprocess.call(['adb', 'install', appDebugAndroidTest])
     break
   except subprocess.CalledProcessError as err:
     print 'Subprocess call error: {0}'.format(err)
