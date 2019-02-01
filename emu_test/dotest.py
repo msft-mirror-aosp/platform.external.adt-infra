@@ -53,8 +53,11 @@ def print_xml(emu_result):
         failure.text = getattr(x[0].failureException, '__doc__', 'failed')
 
     for x in emu_result.errors:
-        ET.SubElement(result, 'testcase', name=getTestName(x[0].id()),
-                      test_result='error')
+        testcase = ET.SubElement(result, 'testcase',
+                                 name=getTestName(x[0].id()),
+                                 test_result='error')
+        error = ET.SubElement(testcase, 'failure')
+        error.text = getattr(x[0].failureException, '__doc__', 'failed')
 
     for x in emu_result.expectedFailures:
         ET.SubElement(result, 'testcase',
