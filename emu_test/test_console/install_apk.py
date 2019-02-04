@@ -4,11 +4,12 @@ import os
 import subprocess
 import sys
 import time
+import platform
 
 from utils import util
 
 install_apk_script_dir = os.path.dirname(os.path.realpath(__file__))
-apk_dir = os.path.join(install_apk_script_dir, 'utils')
+apk_dir = os.path.join(install_apk_script_dir, 'utils', 'apks')
 
 num_trials = 1
 while True:
@@ -16,8 +17,10 @@ while True:
     sys.exit(-1)
   try:
     print 'Run APK install command, trial num: %s' % str(num_trials)
-    appDebug = os.path.join(apk_dir,'app-debug.apk')
-    appDebugAndroidTest = os.path.join(apk_dir,'app-debug-androidTest.apk')
+    appDebug = os.path.join(apk_dir,
+                            'app-debug-'+platform.system()+'.apk')
+    appDebugAndroidTest = os.path.join(apk_dir,
+                                       'app-debug-androidTest-'+platform.system()+'.apk')
     subprocess.call(['adb', 'install', appDebug])
     subprocess.call(['adb', 'install', appDebugAndroidTest])
     break
