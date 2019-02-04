@@ -148,7 +148,12 @@ public class GoogleAppUtil {
 
         UiObject backupSwitch = device.findObject(new UiSelector().resourceId(Res.GOOGLE_BACKUP_SWITCH_RES));
         if (backupSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
-            backupSwitch.clickAndWaitForNewWindow();
+            backupSwitch.click();
+        }
+
+        UiObject agreeButton = device.findObject(new UiSelector().resourceId(Res.GOOGLE_SERVICES_ACCEPT_BUTTON_RES));
+        if(agreeButton.exists()){
+            agreeButton.clickAndWaitForNewWindow();
         }
 
         UiObject moreButton = device.findObject(new UiSelector().textMatches("(?i)more(?-i)"));

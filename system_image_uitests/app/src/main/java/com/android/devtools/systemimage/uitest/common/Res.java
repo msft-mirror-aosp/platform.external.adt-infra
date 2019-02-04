@@ -89,7 +89,9 @@ public class Res {
     public static final String DIALER_PHONE_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/(floating_action_button|fab)";
     public static final String DIALER_PAD_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/dialpad_floating_action_button";
     public static final String DIALER_DIGITS_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/digits";
-
+    
+    public static final String GOOGLE_SERVICES_ACCEPT_BUTTON_RES =
+            "com.google.android.gms:id/next_button";
     public static final String NOW_SIGNIN_ACCEPT_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/accept_button";
     public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
