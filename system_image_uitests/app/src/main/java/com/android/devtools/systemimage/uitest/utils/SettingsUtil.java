@@ -16,8 +16,6 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 import com.android.devtools.systemimage.uitest.watchers.SettingsTestPopupWatcher;
 
-import junit.framework.Assert;
-
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
@@ -141,7 +139,12 @@ public class SettingsUtil {
 
         actionButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
 
-        Assert.assertTrue(actionButton.getText().toLowerCase().contains(change.toLowerCase()));
+        String[] words = actionButton.getText().split("[\\s\\xA0]+");
+        // Do not proceed if policy value matches the requested value.
+        if (!words[0].equalsIgnoreCase(change)) {
+            Log.w(TAG, "changePolicyActivation: policy already set as requested");
+            return;
+        }
 
         if (change.equalsIgnoreCase("Activate")) {
             actionButton.clickAndWaitForNewWindow();
