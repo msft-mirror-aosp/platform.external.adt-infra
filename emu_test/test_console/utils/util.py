@@ -81,11 +81,9 @@ SCRIPT_TO_UNINSTALL_APP = 'uninstall_app.py'
 PYTHON_INTERPRETER = 'python'
 CMD_ROTATE = 'rotate\n'
 MAIN_APK_PACKAGE = 'com.android.devtools.server'
-
 WIN_BUILDER_NAME = 'Win'
 
 CONTACT_PACKAGE_NAME = 'com.android.contacts'
-
 
 def check_read_until(console_output):
   """Checks whether the console output ends with 'OK' message.
