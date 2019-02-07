@@ -64,6 +64,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             pass
 
     def _save_gradle_test_report(self, test_method):
+        self.m_logger.info('Generate reports from Gradle')
         # Copy HTML reports
         gradle_report_path = os.path.join(self.uitest_dir, 'app', 'build', 'reports', 'androidTests', 'connected', '')
         if not os.path.exists(gradle_report_path):
@@ -93,12 +94,26 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             shutil.copyfile(src_file, dst_file)
 
     def _save_adb_bug_report(self, test_method):
+        self.m_logger.info('Generate ADB bugreport')
+        p1 = psutil.Popen(['adb', 'devices'],
+                         stdout=PIPE, stderr=PIPE)
+        (out, err) = p1.communicate()
+        self.m_logger.info('adb_pull_stdout:\n' + out)
+        self.m_logger.info('adb_pull_stderr:\n' + err)
         dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_bugreport.txt')
         with open(dst_path, 'w') as f:
+            self.m_logger.info('Run adb bugreport')
             p = psutil.Popen(['adb', 'bugreport'], stdout=f, stderr=f)
             p.communicate()
+            self.m_logger.info('Generate ADB bugreport complete')
 
     def _pull_log_details(self, test_method):
+        self.m_logger.info('Pull details from sdcard')
+        p1 = psutil.Popen(['adb', 'devices'],
+                         stdout=PIPE, stderr=PIPE)
+        (out1, err1) = p1.communicate()
+        self.m_logger.info('adb_pull_stdout:\n' + out1)
+        self.m_logger.info('adb_pull_stderr:\n' + err1)
         dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_details')
         p = psutil.Popen(['adb', 'pull',
                           '/sdcard/Logs', dst_path],
@@ -208,8 +223,9 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         # save gradle reports
         self._save_gradle_test_report(self._testMethodName)
 
-        # save adb bug reports for the bug report automation purpose
-        self._save_adb_bug_report(self._testMethodName)
+        if "AddGoogleAccountTest" in self._testMethodName:
+            # save adb bug reports for the bug report automation purpose
+            self._save_adb_bug_report(self._testMethodName)
 
         # pull detailed test case log info from android
         self._pull_log_details(self._testMethodName)
