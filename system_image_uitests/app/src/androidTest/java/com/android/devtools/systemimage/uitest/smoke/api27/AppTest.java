@@ -141,8 +141,8 @@ public class AppTest {
             // Click the search box if it's there.
             UiObject searchBox = device.findObject(new UiSelector().resourceId(
                     Res.CHROME_SEARCH_BOX_RES));
-            if (searchBox.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
-                searchBox.clickAndWaitForNewWindow();
+            if (searchBox.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+                searchBox.click();
             }
 
             new AppWatcher(device).checkForCondition();
