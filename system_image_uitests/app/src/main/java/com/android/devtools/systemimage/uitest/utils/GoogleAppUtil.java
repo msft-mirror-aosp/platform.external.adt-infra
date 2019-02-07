@@ -138,13 +138,7 @@ public class GoogleAppUtil {
             }
         }
 
-        new GoogleAppConfirmationWatcher(device).checkForCondition();
-        UiObject signInConsentAgreeButton = device.findObject(new UiSelector().resourceId(Res.NOW_SIGNIN_ACCEPT_BUTTON_RES));
-
-        if (signInConsentAgreeButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
-            signInConsentAgreeButton.clickAndWaitForNewWindow();
-            isSignedIn = true;
-        }
+        isSignedIn = new GoogleAppConfirmationWatcher(device).checkForCondition();
 
         UiObject backupSwitch = device.findObject(new UiSelector().resourceId(Res.GOOGLE_BACKUP_SWITCH_RES));
         if (backupSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {

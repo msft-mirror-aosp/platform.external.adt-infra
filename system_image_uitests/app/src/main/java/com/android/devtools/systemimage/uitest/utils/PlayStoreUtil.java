@@ -178,7 +178,7 @@ public class PlayStoreUtil {
         AppLauncher.launch(instrumentation, "Play Store");
         new GoogleAppConfirmationWatcher(device).checkForCondition();
 
-        boolean hasSearchBox = new Wait(TimeUnit.SECONDS.toMillis(5)).
+        boolean loggedIn = new Wait(TimeUnit.SECONDS.toMillis(5)).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
@@ -188,7 +188,7 @@ public class PlayStoreUtil {
                                         new UiSelector().resourceId(Res.GOOGLE_PLAY_ACTIVE_RES)).exists();
                     }
                 });
-        if (hasSearchBox) {
+        if (loggedIn) {
             return true;
         }
 
@@ -205,7 +205,7 @@ public class PlayStoreUtil {
             unauthorizedUserButton.clickAndWaitForNewWindow();
         }
 
-        GoogleAppUtil.loginGoogleApp(instrumentation);
+        loggedIn = GoogleAppUtil.loginGoogleApp(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
 
         new GoogleAppConfirmationWatcher(device).checkForCondition();
@@ -227,7 +227,7 @@ public class PlayStoreUtil {
 
         new GoogleAppConfirmationWatcher(device).checkForCondition();
         
-        return hasSearchBox;
+        return loggedIn;
     }
 
     /**
