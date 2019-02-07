@@ -80,6 +80,7 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     subprocess.check_output(['adb', 'shell', 'am', 'force-stop', util.CONTACT_PACKAGE_NAME])
     time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LOAD+snapshot_string+ NEW_LINE_COMMAND, util.OK)
+    time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
     self.assertTrue(util.check_running_app())
     util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
 

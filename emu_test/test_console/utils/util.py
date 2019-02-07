@@ -268,7 +268,6 @@ def execute_console_command(telnet, command, expected_output):
 
 def check_running_app():
   test_process = subprocess.check_output(['adb', 'shell', 'ps', '|',  'grep', CONTACT_PACKAGE_NAME])
-  time.sleep(CMD_AVD_SNAPSHOT_DELAY_VALUE)
   if CONTACT_PACKAGE_NAME in str(test_process):
     return True
   else:
