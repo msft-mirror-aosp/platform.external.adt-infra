@@ -151,7 +151,6 @@ class EmuBaseTestCase(LoggedTestCase):
                         return proc
             except psutil.NoSuchProcess:
                 print "Exception Thrown.  No Such process error while searching for emulator instance."
-                print traceback.format_exc()
                 pass
         return None
 
