@@ -20,6 +20,9 @@ else
     fi
 fi
 
+echo "Using ADB"
+which adb
+
 echo "Running UI test for $API"
 echo "Remove any existing AVDs"
 echo "sudo rm -rf $ANDROID_AVD_HOME/*"
