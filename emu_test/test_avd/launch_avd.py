@@ -23,6 +23,7 @@ from utils.emu_error import LaunchError
 import emu_test
 from emu_test.utils import emu_argparser
 from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig
+import emu_test.utils.path_utils as path_utils
 
 log = logging.getLogger('launch_avd')
 
@@ -108,8 +109,9 @@ def launch_emu(avd, emu_args, emu_log_stream, additional_args=None):
 
 def launch_emu_and_wait(avd, emu_args, emu_log_stream, additional_args=None):
     """Launch given avd and wait for boot completion, return boot time"""
-    run_with_timeout(["adb", "kill-server"], 20)
-    run_with_timeout(["adb", "start-server"], 20)
+    adb_binary = path_utils.get_adb_binary()
+    run_with_timeout([adb_binary, "kill-server"], 20)
+    run_with_timeout([adb_binary, "start-server"], 20)
     pool = multiprocessing.pool.ThreadPool(processes = 1)
     launcher_emu = pool.apply_async(launch_emu, [avd, emu_args, emu_log_stream, additional_args])
     start_time = time.time()
@@ -127,7 +129,7 @@ def launch_emu_and_wait(avd, emu_args, emu_log_stream, additional_args=None):
     err = None
 
     while time.time()-start_time < real_time_out:
-        cmd = ["adb", "shell", "getprop", "sys.boot_completed"]
+        cmd = [adb_binary, "shell", "getprop", "sys.boot_completed"]
         if launcher_emu.ready():
             emu_proc = launcher_emu.get()
             if emu_proc.poll():
@@ -157,7 +159,7 @@ def launch_emu_and_wait(avd, emu_args, emu_log_stream, additional_args=None):
     else:
         success = False
     emu_proc.terminate()
-    run_with_timeout(["adb", "kill-server"], 20)
+    run_with_timeout([adb_binary, "kill-server"], 20)
     return success
 
 

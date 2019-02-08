@@ -94,28 +94,18 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             shutil.copyfile(src_file, dst_file)
 
     def _save_adb_bug_report(self, test_method):
+        adb_binary = path_utils.get_adb_binary()
         self.m_logger.info('Generate ADB bugreport')
-        p1 = psutil.Popen(['adb', 'devices'],
-                         stdout=PIPE, stderr=PIPE)
-        (out, err) = p1.communicate()
-        self.m_logger.info('adb_pull_stdout:\n' + out)
-        self.m_logger.info('adb_pull_stderr:\n' + err)
         dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_bugreport.txt')
         with open(dst_path, 'w') as f:
-            self.m_logger.info('Run adb bugreport')
-            p = psutil.Popen(['adb', 'bugreport'], stdout=f, stderr=f)
+            p = psutil.Popen([adb_binary, 'bugreport'], stdout=f, stderr=f)
             p.communicate()
-            self.m_logger.info('Generate ADB bugreport complete')
 
     def _pull_log_details(self, test_method):
+        adb_binary = path_utils.get_adb_binary()
         self.m_logger.info('Pull details from sdcard')
-        p1 = psutil.Popen(['adb', 'devices'],
-                         stdout=PIPE, stderr=PIPE)
-        (out1, err1) = p1.communicate()
-        self.m_logger.info('adb_pull_stdout:\n' + out1)
-        self.m_logger.info('adb_pull_stderr:\n' + err1)
         dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_details')
-        p = psutil.Popen(['adb', 'pull',
+        p = psutil.Popen([adb_binary, 'pull',
                           '/sdcard/Logs', dst_path],
                          stdout=PIPE, stderr=PIPE)
         (out, err) = p.communicate()
@@ -174,6 +164,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
                             cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
 
     def _launch_local_presubmit_check(self, avd, test_method):
+        adb_binary = path_utils.get_adb_binary()
         p1 = psutil.Popen([self.gradle, 'installDebug'],
                           cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         p1.communicate()
@@ -182,7 +173,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         p2.communicate()
         self.assertTrue(p1.poll() == 0 and p2.poll() == 0, "Failed to install the instrumentation APK.")
 
-        p = psutil.Popen(['adb', 'shell', 'am', 'instrument', '-w',
+        p = psutil.Popen([adb_binary, 'shell', 'am', 'instrument', '-w',
                           '-e', 'class', test_method,
                           '-e', 'api', avd.api, '-e', 'abi', avd.abi, '-e', 'tag', avd.tag, '-e', 'origin', avd.ori,
                           'com.android.devtools.systemimage.uitest.test/android.support.test.runner.AndroidJUnitRunner'],

@@ -267,7 +267,8 @@ def execute_console_command(telnet, command, expected_output):
 
 
 def check_running_app():
-  test_process = subprocess.check_output(['adb', 'shell', 'ps', '|',  'grep', CONTACT_PACKAGE_NAME])
+  adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+  test_process = subprocess.check_output([adb_binary, 'shell', 'ps', '|',  'grep', CONTACT_PACKAGE_NAME])
   if CONTACT_PACKAGE_NAME in str(test_process):
     return True
   else:
@@ -372,4 +373,5 @@ def unstall_apps(testcase_call_dir):
   time.sleep(SETUP_WAIT_TIMEOUT_S)
 
 def launch_application(package_name):
-    subprocess.call(['adb', 'shell', 'am', 'start', package_name])
+  adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+  subprocess.call([adb_binary, 'shell', 'am', 'start', package_name])

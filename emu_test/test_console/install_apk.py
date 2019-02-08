@@ -6,7 +6,10 @@ import sys
 import time
 import platform
 
+sys.path.append("..")
+
 from utils import util
+from emu_test.utils import path_utils
 
 install_apk_script_dir = os.path.dirname(os.path.realpath(__file__))
 apk_dir = os.path.join(install_apk_script_dir, 'utils', 'apks')
@@ -16,13 +19,14 @@ while True:
   if num_trials is util.ADB_NUM_MAX_TRIALS:
     sys.exit(-1)
   try:
+    adb_binary = path_utils.get_adb_binary()
     print 'Run APK install command, trial num: %s' % str(num_trials)
     appDebug = os.path.join(apk_dir,
                             'app-debug-'+platform.system()+'.apk')
     appDebugAndroidTest = os.path.join(apk_dir,
                                        'app-debug-androidTest-'+platform.system()+'.apk')
-    subprocess.call(['adb', 'install', appDebug])
-    subprocess.call(['adb', 'install', appDebugAndroidTest])
+    subprocess.call([adb_binary, 'install', '-r', appDebug])
+    subprocess.call([adb_binary, 'install', '-r', appDebugAndroidTest])
     break
   except subprocess.CalledProcessError as err:
     print 'Subprocess call error: {0}'.format(err)

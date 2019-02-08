@@ -5,6 +5,7 @@ import testcase_base
 from utils import util
 import time
 import subprocess
+import emu_test.utils.path_utils as path_utils
 
 import sys
 sys.path.append("..")
@@ -71,18 +72,20 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Verify contacts app. is running in the loaded snapshot.
     """
+    adb_binary = path_utils.get_adb_binary()
     this_function_name = sys._getframe().f_code.co_name
     print 'Running test: %s' % (this_function_name)
     util.launch_application(util.CONTACT_PACKAGE_NAME)
     time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
     snapshot_string = SNAPSHOT_PREFIX + this_function_name
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_SAVE + snapshot_string + NEW_LINE_COMMAND, util.OK)
-    subprocess.check_output(['adb', 'shell', 'am', 'force-stop', util.CONTACT_PACKAGE_NAME])
+    subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CONTACT_PACKAGE_NAME])
     time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LOAD+snapshot_string+ NEW_LINE_COMMAND, util.OK)
     time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
     self.assertTrue(util.check_running_app())
     util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
+    subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CONTACT_PACKAGE_NAME])
 
   def test_avd_snapshot_del(self):
     """Verifies snapshot command del, returns OK.

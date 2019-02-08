@@ -4,7 +4,10 @@ import subprocess
 import sys
 import time
 
+sys.path.append("..")
+
 from utils import util
+from emu_test.utils import path_utils
 
 launcher_class_name = '%s.Server' % util.MAIN_APK_PACKAGE
 instrumentation_runner = 'android.support.test.runner.AndroidJUnitRunner'
@@ -14,9 +17,10 @@ while True:
   if num_trials is util.ADB_NUM_MAX_TRIALS:
     sys.exit(-1)
   try:
+    adb_binary = path_utils.get_adb_binary()
     print ('Run adb shell instrumentation test command, trial num: %s'
            % str(num_trials))
-    res_run_adb_shell = subprocess.call(['adb', 'shell', 'am', 'instrument',
+    res_run_adb_shell = subprocess.call([adb_binary, 'shell', 'am', 'instrument',
                                          '-w', '-e' 'class',
                                          launcher_class_name,
                                          ('%s.test/%s'
