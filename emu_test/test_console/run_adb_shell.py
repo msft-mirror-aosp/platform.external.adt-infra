@@ -7,7 +7,7 @@ import time
 sys.path.append("..")
 
 from utils import util
-from emu_test.utils import path_utils
+import emu_test.utils.path_utils as path_utils
 
 launcher_class_name = '%s.Server' % util.MAIN_APK_PACKAGE
 instrumentation_runner = 'android.support.test.runner.AndroidJUnitRunner'
