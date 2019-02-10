@@ -6,10 +6,7 @@ import sys
 import time
 import platform
 
-sys.path.append("..")
-
 from utils import util
-import emu_test.utils.path_utils as path_utils
 
 install_apk_script_dir = os.path.dirname(os.path.realpath(__file__))
 apk_dir = os.path.join(install_apk_script_dir, 'utils', 'apks')
