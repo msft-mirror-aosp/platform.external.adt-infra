@@ -19,7 +19,7 @@ while True:
   if num_trials is util.ADB_NUM_MAX_TRIALS:
     sys.exit(-1)
   try:
-    adb_binary = path_utils.get_adb_binary()
+    adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
     print 'Run APK install command, trial num: %s' % str(num_trials)
     appDebug = os.path.join(apk_dir,
                             'app-debug-'+platform.system()+'.apk')

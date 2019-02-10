@@ -4,10 +4,7 @@ import subprocess
 import sys
 import time
 
-sys.path.append("..")
-
 from utils import util
-from emu_test.utils import path_utils
 
 test_apk_package = '%s.test' % util.MAIN_APK_PACKAGE
 
@@ -16,7 +13,7 @@ while True:
   if num_trials is util.ADB_NUM_MAX_TRIALS:
     sys.exit(-1)
   try:
-    adb_binary = path_utils.get_adb_binary()
+    adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
     print ('Run adb shell to uninstall apps, trial num: %s' % str(num_trials))
     print ('Run adb uninstall %s' % test_apk_package)
     subprocess.call([adb_binary, 'uninstall', test_apk_package])
