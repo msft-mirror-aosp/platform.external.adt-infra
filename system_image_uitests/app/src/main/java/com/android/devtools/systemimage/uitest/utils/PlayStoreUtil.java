@@ -259,7 +259,7 @@ public class PlayStoreUtil {
         new GoogleAppConfirmationWatcher(device).checkForCondition();
 
         UiObject openButton = device.findObject(new UiSelector().text("OPEN"));
-        boolean isAppInstalled = openButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
+        boolean isAppInstalled = openButton.waitForExists(TimeUnit.SECONDS.toMillis(180));
 
         return isAppInstalled;
     }
