@@ -122,37 +122,6 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
 
     util.unstall_apps(TESTCASE_CALL_DIR)
 
-  def test_accept_call(self):
-    """Test for command: gsm accept <phonenumber>.
-
-    TT ID: 5c8892ba-e458-427c-a21d-19758e376749
-    Test steps:
-      1. Launch an emulator avd
-      2. From command prompt, run: telnet localhost <port>
-      3. Copy the auth_token value from ~/.emulator_console_auth_token
-      4. Run: auth auth_token
-      5. Run: gsm call <phonenumber>, verify 1
-      6. Run: gsm accept <phonenumber>, verify 2
-      7. Run: gsm cancel <phonenumber>
-    Verify:
-      1. Emulator displays an incoming call from the <phonenumber>
-      2. Emulator displays that the incoming call is accepted
-    """
-    if util.WIN_BUILDER_NAME in self.builder_name:
-      print 'Skip call test on Win.'
-      pass
-      return
-
-    print 'Running test: %s' % (inspect.stack()[0][3])
-
-    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
-
-    self._make_inbound_call()
-    self._accept_inbound_call()
-    self._cancel_inbound_call()
-
-    util.unstall_apps(TESTCASE_CALL_DIR)
-
   def test_terminate_call(self):
     """Test for command: gsm cancel <phonenumber>.
 
