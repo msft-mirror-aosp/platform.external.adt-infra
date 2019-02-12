@@ -23,6 +23,7 @@ import android.content.res.AssetManager;
 import android.net.Uri;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
@@ -140,23 +141,28 @@ public class PackageInstallationUtil {
 
         new PackageInstallationUtilityWatcher(device).checkForCondition();
 
-        UiObject doneButton = device.findObject(new UiSelector().textMatches("(?i)done(?-i)"));
-        if (doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(
-                INSTALL_WAIT * 3L, TimeUnit.SECONDS))) {
-            doneButton.clickAndWaitForNewWindow();
-        } else {
+        final UiObject doneButtonText = device.findObject(new UiSelector().textContains("(?i)done(?-i)").
+                className("android.widget.Button"));
+        final UiObject doneButtonRes = device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_DONE_RES));
+        final UiObject doneLabel = device.findObject(new UiSelector().text("App installed."));
 
-            doneButton = device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_DONE_RES));
-            if (doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(
-                    INSTALL_WAIT * 3L, TimeUnit.SECONDS))) {
-                doneButton.clickAndWaitForNewWindow();
-            } else {
-                result += "Could not find done button. ";
-            }
+        boolean installationSuccess = new Wait(INSTALL_WAIT * 6L).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return doneButtonText.exists() || doneButtonRes.exists() || doneLabel.exists();
+                    }
+                });
+
+        if (!installationSuccess) {
+            result += "Could not find done button. ";
         }
+
         if (!result.isEmpty()) {
             Log.w(TAG, result);
         }
+
+        device.pressHome();
         return result;
     }
 
