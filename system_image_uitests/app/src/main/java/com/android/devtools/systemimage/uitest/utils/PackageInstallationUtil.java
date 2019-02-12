@@ -26,6 +26,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
+import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.PackageInstallationUtilityWatcher;
 
 import org.junit.Rule;
@@ -133,19 +134,25 @@ public class PackageInstallationUtil {
                 INSTALL_WAIT, TimeUnit.SECONDS));
         if (hasInstallButton) {
             installButton.clickAndWaitForNewWindow();
-        }  else {
+        } else {
             result += "Could not find install button. ";
         }
 
         new PackageInstallationUtilityWatcher(device).checkForCondition();
 
         UiObject doneButton = device.findObject(new UiSelector().textMatches("(?i)done(?-i)"));
-        boolean hasDoneButton = doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(
-                INSTALL_WAIT * 6L, TimeUnit.SECONDS));
-        if (hasDoneButton) {
+        if (doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(
+                INSTALL_WAIT * 3L, TimeUnit.SECONDS))) {
             doneButton.clickAndWaitForNewWindow();
         } else {
-            result += "Could not find done button. ";
+
+            doneButton = device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_DONE_RES));
+            if (doneButton.waitForExists(TimeUnit.MILLISECONDS.convert(
+                    INSTALL_WAIT * 3L, TimeUnit.SECONDS))) {
+                doneButton.clickAndWaitForNewWindow();
+            } else {
+                result += "Could not find done button. ";
+            }
         }
         if (!result.isEmpty()) {
             Log.w(TAG, result);
