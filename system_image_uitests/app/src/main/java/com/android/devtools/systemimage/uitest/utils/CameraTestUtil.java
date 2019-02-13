@@ -55,7 +55,7 @@ public class CameraTestUtil {
 
         AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
         UiObject cameraFrame = device.findObject(new UiSelector().resourceId(Res.CAMERA_FRAME_RES));
-        if (cameraFrame.waitForExists(5L)) {
+        if (cameraFrame.waitForExists(30L)) {
             cameraFrame.longClick();
             cameraFrame.swipeRight(20);
         }
@@ -63,7 +63,7 @@ public class CameraTestUtil {
         new CameraAccessPermissionsWatcher(device).checkForCondition();
 
         boolean cameraModeButtonExists = device.findObject(new UiSelector()
-                .descriptionStartsWith("Switch to")).waitForExists(5L);
+                .descriptionStartsWith("Switch to")).waitForExists(30L);
 
         org.junit.Assert.assertTrue("Button to select " + mode + " mode not found", cameraModeButtonExists);
 
@@ -134,14 +134,14 @@ public class CameraTestUtil {
         UiObject shutterButton = device.findObject(new UiSelector().resourceId(Res.CAMERA_SHUTTER_BUTTON_RES));
         UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_THUMBNAIL_RES));
 
-        if (shutterButton.waitForExists(3L)) {
+        if (shutterButton.waitForExists(15L)) {
             shutterButton.click();
             if (mode.equals("Video")) {
-                fileThumbnail.waitForExists(3L);
+                fileThumbnail.waitForExists(15L);
                 shutterButton.click();
             }
 
-            if (fileThumbnail.waitForExists(3L)) {
+            if (fileThumbnail.waitForExists(15L)) {
                 fileThumbnail.clickAndWaitForNewWindow();
             }
         }
@@ -152,11 +152,11 @@ public class CameraTestUtil {
         UiObject trashCan = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_DELETE_RES));
         UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_THUMBNAIL_RES));
 
-        if (fileThumbnail.waitForExists(3L)) {
+        if (fileThumbnail.waitForExists(15L)) {
             fileThumbnail.clickAndWaitForNewWindow();
         }
 
-        if (trashCan.waitForExists(3L)) {
+        if (trashCan.waitForExists(15L)) {
             trashCan.click();
         }
 
