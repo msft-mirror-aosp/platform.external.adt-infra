@@ -6,6 +6,11 @@ REM This will be invoked by aosp-emu-master-dev.
 
 set DIST_DIR=%1
 
+if DEFINED SDK_EMULATOR (
+setx ANDROID_HOME %SDK_EMULATOR% /M
+setx ANDROID_SDK_ROOT %SDK_EMULATOR% /M
+)
+
 set SESSION_DIR=%DIST_DIR%\testlogs
 mkdir %SESSION_DIR%
 
@@ -20,10 +25,8 @@ echo "Run 7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-*.zip -o%SESSION_DIR%\
 
 echo "Update SDK"
 echo "Run %ANDROID_HOME%\tools\bin\sdkmanager.bat --update"
+cmd.exe /c yes | %ANDROID_HOME%\tools\bin\sdkmanager.bat --licenses
 cmd.exe /c %ANDROID_HOME%\tools\bin\sdkmanager.bat --update
-
-echo "Remove existing system images"
-for /f %%d in ('dir /b %ANDROID_HOME%\prebuilt\system-images\') do (rmdir /s /q %ANDROID_HOME%\prebuilt\system-images\%%d)
 
 echo "Running Boot tests"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_byob.csv --buildername 'Windows_gce' --filter {\"ori\":\"public\"} --timeout 900 --generate_xml"
