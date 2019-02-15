@@ -245,6 +245,7 @@ class EmuBaseTestCase(LoggedTestCase):
         self.m_logger.info('Launching Emulator with AVD, ...: %s', str(avd))
         emulator_bin = emu_argparser.emu_args.emulator_exec
         launch_cmd = [emulator_bin, "-avd", str(avd), "-verbose", "-show-kernel"]
+        launch_cmd += ["-debug", "surface"]
         if avd.gpu == "swiftshader":
             launch_cmd += ["-gpu", "swiftshader_indirect"]
         else:
