@@ -10,6 +10,7 @@ set API=%2
 
 echo "Update SDK"
 echo "Run %ANDROID_HOME%\tools\bin\sdkmanager.bat --update"
+cmd.exe /c yes | %ANDROID_HOME%\tools\bin\sdkmanager.bat --licenses
 cmd.exe /c %ANDROID_HOME%\tools\bin\sdkmanager.bat --update
 
 rmdir /s /q %ANDROID_HOME%\system-images\android-%API%

@@ -5,6 +5,11 @@
 
 DIST_DIR=$1
 
+if [ -v SDK_EMULATOR ]; then
+    export ANDROID_HOME=$SDK_EMULATOR
+    export ANDROID_SDK_ROOT=$SDK_EMULATOR
+fi
+
 BUILDERNAME="Linux_gce"
 OS="linux"
 if [[ $OSTYPE == *"darwin"* ]]
@@ -33,11 +38,8 @@ unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-*.zip -d $SESSION_DIR/emu-master-dev
 
 echo "Update SDK"
 echo "Run $ANDROID_HOME/tools/bin/sdkmanager --update"
+yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
 $ANDROID_HOME/tools/bin/sdkmanager --update
-
-echo "Remove existing System images"
-echo "Run rm -rf $ANDROID_HOME/system-images/*"
-rm -rf $ANDROID_HOME/system-images/*
 
 echo "Running Boot tests"
 echo "Remove any existing AVDs"
