@@ -55,7 +55,7 @@ public class PackageInstallationUtil {
         throw new AssertionError();
     }
     private final static String TAG = "PackageInstallationUtil";
-    private final static long INSTALL_WAIT = 10L;
+    private final static long INSTALL_WAIT = 60L;
 
     @Rule
     public final static SystemImageTestFramework testFramework = new SystemImageTestFramework();
