@@ -6,10 +6,10 @@ REM This will be invoked by aosp-emu-master-dev.
 
 set DIST_DIR=%1
 
-if DEFINED SDK_EMULATOR (
 setx ANDROID_HOME %SDK_EMULATOR% /M
 setx ANDROID_SDK_ROOT %SDK_EMULATOR% /M
-)
+
+call refreshenv
 
 set SESSION_DIR=%DIST_DIR%\testlogs
 mkdir %SESSION_DIR%
