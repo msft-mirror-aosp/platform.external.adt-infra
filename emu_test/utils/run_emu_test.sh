@@ -36,7 +36,7 @@ unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-*.zip -d $SESSION_DIR/emu-master-dev
 
 echo "Update SDK"
 echo "Run $ANDROID_HOME/tools/bin/sdkmanager --update"
-yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+(yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses) & sleep 10 ; kill $!
 $ANDROID_HOME/tools/bin/sdkmanager --update
 
 echo "Running Boot tests"

@@ -8,7 +8,7 @@ API=$2
 
 echo "Update SDK"
 echo "Run $ANDROID_HOME/tools/bin/sdkmanager --update"
-yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+(yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses) & sleep 10 ; kill $!
 $ANDROID_HOME/tools/bin/sdkmanager --update
 
 rm -rf $ANDROID_HOME/system-images/android-$API/*
