@@ -148,14 +148,15 @@ public class AppTest {
 
             UiObject textField = device.findObject(
                     new UiSelector().resourceId(Res.CHROME_URL_BAR_RES));
-
-            textField.click();
-            textField.clearTextField();
-            // Include a timestamp in the URL so it's not already bookmarked. (On Chrome, the UI
-            // changes in that case.)
-            textField.setText("http://espn.com");
-            device.pressEnter();
-            device.pressMenu();
+            if (textField.waitForExists(TimeUnit.SECONDS.toMillis(15))) {
+                textField.click();
+                textField.clearTextField();
+                // Include a timestamp in the URL so it's not already bookmarked. (On Chrome, the UI
+                // changes in that case.)
+                textField.setText("http://espn.com");
+                device.pressEnter();
+                device.pressMenu();
+            }
 
             boolean notBookmarked = new Wait().until(new Wait.ExpectedCondition() {
                 @Override
@@ -169,11 +170,16 @@ public class AppTest {
                 device.pressMenu();
             }
             // After bookmarking, the button description changes.
-            assertTrue("Bookmark was not set",
-                    device.findObject(new UiSelector().description("Edit bookmark")).exists());
-            // Verify the new bookmark is in the list.
+            UiObject editBookmarkText = device.findObject(new UiSelector().description("Edit bookmark"));
+            editBookmarkText.waitForExists(TimeUnit.SECONDS.toMillis(15));
+            if (editBookmarkText.exists()) {
+                editBookmarkText.clickAndWaitForNewWindow();
+            } else {
+                assertTrue("Bookmark was not set", false);
+            }
+
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
-            bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
+            bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(15));
             if (bookmarks.exists()) {
                 bookmarks.clickAndWaitForNewWindow();
             }
@@ -183,7 +189,7 @@ public class AppTest {
 
             UiObject mobileBookmarks = device.findObject(new UiSelector().text("Mobile bookmarks")
                     .resourceId(Res.CHROME_TITLE_RES));
-            mobileBookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
+            mobileBookmarks.waitForExists(TimeUnit.SECONDS.toMillis(15));
             if (mobileBookmarks.exists()) {
                 mobileBookmarks.clickAndWaitForNewWindow();
             }
@@ -226,7 +232,7 @@ public class AppTest {
             device.findObject(new UiSelector().text("OK")).click();
             device.pressMenu();
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
-            bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(5));
+            bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(15));
             bookmarks.click();
             boolean hasBookmarks = device.wait(
                     Until.hasObject(By.text("Bookmarks")),
