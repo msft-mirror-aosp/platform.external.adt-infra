@@ -108,7 +108,8 @@ public class PackageInstallationUtil {
         context.startActivity(intent);
 
         UiDevice device = UiDevice.getInstance(instrumentation);
-        UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)"));
+        UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)").
+                className("android.widget.Button"));
 
         boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(
                 INSTALL_WAIT, TimeUnit.SECONDS));
@@ -130,7 +131,8 @@ public class PackageInstallationUtil {
             result += "Could not allow installation from outside sources. ";
         }
 
-        UiObject installButton = device.findObject(new UiSelector().textMatches("(?i)install(?-i)"));
+        UiObject installButton = device.findObject(new UiSelector().textMatches("(?i)install(?-i)").
+                className("android.widget.Button"));
         boolean hasInstallButton = installButton.waitForExists(TimeUnit.MILLISECONDS.convert(
                 INSTALL_WAIT, TimeUnit.SECONDS));
         if (hasInstallButton) {
@@ -154,9 +156,7 @@ public class PackageInstallationUtil {
                     }
                 });
 
-        if (!installationSuccess) {
-            result += "Could not find done button. ";
-        }
+        result = installationSuccess ? "" : result + "Could not find done button. ";
 
         if (!result.isEmpty()) {
             Log.w(TAG, result);
