@@ -99,24 +99,32 @@ public class ApiDemosTest {
             UiScrollable itemList =
                     new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES));
             itemList.setAsVerticalList();
-            Assert.assertTrue(itemList.exists());
+            Assert.assertTrue("Could not list items", itemList.exists());
+
             UiObject appItem = itemList.getChildByText(
                     new UiSelector().className("android.widget.TextView"), "App");
-            appItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
-            appItem.click();
+            appItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
+            if (appItem.exists()) {
+                appItem.click();
+            }
             UiObject deviceAdminItem = itemList.getChildByText(
                     new UiSelector().className("android.widget.TextView"), "Device Admin");
-            deviceAdminItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
-            deviceAdminItem.click();
+            deviceAdminItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
+            if (deviceAdminItem.exists()) {
+                deviceAdminItem.click();
+            }
             UiObject passwordQualityItem = itemList.getChildByText(
                     new UiSelector().className("android.widget.TextView"), "Password quality");
-            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
-            passwordQualityItem.clickAndWaitForNewWindow(3L);
-
+            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
+            if (passwordQualityItem.exists()) {
+                passwordQualityItem.click();
+            }
             passwordQualityItem = itemList.getChildByText(
                     new UiSelector().className("android.widget.RelativeLayout"), "Password quality");
-            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
-            passwordQualityItem.clickAndWaitForNewWindow(3L);
+            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
+            if (passwordQualityItem.exists()) {
+                passwordQualityItem.click();
+            }
 
             // Set the criteria for password to 'Complex' type.
             device.findObject(new UiSelector().text("Complex")).clickAndWaitForNewWindow();
