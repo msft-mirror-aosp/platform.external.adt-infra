@@ -1,27 +1,20 @@
 """Tests for rotate-related commands."""
 
-import inspect
-import json
-import os
-import time
 import unittest
-
-import requests
+import sys
 import testcase_base
 from utils import util
 
-TESTCASE_CALL_DIR = os.path.dirname(os.path.realpath(__file__))
-SERVLET_ORIENTATION = 'http://localhost:8080/OrientationManagerService'
 
-MAX_TRIES = 3
-
-ROTATION_0 = 0
-ROTATION_270 = 3
-ROTATION_180 = 2
-ROTATION_90 = 1
-
-ORIENTATION_PORTRAIT = 1
-ORIENTATION_LANDSCAPE = 2
+CMD_ROTATE = 'rotate\n'
+CMD_GET_ORIENTATION = 'sensor get orientation\n'
+ROTATE_90_ORIENTATION = '0:0:-1.5708'
+ROTATE_180_ORIENTATION = '-0:0:-3.14159'
+ROTATE_270_ORIENTATION = '0:0:1.5708'
+ROTATE_360_ORIENTATION = '0:0:0'
+ROTATE_CMD_OUTPUT = ''
+ASSERT_MSG_ROTATE = 'Failed to execute rotate command'
+ASSERT_MSG_ORIENTATION = 'Failed to fetch orientation values'
 
 
 class OrientationTest(testcase_base.BaseConsoleTest):
@@ -35,100 +28,49 @@ class OrientationTest(testcase_base.BaseConsoleTest):
     self.avd = avd
     self.builder_name = builder_name
 
-  def _process_request_orientation_service(self, payload):
-    """Processes post request to orientation service.
-
-    Sends post request to sms service, gets the orientation and rotation.
+  def _execute_command_and_verify(self, command, expected_output, assert_msg):
+    """Executes console command and verify output.
 
     Args:
-        payload: The payload for sending POST request to sms server.
-
-    Returns:
-        orientation: The orientation of the screen.
-        rotation: The rotation of the screen.
+      command: Console command to be executed.
+      expected_output: Expected console output.
+      assert_msg: Assertion message.
     """
-    r = requests.post(SERVLET_ORIENTATION, data=json.dumps(payload))
-
-    if r.raise_for_status():
-      error_msg = ('Servlet Error: Post request to %s failed' %
-                   SERVLET_ORIENTATION)
-      print error_msg
-      return False, error_msg
-
-    r_json = r.json()
-
-    if r_json['isFail']:
-      error_msg = ('Servlet Error: Failure occurred in servlet side => %s'
-                   % SERVLET_ORIENTATION)
-      print error_msg
-      return False, error_msg
-
-    return int(r_json['screenOrientation']), int(r_json['screenRotation'])
-
-  def _poll_orientation_rotation_and_verify(self, expected_orientation,
-                                            expected_rotation):
-    """Polls orientation/rotation information from emulator and verifies them.
-
-    Args:
-      expected_orientation: Expected orientation to get.
-      expected_rotation: Expected rotation to get.
-    """
-    got_expected = False
-    for i in range(MAX_TRIES):
-      got_orientation, got_rotation = self._process_request_orientation_service(
-        {})
-      print ('got_orientation = %s, expected_orientation = %s' %
-             (got_orientation, expected_orientation))
-      print ('got_rotation = %s, expected_rotation = %s' %
-             (got_rotation, expected_rotation))
-      if (got_orientation == expected_orientation and
-            got_rotation == expected_rotation):
-        got_expected = True
-        break
-      else:
-        # Emulator needs some time to update the rotation of it's display.
-        time.sleep(2)
-
-    self.assertTrue(got_expected,
-                    'Max tries reached, failed to get expected values.')
-
-  def _execute_rotate_command_and_verify(self, expected_orientation,
-                                         expected_rotation):
-    print '\n-------------------------'
     is_command_successful, output = util.execute_console_command(
-      self.telnet, util.CMD_ROTATE, '')
-    self.assert_cmd_successful(
-      is_command_successful, 'Failed to properly get orientation/rotation.',
-      False, '', '', output)
-    self._poll_orientation_rotation_and_verify(expected_orientation,
-                                               expected_rotation)
+      self.telnet, command, expected_output)
+    self.assert_cmd_successful(is_command_successful, assert_msg, False, '',
+                               'Pattern: \n%s' % expected_output, output)
 
   def test_orientation(self):
     """Test command for: rotate
 
     TT ID: a802e7d8-75e6-44fd-ac9c-5af3f8d5d3a2
     Test steps:
-      1. Launch an emulator avd
-      2. Open any app, say Calculator, or maps
-      3. From command prompt, run: telnet localhost <port>
-      4. Copy the auth_token value from ~/.emulator_console_auth_token
-      5. Run: auth auth_token
-      6. Run: rotate, and verify
+      1. Run: rotate
+      2. Run: sensor get orientation , to verify rotate is 90 degree.
+      3. Run: rotate
+      4. Run: sensor get orientation , to verify rotate is 180 degree.
+      5. Run: rotate
+      6. Run: sensor get orientation , to verify rotate is 270 degree.
+      7. Run: rotate
+      8. Run: sensor get orientation , to verify rotate is 360 degree.
     Verify:
       Check to orientation and rotation of the launched app.
     """
-    if util.WIN_BUILDER_NAME in self.builder_name:
-      print 'Skip orientation test on Win.'
-      pass
-      return
-
-    util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
-
-    print 'Running test: %s' % (inspect.stack()[0][3])
-    self._poll_orientation_rotation_and_verify(ORIENTATION_PORTRAIT, ROTATION_0)
-    self._execute_rotate_command_and_verify(ORIENTATION_LANDSCAPE, ROTATION_270)
-
-    util.unstall_apps(TESTCASE_CALL_DIR)
+    this_function_name = sys._getframe().f_code.co_name
+    print 'Running test: %s' % (this_function_name)
+    # Rotate 90 degree and check orientation values.
+    self._execute_command_and_verify(CMD_ROTATE, ROTATE_CMD_OUTPUT, ASSERT_MSG_ROTATE)
+    self._execute_command_and_verify(CMD_GET_ORIENTATION, ROTATE_90_ORIENTATION, ASSERT_MSG_ORIENTATION)
+    # Rotate 180 degree and check orientation values.
+    self._execute_command_and_verify(CMD_ROTATE, ROTATE_CMD_OUTPUT, ASSERT_MSG_ROTATE)
+    self._execute_command_and_verify(CMD_GET_ORIENTATION, ROTATE_180_ORIENTATION, ASSERT_MSG_ORIENTATION)
+    # Rotate 270 degree and check orientation values.
+    self._execute_command_and_verify(CMD_ROTATE, ROTATE_CMD_OUTPUT, ASSERT_MSG_ROTATE)
+    self._execute_command_and_verify(CMD_GET_ORIENTATION, ROTATE_270_ORIENTATION, ASSERT_MSG_ORIENTATION)
+    # Rotate 360 degree and check orientation values.
+    self._execute_command_and_verify(CMD_ROTATE, ROTATE_CMD_OUTPUT, ASSERT_MSG_ROTATE)
+    self._execute_command_and_verify(CMD_GET_ORIENTATION, ROTATE_360_ORIENTATION, ASSERT_MSG_ORIENTATION)
 
 
 if __name__ == '__main__':
