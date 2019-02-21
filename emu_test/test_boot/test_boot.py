@@ -6,6 +6,7 @@ import time
 import psutil
 import shutil
 import traceback
+import json
 
 from emu_test.utils.emu_error import *
 from emu_test.utils.emu_argparser import emu_args
@@ -20,6 +21,33 @@ class BootTestCase(EmuBaseTestCase):
     @classmethod
     def setUpClass(cls):
         super(BootTestCase, cls).setUpClass()
+
+    def write_perf_data(self, boot_time1, boot_time2):
+        api = self.avd_config.api
+        jsonDir = os.path.join(emu_args.session_dir,
+                               emu_args.test_dir,
+                               "test.outputs")
+        if not os.path.exists(jsonDir):
+            os.makedirs(jsonDir)
+        filename = os.path.join(jsonDir,
+                                "BootTest" + api + ".json")
+        jsonFile = open(filename, "a")
+        if "Linux" in emu_args.builder_name:
+            platform = "linux"
+        elif "Windows" in emu_args.builder_name:
+            platform = "windows"
+        else:
+            platform = "mac"
+        data = {'boot_time1': boot_time1,
+                'boot_time2': boot_time2}
+        json_data = {"api": api,
+                     "metric": "Boot_time",
+                     "benchmark": "Boot_test",
+                     "platform": platform,
+                     "data": data}
+
+        jsonFile.write(json.dumps(json_data, indent=2))
+        jsonFile.close()
 
     def kill_emulator(self):
         self.m_logger.debug('First try - quit emulator by adb emu kill')
@@ -59,20 +87,21 @@ class BootTestCase(EmuBaseTestCase):
         if 'mips' in str(avd):
             real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time
         try:
-            self.boot_time = self.launch_emu_and_wait(avd)
+            boot_time1 = self.launch_emu_and_wait(avd)
             self.m_logger.info('AVD %s, boot time: %s, expected time: %s'
-                               % (avd, self.boot_time, real_expected_boot_time))
-            self.assertLessEqual(self.boot_time, real_expected_boot_time)
+                               % (avd, boot_time1, real_expected_boot_time))
+            self.assertLessEqual(boot_time1, real_expected_boot_time)
         except TimeoutError:
             self.m_logger.error('AVD %s, time out, try one more time' % str(avd))
         except:
             self.m_logger.error('AVD %s, exception, try one more time' % str(avd))
             self.m_logger.error(traceback.format_exc())
         self.kill_emulator()
-        self.boot_time = self.launch_emu_and_wait(avd)
+        boot_time2 = self.launch_emu_and_wait(avd)
         self.m_logger.info('2nd try AVD %s, boot time: %s, expected time: %s'
-                           % (avd, self.boot_time, real_expected_boot_time))
-        self.assertLessEqual(self.boot_time, real_expected_boot_time)
+                           % (avd, boot_time2, real_expected_boot_time))
+        self.assertLessEqual(boot_time2, real_expected_boot_time)
+        self.write_perf_data(boot_time1, boot_time2)
 
     def run_boot_test(self, avd_config):
         self.avd_config = avd_config
