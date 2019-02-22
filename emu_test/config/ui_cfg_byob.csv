@@ -6,3 +6,6 @@ API 28,android-wear,x86,Android Wear Round,2048,swiftshader,pi,P,P,P
 API 27,google_apis_playstore,x86,Nexus 5X,2048,swiftshader,oc-mr1,P,P,P
 API 27,android-tv,x86,Android TV (1080p),2048,swiftshader,oc-mr1,P,P,P
 API 27,android-wear,x86,Android Wear Round,2048,swiftshader,oc-mr1,P,P,P
+API 26,android-tv,x86,Android TV (1080p),2048,swiftshader,oc,P,P,P
+API 26,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,oc,P,P,P
+API 26,android-wear,x86,Android Wear Round,2048,swiftshader,oc,P,P,P
