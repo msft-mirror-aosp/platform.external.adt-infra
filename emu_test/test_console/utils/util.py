@@ -109,7 +109,7 @@ def parse_output(telnet):
   Returns:
     parsed_output: The parsed output until 'OK' message.
   """
-  parsed_output = telnet.read_until(OK).strip()
+  parsed_output = telnet.read_until(OK,10).strip()
   return parsed_output
 
 
@@ -243,10 +243,6 @@ def execute_console_command(telnet, command, expected_output):
 
     if command == 'crash\n':
       output = telnet.read_all()
-    elif command == CMD_ROTATE: # No 'OK' output showing, only new line.
-      print 'command is rotate'
-      output = telnet.read_until('\n', 10)
-      print 'output = "%s"' % output
     elif command == CMD_EMPTY_AUTH_TOKEN:
       output = telnet.read_until('missing authentication token').strip()
     elif command == CMD_RANDOM_AUTH_TOKEN:
