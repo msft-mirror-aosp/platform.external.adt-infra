@@ -50,4 +50,7 @@ cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
 echo "Cleanup prebuilts"
 for /f %%d in ('dir /b C:\buildbot\prebuilt') do (rmdir /s /q C:\buildbot\prebuilt\%%d)
 
+echo "Cleanup empty files"
+for /f %%d in ('dir /s /b /A:-D %SESSION_DIR%') do (if %%~zd==0 del %%d)
+
 exit 0

@@ -68,4 +68,7 @@ done
 echo "Run rm -rf $SNAPSHOT_DIR"
 rm -rf $SNAPSHOT_DIR
 
+echo "Remove any empty file"
+find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
+
 echo "UI test completed"

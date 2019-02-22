@@ -79,4 +79,7 @@ rm -rf $SESSION_DIR/emu-master-dev
 echo "Cleanup prebuilts"
 rm -rf /buildbot/prebuilt/*
 
+echo "Remove any empty file"
+find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
+
 exit 0
