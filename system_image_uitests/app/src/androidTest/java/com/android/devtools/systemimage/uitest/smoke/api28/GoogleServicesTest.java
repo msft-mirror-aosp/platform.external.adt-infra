@@ -29,7 +29,6 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
-import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 
 import org.junit.Rule;
@@ -119,27 +118,39 @@ public class GoogleServicesTest {
 
         // Open settings
         AppLauncher.launch(instrumentation, "Settings");
+        new AddGoogleAccountWatcher(device).checkForCondition();
 
         // Find and click "Location" in Settings
         UiScrollable itemList =
                 new UiScrollable(
                         new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
                 );
-        itemList.setAsVerticalList();
+
+        if (itemList.waitForExists(3L)) {
+            itemList.setAsVerticalList();
+        }
 
         String securityLabel = "Security & location";
         UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 securityLabel);
-        security.clickAndWaitForNewWindow();
+
+        if (security.waitForExists(3L)) {
+            security.clickAndWaitForNewWindow();
+        }
+
 
         UiObject location = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
-                        "Location");
-        location.clickAndWaitForNewWindow();
+                "Location");
+        if (location.waitForExists(3L)) {
+            location.clickAndWaitForNewWindow();
+        }
 
         assertTrue("Cannot find location toggle button", device.findObject(
-                new UiSelector().className("android.widget.Switch")).exists());
+                new UiSelector().className("android.widget.Switch")).waitForExists(3L));
+        assertTrue("Cannot find mode", device.findObject(new UiSelector().text(
+                "Mode")).waitForExists(3L));
         assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
-                "Recent location requests")).exists());
+                "Recent location requests")).waitForExists(3L));
     }
 
     /**
