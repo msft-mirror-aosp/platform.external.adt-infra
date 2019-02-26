@@ -34,6 +34,10 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
     self.avd = avd
     self.builder_name = builder_name
 
+  def tearDown(self):
+    if (self._execute_command_and_verify(CMD_GSM_LIST, util.OK, ASSERT_MSG.format(CMD_LIST)) is True):
+      self._execute_command_and_verify(CMD_GSM.format(CMD_CANCEL, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_CANCEL))
+
   def _execute_command_and_verify(self, command, expected_output, assert_msg):
     """Executes console command and verify output.
 
@@ -100,6 +104,22 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
                                        ASSERT_MSG.format(CMD_LIST))
     self._execute_command_and_verify(CMD_GSM.format(CMD_CANCEL, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_CANCEL))
 
+  def test_inbound_call_busy(self):
+    """Test for command: gsm busy <phonenumber>.
+    Test steps:
+      1. Run: gsm call <phonenumber>
+      2. Run: gsm busy <phoneNumber>
+      3. Run: gsm list to verify that call is terminated .
+    Verify:
+      1. Emulator displays an incoming call from the <phoneNumber>
+      2. Phone call is terminated.
+    """
+    this_function_name = sys._getframe().f_code.co_name
+    print 'Running test: %s' % (this_function_name)
+    util.make_inbound_call(CALL_NUMBER)
+    self._execute_command_and_verify(CMD_GSM.format(CMD_BUSY, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_BUSY))
+    self._execute_command_and_verify(CMD_GSM_LIST, util.OK,
+                                     ASSERT_MSG.format(CMD_LIST))
 
 if __name__ == '__main__':
   print '======= Call Test ======='
