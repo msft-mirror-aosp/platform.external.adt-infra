@@ -268,6 +268,10 @@ def check_running_app():
   else:
     return False
 
+def make_inbound_call(CALL_NUMBER_OUTBOUND):
+   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+   subprocess.check_output([adb_binary, 'shell', 'am', 'start', '-a', 'android.intent.action.CALL', '-d', 'tel:'+CALL_NUMBER_OUTBOUND])
+
 def execute_help_command(telnet, command):
   """Executes emulator console help related command.
 
