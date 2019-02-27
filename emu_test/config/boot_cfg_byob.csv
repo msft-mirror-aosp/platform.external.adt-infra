@@ -1,5 +1,9 @@
 Device Config,,,,,,,Linux,,,,,Windows,,,,,Mac,,
 API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,Linux_gce,Windows_gce,Mac
+API 29,android-tv,x86,Android TV (1080p),2048,swiftshader,qt,P,P,P
+API 29,google_apis,x86,Nexus 6P,2048,swiftshader,qt,P,P,P
+API 29,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,qt,P,P,P
+API 29,google_apis,x86_64,Nexus 6P,2048,swiftshader,qt,P,P,P
 API 28,android-tv,x86,Android TV (1080p),2048,swiftshader,pi,P,P,P
 API 28,google_apis,x86,Nexus 6P,2048,swiftshader,pi,P,P,P
 API 28,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,pi,P,P,P
