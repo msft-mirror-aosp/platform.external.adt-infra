@@ -50,7 +50,7 @@ python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $
 
 echo "Zip perf data"
 zip -rm $SESSION_DIR/Boot_test/test.outputs/outputs.zip $SESSION_DIR/Boot_test/test.outputs/*.json
-sh -c "cd $SESSION_DIR && zip -rm Boot_test/perfdata.zip Boot_test/test.outputs/*"
+sh -c "cd $SESSION_DIR && zip -rm $DIST_DIR/perfgate_data.zip Boot_test/test.outputs/*"
 rm -rf $SESSION_DIR/Boot_test/test.outputs
 
 if [[ $OSTYPE != *"darwin"* ]]
