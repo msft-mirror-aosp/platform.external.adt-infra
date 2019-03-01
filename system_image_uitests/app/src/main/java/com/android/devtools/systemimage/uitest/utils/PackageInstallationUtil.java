@@ -18,12 +18,14 @@ package com.android.devtools.systemimage.uitest.utils;
 
 import android.annotation.TargetApi;
 import android.app.Instrumentation;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.IntentSender;
+import android.content.pm.PackageInstaller;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
@@ -31,6 +33,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.PackageInstallationUtilityWatcher;
 
 import org.junit.Rule;
+import org.junit.Assert;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -55,6 +58,7 @@ public class PackageInstallationUtil {
         throw new AssertionError();
     }
     private final static String TAG = "PackageInstallationUtil";
+    private final static String INSTALL_COMPLETE = "";
     private final static long INSTALL_WAIT = 60L;
 
     @Rule
@@ -87,9 +91,10 @@ public class PackageInstallationUtil {
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      * @param apkName         the name of the apk to be installed (ie ApiDemos_x86.apk)
+     * @param isV2            if present and true, use newer createIntent method
      */
     @TargetApi(26)
-    public static String installApk(Instrumentation instrumentation, String apkName) throws Exception {
+    public static String installApk(Instrumentation instrumentation, String apkName, Boolean... isV2) throws Exception {
         Context context = instrumentation.getTargetContext();
         AssetManager assetManager = context.getAssets();
         InputStream in = assetManager.open(apkName);
@@ -101,11 +106,12 @@ public class PackageInstallationUtil {
 
         String result = "";
 
-        // Install app via Intent and UiAutomator
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        Boolean useV2 = isV2.length > 0 ? isV2[0] : false;
+        if (useV2) {
+            context.startActivity(createIntent_v2(apkFile));
+        } else {
+            context.startActivity(createIntent_v1(apkFile));
+        }
 
         UiDevice device = UiDevice.getInstance(instrumentation);
         UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)").
@@ -156,14 +162,68 @@ public class PackageInstallationUtil {
                     }
                 });
 
-        result = installationSuccess ? "" : result + "Could not find done button. ";
+        result = installationSuccess ? INSTALL_COMPLETE : result + "Could not find done button. ";
 
         if (!result.isEmpty()) {
             Log.w(TAG, result);
+            Assert.assertTrue("Package installation was unsuccessful: " + result, false);
         }
 
         device.pressHome();
         return result;
+    }
+
+    @TargetApi(21)
+    public static String installPackage(Instrumentation instrumentation, String apkName) throws IOException {
+        Context context = instrumentation.getTargetContext();
+        AssetManager assetManager = context.getAssets();
+        InputStream in = assetManager.open(apkName);
+        File apkFile = new File(context.getExternalFilesDir(null), apkName);
+
+        final PackageManager pm = context.getPackageManager();
+
+        PackageInstaller packageInstaller = pm.getPackageInstaller();
+        PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
+                PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+        params.setAppPackageName(apkName);
+
+        int sessionId = packageInstaller.createSession(params);
+        PackageInstaller.Session session = packageInstaller.openSession(sessionId);
+        OutputStream out = session.openWrite(apkName, 0, -1);
+        byte[] buffer = new byte[65536];
+        int c;
+        while ((c = in.read(buffer)) != -1) {
+            out.write(buffer, 0, c);
+        }
+        session.fsync(out);
+        in.close();
+        out.close();
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                sessionId,
+                createIntent_v2(apkFile),
+                0);
+        IntentSender intentSender = pendingIntent.getIntentSender();;
+        session.commit(intentSender);
+
+        return INSTALL_COMPLETE;
+    }
+
+    private static Intent createIntent_v1(File apkFile) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
+    }
+
+    private static Intent createIntent_v2(File apkFile) {
+        Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+        intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
+        intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true);
+        intent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
     }
 
     private static void copyFile(InputStream in, OutputStream out) throws IOException {
