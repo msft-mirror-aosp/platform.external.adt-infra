@@ -20,8 +20,8 @@ mkdir %SESSION_DIR%\emu-master-dev
 
 set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%\sdk_tools_linux
 
-echo "Run 7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-*.zip -o%SESSION_DIR%\emu-master-dev"
-7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-*.zip -o%SESSION_DIR%\emu-master-dev
+echo "Run 7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-[0-9]*.zip -o%SESSION_DIR%\emu-master-dev"
+7z x -aoa %BUILD_DIR%\sdk-repo-windows-emulator-[0-9]*.zip -o%SESSION_DIR%\emu-master-dev
 
 echo "Update SDK"
 echo "Run %ANDROID_HOME%\tools\bin\sdkmanager.bat --update"

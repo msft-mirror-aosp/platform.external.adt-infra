@@ -31,8 +31,8 @@ mkdir -p $SESSION_DIR/emu-master-dev
 
 BUILD_DIR="out/prebuilt_cached/builds"
 
-echo "Run unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-*.zip -d $SESSION_DIR/emu-master-dev"
-unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-*.zip -d $SESSION_DIR/emu-master-dev
+echo "Run unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev"
+unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev
 
 echo "Update SDK"
 echo "Run $ANDROID_HOME/tools/bin/sdkmanager --update"
