@@ -45,9 +45,9 @@ class BootTestCase(EmuBaseTestCase):
       data = {timestamp: value}
 
       benchmark = {"benchmark": name,
-                   "Project": "Android Studio Emulator",
+                   "project": "Android Studio Emulator",
                    "data": data,
-                   "Analyzers": analyzers}
+                   "analyzers": analyzers}
 
       return benchmark
 
