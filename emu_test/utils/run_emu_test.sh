@@ -53,6 +53,14 @@ sh -c "cd $SESSION_DIR && zip -rm Boot_test/test.outputs/outputs.zip Boot_test/t
 sh -c "cd $SESSION_DIR && zip -rm $DIST_DIR/perfgate_data.zip Boot_test/test.outputs/*"
 rm -rf $SESSION_DIR/Boot_test/test.outputs
 
+echo "Running Console tests"
+echo "Remove any existing AVDs"
+echo "sudo rm -rf $ANDROID_AVD_HOME/*"
+sudo rm -rf $ANDROID_AVD_HOME/*
+
+echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf"
+python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf
+
 if [[ $OSTYPE != *"darwin"* ]]
 then
     echo "Running AVD tests"
@@ -63,14 +71,6 @@ then
     echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml"
     python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file external/adt-infra/emu_test/config/avd_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
 fi
-
-echo "Running Console tests"
-echo "Remove any existing AVDs"
-echo "sudo rm -rf $ANDROID_AVD_HOME/*"
-sudo rm -rf $ANDROID_AVD_HOME/*
-
-echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf"
-python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf
 
 echo "Remove deployed emulator"
 echo "Run rm -rf $SESSION_DIR/emu-master-dev"
