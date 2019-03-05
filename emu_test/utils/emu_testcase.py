@@ -119,6 +119,7 @@ class EmuBaseTestCase(LoggedTestCase):
     def __init__(self, *args, **kwargs):
         super(EmuBaseTestCase, self).__init__(*args, **kwargs)
         self.boot_time = 0
+        self.start_time = 0
 
     @classmethod
     def setUpClass(cls):
@@ -341,7 +342,7 @@ class EmuBaseTestCase(LoggedTestCase):
         self.run_with_timeout([adb_binary, 'start-server'], 20)
         launcher_emu = threading.Thread(target=self.launch_emu, args=[avd, flags])
         launcher_emu.start()
-        start_time = time.time()
+        self.start_time = time.time()
         completed = '0'
         counter = 0
         real_time_out = emu_argparser.emu_args.timeout_in_seconds
@@ -349,7 +350,7 @@ class EmuBaseTestCase(LoggedTestCase):
         # Daemon can be unresponsive on some machines during the startup period with the device.
         time.sleep(20)
         # While loop implements the timeout check by constantly checking the current run time against timeout.
-        while (time.time() - start_time) < real_time_out:
+        while (time.time() - self.start_time) < real_time_out:
             # We use ADB to directly look at the emulator instance and see if its marked as booted.
             cmd = [adb_binary, 'shell', 'getprop', 'sys.boot_completed']
             try:
@@ -361,7 +362,7 @@ class EmuBaseTestCase(LoggedTestCase):
             # We will print out a status message every 20 invocations.  Keeps the log updated without spamming.
             if counter % 20 is 0:
                 self.m_logger.info('Boot Timeout Max is set to %s, current is %s'
-                                   % (real_time_out, time.time() - start_time))
+                                   % (real_time_out, time.time() - self.start_time))
                 self.m_logger.info('Ping AVD %s for boot completion. stdout: %s stderr: %s'
                                    % (str(avd), stdout.strip(), stderr.strip()))
             counter = counter + 1
@@ -379,7 +380,7 @@ class EmuBaseTestCase(LoggedTestCase):
             self.m_logger.error('AVD %s didn\'t boot up within %s seconds' % (str(avd), real_time_out))
             self.boot_time = -1
             raise TimeoutError(avd, real_time_out)
-        self.boot_time = time.time() - start_time
+        self.boot_time = time.time() - self.start_time
         self.m_logger.info('AVD %s, boot time is %s' % (str(avd), self.boot_time))
         if 'apiP' in str(avd):
             network_succeeded = False
@@ -429,7 +430,7 @@ class EmuBaseTestCase(LoggedTestCase):
         launcher_emu.join(10)
         if not emu_argparser.emu_args.skip_adb_perf:
             self.run_adb_perf(avd)
-        return self.boot_time
+        return self.boot_time, self.start_time
 
     def run_adb_perf(self, avd):
         """
@@ -448,10 +449,10 @@ class EmuBaseTestCase(LoggedTestCase):
         run_time = []
         for cmd in [push_cmd, pull_cmd]:
             try:
-                start_time = time.time()
+                self.start_time = time.time()
                 (exit_code, stdout, stderr) = self.run_with_timeout(cmd, 600)
                 # deduct 0.015 seconds for the overhead of sending adb command (this is arbitrarily chosen).
-                elapsed_time = time.time() - start_time - 0.015
+                elapsed_time = time.time() - self.start_time - 0.015
                 calculated_speed = (file_size/1024)/elapsed_time
                 speed = "%.0f KB/s" % calculated_speed
                 self.m_logger.info('Cmd: %s, Time elapsed: %s, File size: %s, speed: %s'

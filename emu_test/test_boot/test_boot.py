@@ -22,7 +22,38 @@ class BootTestCase(EmuBaseTestCase):
     def setUpClass(cls):
         super(BootTestCase, cls).setUpClass()
 
-    def write_perf_data(self, boot_time1, boot_time2):
+    def create_benchmark(self, name, value, timestamp):
+      mean = {"type":"Mean",
+              "constTerm":"10.0",
+              "meanCoeff":"0.1",
+              "stddevCoeff":"1.0"}
+
+      median = {"type":"Median",
+                "constTerm":"10.0",
+                "medianCoeff":"0.1",
+                "madCoeff":"1.0"}
+
+      toleranceParams = [mean,
+                         median]
+
+      analyzers = [{"type":"WindowDeviationAnalyzer",
+                    "metricAggregate":"MEDIAN",
+                    "runInfoQueryLimit":"50",
+                    "recentWindowSize":"25",
+                    "toleranceParams":toleranceParams}]
+
+      data = {timestamp: value}
+
+      benchmark = {"benchmark": name,
+                   "Project": "Android Studio Emulator",
+                   "data": data,
+                   "Analyzers": analyzers}
+
+      return benchmark
+
+    def write_perf_data(self,
+                        boot_time1, timestamp1,
+                        boot_time2, timestamp2):
         api = self.avd_config.api
         jsonDir = os.path.join(emu_args.session_dir,
                                emu_args.test_dir,
@@ -38,13 +69,11 @@ class BootTestCase(EmuBaseTestCase):
             platform = "windows"
         else:
             platform = "mac"
-        data = {'boot_time1': boot_time1,
-                'boot_time2': boot_time2}
-        json_data = {"api": api,
-                     "metric": "Boot_time",
-                     "benchmark": "Boot_test",
-                     "platform": platform,
-                     "data": data}
+
+        benchmarks = [self.create_benchmark("boot_time1", boot_time1, timestamp1),
+                      self.create_benchmark("boot_time2", boot_time2, timestamp2)]
+        json_data = {"metric": "BOOT_TIME",
+                     "benchmarks": benchmarks}
 
         jsonFile.write(json.dumps(json_data, indent=2))
         jsonFile.close()
@@ -87,7 +116,7 @@ class BootTestCase(EmuBaseTestCase):
         if 'mips' in str(avd):
             real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time
         try:
-            boot_time1 = self.launch_emu_and_wait(avd)
+            boot_time1, start_time1 = self.launch_emu_and_wait(avd)
             self.m_logger.info('AVD %s, boot time: %s, expected time: %s'
                                % (avd, boot_time1, real_expected_boot_time))
             self.assertLessEqual(boot_time1, real_expected_boot_time)
@@ -97,11 +126,12 @@ class BootTestCase(EmuBaseTestCase):
             self.m_logger.error('AVD %s, exception, try one more time' % str(avd))
             self.m_logger.error(traceback.format_exc())
         self.kill_emulator()
-        boot_time2 = self.launch_emu_and_wait(avd)
+        boot_time2, start_time2 = self.launch_emu_and_wait(avd)
         self.m_logger.info('2nd try AVD %s, boot time: %s, expected time: %s'
                            % (avd, boot_time2, real_expected_boot_time))
         self.assertLessEqual(boot_time2, real_expected_boot_time)
-        self.write_perf_data(boot_time1, boot_time2)
+        self.write_perf_data(boot_time1, start_time1,
+                             boot_time2, start_time2)
 
     def run_boot_test(self, avd_config):
         self.avd_config = avd_config
