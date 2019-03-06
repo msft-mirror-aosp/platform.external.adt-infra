@@ -70,8 +70,8 @@ class BootTestCase(EmuBaseTestCase):
         else:
             platform = "mac"
 
-        benchmarks = [self.create_benchmark("boot_time1", boot_time1, timestamp1),
-                      self.create_benchmark("boot_time2", boot_time2, timestamp2)]
+        benchmarks = [self.create_benchmark("Boot time new AVD", int(boot_time1), int(timestamp1)),
+                      self.create_benchmark("Boot time existing AVD", int(boot_time2), int(timestamp2))]
         json_data = {"metric": "BOOT_TIME",
                      "benchmarks": benchmarks}
 
