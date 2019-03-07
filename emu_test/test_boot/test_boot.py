@@ -51,18 +51,9 @@ class BootTestCase(EmuBaseTestCase):
 
       return benchmark
 
-    def write_perf_data(self,
-                        boot_time1, timestamp1,
-                        boot_time2, timestamp2):
-        api = self.avd_config.api
-        jsonDir = os.path.join(emu_args.session_dir,
-                               emu_args.test_dir,
-                               "test.outputs")
-        if not os.path.exists(jsonDir):
-            os.makedirs(jsonDir)
-        filename = os.path.join(jsonDir,
-                                "BootTest" + api + ".json")
-        jsonFile = open(filename, "a")
+    def write_perf_data(self, metric, benchmark, tag,
+                        data, timestamp):
+ 
         if "Linux" in emu_args.builder_name:
             platform = "linux"
         elif "Windows" in emu_args.builder_name:
@@ -70,9 +61,19 @@ class BootTestCase(EmuBaseTestCase):
         else:
             platform = "mac"
 
-        benchmarks = [self.create_benchmark("Boot time new AVD", int(boot_time1), int(timestamp1)),
-                      self.create_benchmark("Boot time existing AVD", int(boot_time2), int(timestamp2))]
-        json_data = {"metric": "BOOT_TIME",
+        metric = metric + "_" + platform + "_" + tag
+
+        jsonDir = os.path.join(emu_args.session_dir,
+                               emu_args.test_dir,
+                               "test.outputs")
+        if not os.path.exists(jsonDir):
+            os.makedirs(jsonDir)
+
+        filename = os.path.join(jsonDir, metric + ".json")
+        jsonFile = open(filename, "a")
+
+        benchmarks = [self.create_benchmark(benchmark, int(data), int(timestamp))]
+        json_data = {"metric": metric,
                      "benchmarks": benchmarks}
 
         jsonFile.write(json.dumps(json_data, indent=2))
@@ -130,8 +131,11 @@ class BootTestCase(EmuBaseTestCase):
         self.m_logger.info('2nd try AVD %s, boot time: %s, expected time: %s'
                            % (avd, boot_time2, real_expected_boot_time))
         self.assertLessEqual(boot_time2, real_expected_boot_time)
-        self.write_perf_data(boot_time1, start_time1,
-                             boot_time2, start_time2)
+        if emu_args.generate_perf:
+            self.write_perf_data("Boot_time_new_AVD", "Boot_Time", avd.tag,
+                                 boot_time1, start_time1)
+            self.write_perf_data("Boot_time_existing_avd", "Boot_Time", avd.tag,
+                                 boot_time2, start_time2)
 
     def run_boot_test(self, avd_config):
         self.avd_config = avd_config
