@@ -32,8 +32,8 @@ echo "Build Emulator"
 echo "tools/buildSrc/servers/build_tools.sh $OUT_DIR $DIST_DIR $BID $CPU"
 tools/buildSrc/servers/build_tools.sh $OUT_DIR $DIST_DIR $BID $CPU
 
-echo "Run unzip -o $DIST_DIR/sdk-repo-$OS-emulator-*.zip -d $SESSION_DIR/emu-master-dev"
-unzip -o $DIST_DIR/sdk-repo-$OS-emulator-*.zip -d $SESSION_DIR/emu-master-dev
+echo "Run unzip -o $DIST_DIR/sdk-repo-$OS-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev"
+unzip -o $DIST_DIR/sdk-repo-$OS-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev
 
 echo "Running Boot tests"
 echo "Remove any existing AVDs"
