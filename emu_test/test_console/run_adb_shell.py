@@ -26,7 +26,8 @@ while True:
                                              instrumentation_runner))])
 
     # Print GeoManagerService log for debugging geo test failure on API 23.
-    adb_logcat = subprocess.Popen('adb logcat'.split(), stdout=subprocess.PIPE)
+    cmd = adb_binary + " logcat"
+    adb_logcat = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
     print 'start: logcat'
     while True:
       line = adb_logcat.stdout.readline()
