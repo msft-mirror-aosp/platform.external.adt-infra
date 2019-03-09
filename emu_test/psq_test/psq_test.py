@@ -13,6 +13,8 @@ from emu_test.utils import emu_argparser
 from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig
 from emu_test.utils.emu_error import *
 
+adb_binary = path_utils.get_adb_binary()
+
 class PsqBootTestBase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
         super(PsqBootTestBase, self).__init__(*args, **kwargs)
@@ -24,7 +26,7 @@ class PsqBootTestBase(EmuBaseTestCase):
 
     def kill_emulator(self):
         self.m_logger.debug('First try - quit emulator by adb emu kill')
-        kill_proc = psutil.Popen(["adb", "emu", "kill"])
+        kill_proc = psutil.Popen([adb_binary, "emu", "kill"])
         # check emulator process is terminated
         result = self.term_check(timeout=5)
         if not result:
@@ -68,12 +70,12 @@ class PsqSnapshotRunnerTestCase(PsqBootTestBase):
         launcher_emu, boot_time = self.launch_emu_no_kill(avd_config,
                 ["-feature", "SnapshotAdb,Offworld"])
         prebuilts_path = os.path.join(path_utils.get_emu_test_path(), "prebuilts")
-        self.run_and_log(["adb", "install", os.path.join(prebuilts_path,
+        self.run_and_log([adb_binary, "install", os.path.join(prebuilts_path,
                                                          "AndroidOffworld.apk")])
-        self.run_and_log(["adb", "install", os.path.join(prebuilts_path,
+        self.run_and_log([adb_binary, "install", os.path.join(prebuilts_path,
                                                          "AndroidOffworld_unittests.apk")])
         # We need to run SaveLoadTest and ForkTest. ForkTest is flaky so we disable it for now.
-        out = self.run_and_log(["adb", "shell", "am", "instrument", "-w", "-r", "-e", "debug",
+        out = self.run_and_log([adb_binary, "shell", "am", "instrument", "-w", "-r", "-e", "debug",
             "false", "-e", "class", "'com.google.android.offworld.examples.snapshot.SaveLoadTest'",
             "com.google.android.offworld.examples.snapshot.test/"
             + "androidx.test.runner.AndroidJUnitRunner"])
