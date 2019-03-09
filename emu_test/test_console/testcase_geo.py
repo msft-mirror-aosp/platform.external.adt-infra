@@ -137,11 +137,6 @@ class GeoTest(testcase_base.BaseConsoleTest):
     Verify:
       Check Maps location centers on San Francisco.
     """
-    if util.WIN_BUILDER_NAME in self.builder_name:
-      print 'Skip geo test on Win.'
-      pass
-      return
-
     print 'Running test: %s' % (inspect.stack()[0][3])
 
     print 'api = ' + self.avd.api
@@ -163,7 +158,6 @@ class GeoTest(testcase_base.BaseConsoleTest):
         False, '', '', output)
       self._process_request_geo_service({})
       self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
-
       util.unstall_apps(TESTCASE_CALL_DIR)
     else:
       # TODO: Add support for APIs below 23.
@@ -177,21 +171,16 @@ class GeoTest(testcase_base.BaseConsoleTest):
       print 'Skip geo test on Win.'
       pass
       return
-
     print 'Running test: %s' % (inspect.stack()[0][2])
-
     if self.avd.api >= '24':
       print 'Running test: %s' % (inspect.stack()[0][2])
-
       util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
-
       self._initially_launch_google_maps_to_have_location_history({'api': self.avd.api})
       is_command_successful, output = util.execute_console_command(self.telnet, CMD_GEO_SF, '')
       self.assert_cmd_successful(is_command_successful, 'Failed to properly set geo info.',
                                  False, '', '', output)
       self._process_request_geo_service({})
       self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
-
       for i in range(ITERATIONS):
         # Use telnet.write directly instead of execute_console_command since we expect this command to fail.
         # Will produce 'KO' rather than 'OK'. (i.e. execute_console_command hangs waiting for 'OK').
@@ -200,13 +189,11 @@ class GeoTest(testcase_base.BaseConsoleTest):
         self.telnet.read_until('\n')
         self._process_request_geo_service({})
         self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
-
       util.unstall_apps(TESTCASE_CALL_DIR)
     else:
       # TODO: Add support for APIs below 24.
       print 'Skip geo stress test for APIs below 24.'
       pass
-
 
 if __name__ == '__main__':
   print '======= geo Test ======='

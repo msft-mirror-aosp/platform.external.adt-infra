@@ -13,6 +13,7 @@ import sys
 import telnetlib
 import time
 
+
 NEWLINE = '\n'
 OK = 'OK'
 STATUS = 'status: '
@@ -350,9 +351,8 @@ def run_script_run_adb_shell(testcase_call_dir):
   Args:
     testcase_call_dir: The directory where the test case is called from.
   """
-  script_run_adb_shell = ('%s/%s' %
-                          (testcase_call_dir, SCRIPT_TO_RUN_ADB_SHELL))
-  script_install_apk = '%s/%s' % (testcase_call_dir, SCRIPT_TO_INSTALL_APK)
+  script_run_adb_shell = os.path.join(testcase_call_dir, SCRIPT_TO_RUN_ADB_SHELL)
+  script_install_apk = os.path.join(testcase_call_dir, SCRIPT_TO_INSTALL_APK)
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
   subprocess.call([adb_binary, '-s', 'emulator-%s' % str(CONSOLE_PORT),
                    '-e', 'forward', 'tcp:8080', 'tcp:8081'])
@@ -366,8 +366,23 @@ def unstall_apps(testcase_call_dir):
   Args:
     testcase_call_dir: The directory where the test case is called from.
   """
-  subprocess.Popen([PYTHON_INTERPRETER,
-                    '%s/%s' % (testcase_call_dir, SCRIPT_TO_UNINSTALL_APP)])
+  test_apk_package = '%s.test' % MAIN_APK_PACKAGE
+  num_trials = 1
+  while True:
+    if num_trials is ADB_NUM_MAX_TRIALS:
+      sys.exit(-1)
+    try:
+      adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+      print ('Run adb shell to uninstall apps, trial num: %s' % str(num_trials))
+      print ('Run adb uninstall %s' % test_apk_package)
+      subprocess.call([adb_binary, 'uninstall', test_apk_package])
+      print ('Run adb uninstall %s' % MAIN_APK_PACKAGE)
+      subprocess.call([adb_binary, 'uninstall', MAIN_APK_PACKAGE])
+      break
+    except subprocess.CalledProcessError as err:
+      print 'Subprocess call error: {0}'.format(err)
+      time.sleep(ADB_TRIAL_WAIT_TIME_S)
+      num_trials += 1
   time.sleep(SETUP_WAIT_TIMEOUT_S)
 
 def launch_application(package_name):
