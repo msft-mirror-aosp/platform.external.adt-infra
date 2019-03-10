@@ -10,6 +10,7 @@ import sys
 import time
 import util
 import psutil
+import shutil
 import logging
 import unittest
 import threading
@@ -68,15 +69,15 @@ class CreateAndLaunchAVDTest(EmuBaseTestCase):
            launch_cmd += ["-skip-adb-auth"]
 
        log.info('Launching AVD, cmd: %s' % ' '.join(launch_cmd))
-       start_proc = subprocess.Popen(launch_cmd,
-                                     stderr=subprocess.STDOUT,
-                                     stdout=emu_log_stream)
+       self.start_proc = subprocess.Popen(launch_cmd,
+                                          stderr=subprocess.STDOUT,
+                                          stdout=emu_log_stream)
        log.info('done Launching AVD, cmd: %s' % ' '.join(launch_cmd))
 
-       if start_proc.poll():
+       if self.start_proc.poll():
            raise LaunchError(str(avd))
        log.debug('return Launching AVD, ...: %s' % str(avd))
-       return start_proc
+       return self.start_proc
 
     def run_with_timeout(self, cmd, timeout):
        """Run command with specified timeout.
@@ -174,7 +175,7 @@ class CreateAndLaunchAVDTest(EmuBaseTestCase):
                                     '%s_verbose.txt' % test_name)
 
         args = ['-port', '5554', '-wipe-data', '-no-boot-anim', '-no-snapshot',
-                '-no-window', '-qemu', '-enable-kvm']
+                '-no-window', '-qemu']
         with open(emu_log_path, 'wb') as emu_log:
             return self.launch_emu_and_wait(avd_config,
                                             emu_argparser.emu_args,

@@ -15,14 +15,14 @@ from emu_test.utils.emu_error import *
 
 adb_binary = path_utils.get_adb_binary()
 
-class PsqBootTestBase(EmuBaseTestCase):
+class PsqSnapshotRunnerTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
-        super(PsqBootTestBase, self).__init__(*args, **kwargs)
+        super(PsqSnapshotRunnerTestCase, self).__init__(*args, **kwargs)
         self.avd_config = None
 
     @classmethod
     def setUpClass(cls):
-        super(PsqBootTestBase, cls).setUpClass()
+        super(PsqSnapshotRunnerTestCase, cls).setUpClass()
 
     def kill_emulator(self):
         self.m_logger.debug('First try - quit emulator by adb emu kill')
@@ -52,20 +52,13 @@ class PsqBootTestBase(EmuBaseTestCase):
             self.m_logger.error("Error in cleanup - %r", e)
             pass
 
-class PsqSnapshotRunnerTestCase(PsqBootTestBase):
-    def __init__(self, *args, **kwargs):
-        super(PsqBootTestBase, self).__init__(*args, **kwargs)
-
-    @classmethod
-    def setUpClass(cls):
-        super(PsqBootTestBase, cls).setUpClass()
-
     def run_and_log(self, cmd):
         out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
         self.m_logger.info(out)
         return out
 
     def run_snapshot_runner_test(self, avd_config):
+        self.avd_config = avd_config
         avd = self.create_avd(avd_config)
         launcher_emu, boot_time = self.launch_emu_no_kill(avd_config,
                 ["-feature", "SnapshotAdb,Offworld"])
