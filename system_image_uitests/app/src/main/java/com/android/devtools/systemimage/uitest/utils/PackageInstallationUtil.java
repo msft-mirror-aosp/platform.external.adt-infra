@@ -59,7 +59,7 @@ public class PackageInstallationUtil {
     }
     private final static String TAG = "PackageInstallationUtil";
     private final static String INSTALL_COMPLETE = "";
-    private final static long INSTALL_WAIT = 60L;
+    private final static long INSTALL_WAIT = 5L;
 
     @Rule
     public final static SystemImageTestFramework testFramework = new SystemImageTestFramework();
