@@ -97,28 +97,24 @@ public class MapsTest {
             searchUiObject.clickAndWaitForNewWindow();
 
             UiObject searchEditText;
-            UiObject selectedLocation;
             searchEditText = searchUiObject.getChild(new UiSelector().className(EditText.class.getName()));
             searchEditText.setText(QUERY_STRING);
             UiScrollable scrollView = new UiScrollable(new UiSelector().className(ScrollView.class.getName()));
 
-            final UiObject locationString = mDevice.findObject(new UiSelector().text(QUERY_STRING));
-            boolean hasLocationString = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return locationString.exists();
+            if (scrollView.waitForExists(5L)) {
+                UiObject selectedLocation;
+                UiObject locationString = mDevice.findObject(new UiSelector().text(QUERY_STRING));
+                if (locationString.waitForExists(5L)) {
+                    scrollView.scrollIntoView(locationString);
                 }
-            });
-
-            if (hasLocationString) {
-                scrollView.scrollIntoView(locationString);
+                selectedLocation = scrollView.getChildByText(new UiSelector()
+                        .className(TextView.class.getName()), QUERY_STRING);
+                Assert.assertTrue("Selected location " + QUERY_STRING + " not found.",
+                        selectedLocation.waitForExists(5L));
+                selectedLocation.clickAndWaitForNewWindow();
+            } else {
+                Assert.assertTrue("Scroll view not found.", false);
             }
-
-            selectedLocation = scrollView.getChildByText(new UiSelector()
-                    .className(TextView.class.getName()), QUERY_STRING);
-            Assert.assertTrue("Selected location " + QUERY_STRING + " not found.",
-                    selectedLocation.exists());
-            selectedLocation.clickAndWaitForNewWindow();
 
             // Verify the Query String is present after completing search.
             final UiObject searchTextView =
