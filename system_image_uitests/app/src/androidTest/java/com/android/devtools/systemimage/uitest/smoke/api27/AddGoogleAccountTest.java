@@ -70,6 +70,10 @@ public class AddGoogleAccountTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice mDevice = testFramework.getDevice();
 
+        if (!testFramework.isGoogleApiImage() || !testFramework.isGoogleApiAndPlayImage()) {
+            return;
+        }
+
         AppLauncher.launch(instrumentation, "Contacts");
         // Check if the app is running for the first time.
         UiObject checkingInfo =

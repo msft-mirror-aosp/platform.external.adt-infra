@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  * new wait(timeout, polltime).until(expectedCondition);
  */
 public class Wait {
-    private static final long DEFAULT_WAIT_TIME = TimeUnit.MILLISECONDS.convert(3L, TimeUnit
+    private static final long DEFAULT_WAIT_TIME = TimeUnit.MILLISECONDS.convert(7L, TimeUnit
             .SECONDS);
     private static final long DEFAULT_POLL_TIME =
             TimeUnit.MILLISECONDS.convert(100L, TimeUnit.MILLISECONDS);
