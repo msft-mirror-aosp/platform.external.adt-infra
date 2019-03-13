@@ -32,6 +32,11 @@ echo "Build Emulator"
 echo "tools/buildSrc/servers/build_tools.sh $OUT_DIR $DIST_DIR $BID $CPU"
 tools/buildSrc/servers/build_tools.sh $OUT_DIR $DIST_DIR $BID $CPU
 
+if [[ $? -ne 0 ]]
+then
+    exit 1
+fi
+
 echo "Run unzip -o $DIST_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev"
 unzip -o $DIST_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev
 
@@ -50,4 +55,13 @@ python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $
 echo "Remove any empty file"
 find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
 
-exit 0
+# Check if boot test report generated
+if [[ ! -f $SESSION_DIR/Boot_test/test_report.xml ]]
+then
+    exit 1
+fi
+
+# Check if boot test passed or failed
+grep -q "failures=\"0\"" $SESSION_DIR/Boot_test/test_report.xml
+
+exit $?
