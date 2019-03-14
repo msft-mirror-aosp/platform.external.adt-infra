@@ -244,7 +244,13 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.avd_config = avd_config
         self.assertEqual(self.create_avd(avd_config), 0)
         self.launch_emu_and_wait(avd_config)
-
+        # Turn off ac charger. Keep display on.
+        if "android-tv" not in avd_config.tag:
+            adb_binary = path_utils.get_adb_binary()
+            q1 = psutil.Popen([adb_binary, 'emu', 'power', 'ac', 'off'])
+            q1.communicate()
+            q2 = psutil.Popen([adb_binary, 'shell', 'settings', 'put', 'system', 'screen_off_timeout', '2147483647'])
+            q2.communicate()
 
 if emu_args.config_file is None:
     sys.exit(0)
