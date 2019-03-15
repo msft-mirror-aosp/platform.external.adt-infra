@@ -1,30 +1,27 @@
 """Tests for geo-related commands."""
 
-import inspect
-import json
 import os
 import time
 import unittest
-
-import requests
+import subprocess
+import sys
 import testcase_base
 from utils import util
 
-ITERATIONS = 8
-
-TESTCASE_CALL_DIR = os.path.dirname(os.path.realpath(__file__))
-SERVLET_GEO = 'http://localhost:8080/GeoManagerService'
-
-CMD_GEO_FIX_PREFIX = 'geo fix'
-SF_LONGITUDE = -122
-SF_LATITUDE = 38
-SF_ALTITUDE = 0
-CMD_GEO_SF = ('%s %d %d %d\n' %
-              (CMD_GEO_FIX_PREFIX, SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE))
+CMD_GEO_FIX = 'geo fix {} {} {}\n'
+COORDINATES_MATCHING_STRING = 'Longitude:{} || Latitude:{} || Altitude:{}'
+SF_LONGITUDE = -122.0
+SF_LATITUDE = 38.0
+SF_ALTITUDE = 0.0
 
 SF_INVALID_LONGITUDE = 200
 SF_INVALID_LATITUDE = 100
-CMD_GEO_INVALID = ('%s %d %d %d\n' % (CMD_GEO_FIX_PREFIX, SF_INVALID_LONGITUDE, SF_INVALID_LATITUDE, SF_ALTITUDE))
+SF_INVALID_ALTITUDE = 100
+
+CONSOLE_TEST_PACKAGE_NAME = 'com.example.ConsoleTest'
+ASSERT_MSG = 'Location Co-ordinates cannot be pushed'
+ASSERT_MSG_MATCH_FAILURE = 'Location Co-ordinates do not match'
+RESPONSE_FOR_INVALID_CMD = 'KO'
 
 
 class GeoTest(testcase_base.BaseConsoleTest):
@@ -38,88 +35,13 @@ class GeoTest(testcase_base.BaseConsoleTest):
     self.avd = avd
     self.builder_name = builder_name
 
-  # Comment out these class methods for future use when more APIs are added.
-  # @classmethod
-  # def setUpClass(cls):
-  #   util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
-  #
-  # @classmethod
-  # def tearDownClass(cls):
-  #   util.unstall_apps(TESTCASE_CALL_DIR)
+  @classmethod
+  def setUpClass(cls):
+    util.install_with_permission()
 
-  def _process_request_geo_service(self, payload):
-    """Processes post request to geo service.
-
-    Sends post request to geo service, gets the last known location.
-
-    Args:
-        payload: The payload for sending POST request to geo server.
-
-    Returns:
-        longitude: The longitude of last know location.
-        latitude: The latitude of last know location.
-        altitude: The altitude of last know location.
-    """
-    r = requests.post(SERVLET_GEO, data=json.dumps(payload))
-
-    if r.raise_for_status():
-      error_msg = ('Servlet Error: Post request to %s failed' %
-                   SERVLET_GEO)
-      print error_msg
-      return False, error_msg
-
-    r_json = r.json()
-
-    if r_json['isFail']:
-      error_msg = ('Servlet Error: Failure occurred in servlet side => %s'
-                   % SERVLET_GEO)
-      print error_msg
-      return False, False, False
-
-    print 'Got longitude: ' + r_json['longitude']
-    print 'Got latitude: ' + r_json['latitude']
-    print 'Got altitude: ' + r_json['altitude']
-
-    return (int(r_json['longitude']), int(r_json['latitude']),
-            int(r_json['altitude']))
-
-  def _poll_geo_and_verify(self,
-                           expected_longitude,
-                           expected_latitude,
-                           expected_altitude):
-    """Polls orientation/rotation information from emulator and verifies them.
-
-    Args:
-      expected_longitude: Expected longitude to get.
-      expected_latitude: Expected latitude to get.
-      expected_altitude: Expected altitude to get.
-    """
-    got_expected = False
-    MAX_TRIES = 3
-    for i in range(MAX_TRIES):
-      got_longitude, got_latitude, got_altitude = \
-        self._process_request_geo_service({})
-      print ('got_longitude = %s, expected_longitude = %s' %
-             (got_longitude, expected_longitude))
-      print ('got_latitude = %s, expected_latitude = %s' %
-             (got_latitude, expected_latitude))
-      print ('got_altitude = %s, expected_altitude = %s' %
-             (got_altitude, expected_altitude))
-      if (got_longitude == expected_longitude and
-            (got_latitude >= expected_latitude - 1 or
-              got_latitude <= expected_latitude + 1) and
-            got_altitude == expected_altitude):
-        got_expected = True
-        break
-      else:
-        time.sleep(util.TRIAL_WAIT_TIMEOUT_S)
-
-    self.assertTrue(got_expected,
-                    'Max tries reached, failed to get expected values.')
-
-  def _initially_launch_google_maps_to_have_location_history(self, payload):
-    print 'Launch Google Maps initially to make it has location history.'
-    requests.post(SERVLET_GEO, data=json.dumps(payload))
+  @classmethod
+  def tearDownClass(cls):
+    util.unstall_apps(CONSOLE_TEST_PACKAGE_NAME)
 
   def test_geo(self):
     """Test command for: geo fix xxx
@@ -137,63 +59,42 @@ class GeoTest(testcase_base.BaseConsoleTest):
     Verify:
       Check Maps location centers on San Francisco.
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    this_function_name = sys._getframe().f_code.co_name
+    print 'Running test: %s' %(this_function_name)
+    self._execute_command_and_verify(CMD_GEO_FIX.format(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE), util.OK,
+                                     ASSERT_MSG)
+    self._poll_and_verify_coordinates(COORDINATES_MATCHING_STRING.format(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE))
 
-    print 'api = ' + self.avd.api
-
-    if self.avd.api == '23':
-      print 'Skip geo test for API 23.'
-      pass
-      return
-
-    if self.avd.api >= '23':
-      util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
-
-      self._initially_launch_google_maps_to_have_location_history({'api': self.avd.api})
-
-      is_command_successful, output = util.execute_console_command(
-        self.telnet, CMD_GEO_SF, '')
-      self.assert_cmd_successful(
-        is_command_successful, 'Failed to properly set geo info.',
-        False, '', '', output)
-      self._process_request_geo_service({})
-      self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
-      util.unstall_apps(TESTCASE_CALL_DIR)
-    else:
-      # TODO: Add support for APIs below 23.
-      print 'API is below 23, skip geo test for now.'
-      pass
-
-  @unittest.skip("Skip it because it failed, and also can be repo locally on Linux with API 25/26.")
   def test_geo_stress(self):
     """Stress geo location by attempting to send invalid coordinates."""
-    if util.WIN_BUILDER_NAME in self.builder_name:
-      print 'Skip geo test on Win.'
-      pass
-      return
-    print 'Running test: %s' % (inspect.stack()[0][2])
-    if self.avd.api >= '24':
-      print 'Running test: %s' % (inspect.stack()[0][2])
-      util.run_script_run_adb_shell(TESTCASE_CALL_DIR)
-      self._initially_launch_google_maps_to_have_location_history({'api': self.avd.api})
-      is_command_successful, output = util.execute_console_command(self.telnet, CMD_GEO_SF, '')
-      self.assert_cmd_successful(is_command_successful, 'Failed to properly set geo info.',
-                                 False, '', '', output)
-      self._process_request_geo_service({})
-      self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
-      for i in range(ITERATIONS):
-        # Use telnet.write directly instead of execute_console_command since we expect this command to fail.
-        # Will produce 'KO' rather than 'OK'. (i.e. execute_console_command hangs waiting for 'OK').
-        self.telnet.write(CMD_GEO_INVALID)
-        self.telnet.read_until('KO:')
-        self.telnet.read_until('\n')
-        self._process_request_geo_service({})
-        self._poll_geo_and_verify(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE)
-      util.unstall_apps(TESTCASE_CALL_DIR)
-    else:
-      # TODO: Add support for APIs below 24.
-      print 'Skip geo stress test for APIs below 24.'
-      pass
+    this_function_name = sys._getframe().f_code.co_name
+    print 'Running test: %s' % (this_function_name)
+    self._execute_command_and_verify(CMD_GEO_FIX.format(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE), util.OK,
+                                     ASSERT_MSG)
+    self._execute_command_and_verify(CMD_GEO_FIX.format(SF_INVALID_LONGITUDE, SF_INVALID_LATITUDE, SF_INVALID_ALTITUDE), RESPONSE_FOR_INVALID_CMD,
+                                     ASSERT_MSG)
+    self._poll_and_verify_coordinates(COORDINATES_MATCHING_STRING.format(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE))
+
+  def _poll_and_verify_coordinates(self, coordinates_string):
+   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+   subprocess.Popen(['adb', 'logcat', '-c'], stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+   util.launch_application(CONSOLE_TEST_PACKAGE_NAME + '/com.example.ConsoleTest.MainActivity')
+   time.sleep(1)
+   test_process = subprocess.check_output([adb_binary, 'logcat', '-d'])
+   is_match_successful = coordinates_string in str(test_process)
+   self.assertTrue(is_match_successful, ASSERT_MSG_MATCH_FAILURE)
+
+  def _execute_command_and_verify(self, command, expected_output, assert_msg):
+    """Executes console command and verify output.
+    Args:
+      command: Console command to be executed.
+      expected_output: Expected console output.
+      assert_msg: Assertion message.
+    """
+    is_command_successful, output = util.execute_console_command(
+    self.telnet, command, expected_output)
+    self.assert_cmd_successful(is_command_successful, assert_msg, False, '',
+                               'Pattern: \n%s' % expected_output, output)
 
 if __name__ == '__main__':
   print '======= geo Test ======='
