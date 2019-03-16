@@ -257,6 +257,7 @@ class EmuBaseTestCase(LoggedTestCase):
         # Launch emulator with "-dns-server 8.8.8.8"
         # For CTS test to make test_getByName in android.core.tests.libcore.package.libcore pass
         # Also windows and mac needs this to have network connection
+        launch_cmd += ["-feature", "GLESDynamicVersion"]
         launch_cmd += ['-dns-server', '8.8.8.8']
         if 'test_boot' in emu_argparser.emu_args.pattern:
             launch_cmd += ['-no-snapshot']
