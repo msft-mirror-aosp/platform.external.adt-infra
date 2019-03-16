@@ -251,6 +251,8 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             q1.communicate()
             q2 = psutil.Popen([adb_binary, 'shell', 'settings', 'put', 'system', 'screen_off_timeout', '2147483647'])
             q2.communicate()
+            q3 = psutil.Popen([adb_binary, 'shell', 'dumpsys', 'battery', 'set', 'level', '10'])
+            q3.communicate()
 
 if emu_args.config_file is None:
     sys.exit(0)
