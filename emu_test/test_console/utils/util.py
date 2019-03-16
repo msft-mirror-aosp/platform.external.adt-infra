@@ -76,15 +76,13 @@ AUTH = 'auth'
 CMD_RANDOM_AUTH_TOKEN = '%s axxB123cc\n' % AUTH
 CMD_EMPTY_AUTH_TOKEN = '%s \n' % AUTH
 CMD_EXIT = 'exit\n'
-SCRIPT_TO_INSTALL_APK = 'install_apk.py'
-SCRIPT_TO_RUN_ADB_SHELL = 'run_adb_shell.py'
-SCRIPT_TO_UNINSTALL_APP = 'uninstall_app.py'
-PYTHON_INTERPRETER = 'python'
 CMD_ROTATE = 'rotate\n'
-MAIN_APK_PACKAGE = 'com.android.devtools.server'
 WIN_BUILDER_NAME = 'Win'
 
 CONTACT_PACKAGE_NAME = 'com.android.contacts'
+CONSOLE_TEST_APK = 'ConsoleTest.apk'
+project_default_path = os.path.dirname(os.path.realpath(__file__))
+TESTCASE_CALL_DIR = apk_dir = os.path.join(project_default_path, 'apks')
 
 def check_read_until(console_output):
   """Checks whether the console output ends with 'OK' message.
@@ -341,32 +339,12 @@ def exit_emulator_console(telnet):
   wait_on_windows()
   telnet.close()
 
-
-def run_script_run_adb_shell(testcase_call_dir):
-  """Run Python script to install apk.
-
-  Run Python script to install Rest Service app and corresponding test on
-  Emulator; on emulator, do a port forwarding from tcp:8080 to tcp:8081.
-
-  Args:
-    testcase_call_dir: The directory where the test case is called from.
-  """
-  script_run_adb_shell = os.path.join(testcase_call_dir, SCRIPT_TO_RUN_ADB_SHELL)
-  script_install_apk = os.path.join(testcase_call_dir, SCRIPT_TO_INSTALL_APK)
-  adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
-  subprocess.call([adb_binary, '-s', 'emulator-%s' % str(CONSOLE_PORT),
-                   '-e', 'forward', 'tcp:8080', 'tcp:8081'])
-  subprocess.call([PYTHON_INTERPRETER, script_install_apk])
-  subprocess.Popen([PYTHON_INTERPRETER, script_run_adb_shell])
-  time.sleep(SETUP_WAIT_TIMEOUT_S)
-
-def unstall_apps(testcase_call_dir):
+def unstall_apps(package_name):
   """Run Python script to uninstall apps.
 
   Args:
     testcase_call_dir: The directory where the test case is called from.
   """
-  test_apk_package = '%s.test' % MAIN_APK_PACKAGE
   num_trials = 1
   while True:
     if num_trials is ADB_NUM_MAX_TRIALS:
@@ -374,16 +352,18 @@ def unstall_apps(testcase_call_dir):
     try:
       adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
       print ('Run adb shell to uninstall apps, trial num: %s' % str(num_trials))
-      print ('Run adb uninstall %s' % test_apk_package)
-      subprocess.call([adb_binary, 'uninstall', test_apk_package])
-      print ('Run adb uninstall %s' % MAIN_APK_PACKAGE)
-      subprocess.call([adb_binary, 'uninstall', MAIN_APK_PACKAGE])
+      subprocess.call([adb_binary, 'uninstall', package_name])
       break
     except subprocess.CalledProcessError as err:
       print 'Subprocess call error: {0}'.format(err)
       time.sleep(ADB_TRIAL_WAIT_TIME_S)
       num_trials += 1
-  time.sleep(SETUP_WAIT_TIMEOUT_S)
+
+def install_with_permission():
+  adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+  print ('Run adb install for  %s' % TESTCASE_CALL_DIR)
+  path_to_apk = os.path.join(TESTCASE_CALL_DIR, CONSOLE_TEST_APK)
+  subprocess.call([adb_binary, 'install', '-g', path_to_apk])
 
 def launch_application(package_name):
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
