@@ -19,10 +19,9 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.view.KeyEvent;
 import android.widget.EditText;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -95,41 +94,22 @@ public class MapsTest {
             }));
 
             searchUiObject.clickAndWaitForNewWindow();
-
-            UiObject searchEditText;
-            UiObject selectedLocation;
-            searchEditText = searchUiObject.getChild(new UiSelector().className(EditText.class.getName()));
+            UiObject searchEditText = searchUiObject.getChild(
+                    new UiSelector().className(EditText.class.getName()));
             searchEditText.setText(QUERY_STRING);
-            UiScrollable scrollView = new UiScrollable(new UiSelector().className(ScrollView.class.getName()));
-
-            final UiObject locationString = mDevice.findObject(new UiSelector().text(QUERY_STRING));
-            boolean hasLocationString = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return locationString.exists();
-                }
-            });
-
-            if (hasLocationString) {
-                scrollView.scrollIntoView(locationString);
-            }
-
-            selectedLocation = scrollView.getChildByText(new UiSelector()
-                    .className(TextView.class.getName()), QUERY_STRING);
-            Assert.assertTrue("Selected location " + QUERY_STRING + " not found.",
-                    selectedLocation.exists());
-            selectedLocation.clickAndWaitForNewWindow();
+            mDevice.pressKeyCode(KeyEvent.KEYCODE_ENTER);
 
             // Verify the Query String is present after completing search.
             final UiObject searchTextView =
                     searchUiObject.getChild(new UiSelector().className(TextView.class.getName()));
 
-            boolean hasSearchText = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return searchTextView.exists();
-                }
-            });
+            boolean hasSearchText = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).
+                    until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return searchTextView.waitForExists(10L);
+                        }
+                    });
 
             if (hasSearchText) {
                 Assert.assertTrue("Search string " + QUERY_STRING + " not found.",
