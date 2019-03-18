@@ -180,7 +180,7 @@ public class SettingsUtil {
             appPermissionsLabel.clickAndWaitForNewWindow();
         }
         UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
-        if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+        if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(20))) {
             return appPermissionsList.getChildByText(new UiSelector().className("android.widget.TextView"), appType);
         } else {
             throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
