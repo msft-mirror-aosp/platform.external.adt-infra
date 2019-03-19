@@ -27,6 +27,10 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
+import org.junit.Assert;
+
+import java.util.concurrent.TimeUnit;
+
 /**
  * Developer options manager.
  */
@@ -46,16 +50,28 @@ public class DeveloperOptionsManager {
                         new UiSelector().resourceIdMatches(Res.ABOUT_PHONE_LIST_CONTAINER_RES)
                 );
         itemList.setAsVerticalList();
-        UiObject item =
+
+        final UiObject buildNumberLabel =
                 itemList.getChildByText(
                         new UiSelector().className("android.widget.TextView"),
                         "Build number"
                 );
 
+        boolean hasBuildNumberLabel = new Wait(TimeUnit.MILLISECONDS.convert(
+                10L, TimeUnit.SECONDS)).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return buildNumberLabel.waitForExists(10L);
+                    }
+                });
+
+        Assert.assertTrue("Developer options could not be enabled.", hasBuildNumberLabel);
+
         // Currently, UiAutomator cannot catch toast messages (see b/26511336).
         // We simply repeat for 10 times without verification. Will improve if it causes flakiness.
         for (int i = 0; i < 10; i++) {
-            item.click();
+            buildNumberLabel.click();
         }
     }
     /**
