@@ -57,7 +57,7 @@ public class NetworkIOTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(240);
+    public Timeout globalTimeout = Timeout.seconds(360);
 
     /**
      * Verifies test browser successfully loads a web page.
