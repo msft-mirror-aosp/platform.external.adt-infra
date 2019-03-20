@@ -8,6 +8,7 @@ STATUS=0
 
 export ANDROID_HOME=$SDK_EMULATOR
 export ANDROID_SDK_ROOT=$SDK_EMULATOR
+export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 
 BUILDERNAME="Linux_gce"
 OS="linux"
@@ -40,8 +41,11 @@ echo "rm -rf $ANDROID_AVD_HOME/*"
 rm -rf $ANDROID_AVD_HOME/*
 
 echo "Generate Perf Data"
-echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf"
-python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf
+echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf"
+python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf
+
+echo "Run python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test"
+python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test
 
 echo "Zip perf data"
 sh -c "cd $SESSION_DIR && zip -rm Perf_test/test.outputs/outputs.zip Perf_test/test.outputs/*.json"

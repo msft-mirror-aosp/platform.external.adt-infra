@@ -11,6 +11,9 @@ set DIST_DIR=%1
 set ORI=%2
 set API=%3
 
+setx ANDROID_EMU_ENABLE_CRASH_REPORTING "NO" /M
+call refreshenv
+
 echo "Running UI test for %API%"
 
 set SNAPSHOT_DIR=%DIST_DIR%\snaps

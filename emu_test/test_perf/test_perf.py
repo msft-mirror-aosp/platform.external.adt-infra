@@ -1,4 +1,4 @@
-"""Test the emulator boot time"""
+"""Generate perf data for emulator"""
 
 import unittest
 import os
@@ -6,6 +6,7 @@ import time
 import psutil
 import shutil
 import traceback
+import json
 
 from emu_test.utils.emu_error import *
 from emu_test.utils.emu_argparser import emu_args
@@ -13,13 +14,15 @@ import emu_test.utils.emu_testcase
 from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig
 import emu_test.utils.path_utils as path_utils
 
-class BootTestCase(EmuBaseTestCase):
+class PerfTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
-        super(BootTestCase, self).__init__(*args, **kwargs)
+        super(PerfTestCase, self).__init__(*args, **kwargs)
         self.avd_config = None
+        self.perf_file = ""
+
     @classmethod
     def setUpClass(cls):
-        super(BootTestCase, cls).setUpClass()
+        super(PerfTestCase, cls).setUpClass()
 
     def kill_emulator(self):
         self.m_logger.debug('First try - quit emulator by adb emu kill')
@@ -50,47 +53,46 @@ class BootTestCase(EmuBaseTestCase):
             self.m_logger.error("Error in cleanup - %r" % e)
             pass
 
-    def boot_check(self, avd):
-        real_expected_boot_time = emu_args.expected_boot_time
-        if 'swiftshader' in str(avd):
-            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time
-        if 'arm' in str(avd):
-            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time
-        if 'mips' in str(avd):
-            real_expected_boot_time = real_expected_boot_time + emu_args.expected_boot_time
+    def launch_emulator(self, metric, avd):
         try:
-            boot_time1, start_time1 = self.launch_emu_and_wait(avd)
-            self.m_logger.info('AVD %s, boot time: %s, expected time: %s'
-                               % (avd, boot_time1, real_expected_boot_time))
-            self.assertLessEqual(boot_time1, real_expected_boot_time)
+            self.m_logger.info("PerfGate Metric: %s" % metric)
+            self.perf_file = os.path.join(emu_args.session_dir,
+                                          emu_args.test_dir,
+                                          metric + ".log")
+            boot_time, start_time = self.launch_emu_and_wait(avd)
+            self.m_logger.info('AVD %s, boot time: %s' % (avd, boot_time))
         except TimeoutError:
             self.m_logger.error('AVD %s, time out, try one more time' % str(avd))
         except:
             self.m_logger.error('AVD %s, exception, try one more time' % str(avd))
             self.m_logger.error(traceback.format_exc())
-        self.kill_emulator()
-        boot_time2, start_time2 = self.launch_emu_and_wait(avd)
-        self.m_logger.info('2nd try AVD %s, boot time: %s, expected time: %s'
-                           % (avd, boot_time2, real_expected_boot_time))
-        self.assertLessEqual(boot_time2, real_expected_boot_time)
 
-    def run_boot_test(self, avd_config):
+    def generate_perf_data_idle(self, avd):
+        metric = "New_AVD_" + avd.tag + "_" + avd.gpu + "_idle"
+        self.launch_emulator(metric, avd)
+        time.sleep(300)
+        self.kill_emulator()
+        metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_idle"
+        self.launch_emulator(metric, avd)
+        time.sleep(300)
+
+    def run_perf_test(self, avd_config):
         self.avd_config = avd_config
         if self.create_avd(avd_config) == 0:
-            self.boot_check(avd_config)
+            self.generate_perf_data_idle(avd_config)
 
 
 def create_test_case_for_avds():
     avd_list = emu_args.avd_list
     for avd in avd_list:
         def fn(i):
-            return lambda self: self.boot_check(i)
-        setattr(BootTestCase, "test_boot_%s" % avd, fn(avd))
+            return lambda self: self.generate_perf_data(i)
+        setattr(PerfTestCase, "test_perf_%s" % avd, fn(avd))
 
 if emu_args.config_file is None:
     create_test_case_for_avds()
 else:
-    emu_test.utils.emu_testcase.create_test_case_from_file("boot", BootTestCase, BootTestCase.run_boot_test)
+    emu_test.utils.emu_testcase.create_test_case_from_file("perf", PerfTestCase, PerfTestCase.run_perf_test)
 
 if __name__ == '__main__':
     os.environ["SHELL"] = "/bin/bash"

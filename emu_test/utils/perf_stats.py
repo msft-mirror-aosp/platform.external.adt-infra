@@ -1,0 +1,234 @@
+#!/usr/bin/env python
+"""
+This file contains utility functions to dump perfgate stats.
+"""
+
+import json
+import os
+import platform
+import argparse
+import itertools
+
+AVD_TYPE = ["New",
+            "Existing"]
+
+TAG = ["default",
+       "google_apis",
+       "google_apis_playstore"]
+
+GPU = ["swiftshader"]
+
+TESTCASE = ["idle"]
+
+METRIC = "{}_AVD_{}_{}_{}"
+
+def create_benchmark(name, value, timestamp):
+    """
+    Create a benchmark for perfgate json file.
+
+    name: Name of benchmark
+    value: List of data points
+    timestamp: List of timestamps correspnding to data points
+
+    return: A dictionary object for benchmark which can be dumped as json object
+    """
+    mean = {"type":"Mean",
+            "constTerm":"10.0",
+            "meanCoeff":"0.1",
+            "stddevCoeff":"1.0"}
+
+    median = {"type":"Median",
+              "constTerm":"10.0",
+              "medianCoeff":"0.1",
+              "madCoeff":"1.0"}
+
+    toleranceParams = [mean,
+                       median]
+
+    analyzers = [{"type":"WindowDeviationAnalyzer",
+                  "metricAggregate":"MEDIAN",
+                  "runInfoQueryLimit":"50",
+                  "recentWindowSize":"25",
+                  "toleranceParams":toleranceParams}]
+
+    data = dict((int(ts),va) for (ts, va) in zip(timestamp, value))
+
+    benchmark = {"benchmark": name,
+                 "project": "Android Studio Emulator",
+                 "data": data,
+                 "analyzers": analyzers}
+
+    return benchmark
+
+
+def write_perf_data(metric, benchmark, data, timestamp):
+    """
+    Write perfgate stats to a json file.
+
+    metric: Name of the metric
+    benchmark: Name of the benchmark
+    data: List of data points
+    timestamp: List of timestamps correspnding to data points
+    """
+    metric = metric + "_" + platform.system()
+
+    jsonDir = os.path.join(args.log_dir,
+                           "test.outputs")
+    if not os.path.exists(jsonDir):
+        os.makedirs(jsonDir)
+
+    filename = os.path.join(jsonDir, metric + ".json")
+    jsonFile = open(filename, "a")
+
+    benchmarks = [create_benchmark(benchmark, data, timestamp)]
+    json_data = {"metric": metric,
+                 "benchmarks": benchmarks}
+
+    jsonFile.write(json.dumps(json_data, indent=2))
+    jsonFile.close()
+
+
+def get_time(line):
+    """
+    Extract timestamp from line
+
+    line: Sting containing timestamp
+
+    return: timestamp
+    """
+    timestamp = int(line.split(" time ")[1].split()[0])
+    return timestamp
+
+
+def get_cpu_usage(cpu_data):
+    """
+    Calculate CPU usage
+
+    cpu_data: CPU time
+
+    return: CPU usage in %
+    """
+    return round(((cpu_data[1]+cpu_data[2])/cpu_data[0])*100.0, 2)
+
+
+def get_cpu_mem_data(line):
+    """
+    Extract cpu and memory usage from line
+
+    line: String containing cpu and memory usage data
+
+    return: cpu and memory usage
+    """
+    mem_data = int(line.split(" memory_usage ")[1].split("resident_memory: ")[1].split()[0])
+    vcpu_data = line.split(" memory_usage ")[0].split(" main_loop_slice ")[1].split(" vcpu_slices ")
+    cpu0 = get_cpu_usage([float(x) for x in vcpu_data[0].split() if x.isdigit()])
+    cpu1 = get_cpu_usage([float(x) for x in vcpu_data[1].split() if x.isdigit()])
+    cpu2 = get_cpu_usage([float(x) for x in vcpu_data[2].split() if x.isdigit()])
+    return cpu0, cpu1, cpu2, mem_data
+
+
+def get_data_from_log(logFile):
+    """
+    Find data from test log files along with the timestamp
+
+    marker: A marker to mark start of relevant data in log file
+    logFile: Name of log file from which the data can be extracted
+
+    return: A list of CPU and memory usage data with timestamps
+    """
+    cpu0_data = []
+    cpu1_data = []
+    cpu2_data = []
+    memory_data = []
+    timestamp = []
+    with open(logFile, 'r') as log_file:
+        for line in log_file:
+            if "event time" in line:
+                timestamp.append(get_time(line))
+            elif "emulator_performance_stats" in line:
+                cpu0_usage, cpu1_usage, cpu2_usage, memory_usage = get_cpu_mem_data(line)
+                cpu0_data.append(cpu0_usage)
+                cpu1_data.append(cpu1_usage)
+                cpu2_data.append(cpu2_usage)
+                memory_data.append(memory_usage)
+
+    return [cpu0_data, cpu1_data, cpu2_data], memory_data, timestamp
+
+
+def get_boot_time(logFile):
+    """
+    Get Boot time data
+
+    logFile: Name of log file from which the data can be extracted
+
+    return: List of boot times
+    """
+    boot_time = []
+    with open(logFile, 'r') as log_file:
+        for line in log_file:
+            if "INFO: boot time" in line:
+                boot_time.append(get_time(line))
+
+    return boot_time
+
+
+def write_boot_time_benchmark(metrics, boot_timestamp):
+    """
+    Write boot time benchmark
+
+    metric: Dictionary to hold metrics and boot time
+    boot_timestamp: Timestamps for each metric
+    """
+    logFile = os.path.join(args.log_dir, "PerfTestCase.log")
+    with open(logFile, 'r') as log_file:
+        count = 0
+        for line in log_file:
+            if "PerfGate Metric: " in line:
+                key = line.split("INFO - PerfGate Metric: ")[1].split()[0]
+            elif "INFO: boot time" in line:
+                metrics[key] = get_time(line)
+                count += 1
+            if count == len(metrics):
+                break
+
+    for metric in metrics:
+        write_perf_data("Boot_Time_"+metric,
+                        "Boot_Time",
+                        [metrics[metric]],
+                        [boot_timestamp[metric]])
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Pass dir info to configure perf data parsing")
+    parser.add_argument("--log_dir", type=str, required=True, help="Directory containing log file to parse for perf stats")
+    args = parser.parse_args()
+
+    metrics = {}
+    boot_timestamp = {}
+    for avd_type, tag, gpu, testcase in itertools.product(AVD_TYPE, TAG, GPU, TESTCASE):
+        metric = METRIC.format(avd_type, tag, gpu, testcase)
+        logFile = os.path.join(args.log_dir, metric+".log")
+        if not os.path.isfile(logFile):
+            continue;
+        cpu_data, memory_data, timestamp = get_data_from_log(logFile)
+        metrics[metric] = 0
+        boot_timestamp[metric] = timestamp[0]
+        write_perf_data("CPU0_"+metric,
+                        "CPU_Usage",
+                        cpu_data[0],
+                        timestamp)
+        write_perf_data("CPU1_"+metric,
+                        "CPU_Usage",
+                        cpu_data[0],
+                        timestamp)
+        write_perf_data("CPU2_"+metric,
+                        "CPU_Usage",
+                        cpu_data[0],
+                        timestamp)
+        write_perf_data("Memory_"+metric,
+                        "Memory_Usage",
+                        memory_data,
+                        timestamp)
+    # Write boot time benchmark
+    if metric:
+        write_boot_time_benchmark(metrics, boot_timestamp)
