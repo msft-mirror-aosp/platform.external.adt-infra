@@ -70,7 +70,7 @@ class LoggedTestCase(unittest.TestCase):
         log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         simple_formatter = logging.Formatter('%(message)s')
 
-        file_name = '%s_%s.log' % (cls.__name__, time.strftime("%Y%m%d-%H%M%S"))
+        file_name = '%s.log' % (cls.__name__)
 
         cls.m_logger = cls.setupLogger(cls.__name__, file_name, log_formatter)
         cls.simple_logger = cls.setupLogger(cls.__name__+'_simple', file_name, simple_formatter)
@@ -91,10 +91,7 @@ class LoggedTestCase(unittest.TestCase):
         logger = logging.getLogger(logger_name)
         logger.propagate = False
         logger.addHandler(file_handler)
-        # If this is a PsqBootTestCase, we dont print to console.  This is to
-        # minimize output that swarming server must parse.
-        if cls.__name__ != 'PsqBootTestCase':
-            logger.addHandler(console_handler)
+        logger.addHandler(console_handler)
         logger.setLevel(logging.DEBUG)
 
         return logger
@@ -246,7 +243,8 @@ class EmuBaseTestCase(LoggedTestCase):
         self.m_logger.info('Launching Emulator with AVD, ...: %s', str(avd))
         emulator_bin = emu_argparser.emu_args.emulator_exec
         launch_cmd = [emulator_bin, "-avd", str(avd), "-verbose", "-show-kernel"]
-        launch_cmd += ["-debug", "surface"]
+        if emu_argparser.emu_args.generate_perf:
+            launch_cmd += ["-perf-stat", self.perf_file]
         if avd.gpu == "swiftshader":
             launch_cmd += ["-gpu", "swiftshader_indirect"]
         else:
@@ -259,7 +257,7 @@ class EmuBaseTestCase(LoggedTestCase):
         # Also windows and mac needs this to have network connection
         launch_cmd += ["-feature", "GLESDynamicVersion"]
         launch_cmd += ['-dns-server', '8.8.8.8']
-        if 'test_boot' in emu_argparser.emu_args.pattern:
+        if 'test_boot' in emu_argparser.emu_args.pattern or 'test_perf' in emu_argparser.emu_args.pattern:
             launch_cmd += ['-no-snapshot']
         if flags != None:
             launch_cmd += flags

@@ -7,6 +7,9 @@ REM {src}/platform_testing/ui_test/run_ui_test.cmd
 
 title run_boot_test
 
+setx ANDROID_EMU_ENABLE_CRASH_REPORTING "NO" /M
+call refreshenv
+
 set DIST_DIR=%1
 set ORI=%2
 set API=%3

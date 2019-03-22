@@ -8,6 +8,8 @@ DIST_DIR=$1
 ORI=$2
 API=$3
 
+export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
+
 BUILDERNAME="Linux_gce"
 if [[ $OSTYPE == *"darwin"* ]]
 then
