@@ -37,10 +37,15 @@ public class SettingsUtil {
 
         UiScrollable itemList = new UiScrollable(new UiSelector().resourceIdMatches(
                 Res.SETTINGS_LIST_CONTAINER_RES));
-        if (!itemList.exists()) {
+        if (!itemList.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
             itemList = new UiScrollable(new UiSelector().resourceIdMatches(
                     Res.LAUNCHER_LIST_CONTAINER_RES));
         }
+
+        assertTrue("Failed to find the Settings items list.",
+                itemList.waitForExists(TimeUnit.SECONDS.toMillis(5)));
+
+
         return itemList.setAsVerticalList();
     }
 
@@ -51,11 +56,11 @@ public class SettingsUtil {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
         UiObject item = itemList.getChildByText(
                 new UiSelector().className("android.widget.TextView"), name);
-        if (item.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
-            return item;
-        } else {
-            throw new UiObjectNotFoundException("Failed to find the item in Settings.");
-        }
+
+        assertTrue("Failed to find the item in Settings list.",
+                item.waitForExists(TimeUnit.SECONDS.toMillis(5)));
+
+        return item;
     }
 
     /**
