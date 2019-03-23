@@ -45,7 +45,14 @@ public class ApiDemosTestUtil {
         itemList.setAsVerticalList();
         itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 criteria).clickAndWaitForNewWindow();
-        UiObject editText = device.findObject(new UiSelector().className("android.widget.EditText"));
+        final UiObject editText = device.findObject(new UiSelector().className("android.widget.EditText"));
+        boolean hasEditText = new Wait(5L).until(new Wait.ExpectedCondition() {
+            @Override
+            public boolean isTrue() {
+                return editText.exists();
+            }
+        });
+        Assert.assertTrue("Edit password text field not found", hasEditText);
         editText.setText(value);
         device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
     }
