@@ -39,6 +39,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
@@ -51,6 +52,9 @@ public class ApiDemosTest {
 
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
+
+    @Rule
+    public Timeout globalTimeout = Timeout.seconds(800);
 
     private Instrumentation instrumentation = testFramework.getInstrumentation();
     private UiDevice device = testFramework.getDevice();

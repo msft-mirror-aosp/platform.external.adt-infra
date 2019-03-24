@@ -122,8 +122,7 @@ public class ApiDemosTestUtil {
 
         passwordField.setText(password);
         UiObject passwordError = device.findObject(new UiSelector().textContains(errorMessage));
-        passwordError.waitForExists(3L);
-        Assert.assertTrue(passwordError.exists());
+        Assert.assertTrue("Wrong password not detected", passwordError.waitForExists(5L));
         pressDeleteKey(password.length(), device);
     }
 
