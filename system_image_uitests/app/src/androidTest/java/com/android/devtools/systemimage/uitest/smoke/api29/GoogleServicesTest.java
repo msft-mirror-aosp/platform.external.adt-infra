@@ -105,9 +105,8 @@ public class GoogleServicesTest {
      *   1. Start an emulator AVD targeting Google Add On image
      *   2. Open Settings > Location
      *   Verify:
-     *   "Use location" toggle button is enabled.
-     *   Verify location Mode
-     *   Verify recent location access.
+     *   Location enable toggle button.
+     *   Verify recent location requests.
      *   </pre>
      */
     @Test
@@ -119,6 +118,22 @@ public class GoogleServicesTest {
         // Open settings
         AppLauncher.launch(instrumentation, "Settings");
         new AddGoogleAccountWatcher(device).checkForCondition();
+
+        //Dismiss Set Up Wizard.
+        UiObject cancelWizard = device.findObject(
+                new UiSelector().resourceIdMatches(Res.CANCEL_SETUP_WIZARD_RES));
+
+        if (cancelWizard.waitForExists(5L)) {
+            cancelWizard.clickAndWaitForNewWindow();
+        }
+
+        //Defer until later today.
+        UiObject deferUntilLater = device.findObject(
+                new UiSelector().resourceIdMatches(Res.DEFERRED_SNOOZE_ITEM_RES).index(0));
+
+        if (deferUntilLater.waitForExists(5L)) {
+            deferUntilLater.clickAndWaitForNewWindow();
+        }
 
         // Find and click "Location" in Settings
         UiScrollable itemList =
@@ -146,8 +161,6 @@ public class GoogleServicesTest {
 
         assertTrue("Cannot find location toggle button", device.findObject(
                 new UiSelector().className("android.widget.Switch")).waitForExists(3L));
-        assertTrue("Cannot find mode", device.findObject(new UiSelector().text(
-                "Mode")).waitForExists(3L));
         assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
                 "Recent location requests")).waitForExists(3L));
     }

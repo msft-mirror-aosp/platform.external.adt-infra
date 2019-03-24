@@ -52,6 +52,8 @@ public class Res {
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id|com.google.android.apps.nexuslauncher\\d*:id|com.android.launcher3\\d*:id/active)"
                     + "/(all_apps_container|all_apps_handle|apps_customize_pane_content|apps_list_view|drag_indicator)";
     public static final String LAUNCHER_LIST_DISMISS_RES = "com.google.android.apps.nexuslauncher:id/dismiss";
+    public static final String CANCEL_SETUP_WIZARD_RES = "com.google.android.setupwizard:id/welcome_cancel_button";
+    public static final String DEFERRED_SNOOZE_ITEM_RES = "com.google.android.setupwizard:id/deferred_snooze_item";
     public static final String ANDROID_PHONE_RES = "com.android.phone";
     public static final String ANDROID_SETTINGS_RES = "com.android.settings";
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
