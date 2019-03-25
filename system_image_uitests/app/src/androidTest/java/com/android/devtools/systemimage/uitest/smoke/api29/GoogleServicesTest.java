@@ -106,7 +106,6 @@ public class GoogleServicesTest {
      *   2. Open Settings > Location
      *   Verify:
      *   Location enable toggle button.
-     *   Verify recent location requests.
      *   </pre>
      */
     @Test
@@ -145,7 +144,7 @@ public class GoogleServicesTest {
             itemList.setAsVerticalList();
         }
 
-        String securityLabel = "Security & location";
+        String securityLabel = "Location";
         UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 securityLabel);
 
@@ -153,16 +152,9 @@ public class GoogleServicesTest {
             security.clickAndWaitForNewWindow();
         }
 
-        UiObject location = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
-                "Location");
-        if (location.waitForExists(3L)) {
-            location.clickAndWaitForNewWindow();
-        }
-
-        assertTrue("Cannot find location toggle button", device.findObject(
-                new UiSelector().className("android.widget.Switch")).waitForExists(3L));
-        assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
-                "Recent location requests")).waitForExists(3L));
+        assertTrue("Cannot find location toggle button",
+                device.findObject(new UiSelector().resourceIdMatches(Res.ANDROID_SWITCH_TEXT_RES)
+                        .text("Use location")).waitForExists(5L));
     }
 
     /**

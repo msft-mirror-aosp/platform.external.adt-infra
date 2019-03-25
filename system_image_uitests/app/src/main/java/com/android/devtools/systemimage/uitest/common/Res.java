@@ -56,6 +56,7 @@ public class Res {
     public static final String DEFERRED_SNOOZE_ITEM_RES = "com.google.android.setupwizard:id/deferred_snooze_item";
     public static final String ANDROID_PHONE_RES = "com.android.phone";
     public static final String ANDROID_SETTINGS_RES = "com.android.settings";
+    public static final String ANDROID_SWITCH_TEXT_RES = "com.android.settings:id/switch_text";
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
             "com.android.settings:id/container_material";
     public static final String APPS_LIST_CONTAINER_RES = "com.android.settings:id/list_container";
@@ -64,7 +65,7 @@ public class Res {
             "com.android.settings:id/list";  // Added in API 24.
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
-            "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list)";
+            "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container)";
     public static final String Q_SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(main_content_scrollable_container)";
 
