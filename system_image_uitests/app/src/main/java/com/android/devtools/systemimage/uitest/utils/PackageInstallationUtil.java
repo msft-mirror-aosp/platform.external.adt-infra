@@ -140,7 +140,7 @@ public class PackageInstallationUtil {
         UiObject installButton = device.findObject(new UiSelector().textMatches("(?i)install(?-i)").
                 className("android.widget.Button"));
         boolean hasInstallButton = installButton.waitForExists(TimeUnit.MILLISECONDS.convert(
-                INSTALL_WAIT, TimeUnit.SECONDS));
+                INSTALL_WAIT*2, TimeUnit.SECONDS));
         if (hasInstallButton) {
             installButton.clickAndWaitForNewWindow();
         } else {
