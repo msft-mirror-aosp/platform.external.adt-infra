@@ -38,8 +38,7 @@ def print_xml(emu_result):
         return id.rsplit('.', 1)[-1]
     result = ET.Element('testsuite', name='BootTest')
     result.set('tests', str(emu_result.testsRun))
-    result.set('failures', str(len(emu_result.failures)))
-    result.set('errors', str(len(emu_result.errors)))
+    result.set('failures', str(len(emu_result.failures)+len(emu_result.errors)))
 
     for x in emu_result.passes:
         ET.SubElement(result, 'testcase', name=getTestName(x.id()),
