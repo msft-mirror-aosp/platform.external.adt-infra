@@ -46,12 +46,13 @@ class GCEDevice:
                 "%(ssh_user)s@%(ip_addr)s:%(remote_file)s "
                 "%(local_file)s")
 
-    def __init__(self, config_file, image, build_id, adb):
+    def __init__(self, config_file, image, build_id, adb, gpu=None):
         self.launch = None
         self.adb_port = None
         self.image = image
         self.build_id = build_id
         self.adb = adb
+        self.gpu = gpu
         self._configure(config_file)
 
     def _configure(self, config_file):
@@ -88,6 +89,7 @@ class GCEDevice:
             branch='git_pi-dev',  # Unused, points to an existing branch
             build_id=5136849,     # Unused, points to an existing build
             build_target='sdk_gphone_x86_64-userdebug', # Unused.
+            gpu=self.gpu,
             report_internal_ip=False)
         self.launch.Dump(None)
 

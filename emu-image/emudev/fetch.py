@@ -55,6 +55,8 @@ flags.DEFINE_string(
     'ACloud base configuration')
 flags.DEFINE_string('build_id', '5048570',
                     'Emulator build used to launch the image')
+flags.DEFINE_string('gpu', None,
+                    'GPU to attach to the device or None. e.g. nvidia-tesla-k80')
 flags.DEFINE_string(
     'boot', None, 'Matching string from list to boot image.'
     'For example: "21" will boot all 21 images. '
@@ -91,7 +93,8 @@ def _boot_image(adb, system_image):
     if not FLAGS.delete:
         return system_image.launch_with_acloud(FLAGS.config,
                                                FLAGS.build_id,
-                                               adb).wait_until_booted()
+                                               adb,
+                                               FLAGS.gpu).wait_until_booted()
 
     with system_image.launch_with_acloud(FLAGS.config,
                                          FLAGS.build_id, adb) as device:

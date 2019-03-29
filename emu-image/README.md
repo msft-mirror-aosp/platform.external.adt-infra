@@ -73,6 +73,7 @@ This will produce a csv that could look like this:
   - You can have only one instance of an ADBD running on your machine.
   - During first launch the emulator will marshall the keys found in ~/.android/adbkey to the emulated device.
   - We will obtain this key and place it in the credentials search path of our ADB deamon, so adb can offer the key and connect to the device.
+  - You can launch gpu enabled images, they might be expensive, and you must make sure you have enough GPU quota available.
 
 - You will need to have ssh access to your GCE instances from the machine you are running this from. For example if you are using the emu-dev-cts project you will have to be within google corpnet.
 

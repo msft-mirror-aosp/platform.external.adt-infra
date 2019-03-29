@@ -68,9 +68,9 @@ class AndroidSystemImage(object):
         with zipfile.ZipFile(fname, 'r') as zipf:
             return any(['ranchu' in z for z in zipf.namelist()])
 
-    def launch_with_acloud(self, config_file, build_id, adb):
+    def launch_with_acloud(self, config_file, build_id, adb, gpu=None):
         """Launches a GCE instance using the image with the given build_id"""
-        device = GCEDevice(config_file, self, build_id, adb)
+        device = GCEDevice(config_file, self, build_id, adb, gpu)
         device.start()
         return device
 
