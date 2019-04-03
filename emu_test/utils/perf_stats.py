@@ -18,7 +18,8 @@ TAG = ["default",
 
 GPU = ["swiftshader"]
 
-TESTCASE = ["idle"]
+TESTCASE = ["idle",
+            "gpu_stress"]
 
 METRIC = "{}_AVD_{}_{}_{}"
 
@@ -179,14 +180,16 @@ def write_boot_time_benchmark(metrics, boot_timestamp):
     metric: Dictionary to hold metrics and boot time
     boot_timestamp: Timestamps for each metric
     """
+    key = ""
     logFile = os.path.join(args.log_dir, "PerfTestCase.log")
     with open(logFile, 'r') as log_file:
         count = 0
         for line in log_file:
-            if "PerfGate Metric: " in line:
+            if "PerfGate Metric: " in line and "idle" in line:
                 key = line.split("INFO - PerfGate Metric: ")[1].split()[0]
-            elif "INFO: boot time" in line:
+            elif key and "INFO: boot time" in line:
                 metrics[key] = get_time(line)
+                key = ""
                 count += 1
             if count == len(metrics):
                 break
@@ -210,8 +213,9 @@ if __name__ == '__main__':
         logFile = os.path.join(args.log_dir, metric+".log")
         if not os.path.isfile(logFile):
             continue;
+        if testcase == "idle":
+            metrics[metric] = 0
         cpu_data, memory_data, timestamp = get_data_from_log(logFile)
-        metrics[metric] = 0
         boot_timestamp[metric] = timestamp[0]
         write_perf_data("CPU0_"+metric,
                         "CPU_Usage",
@@ -230,5 +234,5 @@ if __name__ == '__main__':
                         memory_data,
                         timestamp)
     # Write boot time benchmark
-    if metric:
+    if metrics:
         write_boot_time_benchmark(metrics, boot_timestamp)

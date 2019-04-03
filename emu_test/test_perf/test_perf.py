@@ -7,6 +7,7 @@ import psutil
 import shutil
 import traceback
 import json
+import subprocess
 
 from emu_test.utils.emu_error import *
 from emu_test.utils.emu_argparser import emu_args
@@ -75,11 +76,24 @@ class PerfTestCase(EmuBaseTestCase):
         metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_idle"
         self.launch_emulator(metric, avd)
         time.sleep(300)
+        self.kill_emulator()
+
+    def generate_perf_data_gpu_stress(self, avd):
+        metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_gpu_stress"
+        self.launch_emulator(metric, avd)
+        adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+        TESTCASE_CALL_DIR = os.path.dirname(os.path.realpath(__file__))
+        path_to_apk = os.path.join(TESTCASE_CALL_DIR, "..", "utils", "apks", "gpu-emulation-stress-test.apk")
+        subprocess.call([adb_binary, 'install', path_to_apk])
+        subprocess.call([adb_binary, "shell", "am", "start",
+                         "com.android.gpu_emulation_stress_test/com.android.gpu_emulation_stress_test.MainActivity"])
+        time.sleep(300)
 
     def run_perf_test(self, avd_config):
         self.avd_config = avd_config
         if self.create_avd(avd_config) == 0:
             self.generate_perf_data_idle(avd_config)
+            self.generate_perf_data_gpu_stress(avd_config)
 
 
 def create_test_case_for_avds():
