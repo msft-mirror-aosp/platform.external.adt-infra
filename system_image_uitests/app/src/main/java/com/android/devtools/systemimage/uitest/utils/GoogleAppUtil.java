@@ -268,13 +268,13 @@ public class GoogleAppUtil {
         }
 
         device.findObject(new UiSelector().text("Add account")).clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().text("Google")).clickAndWaitForNewWindow(10L);
+        device.findObject(new UiSelector().text("Google")).click();
 
-        TimeUnit.SECONDS.sleep(5);
+        Thread.sleep(10000);
         final UiObject editInputClass = device.findObject(new UiSelector().className("android.widget.EditText"));
         final UiObject editInputText = device.findObject(new UiSelector().textMatches("Email or phone"));
         final UiObject editInputPassword = device.findObject(new UiSelector().textMatches("Enter your password"));
-        boolean hasEditEmail = new Wait(10L).
+        boolean hasEditEmail = new Wait(30L).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
@@ -297,7 +297,7 @@ public class GoogleAppUtil {
         final UiObject backupSwitch = device.findObject(new UiSelector().resourceId("com.google.android.gms:id/suw_items_switch"));
         final UiObject backupSwitch2 = device.findObject(new UiSelector().resourceId("com.google.android.gms:id/sud_navbar_next"));
         final UiObject backupSwitch3 = device.findObject(new UiSelector().resourceId("com.google.android.gms:id/sud_items_switch"));
-        boolean hasBackupSwitch = new Wait(10L).
+        boolean hasBackupSwitch = new Wait(20L).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
@@ -318,7 +318,7 @@ public class GoogleAppUtil {
 
         final UiObject moreNavbar = device.findObject(new UiSelector().resourceId(Res.GOOGLE_MORE_NAVBAR_RES));
         final UiObject moreNavbar2 = device.findObject(new UiSelector().resourceId("com.google.android.gms:id/sud_navbar_more"));
-        boolean hasNavBar = new Wait(10L).
+        boolean hasNavBar = new Wait(20L).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
@@ -336,7 +336,7 @@ public class GoogleAppUtil {
 
         final UiObject acceptButtonTxt = device.findObject(new UiSelector().textMatches("AGREE")); // Fresh avd, first time login
         final UiObject acceptButtonTxt2 = device.findObject(new UiSelector().textMatches("ACCEPT")); // Second time login
-        boolean hasAcceptBtn = new Wait(10L).
+        boolean hasAcceptBtn = new Wait(20L).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
@@ -409,10 +409,11 @@ public class GoogleAppUtil {
             UiObject removeAccount = device.findObject(
                     new UiSelector().textMatches("REMOVE ACCOUNT"));
             removeAccount.clickAndWaitForNewWindow();
-            removeAccount.clickAndWaitForNewWindow();
+            removeAccount.click();
+            Thread.sleep(10000);
         }
 
-        return new Wait(5L).
+        return new Wait(20L).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
