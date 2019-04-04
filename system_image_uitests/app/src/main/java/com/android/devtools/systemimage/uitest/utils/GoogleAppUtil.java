@@ -21,7 +21,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
-
+import android.support.test.uiautomator.UiScrollable;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
@@ -30,7 +30,8 @@ import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher
 import java.util.concurrent.TimeUnit;
 
 import android.util.Log;
-
+import static com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil.testFramework;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -219,6 +220,209 @@ public class GoogleAppUtil {
         return signInLabel.exists() || signInPromoCloseButton.exists();
     }
 
+
+ /**
+     * Log user into Google account.
+     * @param instrumentation
+     * @return
+     * @throws Exception
+     *
+     *  Keeping the test flow very basic with the aim to follow steps to sign-in Google account via Settings.
+     * Steps:
+     * 1. Go to Settings -> Users & Accounts
+     * 2. Check for already existing Google accounts
+     * 3. I not found, Add an Account using Google credentials
+     */
+    public static boolean loginGoogleAccount(Instrumentation instrumentation) throws Exception{
+
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage()) {
+            return false;
+        }
+
+        AppLauncher.launch(instrumentation, "Settings");
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
+
+        String accountsLabel = "Users & accounts";
+        UiObject accounts = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                accountsLabel);
+        accounts.clickAndWaitForNewWindow();
+
+        // Check for already existing account
+        final UiObject emailTextViewClass = device.findObject(new UiSelector().className("android.widget.TextView"));
+        final UiObject googleEmailText = device.findObject(new UiSelector().textMatches("Google"));
+        boolean hasSignedInEmail = new Wait(10L).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return emailTextViewClass.exists() && googleEmailText.exists() ;
+                    }
+                });
+        if(hasSignedInEmail){
+            return true;
+        }
+
+        device.findObject(new UiSelector().text("Add account")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().text("Google")).clickAndWaitForNewWindow(10L);
+
+        TimeUnit.SECONDS.sleep(5);
+        final UiObject editInputClass = device.findObject(new UiSelector().className("android.widget.EditText"));
+        final UiObject editInputText = device.findObject(new UiSelector().textMatches("Email or phone"));
+        final UiObject editInputPassword = device.findObject(new UiSelector().textMatches("Enter your password"));
+        boolean hasEditEmail = new Wait(10L).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return editInputClass.exists() || editInputText.exists() ;
+                    }
+                });
+        assertTrue("Cannot find Email edit text", hasEditEmail);
+
+        editInputText.clearTextField();
+        editInputText.setText(email);
+        clickNext(device);
+
+        editInputPassword.clearTextField();
+        editInputPassword.setText(password);
+        clickNext(device);
+
+        // The "I agree" button below confirms Google sign-in. Following code are just the steps in app flow.
+        new GoogleAppConfirmationWatcher(device).checkForCondition();
+
+        final UiObject backupSwitch = device.findObject(new UiSelector().resourceId("com.google.android.gms:id/suw_items_switch"));
+        final UiObject backupSwitch2 = device.findObject(new UiSelector().resourceId("com.google.android.gms:id/sud_navbar_next"));
+        final UiObject backupSwitch3 = device.findObject(new UiSelector().resourceId("com.google.android.gms:id/sud_items_switch"));
+        boolean hasBackupSwitch = new Wait(10L).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return backupSwitch.exists() || backupSwitch2.exists() || backupSwitch3.exists() ;
+                    }
+                });
+        if(hasBackupSwitch){
+            if(backupSwitch.exists()){
+                backupSwitch.clickAndWaitForNewWindow(10L);
+            }else if(backupSwitch2.exists()){
+                backupSwitch2.clickAndWaitForNewWindow(10L);
+            }
+            else{
+                backupSwitch3.clickAndWaitForNewWindow(10L);
+            }
+        }
+
+
+        final UiObject moreNavbar = device.findObject(new UiSelector().resourceId(Res.GOOGLE_MORE_NAVBAR_RES));
+        final UiObject moreNavbar2 = device.findObject(new UiSelector().resourceId("com.google.android.gms:id/sud_navbar_more"));
+        boolean hasNavBar = new Wait(10L).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return moreNavbar.exists() || moreNavbar2.exists() ;
+                    }
+                });
+        if(hasNavBar){
+            if(moreNavbar.exists()){
+                moreNavbar.clickAndWaitForNewWindow();
+            }
+            else{
+                moreNavbar2.clickAndWaitForNewWindow();
+            }
+        }
+
+        final UiObject acceptButtonTxt = device.findObject(new UiSelector().textMatches("AGREE")); // Fresh avd, first time login
+        final UiObject acceptButtonTxt2 = device.findObject(new UiSelector().textMatches("ACCEPT")); // Second time login
+        boolean hasAcceptBtn = new Wait(10L).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return acceptButtonTxt.exists() || acceptButtonTxt2.exists() ;
+                    }
+                });
+        if(hasAcceptBtn){
+            if(acceptButtonTxt.exists()){
+                acceptButtonTxt.clickAndWaitForNewWindow(10L);
+            }else{
+                acceptButtonTxt2.clickAndWaitForNewWindow(10L);
+            }
+
+        }
+
+        // Since the next screen is FLAKY and not essentially "Users and account screen", we press home first
+        device.pressHome();
+
+        AppLauncher.launch(instrumentation, "Settings");
+        UiScrollable itemList2 =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList2.setAsVerticalList();
+
+        String accountsLabel2 = "Users & accounts";
+        UiObject accounts2 = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                accountsLabel2);
+        accounts2.clickAndWaitForNewWindow();
+
+ //       assertTrue("Cannot find signed-in email in Users and Account Screen", hasSignedInEmail);
+
+        return new Wait(10L).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return  googleEmailText.exists() ;
+                    }
+                });
+    }
+
+    public static boolean logoutGoogleAccount(Instrumentation instrumentation) throws Exception{
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        AppLauncher.launch(instrumentation, "Settings");
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
+
+        String accountsLabel = "Users & accounts";
+        UiObject accounts = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                accountsLabel);
+        accounts.clickAndWaitForNewWindow();
+
+        // Check for already existing account
+        final UiObject emailTextViewClass = device.findObject(new UiSelector().className("android.widget.TextView"));
+        final UiObject googleEmailText = device.findObject(new UiSelector().textMatches("Google"));
+        boolean hasSignedInEmail = new Wait(10L).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return emailTextViewClass.exists() && googleEmailText.exists() ;
+                    }
+                });
+
+        if(hasSignedInEmail){
+            googleEmailText.clickAndWaitForNewWindow(10L);
+            UiObject removeAccount = device.findObject(
+                    new UiSelector().textMatches("REMOVE ACCOUNT"));
+            removeAccount.clickAndWaitForNewWindow();
+            removeAccount.clickAndWaitForNewWindow();
+        }
+
+        return new Wait(5L).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return !googleEmailText.exists() ;
+                    }
+                });
+
+    }
+
+
     private static void openChromeSettings(Instrumentation instrumentation) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
@@ -273,7 +477,7 @@ public class GoogleAppUtil {
         }
 
         if (nextButton.exists()) {
-            nextButton.clickAndWaitForNewWindow();
+            nextButton.clickAndWaitForNewWindow(10L);
         }
     }
 }
