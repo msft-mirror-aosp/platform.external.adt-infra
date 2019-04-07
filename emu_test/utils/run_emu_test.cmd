@@ -19,7 +19,7 @@ echo "Deploy emulator"
 echo "Run mkdir %SESSION_DIR%\emu-master-dev"
 mkdir %SESSION_DIR%\emu-master-dev
 
-set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%\sdk_tools_linux
+set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%\sdk_tools_mingw
 
 echo "Run unzip -o %BUILD_DIR%\sdk-repo-windows-emulator-[0-9]*.zip -d %SESSION_DIR%\emu-master-dev\"
 unzip -o %BUILD_DIR%\sdk-repo-windows-emulator-[0-9]*.zip -d %SESSION_DIR%\emu-master-dev\
