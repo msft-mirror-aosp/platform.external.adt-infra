@@ -391,6 +391,12 @@ public class GoogleAppUtil {
             termsAcceptButton.clickAndWaitForNewWindow();
         }
 
+        UiObject nextButton = device.findObject(new UiSelector().
+                resourceId(Res.GOOGLE_SERVICES_NEXT_BUTTON_RES));
+        if (nextButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            nextButton.clickAndWaitForNewWindow();
+        }
+
         final UiObject chromeUpdateButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_MENU_BADGE_RES)
         );

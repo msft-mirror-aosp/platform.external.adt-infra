@@ -245,7 +245,7 @@ class EmuBaseTestCase(LoggedTestCase):
         launch_cmd = [emulator_bin, "-avd", str(avd), "-verbose", "-show-kernel"]
         if emu_argparser.emu_args.generate_perf:
             launch_cmd += ["-perf-stat", self.perf_file]
-        if avd.gpu == "swiftshader":
+        if avd.gpu == "swiftshader" and (emu_argparser.emu_args.builder_name != "Mac" or "ui" not in emu_argparser.emu_args.config_file):
             launch_cmd += ["-gpu", "swiftshader_indirect"]
         else:
             launch_cmd += ["-gpu", "host"]

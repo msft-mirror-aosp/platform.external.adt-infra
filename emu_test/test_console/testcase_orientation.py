@@ -2,6 +2,7 @@
 
 import unittest
 import sys
+import time
 import testcase_base
 from utils import util
 
@@ -61,15 +62,19 @@ class OrientationTest(testcase_base.BaseConsoleTest):
     print 'Running test: %s' % (this_function_name)
     # Rotate 90 degree and check orientation values.
     self._execute_command_and_verify(CMD_ROTATE, ROTATE_CMD_OUTPUT, ASSERT_MSG_ROTATE)
+    time.sleep(util.CMD_WAIT_TIMEOUT_S)
     self._execute_command_and_verify(CMD_GET_ORIENTATION, ROTATE_90_ORIENTATION, ASSERT_MSG_ORIENTATION)
     # Rotate 180 degree and check orientation values.
     self._execute_command_and_verify(CMD_ROTATE, ROTATE_CMD_OUTPUT, ASSERT_MSG_ROTATE)
+    time.sleep(util.CMD_WAIT_TIMEOUT_S)
     self._execute_command_and_verify(CMD_GET_ORIENTATION, ROTATE_180_ORIENTATION, ASSERT_MSG_ORIENTATION)
     # Rotate 270 degree and check orientation values.
     self._execute_command_and_verify(CMD_ROTATE, ROTATE_CMD_OUTPUT, ASSERT_MSG_ROTATE)
+    time.sleep(util.CMD_WAIT_TIMEOUT_S)
     self._execute_command_and_verify(CMD_GET_ORIENTATION, ROTATE_270_ORIENTATION, ASSERT_MSG_ORIENTATION)
     # Rotate 360 degree and check orientation values.
     self._execute_command_and_verify(CMD_ROTATE, ROTATE_CMD_OUTPUT, ASSERT_MSG_ROTATE)
+    time.sleep(util.CMD_WAIT_TIMEOUT_S)
     self._execute_command_and_verify(CMD_GET_ORIENTATION, ROTATE_360_ORIENTATION, ASSERT_MSG_ORIENTATION)
 
 
