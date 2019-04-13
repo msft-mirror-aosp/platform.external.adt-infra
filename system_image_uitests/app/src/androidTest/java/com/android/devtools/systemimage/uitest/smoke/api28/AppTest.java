@@ -198,17 +198,20 @@ public class AppTest {
             Log.d(TAG, "Searching for bookmark...");
             new AppWatcher(device).checkForCondition();
 
+            final UiObject bookmarkedSite = device.findObject(new UiSelector().textContains("ESPN"));
+
             assertTrue("Cannot find bookmark",
                     new Wait().until(new Wait.ExpectedCondition() {
                         @Override
                         public boolean isTrue() {
                             return device.findObject(
                                     new UiSelector().textContains(("kmarks"))).exists() &&
-                                    device.findObject(
-                                            new UiSelector().textContains("ESPN")).exists();
+                                    bookmarkedSite.exists();
                         }
                     })
             );
+
+            bookmarkedSite.dragTo(bookmarkedSite,20);
 
             final UiObject trashCan = device.findObject(new UiSelector().
                     description("Delete bokmarks"));
