@@ -187,19 +187,4 @@ public class GoogleServicesTest {
         boolean logOutSuccess = GoogleAppUtil.logoutGoogleChrome(instrumentation);
         assertTrue("Google log out was unsuccessful", logOutSuccess);
     }
-
-    
-    @Test
-    @TestInfo(id = "d7f5673a-a3d0-4f50-856a-dfa10ce5c21c1")
-    public void loginGoogleAccount() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-
-        GoogleAppUtil.logoutGoogleAccount(instrumentation);
-
-        boolean logInSuccess = GoogleAppUtil.loginGoogleAccount(instrumentation);
-        assertTrue("Google Account log in was unsuccessful", logInSuccess);
-
-        boolean logOutSuccess = GoogleAppUtil.logoutGoogleAccount(instrumentation);
-        assertTrue("Google Account log out was unsuccessful", logOutSuccess);
-    }
 }
