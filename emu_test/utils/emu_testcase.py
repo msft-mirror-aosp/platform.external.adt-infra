@@ -248,7 +248,8 @@ class EmuBaseTestCase(LoggedTestCase):
         if avd.gpu == "swiftshader":
             launch_cmd += ["-gpu", "swiftshader_indirect"]
         else:
-            launch_cmd = ["vglrun", "+v", "-c", "proxy"] + launch_cmd
+            if emu_argparser.emu_args.builder_name == "Linux_gce":
+                launch_cmd = ["vglrun", "+v", "-c", "proxy"] + launch_cmd
             launch_cmd += ["-gpu", "host"]
         # arm/mips is quit slow, disable boot animation
         if 'arm' in str(avd) or 'mips' in str(avd):
