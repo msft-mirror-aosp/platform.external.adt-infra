@@ -130,7 +130,7 @@ public class GoogleServicesTest {
             itemList.setAsVerticalList();
         }
 
-        String securityLabel = "Security & location";
+        String securityLabel = "Security & Location";
         UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 securityLabel);
 
