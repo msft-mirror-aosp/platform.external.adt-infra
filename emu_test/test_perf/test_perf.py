@@ -89,11 +89,28 @@ class PerfTestCase(EmuBaseTestCase):
                          "com.android.gpu_emulation_stress_test/com.android.gpu_emulation_stress_test.MainActivity"])
         time.sleep(300)
 
+    def generate_perf_data_large_apk(self, avd):
+        metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_large_apk"
+        adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+        TESTCASE_CALL_DIR = os.path.dirname(os.path.realpath(__file__))
+        path_to_apk = os.path.join(TESTCASE_CALL_DIR, "..", "utils", "apks", "BestFiends.apk")
+        self.launch_emulator(metric, avd)
+        start_time = time.time()
+        subprocess.call([adb_binary, 'install', path_to_apk])
+        install_time = time.time() - start_time
+        time.sleep(60)
+        log_file = os.path.join(emu_args.session_dir,
+                                emu_args.test_dir,
+                                metric+"_adb_install_time.log")
+        with open(log_file, 'w') as adb_log:
+            adb_log.write(str(install_time))
+
     def run_perf_test(self, avd_config):
         self.avd_config = avd_config
         if self.create_avd(avd_config) == 0:
             self.generate_perf_data_idle(avd_config)
             self.generate_perf_data_gpu_stress(avd_config)
+            self.generate_perf_data_large_apk(avd_config)
 
 
 def create_test_case_for_avds():
