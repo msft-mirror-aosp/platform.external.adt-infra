@@ -291,19 +291,16 @@ public class NetworkIOTest {
 
         // Test requires "Airplane mode" switch widget to start in the off state.
         if (NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon)) {
-            AppLauncher.launchPath(instrumentation, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
         }
         assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
 
         for (int i = 0; i < stressCount; i++) {
-            AppLauncher.launchPath(instrumentation, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
             assertTrue("Airplane mode is not enabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
             new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
 
             // Disable airplane mode.
-            AppLauncher.launchPath(instrumentation, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
             assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
             new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));

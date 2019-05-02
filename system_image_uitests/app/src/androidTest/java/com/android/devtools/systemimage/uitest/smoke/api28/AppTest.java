@@ -214,7 +214,7 @@ public class AppTest {
             bookmarkedSite.dragTo(bookmarkedSite,20);
 
             final UiObject trashCan = device.findObject(new UiSelector().
-                    description("Delete bokmarks"));
+                    description("Delete bookmarks"));
             // Delete the bookmark.
             assertTrue("Cannot find trash",
                     new Wait().until(new Wait.ExpectedCondition() {

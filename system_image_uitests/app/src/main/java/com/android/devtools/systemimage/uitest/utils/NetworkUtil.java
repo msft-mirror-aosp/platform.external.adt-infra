@@ -97,12 +97,18 @@ public class NetworkUtil {
     public static boolean isAirplaneModeEnabled(UiDevice device, UiObject airplaneModeIcon) throws Exception {
         openExtendedNotificationsPanel(device);
 
+        boolean status;
         if (airplaneModeIcon.waitForExists(5L) && airplaneModeIcon.getText().toLowerCase().contains("on")) {
-            return true;
+            status = true;
         } else {
             UiObject airplaneModeView = device.findObject(new UiSelector().descriptionStartsWith(("Airplane mode")));
-            return airplaneModeView.waitForExists(5L) && airplaneModeView.getContentDescription().toLowerCase().contains("on");
+            status = airplaneModeView.waitForExists(5L) && airplaneModeView.getContentDescription().toLowerCase().contains("on");
         }
+
+        UiObject expandIndicator = device.findObject(
+                new UiSelector().resourceId("com.android.systemui:id/qs_navbar_scrim"));
+        expandIndicator.click();
+        return status;
     }
 
     public static void openExtendedNotificationsPanel(UiDevice device)

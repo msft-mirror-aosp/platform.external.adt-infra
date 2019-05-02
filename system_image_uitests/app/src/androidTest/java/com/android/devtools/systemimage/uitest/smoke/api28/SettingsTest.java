@@ -178,9 +178,8 @@ public class SettingsTest {
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text(
-                                "This application cannot make outgoing calls without the Phone permission.")).
-                                        exists();
+                        return !(device.findObject(new UiSelector().resourceIdMatches("com.google.android.dialer:id/incall_end_call").
+                                        exists());
                         }
                 })
         );
@@ -680,7 +679,7 @@ public class SettingsTest {
         String appName = "Maps";
         String contactsText = "Contacts";
         String locationText = "Location";
-        String phoneText = "Phone";
+        String phoneText = "Microphone";
         String storageText = "Storage";
 
         // Variables to store the state of permissions.
