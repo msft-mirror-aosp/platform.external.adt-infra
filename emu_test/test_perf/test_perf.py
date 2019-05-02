@@ -20,6 +20,7 @@ class PerfTestCase(EmuBaseTestCase):
         super(PerfTestCase, self).__init__(*args, **kwargs)
         self.avd_config = None
         self.perf_file = ""
+        self.result = True
 
     @classmethod
     def setUpClass(cls):
@@ -39,12 +40,11 @@ class PerfTestCase(EmuBaseTestCase):
         return result
 
     def tearDown(self):
-        result = self.kill_emulator()
         self.m_logger.info("Remove AVD inside of tear down")
         # avd should be found $HOME/.android/avd/
         avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
         try:
-            if result and self.start_proc:
+            if self.result and self.start_proc:
                 self.start_proc.wait()
             time.sleep(1)
             self.kill_proc_by_name(["crash-service", "adb"])
@@ -72,11 +72,11 @@ class PerfTestCase(EmuBaseTestCase):
         metric = "New_AVD_" + avd.tag + "_" + avd.gpu + "_idle"
         self.launch_emulator(metric, avd)
         time.sleep(300)
-        self.kill_emulator()
+        self.result = self.kill_emulator()
         metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_idle"
         self.launch_emulator(metric, avd)
         time.sleep(300)
-        self.kill_emulator()
+        self.result = self.kill_emulator()
 
     def generate_perf_data_gpu_stress(self, avd):
         metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_gpu_stress"
@@ -88,6 +88,7 @@ class PerfTestCase(EmuBaseTestCase):
         subprocess.call([adb_binary, "shell", "am", "start",
                          "com.android.gpu_emulation_stress_test/com.android.gpu_emulation_stress_test.MainActivity"])
         time.sleep(300)
+        self.result = self.kill_emulator()
 
     def generate_perf_data_large_apk(self, avd):
         metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_large_apk"
@@ -104,6 +105,7 @@ class PerfTestCase(EmuBaseTestCase):
                                 metric+"_adb_install_time.log")
         with open(log_file, 'w') as adb_log:
             adb_log.write(str(install_time))
+        self.result = self.kill_emulator()
 
     def run_perf_test(self, avd_config):
         self.avd_config = avd_config

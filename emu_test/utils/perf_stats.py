@@ -72,6 +72,7 @@ def write_perf_data(metric, benchmark, data, timestamp):
     data: List of data points
     timestamp: List of timestamps correspnding to data points
     """
+    print "write perf data " + metric + " " + benchmark
     metric = metric + "_" + platform.system()
 
     jsonDir = os.path.join(args.log_dir,
