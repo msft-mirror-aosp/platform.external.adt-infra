@@ -63,9 +63,9 @@ flags.DEFINE_string(
     '"28, android, x86_64" will boot a single image.')
 flags.DEFINE_string('result_file', None,
                     'Print the resulting csv to this file')
-flags.DEFINE_integer('concurrency', multiprocessing.cpu_count(),
+flags.DEFINE_integer('concurrency', 1,
                      'Max number of concurrent requests. '
-                     'Lower this if you lack gce quota during boot testing')
+                     'Lower this if you lack gce quota during boot testing.')
 
 
 def get_system_images():
@@ -86,7 +86,8 @@ def get_system_images():
 def _boot_image(adb, system_image):
     """Attempts to boot a single system image.
 
-      The device will be torn down after boot completion.
+      The device will be torn down after boot completion if
+      FLAGS.delete is true.
 
       Returns: True if the device booted
       """
@@ -108,8 +109,11 @@ def boot(system_images):
 
         # Use number of available cores to spin up machines
         # Be careful, we have limited quota!
-        pool = multiprocessing.Pool(processes=FLAGS.concurrency)
-        return zip(system_images, pool.map(boot_img, system_images))
+        if FLAGS.concurrency > 1:
+            pool = multiprocessing.Pool(processes=FLAGS.concurrency)
+            return zip(system_images, pool.map(boot_img, system_images))
+        else:
+            return zip(system_images, [boot_img(x) for x in system_images])
 
 
 def _has_ranchu(system_image):
