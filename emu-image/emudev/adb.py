@@ -18,6 +18,8 @@ import os
 import shutil
 import tempfile
 from distutils.spawn import find_executable
+from absl import logging
+
 
 class Singleton(type):
     """Ye olde singleton."""
@@ -63,11 +65,16 @@ class Adb:
 
     def cmd(self, cmd, adb_port):
         """Executes the given adb cmd on this devices. (Note, cmd should be an array)"""
-        env = {'ADB_VENDOR_KEYS': '%s/adbkey' % self.keydir}
-        proc = subprocess.Popen([self.bin_path, '-s', '127.0.0.1:%s' % adb_port] + cmd,
+        env = {
+            'ADB_VENDOR_KEYS': '%s/adbkey' % self.keydir,
+            'ANDROID_SERIAL': '127.0.0.1:%s' % adb_port
+        }
+        cmd = [self.bin_path, '-s', '127.0.0.1:%s' % adb_port] + cmd
+        proc = subprocess.Popen(' '.join(cmd),
                                 stdout=subprocess.PIPE,
                                 shell=True,
                                 env=env)
         outs, _ = proc.communicate()
         proc.wait()
+        logging.info("executed: %s -> %s", ' '.join(cmd), outs)
         return outs

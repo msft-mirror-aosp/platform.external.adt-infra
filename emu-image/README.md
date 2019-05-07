@@ -16,7 +16,7 @@ In order to use this you will need to:
    client_id: "my-client-id"
    client_secret: "aSup3rS@f3Secret!"
    # Must have this one otherwise you will not boot.
-   stable_goldfish_host_image_name: "vsoc-host-scratch-jansene"
+   stable_goldfish_host_image_name: "vsoc-host-scratch-me"
    ssh_private_key_path: "/home/me/.ssh/acloud_rsa"
    ssh_public_key_path: "/home/me/.ssh/acloud_rsa.pub"
    storage_bucket_name: "my-super-project"
@@ -39,9 +39,12 @@ In order to use this you will need to:
 
 Now you can launch images by using emu-image.
 
+**NOTE:** This tool will require access to http://go/ab. The tool will try to authenticate. If this will fail on the first time and the tool becomes interactive.
+You will have to click on a redirect link and enter the generated token. *This means the first run to obtain this token cannot use concurrency!*.
+
 
 ```sh
-   emu-image --help
+   emu-image --helpfull
 ```
 
 For example, to boot all the images with api level 25 you can:
@@ -62,6 +65,12 @@ This will produce a csv that could look like this:
     25, google_apis_playstore, x86, x86-25_r09.zip, https://dl.google.com/android/repository/sys-img/google_apis_playstore/x86-25_r09.zip, True
 
     Emulator build: 5134463
+
+To boot a set of images of go/ab with the latest emu-master-dev emulator build:
+
+```sh
+   emu-image --boot "5538743,5534473"
+```
 
 
 ## Some things to be aware of
