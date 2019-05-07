@@ -179,6 +179,7 @@ public class SettingsUtil {
 
         SettingsUtil.openItem(instrumentation, appText);
 
+        SettingsUtil.clickAdvancedMenu(device);
         UiObject appPermissionsLabel = device.findObject(new UiSelector().text("App permissions"));
         boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
         if (hasAppPermissionsLabel) {

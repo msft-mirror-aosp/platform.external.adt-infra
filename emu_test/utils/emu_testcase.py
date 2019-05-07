@@ -556,6 +556,8 @@ class EmuBaseTestCase(LoggedTestCase):
                 'system-images/%s/%s/%s/' % (self.get_sub_dir(avd_config), avd_config.tag, avd_config.abi))
         set_val(config, 'tag.display', tag_id_to_display[avd_config.tag])
         set_val(config, 'tag.id', avd_config.tag)
+        if platform.system() == "Windows":
+            set_val(config, 'hw.cpu.ncore', '1')
 
         self.m_logger.info("Create config.ini file at: %s", dst_path)
         for section in config.sections():

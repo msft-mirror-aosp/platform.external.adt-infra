@@ -121,7 +121,7 @@ public class ShellUtilTest {
         ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
 
         if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
+            DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
         }
 
         AppLauncher.launchPath(instrumentation, new String[] {

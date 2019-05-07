@@ -99,7 +99,7 @@ public class DeveloperOptionsManager {
     /**
      * Enables developer options.
      *
-     * Version 2 for api 26, 27 and 28.
+     * Version 2 for api 26, 27.
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
@@ -121,7 +121,7 @@ public class DeveloperOptionsManager {
     /**
      * Enables developer options.
      *
-     * Version 3 for api >= 29.
+     * Version 3 for api >= 28.
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }

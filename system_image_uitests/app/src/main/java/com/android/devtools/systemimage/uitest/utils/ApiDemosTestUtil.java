@@ -46,7 +46,7 @@ public class ApiDemosTestUtil {
         itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 criteria).clickAndWaitForNewWindow();
         final UiObject editText = device.findObject(new UiSelector().className("android.widget.EditText"));
-        boolean hasEditText = new Wait(5L).until(new Wait.ExpectedCondition() {
+        boolean hasEditText = new Wait(5000L).until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() {
                 return editText.exists();
@@ -122,7 +122,7 @@ public class ApiDemosTestUtil {
 
         passwordField.setText(password);
         UiObject passwordError = device.findObject(new UiSelector().textContains(errorMessage));
-        Assert.assertTrue("Wrong password not detected", passwordError.waitForExists(5L));
+        Assert.assertTrue("Wrong password not detected:"+password, passwordError.waitForExists(5000L));
         pressDeleteKey(password.length(), device);
     }
 

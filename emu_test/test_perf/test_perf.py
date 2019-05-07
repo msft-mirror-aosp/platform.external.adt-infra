@@ -20,6 +20,7 @@ class PerfTestCase(EmuBaseTestCase):
         super(PerfTestCase, self).__init__(*args, **kwargs)
         self.avd_config = None
         self.perf_file = ""
+        self.result = True
 
     @classmethod
     def setUpClass(cls):
@@ -39,12 +40,11 @@ class PerfTestCase(EmuBaseTestCase):
         return result
 
     def tearDown(self):
-        result = self.kill_emulator()
         self.m_logger.info("Remove AVD inside of tear down")
         # avd should be found $HOME/.android/avd/
         avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
         try:
-            if result and self.start_proc:
+            if self.result and self.start_proc:
                 self.start_proc.wait()
             time.sleep(1)
             self.kill_proc_by_name(["crash-service", "adb"])
@@ -72,11 +72,11 @@ class PerfTestCase(EmuBaseTestCase):
         metric = "New_AVD_" + avd.tag + "_" + avd.gpu + "_idle"
         self.launch_emulator(metric, avd)
         time.sleep(300)
-        self.kill_emulator()
+        self.result = self.kill_emulator()
         metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_idle"
         self.launch_emulator(metric, avd)
         time.sleep(300)
-        self.kill_emulator()
+        self.result = self.kill_emulator()
 
     def generate_perf_data_gpu_stress(self, avd):
         metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_gpu_stress"
@@ -88,12 +88,31 @@ class PerfTestCase(EmuBaseTestCase):
         subprocess.call([adb_binary, "shell", "am", "start",
                          "com.android.gpu_emulation_stress_test/com.android.gpu_emulation_stress_test.MainActivity"])
         time.sleep(300)
+        self.result = self.kill_emulator()
+
+    def generate_perf_data_large_apk(self, avd):
+        metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_large_apk"
+        adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+        TESTCASE_CALL_DIR = os.path.dirname(os.path.realpath(__file__))
+        path_to_apk = os.path.join(TESTCASE_CALL_DIR, "..", "utils", "apks", "BestFiends.apk")
+        self.launch_emulator(metric, avd)
+        start_time = time.time()
+        subprocess.call([adb_binary, 'install', path_to_apk])
+        install_time = time.time() - start_time
+        time.sleep(60)
+        log_file = os.path.join(emu_args.session_dir,
+                                emu_args.test_dir,
+                                metric+"_adb_install_time.log")
+        with open(log_file, 'w') as adb_log:
+            adb_log.write(str(install_time))
+        self.result = self.kill_emulator()
 
     def run_perf_test(self, avd_config):
         self.avd_config = avd_config
         if self.create_avd(avd_config) == 0:
             self.generate_perf_data_idle(avd_config)
             self.generate_perf_data_gpu_stress(avd_config)
+            self.generate_perf_data_large_apk(avd_config)
 
 
 def create_test_case_for_avds():

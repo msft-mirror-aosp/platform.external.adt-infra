@@ -6,11 +6,11 @@
 BUILD_DIR=$1
 API=$2
 
-echo "Update SDK"
-echo "Run $ANDROID_HOME/tools/bin/sdkmanager --update"
-(yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses) & sleep 10 ; kill $!
-pkill yes
-$ANDROID_HOME/tools/bin/sdkmanager --update
+#echo "Update SDK"
+#echo "Run $ANDROID_HOME/tools/bin/sdkmanager --update"
+#(yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses) & sleep 10 ; kill $!
+#pkill yes
+#$ANDROID_HOME/tools/bin/sdkmanager --update
 
 rm -rf $ANDROID_HOME/system-images/android-$API/*
 

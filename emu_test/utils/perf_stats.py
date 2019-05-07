@@ -19,7 +19,8 @@ TAG = ["default",
 GPU = ["swiftshader"]
 
 TESTCASE = ["idle",
-            "gpu_stress"]
+            "gpu_stress",
+            "large_apk"]
 
 METRIC = "{}_AVD_{}_{}_{}"
 
@@ -71,6 +72,7 @@ def write_perf_data(metric, benchmark, data, timestamp):
     data: List of data points
     timestamp: List of timestamps correspnding to data points
     """
+    print "write perf data " + metric + " " + benchmark
     metric = metric + "_" + platform.system()
 
     jsonDir = os.path.join(args.log_dir,
@@ -213,26 +215,50 @@ if __name__ == '__main__':
         logFile = os.path.join(args.log_dir, metric+".log")
         if not os.path.isfile(logFile):
             continue;
-        if testcase == "idle":
-            metrics[metric] = 0
         cpu_data, memory_data, timestamp = get_data_from_log(logFile)
-        boot_timestamp[metric] = timestamp[0]
-        write_perf_data("CPU0_"+metric,
-                        "CPU_Usage",
-                        cpu_data[0],
-                        timestamp)
-        write_perf_data("CPU1_"+metric,
-                        "CPU_Usage",
-                        cpu_data[0],
-                        timestamp)
-        write_perf_data("CPU2_"+metric,
-                        "CPU_Usage",
-                        cpu_data[0],
-                        timestamp)
-        write_perf_data("Memory_"+metric,
-                        "Memory_Usage",
-                        memory_data,
-                        timestamp)
+        if testcase == "large_apk":
+            #process large apk metrics
+            #find avg cpu usage
+            cpu_data = [(a+b+c)/3 for (a,b,c) in zip(cpu_data[0], cpu_data[1], cpu_data[2])]
+            #find memory delta
+            mem_delta = [(x-memory_data[0]) for x in memory_data]
+            #log adb install time
+            adbLogFile = os.path.join(args.log_dir, metric+"_adb_install_time.log")
+            with open(adbLogFile, 'r') as adb_log:
+                install_time = adb_log.readline()
+            write_perf_data("Install_Time_"+metric,
+                            "Install_Time_large_apk",
+                            [install_time],
+                            [timestamp[0]])
+            write_perf_data("CPU_AVG_"+metric,
+                            "CPU_Avg",
+                            cpu_data,
+                            timestamp)
+            write_perf_data("Memory_Delta_"+metric,
+                            "Memory_Delta",
+                            mem_delta,
+                            timestamp)
+        else:
+            if testcase == "idle":
+                metrics[metric] = 0
+            boot_timestamp[metric] = timestamp[0]
+            write_perf_data("CPU0_"+metric,
+                            "CPU_Usage",
+                            cpu_data[0],
+                            timestamp)
+            write_perf_data("CPU1_"+metric,
+                            "CPU_Usage",
+                            cpu_data[1],
+                            timestamp)
+            write_perf_data("CPU2_"+metric,
+                            "CPU_Usage",
+                            cpu_data[2],
+                            timestamp)
+            write_perf_data("Memory_"+metric,
+                            "Memory_Usage",
+                            memory_data,
+                            timestamp)
+
     # Write boot time benchmark
     if metrics:
         write_boot_time_benchmark(metrics, boot_timestamp)
