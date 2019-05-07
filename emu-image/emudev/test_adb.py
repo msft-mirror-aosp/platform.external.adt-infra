@@ -21,20 +21,18 @@ class AdbTest(unittest.TestCase):
 
     def test_keygen(self):
         a = Adb()
-        self.assertIsNotNone(a.pub)
+
         self.assertIsNotNone(a.priv)
 
     def test_Singleton(self):
         a = Adb()
         b = Adb()
         self.assertEqual(a.priv, b.priv)
-        self.assertEqual(a.pub, b.pub)
 
     def test_adbdir(self):
         a = Adb()
         self.assertTrue(os.path.exists(a.keydir))
         self.assertTrue(os.path.exists(os.path.join(a.keydir, 'adbkey')))
-        self.assertTrue(os.path.exists(os.path.join(a.keydir, 'adbkey.pub')))
 
     def test_getVersion(self):
         a = Adb()

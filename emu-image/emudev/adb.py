@@ -59,7 +59,6 @@ class Adb:
         subprocess.check_call([self.bin_path, 'kill-server'])
         subprocess.check_call(
             [self.bin_path, 'keygen', os.path.join(self.keydir, 'adbkey')])
-        self.pub = open(os.path.join(self.keydir, 'adbkey.pub'), 'r').read()
         self.priv = open(os.path.join(self.keydir, 'adbkey'), 'r').read()
 
     def cmd(self, cmd, adb_port):
