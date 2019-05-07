@@ -295,6 +295,11 @@ public class SettingsTest {
     private void openDateTimeSettings() throws UiObjectNotFoundException {
         device.pressBack();
 
+        UiObject dismiss = device.findObject(new UiSelector().resourceId(Res.TV_DISMISS));
+        if (dismiss.waitForExists(10L)) {
+            dismiss.clickAndWaitForNewWindow();
+        }
+
         UiObject tvLauncher = device.findObject(new UiSelector().resourceId(Res.TV_LAUNCHER));
         if (tvLauncher.waitForExists(10L)) {
             tvLauncher.clickAndWaitForNewWindow();

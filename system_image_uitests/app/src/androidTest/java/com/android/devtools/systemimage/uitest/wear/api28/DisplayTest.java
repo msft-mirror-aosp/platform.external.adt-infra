@@ -30,6 +30,7 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
@@ -72,6 +73,7 @@ public class DisplayTest {
      */
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
+    @Ignore("not supposed to work on *-emu-dev branch")
     public void changeWatchFace() throws Exception {
         boolean isOriginalAnalog = getWatchFaceType();
         setWatchFaceType(false);
