@@ -135,6 +135,7 @@ public class Res {
     public static final String TV_MAIN_FRAME = "com.android.tv.settings:id/main_frame";
     public static final String TV_DATE_PICKER = "com.android.tv.settings:id/date_picker";
     public static final String TV_TIME_PICKER = "com.android.tv.settings:id/time_picker";
+    public static final String TV_DISMISS = "com.google.android.tvlauncher:id/tray_dismiss";
 
     // Android Wear Resources.
     public static final String WEAR_SETTINGS = "com.google.android.apps.wearable.settings";
