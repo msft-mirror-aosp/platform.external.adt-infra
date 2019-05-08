@@ -42,6 +42,12 @@ class AndroidSystemImage(object):
         self.url = 'https://dl.google.com/android/repository/sys-img/%s/%s' % (
             self.tag, self.zip)
 
+        # The properties below are "fake" and needed to make sure acloud
+        # has the necessary data to proceed.
+        self.branch='git_pi-dev'  # Unused, points to an existing branch
+        self.build_id=5136849     # Unused, points to an existing build
+        self.build_target='sdk_gphone_x86_64-userdebug'  # Unused.
+
     def download(self, fname):
         """Downloads the current image to the given file name/file object."""
         if hasattr(fname, 'write'):
@@ -109,17 +115,18 @@ class InternalAndroidImage(AndroidSystemImage):
         credentials = auth.CreateCredentials(cfg)
         self.ab = android_build_client.AndroidBuildClient(credentials)
         self.branch = self.ab.GetBranch(target, build_id)
-        self.target = target
+        self.build_target = target
         self.build_id = build_id
-        self.zip = "{}-img-{}.zip".format(self.target.split('-')
+        self.zip = "{}-img-{}.zip".format(self.build_target.split('-')
                                           [0], self.build_id)
         self.url = 'http://go/ab/{}'.format(build_id)
         self._extract_properties()
 
+
     def _extract_properties(self):
         """Extract the properties of the build from build.prop."""
         _, prop_file = tempfile.mkstemp()
-        self.ab.DownloadArtifact(self.target,
+        self.ab.DownloadArtifact(self.build_target,
                                  self.build_id,
                                  'build.prop',
                                  prop_file)
@@ -134,12 +141,10 @@ class InternalAndroidImage(AndroidSystemImage):
 
     def download(self, fname):
         """Downloads the  image from go/ab to the given file."""
-        self.ab.DownloadArtifact(self.target,
+        self.ab.DownloadArtifact(self.build_target,
                                  self.build_id,
                                  self.zip,
                                  fname)
 
     def metadata(self):
-        return {InternalAndroidImage.BUILD_TARGET: self.target,
-                InternalAndroidImage.BUILD_ID:  "{branch}/{build_id}".format(
-                    branch=self.branch, build_id=self.build_id)}
+        return {}

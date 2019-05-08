@@ -89,9 +89,9 @@ class GCEDevice:
             cfg=self.cfg,
             emulator_build_id=self.build_id,
             num=1,
-            branch='git_pi-dev',  # Unused, points to an existing branch
-            build_id=5136849,     # Unused, points to an existing build
-            build_target='sdk_gphone_x86_64-userdebug',  # Unused.
+            branch=self.image.branch,
+            build_id=self.image.build_id,
+            build_target=self.image.build_target,
             gpu=self.gpu,
             report_internal_ip=False)
         self.launch.Dump(None)
