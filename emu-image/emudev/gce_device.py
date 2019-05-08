@@ -14,21 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Absl-py
-from absl import logging
-
-# You will need to install the acloud module.
-from acloud.public.config import AcloudConfigManager
-from acloud.internal.lib import android_build_client, auth
-from acloud.public.actions import create_goldfish_action
-from acloud.public import device_driver
-from acloud.public.report import Status
-from acloud.internal.lib.utils import AutoConnect
-
-from distutils.spawn import find_executable
 import getpass
 import subprocess
 import time
+from distutils.spawn import find_executable
+
+# Absl-py
+from absl import logging
+from acloud.internal.lib import android_build_client, auth
+from acloud.internal.lib.utils import AutoConnect
+from acloud.public import device_driver
+from acloud.public.actions import create_goldfish_action
+# You will need to install the acloud module.
+from acloud.public.config import AcloudConfigManager
+from acloud.public.report import Status
 
 
 class GCEDevice:
@@ -59,6 +58,7 @@ class GCEDevice:
         self.adb = adb
         self.gpu = gpu
         self._configure(config_file)
+        self.status = False
 
     def _configure(self, config_file):
         """Configure the metadata for our gce instance."""
@@ -169,14 +169,14 @@ class GCEDevice:
             return False
 
         start = time.time()
-        status = self.boot_complete()
+        self.status = self.boot_complete()
         while not status and time.time() - start < timeout:
             logging.info("Waiting for boot completion message.")
             time.sleep(1)
-            status = self.boot_complete()
+            self.status = self.boot_complete()
 
         logging.info("Finished waiting, booted: %s", status)
-        return status
+        return self
 
     def boot_complete(self):
         """Returns true if the sys.boot_completed property is set in the device."""
@@ -194,6 +194,9 @@ class GCEDevice:
             lookfor = GCEDevice.FAILED
         return next(iter([device[prop] for device in self.launch.data[lookfor]]), None)
 
+    def status(self):
+        return self.status
+
     def instance_ip(self):
         """Gets the public ip address of the running gce instance."""
         return self._get_property(GCEDevice.GCE_INSTANCE_IP)
@@ -207,4 +210,4 @@ class GCEDevice:
         return device_driver.DeleteAndroidVirtualDevices(self.cfg, [self.instance_name()])
 
     def __str__(self):
-        return "%s - Running: %s, Booted: %s" % (self.image, self.is_running(), self.boot_complete)
+        return "%s - Running: %s, Booted: %s" % (self.image, self.is_running(), self.status)

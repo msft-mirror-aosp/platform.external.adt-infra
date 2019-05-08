@@ -37,11 +37,15 @@ setuptools.setup(
     dependency_links=['git+https://android.googlesource.com/platform/tools/acloud@master'],
     packages=['emudev'],
     platforms='POSIX',
+    package_data={
+        'templates': ['*'],
+        'templates/avd': ['*'],
+    },
     entry_points={
         'console_scripts': ['emu-image=emudev.fetch:launch'],
     },
     install_requires=[
-        'acloud', 'absl-py', 'urlfetch'
+        'acloud', 'absl-py', 'urlfetch', 'docker', 'Jinja2'
     ],
     license='Apache License, Version 2.0',
     classifiers=[
