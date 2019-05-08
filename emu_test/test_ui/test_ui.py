@@ -7,6 +7,7 @@ import psutil
 import shutil
 import sys
 import re
+import subprocess
 from subprocess import PIPE
 
 from emu_test.utils.emu_argparser import emu_args
@@ -132,6 +133,11 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
            pkg = 'wear'
         else:
            pkg = 'smoke'
+           adb_binary = path_utils.get_adb_binary()
+           execute_query = psutil.Popen([adb_binary, 'shell', 'pm', 'dump', 'com.google.android.gms',
+                                         '|', 'grep', 'versionName'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+           out, err = execute_query.communicate()
+           self.m_logger.info('GMSCore version is::' + str(out).lstrip())
         test_args_prefix = '-Pandroid.testInstrumentationRunnerArguments'
         test_class = test_args_prefix + '.class=com.android.devtools.systemimage.uitest.' +\
                      pkg + '.api' + avd.api + '.' + class_name
