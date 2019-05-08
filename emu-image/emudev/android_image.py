@@ -14,15 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.import tempfile
 import os
+import tempfile
 import zipfile
 
-
 import urlfetch
-import tempfile
 from absl import logging
-from emudev.gce_device import GCEDevice
 from acloud.internal.lib import android_build_client, auth
 from acloud.public.config import AcloudConfigManager
+from emudev.gce_device import GCEDevice
 
 
 class AndroidSystemImage(object):
@@ -110,7 +109,6 @@ class InternalAndroidImage(AndroidSystemImage):
 
     def __init__(self, config_file,  build_id, target='sdk_gphone_x86_64-user'):
         """Initializes and android system image from a build id."""
-        # Download build.prop
         cfg = AcloudConfigManager(config_file).Load()
         credentials = auth.CreateCredentials(cfg)
         self.ab = android_build_client.AndroidBuildClient(credentials)
@@ -120,11 +118,20 @@ class InternalAndroidImage(AndroidSystemImage):
         self.zip = "{}-img-{}.zip".format(self.build_target.split('-')
                                           [0], self.build_id)
         self.url = 'http://go/ab/{}'.format(build_id)
-        self._extract_properties()
+        self.tag = 'android'
+        self.api = 'unknown'
+        self.abi = 'unknown'
+        try:
+            self._extract_properties()
+        except:
+            logging.error("Unable to extract build properties (api/abi). You might be using an older build.")
 
 
     def _extract_properties(self):
-        """Extract the properties of the build from build.prop."""
+        """Extract the properties of the build from build.prop.
+
+           Note: this can fail on older deserts. (Lollipop for example.)
+        """
         _, prop_file = tempfile.mkstemp()
         self.ab.DownloadArtifact(self.build_target,
                                  self.build_id,
@@ -135,7 +142,6 @@ class InternalAndroidImage(AndroidSystemImage):
                                for x in props.readlines() if '=' in x])
 
         self.api = properties['ro.build.version.sdk']
-        self.tag = 'android'
         self.abi = properties['ro.product.cpu.abilist'].split(',')[0]
         os.remove(prop_file)
 
