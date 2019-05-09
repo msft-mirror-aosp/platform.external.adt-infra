@@ -164,6 +164,7 @@ public class SettingsUtil {
 
     /**
      * Fetch permissions settings for a given application type.
+     * For API <= 25
      *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
@@ -171,7 +172,41 @@ public class SettingsUtil {
      *                screen.
      * @throws Exception if it fails to find a UI object.
      */
-    public static UiObject getAppPermissions(
+    public static boolean getAppPermissions_v1(
+            Instrumentation instrumentation, String appType, String appText)
+            throws Exception {
+
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        SettingsUtil.openItem(instrumentation, appText);
+
+        UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+        if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(20))) {
+            appPermissionsList.getChildByText(new UiSelector().className("android.widget.TextView"), appType).clickAndWaitForNewWindow();
+        } else {
+            throw new UiObjectNotFoundException("Failed to find the item in Apps.");
+        }
+
+        UiObject appPermissionsLabel = device.findObject(new UiSelector().text("Permissions"));
+        boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
+        if (hasAppPermissionsLabel) {
+            appPermissionsLabel.clickAndWaitForNewWindow();
+        }
+
+        return hasAppPermissionsLabel;
+    }
+
+    /**
+     * Fetch permissions settings for a given application type.
+     * For API >= 26
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     * @param appType String describing the application type, as listed on the App permissions
+     *                screen.
+     * @throws Exception if it fails to find a UI object.
+     */
+    public static UiObject getAppPermissions_v2(
             Instrumentation instrumentation, String appType, String appText)
             throws Exception {
 
@@ -195,6 +230,8 @@ public class SettingsUtil {
 
     /**
      * Enable or disable permissions settings for a given application type
+     * For API <= 25
+     *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      * @param appType String describing the application type, as listed on the App permissions
@@ -205,7 +242,7 @@ public class SettingsUtil {
      *                          or disabled.
      * @throws Exception if it fails to find a UI object.
      */
-    public static void setAppPermissions(
+    public static void setAppPermissions_v1(
             Instrumentation instrumentation, String appType,
             String appName, boolean enablePermissions,
             String denyButtonText, String appText)
@@ -213,7 +250,61 @@ public class SettingsUtil {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        getAppPermissions(instrumentation, appType, appText);
+        getAppPermissions_v1(instrumentation, appName, appText);
+
+        UiObject2 permissionsBtn = UiAutomatorPlus.findObjectByRelative(
+                instrumentation,
+                By.clazz("android.widget.Switch"),
+                By.text(appType),
+                By.clazz("android.widget.LinearLayout"),
+                2);
+
+        if (!permissionsBtn.isChecked() && enablePermissions)
+            permissionsBtn.click();
+
+        else if ((permissionsBtn.isChecked() && !enablePermissions)) {
+            permissionsBtn.click();
+
+            final UiObject denyButton = device.findObject(new UiSelector().text(denyButtonText));
+
+            try {
+                boolean dialogLaunched =
+                        new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() throws UiObjectNotFoundException {return denyButton.exists();
+                            }
+                        });
+                if (dialogLaunched)
+                    denyButton.click();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Enable or disable permissions settings for a given application type
+     * For API >= 26
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     * @param appType String describing the application type, as listed on the App permissions
+     *                screen.
+     * @param appName String describing the application name, as listed on the {appType}
+     *                permissions screen.
+     * @param enablePermissions boolean indicating whether the permissions should be enabled
+     *                          or disabled.
+     * @throws Exception if it fails to find a UI object.
+     */
+    public static void setAppPermissions_v2(
+            Instrumentation instrumentation, String appType,
+            String appName, boolean enablePermissions,
+            String denyButtonText, String appText)
+            throws Exception {
+
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        getAppPermissions_v2(instrumentation, appType, appText);
 
         device.findObject(new UiSelector().text(appType)).click();
 

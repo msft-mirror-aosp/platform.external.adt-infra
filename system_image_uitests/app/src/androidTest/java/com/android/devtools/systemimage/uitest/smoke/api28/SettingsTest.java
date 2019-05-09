@@ -164,7 +164,7 @@ public class SettingsTest {
     public void testPhonePermissions() throws Exception {
         final String app = "Phone";
 
-        SettingsUtil.setAppPermissions(instrumentation, app, app, false, "DENY ANYWAY", "Apps & notifications");
+        SettingsUtil.setAppPermissions_v2(instrumentation, app, app, false, "DENY ANYWAY", "Apps & notifications");
         device.pressHome();
 
         AppLauncher.launch(instrumentation, app);
@@ -184,7 +184,7 @@ public class SettingsTest {
                 })
         );
 
-        SettingsUtil.setAppPermissions(instrumentation, app, app, true, "DENY ANYWAY", "Apps & notifications");
+        SettingsUtil.setAppPermissions_v2(instrumentation, app, app, true, "DENY ANYWAY", "Apps & notifications");
         device.pressHome();
     }
 
@@ -218,7 +218,7 @@ public class SettingsTest {
             return;
         }
 
-        SettingsUtil.setAppPermissions(instrumentation, appType, appName, false, "DENY ANYWAY", "Apps & notifications");
+        SettingsUtil.setAppPermissions_v2(instrumentation, appType, appName, false, "DENY ANYWAY", "Apps & notifications");
         device.pressHome();
 
         AppLauncher.launch(instrumentation, appName);
@@ -247,7 +247,7 @@ public class SettingsTest {
                 })
         );
 
-        SettingsUtil.setAppPermissions(instrumentation, appType, appName, true, "DENY ANYWAY", "Apps & notifications");
+        SettingsUtil.setAppPermissions_v2(instrumentation, appType, appName, true, "DENY ANYWAY", "Apps & notifications");
         device.pressHome();
     }
 
@@ -274,10 +274,10 @@ public class SettingsTest {
         AppManager.openAppList_v2(instrumentation);
         SettingsUtil.clickAdvancedMenu(device);
 
-        assertTrue(SettingsUtil.getAppPermissions(instrumentation, "Calendar", "Apps & notifications").exists()
-                && SettingsUtil.getAppPermissions(instrumentation, "Camera", "Apps & notifications").exists()
-                && SettingsUtil.getAppPermissions(instrumentation, "Camera", "Apps & notifications").exists()
-                && SettingsUtil.getAppPermissions(instrumentation, "Phone", "Apps & notifications").exists());
+        assertTrue(SettingsUtil.getAppPermissions_v2(instrumentation, "Calendar", "Apps & notifications").exists()
+                && SettingsUtil.getAppPermissions_v2(instrumentation, "Camera", "Apps & notifications").exists()
+                && SettingsUtil.getAppPermissions_v2(instrumentation, "Camera", "Apps & notifications").exists()
+                && SettingsUtil.getAppPermissions_v2(instrumentation, "Phone", "Apps & notifications").exists());
     }
 
     /**

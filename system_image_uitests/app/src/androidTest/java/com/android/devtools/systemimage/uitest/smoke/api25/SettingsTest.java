@@ -158,7 +158,7 @@ public class SettingsTest {
     public void testPhonePermissions() throws Exception {
         final String app = "Phone";
 
-        SettingsUtil.setAppPermissions(instrumentation, app, app, false, "DENY ANYWAY", "Apps");
+        SettingsUtil.setAppPermissions_v1(instrumentation, app, app, false, "DENY ANYWAY", "Apps");
         device.pressHome();
 
         AppLauncher.launch(instrumentation, app);
@@ -172,14 +172,13 @@ public class SettingsTest {
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text(
-                                "This application cannot make outgoing calls without the Phone permission.")).
-                                        exists();
-                        }
+                        return !(device.findObject(new UiSelector().resourceIdMatches("com.google.android.dialer:id/incall_end_call")).
+                                exists());
+                    }
                 })
         );
 
-        SettingsUtil.setAppPermissions(instrumentation, app, app, true, "DENY ANYWAY", "Apps");
+        SettingsUtil.setAppPermissions_v1(instrumentation, app, app, true, "DENY ANYWAY", "Apps");
         device.pressHome();
     }
 
@@ -213,7 +212,7 @@ public class SettingsTest {
             return;
         }
 
-        SettingsUtil.setAppPermissions(instrumentation, appType, appName, false, "DENY ANYWAY", "Apps");
+        SettingsUtil.setAppPermissions_v1(instrumentation, appType, appName, false, "DENY ANYWAY", "Apps");
         device.pressHome();
 
         AppLauncher.launch(instrumentation, appName);
@@ -242,7 +241,7 @@ public class SettingsTest {
                 })
         );
 
-        SettingsUtil.setAppPermissions(instrumentation, appType, appName, true, "DENY ANYWAY", "Apps");
+        SettingsUtil.setAppPermissions_v1(instrumentation, appType, appName, true, "DENY ANYWAY", "Apps");
         device.pressHome();
     }
 
@@ -267,12 +266,11 @@ public class SettingsTest {
     @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void displayConfigureAppPermissions() throws Exception {
         AppManager.openAppList_v1(instrumentation);
-        SettingsUtil.clickAdvancedMenu(device);
 
-        assertTrue(SettingsUtil.getAppPermissions(instrumentation, "Calendar", "Apps").exists()
-                && SettingsUtil.getAppPermissions(instrumentation, "Camera", "Apps").exists()
-                && SettingsUtil.getAppPermissions(instrumentation, "Camera", "Apps").exists()
-                && SettingsUtil.getAppPermissions(instrumentation, "Phone", "Apps").exists());
+        assertTrue(SettingsUtil.getAppPermissions_v1(instrumentation, "Calendar", "Apps")
+                && SettingsUtil.getAppPermissions_v1(instrumentation, "Maps", "Apps")
+                && SettingsUtil.getAppPermissions_v1(instrumentation, "Camera", "Apps")
+                && SettingsUtil.getAppPermissions_v1(instrumentation, "Phone", "Apps"));
     }
 
     /**

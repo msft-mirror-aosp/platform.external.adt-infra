@@ -225,7 +225,7 @@ if __name__ == '__main__':
             #log adb install time
             adbLogFile = os.path.join(args.log_dir, metric+"_adb_install_time.log")
             with open(adbLogFile, 'r') as adb_log:
-                install_time = adb_log.readline()
+                install_time = float(adb_log.readline())
             write_perf_data("Install_Time_"+metric,
                             "Install_Time_large_apk",
                             [install_time],
