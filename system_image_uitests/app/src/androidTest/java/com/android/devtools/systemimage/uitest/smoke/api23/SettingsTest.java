@@ -157,7 +157,7 @@ public class SettingsTest {
     public void testPhonePermissions() throws Exception {
         final String app = "Phone";
 
-        SettingsUtil.setAppPermissions(instrumentation, app, app, false, "Deny", "Apps");
+        SettingsUtil.setAppPermissions_v1(instrumentation, app, app, false, "Deny", "Apps");
         device.pressHome();
 
         AppLauncher.launch(instrumentation, app);
@@ -178,7 +178,7 @@ public class SettingsTest {
                 })
         );
 
-        SettingsUtil.setAppPermissions(instrumentation, app, app, true, "Deny", "Apps");
+        SettingsUtil.setAppPermissions_v1(instrumentation, app, app, true, "Deny", "Apps");
         device.pressHome();
     }
 
@@ -212,7 +212,7 @@ public class SettingsTest {
             return;
         }
 
-        SettingsUtil.setAppPermissions(instrumentation, appType, appName, false, "Deny", "Apps");
+        SettingsUtil.setAppPermissions_v1(instrumentation, appType, appName, false, "Deny", "Apps");
         device.pressHome();
 
         AppLauncher.launch(instrumentation, appName);
@@ -241,7 +241,7 @@ public class SettingsTest {
                 })
         );
 
-        SettingsUtil.setAppPermissions(instrumentation, appType, appName, true, "Deny", "Apps");
+        SettingsUtil.setAppPermissions_v1(instrumentation, appType, appName, true, "Deny", "Apps");
         device.pressHome();
     }
 
@@ -268,10 +268,10 @@ public class SettingsTest {
         AppManager.openAppList_v1(instrumentation);
         SettingsUtil.clickAdvancedMenu(device);
 
-        assertTrue(SettingsUtil.getAppPermissions(instrumentation, "Calendar", "Apps").exists()
-                && SettingsUtil.getAppPermissions(instrumentation, "Camera", "Apps").exists()
-                && SettingsUtil.getAppPermissions(instrumentation, "Camera", "Apps").exists()
-                && SettingsUtil.getAppPermissions(instrumentation, "Phone", "Apps").exists());
+        assertTrue(SettingsUtil.getAppPermissions_v1(instrumentation, "Calendar", "Apps")
+                && SettingsUtil.getAppPermissions_v1(instrumentation, "Camera", "Apps")
+                && SettingsUtil.getAppPermissions_v1(instrumentation, "Camera", "Apps")
+                && SettingsUtil.getAppPermissions_v1(instrumentation, "Phone", "Apps"));
     }
 
     /**
