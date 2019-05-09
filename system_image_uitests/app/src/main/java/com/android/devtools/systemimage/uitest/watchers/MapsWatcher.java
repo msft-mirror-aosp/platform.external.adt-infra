@@ -61,6 +61,12 @@ public class MapsWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().textContains("OK")).click();
                 condition = true;
             }
+            isSuccess = mDevice.findObject(new UiSelector().textContains("Get a ride in minutes"))
+                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().textContains("Get a ride in minutes")).click();
+                condition = true;
+            }
 
         }
         catch (UiObjectNotFoundException e) {
