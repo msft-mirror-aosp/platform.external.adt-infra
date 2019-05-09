@@ -22,6 +22,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
@@ -131,19 +132,14 @@ public class GoogleServicesTest {
             itemList.setAsVerticalList();
         }
 
-        String securityLabel = "Security & location";
-        UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                securityLabel);
+        String LocationLabel = "Location";
+        UiObject location = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                LocationLabel);
 
-        if (security.waitForExists(3L)) {
-            security.clickAndWaitForNewWindow();
-        }
-
-
-        UiObject location = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
-                "Location");
         if (location.waitForExists(3L)) {
             location.clickAndWaitForNewWindow();
+        }else{
+            assertTrue("Cannot find Location in Settings", location.exists());
         }
 
         assertTrue("Cannot find location toggle button", device.findObject(
