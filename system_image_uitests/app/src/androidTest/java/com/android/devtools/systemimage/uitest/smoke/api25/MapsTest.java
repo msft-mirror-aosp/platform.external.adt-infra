@@ -150,10 +150,12 @@ public class MapsTest {
             Assert.assertTrue(directions.exists());
             directions.clickAndWaitForNewWindow();
 
+            new MapsWatcher(mDevice).checkForCondition();
+
             UiObject destination = mDevice.findObject(new UiSelector().textContains(QUERY_STRING));
             new MapsWatcher(mDevice).checkForCondition();
 
-            Assert.assertTrue(destination.exists());
+            Assert.assertTrue("Cannot find Destination", destination.waitForExists(5000));
 
             for (int i = 0; i < 5; i++) {
                 mDevice.pressBack();
