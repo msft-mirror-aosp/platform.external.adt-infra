@@ -32,6 +32,7 @@ import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AppWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -131,6 +132,9 @@ public class AppTest {
             GoogleAppUtil.loginGoogleApp(instrumentation);
             AppLauncher.launch(instrumentation, "Chrome");
 
+            new GoogleAppContinueWatcher(device).checkForCondition();
+            new AppWatcher(device).checkForCondition();
+
             // Click the search box if it's there.
             UiObject searchBox = device.findObject(new UiSelector().resourceId(
                     Res.CHROME_SEARCH_BOX_RES));
@@ -191,28 +195,35 @@ public class AppTest {
             Log.d(TAG, "Searching for bookmark...");
             new AppWatcher(device).checkForCondition();
 
+            final UiObject bookmarkedSite = device.findObject(new UiSelector().textContains("ESPN"));
+
             assertTrue("Cannot find bookmark",
                     new Wait().until(new Wait.ExpectedCondition() {
                         @Override
                         public boolean isTrue() {
                             return device.findObject(
                                     new UiSelector().textContains(("kmarks"))).exists() &&
-                                    device.findObject(new UiSelector().textContains("ESPN").resourceId(
-                                            Res.CHROME_TITLE_RES)).exists();
+                                    bookmarkedSite.exists();
                         }
                     })
             );
 
-            device.findObject(new UiSelector().resourceId(
-                    Res.CHROME_CLOSE_MENU_BUTTON_RES)).clickAndWaitForNewWindow();
+            bookmarkedSite.dragTo(bookmarkedSite,20);
 
-            Log.d(TAG, "Closing the menu");
-
+            final UiObject trashCan = device.findObject(new UiSelector().
+                    description("Delete bookmarks"));
             // Delete the bookmark.
-            device.pressMenu();
-            device.findObject(
-                    new UiSelector().description("Edit bookmark")).clickAndWaitForNewWindow();
-            device.findObject(new UiSelector().description("Delete bookmarks")).click();
+            assertTrue("Cannot find trash",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return trashCan.exists();
+                        }
+                    })
+
+            );
+
+            trashCan.click();
         }
     }
 }

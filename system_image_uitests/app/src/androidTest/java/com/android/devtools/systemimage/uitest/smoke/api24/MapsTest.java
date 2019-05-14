@@ -131,6 +131,8 @@ public class MapsTest {
                 }
             });
 
+            new MapsWatcher(mDevice).checkForCondition();
+
             if (hasSearchText) {
                 Assert.assertTrue("Search string " + QUERY_STRING + " not found.",
                         searchTextView.getText().contains(QUERY_STRING));

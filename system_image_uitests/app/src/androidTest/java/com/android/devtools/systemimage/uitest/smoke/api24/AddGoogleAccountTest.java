@@ -76,8 +76,8 @@ public class AddGoogleAccountTest {
                 mDevice.findObject(new UiSelector().textContains("Checking Info"));
         if (checkingInfo.exists()) {
             mDevice.pressBack();
+            AppLauncher.launch(instrumentation, "Contacts");
         }
-        AppLauncher.launch(instrumentation, "Contacts");
 
         UiObject addAccount = mDevice.findObject(
                 new UiSelector().textMatches(("(?i)add account(?-i)")));
@@ -87,8 +87,12 @@ public class AddGoogleAccountTest {
             addAccount.clickAndWaitForNewWindow();
         }
 
-        new AddGoogleAccountWatcher(mDevice).checkForCondition();
+        UiObject GoogleAccount = mDevice.findObject(new UiSelector().text("Google"));
+        if(GoogleAccount.waitForExists(5000)){
+            GoogleAccount.clickAndWaitForNewWindow();
+        }
 
+        Thread.sleep(5000);
         assertTrue("Add Google account page not found",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
