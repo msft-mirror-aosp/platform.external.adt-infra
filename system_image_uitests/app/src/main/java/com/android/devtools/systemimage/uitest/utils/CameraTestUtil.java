@@ -27,6 +27,8 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
+import org.junit.Assert;
+
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
@@ -36,69 +38,6 @@ public class CameraTestUtil {
 
     private CameraTestUtil() {
         throw new AssertionError();
-    }
-
-    /* A helper method to perform the common camera actions of both the photo and video tests,
-     * based on the mode parameter */
-    public static boolean useCamera(Instrumentation instrumentation, String mode) throws Exception {
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-
-        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
-
-        if (SettingsUtil.verifyCameraAppDisabled(device)) {
-            SettingsUtil.setCameraEnabled(true, instrumentation, device);
-        }
-
-        device.pressBack();
-        device.pressHome();
-
-        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
-        UiObject cameraFrame = device.findObject(new UiSelector().resourceId(Res.CAMERA_FRAME_RES));
-        if (cameraFrame.waitForExists(30L)) {
-            cameraFrame.longClick();
-            cameraFrame.swipeRight(20);
-        }
-
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
-
-        boolean cameraModeButtonExists = device.findObject(new UiSelector()
-                .descriptionStartsWith("Switch to")).waitForExists(30L);
-
-        org.junit.Assert.assertTrue("Button to select " + mode + " mode not found", cameraModeButtonExists);
-
-        if (mode.equals("Camera")) {
-            device.findObject(new UiSelector().description("Switch to Camera Mode")).click();
-        } else {
-            device.findObject(new UiSelector().description("Switch to Video Camera")).click();
-        }
-
-        createTestFile(device, mode);
-        deleteTestFile(device);
-
-        String originalFileList = listGalleryFiles();
-
-        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
-
-        createTestFile(device, mode);
-
-        String fileExt = mode.equals("Camera") ? ".jpg" : ".mp4";
-        String newFileList = listGalleryFiles();
-
-        Log.d(TAG, "Test mode is " + mode);
-        Log.d(TAG, "Original gallery file list is " + originalFileList);
-        Log.d(TAG, "Gallery file list after create is " + newFileList);
-
-        org.junit.Assert.assertTrue("New file was not added to the gallery",
-                !originalFileList.equals(newFileList) && newFileList.contains(fileExt));
-
-        deleteTestFile(device);
-
-        String lastFileList = listGalleryFiles();
-        Log.d(TAG, "Gallery file list after delete is " + lastFileList);
-
-        return originalFileList.equals(lastFileList);
     }
 
     /* A helper method to list the contents on the external media files storage directory */
@@ -129,8 +68,26 @@ public class CameraTestUtil {
         return result.stdout;
     }
 
-    /* A helper method to generate either a new photo or video, and then select view it */
-    private static void createTestFile(UiDevice device, String mode) throws UiObjectNotFoundException {
+    /* A helper method to generate either a new photo or video, and then select view it
+    * For API <= 25
+    */
+    private static void createTestFile_v1(UiDevice device, String mode) throws UiObjectNotFoundException {
+        UiObject shutterButton = device.findObject(new UiSelector().resourceId("com.android.camera:id/shutter_button"));
+        UiObject fileThumbnail = device.findObject(new UiSelector().resourceId("com.android.camera:id/thumbnail"));
+
+        if (shutterButton.waitForExists(15L)) {
+            shutterButton.click();
+            if (mode.equals("Videos")) {
+                fileThumbnail.waitForExists(15L);
+                shutterButton.click();
+            }
+        }
+    }
+
+    /* A helper method to generate either a new photo or video, and then select view it
+    * For API >= 26
+    */
+    private static void createTestFile_v2(UiDevice device, String mode) throws UiObjectNotFoundException {
         UiObject shutterButton = device.findObject(new UiSelector().resourceId(Res.CAMERA_SHUTTER_BUTTON_RES));
         UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_THUMBNAIL_RES));
 
@@ -147,20 +104,163 @@ public class CameraTestUtil {
         }
     }
 
-    /* A helper method to delete a new photo or video */
-    private static void deleteTestFile(UiDevice device) throws UiObjectNotFoundException {
-        UiObject trashCan = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_DELETE_RES));
+    /* A helper method to perform the common camera actions of both the photo and video tests,
+     * based on the mode parameter
+     *
+     * for API <= 25
+     */
+    public static boolean useCamera_v1(Instrumentation instrumentation, String mode) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+
+        UiObject cameraFrame = device.findObject(new UiSelector().resourceId("com.android.camera:id/mode_0"));
+        if (cameraFrame.waitForExists(10L)) {
+            cameraFrame.click();
+        }
+
+        String resId = mode.equals("Camera") ? "com.android.camera:id/mode_camera" :
+                "com.android.camera:id/mode_video";
+        UiObject ModeButton = device.findObject(new UiSelector()
+                .resourceId(resId));
+        if (ModeButton.waitForExists(10L)) {
+            ModeButton.click();
+        }
+        else {
+            Assert.assertTrue("Button to select mode does not exist", false);
+        }
+
+        createTestFile_v1(device, mode);
+        deleteTestFile_v1(instrumentation, device, mode);
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        String originalFileList = listGalleryFiles();
+
+        createTestFile_v1(device, mode);
+
+        String fileExt = mode.equals("Camera") ? ".jpg" : ".mp4";
+        String newFileList = listGalleryFiles();
+
+        Log.d(TAG, "Test mode is " + mode);
+        Log.d(TAG, "Original gallery file list is " + originalFileList);
+        Log.d(TAG, "Gallery file list after create is " + newFileList);
+
+        Assert.assertTrue("New file was not added to the gallery",
+                !originalFileList.equals(newFileList) && newFileList.contains(fileExt));
+
+        deleteTestFile_v1(instrumentation, device, mode);
+
+        String lastFileList = listGalleryFiles();
+        Log.d(TAG, "Gallery file list after delete is " + lastFileList);
+
+        return originalFileList.equals(lastFileList);
+    }
+
+    /* A helper method to delete a new photo or video
+    *
+    * For API <= 25
+    */
+    private static void deleteTestFile_v1(Instrumentation instrumentation, UiDevice device, String mode) throws Exception {
+        device.pressHome();
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Downloads"});
+
+        String desc = mode.equals("Camera") ? "Images" : "Videos";
+        UiObject fileButton = device.findObject(new UiSelector().text(desc));
+
+        if ( fileButton.waitForExists(10)) {
+            fileButton.click();
+            device.findObject(new UiSelector().text("Camera")).click();
+        }
+
+        UiObject fileThumbnail = device.findObject(new UiSelector().resourceId("com.android.documentsui:id/icon_thumb"));
+
+        if (fileThumbnail.waitForExists(15L)) {
+            fileThumbnail.dragTo(fileThumbnail, 20);
+        }
+
+        UiObject trashButton = device.findObject(new UiSelector().resourceId("com.android.documentsui:id/menu_sort"));
+
+        if (trashButton.waitForExists(15L)) {
+            trashButton.click();
+        }
+
+        UiObject okButton = device.findObject(new UiSelector().resourceId("android:id/button1"));
+
+        if (okButton.waitForExists(15L)) {
+            okButton.click();
+        }
+
+        device.pressHome();
+    }
+
+    /* A helper method to perform the common camera actions of both the photo and video tests,
+     * based on the mode parameter
+     *
+     * For API >= 26
+     */
+    public static boolean useCamera_v2(Instrumentation instrumentation, String mode) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
+
+        UiObject cameraFrame = device.findObject(new UiSelector().resourceId(Res.CAMERA_FRAME_RES));
+        if (cameraFrame.waitForExists(30L)) {
+            cameraFrame.longClick();
+            cameraFrame.swipeRight(20);
+        }
+
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
+
+        boolean cameraModeButtonExists = device.findObject(new UiSelector()
+                .descriptionStartsWith("Switch to")).waitForExists(30L);
+
+        org.junit.Assert.assertTrue("Button to select " + mode + " mode not found", cameraModeButtonExists);
+
+        if (mode.equals("Camera")) {
+            device.findObject(new UiSelector().description("Switch to Camera Mode")).click();
+        } else {
+            device.findObject(new UiSelector().description("Switch to Video Camera")).click();
+        }
+
+        createTestFile_v2(device, mode);
+        deleteTestFile_v2(device);
+
+        String originalFileList = listGalleryFiles();
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        new CameraAccessPermissionsWatcher(device).checkForCondition();
+
+        createTestFile_v2(device, mode);
+
+        String fileExt = mode.equals("Camera") ? ".jpg" : ".mp4";
+        String newFileList = listGalleryFiles();
+
+        Log.d(TAG, "Test mode is " + mode);
+        Log.d(TAG, "Original gallery file list is " + originalFileList);
+        Log.d(TAG, "Gallery file list after create is " + newFileList);
+
+        org.junit.Assert.assertTrue("New file was not added to the gallery",
+                !originalFileList.equals(newFileList) && newFileList.contains(fileExt));
+
+        deleteTestFile_v2(device);
+
+        String lastFileList = listGalleryFiles();
+        Log.d(TAG, "Gallery file list after delete is " + lastFileList);
+
+        return originalFileList.equals(lastFileList);
+    }
+
+    /* A helper method to delete a new photo or video
+    *
+    * for API >= 26
+    */
+    private static void deleteTestFile_v2(UiDevice device) throws UiObjectNotFoundException {
         UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_THUMBNAIL_RES));
 
         if (fileThumbnail.waitForExists(15L)) {
             fileThumbnail.clickAndWaitForNewWindow();
         }
-
-        if (trashCan.waitForExists(15L)) {
-            trashCan.click();
-        }
-
-        device.pressBack();
-        device.pressHome();
     }
 }
