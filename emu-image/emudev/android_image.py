@@ -19,6 +19,8 @@ import zipfile
 
 import urlfetch
 from absl import logging
+from emudev.gce_device import GCEDevice
+from emudev.docker_device import DockerDevice
 from acloud.internal.lib import android_build_client, auth
 from acloud.public.config import AcloudConfigManager
 from emudev.gce_device import GCEDevice
@@ -78,8 +80,14 @@ class AndroidSystemImage(object):
         with zipfile.ZipFile(fname, 'r') as zipf:
             return any(['ranchu' in z for z in zipf.namelist()])
 
-    def launch_with_acloud(self, config_file, build_id, adb, gpu=None):
+    def create_docker_container(self, config_file, build_id):
         """Launches a GCE instance using the image with the given build_id"""
+        device = DockerDevice(config_file, self, build_id)
+        device.create()
+        return device
+
+    def launch_with_acloud(self, config_file, build_id, adb, gpu=None):
+        """Creates a docker image using the image with the given build_id"""
         device = GCEDevice(config_file, self, build_id, adb, gpu)
         device.start()
         return device

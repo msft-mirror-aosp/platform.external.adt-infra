@@ -13,28 +13,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import multiprocessing
 import os
-import xml.etree.ElementTree as ET
 import sys
 import tempfile
+import xml.etree.ElementTree as ET
 from functools import partial
 from operator import attrgetter
 
-from absl import app
-from absl import flags
-from absl import logging
-
 import urlfetch
+from absl import app, flags, logging
+from acloud.internal.lib import android_build_client, auth
+from acloud.public.config import AcloudConfigManager
 
 from emudev.adb import Adb
 from emudev.android_image import AndroidSystemImage, InternalAndroidImage
-from acloud.public.config import AcloudConfigManager
-from acloud.internal.lib import android_build_client, auth
 
 REPOS = [
     'https://dl.google.com/android/repository/sys-img/android-tv/sys-img2-1.xml',
@@ -49,7 +44,8 @@ flags.DEFINE_boolean(
 flags.DEFINE_string('img_dir', os.path.join(tempfile.gettempdir(), 'sys-images'),
                     'Directory to store downloaded images for kernel-ranchu check.'
                     'Remove this to download the images again')
-flags.DEFINE_string('target', 'sdk_gphone_x86_64-user', 'The system image target if using internal build number.')
+flags.DEFINE_string('target', 'sdk_gphone_x86_64-user',
+                    'The system image target if using internal build number.')
 flags.DEFINE_boolean('list', False, 'List all the images.')
 flags.DEFINE_boolean('delete', True, 'Delete instance after booting.')
 flags.DEFINE_string(
@@ -65,12 +61,17 @@ flags.DEFINE_string(
     'boot', None, 'Matching string from list to boot image.'
     'For example: "21" will boot all 21 images. '
     '"28, android, x86_64" will boot a single image.')
+flags.DEFINE_string(
+    'create', None, 'Matching string from list to create a docker image.'
+    'For example: "21" will create a docker image for all android 21 apis. '
+    '"28, android, x86_64" will create a single image.')
 flags.DEFINE_string('result_file', None,
                     'Print the resulting csv to this file')
 flags.DEFINE_integer('concurrency', 1,
                      'Max number of concurrent requests. '
                      'Lower this if you lack gce quota during boot testing.')
-flags.DEFINE_integer('timeout', 300, 'Time we are willing to wait for boot complete')
+flags.DEFINE_integer(
+    'timeout', 300, 'Time we are willing to wait for boot complete')
 
 
 def get_system_images():
@@ -88,13 +89,21 @@ def get_system_images():
     return [AndroidSystemImage(item) for sublist in xml for item in sublist]
 
 
+def _create_image(emu_build_id, system_image):
+    """Creates a docker image.
+
+      Returns: The created device
+    """
+    return system_image.create_docker_container(FLAGS.config, emu_build_id)
+
+
 def _boot_image(adb, emu_build_id, system_image):
     """Attempts to boot a single system image.
 
       The device will be torn down after boot completion if
       FLAGS.delete is true.
 
-      Returns: True if the device booted
+      Returns: The created device
       """
     if not FLAGS.delete:
         return system_image.launch_with_acloud(FLAGS.config,
@@ -114,18 +123,15 @@ def _fetch_latest_emu_build(config_file):
     return ab.GetLKGB('sdk_tools_linux', 'aosp-emu-master-dev')
 
 
-def boot(system_images, emu_build_id):
+def create(system_images, create_action):
     """Boots the given list of images."""
-    with Adb() as adb:
-        boot_img = partial(_boot_image, adb, emu_build_id)
-
-        # Use number of available cores to spin up machines
-        # Be careful, we have limited quota!
-        if FLAGS.concurrency > 1:
-            pool = multiprocessing.Pool(processes=FLAGS.concurrency)
-            return zip(system_images, pool.map(boot_img, system_images))
-        else:
-            return zip(system_images, [boot_img(x) for x in system_images])
+    # Use number of available cores to spin up machines
+    # Be careful, we have limited quota!
+    if FLAGS.concurrency > 1:
+        pool = multiprocessing.Pool(processes=FLAGS.concurrency)
+        return zip(system_images, pool.map(create_action, system_images))
+    else:
+        return zip(system_images, [create_action(x) for x in system_images])
 
 
 def _has_ranchu(system_image):
@@ -163,15 +169,22 @@ def main(argv=None):
         output.write('%s, ranchu\n' % AndroidSystemImage.header())
         output.write('\n'.join(map(lambda x: '%s, %s' % x, ranchu)))
 
+    create_action = None
     if FLAGS.boot:
         bootlist = [pkg for pkg in system_images if FLAGS.boot in str(pkg)]
         if not bootlist:
             # Nothing to boot from public images.. Assume the are private build ids
             bootlist = [InternalAndroidImage(
                 FLAGS.config, build_id, FLAGS.target) for build_id in FLAGS.boot.split(',')]
+        create_action = partial(_boot_image, Adb(), emu_build_id)
 
-        launched = boot(bootlist, emu_build_id)
-        output.write('%s, can_boot\n' % AndroidSystemImage.header())
+    if FLAGS.create:
+        bootlist = [pkg for pkg in system_images if FLAGS.create in str(pkg)]
+        create_action = partial(_create_image, emu_build_id)
+
+    if create_action:
+        launched = create(bootlist, create_action)
+        output.write('%s, status\n' % launched[0][0].header())
         output.write('\n'.join(map(lambda x: '%s, %s' % x, launched)))
 
     output.write('\n\nEmulator build: %s\n\n' % emu_build_id)
