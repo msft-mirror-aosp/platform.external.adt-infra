@@ -77,7 +77,7 @@ public class DeveloperOptionsManager {
     /**
      * Enables developer options.
      *
-     * Version 1 for api <= 25
+     * Version 1 for api <= 25 and api >= 29
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
@@ -119,31 +119,9 @@ public class DeveloperOptionsManager {
     }
 
     /**
-     * Enables developer options.
-     *
-     * Version 3 for api >= 28.
-     *
-     * @param testFramework see {
-     *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
-     * @throws Exception if it fails to find a UI widget.
-     */
-    public static void enableDeveloperOptions_v3(SystemImageTestFramework testFramework)
-            throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-
-        try {
-            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
-        } catch (UiObjectNotFoundException e) {
-            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
-        }
-
-        enableOptions(instrumentation);
-    }
-
-    /**
      * Checks if the developer options is enabled.
      *
-     * Version 1 for api <= 25
+     * Version 1 for api <= 25 and api >= 29
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
@@ -167,7 +145,7 @@ public class DeveloperOptionsManager {
     /**
      * Checks if the developer options is enabled.
      *
-     * Version 2 for api >= 26
+     * Version 2 for api 26, 27 and 28
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }

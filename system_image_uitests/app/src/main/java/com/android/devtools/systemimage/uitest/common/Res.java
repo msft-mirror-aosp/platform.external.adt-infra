@@ -65,7 +65,7 @@ public class Res {
             "com.android.settings:id/list";  // Added in API 24.
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
-            "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container)";
+            "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container|list_container)";
     public static final String Q_SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(main_content_scrollable_container)";
 
