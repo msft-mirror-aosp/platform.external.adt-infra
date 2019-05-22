@@ -129,6 +129,7 @@ public class Res {
     public static final String ANDROID_SUMMARY_RES = "android:id/summary";
     public static final String ANDROID_SWITCH_WIDGET = "android:id/switch_widget";
     public static final String ANDROID_ICON_RES = "android:id/icon";
+    public static final String ANDROID_ERROR_CLOSE_RES = "android:id/aerr_close";
 
     // Android TV Resources.
     public static final String TV_LAUNCHER = "com.google.android.tvlauncher:id/button_icon";
