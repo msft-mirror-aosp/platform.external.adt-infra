@@ -771,4 +771,56 @@ public class SettingsTest {
                 SettingsUtil.findObjectByRelative(
                         permissionList,"Storage",LinearLayout.class.getName()).isChecked());
     }
+
+    /**
+     * To verify that revoking USB debugging can be invoked from Developer Options.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Launch an emulator avd.
+     *   2. If Developer Options are disabled, enable Developer Options.
+     *   3. Launch Developers Options.
+     *   4. Scroll to Revoke USB Debugging Authorizations and click.
+     *   5. Detect that the Revoke USB Debugging message is presented.
+     *   Verify:
+     *   1. Developer Options have been enabled.
+     *   2. Revoke USB Debugging option is available.
+     *   </pre>
+     */
+    @Test
+    public void revokeDebugAuth() throws Exception {
+        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
+            DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
+        }
+
+        Assert.assertTrue("Could not enable developer options",
+                DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "Advanced", "Developer options"});
+
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
+
+        UiSelector revokeUSBOption = new UiSelector().text("Revoke USB debugging authorizations");
+        itemList.scrollIntoView(revokeUSBOption);
+
+        UiObject revokeUSBDebug = device.findObject(revokeUSBOption);
+
+        if (revokeUSBDebug.waitForExists(5L)) {
+            revokeUSBDebug.clickAndWaitForNewWindow();
+        }
+
+        UiObject revokeText = device.findObject(
+                new UiSelector().text("Revoke access to USB debugging from all computers you’ve previously authorized?"));
+        UiObject cancelRevoke = device.findObject(
+                new UiSelector().text("CANCEL").className("android.widget.Button"));
+        Assert.assertTrue("Unable to revoke USB debugging authorizations",
+                revokeText.waitForExists(5L) && cancelRevoke.waitForExists(5L));
+        cancelRevoke.click();
+    }
 }
