@@ -146,4 +146,6 @@ public class Res {
     public static final String WEAR_SHOW_ALL_BUTTON = "com.google.android.wearable.app:id/show_all_btn";
     public static final String WEAR_WATCH_FACE_PICKER =
             "com.google.android.wearable.app:id/watchface_picker_all_title";
+
+    public static final String YOUTUBE_UPDATE_LATER_BUTTON_RES = "com.google.android.youtube:id/later_button";
 }
