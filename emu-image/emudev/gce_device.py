@@ -21,7 +21,8 @@ from distutils.spawn import find_executable
 
 # Absl-py
 from absl import logging
-from acloud.internal.lib import android_build_client, auth
+from acloud.internal.lib import (android_build_client, android_compute_client,
+                                 auth)
 from acloud.internal.lib.utils import AutoConnect
 from acloud.public import device_driver
 from acloud.public.actions import create_goldfish_action
@@ -93,6 +94,7 @@ class GCEDevice:
             build_id=self.image.build_id,
             build_target=self.image.build_target,
             gpu=self.gpu,
+            tags=["https-server"],
             report_internal_ip=False)
         self.launch.Dump(None)
 
@@ -170,12 +172,12 @@ class GCEDevice:
 
         start = time.time()
         self.status = self.boot_complete()
-        while not status and time.time() - start < timeout:
+        while not self.status and time.time() - start < timeout:
             logging.info("Waiting for boot completion message.")
             time.sleep(1)
             self.status = self.boot_complete()
 
-        logging.info("Finished waiting, booted: %s", status)
+        logging.info("Finished waiting, booted: %s", self.status)
         return self
 
     def boot_complete(self):
@@ -193,9 +195,6 @@ class GCEDevice:
         if GCEDevice.FAILED in self.launch.data:
             lookfor = GCEDevice.FAILED
         return next(iter([device[prop] for device in self.launch.data[lookfor]]), None)
-
-    def status(self):
-        return self.status
 
     def instance_ip(self):
         """Gets the public ip address of the running gce instance."""
