@@ -65,7 +65,7 @@ public class Res {
             "com.android.settings:id/list";  // Added in API 24.
     public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
-            "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container)";
+            "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container|list_container)";
     public static final String Q_SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(main_content_scrollable_container)";
 
@@ -135,6 +135,7 @@ public class Res {
     public static final String TV_MAIN_FRAME = "com.android.tv.settings:id/main_frame";
     public static final String TV_DATE_PICKER = "com.android.tv.settings:id/date_picker";
     public static final String TV_TIME_PICKER = "com.android.tv.settings:id/time_picker";
+    public static final String TV_DISMISS = "com.google.android.tvlauncher:id/tray_dismiss";
 
     // Android Wear Resources.
     public static final String WEAR_SETTINGS = "com.google.android.apps.wearable.settings";

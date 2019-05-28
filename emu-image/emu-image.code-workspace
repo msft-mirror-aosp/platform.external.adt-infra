@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+            "name": "emu-image",
+			"path": "."
+		},
+		{
+            "name": "Acloud Library",
+			"path": "../../../tools/acloud"
+		}
+	]
+}

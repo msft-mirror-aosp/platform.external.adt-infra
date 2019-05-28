@@ -54,11 +54,11 @@ taskkill /fi "windowtitle eq Administrator:  test_timer*"
 goto BootDone
 
 :BootTimeOut
-echo "Perf test timed out"
+echo "Boot test timed out"
 
 :BootDone
 echo "Running AVD tests"
-start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\test_timer.py --timeout 1000"
+start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\test_timer.py --timeout 1800"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir AVD_test --file_pattern *launch_avd*.* --config_file external\adt-infra\emu_test\config\avd_cfg_byob.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900 --generate_xml"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir AVD_test --file_pattern *launch_avd*.* --config_file external\adt-infra\emu_test\config\avd_cfg_byob.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900 --generate_xml
 tasklist /v | find "test_timer"
@@ -67,11 +67,11 @@ taskkill /fi "windowtitle eq Administrator:  test_timer*"
 goto AVDDone
 
 :AVDTimeOut
-echo "Perf test timed out"
+echo "AVD test timed out"
 
 :AVDDone
 echo "Running Console tests"
-start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\test_timer.py --timeout 1800"
+start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\test_timer.py --timeout 3600"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Console_test --file_pattern test_console.* --config_file external\adt-infra\emu_test\config\console_cfg_byob.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Console_test --file_pattern test_console.* --config_file external\adt-infra\emu_test\config\console_cfg_byob.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900
 tasklist /v | find "test_timer"
@@ -80,11 +80,11 @@ taskkill /fi "windowtitle eq Administrator:  test_timer*"
 goto ConsoleDone
 
 :ConsoleTimeOut
-echo "Perf test timed out"
+echo "Console test timed out"
 
 :ConsoleDone
 echo "Running psq snapshot tests"
-start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\test_timer.py --timeout 1000"
+start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\test_timer.py --timeout 1800"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Snapshot_test --file_pattern psq_test.* --config_file external\adt-infra\emu_test\config\psq_cfg_byob.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900 --generate_xml"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Snapshot_test --file_pattern psq_test.* --config_file external\adt-infra\emu_test\config\psq_cfg_byob.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900 --generate_xml
 tasklist /v | find "test_timer"
@@ -93,7 +93,7 @@ taskkill /fi "windowtitle eq Administrator:  test_timer*"
 goto PsqDone
 
 :PsqTimeOut
-echo "Perf test timed out"
+echo "Psq test timed out"
 
 :PsqDone
 echo "Remove deployed emulator"

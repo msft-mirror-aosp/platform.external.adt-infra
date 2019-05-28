@@ -1,6 +1,8 @@
 Emu-image
 =========
-A tool that allows you to list and boot all our publicly hosted images. The test will produce csv with results. The csv can be written to a file, or printed to std out.
+A tool that allows you to list, boot and create docker images from all our
+publicly hosted android system-images. The test will produce csv with results.
+The csv can be written to a file, or printed to std out.
 
 ## Getting Started
 
@@ -16,7 +18,7 @@ In order to use this you will need to:
    client_id: "my-client-id"
    client_secret: "aSup3rS@f3Secret!"
    # Must have this one otherwise you will not boot.
-   stable_goldfish_host_image_name: "vsoc-host-scratch-jansene"
+   stable_goldfish_host_image_name: "vsoc-host-scratch-me"
    ssh_private_key_path: "/home/me/.ssh/acloud_rsa"
    ssh_public_key_path: "/home/me/.ssh/acloud_rsa.pub"
    storage_bucket_name: "my-super-project"
@@ -27,26 +29,29 @@ In order to use this you will need to:
 
 - Have the acloud module installed. The acloud module can be found in AOSP under tools/acloud. If you are building this from the emulator repo you can just:
    ```sh
-      $ push ../../../tools/acloud
-      $ python setup.py install --user
-      $ popd
+   $ push ../../../tools/acloud
+   $ python setup.py install --user
+   $ popd
    ```
 
 - Install this module yourself
    ```sh
-      $ python setup.py install --user
+   $ python setup.py install --user
    ```
 
 Now you can launch images by using emu-image.
 
+**NOTE:** This tool will require access to http://go/ab. The tool will try to authenticate. If this will fail on the first time and the tool becomes interactive.
+You will have to click on a redirect link and enter the generated token. *This means the first run to obtain this token cannot use concurrency!*.
+
 
 ```sh
-   emu-image --help
+$ emu-image --helpfull
 ```
 
 For example, to boot all the images with api level 25 you can:
 ```sh
-   emu-image --boot "25" -v 0 --build_id 5134463
+$ emu-image --boot "25" -v 0 --build_id 5134463
 ```
 
 This will produce a csv that could look like this:
@@ -63,10 +68,70 @@ This will produce a csv that could look like this:
 
     Emulator build: 5134463
 
+To boot a set of images of go/ab with the latest emu-master-dev emulator build:
 
-## Some things to be aware of
+```sh
+$ emu-image --boot "5538743,5534473"
+```
 
-- It will kill your running adb server, as we need to modify the credential search path.
+## Creating docker images
+
+You can create docker images by using the --create flag. For example:
+
+```sh
+$ emu-image --create  "28, google_apis_playstore, x86_64, x86_64-Q_r04.zip"
+```
+
+Will create the following docker image:
+
+
+|REPOSITORY                                 |TAG                 |IMAGE ID            |CREATED             |SIZE   |
+|-------------------------------------------|--------------------|--------------------|--------------------|-------|
+|emulator/google_apis_playstore-28-x86_64   |latest              |de8a974c8a4b        |53 seconds ago      |4.07GB |
+
+You can launch the docker image as follows:
+
+```sh
+$ docker run -e "ADBKEY=$(cat ~/.android/adbkey)" --privileged  --publish 5556:5556/tcp --publish 5554:5554/tcp emulator/google_apis_playstore-28-x86_64
+```
+
+*Note:* The emulator needs access to kvm, hence you will need to pass the --privileged flag. Without docker will not have access to KVM and you will not be able run the emulator.
+
+
+### Pushing docker images to internal repo
+
+You can push the created images to an internal repo as follows:
+
+1. First we need to make sure you have GCE configured such that we can publish
+   the docker images to our GCE project.
+
+   ```sh
+   $ gcloud auth configure-docker
+   ```
+
+2. Next you can push an image to the emu-dev-cts project as follows:
+
+   ```
+   $ docker push gcr.io/emu-dev-cts/emulator/google_apis_playstore-28-x86_64:5550274
+   ```
+
+3. Now you can pull the image
+
+### Troubleshooting
+
+- I see access errors when creating a docker image.
+
+  This workflow requires sudoless Docker. Add your user to the docker group to run Docker commands without 'sudo':
+
+  ```sh
+     sudo adduser $USER docker
+   ```
+
+   In order for the above to take effect, logout and log back in or use `newgrp docker` to change your primary group within a terminal.
+
+
+
+## Some things to be aware of- It will kill your running adb server, as we need to modify the credential search path.
 
   - Public images are signed and will not allow adb access without proper verification.
   - When ADB makes a connection to a device it goes through ADBD. ADBD will negotiate credentials to the device on behalf of your ADB client.

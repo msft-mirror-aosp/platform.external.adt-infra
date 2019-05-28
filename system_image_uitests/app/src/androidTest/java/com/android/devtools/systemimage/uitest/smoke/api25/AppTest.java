@@ -34,6 +34,7 @@ import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AppWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -133,11 +134,16 @@ public class AppTest {
             GoogleAppUtil.loginGoogleApp(instrumentation);
             AppLauncher.launch(instrumentation, "Chrome");
 
+            new GoogleAppContinueWatcher(device).checkForCondition();
+            new AppWatcher(device).checkForCondition();
+
             // Click the search box if it's there.
             UiObject searchBox = device.findObject(new UiSelector().resourceId(
                     Res.CHROME_SEARCH_BOX_RES));
             if (searchBox.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
                 searchBox.clickAndWaitForNewWindow();
+            }else{
+                assertTrue("Cannot find Search Box",searchBox.exists());
             }
 
             new AppWatcher(device).checkForCondition();
@@ -167,12 +173,9 @@ public class AppTest {
             }
             // After bookmarking, the button description changes.
             UiObject editBookmarkText = device.findObject(new UiSelector().description("Edit bookmark"));
-            editBookmarkText.waitForExists(TimeUnit.SECONDS.toMillis(15));
-            if (editBookmarkText.exists()) {
-                editBookmarkText.clickAndWaitForNewWindow();
-            } else {
-                assertTrue("Bookmark was not set", false);
-            }
+            editBookmarkText.waitForExists(TimeUnit.SECONDS.toMillis(10));
+            assertTrue("Bookmark was not set", editBookmarkText.exists());
+
 
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(15));
@@ -193,58 +196,35 @@ public class AppTest {
             Log.d(TAG, "Searching for bookmark...");
             new AppWatcher(device).checkForCondition();
 
+            final UiObject bookmarkedSite = device.findObject(new UiSelector().textContains("ESPN"));
+
             assertTrue("Cannot find bookmark",
                     new Wait().until(new Wait.ExpectedCondition() {
                         @Override
                         public boolean isTrue() {
                             return device.findObject(
                                     new UiSelector().textContains(("kmarks"))).exists() &&
-                                    device.findObject(new UiSelector().textContains("ESPN").resourceId(
-                                            Res.CHROME_TITLE_RES)).exists();
+                                    bookmarkedSite.exists();
                         }
                     })
             );
 
-            device.findObject(new UiSelector().resourceId(
-                    Res.CHROME_CLOSE_MENU_BUTTON_RES)).clickAndWaitForNewWindow();
+            bookmarkedSite.dragTo(bookmarkedSite,20);
 
-            Log.d(TAG, "Closing the menu");
+            final UiObject trashCan = device.findObject(new UiSelector().
+                    description("Delete bookmarks"));
+            // Delete the bookmark.
+            assertTrue("Cannot find trash",
+                    new Wait().until(new Wait.ExpectedCondition() {
+                        @Override
+                        public boolean isTrue() {
+                            return trashCan.exists();
+                        }
+                    })
 
-            // Delete the bookmark.
-            device.pressMenu();
-            device.findObject(
-                    new UiSelector().description("Edit bookmark")).clickAndWaitForNewWindow();
-            device.findObject(new UiSelector().description("Delete bookmarks")).click();
-        } else {
-            AppLauncher.launch(instrumentation, "Browser");
-            UiObject textField = device.findObject(
-                    new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES));
-            textField.click();
-            textField.clearTextField();
-            textField.setText("espn.com");
-            device.pressEnter();
-            device.pressMenu();
-            device.findObject(new UiSelector().text("Save to bookmarks")).click();
-            device.findObject(new UiSelector().text("OK")).click();
-            device.pressMenu();
-            UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
-            bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(15));
-            bookmarks.click();
-            boolean hasBookmarks = device.wait(
-                    Until.hasObject(By.text("Bookmarks")),
-                    TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
             );
-            boolean hasNewBookmark = device.wait(
-                    Until.hasObject(By.res(Res.BROWSER_BOOKMARKS_LABEL_RES)),
-                    TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
-            );
-            assertTrue("Cannot find ESPN bookmark",
-                    hasBookmarks && hasNewBookmark);
-            device.findObject(new UiSelector().textContains(
-                    "ESPN").resourceId(Res.BROWSER_BOOKMARKS_LABEL_RES)).swipeUp(400);
-            // Delete the bookmark.
-            device.findObject(new UiSelector().text("Delete bookmark")).clickAndWaitForNewWindow();
-            device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
+
+            trashCan.click();
         }
     }
 }

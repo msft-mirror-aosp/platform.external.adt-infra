@@ -34,6 +34,7 @@ import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AppWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -138,11 +139,16 @@ public class AppTest {
             GoogleAppUtil.loginGoogleApp(instrumentation);
             AppLauncher.launch(instrumentation, "Chrome");
 
+            new GoogleAppContinueWatcher(device).checkForCondition();
+            new AppWatcher(device).checkForCondition();
+
             // Click the search box if it's there.
             UiObject searchBox = device.findObject(new UiSelector().resourceId(
                     Res.CHROME_SEARCH_BOX_RES));
             if (searchBox.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
                 searchBox.clickAndWaitForNewWindow();
+            }else{
+                assertTrue("Cannot find Search Box",searchBox.exists());
             }
 
             new AppWatcher(device).checkForCondition();
@@ -172,12 +178,8 @@ public class AppTest {
             }
             // After bookmarking, the button description changes.
             UiObject editBookmarkText = device.findObject(new UiSelector().description("Edit bookmark"));
-            editBookmarkText.waitForExists(TimeUnit.SECONDS.toMillis(15));
-            if (editBookmarkText.exists()) {
-                editBookmarkText.clickAndWaitForNewWindow();
-            } else {
-                assertTrue("Bookmark was not set", false);
-            }
+            editBookmarkText.waitForExists(TimeUnit.SECONDS.toMillis(10));
+            assertTrue("Bookmark was not set", editBookmarkText.exists());
 
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(15));

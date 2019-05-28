@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.devtools.systemimage.uitest.smoke.api26;
+package com.android.devtools.systemimage.uitest.smoke.api29;
 
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
@@ -67,11 +67,11 @@ public class SettingsTest {
     // Tests under this class takes up to 240 seconds depending on the performance of the bot the
     // tests run on.
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(240);
+    public Timeout globalTimeout = Timeout.seconds(300);
 
     @Before
     public void activateDeviceAdmin() throws Exception {
-        ApiDemosInstaller.installApp("Security & Location", "Device admin apps");
+        ApiDemosInstaller.installApp("Security & location", "Device admin apps");
     }
 
     /**
@@ -102,7 +102,7 @@ public class SettingsTest {
                 );
         itemList.setAsVerticalList();
 
-        String securityLabel = "Security & Location";
+        String securityLabel = "Security & location";
         UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 securityLabel);
         security.clickAndWaitForNewWindow();
@@ -178,10 +178,9 @@ public class SettingsTest {
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text(
-                                "This application cannot make outgoing calls without the Phone permission.")).
-                                        exists();
-                        }
+                        return !(device.findObject(new UiSelector().resourceIdMatches("com.google.android.dialer:id/incall_end_call")).
+                                exists());
+                    }
                 })
         );
 
@@ -301,13 +300,13 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
+        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v1(testFramework)) {
+            DeveloperOptionsManager.enableDeveloperOptions_v1(testFramework);
         } else {
             return;
         }
         assertTrue("Failed to enable Developer options.",
-                DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
+                DeveloperOptionsManager.isDeveloperOptionsEnabled_v1(testFramework));
     }
 
     /**
@@ -346,37 +345,37 @@ public class SettingsTest {
             widget.click();
         }
         assertTrue("Failed to disable set date.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
                         return !device.findObject(new UiSelector().text("Set date")).isEnabled();
-                  }
-              })
+                    }
+                })
         );
         assertTrue("Failed to disable set time.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
                         return !device.findObject(new UiSelector().text("Set time")).isEnabled();
-                  }
-              })
+                    }
+                })
         );
         widget.click();
         assertTrue("Failed to enable set date.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(new UiSelector().text("Set date")).isEnabled();
-                  }
-              })
+                    }
+                })
         );
         assertTrue("Failed to enable set time.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(new UiSelector().text("Set time")).isEnabled();
-                  }
-              })
+                    }
+                })
         );
         device.findObject(new UiSelector().text("Set date")).clickAndWaitForNewWindow();
 
@@ -426,35 +425,35 @@ public class SettingsTest {
             widget.click();
         }
         assertTrue("Failed to disable select time zone",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
                         return !device.findObject(new UiSelector().text("Select time zone")).isEnabled();
-                  }
-              })
+                    }
+                })
         );
         // Disable automatic time zone option.
         widget.click();
         final UiObject selectTimeZone = device.findObject(
                 new UiSelector().text("Select time zone"));
         assertTrue("Failed to enable select time zone",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
                         return selectTimeZone.isEnabled();
-                  }
-              })
+                    }
+                })
         );
         selectTimeZone.clickAndWaitForNewWindow();
 
         assertTrue("Failed to load Select time zone screen.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(
                                 new UiSelector().text("Select time zone")).exists();
                     }
-              })
+                })
         );
 
         UiObject timeZoneLabel = device.findObject(new UiSelector().text("Time zone").
@@ -468,8 +467,7 @@ public class SettingsTest {
         String timezoneOffset = "GMT-08:00";
 
         assertTrue("Target time zone label not found",
-                timeZoneList.getChildByText(
-                        new UiSelector().className("android.widget.TextView"), timezoneOffset).exists());
+                device.findObject(new UiSelector().textContains(timezoneOffset)).waitForExists(3L));
     }
 
     /**
@@ -500,7 +498,8 @@ public class SettingsTest {
             Log.e(TAG, e.getMessage());
         }
 
-        final UiObject2 useTwentyFourSwitch = SettingsUtil.navigateToDateTimeSwitch("Use 24-hour format", instrumentation, Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES);
+        String useTwentyFourHour = "Use 24-hour format";
+        final UiObject2 useTwentyFourSwitch = SettingsUtil.navigateToDateTimeSwitch(useTwentyFourHour, instrumentation, Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES);
 
         assertTrue("Failed to find Use 24-hour format switch.",
                 new Wait().until(new Wait.ExpectedCondition() {
@@ -511,8 +510,17 @@ public class SettingsTest {
                 })
         );
 
+        boolean autoTwentyFourWasEnabled = false;
         boolean useTwentyFourWasEnabled = false;
+        UiObject useTwentyFourLabel = device.findObject(new UiSelector().text(useTwentyFourHour));
+        UiObject autoTwentyFourLabel = device.findObject(new UiSelector().text("Use locale default"));
         final UiObject thirteenHundredLabel = device.findObject(new UiSelector().text("13:00"));
+
+        // Initialize automatic format option to disabled state.
+        if (autoTwentyFourLabel.waitForExists(3L) && !useTwentyFourLabel.isEnabled()) {
+            autoTwentyFourWasEnabled = true;
+            autoTwentyFourLabel.click();
+        }
 
         // Initialize 24-hour format option to disabled state.
         if (thirteenHundredLabel.exists()) {
@@ -520,32 +528,36 @@ public class SettingsTest {
             useTwentyFourSwitch.click();
         }
         assertTrue("Failed to find Use 24-hour format label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(
                                 new UiSelector().text("Use 24-hour format")).exists();
-                  }
-              })
+                    }
+                })
         );
         assertTrue("Failed to find 1:00 PM label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
                         return device.findObject(new UiSelector().text("1:00 PM")).exists();
-                  }
-              })
+                    }
+                })
         );
         // Enable 24-hour format.
         useTwentyFourSwitch.click();
         assertTrue("Failed to find 13:00 label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
+                new Wait().until(new Wait.ExpectedCondition() {
+                    @Override
                     public boolean isTrue() throws Exception {
-                      return thirteenHundredLabel.exists();
-                  }
-              })
+                        return thirteenHundredLabel.exists();
+                    }
+                })
         );
+
+        if (autoTwentyFourWasEnabled && useTwentyFourLabel.isEnabled()) {
+            autoTwentyFourLabel.click();
+        }
 
         // Clean up by disabling 24-hour format option.
         if (!useTwentyFourWasEnabled) {
@@ -579,20 +591,20 @@ public class SettingsTest {
                 "com.example.android.apis");
 
         if (isAPIDemoInstalled) {
-            SettingsUtil.launchDeviceAdminApps(instrumentation, "Security & Location", "Device admin apps");
+            SettingsUtil.launchDeviceAdminApps(instrumentation, "Security & location", "Device admin apps");
 
-            if (SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox")) {
-                SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security & Location", "Device admin apps");
+            if (SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.Switch")) {
+                SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security & location", "Device admin apps");
             }
-            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox"));
+            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.Switch"));
 
             // Activate "Sample Device Admin" policy
-            SettingsUtil.activate(instrumentation, "Sample Device Admin", "Security & Location", "Device admin apps");
-            assertTrue(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox"));
+            SettingsUtil.activate(instrumentation, "Sample Device Admin", "Security & location", "Device admin apps");
+            assertTrue(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.Switch"));
 
             // Deactivate "Sample Device Admin" policy
-            SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security & Location", "Device admin apps");
-            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox"));
+            SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security & location", "Device admin apps");
+            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.Switch"));
         } else {
             Log.w(TAG,"activateDeactivatePolicy: required APK is missing");
         }
@@ -667,7 +679,7 @@ public class SettingsTest {
         String appName = "Maps";
         String contactsText = "Contacts";
         String locationText = "Location";
-        String phoneText = "Phone";
+        String phoneText = "Microphone";
         String storageText = "Storage";
 
         // Variables to store the state of permissions.
@@ -758,5 +770,57 @@ public class SettingsTest {
         assertEquals(storageSwitchState,
                 SettingsUtil.findObjectByRelative(
                         permissionList,"Storage",LinearLayout.class.getName()).isChecked());
+    }
+
+    /**
+     * To verify that revoking USB debugging can be invoked from Developer Options.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Launch an emulator avd.
+     *   2. If Developer Options are disabled, enable Developer Options.
+     *   3. Launch Developers Options.
+     *   4. Scroll to Revoke USB Debugging Authorizations and click.
+     *   5. Detect that the Revoke USB Debugging message is presented.
+     *   Verify:
+     *   1. Developer Options have been enabled.
+     *   2. Revoke USB Debugging option is available.
+     *   </pre>
+     */
+    @Test
+    public void revokeDebugAuth() throws Exception {
+        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
+            DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
+        }
+
+        Assert.assertTrue("Could not enable developer options",
+                DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "Advanced", "Developer options"});
+
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
+
+        UiSelector revokeUSBOption = new UiSelector().text("Revoke USB debugging authorizations");
+        itemList.scrollIntoView(revokeUSBOption);
+
+        UiObject revokeUSBDebug = device.findObject(revokeUSBOption);
+
+        if (revokeUSBDebug.waitForExists(5L)) {
+            revokeUSBDebug.clickAndWaitForNewWindow();
+        }
+
+        UiObject revokeText = device.findObject(
+                new UiSelector().text("Revoke access to USB debugging from all computers you’ve previously authorized?"));
+        UiObject cancelRevoke = device.findObject(
+                new UiSelector().text("CANCEL").className("android.widget.Button"));
+        Assert.assertTrue("Unable to revoke USB debugging authorizations",
+                revokeText.waitForExists(5L) && cancelRevoke.waitForExists(5L));
+        cancelRevoke.click();
     }
 }

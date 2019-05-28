@@ -982,7 +982,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
             if reader.line_num == 1:
                 continue
             if reader.line_num == 2:
-                idx = [i for i, j in enumerate(row) if j in emu_argparser.emu_args.builder_name]
+                idx = [i for i, j in enumerate(row) if emu_argparser.emu_args.builder_name == j]
                 assert len(idx) == 1, "Unexpected builder name {0} in line {1}, config file: {1}".format(
                     emu_argparser.emu_args.builder_name, row, emu_argparser.emu_args.config_file)
                 builder_idx = idx[0]
