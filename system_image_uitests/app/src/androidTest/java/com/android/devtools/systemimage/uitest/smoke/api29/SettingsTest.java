@@ -829,4 +829,36 @@ public class SettingsTest {
                 revokeText.waitForExists(5L) && cancelRevoke.waitForExists(5L));
         cancelRevoke.click();
     }
+
+    /**
+     * To verify that a list of connected devices can be viewed.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Launch an emulator avd.
+     *   2. Click on Settings.
+     *   3. Click on Connected Devices.
+     *   Verify:
+     *   1. 'Settings keeps stopping' error was not thrown.
+     *   2. List of connected devices is displayed.
+     *   </pre>
+     */
+    @Test
+    public void listConnectedDevices() throws Exception {
+        AppLauncher.launchPath(instrumentation, new String[]{"Settings", "Connected devices"});
+
+        UiObject androidErrorClose = device.findObject(
+                new UiSelector().resourceId(Res.ANDROID_ERROR_CLOSE_RES));
+        Assert.assertTrue("Settings Keeps Stopping error when revoking usb debugging",
+                !androidErrorClose.waitForExists(5L));
+
+        UiObject actionBar = device.findObject(
+                new UiSelector().resourceId(Res.SETTINGS_ACTION_BAR_RES).className("android.view.ViewGroup"));
+        UiObject connectedDevices = device.findObject(
+                new UiSelector().text("Connected devices").className("android.widget.TextView"));
+        Assert.assertTrue("Connected devices were not listed",
+                actionBar.waitForExists(5L) && connectedDevices.waitForExists(5L));
+    }
 }
