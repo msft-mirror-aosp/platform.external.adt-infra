@@ -1,5 +1,5 @@
-Emu-image
-=========
+# Emu-image
+
 A tool that allows you to list, boot and create docker images from all our
 publicly hosted android system-images. The test will produce csv with results.
 The csv can be written to a file, or printed to std out.
@@ -10,46 +10,50 @@ In order to use this you will need to:
 
 - Have a valid acloud configuration:
 
-   For example:
+  For example:
 
-   ```
-   project: "my-super-project"
-   zone: "us-west1-b"
-   client_id: "my-client-id"
-   client_secret: "aSup3rS@f3Secret!"
-   # Must have this one otherwise you will not boot.
-   stable_goldfish_host_image_name: "vsoc-host-scratch-me"
-   ssh_private_key_path: "/home/me/.ssh/acloud_rsa"
-   ssh_public_key_path: "/home/me/.ssh/acloud_rsa.pub"
-   storage_bucket_name: "my-super-project"
-   # Note these two below are crucial!
-   orientation: "portrait"
-   resolution: "800x1280x32x213"
-   ```
+  ```
+  project: "my-super-project"
+  zone: "us-west1-b"
+  client_id: "my-client-id"
+  client_secret: "aSup3rS@f3Secret!"
+  # Must have this one otherwise you will not boot.
+  stable_goldfish_host_image_name: "vsoc-host-scratch-me"
+  ssh_private_key_path: "/home/me/.ssh/acloud_rsa"
+  ssh_public_key_path: "/home/me/.ssh/acloud_rsa.pub"
+  storage_bucket_name: "my-super-project"
+  # Note these two below are crucial!
+  orientation: "portrait"
+  resolution: "800x1280x32x213"
+  extra_scopes: "https://www.googleapis.com/auth/androidbuild.internal"
+  ```
+
+**Note:** You will likely need the extra_scopes line. Acloud will not generate this by default for you. The scope enables your base image to access the internal build API.
 
 - Have the acloud module installed. The acloud module can be found in AOSP under tools/acloud. If you are building this from the emulator repo you can just:
-   ```sh
-   $ push ../../../tools/acloud
-   $ python setup.py install --user
-   $ popd
-   ```
+
+  ```sh
+  $ push ../../../tools/acloud
+  $ python setup.py install --user
+  $ popd
+  ```
 
 - Install this module yourself
-   ```sh
-   $ python setup.py install --user
-   ```
+  ```sh
+  $ python setup.py install --user
+  ```
 
 Now you can launch images by using emu-image.
 
 **NOTE:** This tool will require access to http://go/ab. The tool will try to authenticate. If this will fail on the first time and the tool becomes interactive.
-You will have to click on a redirect link and enter the generated token. *This means the first run to obtain this token cannot use concurrency!*.
-
+You will have to click on a redirect link and enter the generated token. _This means the first run to obtain this token cannot use concurrency!_.
 
 ```sh
 $ emu-image --helpfull
 ```
 
 For example, to boot all the images with api level 25 you can:
+
 ```sh
 $ emu-image --boot "25" -v 0 --build_id 5134463
 ```
@@ -84,19 +88,23 @@ $ emu-image --create  "28, google_apis_playstore, x86_64, x86_64-Q_r04.zip"
 
 Will create the following docker image:
 
-
-|REPOSITORY                                 |TAG                 |IMAGE ID            |CREATED             |SIZE   |
-|-------------------------------------------|--------------------|--------------------|--------------------|-------|
-|emulator/google_apis_playstore-28-x86_64   |latest              |de8a974c8a4b        |53 seconds ago      |4.07GB |
+| REPOSITORY                               | TAG    | IMAGE ID     | CREATED        | SIZE   |
+| ---------------------------------------- | ------ | ------------ | -------------- | ------ |
+| emulator/google_apis_playstore-28-x86_64 | latest | de8a974c8a4b | 53 seconds ago | 4.07GB |
 
 You can launch the docker image as follows:
 
 ```sh
-$ docker run -e "ADBKEY=$(cat ~/.android/adbkey)" --privileged  --publish 5556:5556/tcp --publish 5554:5554/tcp emulator/google_apis_playstore-28-x86_64
+$ docker run -e "ADBKEY=$(cat ~/.android/adbkey)" --privileged  --publish 5556:5556/tcp --publish 5555:5555/tcp emulator/google_apis_playstore-28-x86_64
 ```
 
-*Note:* The emulator needs access to kvm, hence you will need to pass the --privileged flag. Without docker will not have access to KVM and you will not be able run the emulator.
+The command line parameters mean the following:
 
+- `-e "ADBKEY=$(cat ~/.android/adbkey)"` Set the environment variable ADBKEY to contain the private key used by your current adb install. Usually this private
+  key resides in ~/.android/adbkey
+- `--privileged` The emulator needs access to kvm, hence you will need to pass the --privileged flag. Without docker will not have access to KVM and you will not be able run the emulator.
+- `--publish 5556:5556/tcp` make the internal port 5556 in the docker container visible to the outside world at port 5556. This is the gRPC port, that can be used to interact with the emulator.
+- `--publish 5555:5555/tcp` make the internal port 5555 in the docker container visible to the outside world at port 5555. This is the ADB port that can be used to interact with the emulator.
 
 ### Pushing docker images to internal repo
 
@@ -125,20 +133,18 @@ You can push the created images to an internal repo as follows:
 
   ```sh
      sudo adduser $USER docker
-   ```
+  ```
 
-   In order for the above to take effect, logout and log back in or use `newgrp docker` to change your primary group within a terminal.
-
-
+  In order for the above to take effect, logout and log back in or use `newgrp docker` to change your primary group within a terminal.
 
 ## Some things to be aware of- It will kill your running adb server, as we need to modify the credential search path.
 
-  - Public images are signed and will not allow adb access without proper verification.
-  - When ADB makes a connection to a device it goes through ADBD. ADBD will negotiate credentials to the device on behalf of your ADB client.
-  - You can have only one instance of an ADBD running on your machine.
-  - During first launch the emulator will marshall the keys found in ~/.android/adbkey to the emulated device.
-  - We will obtain this key and place it in the credentials search path of our ADB deamon, so adb can offer the key and connect to the device.
-  - You can launch gpu enabled images, they might be expensive, and you must make sure you have enough GPU quota available.
+- Public images are signed and will not allow adb access without proper verification.
+- When ADB makes a connection to a device it goes through ADBD. ADBD will negotiate credentials to the device on behalf of your ADB client.
+- You can have only one instance of an ADBD running on your machine.
+- During first launch the emulator will marshall the keys found in ~/.android/adbkey to the emulated device.
+- We will obtain this key and place it in the credentials search path of our ADB deamon, so adb can offer the key and connect to the device.
+- You can launch gpu enabled images, they might be expensive, and you must make sure you have enough GPU quota available.
 
 - You will need to have ssh access to your GCE instances from the machine you are running this from. For example if you are using the emu-dev-cts project you will have to be within google corpnet.
 
