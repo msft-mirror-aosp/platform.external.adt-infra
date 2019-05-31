@@ -786,7 +786,8 @@ public class SettingsTest {
      *   5. Detect that the Revoke USB Debugging message is presented.
      *   Verify:
      *   1. Developer Options have been enabled.
-     *   2. Revoke USB Debugging option is available.
+     *   2. 'Settings keeps stopping' error was not thrown.
+     *   3. Revoke USB Debugging option is available.
      *   </pre>
      */
     @Test
@@ -814,6 +815,11 @@ public class SettingsTest {
         if (revokeUSBDebug.waitForExists(5L)) {
             revokeUSBDebug.clickAndWaitForNewWindow();
         }
+
+        UiObject androidErrorClose = device.findObject(
+                new UiSelector().resourceId(Res.ANDROID_ERROR_CLOSE_RES));
+        Assert.assertTrue("Settings Keeps Stopping error when revoking usb debugging",
+                !androidErrorClose.waitForExists(5L));
 
         UiObject revokeText = device.findObject(
                 new UiSelector().text("Revoke access to USB debugging from all computers you’ve previously authorized?"));
