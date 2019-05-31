@@ -75,7 +75,7 @@ directory that can be sent to `docker build` via the following invocation of
     python emu_docker.py <emulator-zip> <system-image-zip> <docker-repo-name(unused currently)> [docker-src-dir (getcwd()/src by default)]
 
 This places all the right elements to run a docker image, but does not build,
-run or publish yet.
+run or publish yet. A Linux emulator zip file must be used.
 
 To build the Docker image corresponding to these emulators and system images:
 
