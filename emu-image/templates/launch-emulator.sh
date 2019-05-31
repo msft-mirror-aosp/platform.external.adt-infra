@@ -31,10 +31,11 @@ else
     echo "No adb key provided.. You might not be able to connect to the emulator."
 fi
 
-# We need pulse audio for the webrtc video bridge
+# We need pulse audio for the webrtc video bridge. Our pulseaudio is just a /dev/null devices.
 pulseaudio -D
 
-# All our ports are loopback devices, so setup a simple forwarder
+# Most of our ports are loopback devices, so setup a simple forwarder. Loopback devices are only visible
+# locally to the docker container, and not accessible to the outside world.
 socat -d tcp-listen:5555,reuseaddr,fork tcp:127.0.0.1:6555 &
 
 # Kick off the emulator
