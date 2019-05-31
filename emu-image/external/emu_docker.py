@@ -24,6 +24,15 @@ from distutils.spawn import find_executable
 
 from jinja2 import Environment, BaseLoader
 
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
 if len(sys.argv) < 4:
     print "Invalid usage. Usage: python emu_docker.py <public-emu-url> <public-sysimg-url> <docker-repo-name> [docker-src-dir (cwd by default]"
     sys.exit(1)
@@ -43,6 +52,8 @@ print "Repo name: %s" % repo_name
 
 print "Docker src dir: %s" % src_dir
 
+mkdir_p(src_dir)
+
 print "Copying zips to docker src dir..."
 shutil.copy2(emu_zip, src_dir)
 shutil.copy2(sysimg_zip, src_dir)
@@ -57,16 +68,6 @@ print "AVD dir: %s" % avd_dir_avd_out_path
 
 print "Creating dirs..."
 
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
-
-mkdir_p(src_dir)
 mkdir_p(platform_tools_dir)
 mkdir_p(avd_dir_out_path)
 mkdir_p(avd_dir_avd_out_path)
