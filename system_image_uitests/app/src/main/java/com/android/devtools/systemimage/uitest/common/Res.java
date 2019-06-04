@@ -80,6 +80,8 @@ public class Res {
     public static final String NOTIFICATION_QUICK_PANEL_RES = "com.android.systemui:id/quick_qs_panel";
     public static final String NOTIFICATION_BAR_EXPAND_RES = "com.android.systemui:id/expand_indicator";
     public static final String NOTIFICATION_BAR_HEADER_RES = "com.android.systemui:id/header";
+    public static final String MENU_LIST_RES = "com.android.documentsui:id/menu_list";
+    public static final String OPTION_MENU_LIST_RES = "com.android.documentsui:id/option_menu_list";
 
     public static final String GOOGLE_PLAY_VENDING_RES = "com.android.vending";
     public static final String GOOGLE_PLAY_IDLE_RES = "com.android.vending:id/search_box_idle_text";

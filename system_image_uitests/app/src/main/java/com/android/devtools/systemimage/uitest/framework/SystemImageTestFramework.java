@@ -170,8 +170,9 @@ public class SystemImageTestFramework implements TestRule {
                         // Log the test case description
                         PrintWriter info =
                                 new PrintWriter(new File(loggingDir, "description.txt").getPath());
-                        String testRailLink = description.getAnnotation(TestInfo.class).rootLink() +
-                                description.getAnnotation(TestInfo.class).id();
+                        String testRailLink = description.getAnnotation(TestInfo.class) != null ?
+                                description.getAnnotation(TestInfo.class).rootLink() +
+                                        description.getAnnotation(TestInfo.class).id() : "...";
                         info.println("See " + testRailLink);
                         info.println();
                         info.println("If you cannot access the link above, see http://go/adt-sysimage-autotracker instead");

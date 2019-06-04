@@ -1,7 +1,10 @@
 package com.android.devtools.systemimage.uitest.utils;
 
 import android.app.Instrumentation;
+import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Rect;
+import android.os.Environment;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
@@ -16,6 +19,10 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 import com.android.devtools.systemimage.uitest.watchers.SettingsTestPopupWatcher;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
@@ -563,5 +570,74 @@ public class SettingsUtil {
         } else {
             Log.w(TAG, "enableSampleDeviceAdmin: required APK is missing");
         }
+    }
+
+    // Open Downloads folder.
+    private static void openDownloads(Instrumentation instrumentation) throws UiObjectNotFoundException {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        UiObject downloadsFolder = device.findObject(new UiSelector().text("Download").index(1));
+        if (downloadsFolder.waitForExists(5L)) {
+            downloadsFolder.clickAndWaitForNewWindow();
+        }
+    }
+
+    // Check if test file is stored in Downloads folder.
+    public static boolean hasTestFile(Instrumentation instrumentation, String testFileName) throws UiObjectNotFoundException {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        openDownloads(instrumentation);
+        UiObject testFile = device.findObject(new UiSelector().text(testFileName));
+        boolean hasTestFile = testFile.waitForExists(5L);
+        device.pressBack();
+        return hasTestFile;
+    }
+
+    // Test file deletion for API 26.
+    public static void deleteTestFile_v1(Instrumentation instrumentation, String testFileName) throws UiObjectNotFoundException {
+        deleteTestFile(instrumentation, testFileName,
+                UiDevice.getInstance(instrumentation).findObject(new UiSelector().resourceId(Res.MENU_LIST_RES)));
+    }
+
+    // Test file deletion for APIs 27 and above.
+    public static void deleteTestFile_v2(Instrumentation instrumentation, String testFileName) throws UiObjectNotFoundException {
+        deleteTestFile(instrumentation, testFileName,
+                UiDevice.getInstance(instrumentation).findObject(new UiSelector().resourceId(Res.OPTION_MENU_LIST_RES)));
+    }
+
+    // Delete test file from Downloads folder.
+    private static void deleteTestFile(Instrumentation instrumentation, String testFileName, UiObject trashCan)
+            throws UiObjectNotFoundException {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        openDownloads(instrumentation);
+        UiObject testFile = device.findObject(new UiSelector().text(testFileName));
+        if (testFile.waitForExists(5L)) {
+            testFile.dragTo(testFile, 100);
+        }
+
+        if (trashCan.waitForExists(5L)) {
+            trashCan.clickAndWaitForNewWindow();
+        }
+
+        UiObject okButton = device.findObject(new UiSelector().textMatches("(?i)ok(?-i)"));
+        if (okButton.waitForExists(5L)) {
+            okButton.clickAndWaitForNewWindow();
+        }
+        device.pressBack();
+    }
+
+    // Copy test file to Downloads folder.
+    public static void copyTestFile(Instrumentation instrumentation, String testFileName) throws java.io.IOException {
+        Context context = instrumentation.getTargetContext();
+        AssetManager assetManager = context.getAssets();
+        InputStream in = assetManager.open(testFileName);
+        File testFile = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS), testFileName);
+        OutputStream out = new FileOutputStream(testFile);
+        byte[] buffer = new byte[1024];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            out.write(buffer, 0, read);
+        }
+        in.close();
+        out.close();
     }
 }
