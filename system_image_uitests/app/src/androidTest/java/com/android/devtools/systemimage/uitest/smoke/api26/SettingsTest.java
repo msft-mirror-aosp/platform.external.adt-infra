@@ -849,4 +849,47 @@ public class SettingsTest {
         Assert.assertTrue("Connected devices were not listed",
                 actionBar.waitForExists(5L) && connectedDevices.waitForExists(5L));
     }
+
+    /**
+     * To verify that files can be copied to and deleted from the device.
+     * <p>
+     * This is run to qualify releases. Please involve the test team in substantial changes.
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Launch an emulator avd.
+     *   2. Click on Settings.
+     *   3. Click on Storage > Internal shared storage > Files.
+     *   4. Remove test file from internal storage folder if it already exists.
+     *   5. Copy test file into internal storage folder.
+     *   6. Delete copied test file from internal storage folder.
+     *   7. Repeat for additional test files.
+     *   Verify:
+     *   1. Test file does not already exist in the Download folder.
+     *   2. Test file is copied into the Download folder.
+     *   3. Test file is deleted from the Download folder.
+     *   </pre>
+     */
+    @Test
+    public void filesDeleted() throws Exception {
+        String[] testFileNames = {"test_text_01.txt", "test_text_02.txt", "test_text_03.txt"};
+
+        for (String name : testFileNames) {
+            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "Storage", "Internal shared storage", "Files"});
+
+            if (SettingsUtil.hasTestFile(instrumentation, name)) {
+                SettingsUtil.deleteTestFile_v1(instrumentation, name);
+            }
+            Assert.assertFalse("Test file " + name + " already exists",
+                    SettingsUtil.hasTestFile(instrumentation, name));
+
+            SettingsUtil.copyTestFile(instrumentation, name);
+            Assert.assertTrue("Test file " + name + " could not be copied",
+                    SettingsUtil.hasTestFile(instrumentation, name));
+
+            SettingsUtil.deleteTestFile_v1(instrumentation, name);
+            Assert.assertFalse("Test file " + name + " could not be deleted",
+                    SettingsUtil.hasTestFile(instrumentation, name));
+        }
+    }
 }
