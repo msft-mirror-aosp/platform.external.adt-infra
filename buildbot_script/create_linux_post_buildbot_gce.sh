@@ -8,6 +8,7 @@
 # adt-emu-buildbot-2    Includes set of permission fixes for MSVC
 # adt-emu-buildbot-3    Includes VNC server fix
 # adt-emu-buildbot-4    Includes script to start buildbot
+# adt-emu-buildbot-5    mount src to tmpfs
 
 if [ $# -ne 1 ]
 then echo "You must supply a positive integer to append to the adt-emu-buildbot- prefix.  Integer must not currently be in use"
@@ -17,7 +18,7 @@ if [ $1 -lt 1 ]
 then echo "You must supply a positive integer"
 fi
 
-export IMAGE_NAME=adt-emu-buildbot-4
+export IMAGE_NAME=adt-emu-buildbot-5
 export TEMP_INSTANCE=adt-emu-buildbot-$1
 export PROJECT=android-studio-build
 export FULL_PROJECT=android-studio-build
