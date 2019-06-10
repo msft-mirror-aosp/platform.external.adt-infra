@@ -32,18 +32,23 @@ class BootTestCase(EmuBaseTestCase):
             self.kill_proc_by_name(["emulator", "qemu-system"])
             result = self.term_check(timeout=10)
             self.m_logger.info("term_check after psutil.kill - %s" % result)
-        return result
-
-    def tearDown(self):
-        result = self.kill_emulator()
-        self.m_logger.info("Remove AVD inside of tear down")
-        # avd should be found $HOME/.android/avd/
-        avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
         try:
+            self.m_logger.debug('kill adb and crash-service')
             if result and self.start_proc:
                 self.start_proc.wait()
             time.sleep(1)
             self.kill_proc_by_name(["crash-service", "adb"])
+        except Exception, e:
+            self.m_logger.error("Error in cleanup - %r" % e)
+            pass
+        self.m_logger.debug('Killed emulator done')
+
+    def tearDown(self):
+        self.kill_emulator()
+        self.m_logger.info("Remove AVD inside of tear down")
+        # avd should be found $HOME/.android/avd/
+        avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
+        try:
             os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
             shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
         except Exception, e:
