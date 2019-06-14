@@ -61,6 +61,12 @@ echo "Boot test timed out"
 
 :BootDone
 
+mkdir %SESSION_DIR%\cts
+pushd cts
+python setup.py test install --user && python cts\run_basic_cts_tests.py --log %SESSION_DIR%\cts\cts_test.xml -v 1
+popd
+
+
 echo "Remove deployed emulator"
 echo "Run rmdir /s /q %SESSION_DIR%\emu-master-dev"
 rmdir /s /q %SESSION_DIR%\emu-master-dev
