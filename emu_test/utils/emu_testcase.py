@@ -259,6 +259,7 @@ class EmuBaseTestCase(LoggedTestCase):
         # Also windows and mac needs this to have network connection
         launch_cmd += ["-feature", "GLESDynamicVersion"]
         launch_cmd += ['-dns-server', '8.8.8.8']
+        launch_cmd += ['-no-audio']
         if 'test_boot' in emu_argparser.emu_args.pattern or 'test_perf' in emu_argparser.emu_args.pattern:
             launch_cmd += ['-no-snapshot']
         if flags != None:

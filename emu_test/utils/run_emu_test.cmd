@@ -40,6 +40,9 @@ echo "Perf test timed out"
 echo "Run python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test"
 python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test
 
+echo "Run python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --metric_tag mingw"
+python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --metric_tag mingw
+
 echo "Zip Perf Data"
 7z a %SESSION_DIR%\Perf_test\test.outputs\outputs.zip %SESSION_DIR%\Perf_test\test.outputs\*.json
 7z a %DIST_DIR%\perfgate_data.zip %SESSION_DIR%\Perf_test\test.outputs\outputs.zip

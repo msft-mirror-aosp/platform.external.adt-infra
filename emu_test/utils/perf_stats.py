@@ -75,6 +75,9 @@ def write_perf_data(metric, benchmark, data, timestamp):
     print "write perf data " + metric + " " + benchmark
     metric = metric + "_" + platform.system()
 
+    if args.metric_tag:
+        metric = metric + "_" + args.metric_tag
+
     jsonDir = os.path.join(args.log_dir,
                            "test.outputs")
     if not os.path.exists(jsonDir):
@@ -206,6 +209,7 @@ def write_boot_time_benchmark(metrics, boot_timestamp):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Pass dir info to configure perf data parsing")
     parser.add_argument("--log_dir", type=str, required=True, help="Directory containing log file to parse for perf stats")
+    parser.add_argument("--metric_tag", type=str, default=None, help="Extra tag that can be attached to metric name")
     args = parser.parse_args()
 
     metrics = {}
