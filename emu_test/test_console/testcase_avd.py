@@ -11,23 +11,6 @@ CMD_AVD_STOP = 'avd stop\n'
 CMD_AVD_START = 'avd start\n'
 CMD_AVD_STATUS = 'avd status\n'
 
-REGEX_HELP_AVD_DISPLAY = ('.*\n'
-                          '.*\n'
-                          '.*\n'
-                          '.*stop.*\n'
-                          '.*start.*\n'
-                          '.*status.*\n'
-                          '.*heartbeat.*\n'
-                          '.*rewindaudio.*\n'
-                          '.*name.*\n'
-                          '.*snapshot.*\n'
-                          '.*pause.*\n'
-                          '.*hostmicon.*\n'
-                          '.*hostmicoff.*\n'
-                          '.*resume.*\n'
-                          '.*bugreport.*\n'
-                          '.*\n'
-                          'OK')
 AVD_STOPPED = 'virtual device is stopped.*\nOK'
 AVD_RUNNING = 'virtual device is running.*\nOK'
 
@@ -43,23 +26,6 @@ class AvdTest(testcase_base.BaseConsoleTest):
     self.avd = avd
     self.builder_name = builder_name
 
-  def test_help_avd(self):
-    """Test command for: help avd.
-
-    TT ID: 6610081f-54bb-4007-8cb5-b4b9fb2f29ec
-    Test steps:
-      1. Launch an emulator avd
-      2. From command prompt, run: telnet localhost <port>
-      3. Copy the auth_token value from ~/.emulator_console_auth_token
-      4. Run: auth auth_token
-      5. Run: help avd
-    Verify:
-      Available avd sub commands are listed:
-        stop, start, status, name, snapshot
-    """
-    print 'Running test: %s' % (inspect.stack()[0][3])
-    self._execute_console_command_and_verify(CMD_HELP_AVD,
-                                             REGEX_HELP_AVD_DISPLAY)
 
   def test_avd_stop_and_start(self):
     """Test command for: avd stop, avd start, avd status.
