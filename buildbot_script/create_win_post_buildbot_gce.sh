@@ -1,21 +1,37 @@
 # Script used to create new instances of Emulator/System image go/ab Windows Buildbots.
 # Script will create a machine named 'adt-emu-win-X', where X is the first
 # argument to the script.
+#
 # IMAGE VERSION HISTORY
-# adt-emu-win        Base image
-# adt-emu-win-1      Includes Visual studio
-# adt-emu-win-2      Updated haxm
-# adt-emu-win-3      Windows server 2019
+# adt-emu-win          Base image
+# adt-emu-win-1        Includes Visual studio
+# adt-emu-win-2        Updated haxm
+# adt-emu-win-3        Windows server 2019
+# adt-emu-win-3-test   Image to be used for test machines
+#                        (does not start buildbot)
+# adt-emu-win-3-prod   Image to be used for buildbots
+#                        (starts buildbot on startup)
 
-if [ $# -ne 1 ]
-then echo "You must supply a positive integer to append to the adt-emu-win- prefix.  Integer must not currently be in use"
+if [ $# -ne 2 ]
+then
+    echo "You must supply a positive integer to append to the adt-emu-win- prefix.  Integer must not currently be in use"
+    echo "You must supply an image type, either prod or test."
+    exit -1
 fi
 
 if [ $1 -lt 1 ]
-then echo "You must supply a positive integer"
+then
+    echo "You must supply a positive integer"
+    exit -1
 fi
 
-export IMAGE_NAME=adt-emu-win-3
+export IMAGE_TYPE="test"
+if [ $2 == "prod" ]
+then
+   export IMAGE_TYPE="prod"
+fi
+
+export IMAGE_NAME=adt-emu-win-3-$IMAGE_TYPE
 export TEMP_INSTANCE=adt-emu-win-$1
 export PROJECT=android-studio-build
 export FULL_PROJECT=android-studio-build
