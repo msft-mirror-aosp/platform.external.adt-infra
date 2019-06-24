@@ -8,6 +8,13 @@ We do similar things as the internal facing scripts, but is meant for external
 release.  When the container images are built, they can be separately pushed to
 some location such as docker hub or even dl.google.com.
 
+# Install
+
+The following Python libraries are required:
+
+    urlfetch
+    jinja2
+
 # Docker
 
 We have two scripts that work together to provide emulator docker images:
