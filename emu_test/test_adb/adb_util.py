@@ -96,7 +96,8 @@ class ProgressPrinter(object):
 
 def get_connected_devices():
     """Returns list of adb device ids that are connected."""
-    proc = subprocess.Popen('adb devices'.split(), stdout=subprocess.PIPE)
+    cmd = adb_binary + ' devices'
+    proc = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
     output, error = proc.communicate()
     connected = []
     # Collect connected devices.
@@ -135,7 +136,7 @@ def test_connected(devices):
               str(devices))
         print('Found: ' + str(len(connected)))
 
-        output, error = shell(['adb', 'devices'])
+        output, error = shell([adb_binary, 'devices'])
         print('\n<<<Begin Output of adb devices>>>')
         print(output)
         print('<<<End Output of adb devices>>>')
