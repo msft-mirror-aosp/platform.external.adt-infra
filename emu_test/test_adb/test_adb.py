@@ -192,6 +192,7 @@ class AdbTestCase(emu_testcase.EmuBaseTestCase):
         emu_result = emu_runner.run(emu_suite)
         self.result = self.kill_emulator()
         self.print_adb_result(emu_result)
+        self.run_with_timeout([adb_binary, 'kill-server'], 20)
         self.assertTrue(emu_result.wasSuccessful(),
                         '%s was failed.' % self._testMethodName)
 
