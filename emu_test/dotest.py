@@ -198,8 +198,11 @@ if __name__ == '__main__':
         
     # Always attempt to kill the adb server.  We are now done testing with it.
     try:
+        print "Try to kill adb server"
         adb_binary = path_utils.get_adb_binary()
         check_call([adb_binary, 'kill-server'], stdout=PIPE, stdin=PIPE)
+        print "adb server killed"
     except CalledProcessError:
         print "Error shutting down adb.  Error: " + traceback.format_exc()
+    print "Test complete"
     sys.exit(not emuResult.wasSuccessful())
