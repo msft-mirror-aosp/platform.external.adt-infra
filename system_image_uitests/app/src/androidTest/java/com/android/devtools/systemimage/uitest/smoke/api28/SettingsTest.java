@@ -42,6 +42,7 @@ import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsW
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -846,6 +847,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @Ignore("b/137769277 - Connected Device app crashes.")
     public void listConnectedDevices() throws Exception {
         AppLauncher.launchPath(instrumentation, new String[]{"Settings", "Connected devices"});
 
