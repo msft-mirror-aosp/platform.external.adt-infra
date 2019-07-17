@@ -273,7 +273,7 @@ public class NetworkIOTest {
      *   Verify:
      *   Airplane mode icon is present and enabled in notification tray
      *   5. Toggle Airplane mode off.
-     *   6  Repeat steps 3-6 four more times.
+     *   6  Repeat steps 3-6 two more times.
      *   </pre>
      * <p>
      */
@@ -282,7 +282,7 @@ public class NetworkIOTest {
     public void stressTestAirplaneMode() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        int stressCount = 5;
+        int stressCount = 3;
 
         String[] path = new String[]{"Settings", "Network & Internet"};
         AppLauncher.launchPath(instrumentation, path);
