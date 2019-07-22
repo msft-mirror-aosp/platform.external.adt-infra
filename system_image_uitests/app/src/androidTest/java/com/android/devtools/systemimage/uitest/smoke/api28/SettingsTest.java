@@ -405,7 +405,8 @@ public class SettingsTest {
      *   5. Verify Select time zone is enabled.
      *   6. Enable time zone.
      *   Verify:
-     *   Select time zone text and timezone offset text can be seen.
+     *   List of time zones can be loaded.
+     *   Target time zone text and time zone offset text can be seen.
      *   </pre>
      */
     @Test
@@ -459,14 +460,17 @@ public class SettingsTest {
 
         UiObject timeZoneLabel = device.findObject(new UiSelector().text("Time zone").
                 resourceId(Res.ANDROID_TITLE_RES).packageName("com.android.settings"));
+        UiObject utcOffsetLabel = device.findObject(new UiSelector().text("Select UTC offset").
+                resourceId(Res.ANDROID_TITLE_RES).packageName("com.android.settings"));
         if (timeZoneLabel.waitForExists(3L)) {
             timeZoneLabel.clickAndWaitForNewWindow();
+        } else if (utcOffsetLabel.waitForExists(3L)) {
+            utcOffsetLabel.clickAndWaitForNewWindow();
+        } else {
+            assertTrue("Could not load time zone list", false);
         }
-        UiScrollable timeZoneList =
-                new UiScrollable(new UiSelector().className("android.widget.ListView"));
 
         String timezoneOffset = "GMT-08:00";
-
         assertTrue("Target time zone label not found",
                 device.findObject(new UiSelector().textContains(timezoneOffset)).waitForExists(3L));
     }
