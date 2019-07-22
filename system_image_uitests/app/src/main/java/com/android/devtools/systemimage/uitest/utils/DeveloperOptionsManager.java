@@ -90,7 +90,15 @@ public class DeveloperOptionsManager {
         try {
             AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
         } catch (UiObjectNotFoundException e) {
-            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
+            try {
+                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
+            } catch (UiObjectNotFoundException e1) {
+                try {
+                    AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
+                } catch (UiObjectNotFoundException e2) {
+                    AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
+                }
+            }
         }
 
         enableOptions(instrumentation);
