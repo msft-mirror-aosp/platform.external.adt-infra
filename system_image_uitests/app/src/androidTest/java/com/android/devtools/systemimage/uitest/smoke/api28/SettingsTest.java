@@ -302,7 +302,7 @@ public class SettingsTest {
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
         if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
+            DeveloperOptionsManager.enableDeveloperOptions_v1(testFramework);
         } else {
             return;
         }
@@ -741,7 +741,7 @@ public class SettingsTest {
         storageSwitch.click();
         locationSwitch.clickAndWaitForNewWindow();
 
-        device.findObject(new UiSelector().textStartsWith("Deny")).clickAndWaitForNewWindow();
+        device.findObject(new UiSelector().textStartsWith("DENY")).clickAndWaitForNewWindow();
 
         //Go back two times to go to system apps page to reset permissions.
         device.pressBack();
@@ -765,16 +765,16 @@ public class SettingsTest {
 
         assertEquals(contactsSwitchState,
                 SettingsUtil.findObjectByRelative(
-                        permissionList,"Contacts",LinearLayout.class.getName()).isChecked());
+                        permissionList,contactsText,LinearLayout.class.getName()).isChecked());
         assertEquals(locationSwitchState,
                 SettingsUtil.findObjectByRelative(
-                        permissionList,"Location",LinearLayout.class.getName()).isChecked());
+                        permissionList,locationText,LinearLayout.class.getName()).isChecked());
         assertEquals(phoneSwitchState,
                 SettingsUtil.findObjectByRelative(
-                        permissionList,"Phone",LinearLayout.class.getName()).isChecked());
+                        permissionList,phoneText,LinearLayout.class.getName()).isChecked());
         assertEquals(storageSwitchState,
                 SettingsUtil.findObjectByRelative(
-                        permissionList,"Storage",LinearLayout.class.getName()).isChecked());
+                        permissionList,storageText,LinearLayout.class.getName()).isChecked());
     }
 
     /**
@@ -798,7 +798,7 @@ public class SettingsTest {
     @Test
     public void revokeDebugAuth() throws Exception {
         if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
+            DeveloperOptionsManager.enableDeveloperOptions_v1(testFramework);
         }
 
         Assert.assertTrue("Could not enable developer options",
