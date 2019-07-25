@@ -90,15 +90,7 @@ public class DeveloperOptionsManager {
         try {
             AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
         } catch (UiObjectNotFoundException e) {
-            try {
-                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
-            } catch (UiObjectNotFoundException e1) {
-                try {
-                    AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
-                } catch (UiObjectNotFoundException e2) {
-                    AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
-                }
-            }
+            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
         }
 
         enableOptions(instrumentation);
@@ -107,7 +99,7 @@ public class DeveloperOptionsManager {
     /**
      * Enables developer options.
      *
-     * Version 2 for api 26, 27.
+     * Version 2 for api 26, 27 and 28.
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
@@ -120,7 +112,15 @@ public class DeveloperOptionsManager {
         try {
             AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About emulated device"});
         } catch (UiObjectNotFoundException e) {
-            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
+            try {
+                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
+            } catch (UiObjectNotFoundException e1) {
+                try {
+                    AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
+                } catch (UiObjectNotFoundException e2) {
+                    AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
+                }
+            }
         }
 
         enableOptions(instrumentation);
