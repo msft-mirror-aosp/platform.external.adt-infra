@@ -97,10 +97,6 @@ public class CameraTestUtil {
                 fileThumbnail.waitForExists(15L);
                 shutterButton.click();
             }
-
-            if (fileThumbnail.waitForExists(15L)) {
-                fileThumbnail.clickAndWaitForNewWindow();
-            }
         }
     }
 
@@ -225,7 +221,7 @@ public class CameraTestUtil {
         }
 
         createTestFile_v2(device, mode);
-        deleteTestFile_v2(device);
+        deleteTestFile_v2(instrumentation, device, mode);
 
         String originalFileList = listGalleryFiles();
 
@@ -244,7 +240,7 @@ public class CameraTestUtil {
         org.junit.Assert.assertTrue("New file was not added to the gallery",
                 !originalFileList.equals(newFileList) && newFileList.contains(fileExt));
 
-        deleteTestFile_v2(device);
+        deleteTestFile_v2(instrumentation, device, mode);
 
         String lastFileList = listGalleryFiles();
         Log.d(TAG, "Gallery file list after delete is " + lastFileList);
@@ -256,11 +252,38 @@ public class CameraTestUtil {
     *
     * for API >= 26
     */
-    private static void deleteTestFile_v2(UiDevice device) throws UiObjectNotFoundException {
-        UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_THUMBNAIL_RES));
+    private static void deleteTestFile_v2(Instrumentation instrumentation, UiDevice device, String mode) throws Exception {
+        device.pressHome();
+
+        AppLauncher.launchPath(instrumentation, new String[]{"Files"});
+
+        device.findObject(new UiSelector().description("Show roots")).click();
+
+        String desc = mode.equals("Camera") ? "Images" : "Videos";
+        UiObject fileButton = device.findObject(new UiSelector().text(desc));
+
+        if ( fileButton.waitForExists(10)) {
+            fileButton.click();
+            device.findObject(new UiSelector().text("Camera")).click();
+        }
+        UiObject fileThumbnail = device.findObject(new UiSelector().resourceId("com.android.documentsui:id/icon_thumb"));
 
         if (fileThumbnail.waitForExists(15L)) {
-            fileThumbnail.clickAndWaitForNewWindow();
+            fileThumbnail.dragTo(fileThumbnail, 20);
         }
+
+        UiObject trashButton = device.findObject(new UiSelector().resourceId("com.android.documentsui:id/option_menu_list"));
+
+        if (trashButton.waitForExists(15L)) {
+            trashButton.click();
+        }
+
+        UiObject okButton = device.findObject(new UiSelector().resourceId("android:id/button1"));
+
+        if (okButton.waitForExists(15L)) {
+            okButton.click();
+        }
+
+        device.pressHome();
     }
 }
