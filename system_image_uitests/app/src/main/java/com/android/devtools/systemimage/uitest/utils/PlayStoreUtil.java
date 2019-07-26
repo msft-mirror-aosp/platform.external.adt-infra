@@ -317,23 +317,20 @@ public class PlayStoreUtil {
      * Helper to search Google Play for an application by description.
      * Return true if found, false if not.
      */
-    public static boolean hasTestApp(Instrumentation instrumentation, String application, boolean strict)
+    public static boolean hasTestApp(Instrumentation instrumentation, final String application, final boolean strict)
             throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String appTitle = application;
-        final boolean exactMatch = strict;
-
         device.pressHome();
-        PlayStoreUtil.launchGooglePlay(instrumentation, appTitle);
+
+        String appName = (application == "YouTube Kids" ) ? "youtube kids" :"truth or dare: dirty";
+        PlayStoreUtil.launchGooglePlay(instrumentation, appName);
 
         return new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() {
-                boolean hasApplication = exactMatch ?
-                        device.findObject(new UiSelector().text(appTitle).
-                                resourceId(Res.GOOGLE_PLAY_LIST_TITLE_RES)).exists() :
-                        device.findObject(new UiSelector().textContains(appTitle).
-                                resourceId(Res.GOOGLE_PLAY_LIST_TITLE_RES)).exists();
+                boolean hasApplication = strict ?
+                        device.findObject(new UiSelector().text(application)).exists() :
+                        device.findObject(new UiSelector().textContains(application)).exists();
                 return hasApplication;
             }
         });

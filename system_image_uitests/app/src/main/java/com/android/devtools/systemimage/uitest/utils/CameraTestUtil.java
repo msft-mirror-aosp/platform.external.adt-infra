@@ -32,6 +32,8 @@ import org.junit.Assert;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.TimeUnit.*;
+
 public class CameraTestUtil {
 
     private static String TAG = "CameraTest";
@@ -49,7 +51,7 @@ public class CameraTestUtil {
         final ShellUtil.ShellResult result = ShellUtil.invokeCommand(cmd);
 
         boolean photosListed = new Wait(
-                TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(
+                MILLISECONDS.convert(10L, SECONDS)).until(
                 new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
@@ -71,7 +73,7 @@ public class CameraTestUtil {
     /* A helper method to generate either a new photo or video, and then select view it
     * For API <= 25
     */
-    private static void createTestFile_v1(UiDevice device, String mode) throws UiObjectNotFoundException {
+    private static void createTestFile_v1(UiDevice device, String mode) throws UiObjectNotFoundException, InterruptedException {
         UiObject shutterButton = device.findObject(new UiSelector().resourceId("com.android.camera:id/shutter_button"));
         UiObject fileThumbnail = device.findObject(new UiSelector().resourceId("com.android.camera:id/thumbnail"));
 
@@ -82,12 +84,14 @@ public class CameraTestUtil {
                 shutterButton.click();
             }
         }
+
+        TimeUnit.SECONDS.sleep(10);
     }
 
     /* A helper method to generate either a new photo or video, and then select view it
     * For API >= 26
     */
-    private static void createTestFile_v2(UiDevice device, String mode) throws UiObjectNotFoundException {
+    private static void createTestFile_v2(UiDevice device, String mode) throws UiObjectNotFoundException, InterruptedException {
         UiObject shutterButton = device.findObject(new UiSelector().resourceId(Res.CAMERA_SHUTTER_BUTTON_RES));
         UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.CAMERA_FILE_THUMBNAIL_RES));
 
@@ -98,6 +102,8 @@ public class CameraTestUtil {
                 shutterButton.click();
             }
         }
+
+        TimeUnit.SECONDS.sleep(10);
     }
 
     /* A helper method to perform the common camera actions of both the photo and video tests,

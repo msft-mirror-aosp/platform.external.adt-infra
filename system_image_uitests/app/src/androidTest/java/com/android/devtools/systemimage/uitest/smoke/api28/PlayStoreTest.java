@@ -56,7 +56,7 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
 
-            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v3(instrumentation);
+            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v2(instrumentation);
             boolean loggedInToPlayStore = playStoreInstalled &&
                     PlayStoreUtil.loginGooglePlay(instrumentation);
             assertTrue("PlayStore login failed.", loggedInToPlayStore);
@@ -89,51 +89,6 @@ public class PlayStoreTest {
 
             assertTrue("Application not found in search.",
                     PlayStoreUtil.hasTestApp(instrumentation, application, false));
-            PlayStoreUtil.resetPlayStore(instrumentation);
-            device.pressHome();
-        }
-    }
-
-    /**
-     * Verify that Google Play can install and uninstall a free app on the device.
-     * <p>
-     * TT ID: cb0ccd97-f045-42fa-8293-a32e94e838aa
-     * <p>
-     *   <pre>
-     *   Test Steps:
-     *   1. Start an emulator and launch home screen.
-     *   2. Open Apps drawer.
-     *   3. Confirm that Play Store is present, then launch.
-     *   4. Search for free app in store.
-     *   5. If app is available for install, begin installation.
-     *   6. Uninstall the app.
-     *   Verify:
-     *      1a. If Install button was displayed, allow installation to complete then
-     *      confirm that the Open button to launch the app is present.
-     *      1b. If Install button was not displayed, confirm that the Open button to
-     *      launch the app is present.
-     *      2. Confirm that the app was subsequently uninstalled.
-     *   </pre>
-     */
-
-    @Test
-    @TestInfo(id = "cb0ccd97-f045-42fa-8293-a32e94e838aa")
-    public void testAppInstallation() throws Exception {
-        if (testFramework.isGoogleApiAndPlayImage()) {
-            Instrumentation instrumentation = testFramework.getInstrumentation();
-            final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String application = "Google Translate";
-
-            PlayStoreUtil.selectApplication(instrumentation, application);
-            new GoogleAppConfirmationWatcher(device).checkForCondition();
-
-            assertTrue("Unable to install the application from Google Play",
-                    PlayStoreUtil.installApplication(instrumentation));
-
-            AppLauncher.launch(instrumentation, "Play Store");
-            assertTrue("Unable to uninstall the application from Google Play",
-                    PlayStoreUtil.uninstallApplication(instrumentation));
-
             PlayStoreUtil.resetPlayStore(instrumentation);
             device.pressHome();
         }
@@ -272,13 +227,12 @@ public class PlayStoreTest {
             final Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
             final String familyApplication = "YouTube Kids";
-            final String restrictedApplication = "Truth or Dare ? Dirty !";
+            final String restrictedApplication = "Truth Or Dare: Dirty";
 
             assertTrue("Adult application is not found in search.",
                     PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true));
 
             PlayStoreUtil.setRestrictions(instrumentation,  "Apps", "Everyone 10+");
-
 
             assertTrue("Adult application found in search.",
                     !PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true) &&
