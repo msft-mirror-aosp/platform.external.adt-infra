@@ -13,6 +13,7 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 
 import com.android.devtools.systemimage.uitest.common.Res;
@@ -318,12 +319,10 @@ public class SettingsUtil {
         UiScrollable locationPermissions = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
         locationPermissions.getChildByText(new UiSelector().className("android.widget.TextView"), appName);
 
-        UiObject2 permissionsBtn = UiAutomatorPlus.findObjectByRelative(
-                instrumentation,
-                By.clazz("android.widget.Switch"),
-                By.text(appName),
-                By.clazz("android.widget.LinearLayout"),
-                2);
+        UiScrollable permissionList = new UiScrollable(new UiSelector().resourceIdMatches(Res.ANDROID_LIST_RES));
+
+        UiObject permissionsBtn =
+                SettingsUtil.findObjectByRelative(permissionList,appName, LinearLayout.class.getName());
 
         if (!permissionsBtn.isChecked() && enablePermissions)
             permissionsBtn.click();
@@ -349,17 +348,16 @@ public class SettingsUtil {
     }
 
     public static void clickAdvancedMenu(UiDevice device) throws Exception {
-        final UiObject advancedMenu = device.findObject(new UiSelector().text("Advanced"));
-        boolean hasAdvancedMenu = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return advancedMenu.exists();
-            }
-        });
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
 
-        if (hasAdvancedMenu) {
-            advancedMenu.click();
-        }
+        UiSelector advancedButton = new UiSelector().text("Advanced");
+        itemList.scrollIntoView(advancedButton);
+
+        device.findObject(advancedButton).click();
     }
 
     /**
