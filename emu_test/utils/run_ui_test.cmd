@@ -7,7 +7,7 @@ REM {src}/platform_testing/ui_test/run_ui_test.cmd
 
 title run_ui_test
 
-set DIST_DIR=%1
+set DISTRIB_DIR=%1
 set ORI=%2
 set API=%3
 
@@ -16,10 +16,10 @@ call refreshenv
 
 echo "Running UI test for %API%"
 
-set SNAPSHOT_DIR=%DIST_DIR%\snaps
+set SNAPSHOT_DIR=%DISTRIB_DIR%\snaps
 mkdir %SNAPSHOT_DIR%
 
-set SESSION_DIR=%DIST_DIR%\testlogs
+set SESSION_DIR=%DISTRIB_DIR%\testlogs
 mkdir %SESSION_DIR%
 
 for /f %%i in ('dir /b %ANDROID_HOME%\system-images\android-%API%') do (

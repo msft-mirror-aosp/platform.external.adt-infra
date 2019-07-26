@@ -4,7 +4,7 @@
 # This will be invoked by system image source.
 #  {src}/platform_testing/ui_test/run_ui_test.sh
 
-DIST_DIR=$1
+DISTRIB_DIR=$1
 ORI=$2
 API=$3
 
@@ -30,7 +30,7 @@ echo "Remove any existing AVDs"
 echo "sudo rm -rf $ANDROID_AVD_HOME/*"
 sudo rm -rf $ANDROID_AVD_HOME/*
 
-export SNAPSHOT_DIR=$DIST_DIR/snaps
+export SNAPSHOT_DIR=$DISTRIB_DIR/snaps
 mkdir -p $SNAPSHOT_DIR
 
 for FILE in "$ANDROID_HOME/system-images/android-$API"/*
@@ -52,7 +52,7 @@ do
         continue
     fi
 
-    SESSION_DIR=$DIST_DIR/testlogs
+    SESSION_DIR=$DISTRIB_DIR/testlogs
     TEST_DIR=UI_TEST_$TARGET
     mkdir -p $SESSION_DIR
 

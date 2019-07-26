@@ -10,13 +10,13 @@ title run_boot_test
 setx ANDROID_EMU_ENABLE_CRASH_REPORTING "NO" /M
 call refreshenv
 
-set DIST_DIR=%1
+set DISTRIB_DIR=%1
 set ORI=%2
 set API=%3
 
 echo "Runnig BOOT test for %API%"
 
-set SESSION_DIR=%DIST_DIR%\testlogs
+set SESSION_DIR=%DISTRIB_DIR%\testlogs
 mkdir %SESSION_DIR%
 
 set FILTER={\"ori\":\"%ORI%\"}

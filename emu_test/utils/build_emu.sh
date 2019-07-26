@@ -4,7 +4,7 @@
 # This will be invoked by aosp-emu-master-dev.
 
 OUT_DIR=$1
-DIST_DIR=$2
+DISTRIB_DIR=$2
 BID=$3
 CPU=$4
 
@@ -26,20 +26,20 @@ else
     fi
 fi
 
-SESSION_DIR=$DIST_DIR/testlogs
+SESSION_DIR=$DISTRIB_DIR/testlogs
 mkdir -p $SESSION_DIR
 
 echo "Build Emulator"
-echo "tools/buildSrc/servers/build_tools.sh $OUT_DIR $DIST_DIR $BID $CPU"
-tools/buildSrc/servers/build_tools.sh $OUT_DIR $DIST_DIR $BID $CPU
+echo "tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID"
+tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID
 
 if [[ $? -ne 0 ]]
 then
     exit 1
 fi
 
-echo "Run unzip -o $DIST_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev"
-unzip -o $DIST_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev
+echo "Run unzip -o $DISTRIB_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev"
+unzip -o $DISTRIB_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev
 
 echo "Running Boot tests"
 echo "Remove any existing AVDs"

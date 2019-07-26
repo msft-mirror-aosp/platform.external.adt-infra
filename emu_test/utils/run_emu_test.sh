@@ -3,7 +3,7 @@
 # This is used to run AVD and console emulator tests.
 # This will be invoked by aosp-emu-master-dev.
 
-DIST_DIR=$1
+DISTRIB_DIR=$1
 STATUS=0
 
 export ANDROID_HOME=$SDK_EMULATOR
@@ -24,7 +24,7 @@ else
     fi
 fi
 
-SESSION_DIR=$DIST_DIR/testlogs
+SESSION_DIR=$DISTRIB_DIR/testlogs
 mkdir -p $SESSION_DIR
 
 echo "Deploy emulator"
@@ -49,9 +49,9 @@ python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR
 
 echo "Zip perf data"
 sh -c "cd $SESSION_DIR && zip -rm Perf_test/test.outputs/outputs.zip Perf_test/test.outputs/*.json"
-sh -c "cd $SESSION_DIR && zip -rm $DIST_DIR/perfgate_data.zip Perf_test/test.outputs/*"
+sh -c "cd $SESSION_DIR && zip -rm $DISTRIB_DIR/perfgate_data.zip Perf_test/test.outputs/*"
 
-if [[ ! -f $DIST_DIR/perfgate_data.zip ]]
+if [[ ! -f $DISTRIB_DIR/perfgate_data.zip ]]
 then
     STATUS=1
 fi
