@@ -347,17 +347,24 @@ public class SettingsUtil {
         }
     }
 
-    public static void clickAdvancedMenu(UiDevice device) throws Exception {
+    /*
+     * Helper function to click "Advanced" is setting menu if it exists.
+     * Otherwiese it should do nothing and shopuld not throw any exception.
+     */
+    public static void clickAdvancedMenu(UiDevice device) {
         UiScrollable itemList =
                 new UiScrollable(
                         new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
                 );
         itemList.setAsVerticalList();
-
         UiSelector advancedButton = new UiSelector().text("Advanced");
-        itemList.scrollIntoView(advancedButton);
 
-        device.findObject(advancedButton).click();
+        try {
+            itemList.scrollIntoView(advancedButton);
+            device.findObject(advancedButton).click();
+        } catch (UiObjectNotFoundException e) {
+            Log.w(TAG, "Advanced does not exist");
+        }
     }
 
     /**
