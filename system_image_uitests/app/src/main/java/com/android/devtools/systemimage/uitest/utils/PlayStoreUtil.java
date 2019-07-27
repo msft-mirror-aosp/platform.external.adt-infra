@@ -322,7 +322,7 @@ public class PlayStoreUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
-        String appName = (application == "YouTube Kids" ) ? "youtube kids" :"truth or dare: dirty";
+        String appName = application.toLowerCase();
         PlayStoreUtil.launchGooglePlay(instrumentation, appName);
 
         return new Wait().until(new Wait.ExpectedCondition() {
