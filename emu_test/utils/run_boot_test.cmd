@@ -21,8 +21,8 @@ mkdir %SESSION_DIR%
 
 set FILTER={\"ori\":\"%ORI%\"}
 
-echo "Run python -u %ADT_INFRA%\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file %ADT_INFRA%\emu_test\config\boot_cfg_byob.csv --buildername 'Windows_gce' --filter %FILTER% --generate_xml --timeout 900"
-python -u %ADT_INFRA%\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file %ADT_INFRA%\emu_test\config\boot_cfg_byob.csv --buildername 'Windows_gce' --filter %FILTER% --generate_xml --timeout 900
+echo "Run python -u %ADT_INFRA%\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator-headless --test_dir BOOT_test --file_pattern test_boot.* --config_file %ADT_INFRA%\emu_test\config\boot_cfg_byob.csv --buildername 'Windows_gce' --filter %FILTER% --generate_xml --timeout 900"
+python -u %ADT_INFRA%\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator-headless --test_dir BOOT_test --file_pattern test_boot.* --config_file %ADT_INFRA%\emu_test\config\boot_cfg_byob.csv --buildername 'Windows_gce' --filter %FILTER% --generate_xml --timeout 900
 
 echo "Boot test completed, kill adb server"
 cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
