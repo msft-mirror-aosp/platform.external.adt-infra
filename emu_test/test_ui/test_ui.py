@@ -259,6 +259,8 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             q2.communicate()
             q3 = psutil.Popen([adb_binary, 'shell', 'dumpsys', 'battery', 'set', 'level', '10'])
             q3.communicate()
+        # wait for 5 minutes before taking the snapshot
+        time.sleep(300)
 
 if emu_args.config_file is None:
     sys.exit(0)

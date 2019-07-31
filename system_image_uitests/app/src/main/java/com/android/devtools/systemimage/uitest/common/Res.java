@@ -106,7 +106,7 @@ public class Res {
     public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
     public static final String GOOGLE_BACKUP_SWITCH_RES =
-            "com.google.android.gms:id/suw_items_switch";
+            "com.google.android.gms:id/sud_items_switch";
     public static final String SIGN_IN_CONSENT_RES = "com.google.android.gms:id/signinconsentNext";
 
     public static final String SEARCH_TEXT_BOX =

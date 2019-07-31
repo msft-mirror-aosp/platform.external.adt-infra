@@ -85,6 +85,20 @@ public class GoogleAppContinueWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().descriptionContains("(?i)next(?-i)")).click();
                 condition = true;
             }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().text("ACCEPT"))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().text("ACCEPT")).click();
+                condition = true;
+            }
+            isSuccess =
+                    mDevice.findObject(new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES))
+                            .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES)).click();
+                condition = true;
+            }
         }
         catch (UiObjectNotFoundException e) {
             throw new AssertionError("Failed to dismiss the play store confirmation popup dialogs");

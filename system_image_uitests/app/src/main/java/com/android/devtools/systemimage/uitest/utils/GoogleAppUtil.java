@@ -170,7 +170,7 @@ public class GoogleAppUtil {
         }
 
         device.pressHome();
-        TimeUnit.SECONDS.sleep(30);
+        TimeUnit.SECONDS.sleep(10);
         return isSignedIn;
     }
 
