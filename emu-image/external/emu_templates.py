@@ -161,3 +161,56 @@ WORKDIR /android/sdk
 CMD ["/android/sdk/launch-emulator.sh"]
 """
 
+avd_local_run_ini_template = """
+# Basic config used to create an avd for now.
+avd.ini.encoding=UTF-8
+path.rel={{avd_ini_path_rel}}
+path={{avd_ini_path}}
+target=android
+"""
+
+avd_local_run_config_ini_template = """
+AvdId=run
+PlayStore.enabled=false
+avd.ini.displayname=run
+avd.ini.encoding=UTF-8
+disk.dataPartition.size=6G
+fastboot.forceColdBoot=no
+hw.accelerometer=yes
+hw.audioInput=yes
+hw.battery=yes
+hw.camera.back=emulated
+hw.camera.front=emulated
+hw.cpu.ncore=4
+hw.dPad=no
+hw.device.hash2=MD5:bc5032b2a871da511332401af3ac6bb0
+hw.device.manufacturer=Google
+hw.gps=yes
+hw.gpu.enabled=yes
+hw.gpu.mode=auto
+hw.initialOrientation=Portrait
+hw.keyboard=yes
+hw.mainKeys=no
+hw.ramSize=4096
+hw.sensors.orientation=yes
+hw.sensors.proximity=yes
+hw.trackBall=no
+runtime.network.latency=none
+runtime.network.speed=full
+vm.heapSize=512
+tag.display=Google APIs
+# Set some
+hw.lcd.density=440
+hw.lcd.height=1920
+hw.lcd.width=1080
+# Unused
+# hw.sdCard=yes
+# sdcard.size=512M
+
+# TODO: add support for other abis
+tag.id=google_apis
+abi.type=x86_64
+hw.cpu.arch=x86_64
+image.sysdir.1={{avd_config_ini_sysdir}}
+
+"""

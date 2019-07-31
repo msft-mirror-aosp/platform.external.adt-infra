@@ -144,3 +144,12 @@ To stop, hit Ctrl-C in the terminal where `make develop` was issued, then issue:
 
 TODO: We are also working on a more isolated solution via envoy, nginx, and `docker-compose`. See https://android.googlesource.com/platform/external/qemu/+/refs/heads/emu-master-dev/android/android-grpc/docs/grpc-samples/js/docker/
 
+# Local run of any emulator/system image zip combo
+
+It can be useful to do local debugging of a particular emulator/system image outside the container.
+
+1. Download any emulator/system image zip folder, unzip somewhere and note the resulting `emulator/` and `x86_64/` folders.
+2. `python emu_local_run.py emulator/ x86_64/` (or resulting paths to emulator/system image folder if different)
+3. This creates an AVD and defaults to putting the `-no-snapshot, -show-kernel` flags.
+
+TODO: Support other arch's than x64
