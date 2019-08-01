@@ -173,11 +173,7 @@ public class AppTest {
             // After bookmarking, the button description changes.
             UiObject editBookmarkText = device.findObject(new UiSelector().description("Edit bookmark"));
             editBookmarkText.waitForExists(TimeUnit.SECONDS.toMillis(15));
-            if (editBookmarkText.exists()) {
-                editBookmarkText.clickAndWaitForNewWindow();
-            } else {
-                assertTrue("Bookmark was not set", false);
-            }
+            assertTrue("Bookmark was not set", editBookmarkText.exists());
 
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(15));
@@ -186,7 +182,6 @@ public class AppTest {
             }
 
             Log.d(TAG, "The bookmark is set");
-            new AppWatcher(device).checkForCondition();
 
             UiObject mobileBookmarks = device.findObject(new UiSelector().text("Mobile bookmarks")
                     .resourceId(Res.CHROME_TITLE_RES));
@@ -196,7 +191,7 @@ public class AppTest {
             }
 
             Log.d(TAG, "Searching for bookmark...");
-            new AppWatcher(device).checkForCondition();
+            final UiObject bookmarkedSite = device.findObject(new UiSelector().textContains("ESPN"));
 
             assertTrue("Cannot find bookmark",
                     new Wait().until(new Wait.ExpectedCondition() {
@@ -204,14 +199,15 @@ public class AppTest {
                         public boolean isTrue() {
                             return device.findObject(
                                     new UiSelector().textContains(("kmarks"))).exists() &&
-                                    device.findObject(
-                                            new UiSelector().textContains("ESPN")).exists();
+                                    bookmarkedSite.exists();
                         }
                     })
             );
 
+            bookmarkedSite.dragTo(bookmarkedSite,20);
+
             final UiObject trashCan = device.findObject(new UiSelector().
-                    description("Delete bokmarks"));
+                    description("Delete bookmarks"));
             // Delete the bookmark.
             assertTrue("Cannot find trash",
                     new Wait().until(new Wait.ExpectedCondition() {
@@ -220,7 +216,6 @@ public class AppTest {
                             return trashCan.exists();
                         }
                     })
-
             );
 
             trashCan.click();
