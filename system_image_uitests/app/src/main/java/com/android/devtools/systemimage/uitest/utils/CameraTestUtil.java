@@ -114,7 +114,7 @@ public class CameraTestUtil {
     public static boolean useCamera_v1(Instrumentation instrumentation, String mode) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        AppLauncher.launchPath(instrumentation, true, new String[]{"Camera"});
 
         UiObject cameraFrame = device.findObject(new UiSelector().resourceId("com.android.camera:id/mode_0"));
         if (cameraFrame.waitForExists(10L)) {
@@ -135,7 +135,7 @@ public class CameraTestUtil {
         createTestFile_v1(device, mode);
         deleteTestFile_v1(instrumentation, device, mode);
 
-        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        AppLauncher.launchPath(instrumentation, true, new String[]{"Camera"});
         String originalFileList = listGalleryFiles();
 
         createTestFile_v1(device, mode);
@@ -165,7 +165,7 @@ public class CameraTestUtil {
     private static void deleteTestFile_v1(Instrumentation instrumentation, UiDevice device, String mode) throws Exception {
         device.pressHome();
 
-        AppLauncher.launchPath(instrumentation, new String[]{"Downloads"});
+        AppLauncher.launchPath(instrumentation, true, new String[]{"Downloads"});
 
         String desc = mode.equals("Camera") ? "Images" : "Videos";
         UiObject fileButton = device.findObject(new UiSelector().text(desc));
@@ -204,7 +204,7 @@ public class CameraTestUtil {
     public static boolean useCamera_v2(Instrumentation instrumentation, String mode) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        AppLauncher.launchPath(instrumentation, true, new String[]{"Camera"});
         new CameraAccessPermissionsWatcher(device).checkForCondition();
 
         UiObject cameraFrame = device.findObject(new UiSelector().resourceId(Res.CAMERA_FRAME_RES));
@@ -231,7 +231,7 @@ public class CameraTestUtil {
 
         String originalFileList = listGalleryFiles();
 
-        AppLauncher.launchPath(instrumentation, new String[]{"Camera"});
+        AppLauncher.launchPath(instrumentation, true, new String[]{"Camera"});
         new CameraAccessPermissionsWatcher(device).checkForCondition();
 
         createTestFile_v2(device, mode);
@@ -261,7 +261,7 @@ public class CameraTestUtil {
     private static void deleteTestFile_v2(Instrumentation instrumentation, UiDevice device, String mode) throws Exception {
         device.pressHome();
 
-        AppLauncher.launchPath(instrumentation, new String[]{"Files"});
+        AppLauncher.launchPath(instrumentation, true, new String[]{"Files"});
 
         device.findObject(new UiSelector().description("Show roots")).click();
 

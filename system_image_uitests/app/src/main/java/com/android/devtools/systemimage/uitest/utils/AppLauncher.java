@@ -47,7 +47,8 @@ public class AppLauncher {
      * @param appName         the app name to launch
      * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
-    public static void launch(Instrumentation instrumentation, String appName) throws Exception  {
+    public static boolean launch(Instrumentation instrumentation, String appName) throws Exception  {
+        Log.i(TAG, "Open "+appName);
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
@@ -167,6 +168,8 @@ public class AppLauncher {
                 appObject.clickAndWaitForNewWindow();
             }
         }
+
+        return appNameFound;
     }
 
     /**
@@ -177,12 +180,16 @@ public class AppLauncher {
      * @param appPath         the app path to launch
      * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
-    public static void launchPath(Instrumentation instrumentation, String... appPath)
+    public static boolean launchPath(Instrumentation instrumentation, boolean firstAttempt, String... appPath)
             throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        launch(instrumentation, appPath[0]);
+        boolean status = launch(instrumentation, appPath[0]);
 
-        for (int i = 1; i < appPath.length; ++i) {
+        if ( !status ) return false;
+
+        for (int i = 1; i < appPath.length && status; ++i) {
+            status = false;
+            Log.i(TAG, "Open "+appPath[i]);
             UiSelector regexSelector = new UiSelector().textMatches(appPath[i]);
             UiSelector textSelector = new UiSelector().textContains(appPath[i]);
 
@@ -195,13 +202,20 @@ public class AppLauncher {
                     scrollable.scrollIntoView(textSelector);
                 }
                 target.clickAndWaitForNewWindow();
+                status = true;
             }
             catch (UiObjectNotFoundException e) {
                 Log.w(TAG, e.getMessage());
                 if (target.exists()) {
                     target.clickAndWaitForNewWindow();
+                    status = true;
                 }
             }
         }
+
+        if ( firstAttempt && !status ) {
+            return launchPath(instrumentation, false, appPath);
+        }
+        return status;
     }
 }

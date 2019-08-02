@@ -151,7 +151,7 @@ public class CameraTest {
         assertTrue("Application " + apk + " is not installed. Result: " + result,
                 isHelloARInstalled);
 
-        AppLauncher.launchPath(instrumentation, new String[]{appName});
+        AppLauncher.launchPath(instrumentation, true, new String[]{appName});
         new CameraAccessPermissionsWatcher(device).checkForCondition();
 
         assertTrue("'Searching for surfaces...' text is not visible",

@@ -136,7 +136,7 @@ public class AppTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
-            GoogleAppUtil.loginGoogleApp(instrumentation);
+            assertTrue("Google login failed", GoogleAppUtil.loginGoogleApp(instrumentation, true));
             AppLauncher.launch(instrumentation, "Chrome");
 
             new GoogleAppContinueWatcher(device).checkForCondition();

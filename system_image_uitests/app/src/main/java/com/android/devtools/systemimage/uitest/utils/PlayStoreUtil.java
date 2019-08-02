@@ -29,6 +29,7 @@ import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWat
 import com.android.devtools.systemimage.uitest.watchers.PlayStoreControlsWatcher;
 
 import java.util.concurrent.TimeUnit;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Static utility methods pertaining to the Google Play Store
@@ -160,13 +161,13 @@ public class PlayStoreUtil {
             }
         });
 
-        if (inputTextFieldExists) {
-            UiObject inputTextField = device.findObject(
-                    new UiSelector().resourceId(Res.GOOGLE_PLAY_INPUT_RES));
-            inputTextField.clearTextField();
-            inputTextField.setText(appName);
-            device.pressEnter();
-        }
+        assertTrue("Input text field not found", inputTextFieldExists);
+
+        UiObject inputTextField = device.findObject(
+                new UiSelector().resourceId(Res.GOOGLE_PLAY_INPUT_RES));
+        inputTextField.clearTextField();
+        inputTextField.setText(appName);
+        device.pressEnter();
     }
 
     /**
@@ -205,7 +206,7 @@ public class PlayStoreUtil {
             unauthorizedUserButton.clickAndWaitForNewWindow();
         }
 
-        loggedIn = GoogleAppUtil.loginGoogleApp(instrumentation);
+        loggedIn = GoogleAppUtil.loginGoogleApp(instrumentation, true);
         AppLauncher.launch(instrumentation, "Play Store");
 
         new GoogleAppConfirmationWatcher(device).checkForCondition();

@@ -122,7 +122,7 @@ public class NetworkIOTest {
 
         String[] path = new String[]{"Settings", "More", "Mobile networks", "Preferred network type"};
 
-        AppLauncher.launchPath(instrumentation, path);
+        AppLauncher.launchPath(instrumentation, true, path);
 
         UiObject dataSwitch3G = device.findObject(new UiSelector().text("3G"));
         UiObject dataSwitch2G = device.findObject(new UiSelector().text("2G"));
@@ -180,7 +180,7 @@ public class NetworkIOTest {
 
         String[] path = new String[]{"Settings", "More", "Mobile networks"};
 
-        AppLauncher.launchPath(instrumentation, path);
+        AppLauncher.launchPath(instrumentation, true, path);
 
         // Test requires image to start with data roaming active.
         if (!NetworkIOTestUtil.isDataRoamingEnabled(context)) {

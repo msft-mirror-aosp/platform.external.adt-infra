@@ -124,7 +124,7 @@ public class ShellUtilTest {
             DeveloperOptionsManager.enableDeveloperOptions_v1(testFramework);
         }
 
-        AppLauncher.launchPath(instrumentation, new String[] {
+        AppLauncher.launchPath(instrumentation, true, new String[] {
                 "Settings", "System", "Advanced", "Developer options"});
         // Remove bug report files even if the test fails.
         try {
