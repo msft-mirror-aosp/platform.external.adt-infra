@@ -247,18 +247,26 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
     def save_snapshot(self, avd_config):
         """Save snapshot for an AVD described by 'avd_config'
         """
+        self.uitest_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'system_image_uitests')
         self.avd_config = avd_config
         self.assertEqual(self.create_avd(avd_config), 0)
         self.launch_emu_and_wait(avd_config)
-        # Turn off ac charger. Keep display on.
-        if "android-tv" not in avd_config.tag:
+        if "google_apis_playstore" in avd_config.tag:
             adb_binary = path_utils.get_adb_binary()
-            q1 = psutil.Popen([adb_binary, 'emu', 'power', 'ac', 'off'])
-            q1.communicate()
-            q2 = psutil.Popen([adb_binary, 'shell', 'settings', 'put', 'system', 'screen_off_timeout', '2147483647'])
-            q2.communicate()
-            q3 = psutil.Popen([adb_binary, 'shell', 'dumpsys', 'battery', 'set', 'level', '10'])
-            q3.communicate()
+            # Turn off ac charger. Keep display on.
+            subprocess.call([adb_binary, 'emu', 'power', 'ac', 'off'])
+            subprocess.call([adb_binary, 'shell', 'settings', 'put', 'system', 'screen_off_timeout', '2147483647'])
+            subprocess.call([adb_binary, 'shell', 'dumpsys', 'battery', 'set', 'level', '10'])
+
+            # Pre-Install required APKs
+            path_to_apk = os.path.join(self.uitest_dir, "app", "src", "main", "assets")
+            apks = ["ApiDemos_x86.apk", "CrashExample.apk", "FredVPN.apk", "HelloAr_C.apk", "HelloCompute.apk"]
+            for apk in apks:
+                subprocess.call([adb_binary,
+                                 'install',
+                                 '-g',
+                                 os.path.join(path_to_apk, apk)])
+
         # wait for 5 minutes before taking the snapshot
         time.sleep(300)
 
