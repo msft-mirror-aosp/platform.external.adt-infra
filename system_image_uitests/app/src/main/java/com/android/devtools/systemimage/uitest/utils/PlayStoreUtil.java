@@ -144,27 +144,27 @@ public class PlayStoreUtil {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
                 return device.findObject(
-                        new UiSelector().resourceId(Res.GOOGLE_PLAY_IDLE_RES)).exists();
+                        new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).exists();
             }
         });
 
         if (idleTextFieldExists) {
             device.findObject(
-                    new UiSelector().resourceId(Res.GOOGLE_PLAY_IDLE_RES)).click();
+                    new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).click();
         }
 
         boolean inputTextFieldExists = new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws UiObjectNotFoundException {
                 return device.findObject(
-                        new UiSelector().resourceId(Res.GOOGLE_PLAY_INPUT_RES)).exists();
+                        new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES)).exists();
             }
         });
 
         assertTrue("Input text field not found", inputTextFieldExists);
 
         UiObject inputTextField = device.findObject(
-                new UiSelector().resourceId(Res.GOOGLE_PLAY_INPUT_RES));
+                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES));
         inputTextField.clearTextField();
         inputTextField.setText(appName);
         device.pressEnter();
@@ -184,7 +184,7 @@ public class PlayStoreUtil {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
                         return device.findObject(
-                                new UiSelector().resourceId(Res.GOOGLE_PLAY_IDLE_RES)).exists() ||
+                                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).exists() ||
                                 device.findObject(
                                         new UiSelector().resourceId(Res.GOOGLE_PLAY_ACTIVE_RES)).exists();
                     }

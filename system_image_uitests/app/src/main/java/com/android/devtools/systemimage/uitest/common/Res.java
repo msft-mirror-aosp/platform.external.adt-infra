@@ -84,10 +84,10 @@ public class Res {
     public static final String OPTION_MENU_LIST_RES = "com.android.documentsui:id/option_menu_list";
 
     public static final String GOOGLE_PLAY_VENDING_RES = "com.android.vending";
-    public static final String GOOGLE_PLAY_IDLE_RES = "com.android.vending:id/search_box_idle_text";
+    public static final String GOOGLE_PLAY_IDLE_RES = "(com.android.vending:id/search_box_idle_text|com.android.vending:id/search_bar_hint)";
     public static final String GOOGLE_PLAY_ACTIVE_RES = "com.android.vending:id/search_box_active_text_view";
     public static final String GOOGLE_PLAY_INPUT_RES =
-            "com.android.vending:id/search_box_text_input";
+            "(com.android.vending:id/search_box_text_input|com.android.vending:id/search_bar_text_input)";
     public static final String GOOGLE_PLAY_LIST_TITLE_RES = "com.android.vending:id/li_title";
     public static final String GOOGLE_PLAY_FILTER_TOGGLE_RES = "com.android.vending:id/content_filter_on_off_toggle";
     public static final String GOOGLE_UNAUTHORIZED_SIGN_IN_RES = "com.android.vending:id/unauth_home_sign_in_button";
