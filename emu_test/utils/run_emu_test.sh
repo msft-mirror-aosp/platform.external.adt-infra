@@ -73,7 +73,8 @@ rm -rf $ANDROID_AVD_HOME/*
 echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf"
 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Console_test --file_pattern 'test_console.*' --config_file external/adt-infra/emu_test/config/console_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf
 
-if [[ ! -f $SESSION_DIR/Console_test/test_consoleTestResult.xml ]]
+count=`ls -1 $SESSION_DIR/Console_test/*.xml 2>/dev/null | wc -l`
+if [[ $count == 0 ]]
 then
     STATUS=1
 fi
