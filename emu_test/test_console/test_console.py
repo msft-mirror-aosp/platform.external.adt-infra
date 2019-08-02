@@ -27,10 +27,6 @@ from emu_test.utils import path_utils
 from utils import util
 
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
-CONSOLE_RESULT_XML_FILE = 'test_consoleTestResult.xml'
-
-g_xml_string_result = ''
-g_avd_counter = 0
 
 
 class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
@@ -77,13 +73,10 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
         return failed_test_id.rsplit('.', 1)[-1]
 
     def create_result_xml(self, emu_result):
-        global g_xml_string_result
-        global g_avd_counter
-        g_avd_counter += 1
 
         dst_path = os.path.join(emu_argparser.emu_args.session_dir,
                                 emu_argparser.emu_args.test_dir,
-                                CONSOLE_RESULT_XML_FILE)
+                                self.avd_config.name() + ".xml")
 
         result = ET.Element('testsuite', name=self._testMethodName)
         result.set('tests', str(emu_result.testsRun))
@@ -120,11 +113,10 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
 
         xml_string_result = ET.tostring(result)
         # Saves each avd testing result to global variable: g_xml_string_result
-        g_xml_string_result += xml_string_result
 
         # Refresh the current whole test result page.
         with open(dst_path, 'w+') as modified:
-            modified.write(('%s' % g_xml_string_result))
+            modified.write(('%s' % xml_string_result))
             self.m_logger.info("Wrote %s" % dst_path)
 
     def print_console_result(self, emu_result):
@@ -168,7 +160,13 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
         current_dir = os.path.dirname(os.path.realpath(__file__))
 
         test_classes = []
-        for test_file in glob.glob(os.path.join(current_dir, 'testcase_*.py')):
+        test_files = glob.glob(os.path.join(current_dir, 'testcase_*.py'))
+        if "Foldable" in self.avd_config.name():
+            test_files = [test for test in test_files if "testcase_foldable" in test]
+        else:
+            test_files = [test for test in test_files if "testcase_foldable" not in test]
+
+        for test_file in test_files:
             name = os.path.splitext(os.path.basename(test_file))[0]
             test_module = importlib.import_module('.' + name, 'test_console')
             for member in dir(test_module):
