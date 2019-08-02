@@ -804,7 +804,7 @@ public class SettingsTest {
         Assert.assertTrue("Could not enable developer options",
                 DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
 
-        AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "Advanced", "Developer options"});
+        AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "System", "Advanced", "Developer options"});
 
         UiScrollable itemList =
                 new UiScrollable(
@@ -853,7 +853,7 @@ public class SettingsTest {
     @Test
     @Ignore("b/137769277 - Connected Device app crashes.")
     public void listConnectedDevices() throws Exception {
-        AppLauncher.launchPath(instrumentation, new String[]{"Settings", "Connected devices"});
+        AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "Connected devices"});
 
         UiObject androidErrorClose = device.findObject(
                 new UiSelector().resourceId(Res.ANDROID_ERROR_CLOSE_RES));
@@ -893,7 +893,7 @@ public class SettingsTest {
         String[] testFileNames = {"test_text_01.txt", "test_text_02.txt", "test_text_03.txt"};
 
         for (String name : testFileNames) {
-            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "Storage", "Internal shared storage", "Files"});
+            AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "Storage", "Internal shared storage", "Files"});
 
             if (SettingsUtil.hasTestFile(instrumentation, name)) {
                 SettingsUtil.deleteTestFile_v2(instrumentation, name);

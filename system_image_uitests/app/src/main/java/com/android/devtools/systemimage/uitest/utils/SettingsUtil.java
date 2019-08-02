@@ -360,8 +360,9 @@ public class SettingsUtil {
         UiSelector advancedButton = new UiSelector().text("Advanced");
 
         try {
-            itemList.scrollIntoView(advancedButton);
-            device.findObject(advancedButton).click();
+            if (itemList.scrollIntoView(advancedButton)) {
+                device.findObject(advancedButton).click();
+            }
         } catch (UiObjectNotFoundException e) {
             Log.w(TAG, "Advanced does not exist");
         }

@@ -154,7 +154,7 @@ public class PackageInstallationUtil {
         final UiObject doneButtonRes = device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_DONE_RES));
         final UiObject doneLabel = device.findObject(new UiSelector().text("App installed."));
 
-        boolean installationSuccess = new Wait(INSTALL_WAIT * 6L).
+        boolean installationSuccess = new Wait(INSTALL_WAIT * 12L).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {

@@ -179,7 +179,7 @@ public class NetworkIOTest {
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         final UiObject billingCycle = device.findObject(new UiSelector().text("Billing cycle"));
 
-        AppLauncher.launchPath(instrumentation, path);
+        AppLauncher.launchPath(instrumentation, true, path);
 
         if (scrollable.waitForExists(3L)) {
             scrollable.scrollIntoView(billingCycle);
@@ -242,23 +242,23 @@ public class NetworkIOTest {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         String[] path = new String[]{"Settings", "Network & Internet"};
-        AppLauncher.launchPath(instrumentation, path);
+        AppLauncher.launchPath(instrumentation, true, path);
 
         UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v2(device);
 
         // Test requires "Airplane mode" switch widget to start in the off state.
         if (NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon)) {
-            AppLauncher.launchPath(instrumentation, path);
+            AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
         }
         assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
 
-        AppLauncher.launchPath(instrumentation, path);
+        AppLauncher.launchPath(instrumentation, true, path);
         NetworkIOTestUtil.toggleAirplaneMode(device);
         assertTrue("Airplane mode is not enabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
 
         // Disable airplane mode.
-        AppLauncher.launchPath(instrumentation, path);
+        AppLauncher.launchPath(instrumentation, true, path);
         NetworkIOTestUtil.toggleAirplaneMode(device);
     }
 
@@ -285,25 +285,25 @@ public class NetworkIOTest {
         int stressCount = 5;
 
         String[] path = new String[]{"Settings", "Network & Internet"};
-        AppLauncher.launchPath(instrumentation, path);
+        AppLauncher.launchPath(instrumentation, true, path);
 
         UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v2(device);
 
         // Test requires "Airplane mode" switch widget to start in the off state.
         if (NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon)) {
-            AppLauncher.launchPath(instrumentation, path);
+            AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
         }
         assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
 
         for (int i = 0; i < stressCount; i++) {
-            AppLauncher.launchPath(instrumentation, path);
+            AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
             assertTrue("Airplane mode is not enabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
             new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
 
             // Disable airplane mode.
-            AppLauncher.launchPath(instrumentation, path);
+            AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
             assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
             new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
@@ -333,7 +333,7 @@ public class NetworkIOTest {
 
         String[] path = new String[]{"Settings", "Network & Internet", "Mobile network", "Preferred network type"};
 
-        AppLauncher.launchPath(instrumentation, path);
+        AppLauncher.launchPath(instrumentation, true, path);
 
         UiObject dataSwitch3G = device.findObject(new UiSelector().text("3G"));
         UiObject dataSwitch2G = device.findObject(new UiSelector().text("2G"));

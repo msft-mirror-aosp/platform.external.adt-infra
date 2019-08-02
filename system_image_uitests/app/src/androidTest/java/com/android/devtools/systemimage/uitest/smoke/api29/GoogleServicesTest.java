@@ -185,7 +185,7 @@ public class GoogleServicesTest {
 
         GoogleAppUtil.logoutGoogleChrome(instrumentation);
 
-        boolean logInSuccess = GoogleAppUtil.loginGoogleApp(instrumentation);
+        boolean logInSuccess = GoogleAppUtil.loginGoogleApp(instrumentation, true);
         assertTrue("Google log in was unsuccessful", logInSuccess);
 
         boolean logOutSuccess = GoogleAppUtil.logoutGoogleChrome(instrumentation);

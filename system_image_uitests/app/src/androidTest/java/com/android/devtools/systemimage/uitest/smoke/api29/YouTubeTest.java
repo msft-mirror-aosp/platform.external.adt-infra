@@ -89,7 +89,7 @@ public class YouTubeTest {
     public void loginYouTube() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         GoogleAppUtil.logoutGoogleChrome(instrumentation);
-        boolean logInSuccess = GoogleAppUtil.loginGoogleApp(instrumentation);
+        boolean logInSuccess = GoogleAppUtil.loginGoogleApp(instrumentation, true);
         assertTrue("YouTube log in was unsuccessful", logInSuccess);
 
         final UiDevice device = UiDevice.getInstance(instrumentation);

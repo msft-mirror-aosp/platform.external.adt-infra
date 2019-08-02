@@ -52,7 +52,7 @@ public class GoogleAppUtil {
      *  @param instrumentation
      *  @return boolean flag indicating success
      */
-    public static boolean loginGoogleApp(Instrumentation instrumentation) throws Exception {
+    public static boolean loginGoogleApp(Instrumentation instrumentation, boolean firstAttempt) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         GoogleAppUtil.openChromeSettings(instrumentation);
@@ -89,7 +89,6 @@ public class GoogleAppUtil {
         final UiObject signInButton = device.findObject(
                 new UiSelector().textMatches(("(?i)sign in(?-i)")));
 
-        boolean isSignedIn = false;
         boolean needsSignIn = new Wait().
                 until(new Wait.ExpectedCondition() {
                     @Override
@@ -117,35 +116,59 @@ public class GoogleAppUtil {
         UiObject editInput = device.findObject(new UiSelector().className("android.widget.EditText"));
         boolean hasEditInput = editInput.waitForExists(
                 TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-
-        if (hasEditInput) {
-            Log.i("Login", "found email field");
-            UiObject inputEmailField = device.findObject(new UiSelector().description("Email or phone"));
-            UiObject forgotEmailLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot email?")) :
-                    device.findObject(new UiSelector().description("Forgot email?"));
-
-            boolean needsEmail = api == 24 ? inputEmailField.waitForExists(
-                    TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)) :
-                    forgotEmailLink.waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
-
-            Log.i("Login", "enter email");
-            editInput.clearTextField();
-            editInput.setText(email);
-            clickNext(device);
-
-            UiObject forgotPasswordLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot password?")) :
-                    device.findObject(new UiSelector().description("Forgot password?"));
-            boolean needsPassword = forgotPasswordLink.waitForExists(
-                    TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-
-            Log.i("Login", "enter password");
-            editInput.clearTextField();
-            editInput.setText(password);
-            clickNext(device);
+        assertTrue("Email field not found", firstAttempt || hasEditInput);
+        if ( !hasEditInput ) {
+            Log.i("Login", "Retry google login");
+            device.pressHome();
+            TimeUnit.SECONDS.sleep(5);
+            return loginGoogleApp(instrumentation, false);
         }
 
-        isSignedIn = new GoogleAppConfirmationWatcher(device).checkForCondition();
-        Log.i("Login", "isSignedIn = " + isSignedIn);
+        UiObject inputEmailField = device.findObject(new UiSelector().description("Email or phone"));
+        UiObject forgotEmailLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot email?")) :
+                device.findObject(new UiSelector().description("Forgot email?"));
+
+        boolean needsEmail = api == 24 ? inputEmailField.waitForExists(
+                TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)) :
+                forgotEmailLink.waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+        assertTrue("Forgot email not found", firstAttempt || needsEmail);
+        if ( !needsEmail ) {
+            Log.i("Login", "Retry google login");
+            device.pressHome();
+            TimeUnit.SECONDS.sleep(5);
+            return loginGoogleApp(instrumentation, false);
+        }
+
+        Log.i("Login", "enter email");
+        editInput.clearTextField();
+        editInput.setText(email);
+        clickNext(device);
+
+        UiObject forgotPasswordLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot password?")) :
+                device.findObject(new UiSelector().description("Forgot password?"));
+        boolean needsPassword = forgotPasswordLink.waitForExists(
+                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        assertTrue("Forgot password not found", firstAttempt || needsPassword);
+        if ( !needsPassword ) {
+            Log.i("Login", "Retry google login");
+            device.pressHome();
+            TimeUnit.SECONDS.sleep(5);
+            return loginGoogleApp(instrumentation, false);
+        }
+
+        Log.i("Login", "enter password");
+        editInput.clearTextField();
+        editInput.setText(password);
+        clickNext(device);
+
+        boolean isSignedIn = new GoogleAppConfirmationWatcher(device).checkForCondition();
+        assertTrue("Login failed", firstAttempt || isSignedIn);
+        if ( !isSignedIn ) {
+            Log.i("Login", "Retry google login");
+            device.pressHome();
+            TimeUnit.SECONDS.sleep(5);
+            return loginGoogleApp(instrumentation, false);
+        }
 
         UiObject backupSwitch = device.findObject(new UiSelector().resourceId(Res.GOOGLE_BACKUP_SWITCH_RES));
         if (backupSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {

@@ -88,9 +88,9 @@ public class DeveloperOptionsManager {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
         try {
-            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
+            AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "About emulated device"});
         } catch (UiObjectNotFoundException e) {
-            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
+            AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "About phone"});
         }
 
         enableOptions(instrumentation);
@@ -110,15 +110,15 @@ public class DeveloperOptionsManager {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
         try {
-            AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About emulated device"});
+            AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "System", "About emulated device"});
         } catch (UiObjectNotFoundException e) {
             try {
-                AppLauncher.launchPath(instrumentation, new String[]{"Settings", "System", "About phone"});
+                AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "System", "About phone"});
             } catch (UiObjectNotFoundException e1) {
                 try {
-                    AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About emulated device"});
+                    AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "About emulated device"});
                 } catch (UiObjectNotFoundException e2) {
-                    AppLauncher.launchPath(instrumentation, new String[]{"Settings", "About phone"});
+                    AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "About phone"});
                 }
             }
         }

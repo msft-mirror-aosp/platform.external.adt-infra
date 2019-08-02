@@ -136,7 +136,7 @@ public class AppTest {
 
         if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
 
-            GoogleAppUtil.loginGoogleApp(instrumentation);
+            GoogleAppUtil.loginGoogleApp(instrumentation, true);
             AppLauncher.launch(instrumentation, "Chrome");
 
             // Click the search box if it's there.
