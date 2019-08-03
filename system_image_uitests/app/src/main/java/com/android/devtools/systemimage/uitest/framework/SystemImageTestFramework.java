@@ -33,6 +33,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
+import android.util.Log;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -143,6 +144,7 @@ public class SystemImageTestFramework implements TestRule {
 
                 // Implement retry logic here
                 for (int i = 0; i < RETRY_COUNT; i++) {
+                    Log.i("Framework", "Try " + i);
                     throwable = null;
                     try {
                         base.evaluate();
