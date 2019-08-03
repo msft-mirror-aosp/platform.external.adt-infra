@@ -154,31 +154,22 @@ public class SystemImageTestFramework implements TestRule {
                         mDevice.pressHome();
                     } catch (Throwable t) {
                         throwable = t;
-                        File loggingDir = getLoggingDir(description.getTestClass().getSimpleName(),
-                                description.getMethodName());
+                        if ( i == RETRY_COUNT-1 ) {
+                            File loggingDir = getLoggingDir(description.getTestClass().getSimpleName(),
+                                                            description.getMethodName());
 
-                        // Capture the window UI hierarchy when a test fails.
-                        mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy.xml"));
+                            // Capture the window UI hierarchy when a test fails.
+                            mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy.xml"));
 
-                        // Snap the screenshot when a test fails.
-                        mDevice.takeScreenshot(new File(loggingDir, "screenshot.png"));
+                            // Snap the screenshot when a test fails.
+                            mDevice.takeScreenshot(new File(loggingDir, "screenshot.png"));
 
-                        // Log the error message
-                        PrintWriter error =
-                                new PrintWriter(new File(loggingDir, "error.txt").getPath(), "UTF-8");
-                        t.printStackTrace(error);
-                        error.close();
-
-                        // Log the test case description
-                        PrintWriter info =
-                                new PrintWriter(new File(loggingDir, "description.txt").getPath());
-                        String testRailLink = description.getAnnotation(TestInfo.class) != null ?
-                                description.getAnnotation(TestInfo.class).rootLink() +
-                                        description.getAnnotation(TestInfo.class).id() : "...";
-                        info.println("See " + testRailLink);
-                        info.println();
-                        info.println("If you cannot access the link above, see http://go/adt-sysimage-autotracker instead");
-                        info.close();
+                            // Log the error message
+                            PrintWriter error =
+                                    new PrintWriter(new File(loggingDir, "error.txt").getPath(), "UTF-8");
+                            t.printStackTrace(error);
+                            error.close();
+                        }
                     } finally {
                         mDevice.removeWatcher(CrashWatcher.class.getName());
                         mDevice.removeWatcher(LockScreenWatcher.class.getName());
