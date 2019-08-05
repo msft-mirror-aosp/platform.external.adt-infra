@@ -126,31 +126,12 @@ public class SystemImageTestFramework implements TestRule {
                 // Press "Home" to dismiss a lock screen if any.
                 mDevice.pressHome();
 
-                CrashWatcher crashWatcher = new CrashWatcher(mDevice);
-                mDevice.registerWatcher(CrashWatcher.class.getName(), crashWatcher);
-                mDevice.registerWatcher(
-                        LockScreenWatcher.class.getName(),
-                        new LockScreenWatcher(mDevice)
-                );
-                mDevice.registerWatcher(
-                        AndroidWelcomeClingWatcher.class.getName(),
-                        new AndroidWelcomeClingWatcher(mDevice)
-                );
-                mDevice.registerWatcher(
-                        AndroidLauncherWelcomeClingWatcher.class.getName(),
-                        new AndroidLauncherWelcomeClingWatcher(mDevice)
-                );
-                mDevice.runWatchers();
-
                 // Implement retry logic here
                 for (int i = 0; i < RETRY_COUNT; i++) {
                     Log.i("Framework", "Try " + i);
                     throwable = null;
                     try {
                         base.evaluate();
-                        // Must check the crash watcher again for finalization,
-                        // or could miss a crash if it happens at the end of a test case.
-                        crashWatcher.checkForCondition();
                         mDevice.pressHome();
                     } catch (Throwable t) {
                         throwable = t;
@@ -170,23 +151,14 @@ public class SystemImageTestFramework implements TestRule {
                             t.printStackTrace(error);
                             error.close();
                         }
-                    } finally {
-                        mDevice.removeWatcher(CrashWatcher.class.getName());
-                        mDevice.removeWatcher(LockScreenWatcher.class.getName());
-                        mDevice.removeWatcher(AndroidWelcomeClingWatcher.class.getName());
-                        mDevice.removeWatcher(AndroidLauncherWelcomeClingWatcher.class.getName());
                     }
                     if (throwable == null) {
                         return;
                     }
                 }
 
-                // Dismiss any left crash dialog before throw and end the test.
-                // Failed to dismiss a crash dialog may impair the following tests.
-                crashWatcher.dismiss();
                 throw throwable;
             }
         };
     }
-
 }
