@@ -16,8 +16,6 @@
 
 package com.android.devtools.systemimage.uitest.utils;
 
-import com.google.common.base.Stopwatch;
-
 import android.os.SystemClock;
 
 import java.util.concurrent.TimeUnit;
@@ -60,12 +58,13 @@ public class Wait {
      * true before timeout is reached, or {@code false} otherwise.
      */
     public boolean until(ExpectedCondition expectedCondition) throws Exception {
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        while (stopwatch.elapsed(TimeUnit.MILLISECONDS) < timeout) {
+        long count = 0;
+        while ((polltime*count) < timeout) {
             if (expectedCondition.isTrue()) {
                 return true;
             }
             SystemClock.sleep(polltime);
+            count++;
         }
         return false;
     }

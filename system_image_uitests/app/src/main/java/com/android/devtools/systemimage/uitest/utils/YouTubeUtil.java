@@ -5,6 +5,7 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 import java.util.concurrent.TimeUnit;
+import static org.junit.Assert.assertTrue;
 
 public class YouTubeUtil {
 
@@ -15,8 +16,7 @@ public class YouTubeUtil {
     public static void openYouTubeSettings(Instrumentation instrumentation, String contentDescription) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
         UiObject settingsButton = device.findObject(new UiSelector().descriptionContains(contentDescription));
-        if (settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
-            settingsButton.clickAndWaitForNewWindow();
-        }
+        assertTrue("Settings not found", settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)));
+        settingsButton.clickAndWaitForNewWindow();
     }
 }

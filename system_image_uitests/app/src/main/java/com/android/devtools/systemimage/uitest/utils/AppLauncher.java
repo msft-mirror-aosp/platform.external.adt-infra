@@ -70,6 +70,7 @@ public class AppLauncher {
 
         if (appsLabelFound) {
             appsLabel.clickAndWaitForNewWindow();
+            Log.i(TAG, "Opened Apps list in first attempt");
         }
 
         // Attempt to scroll through the list twice, first vertically, and then horizontally.
@@ -89,6 +90,7 @@ public class AppLauncher {
         });
         if (appNameFound) {
             appObject.clickAndWaitForNewWindow();
+            Log.i(TAG, "Opened app in first attempt");
         } else {
             try {
                 scrollable.setAsVerticalList();
@@ -124,6 +126,7 @@ public class AppLauncher {
 
                 if (appsLabelFound) {
                     appsLabel.clickAndWaitForNewWindow();
+                    Log.i(TAG, "Opened Apps list in second attempt");
                 }
 
                 if (!appObject.exists()) {
@@ -166,6 +169,7 @@ public class AppLauncher {
 
             if (appNameFound) {
                 appObject.clickAndWaitForNewWindow();
+                Log.i(TAG, "Opened app in second attempt");
             }
         }
 
