@@ -306,4 +306,29 @@ public class GoogleAppUtil {
             nextButton.clickAndWaitForNewWindow(10L);
         }
     }
+
+    public static void deleteAccount(Instrumentation instrumentation) throws Exception {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "Accounts"});
+
+        UiObject account = device.findObject(new UiSelector().text(email));
+
+        if (account.waitForExists(5L))
+            account.clickAndWaitForNewWindow();
+        else
+            return;
+
+        UiObject removeAccount = device.findObject(new UiSelector().text("Remove account"));
+
+        assertTrue("Cannot find remove account", removeAccount.waitForExists(5L));
+
+        removeAccount.click();
+
+        UiObject removeAccountDialogue = device.findObject(new UiSelector().text("Remove account"));
+        if (removeAccountDialogue.waitForExists(5L))
+            removeAccountDialogue.click();
+
+        device.pressHome();
+    }
 }

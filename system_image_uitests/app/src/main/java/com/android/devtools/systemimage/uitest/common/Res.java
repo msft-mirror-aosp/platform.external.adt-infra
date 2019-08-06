@@ -82,6 +82,7 @@ public class Res {
     public static final String NOTIFICATION_BAR_HEADER_RES = "com.android.systemui:id/header";
     public static final String MENU_LIST_RES = "com.android.documentsui:id/menu_list";
     public static final String OPTION_MENU_LIST_RES = "com.android.documentsui:id/option_menu_list";
+    public static final String OPTION_MENU_SEARCH_RES = "com.android.documentsui:id/option_menu_search";
 
     public static final String GOOGLE_PLAY_VENDING_RES = "com.android.vending";
     public static final String GOOGLE_PLAY_IDLE_RES = "(com.android.vending:id/search_box_idle_text|com.android.vending:id/search_bar_hint)";
@@ -126,6 +127,7 @@ public class Res {
     public static final String ANDROID_TIME_HEADER_RES = "android:id/time_header";
     public static final String ANDROID_TIME_HEADER_RES_19 = "android:id/timePicker";
     public static final String ANDROID_LIST_RES = "android:id/list";
+    public static final String ANDROID_SETTING_LIST_RES = "com.android.settings:id/recycler_view";
     public static final String ANDROID_CONTENT_RES = "android:id/content";
     public static final String ANDROID_TITLE_RES = "android:id/title";
     public static final String ANDROID_SELECT_LIST = "android:id/select_dialog_listview";

@@ -266,27 +266,35 @@ public class CameraTestUtil {
         device.findObject(new UiSelector().description("Show roots")).click();
 
         String desc = mode.equals("Camera") ? "Images" : "Videos";
-        UiObject fileButton = device.findObject(new UiSelector().text(desc));
+        UiObject fileButton = device.findObject(new UiSelector().text(desc).className("android.widget.TextView"));
 
         if ( fileButton.waitForExists(10)) {
             fileButton.click();
-            device.findObject(new UiSelector().text("Camera")).click();
+            UiObject cameraButton = device.findObject(new UiSelector().text("Camera"));
+            if ( cameraButton.waitForExists(5L) ) {
+                cameraButton.click();
+            }
         }
         UiObject fileThumbnail = device.findObject(new UiSelector().resourceId("com.android.documentsui:id/icon_thumb"));
 
-        if (fileThumbnail.waitForExists(15L)) {
+        if (fileThumbnail.waitForExists(5L)) {
             fileThumbnail.dragTo(fileThumbnail, 20);
         }
 
-        UiObject trashButton = device.findObject(new UiSelector().resourceId("com.android.documentsui:id/option_menu_list"));
-
-        if (trashButton.waitForExists(15L)) {
+        UiObject trashButton = device.findObject(new UiSelector().resourceIdMatches("com.android.documentsui:id/option_menu_list"));
+        if (trashButton.waitForExists(5L)) {
             trashButton.click();
+        }
+        else {
+            trashButton = device.findObject(new UiSelector().resourceIdMatches("com.android.documentsui:id/option_menu_search"));
+            if (trashButton.waitForExists(5L)) {
+                trashButton.click();
+            }
         }
 
         UiObject okButton = device.findObject(new UiSelector().resourceId("android:id/button1"));
 
-        if (okButton.waitForExists(15L)) {
+        if (okButton.waitForExists(5L)) {
             okButton.click();
         }
 

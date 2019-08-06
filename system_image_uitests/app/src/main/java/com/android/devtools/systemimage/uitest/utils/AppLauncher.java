@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.utils;
 import com.android.devtools.systemimage.uitest.common.Res;
 
 import android.app.Instrumentation;
+import android.graphics.Rect;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
@@ -53,25 +54,15 @@ public class AppLauncher {
         device.pressHome();
 
         final UiObject appsLabel = device.findObject(new UiSelector().descriptionContains("Apps"));
-        boolean appsLabelFound = false;
-        boolean appNameFound;
 
-        try {
-            appsLabelFound = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return appsLabel.exists();
-                }
-            });
-        } catch(Exception error) {
-            Log.e(TAG, error.getMessage());
-            Log.e(TAG,"Launch: Apps label not found on first attempt");
-        }
-
-        if (appsLabelFound) {
-            appsLabel.clickAndWaitForNewWindow();
-            Log.i(TAG, "Opened Apps list in first attempt");
-        }
+        UiObject scrollView = device.findObject(new UiSelector().resourceId("android:id/content"));
+        // Scroll to the end to open app drawer.
+        device.drag(
+                0,
+                appsLabel.getBounds().top,
+                0,
+                scrollView.getBounds().top,
+                10);
 
         // Attempt to scroll through the list twice, first vertically, and then horizontally.
         // If the target object cannot be found while scrolling, fling forward by a
@@ -82,7 +73,7 @@ public class AppLauncher {
         final UiSelector appSelector = new UiSelector().text(appName);
         final UiObject appObject = device.findObject(appSelector);
 
-        appNameFound = new Wait().until(new Wait.ExpectedCondition() {
+        boolean appNameFound = new Wait().until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() {
                 return appObject.exists();
@@ -112,22 +103,12 @@ public class AppLauncher {
                 }
             } catch (UiObjectNotFoundException e) {
                 device.pressHome();
-                try {
-                    appsLabelFound = new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return appsLabel.exists();
-                        }
-                    });
-                } catch (Exception error) {
-                    Log.e(TAG, error.getMessage());
-                    Log.e(TAG, "Launch: Apps label not found on second attempt");
-                }
-
-                if (appsLabelFound) {
-                    appsLabel.clickAndWaitForNewWindow();
-                    Log.i(TAG, "Opened Apps list in second attempt");
-                }
+                device.drag(
+                        0,
+                        appsLabel.getBounds().top,
+                        0,
+                        scrollView.getBounds().top,
+                        10);
 
                 if (!appObject.exists()) {
                     if (api >= 28) {

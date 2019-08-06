@@ -88,7 +88,8 @@ public class YouTubeTest {
     @TestInfo(id = "XXXX")
     public void loginYouTube() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        GoogleAppUtil.logoutGoogleChrome(instrumentation);
+        GoogleAppUtil.deleteAccount(instrumentation);
+
         boolean logInSuccess = GoogleAppUtil.loginGoogleApp(instrumentation, true);
         assertTrue("YouTube log in was unsuccessful", logInSuccess);
 
@@ -102,24 +103,14 @@ public class YouTubeTest {
         }
 
         YouTubeUtil.openYouTubeSettings(instrumentation, "Account");
-        final UiObject channelButton = device.findObject(new UiSelector().text("Your channel"));
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return channelButton.exists();
-            }})) {
-            channelButton.clickAndWaitForNewWindow();
-        }
+        UiObject signInLabel = device.findObject(new UiSelector().text("SIGN IN"));
+        assertFalse("YouTube log in was unsuccessful", signInLabel.waitForExists(5L));
 
-        YouTubeUtil.openYouTubeSettings(instrumentation, "More options");
-        final UiObject signOutButton = device.findObject(new UiSelector().text("Sign out"));
-        boolean isButtonSignOutPresent = signOutButton.exists();
-        assertTrue("Sign Out button not found", isButtonSignOutPresent);
-        signOutButton.clickAndWaitForNewWindow();
+        GoogleAppUtil.deleteAccount(instrumentation);
 
+        AppLauncher.launch(instrumentation, "YouTube");
         YouTubeUtil.openYouTubeSettings(instrumentation, "Account");
-        final UiObject signInLabel = device.findObject(new UiSelector().text("SIGN IN"));
+        signInLabel = device.findObject(new UiSelector().text("SIGN IN"));
         assertTrue("YouTube log out was unsuccessful", signInLabel.waitForExists(5L));
     }
 }
-

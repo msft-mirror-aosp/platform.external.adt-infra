@@ -164,7 +164,8 @@ public class SettingsTest {
     public void testPhonePermissions() throws Exception {
         final String app = "Phone";
 
-        SettingsUtil.setAppPermissions_v2(instrumentation, app, app, false, "DENY ANYWAY", "Apps & notifications");
+        SettingsUtil.setAppPermissions_v2(instrumentation, app, app, false,
+                "DENY ANYWAY", "Apps & notifications", "App permissions");
         device.pressHome();
 
         AppLauncher.launch(instrumentation, app);
@@ -185,7 +186,8 @@ public class SettingsTest {
                 })
         );
 
-        SettingsUtil.setAppPermissions_v2(instrumentation, app, app, true, "DENY ANYWAY", "Apps & notifications");
+        SettingsUtil.setAppPermissions_v2(instrumentation, app, app, true,
+                "DENY ANYWAY", "Apps & notifications", "App permissions");
         device.pressHome();
     }
 
@@ -219,7 +221,8 @@ public class SettingsTest {
             return;
         }
 
-        SettingsUtil.setAppPermissions_v2(instrumentation, appType, appName, false, "DENY ANYWAY", "Apps & notifications");
+        SettingsUtil.setAppPermissions_v2(instrumentation, appType, appName, false,
+                "DENY ANYWAY", "Apps & notifications", "App permissions");
         device.pressHome();
 
         AppLauncher.launch(instrumentation, appName);
@@ -248,7 +251,8 @@ public class SettingsTest {
                 })
         );
 
-        SettingsUtil.setAppPermissions_v2(instrumentation, appType, appName, true, "DENY ANYWAY", "Apps & notifications");
+        SettingsUtil.setAppPermissions_v2(instrumentation, appType, appName, true,
+                "DENY ANYWAY", "Apps & notifications", "App permissions");
         device.pressHome();
     }
 
@@ -275,10 +279,10 @@ public class SettingsTest {
         AppManager.openAppList_v2(instrumentation);
         SettingsUtil.clickAdvancedMenu(device);
 
-        assertTrue(SettingsUtil.getAppPermissions_v2(instrumentation, "Calendar", "Apps & notifications").exists()
-                && SettingsUtil.getAppPermissions_v2(instrumentation, "Camera", "Apps & notifications").exists()
-                && SettingsUtil.getAppPermissions_v2(instrumentation, "Camera", "Apps & notifications").exists()
-                && SettingsUtil.getAppPermissions_v2(instrumentation, "Phone", "Apps & notifications").exists());
+        assertTrue(SettingsUtil.getAppPermissions_v2(instrumentation, "Calendar", "Apps & notifications", "App permissions").exists()
+                && SettingsUtil.getAppPermissions_v2(instrumentation, "Camera", "Apps & notifications", "App permissions").exists()
+                && SettingsUtil.getAppPermissions_v2(instrumentation, "Location", "Apps & notifications", "App permissions").exists()
+                && SettingsUtil.getAppPermissions_v2(instrumentation, "Phone", "Apps & notifications", "App permissions").exists());
     }
 
     /**
@@ -581,18 +585,18 @@ public class SettingsTest {
         if (isAPIDemoInstalled) {
             SettingsUtil.launchDeviceAdminApps(instrumentation, "Security & Location", "Device admin apps");
 
-            if (SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox")) {
+            if (SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox", Res.ANDROID_LIST_RES)) {
                 SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security & Location", "Device admin apps");
             }
-            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox"));
+            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox", Res.ANDROID_LIST_RES));
 
             // Activate "Sample Device Admin" policy
             SettingsUtil.activate(instrumentation, "Sample Device Admin", "Security & Location", "Device admin apps");
-            assertTrue(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox"));
+            assertTrue(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox", Res.ANDROID_LIST_RES));
 
             // Deactivate "Sample Device Admin" policy
             SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security & Location", "Device admin apps");
-            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox"));
+            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox", Res.ANDROID_LIST_RES));
         } else {
             Log.w(TAG,"activateDeactivatePolicy: required APK is missing");
         }

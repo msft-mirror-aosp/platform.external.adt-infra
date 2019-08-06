@@ -129,7 +129,7 @@ public class DeveloperOptionsManager {
     /**
      * Checks if the developer options is enabled.
      *
-     * Version 1 for api <= 25 and api >= 29
+     * Version 1 for api <= 25
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
@@ -153,7 +153,7 @@ public class DeveloperOptionsManager {
     /**
      * Checks if the developer options is enabled.
      *
-     * Version 2 for api 26, 27 and 28
+     * Version 2 for api >= 26
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
@@ -164,13 +164,10 @@ public class DeveloperOptionsManager {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        new SettingsTestPopupWatcher(device).checkForCondition();
-
         try {
             SettingsUtil.openItem(instrumentation, "System");
             SettingsUtil.clickAdvancedMenu(device);
-            device.findObject(new UiSelector().text("Developer options")).click();
-            return true;
+            return device.findObject(new UiSelector().text("Developer options")).exists();
         } catch (UiObjectNotFoundException e) {
             return false;
         }

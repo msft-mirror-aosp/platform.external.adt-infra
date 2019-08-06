@@ -362,18 +362,18 @@ public class SettingsTest {
         if (isAPIDemoInstalled) {
             SettingsUtil.launchDeviceAdminApps(instrumentation, "Security", "Device administrators");
 
-            if (SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox")) {
+            if (SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox", Res.ANDROID_LIST_RES)) {
                 SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security", "Device administrators");
             }
-            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox"));
+            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox", Res.ANDROID_LIST_RES));
 
             // Activate "Sample Device Admin" policy
             SettingsUtil.activate(instrumentation, "Sample Device Admin", "Security", "Device administrators");
-            assertTrue(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox"));
+            assertTrue(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox", Res.ANDROID_LIST_RES));
 
             // Deactivate "Sample Device Admin" policy
             SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security", "Device administrators");
-            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox"));
+            assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox", Res.ANDROID_LIST_RES));
         } else {
             Log.w(TAG,"activateDeactivatePolicy: required APK is missing");
         }

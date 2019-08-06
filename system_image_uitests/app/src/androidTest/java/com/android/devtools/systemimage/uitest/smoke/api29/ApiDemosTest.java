@@ -61,7 +61,7 @@ public class ApiDemosTest {
 
     @Before
     public void activateDeviceAdmin() throws Exception {
-        ApiDemosInstaller.installApp("Security & location", "Device admin apps");
+        ApiDemosInstaller.installApp("Security", "Device admin apps");
     }
 
     /**

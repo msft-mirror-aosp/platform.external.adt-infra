@@ -172,7 +172,7 @@ public class NetworkIOTest {
     public void toggleCellularDataMode() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        String[] path = new String[] {"Settings", "Network & Internet", "Data usage"};
+        String[] path = new String[] {"Settings", "Network & Internet", "Mobile network"};
         String label = "Mobile data";
         final UiObject dataSwitch = device.findObject(new UiSelector().text(label));
 

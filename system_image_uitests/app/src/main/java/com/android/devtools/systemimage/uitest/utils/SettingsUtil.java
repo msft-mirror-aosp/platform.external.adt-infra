@@ -215,7 +215,7 @@ public class SettingsUtil {
      * @throws Exception if it fails to find a UI object.
      */
     public static UiObject getAppPermissions_v2(
-            Instrumentation instrumentation, String appType, String appText)
+            Instrumentation instrumentation, String appType, String appText, String permissionText)
             throws Exception {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
@@ -223,7 +223,7 @@ public class SettingsUtil {
         SettingsUtil.openItem(instrumentation, appText);
 
         SettingsUtil.clickAdvancedMenu(device);
-        UiObject appPermissionsLabel = device.findObject(new UiSelector().text("App permissions"));
+        UiObject appPermissionsLabel = device.findObject(new UiSelector().text(permissionText));
         boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
         if (hasAppPermissionsLabel) {
             appPermissionsLabel.clickAndWaitForNewWindow();
@@ -307,12 +307,13 @@ public class SettingsUtil {
     public static void setAppPermissions_v2(
             Instrumentation instrumentation, String appType,
             String appName, boolean enablePermissions,
-            String denyButtonText, String appText)
+            String denyButtonText, String appText,
+            String permissionText)
             throws Exception {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        getAppPermissions_v2(instrumentation, appType, appText);
+        getAppPermissions_v2(instrumentation, appType, appText, permissionText);
 
         device.findObject(new UiSelector().text(appType)).click();
 
@@ -329,6 +330,67 @@ public class SettingsUtil {
 
         else if ((permissionsBtn.isChecked() && !enablePermissions)) {
             permissionsBtn.click();
+
+            final UiObject denyButton = device.findObject(new UiSelector().text(denyButtonText));
+
+            try {
+                boolean dialogLaunched =
+                        new Wait().until(new Wait.ExpectedCondition() {
+                            @Override
+                            public boolean isTrue() throws UiObjectNotFoundException {return denyButton.exists();
+                            }
+                        });
+                if (dialogLaunched)
+                    denyButton.click();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Enable or disable permissions settings for a given application type
+     * For API >= 29
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     * @param appType String describing the application type, as listed on the App permissions
+     *                screen.
+     * @param appName String describing the application name, as listed on the {appType}
+     *                permissions screen.
+     * @param enablePermissions boolean indicating whether the permissions should be enabled
+     *                          or disabled.
+     * @throws Exception if it fails to find a UI object.
+     */
+    public static void setAppPermissions_v3(
+            Instrumentation instrumentation, String appType,
+            String appName, boolean enablePermissions,
+            String denyButtonText, String appText,
+            String permissionText)
+            throws Exception {
+
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        getAppPermissions_v2(instrumentation, appType, appText, permissionText);
+
+        device.findObject(new UiSelector().text(appType)).click();
+
+        UiScrollable permissionList = new UiScrollable(new UiSelector().resourceId("com.android.permissioncontroller:id/recycler_view"));
+        UiObject appButton = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), appName);
+
+        if (appButton.exists())
+            appButton.click();
+
+        UiObject permissionsAllowBtn = device.findObject(
+                new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
+        UiObject permissionsDenyBtn = device.findObject(
+                new UiSelector().resourceId("com.android.permissioncontroller:id/deny_radio_button"));
+
+        if (enablePermissions)
+            permissionsAllowBtn.click();
+
+        else if ((permissionsAllowBtn.isChecked() && !enablePermissions)) {
+            permissionsDenyBtn.click();
 
             final UiObject denyButton = device.findObject(new UiSelector().text(denyButtonText));
 
@@ -469,9 +531,10 @@ public class SettingsUtil {
     /**
      * Check if the the selected policy is checked or not.
      */
-    public static boolean checkStatusOfPolicy(UiDevice device, Instrumentation instrumentation, String switchWidget)
+    public static boolean checkStatusOfPolicy(UiDevice device, Instrumentation instrumentation,
+                                              String switchWidget, String listRes)
             throws Exception {
-        UiSelector listViewSelector = new UiSelector().resourceId(Res.ANDROID_LIST_RES);
+        UiSelector listViewSelector = new UiSelector().resourceId(listRes);
 
         new SettingsTestPopupWatcher(device).checkForCondition();
         assertTrue(device.findObject(listViewSelector).exists());
@@ -485,7 +548,7 @@ public class SettingsUtil {
                     instrumentation,
                     By.clazz(switchWidget),
                     By.text("Sample Device Admin"),
-                    By.res(Res.ANDROID_LIST_RES));
+                    By.res(listRes));
 
             if (sampleDeviceAdminCheckbox != null) {
                 boolean isChecked = sampleDeviceAdminCheckbox.isChecked();
@@ -604,9 +667,9 @@ public class SettingsUtil {
     }
 
     // Test file deletion for APIs 27 and above.
-    public static void deleteTestFile_v2(Instrumentation instrumentation, String testFileName) throws UiObjectNotFoundException {
+    public static void deleteTestFile_v2(Instrumentation instrumentation, String testFileName, String trashRes) throws UiObjectNotFoundException {
         deleteTestFile(instrumentation, testFileName,
-                UiDevice.getInstance(instrumentation).findObject(new UiSelector().resourceId(Res.OPTION_MENU_LIST_RES)));
+                UiDevice.getInstance(instrumentation).findObject(new UiSelector().resourceId(trashRes)));
     }
 
     // Delete test file from Downloads folder.
