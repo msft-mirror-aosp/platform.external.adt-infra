@@ -37,43 +37,17 @@ public class CameraAccessPermissionsWatcher implements UiWatcher {
     @Override
     public boolean checkForCondition() {
         boolean condition = false;
-        boolean hasPopup =
-                mDevice.findObject(new UiSelector().textMatches("(?i)allow(?-i)"))
-                        .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+        boolean hasPopup = true;
+
         try {
-            if (hasPopup) {
-                mDevice.findObject(new UiSelector().textMatches("(?i)allow(?-i)")).clickAndWaitForNewWindow();
-                condition = true;
-            }
-            hasPopup = mDevice.findObject(new UiSelector().textMatches("(?i)next(?-i)"))
-                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-            if (hasPopup) {
-                mDevice.findObject(new UiSelector().textMatches("(?i)next(?-i)")).clickAndWaitForNewWindow();
-                condition = true;
-            }
-            hasPopup = mDevice.findObject(new UiSelector().textMatches("(?i)got it(?-i)"))
-                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-            if (hasPopup) {
-                mDevice.findObject(new UiSelector().textMatches("(?i)got it(?-i)")).clickAndWaitForNewWindow();
-                condition = true;
-            }
-            hasPopup = mDevice.findObject(new UiSelector().textMatches("(?i)continue(?-i)"))
-                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-            if (hasPopup) {
-                mDevice.findObject(new UiSelector().textMatches("(?i)continue(?-i)")).clickAndWaitForNewWindow();
-                condition = true;
-            }
-            hasPopup = mDevice.findObject(new UiSelector().textMatches("Deny"))
-                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-            if (hasPopup) {
-                mDevice.findObject(new UiSelector().textMatches("Deny")).clickAndWaitForNewWindow();
-                condition = true;
-            }
-            hasPopup = mDevice.findObject(new UiSelector().textMatches("(?i)next(?-i)"))
-                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
-            if (hasPopup) {
-                mDevice.findObject(new UiSelector().textMatches("(?i)next(?-i)")).clickAndWaitForNewWindow();
-                condition = true;
+            while (hasPopup) {
+                hasPopup = mDevice.findObject(new UiSelector().textMatches("(?i)allow|next|got|continue|deny(?-i)"))
+                        .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+                if (hasPopup) {
+                    mDevice.findObject(new UiSelector().textMatches("(?i)allow|next|got|continue|deny(?-i)"))
+                            .clickAndWaitForNewWindow(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+                    condition = true;
+                }
             }
         }
         catch (UiObjectNotFoundException e) {
