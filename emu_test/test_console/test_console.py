@@ -76,7 +76,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
 
         dst_path = os.path.join(emu_argparser.emu_args.session_dir,
                                 emu_argparser.emu_args.test_dir,
-                                self.avd_config.name() + ".xml")
+                                "test_" + self.avd_config.name() + ".xml")
 
         result = ET.Element('testsuite', name=self._testMethodName)
         result.set('tests', str(emu_result.testsRun))
