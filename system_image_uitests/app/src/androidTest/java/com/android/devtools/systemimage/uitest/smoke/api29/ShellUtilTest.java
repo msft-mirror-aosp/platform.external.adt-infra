@@ -129,7 +129,7 @@ public class ShellUtilTest {
         // Remove bug report files even if the test fails.
         try {
             device.findObject(
-                    new UiSelector().text("Take bug report")).clickAndWaitForNewWindow();
+                    new UiSelector().text("Bug report")).clickAndWaitForNewWindow();
             UiObject fullReportButton = device.findObject(new UiSelector().textMatches("(?i)full report(?-i)"));
             if (fullReportButton.exists()) {
                 fullReportButton.clickAndWaitForNewWindow();
