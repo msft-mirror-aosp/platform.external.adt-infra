@@ -153,4 +153,17 @@ public class Res {
             "com.google.android.wearable.app:id/watchface_picker_all_title";
 
     public static final String YOUTUBE_UPDATE_LATER_BUTTON_RES = "com.google.android.youtube:id/later_button";
+
+    public static final String ADD_GOOGLE_ACC_WATCHER_PATTERN = "(?i)(not|accept|ok|cancel)(?-i)";
+    public static final String API_DEMOS_WATCHER_PATTERN = "(?i)(thanks|no|continue)(?-i)";
+    public static final String APP_WATCHER_PATTERN = "(?i)(ok|thanks)(?-i)";
+    public static final String CAMERA_ACCESS_PERM_WATCHER_PATTERN = "(?i)(allow|next|got|continue|deny)(?-i)";
+    public static final String GOOGLE_APP_CONF_WATCHER_PATTERN = "(?i).*(yes|accept|agree)(?-i)";
+    public static final String GOOGLE_APP_CONT_WATCHER_PATTERN = "(?i)(continue|confirm|skip|next|accept)(?-i)";
+    public static final String MAPS_WATCHER_PATTERN = "(?i)(accept|skip|got|ok|ride)(?-i)";
+    public static final String NETWORK_UTIL_WATCHER_PATTERN = "(?i)(ok)(?-i)";
+    public static final String PKG_INSTALL_WATCHER_PATTERN = "(?i)(new|decline)(?-i)";
+    public static final String PLAY_STORE_WATCHER_PATTERN = "(?i)(ok|save(?-i)";
+    public static final String SETTINGS_WATCHER_PATTERN = "(?i)(ok)(?-i)";
+    public static final String VPN_WATCHER_PATTERN = "(?i)(trust|ok)(?-i)";
 }

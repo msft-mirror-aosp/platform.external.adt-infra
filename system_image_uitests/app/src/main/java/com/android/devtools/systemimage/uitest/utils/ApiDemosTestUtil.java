@@ -16,7 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.utils;
 
-import com.android.devtools.systemimage.uitest.watchers.ApiDemosWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 import com.android.devtools.systemimage.uitest.common.Res;
 
 import android.app.Instrumentation;
@@ -84,7 +84,7 @@ public class ApiDemosTestUtil {
         itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
                 "Password").clickAndWaitForNewWindow();
 
-        new ApiDemosWatcher(device).checkForCondition();
+        new watcher(device, Res.API_DEMOS_WATCHER_PATTERN).checkForCondition();
         UiObject passwordField = device.findObject(
                 new UiSelector().className("android.widget.EditText"));
         passwordField.waitForExists(TimeUnit.SECONDS.toMillis(3L));

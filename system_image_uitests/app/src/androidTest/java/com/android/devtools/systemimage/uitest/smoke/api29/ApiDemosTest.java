@@ -36,7 +36,6 @@ import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -91,7 +90,6 @@ public class ApiDemosTest {
      */
     @Test
     @TestInfo(id = "T144630615")
-    @Ignore("b/123358848")
     public void testPasswordQuality() throws Exception {
         boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
                 "com.example.android.apis");
@@ -157,13 +155,13 @@ public class ApiDemosTest {
             ApiDemosTestUtil.setPasswordCriteria("Minimum non-letter", "1", device);
 
             //Verify that setting the password meets the "PASSWORD QUALITY" criteria.
-            ApiDemosTestUtil.verifyPasswordQuality(instrumentation, device, "Security & location", "NEXT");
+            ApiDemosTestUtil.verifyPasswordQuality(instrumentation, device, "Security", "NEXT");
         }
     }
 
     @After
     public void restoreState() throws Exception{
         //Deactivate "Device Admin" to restore the state.
-        SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security & location", "Device admin apps");
+        SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security", "Device admin apps");
     }
 }

@@ -16,12 +16,6 @@
 
 package com.android.devtools.systemimage.uitest.framework;
 
-import com.android.devtools.systemimage.uitest.annotations.TestInfo;
-import com.android.devtools.systemimage.uitest.watchers.AndroidLauncherWelcomeClingWatcher;
-import com.android.devtools.systemimage.uitest.watchers.AndroidWelcomeClingWatcher;
-import com.android.devtools.systemimage.uitest.watchers.CrashWatcher;
-import com.android.devtools.systemimage.uitest.watchers.LockScreenWatcher;
-
 import org.junit.Assert;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;

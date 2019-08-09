@@ -17,17 +17,13 @@
 package com.android.devtools.systemimage.uitest.utils;
 
 import android.app.Instrumentation;
-import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
-import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
-import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 import java.util.concurrent.TimeUnit;
-import android.support.test.uiautomator.Until;
 import android.util.Log;
 
 import static org.junit.Assert.assertTrue;
@@ -75,7 +71,7 @@ public class GoogleAppUtil {
 
         UiObject testUserEmail = device.findObject(new UiSelector().text(email));
         if (testUserEmail.waitForExists(5L)) {
-            new GoogleAppContinueWatcher(device).checkForCondition();
+            new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
             UiObject chromePositiveButton = device.findObject(
                     new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES));
             if (chromePositiveButton.waitForExists(5L)) {
@@ -161,7 +157,7 @@ public class GoogleAppUtil {
         editInput.setText(password);
         clickNext(device);
 
-        boolean isSignedIn = new GoogleAppConfirmationWatcher(device).checkForCondition();
+        boolean isSignedIn = new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
         assertTrue("Login failed", firstAttempt || isSignedIn);
         if ( !isSignedIn ) {
             Log.i("Login", "Retry google login");
@@ -185,7 +181,7 @@ public class GoogleAppUtil {
             moreButton.clickAndWaitForNewWindow();
         }
 
-        new GoogleAppContinueWatcher(device).checkForCondition();
+        new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
 
         UiObject backupButton = device.findObject(new UiSelector().textMatches("(?i)agree(?-i)"));
         if (backupButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {

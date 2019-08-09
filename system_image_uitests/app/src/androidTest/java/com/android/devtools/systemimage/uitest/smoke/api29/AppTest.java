@@ -18,12 +18,10 @@ package com.android.devtools.systemimage.uitest.smoke.api29;
 
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.Until;
 import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -33,7 +31,7 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.AppWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -92,7 +90,7 @@ public class AppTest {
 
         if (!isHelloComputeInstalled) {
             result = PackageInstallationUtil.installApk(instrumentation, apk);
-            new AppWatcher(device).checkForCondition();
+            new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
             isHelloComputeInstalled = PackageInstallationUtil.
                     isPackageInstalled(instrumentation, testPackageName);
         }
@@ -101,7 +99,7 @@ public class AppTest {
                 isHelloComputeInstalled);
 
         AppLauncher.launch(instrumentation, appName);
-        new AppWatcher(device).checkForCondition();
+        new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
         boolean hasApplication = testFramework.getDevice().findObject(new UiSelector().resourceId(
                 Res.APP_IMAGE_VIEW_ID)).waitForExists(5L);
 
@@ -145,7 +143,7 @@ public class AppTest {
                 searchBox.clickAndWaitForNewWindow();
             }
 
-            new AppWatcher(device).checkForCondition();
+            new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
 
             UiObject textField = device.findObject(
                     new UiSelector().resourceId(Res.CHROME_URL_BAR_RES));
@@ -167,7 +165,7 @@ public class AppTest {
             });
             if (notBookmarked) {
                 device.findObject(new UiSelector().description("Bookmark this page")).click();
-                new AppWatcher(device).checkForCondition();
+                new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
                 device.pressMenu();
             }
             // After bookmarking, the button description changes.

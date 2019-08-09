@@ -29,7 +29,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.MapsWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -82,7 +82,7 @@ public class MapsTest {
         if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
             AppLauncher.launch(instrumentation, "Maps");
 
-            new MapsWatcher(mDevice).checkForCondition();
+            new watcher(mDevice, Res.MAPS_WATCHER_PATTERN).checkForCondition();
 
             final UiObject searchUiObject = mDevice.findObject(new UiSelector().
                     resourceIdMatches(Res.SEARCH_TEXT_BOX));
@@ -131,7 +131,7 @@ public class MapsTest {
             directions.clickAndWaitForNewWindow();
 
             UiObject destination = mDevice.findObject(new UiSelector().textContains(QUERY_STRING));
-            new MapsWatcher(mDevice).checkForCondition();
+            new watcher(mDevice, Res.MAPS_WATCHER_PATTERN).checkForCondition();
 
             Assert.assertTrue(destination.exists());
 

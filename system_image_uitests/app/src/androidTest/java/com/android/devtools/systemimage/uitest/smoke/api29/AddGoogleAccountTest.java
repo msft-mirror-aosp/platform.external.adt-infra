@@ -28,7 +28,8 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
+import com.android.devtools.systemimage.uitest.common.Res;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -87,7 +88,7 @@ public class AddGoogleAccountTest {
             addAccount.clickAndWaitForNewWindow();
         }
 
-        new AddGoogleAccountWatcher(mDevice).checkForCondition();
+        new watcher(mDevice, Res.ADD_GOOGLE_ACC_WATCHER_PATTERN).checkForCondition();
 
         assertTrue("Add Google account page not found",
                 new Wait().until(new Wait.ExpectedCondition() {

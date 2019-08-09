@@ -29,7 +29,7 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
-import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -116,7 +116,7 @@ public class GoogleServicesTest {
 
         // Open settings
         AppLauncher.launch(instrumentation, "Settings");
-        new AddGoogleAccountWatcher(device).checkForCondition();
+        new watcher(device, Res.ADD_GOOGLE_ACC_WATCHER_PATTERN).checkForCondition();
 
         //Dismiss Set Up Wizard.
         UiObject cancelWizard = device.findObject(

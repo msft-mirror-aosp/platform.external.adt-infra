@@ -28,10 +28,9 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.VpnTestUtil;
-import com.android.devtools.systemimage.uitest.watchers.VpnPopupWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -70,7 +69,6 @@ public class VpnTest {
      */
     @Test
     @TestInfo(id = "14578822")
-    @Ignore("b/123358848")
     public void testVpn() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
@@ -95,13 +93,13 @@ public class VpnTest {
         if (!VpnTestUtil.verifyVpnStatus_v2(device)) {
             AppLauncher.launch(instrumentation, "TestVPN");
 
-            new VpnPopupWatcher(device).checkForCondition();
+            new watcher(device, Res.VPN_WATCHER_PATTERN).checkForCondition();
             UiObject startVPN = device.findObject(
                     new UiSelector().resourceId(Res.START_VPN_BUTTON_RES));
             if (startVPN.waitForExists(3L)) {
                 startVPN.clickAndWaitForNewWindow();
             }
-            new VpnPopupWatcher(device).checkForCondition();
+            new watcher(device, Res.VPN_WATCHER_PATTERN).checkForCondition();
             Assert.assertTrue("Failed to find the VPN lock icon after starting VPN!",
                     VpnTestUtil.verifyVpnStatus_v2(device));
         }

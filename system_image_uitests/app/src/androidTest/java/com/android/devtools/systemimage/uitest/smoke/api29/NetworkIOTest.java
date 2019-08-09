@@ -33,11 +33,10 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.NetworkIOTestUtil;
 import com.android.devtools.systemimage.uitest.utils.NetworkUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import junit.framework.Assert;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -193,13 +192,13 @@ public class NetworkIOTest {
 
         if (!dataWarning.exists() || !dataWarning.isEnabled()) {
             dataSwitch.click();
-            new NetworkUtilPopupWatcher(device).checkForCondition();
+            new watcher(device, Res.NETWORK_UTIL_WATCHER_PATTERN).checkForCondition();
         }
 
         // Disable Cellular data.
         dataSwitch.click();
         TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
-        new NetworkUtilPopupWatcher(device).checkForCondition();
+        new watcher(device, Res.NETWORK_UTIL_WATCHER_PATTERN).checkForCondition();
 
         assertTrue("Disabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
             @Override
@@ -211,7 +210,7 @@ public class NetworkIOTest {
         // Enable Cellular data.
         dataSwitch.click();
         TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
-        new NetworkUtilPopupWatcher(device).checkForCondition();
+        new watcher(device, Res.NETWORK_UTIL_WATCHER_PATTERN).checkForCondition();
 
         assertTrue("Enabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
             @Override

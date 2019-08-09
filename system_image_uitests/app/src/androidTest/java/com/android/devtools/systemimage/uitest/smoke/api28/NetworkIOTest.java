@@ -37,7 +37,6 @@ import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
 
 import junit.framework.Assert;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;

@@ -25,8 +25,7 @@ import android.support.test.uiautomator.UiSelector;
 import android.view.KeyEvent;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
-import com.android.devtools.systemimage.uitest.watchers.PlayStoreControlsWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertTrue;
@@ -67,7 +66,7 @@ public class PlayStoreUtil {
     }
 
     /**
-     * Version 2 for 25 <= api <= 27
+     * Version 2 for 25 <= api
      *
      * Checks if Play Store has been installed.
      * Returns true if Play Store has been installed, false if not.
@@ -87,34 +86,6 @@ public class PlayStoreUtil {
                                 device.findObject(new UiSelector().description(playStore)).exists();
                     }
                 });
-
-        return isInstalled;
-    }
-
-    /**
-     * Version 3 for api >= 28
-     *
-     * Checks if Play Store has been installed.
-     * Returns true if Play Store has been installed, false if not.
-     */
-    public static boolean isPlayStoreInstalled_v3(Instrumentation instrumentation) throws Exception {
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        boolean isInstalled;
-        final String playStore = "Play Store";
-
-        device.pressHome();
-        device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
-
-        isInstalled = new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)).
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return device.findObject(new UiSelector().text(playStore)).exists() ||
-                                device.findObject(new UiSelector().description(playStore)).exists();
-                    }
-                });
-
-        device.pressHome();
 
         return isInstalled;
     }
@@ -177,7 +148,7 @@ public class PlayStoreUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         resetPlayStore(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
-        new GoogleAppConfirmationWatcher(device).checkForCondition();
+        new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
         boolean loggedIn = new Wait(TimeUnit.SECONDS.toMillis(5)).
                 until(new Wait.ExpectedCondition() {
@@ -209,7 +180,7 @@ public class PlayStoreUtil {
         loggedIn = GoogleAppUtil.loginGoogleApp(instrumentation, true);
         AppLauncher.launch(instrumentation, "Play Store");
 
-        new GoogleAppConfirmationWatcher(device).checkForCondition();
+        new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
         final UiObject onboardButton = device.findObject(
                 new UiSelector().resourceId(Res.GOOGLE_PLAY_ONBOARD_BUTTON_RES));
@@ -226,7 +197,7 @@ public class PlayStoreUtil {
             onboardButton.clickAndWaitForNewWindow();
         }
 
-        new GoogleAppConfirmationWatcher(device).checkForCondition();
+        new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
         
         return loggedIn;
     }
@@ -257,7 +228,7 @@ public class PlayStoreUtil {
         }
 
         device.findObject(new UiSelector().textMatches("(?i)install(?-i)")).clickAndWaitForNewWindow();
-        new GoogleAppConfirmationWatcher(device).checkForCondition();
+        new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
         UiObject openButton = device.findObject(new UiSelector().textMatches("(?i)open(?-i)"));
         boolean isAppInstalled = openButton.waitForExists(TimeUnit.SECONDS.toMillis(180));
@@ -428,13 +399,13 @@ public class PlayStoreUtil {
                 .waitForExists(TimeUnit.SECONDS.toMillis(3));
         device.findObject(new UiSelector().text(ages))
                 .clickAndWaitForNewWindow();
-        new PlayStoreControlsWatcher(device).checkForCondition();
+        new watcher(device, Res.PLAY_STORE_WATCHER_PATTERN).checkForCondition();
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         scrollable.waitForExists(3L);
         if (scrollable.exists()) {
             scrollable.flingToEnd(5);
         }
-        new PlayStoreControlsWatcher(device).checkForCondition();
+        new watcher(device, Res.PLAY_STORE_WATCHER_PATTERN).checkForCondition();
         PlayStoreUtil.resetPlayStore(instrumentation);
         device.pressHome();
     }

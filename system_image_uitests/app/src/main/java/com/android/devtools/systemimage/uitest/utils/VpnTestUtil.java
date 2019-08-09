@@ -72,11 +72,6 @@ public class VpnTestUtil {
         boolean isTrue = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
             @Override
             public boolean isTrue() throws Exception {
-                device.openNotification();
-
-                UiObject notificationExpander = device.findObject(new UiSelector().
-                        resourceId(Res.NOTIFICATION_BAR_EXPAND_RES).className("android.widget.ImageView"));
-
                 NetworkUtil.openExtendedNotificationsPanel(device);
 
                 return device.hasObject(By.text(NETWORK_MONITORED_TEXT)) ||

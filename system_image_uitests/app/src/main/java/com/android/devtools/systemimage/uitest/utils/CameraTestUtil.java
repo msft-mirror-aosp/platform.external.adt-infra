@@ -17,7 +17,7 @@
 package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import android.app.Instrumentation;
 import android.os.Environment;
@@ -205,7 +205,7 @@ public class CameraTestUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         AppLauncher.launchPath(instrumentation, true, new String[]{"Camera"});
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
+        new watcher(device, Res.CAMERA_ACCESS_PERM_WATCHER_PATTERN).checkForCondition();
 
         UiObject cameraFrame = device.findObject(new UiSelector().resourceId(Res.CAMERA_FRAME_RES));
         if (cameraFrame.waitForExists(30L)) {
@@ -213,7 +213,7 @@ public class CameraTestUtil {
             cameraFrame.swipeRight(20);
         }
 
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
+        new watcher(device, Res.CAMERA_ACCESS_PERM_WATCHER_PATTERN).checkForCondition();
 
         boolean cameraModeButtonExists = device.findObject(new UiSelector()
                 .descriptionStartsWith("Switch to")).waitForExists(30L);
@@ -232,7 +232,7 @@ public class CameraTestUtil {
         String originalFileList = listGalleryFiles();
 
         AppLauncher.launchPath(instrumentation, true, new String[]{"Camera"});
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
+        new watcher(device, Res.CAMERA_ACCESS_PERM_WATCHER_PATTERN).checkForCondition();
 
         createTestFile_v2(device, mode);
 

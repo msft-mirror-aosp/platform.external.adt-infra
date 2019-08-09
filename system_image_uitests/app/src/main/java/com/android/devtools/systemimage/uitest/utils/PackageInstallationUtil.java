@@ -18,10 +18,7 @@ package com.android.devtools.systemimage.uitest.utils;
 
 import android.annotation.TargetApi;
 import android.app.Instrumentation;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.IntentSender;
-import android.content.pm.PackageInstaller;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.support.test.uiautomator.UiDevice;
@@ -30,7 +27,7 @@ import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.watchers.PackageInstallationUtilityWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Rule;
 import org.junit.Assert;
@@ -147,9 +144,9 @@ public class PackageInstallationUtil {
             result += "Could not find install button. ";
         }
 
-        new PackageInstallationUtilityWatcher(device).checkForCondition();
+        new watcher(device, Res.PKG_INSTALL_WATCHER_PATTERN).checkForCondition();
 
-        final UiObject doneButtonText = device.findObject(new UiSelector().textContains("(?i)done(?-i)").
+        final UiObject doneButtonText = device.findObject(new UiSelector().textMatches("(?i)done(?-i)").
                 className("android.widget.Button"));
         final UiObject doneButtonRes = device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_DONE_RES));
         final UiObject doneLabel = device.findObject(new UiSelector().text("App installed."));
@@ -171,43 +168,6 @@ public class PackageInstallationUtil {
 
         device.pressHome();
         return result;
-    }
-
-    @TargetApi(21)
-    public static String installPackage(Instrumentation instrumentation, String apkName) throws IOException {
-        Context context = instrumentation.getTargetContext();
-        AssetManager assetManager = context.getAssets();
-        InputStream in = assetManager.open(apkName);
-        File apkFile = new File(context.getExternalFilesDir(null), apkName);
-
-        final PackageManager pm = context.getPackageManager();
-
-        PackageInstaller packageInstaller = pm.getPackageInstaller();
-        PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
-                PackageInstaller.SessionParams.MODE_FULL_INSTALL);
-        params.setAppPackageName(apkName);
-
-        int sessionId = packageInstaller.createSession(params);
-        PackageInstaller.Session session = packageInstaller.openSession(sessionId);
-        OutputStream out = session.openWrite(apkName, 0, -1);
-        byte[] buffer = new byte[65536];
-        int c;
-        while ((c = in.read(buffer)) != -1) {
-            out.write(buffer, 0, c);
-        }
-        session.fsync(out);
-        in.close();
-        out.close();
-
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                context,
-                sessionId,
-                createIntent_v2(apkFile),
-                0);
-        IntentSender intentSender = pendingIntent.getIntentSender();;
-        session.commit(intentSender);
-
-        return INSTALL_COMPLETE;
     }
 
     private static Intent createIntent_v1(File apkFile) {

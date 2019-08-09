@@ -17,7 +17,7 @@
 package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import android.app.Instrumentation;
 import android.content.Context;
@@ -113,9 +113,8 @@ public class NetworkUtil {
 
     public static void openExtendedNotificationsPanel(UiDevice device)
             throws UiObjectNotFoundException {
-        new NetworkUtilPopupWatcher(device).checkForCondition();
         device.openNotification();
-        new NetworkUtilPopupWatcher(device).checkForCondition();
+        new watcher(device, Res.NETWORK_UTIL_WATCHER_PATTERN).checkForCondition();
 
         UiObject expandIndicator = device.findObject(
                 new UiSelector().resourceId(Res.NOTIFICATION_BAR_EXPAND_RES));

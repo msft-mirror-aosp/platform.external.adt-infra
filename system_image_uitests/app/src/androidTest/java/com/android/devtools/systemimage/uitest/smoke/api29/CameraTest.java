@@ -28,10 +28,9 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.CameraTestUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -127,7 +126,6 @@ public class CameraTest {
      */
     @Test
     @TestInfo(id = "61ba18b5-cfba-46a7-a3f2-abfc60e40303")
-    @Ignore("b/123358848")
     public void launchARApp() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
@@ -154,7 +152,7 @@ public class CameraTest {
                 isHelloARInstalled);
 
         AppLauncher.launchPath(instrumentation, true, new String[]{appName});
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
+        new watcher(device, Res.CAMERA_ACCESS_PERM_WATCHER_PATTERN).checkForCondition();
 
         assertTrue("'Searching for surfaces...' text is not visible",
                 new Wait().until(new Wait.ExpectedCondition() {

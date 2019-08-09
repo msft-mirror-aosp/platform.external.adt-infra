@@ -20,12 +20,10 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObject2;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -38,7 +36,6 @@ import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 
 import org.junit.Assert;
 import org.junit.Before;

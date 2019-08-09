@@ -18,7 +18,7 @@ package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
-import com.android.devtools.systemimage.uitest.watchers.SettingsTestPopupWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
@@ -140,7 +140,7 @@ public class DeveloperOptionsManager {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        new SettingsTestPopupWatcher(device).checkForCondition();
+        new watcher(device, Res.SETTINGS_WATCHER_PATTERN).checkForCondition();
 
         try {
             SettingsUtil.findItem(instrumentation, "Developer options");

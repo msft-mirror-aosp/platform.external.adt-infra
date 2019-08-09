@@ -17,8 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 
 import com.android.devtools.systemimage.uitest.common.Res;
-import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
-import com.android.devtools.systemimage.uitest.watchers.SettingsTestPopupWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -519,13 +518,19 @@ public class SettingsUtil {
 
     public static void gotoCameraApp(Instrumentation instrumentation, UiDevice device) throws Exception {
         AppLauncher.launch(instrumentation, "Camera");
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
+        new watcher(device, Res.CAMERA_ACCESS_PERM_WATCHER_PATTERN).checkForCondition();
     }
 
-    public static boolean verifyCameraAppDisabled(UiDevice device) {
-        return device.hasObject(By.textContains(
+    public static boolean verifyCameraAppDisabled(UiDevice device) throws UiObjectNotFoundException {
+        boolean errorTextExist = device.hasObject(By.textContains(
                 "Camera has been disabled because of security policies")) ||
                 device.hasObject(By.text("Can't connect to the camera."));
+
+        if (errorTextExist) {
+            device.findObject(new UiSelector().textMatches("(?i)dismiss(?-i)")).click();
+        }
+
+        return errorTextExist;
     }
 
     /**
@@ -536,7 +541,7 @@ public class SettingsUtil {
             throws Exception {
         UiSelector listViewSelector = new UiSelector().resourceId(listRes);
 
-        new SettingsTestPopupWatcher(device).checkForCondition();
+        new watcher(device, Res.SETTINGS_WATCHER_PATTERN).checkForCondition();
         assertTrue(device.findObject(listViewSelector).exists());
 
         // Get all the available "Device administrators" options
