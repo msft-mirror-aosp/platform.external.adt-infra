@@ -189,9 +189,11 @@ def write_boot_time_benchmark(metrics, boot_timestamp):
     logFile = os.path.join(args.log_dir, "PerfTestCase.log")
     with open(logFile, 'r') as log_file:
         count = 0
+        prefix = "PerfGate Metric for {}: ".format(args.api)
+        splitter = "INFO - PerfGate Metric for {}: ".format(args.api)
         for line in log_file:
-            if "PerfGate Metric: " in line and "idle" in line:
-                key = line.split("INFO - PerfGate Metric: ")[1].split()[0]
+            if prefix in line and "idle" in line:
+                key = line.split(splitter)[1].split()[0]
             elif key and "INFO: boot time" in line:
                 metrics[key] = get_time(line)
                 key = ""
@@ -210,13 +212,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Pass dir info to configure perf data parsing")
     parser.add_argument("--log_dir", type=str, required=True, help="Directory containing log file to parse for perf stats")
     parser.add_argument("--metric_tag", type=str, default=None, help="Extra tag that can be attached to metric name")
+    parser.add_argument("--api", type=str, required=True, help="Process data only for the given api")
     args = parser.parse_args()
 
     metrics = {}
     boot_timestamp = {}
     for avd_type, tag, gpu, testcase in itertools.product(AVD_TYPE, TAG, GPU, TESTCASE):
         metric = METRIC.format(avd_type, tag, gpu, testcase)
-        logFile = os.path.join(args.log_dir, metric+".log")
+
+        logFileName = "{}_{}.log".format(args.api, metric)
+        logFile = os.path.join(args.log_dir, logFileName)
         if not os.path.isfile(logFile):
             continue;
         cpu_data, memory_data, timestamp = get_data_from_log(logFile)

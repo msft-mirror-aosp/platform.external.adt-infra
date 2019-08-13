@@ -56,10 +56,10 @@ class PerfTestCase(EmuBaseTestCase):
 
     def launch_emulator(self, metric, avd):
         try:
-            self.m_logger.info("PerfGate Metric: %s" % metric)
+            self.m_logger.info("PerfGate Metric for %s: %s" %(avd.api, metric))
             self.perf_file = os.path.join(emu_args.session_dir,
                                           emu_args.test_dir,
-                                          metric + ".log")
+                                          avd.api + "_" + metric + ".log")
             boot_time, start_time = self.launch_emu_and_wait(avd)
             self.m_logger.info('AVD %s, boot time: %s' % (avd, boot_time))
         except TimeoutError:
