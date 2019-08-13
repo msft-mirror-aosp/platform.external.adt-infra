@@ -25,8 +25,12 @@ import android.app.Instrumentation;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
 import java.io.File;
@@ -102,6 +106,24 @@ public class SystemImageTestFramework implements TestRule {
         return loggingDir;
     }
 
+    private void resetDeviceState() throws RemoteException, UiObjectNotFoundException {
+        // Close all recently opened apps so that the next retry can start afresh
+        mDevice.pressHome();
+        mDevice.pressRecentApps();
+
+        UiObject apps = mDevice.findObject(new UiSelector().resourceId("android:id/content"));
+        mDevice.drag(apps.getBounds().left,
+                apps.getBounds().centerY(),
+                apps.getBounds().right,
+                apps.getBounds().centerY(),
+                10);
+
+        UiObject clearButton = mDevice.findObject(new UiSelector().text("Clear all"));
+        if ( clearButton.waitForExists(5)) clearButton.click();
+
+        mDevice.pressHome();
+    }
+
     @Override
     public Statement apply(final Statement base, final Description description) {
         return statement(base, description);
@@ -117,8 +139,8 @@ public class SystemImageTestFramework implements TestRule {
                 Assert.assertTrue("Failed to wake up the device.", mDevice.isScreenOn());
                 // Press "Menu" to unlock screen if any.
                 mDevice.pressMenu();
-                // Press "Home" to dismiss a lock screen if any.
-                mDevice.pressHome();
+                // Reset device to dismiss a lock screen if any.
+                resetDeviceState();
 
                 // Implement retry logic here
                 for (int i = 0; i < RETRY_COUNT; i++) {
@@ -145,6 +167,9 @@ public class SystemImageTestFramework implements TestRule {
                             t.printStackTrace(error);
                             error.close();
                         }
+
+                        // clear all recently opened apps if any before retry
+                        resetDeviceState();
                     }
                     if (throwable == null) {
                         return;

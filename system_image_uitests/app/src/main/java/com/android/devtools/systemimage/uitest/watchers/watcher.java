@@ -24,6 +24,8 @@ import android.support.test.uiautomator.UiWatcher;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * A generic popup watcher which will try to dismiss
  * any dialogue matching with the provided pattern.
@@ -48,9 +50,11 @@ public class watcher implements UiWatcher {
     @Override
     public boolean checkForCondition() {
         boolean condition = false;
+        int count = 0;
 
         try {
-            while (true) {
+            // try to dismiss popup 10 times at max
+            while (count <= 10) {
                 UiObject popUp = mDevice.findObject(new UiSelector().textMatches((mRegEx)).clickable(true));
                 if (popUp.waitForExists(mTimeout)) {
                     popUp.click();
@@ -59,11 +63,14 @@ public class watcher implements UiWatcher {
                 else {
                     break;
                 }
+                count++;
             }
         }
         catch (UiObjectNotFoundException e) {
             throw new AssertionError("Failed to dismiss popup dialogs");
         }
+
+        assertTrue("Failed to dismiss popup dialogs", (count <= 10));
         return condition;
     }
 }

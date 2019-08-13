@@ -302,7 +302,7 @@ public class PlayStoreUtil {
             public boolean isTrue() {
                 boolean hasApplication = strict ?
                         device.findObject(new UiSelector().text(application)).exists() :
-                        device.findObject(new UiSelector().textMatches(application)).exists();
+                        device.findObject(new UiSelector().textContains(application)).exists();
                 return hasApplication;
             }
         });
