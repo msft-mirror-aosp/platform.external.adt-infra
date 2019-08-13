@@ -121,7 +121,7 @@ public class GoogleAppUtil {
         }
 
         UiObject inputEmailField = device.findObject(new UiSelector().description("Email or phone"));
-        UiObject forgotEmailLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot email?")) :
+        UiObject forgotEmailLink = api >= 27 ? device.findObject(new UiSelector().text("Forgot email?")) :
                 device.findObject(new UiSelector().description("Forgot email?"));
 
         boolean needsEmail = api == 24 ? inputEmailField.waitForExists(
@@ -140,7 +140,7 @@ public class GoogleAppUtil {
         editInput.setText(email);
         clickNext(device);
 
-        UiObject forgotPasswordLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot password?")) :
+        UiObject forgotPasswordLink = api >= 27 ? device.findObject(new UiSelector().text("Forgot password?")) :
                 device.findObject(new UiSelector().description("Forgot password?"));
         boolean needsPassword = forgotPasswordLink.waitForExists(
                 TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
