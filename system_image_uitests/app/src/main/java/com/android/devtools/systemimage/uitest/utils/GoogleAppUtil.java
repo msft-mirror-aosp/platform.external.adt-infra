@@ -103,8 +103,10 @@ public class GoogleAppUtil {
         UiObject signedOutButton = device.findObject(
                 new UiSelector().descriptionContains("signed out"));
         boolean wasSignedOut = signedOutButton.waitForExists(
-                TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS));
-        if (wasSignedOut) {
+                TimeUnit.MILLISECONDS.convert(15L, TimeUnit.SECONDS));
+        UiObject createAccount = device.findObject(new UiSelector().
+                textMatches("(?i)create account(?-i)"));
+        if (wasSignedOut || createAccount.exists()) {
             Log.i("Login", "was signed out");
             clickNext(device);
         }
