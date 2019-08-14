@@ -3,6 +3,3 @@ API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,Linux_gce,Windows_gce,Mac,Linux
 API 28,default,x86,Nexus 5,2048,swiftshader,public-perf,P,P,P,P
 API 28,google_apis,x86,Nexus 5,2048,swiftshader,public-perf,P,P,P,P
 API 28,google_apis_playstore,x86,Nexus 5,2048,swiftshader,public-perf,P,P,P,P
-API 29,default,x86,Nexus 6P,2048,swiftshader,public-perf,P,P,P,P
-API 29,google_apis,x86,Nexus 6P,2048,swiftshader,public-perf,P,P,P,P
-API 29,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,public-perf,P,P,P,P
