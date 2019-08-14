@@ -20,8 +20,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
+import android.util.Log;
 
 import java.util.concurrent.TimeUnit;
 
@@ -49,6 +48,7 @@ public class VpnTestUtil {
             @Override
             public boolean isTrue() {
                 device.openNotification();
+                Log.i("VPN", "Opened notification drawer");
                 return device.hasObject(By.res(Res.VPN_LOCK_ICON_RES)) ||
                         device.hasObject(By.text(VPN_ACTIVATED_TEXT));
             }
@@ -73,6 +73,7 @@ public class VpnTestUtil {
             @Override
             public boolean isTrue() throws Exception {
                 NetworkUtil.openExtendedNotificationsPanel(device);
+                Log.i("VPN", "Open extended notifications panel");
 
                 return device.hasObject(By.text(NETWORK_MONITORED_TEXT)) ||
                         device.hasObject(By.text(DEVICE_CONNECTED_TEXT));
