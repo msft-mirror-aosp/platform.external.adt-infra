@@ -222,7 +222,7 @@ public class GoogleAppUtil {
             return true;
         }
 
-        final UiObject signOutButton = device.findObject(new UiSelector().text("SIGN OUT"));
+        final UiObject signOutButton = device.findObject(new UiSelector().textMatches("(?i)(SIGN OUT)(?-i)"));
 
         if (new Wait().until(new Wait.ExpectedCondition() {
             @Override

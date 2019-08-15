@@ -72,22 +72,6 @@ public class VpnTest {
     public void testVpn() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
-        String testPackageName = "com.test.vpn";
-        String apk = "FredVPN.apk";
-        String result = "";
-
-        // Install TestVPN, if not already present.
-        boolean isTestVPNInstalled = PackageInstallationUtil.
-                isPackageInstalled(instrumentation, testPackageName);
-
-        if (!isTestVPNInstalled) {
-            result = PackageInstallationUtil.installApk(instrumentation, apk);
-            isTestVPNInstalled = PackageInstallationUtil.
-                    isPackageInstalled(instrumentation, testPackageName);
-        }
-
-        assertTrue("Application " + apk + " is not installed. Result: " + result,
-                isTestVPNInstalled);
 
         // Check if VPN is on. If true, skip.
         if (!VpnTestUtil.verifyVpnStatus_v2(device)) {

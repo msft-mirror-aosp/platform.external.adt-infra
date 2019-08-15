@@ -229,10 +229,14 @@ public class SettingsUtil {
         }
         UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
         if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(30L))) {
-            return appPermissionsList.getChildByText(new UiSelector().className("android.widget.TextView"), appType);
-        } else {
-            throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
+            appPermissionsList.setAsVerticalList();
+            UiSelector appSelector = new UiSelector().text(appType);
+            if (appPermissionsList.scrollIntoView(appSelector)) {
+                return device.findObject(appSelector);
+            }
         }
+
+        throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
     }
 
     /**

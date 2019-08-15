@@ -443,21 +443,20 @@ public class SettingsTest {
         assertTrue("Failed to load Select time zone screen.",
                 new Wait().until(new Wait.ExpectedCondition() {
                     @Override
-                    public boolean isTrue() throws Exception {
+                    public boolean isTrue() {
                         return device.findObject(
                                 new UiSelector().text("Select time zone")).exists();
                     }
                 })
         );
 
-        UiObject timeZoneLabel = device.findObject(new UiSelector().text("Time zone").
+        UiObject timeZoneLabel = device.findObject(new UiSelector().textMatches("(Time zone|Select UTC offset)").
                 resourceId(Res.ANDROID_TITLE_RES).packageName("com.android.settings"));
         if (timeZoneLabel.waitForExists(3L)) {
             timeZoneLabel.clickAndWaitForNewWindow();
         }
 
         String timezoneOffset = "GMT-08:00";
-
         assertTrue("Target time zone label not found",
                 device.findObject(new UiSelector().textContains(timezoneOffset)).waitForExists(3L));
     }

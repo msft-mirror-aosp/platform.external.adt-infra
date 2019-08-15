@@ -60,7 +60,7 @@ public class ApiDemosTest {
 
     @Before
     public void activateDeviceAdmin() throws Exception {
-        ApiDemosInstaller.installApp("Security", "Device admin apps");
+        SettingsUtil.activate(instrumentation, "Sample Device Admin", "Security", "Device admin apps");
     }
 
     /**
@@ -91,72 +91,64 @@ public class ApiDemosTest {
     @Test
     @TestInfo(id = "T144630615")
     public void testPasswordQuality() throws Exception {
-        boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
-                "com.example.android.apis");
-        if (isAPIDemoInstalled) {
-            AppLauncher.launch(instrumentation, "API Demos");
-            for (int i = 0; i < 5; i++) {
-                device.pressBack();
-            }
-            AppLauncher.launch(instrumentation, "API Demos");
+        AppLauncher.launch(instrumentation, "API Demos");
 
-            UiScrollable itemList =
-                    new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES));
-            itemList.setAsVerticalList();
-            Assert.assertTrue("Could not list items", itemList.exists());
+        UiScrollable itemList =
+                new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES));
+        itemList.setAsVerticalList();
+        Assert.assertTrue("Could not list items", itemList.exists());
 
-            UiObject appItem = itemList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"), "App");
-            appItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
-            if (appItem.exists()) {
-                appItem.click();
-            }
-            UiObject deviceAdminItem = itemList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"), "Device Admin");
-            deviceAdminItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
-            if (deviceAdminItem.exists()) {
-                deviceAdminItem.click();
-            }
-            UiObject passwordQualityItem = itemList.getChildByText(
-                    new UiSelector().className("android.widget.TextView"), "Password quality");
-            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
-            if (passwordQualityItem.exists()) {
-                passwordQualityItem.click();
-            }
-            passwordQualityItem = itemList.getChildByText(
-                    new UiSelector().className("android.widget.RelativeLayout"), "Password quality");
-            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
-            if (passwordQualityItem.exists()) {
-                passwordQualityItem.click();
-            }
-
-            // Set the criteria for password to 'Complex' type.
-            device.findObject(new UiSelector().text("Complex")).clickAndWaitForNewWindow();
-
-            // Set minimum length to 6.
-            ApiDemosTestUtil.setPasswordCriteria("Minimum length", "6", device);
-
-            // Set minimum letters to 1.
-            ApiDemosTestUtil.setPasswordCriteria("Minimum letters", "1", device);
-
-            // Set minimum numerics to 1.
-            ApiDemosTestUtil.setPasswordCriteria("Minimum numeric", "1", device);
-
-            // Set minimum lower case letters to 1.
-            ApiDemosTestUtil.setPasswordCriteria("Minimum lower case", "1", device);
-
-            // Set minimum upper case letters  to 1.
-            ApiDemosTestUtil.setPasswordCriteria("Minimum upper case", "1", device);
-
-            // Set minimum special symbols to 1.
-            ApiDemosTestUtil.setPasswordCriteria("Minimum symbols", "1", device);
-
-            // Set minimum non-letter to 1.
-            ApiDemosTestUtil.setPasswordCriteria("Minimum non-letter", "1", device);
-
-            //Verify that setting the password meets the "PASSWORD QUALITY" criteria.
-            ApiDemosTestUtil.verifyPasswordQuality(instrumentation, device, "Security", "NEXT");
+        UiObject appItem = itemList.getChildByText(
+                new UiSelector().className("android.widget.TextView"), "App");
+        appItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
+        if (appItem.exists()) {
+            appItem.click();
         }
+        UiObject deviceAdminItem = itemList.getChildByText(
+                new UiSelector().className("android.widget.TextView"), "Device Admin");
+        deviceAdminItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
+        if (deviceAdminItem.exists()) {
+            deviceAdminItem.click();
+        }
+        UiObject passwordQualityItem = itemList.getChildByText(
+                new UiSelector().className("android.widget.TextView"), "Password quality");
+        passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
+        if (passwordQualityItem.exists()) {
+            passwordQualityItem.click();
+        }
+        passwordQualityItem = itemList.getChildByText(
+                new UiSelector().className("android.widget.RelativeLayout"), "Password quality");
+        passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
+        if (passwordQualityItem.exists()) {
+            passwordQualityItem.click();
+        }
+
+        // Set the criteria for password to 'Complex' type.
+        device.findObject(new UiSelector().text("Complex")).clickAndWaitForNewWindow();
+
+        // Set minimum length to 6.
+        ApiDemosTestUtil.setPasswordCriteria("Minimum length", "6", device);
+
+        // Set minimum letters to 1.
+        ApiDemosTestUtil.setPasswordCriteria("Minimum letters", "1", device);
+
+        // Set minimum numerics to 1.
+        ApiDemosTestUtil.setPasswordCriteria("Minimum numeric", "1", device);
+
+        // Set minimum lower case letters to 1.
+        ApiDemosTestUtil.setPasswordCriteria("Minimum lower case", "1", device);
+
+        // Set minimum upper case letters  to 1.
+        ApiDemosTestUtil.setPasswordCriteria("Minimum upper case", "1", device);
+
+        // Set minimum special symbols to 1.
+        ApiDemosTestUtil.setPasswordCriteria("Minimum symbols", "1", device);
+
+        // Set minimum non-letter to 1.
+        ApiDemosTestUtil.setPasswordCriteria("Minimum non-letter", "1", device);
+
+        //Verify that setting the password meets the "PASSWORD QUALITY" criteria.
+        ApiDemosTestUtil.verifyPasswordQuality(instrumentation, device, "Security", "NEXT");
     }
 
     @After
