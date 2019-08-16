@@ -15,6 +15,10 @@ call refreshenv
 set SESSION_DIR=%DISTRIB_DIR%\testlogs
 mkdir %SESSION_DIR%
 
+echo "Update emulator, not used, juts for the purpose of sys img dependencies"
+echo "Run %ANDROID_HOME%\tools\bin\sdkmanager.bat --channel=3 --install emulator"
+cmd.exe /c %ANDROID_HOME%\tools\bin\sdkmanager.bat --channel=3 --install emulator
+
 echo "Deploy emulator"
 echo "Run mkdir %SESSION_DIR%\emu-master-dev"
 mkdir %SESSION_DIR%\emu-master-dev

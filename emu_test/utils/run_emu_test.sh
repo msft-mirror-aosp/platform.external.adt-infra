@@ -24,6 +24,10 @@ else
     fi
 fi
 
+echo "Update emulator, not used, juts for the purpose of sys img dependencies"
+echo "Run $ANDROID_HOME/tools/bin/sdkmanager --channel=3 --install emulator"
+$ANDROID_HOME/tools/bin/sdkmanager --channel=3 --install emulator
+
 SESSION_DIR=$DISTRIB_DIR/testlogs
 mkdir -p $SESSION_DIR
 
