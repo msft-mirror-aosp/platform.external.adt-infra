@@ -7,6 +7,10 @@
 #                             (does not start buildbot)
 # adt-emu-gpu-win-1-prod   Image to be used for buildbots
 #                             (starts buildbot on startup)
+# adt-emu-gpu-win-2-test   Updated nvidia driver to 425.31
+#                             (does not start buildbot)
+# adt-emu-gpu-win-2-prod   Updated nvidia driver to 425.31
+#                             (starts buildbot on startup)
 
 if [ $# -ne 2 ]
 then
@@ -27,7 +31,7 @@ then
    export IMAGE_TYPE="prod"
 fi
 
-export IMAGE_NAME=adt-emu-gpu-win-1-$IMAGE_TYPE
+export IMAGE_NAME=adt-emu-gpu-win-2-$IMAGE_TYPE
 export TEMP_INSTANCE=adt-emu-gpu-win-$1
 export PROJECT=android-studio-build
 export FULL_PROJECT=android-studio-build
