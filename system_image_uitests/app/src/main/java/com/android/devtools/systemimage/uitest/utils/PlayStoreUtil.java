@@ -312,7 +312,9 @@ public class PlayStoreUtil {
      */
     private static void openParentalControls(UiDevice testDevice) throws Exception {
         final UiDevice device = testDevice;
-        device.findObject(new UiSelector().description("Back")).clickAndWaitForNewWindow();
+        if ( device.findObject(new UiSelector().description("Back")).waitForExists(3)) {
+            device.findObject(new UiSelector().description("Back")).clickAndWaitForNewWindow();
+            }
         device.findObject(new UiSelector().description("Show navigation drawer"))
                 .waitForExists(TimeUnit.SECONDS.toMillis(3));
         device.findObject(new UiSelector().description("Show navigation drawer"))
