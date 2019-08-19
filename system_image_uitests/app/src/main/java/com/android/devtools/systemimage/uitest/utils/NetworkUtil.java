@@ -37,6 +37,8 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 
 import org.junit.Rule;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Static utility methods pertaining to network status.
  */
@@ -111,13 +113,14 @@ public class NetworkUtil {
         return status;
     }
 
-    public static void openExtendedNotificationsPanel(UiDevice device) throws UiObjectNotFoundException {
+    public static void openExtendedNotificationsPanel(UiDevice device) throws UiObjectNotFoundException, InterruptedException {
         device.pressHome();
 
         UiObject pan = device.findObject(new UiSelector().resourceId("com.google.android.apps.nexuslauncher:id/scrim_view"));
         Rect panRect = pan.getBounds();
 
         device.openNotification();
+        TimeUnit.SECONDS.sleep(2);
         device.drag(panRect.left, panRect.top, panRect.left, panRect.centerY(), 10);
     }
 }
