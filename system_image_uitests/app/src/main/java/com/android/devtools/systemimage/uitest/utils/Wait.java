@@ -32,7 +32,7 @@ public class Wait {
     private static final long DEFAULT_WAIT_TIME = TimeUnit.MILLISECONDS.convert(7L, TimeUnit
             .SECONDS);
     private static final long DEFAULT_POLL_TIME =
-            TimeUnit.MILLISECONDS.convert(100L, TimeUnit.MILLISECONDS);
+            TimeUnit.MILLISECONDS.convert(1000L, TimeUnit.MILLISECONDS);
 
     private long timeout;
     private long polltime;
