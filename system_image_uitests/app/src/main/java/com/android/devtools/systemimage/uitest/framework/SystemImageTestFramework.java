@@ -35,6 +35,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.concurrent.TimeUnit;
 
 /**
  * System image test framework that standardizes a test's initialization and finalization.
@@ -121,6 +122,7 @@ public class SystemImageTestFramework implements TestRule {
         UiObject clearButton = mDevice.findObject(new UiSelector().text("Clear all"));
         if ( clearButton.waitForExists(5)) clearButton.click();
 
+        Log.i("Framework", "Clear recently opened apps");
         mDevice.pressHome();
     }
 
@@ -156,10 +158,17 @@ public class SystemImageTestFramework implements TestRule {
                                                             description.getMethodName());
 
                             // Capture the window UI hierarchy when a test fails.
-                            mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy.xml"));
+                            mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy_1.xml"));
 
                             // Snap the screenshot when a test fails.
-                            mDevice.takeScreenshot(new File(loggingDir, "screenshot.png"));
+                            mDevice.takeScreenshot(new File(loggingDir, "screenshot_1.png"));
+
+                            // wait for 30 seconds
+                            TimeUnit.SECONDS.sleep(30);
+
+                            // take another set of window UI hierarchy and screenshot
+                            mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy_2.xml"));
+                            mDevice.takeScreenshot(new File(loggingDir, "screenshot_2.png"));
 
                             // Log the error message
                             PrintWriter error =
@@ -167,7 +176,6 @@ public class SystemImageTestFramework implements TestRule {
                             t.printStackTrace(error);
                             error.close();
                         }
-
                         // clear all recently opened apps if any before retry
                         resetDeviceState();
                     }
@@ -175,7 +183,6 @@ public class SystemImageTestFramework implements TestRule {
                         return;
                     }
                 }
-
                 throw throwable;
             }
         };
