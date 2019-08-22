@@ -228,7 +228,7 @@ public class SettingsUtil {
             appPermissionsLabel.clickAndWaitForNewWindow();
         }
         UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
-        if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(30L))) {
+        if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(60L))) {
             appPermissionsList.setAsVerticalList();
             UiSelector appSelector = new UiSelector().text(appType);
             if (appPermissionsList.scrollIntoView(appSelector)) {
