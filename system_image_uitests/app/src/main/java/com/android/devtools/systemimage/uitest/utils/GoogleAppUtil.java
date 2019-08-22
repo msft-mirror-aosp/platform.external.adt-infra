@@ -185,9 +185,14 @@ public class GoogleAppUtil {
 
         new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
 
-        UiObject backupButton = device.findObject(new UiSelector().textMatches("(?i)agree(?-i)"));
-        if (backupButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
-            backupButton.clickAndWaitForNewWindow();
+        agreeButton = device.findObject(new UiSelector().textMatches("(?i)agree(?-i)"));
+        if (agreeButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            agreeButton.clickAndWaitForNewWindow();
+        }
+
+        UiObject gotitButton = device.findObject(new UiSelector().textMatches("(?i)ok, got it(?-i)"));
+        if (gotitButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            gotitButton.clickAndWaitForNewWindow();
         }
 
         device.pressHome();
