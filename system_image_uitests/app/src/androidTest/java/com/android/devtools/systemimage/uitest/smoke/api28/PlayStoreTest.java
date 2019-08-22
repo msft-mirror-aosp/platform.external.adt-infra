@@ -229,6 +229,8 @@ public class PlayStoreTest {
             final String familyApplication = "YouTube Kids";
             final String restrictedApplication = "Truth Or Dare: Dirty";
 
+            AppLauncher.launch(instrumentation, "Play Store");
+            PlayStoreUtil.toggleParentalControls(device, false);
             assertTrue("Adult application is not found in search.",
                     PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true));
 
