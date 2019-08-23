@@ -133,7 +133,7 @@ public class PlayStoreTest {
                     PlayStoreUtil.installApplication(instrumentation));
 
             AppLauncher.launch(instrumentation, "Play Store");
-            device.findObject(new UiSelector().text("OPEN")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().textMatches("(?i)open(?-i)")).clickAndWaitForNewWindow();
             assertTrue("App could not be opened",
                     new Wait().until(new Wait.ExpectedCondition() {
                         @Override
