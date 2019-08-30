@@ -11,6 +11,12 @@
 #                        (does not start buildbot)
 # adt-emu-win-3-prod   Image to be used for buildbots
 #                        (starts buildbot on startup)
+# adt-emu-win-4-test   Image to be used for test machines
+#                      Modified buildbot code to handle sync on windows
+#                        (does not start buildbot)
+# adt-emu-win-4-prod   Image to be used for buildbots
+#                      Modified buildbot code to handle sync on windows
+#                        (starts buildbot on startup)
 
 if [ $# -ne 2 ]
 then
@@ -31,7 +37,7 @@ then
    export IMAGE_TYPE="prod"
 fi
 
-export IMAGE_NAME=adt-emu-win-3-$IMAGE_TYPE
+export IMAGE_NAME=adt-emu-win-4-$IMAGE_TYPE
 export TEMP_INSTANCE=adt-emu-win-$1
 export PROJECT=android-studio-build
 export FULL_PROJECT=android-studio-build

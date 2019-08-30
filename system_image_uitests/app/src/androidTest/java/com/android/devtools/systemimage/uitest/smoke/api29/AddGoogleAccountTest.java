@@ -91,7 +91,7 @@ public class AddGoogleAccountTest {
         new watcher(mDevice, Res.ADD_GOOGLE_ACC_WATCHER_PATTERN).checkForCondition();
 
         assertTrue("Add Google account page not found",
-                new Wait(20).until(new Wait.ExpectedCondition() {
+                new Wait(60).until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() throws UiObjectNotFoundException {
                         return UiAutomatorPlus.findObjectMatchingAny(instrumentation,
