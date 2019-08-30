@@ -8,8 +8,10 @@
 # adt-emu-gpu-win-1-prod   Image to be used for buildbots
 #                             (starts buildbot on startup)
 # adt-emu-gpu-win-2-test   Updated nvidia driver to 425.31
+#                          Modified buildbot code to handle sync on windows
 #                             (does not start buildbot)
 # adt-emu-gpu-win-2-prod   Updated nvidia driver to 425.31
+#                          Modified buildbot code to handle sync on windows
 #                             (starts buildbot on startup)
 
 if [ $# -ne 2 ]
