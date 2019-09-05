@@ -50,7 +50,7 @@ rmdir /s /q %SNAPSHOT_DIR%
 
 echo "UI test completed, kill adb server"
 cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
-python -u %ADT_INFRA%\emu_test\utils\kill_adb.py
+python -u %ADT_INFRA%\emu_test\utils\kill_android_bridge_server.py
 
 echo "Cleanup empty files"
 for /f %%d in ('dir /s /b /A:-D %SESSION_DIR%') do (if %%~zd==0 del %%d)
