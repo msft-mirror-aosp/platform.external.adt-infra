@@ -16,6 +16,8 @@ call refreshenv
 set SESSION_DIR=%DISTRIB_DIR%\testlogs
 mkdir %SESSION_DIR%
 
+set GENERAL_TESTS_DIR=%DISTRIB_DIR%\general-tests\host\testcases
+
 set LOGFILE=%SESSION_DIR%\run_test_android_bridge.log
 call :LOG > %LOGFILE% 2>&1
 exit /B 0
