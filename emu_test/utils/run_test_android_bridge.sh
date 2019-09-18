@@ -31,6 +31,8 @@ sudo rm -rf $ANDROID_AVD_HOME/*
 SESSION_DIR=$DISTRIB_DIR/testlogs
 mkdir -p $SESSION_DIR
 
+export GENERAL_TESTS_DIR=$DISTRIB_DIR/general-tests/host/testcases
+
 echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir ADB_test --file_pattern 'test_adb.*' --config_file $ADT_INFRA/emu_test/config/adb_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'"
 python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir ADB_test --file_pattern 'test_adb.*' --config_file $ADT_INFRA/emu_test/config/adb_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'
 
