@@ -22,7 +22,7 @@ set GENERAL_TESTS_DIR=%DISTRIB_DIR%\general-tests\host\testcases
 
 set LOGFILE=%SESSION_DIR%\run_test_android_bridge.log
 call :LOG > %LOGFILE% 2>&1
-exit /B 0
+exit 0
 
 :LOG
 echo "Run python -u %ADT_INFRA%\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator-headless --test_dir ADB_test --file_pattern test_adb.* --config_file %ADT_INFRA%\emu_test\config\adb_cfg_byob.csv --buildername Windows_gce --filter {\"ori\":\"public\"} --timeout 900"

@@ -19,7 +19,7 @@ mkdir %SESSION_DIR%
 
 set LOGFILE=%SESSION_DIR%\run_boot_test.log
 call :LOG > %LOGFILE% 2>&1
-exit /B 0
+exit 0
 
 :LOG
 echo "Runnig BOOT test for %API%"
