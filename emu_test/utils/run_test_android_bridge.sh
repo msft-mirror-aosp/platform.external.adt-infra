@@ -7,6 +7,8 @@
 DISTRIB_DIR=$1
 STATUS=0
 
+export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools
+
 echo "using ADB"
 which adb
 

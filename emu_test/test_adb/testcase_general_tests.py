@@ -33,7 +33,7 @@ class GeneralTest(testcase_base.BaseAdbTest):
                                 "adb_integration_test_device",
                                 "x86_64",
                                 "adb_integration_test_device")
-            adbCmd = subprocess.Popen([test],
+            adbCmd = subprocess.Popen(["python", test],
                                       stdout=subprocess.PIPE,
                                       stderr=subprocess.STDOUT)
 
@@ -51,7 +51,7 @@ class GeneralTest(testcase_base.BaseAdbTest):
                                 "adb_integration_test_adb",
                                 "x86_64",
                                 "adb_integration_test_adb")
-            adbCmd = subprocess.Popen([test],
+            adbCmd = subprocess.Popen(["python", test],
                                       stdout=subprocess.PIPE,
                                       stderr=subprocess.STDOUT)
 

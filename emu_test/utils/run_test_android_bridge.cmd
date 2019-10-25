@@ -9,8 +9,6 @@ title run_test_android_bridge
 
 set DISTRIB_DIR=%1
 
-setx ANDROID_HOME %SDK_SYS_IMAGE% /M
-setx ANDROID_SDK_ROOT %SDK_SYS_IMAGE% /M
 setx ANDROID_EMU_ENABLE_CRASH_REPORTING "NO" /M
 
 call refreshenv
