@@ -39,7 +39,7 @@ mkdir -p $SESSION_DIR
 export GENERAL_TESTS_DIR=$DISTRIB_DIR/general-tests/host/testcases
 
 echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir ADB_test --file_pattern 'test_adb.*' --config_file $ADT_INFRA/emu_test/config/adb_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'"
-$TIMEOUT_CMD 5400 python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir ADB_test --file_pattern 'test_adb.*' --config_file $ADT_INFRA/emu_test/config/adb_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'
+$TIMEOUT_CMD 4200 python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir ADB_test --file_pattern 'test_adb.*' --config_file $ADT_INFRA/emu_test/config/adb_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public"}'
 
 if [[ ! -f $SESSION_DIR/ADB_test/test_adbTestResult.xml ]]
 then
