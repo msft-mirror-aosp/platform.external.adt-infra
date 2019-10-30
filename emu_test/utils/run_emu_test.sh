@@ -48,11 +48,12 @@ rm -rf $ANDROID_AVD_HOME/*
 
 echo "Generate Perf Data"
 echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf"
-$TIMEOUT_CMD 8000 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf
+$TIMEOUT_CMD 14000 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf
 
 if [[ $? -ne 0 ]]
 then
     STATUS=1
+    echo "Perf test timeout"
 fi
 
 echo "Run python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 28"
@@ -68,6 +69,7 @@ sh -c "cd $SESSION_DIR && zip -rm $DISTRIB_DIR/perfgate_data.zip Perf_test/test.
 if [[ ! -f $DISTRIB_DIR/perfgate_data.zip ]]
 then
     STATUS=1
+    echo "Perf zip fail"
 fi
 
 echo "Running Boot tests"
@@ -77,6 +79,7 @@ $TIMEOUT_CMD 3600 python -u external/adt-infra/emu_test/dotest.py --loglevel DEB
 if [[ ! -f $SESSION_DIR/Boot_test/test_report.xml ]]
 then
     STATUS=1
+    echo "Boot test timeout"
 fi
 
 echo "Running Console tests"
@@ -91,6 +94,7 @@ count=`ls -1 $SESSION_DIR/Console_test/*.xml 2>/dev/null | wc -l`
 if [[ $count == 0 ]]
 then
     STATUS=1
+    echo "Console test timeout"
 fi
 
 echo "Running AVD tests"
@@ -104,6 +108,7 @@ $TIMEOUT_CMD 1800 python -u external/adt-infra/emu_test/dotest.py --loglevel DEB
 if [[ ! -f $SESSION_DIR/AVD_test/test_report.xml ]]
 then
     STATUS=1
+    echo "AVD test timeout"
 fi
 
 echo "Running psq snapshot tests"
@@ -117,6 +122,7 @@ $TIMEOUT_CMD 1800 python -u external/adt-infra/emu_test/dotest.py --loglevel DEB
 if [[ ! -f $SESSION_DIR/Snapshot_test/test_report.xml ]]
 then
     STATUS=1
+    echo "Snapshot test timeout"
 fi
 
 echo "Remove deployed emulator"
