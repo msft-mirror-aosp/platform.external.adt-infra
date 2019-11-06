@@ -14,13 +14,18 @@ set API=%3
 setx ANDROID_EMU_ENABLE_CRASH_REPORTING "NO" /M
 call refreshenv
 
-echo "Running UI test for %API%"
-
 set SNAPSHOT_DIR=%DISTRIB_DIR%\snaps
 mkdir %SNAPSHOT_DIR%
 
 set SESSION_DIR=%DISTRIB_DIR%\testlogs
 mkdir %SESSION_DIR%
+
+set LOGFILE=%SESSION_DIR%\run_ui_test.log
+call :LOG > %LOGFILE% 2>&1
+exit 0
+
+:LOG
+echo "Running UI test for %API%"
 
 for /f %%i in ('dir /b %ANDROID_HOME%\system-images\android-%API%') do (
 echo.%%i | findstr /C:"tv" 1>nul && set TARGET=tv && set FILTER={\"tag\":\"android-tv\",\"ori\":\"%ORI%\"} && set TEST_DIR=UI_TEST_tv
@@ -48,10 +53,15 @@ set TEST_DIR=
 echo "rmdir /s /q %SNAPSHOT_DIR%"
 rmdir /s /q %SNAPSHOT_DIR%
 
+echo "List running processes before killing ADB"
+C:\PSTools\tlist.exe /c
+
 echo "UI test completed, kill adb server"
 cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
+python -u %ADT_INFRA%\emu_test\utils\kill_android_bridge_server.py
+
+echo "List running processes after killing ADB"
+C:\PSTools\tlist.exe /c
 
 echo "Cleanup empty files"
 for /f %%d in ('dir /s /b /A:-D %SESSION_DIR%') do (if %%~zd==0 del %%d)
-
-exit 0

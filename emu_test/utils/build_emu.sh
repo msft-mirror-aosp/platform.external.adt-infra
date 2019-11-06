@@ -7,6 +7,7 @@ OUT_DIR=$1
 DISTRIB_DIR=$2
 BID=$3
 CPU=$4
+USE_QTWEBENGINE=$5
 
 export ANDROID_HOME=$SDK_EMULATOR
 export ANDROID_SDK_ROOT=$SDK_EMULATOR
@@ -30,8 +31,13 @@ SESSION_DIR=$DISTRIB_DIR/testlogs
 mkdir -p $SESSION_DIR
 
 echo "Build Emulator"
-echo "tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID"
-tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID
+
+QTWEBENGINE_ARG=
+if [[ $USE_QTWEBENGINE == "qtwebengine" ]]; then
+    QTWEBENGINE_ARG="--qtwebengine"
+fi
+echo "tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG"
+tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG
 
 if [[ $? -ne 0 ]]
 then
