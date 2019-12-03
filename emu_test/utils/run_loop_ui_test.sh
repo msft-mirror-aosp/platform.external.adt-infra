@@ -22,7 +22,6 @@ echo "filter $FILTER"
 echo "Using ADB"
 which adb
 
-echo "Running UI test for $API"
 echo "Remove any existing AVDs"
 echo "sudo rm -rf $ANDROID_AVD_HOME/*"
 sudo rm -rf $ANDROID_AVD_HOME/*
@@ -48,7 +47,7 @@ do
     echo "Test directory is $TEST_DIR"
 
     echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel INFO --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --load-snapshot $NUM_RUNS times"
-    python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --load-snapshot
+    python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir $TEST_DIR --file_pattern 'test_ui.*' --config_file $ADT_INFRA/emu_test/config/ui_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --skip-adb-perf --load_snapshot
     i=$((i + 1))
 done
 
