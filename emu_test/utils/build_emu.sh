@@ -84,7 +84,7 @@ export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 #python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Snapshot_test --file_pattern 'psq_test.*' --config_file external/adt-infra/emu_test/config/psq_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf
 
 echo "Remove any empty file"
-$(find $SESSION_DIR -size  0 -print0) | xargs -0 rm --
+find $SESSION_DIR -size 0 -delete
 
 # Check if test reports were generated.
 [[ ! -f $SESSION_DIR/Boot_test/test_report.xml ]] && panic "No boot test report found"
