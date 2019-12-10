@@ -11,3 +11,9 @@ API 26,android-tv,x86,Android TV (1080p),4096,yes,oc,P,P,P,P
 API 26,google_apis_playstore,x86,Nexus 6P,4096,yes,oc,P,P,P,P
 API 26,android-wear,x86,Android Wear Round,4096,yes,oc,P,P,P,P
 API 25,google_apis_playstore,x86,Nexus 6P,4096,yes,nyc-mr1,P,P,P,P
+API 24,google_apis_playstore,x86,Nexus 6P,4096,yes,nyc,P,P,P,P
+API 23,google_apis,x86,Nexus 6P,4096,yes,mnc,P,P,P,P
+API 22,google_apis,x86,Nexus 6P,4096,yes,lmp-mr1,P,P,P,P
+API 21,google_apis,x86,Nexus 6P,4096,yes,lmp,P,P,P,P
+API 19,google_apis,x86,Nexus 6P,4096,yes,klp,P,P,P,P
+API 18,google_apis,x86,Nexus 6P,4096,yes,jb-mr2,P,P,P,P
