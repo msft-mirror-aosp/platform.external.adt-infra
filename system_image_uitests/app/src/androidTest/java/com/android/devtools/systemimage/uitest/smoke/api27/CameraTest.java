@@ -28,7 +28,7 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.CameraTestUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -151,8 +151,8 @@ public class CameraTest {
         assertTrue("Application " + apk + " is not installed. Result: " + result,
                 isHelloARInstalled);
 
-        AppLauncher.launchPath(instrumentation, true, new String[]{appName});
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
+        AppLauncher.launchPath(instrumentation, true, appName);
+        new watcher(device, Res.CAMERA_ACCESS_PERM_WATCHER_PATTERN).checkForCondition();
 
         assertTrue("'Searching for surfaces...' text is not visible",
                 new Wait().until(new Wait.ExpectedCondition() {

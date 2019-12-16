@@ -152,7 +152,6 @@ public class CameraTest {
                 isHelloARInstalled);
 
         AppLauncher.launchPath(instrumentation, true, new String[]{appName});
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
 
         assertTrue("'Searching for surfaces...' text is not visible",
                 new Wait().until(new Wait.ExpectedCondition() {

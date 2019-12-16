@@ -38,7 +38,6 @@ import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -614,17 +613,15 @@ public class SettingsTest {
     @TestInfo(id = "4db4a825-b584-4c68-a04d-c6a933b14e24")
     public void testCameraAppDisabled() throws Exception {
         SettingsUtil.enableSampleDeviceAdmin_v1(instrumentation, device);
-        if (SettingsUtil.verifyCameraAppDisabled(device)) {
+        if (SettingsUtil.verifyCameraAppDisabled(instrumentation)) {
             SettingsUtil.setCameraEnabled(true, instrumentation, device);
         }
-        Assert.assertFalse(SettingsUtil.verifyCameraAppDisabled(device));
+        Assert.assertFalse(SettingsUtil.verifyCameraAppDisabled(instrumentation));
 
         SettingsUtil.setCameraEnabled(false, instrumentation, device);
-        SettingsUtil.gotoCameraApp(instrumentation, device);
-        new CameraAccessPermissionsWatcher(device).checkForCondition();
-        Assert.assertTrue(SettingsUtil.verifyCameraAppDisabled(device));
+        Assert.assertTrue(SettingsUtil.verifyCameraAppDisabled(instrumentation));
         SettingsUtil.setCameraEnabled(true, instrumentation, device);
-        Assert.assertFalse(SettingsUtil.verifyCameraAppDisabled(device));
+        Assert.assertFalse(SettingsUtil.verifyCameraAppDisabled(instrumentation));
     }
 
     /**

@@ -619,21 +619,17 @@ public class SettingsTest {
     public void testCameraAppDisabled() throws Exception {
         SettingsUtil.enableSampleDeviceAdmin_v2(instrumentation, device);
 
-        SettingsUtil.gotoCameraApp(instrumentation, device);
-        if (SettingsUtil.verifyCameraAppDisabled(device)) {
+        if (SettingsUtil.verifyCameraAppDisabled(instrumentation)) {
             SettingsUtil.setCameraEnabled(true, instrumentation, device);
         }
 
-        SettingsUtil.gotoCameraApp(instrumentation, device);
-        Assert.assertFalse(SettingsUtil.verifyCameraAppDisabled(device));
+        Assert.assertFalse(SettingsUtil.verifyCameraAppDisabled(instrumentation));
 
         SettingsUtil.setCameraEnabled(false, instrumentation, device);
-        SettingsUtil.gotoCameraApp(instrumentation, device);
-        Assert.assertTrue(SettingsUtil.verifyCameraAppDisabled(device));
+        Assert.assertTrue(SettingsUtil.verifyCameraAppDisabled(instrumentation));
 
         SettingsUtil.setCameraEnabled(true, instrumentation, device);
-        SettingsUtil.gotoCameraApp(instrumentation, device);
-        Assert.assertFalse(SettingsUtil.verifyCameraAppDisabled(device));
+        Assert.assertFalse(SettingsUtil.verifyCameraAppDisabled(instrumentation));
     }
 
     /**
