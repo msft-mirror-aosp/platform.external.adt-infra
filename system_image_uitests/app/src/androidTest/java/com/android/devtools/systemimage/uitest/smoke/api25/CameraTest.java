@@ -18,16 +18,10 @@ package com.android.devtools.systemimage.uitest.smoke.api25;
 
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
-import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
-import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.CameraTestUtil;
-import com.android.devtools.systemimage.uitest.watchers.CameraAccessPermissionsWatcher;
 
 import org.junit.Assert;
 import org.junit.Rule;
