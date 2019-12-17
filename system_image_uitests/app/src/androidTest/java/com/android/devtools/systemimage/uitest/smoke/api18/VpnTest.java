@@ -28,6 +28,7 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.VpnTestUtil;
 import com.android.devtools.systemimage.uitest.watchers.VpnPopupWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -75,6 +76,7 @@ public class VpnTest {
         String apk = "FredVPN.apk";
         String result = "";
 
+        new watcher(device, Res.SETTINGS_WATCHER_PATTERN).checkForCondition();
         // Install TestVPN, if not already present.
         boolean isTestVPNInstalled = PackageInstallationUtil.
                 isPackageInstalled(instrumentation, testPackageName);
