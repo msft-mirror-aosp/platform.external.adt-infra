@@ -85,13 +85,7 @@ public class NetworkIOTest {
             // then verify if the loading bar finishes in 3 seconds (default timeout on Wait()).
             final UiObject progress =
                     device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
-            boolean isSuccess =
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return !progress.exists();
-                        }
-                    });
+            boolean isSuccess = new Wait().until(() -> !progress.exists());
             assertTrue("Failed to dismiss the loading bar.", isSuccess);
         }
     }
