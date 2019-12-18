@@ -1,0 +1,4 @@
+Device Config,,,,,,,Linux,,,,,Windows,,,,,Mac,,
+API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,Linux_gce,Windows_gce,Mac,Linux
+API 26,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P,P
+API 29,google_apis_playstore,x86_64,Nexus 5,2048,swiftshader,public,P,P,P,P
