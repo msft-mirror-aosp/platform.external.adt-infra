@@ -17,6 +17,7 @@
 package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
@@ -85,6 +86,7 @@ public class AppLauncher {
                     description("Apps"));
                 if (new Wait().until(launcherIcon::exists)) {
                     launcherIcon.clickAndWaitForNewWindow();
+                  new watcher(device, Res.SETTINGS_WATCHER_PATTERN).checkForCondition();
                 }
             }
             try {
