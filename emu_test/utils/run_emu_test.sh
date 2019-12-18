@@ -46,6 +46,24 @@ echo "Remove any existing AVDs"
 echo "rm -rf $ANDROID_AVD_HOME/*"
 rm -rf $ANDROID_AVD_HOME/*
 
+echo "Installing python dependencies"
+python -m virtualenv &>/dev/null || python -m easy_install --user virtualenv
+python -m virtualenv venv
+. venv/bin/activate
+pip install -r requirements.txt
+
+echo "Generating protobuf stubs"
+PROTOSRC=$SESSION_DIR/emu-master-dev/emulator/lib/
+PROTOS=$(ls -1 $PROTOSRC/*.proto)
+PROTODIR=external/adt-infra/emu_test/proto
+mkdir -p $PROTODIR
+touch $PROTODIR/__init__.py
+for PROTO in ${PROTOS}
+do
+    python -m grpc.tools.protoc -I${PROTODIR} -I${PROTOSRC} \
+        --python_out=${PROTODIR} --grpc_python_out=${PROTODIR} ${PROTO}
+done
+
 echo "Generate Perf Data"
 echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf"
 $TIMEOUT_CMD 14000 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf
@@ -80,6 +98,16 @@ if [[ ! -f $SESSION_DIR/Boot_test/test_report.xml ]]
 then
     STATUS=1
     echo "Boot test timeout"
+fi
+
+echo "Running Snapshot tests"
+echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Snapshot_test --file_pattern 'test_snapshot.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml"
+$TIMEOUT_CMD 3600 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml
+
+if [[ ! -f $SESSION_DIR/Snapshot_test/test_report.xml ]]
+then
+    STATUS=1
+    echo "Snapshot test timeout"
 fi
 
 echo "Running Console tests"
