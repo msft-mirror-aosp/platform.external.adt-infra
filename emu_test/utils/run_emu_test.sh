@@ -161,6 +161,6 @@ echo "Cleanup prebuilts"
 rm -rf /buildbot/prebuilt/*
 
 echo "Remove any empty file"
-find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
+find $SESSION_DIR -size 0 -delete
 
 exit $STATUS
