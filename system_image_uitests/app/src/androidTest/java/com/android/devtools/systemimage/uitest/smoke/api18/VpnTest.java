@@ -76,7 +76,7 @@ public class VpnTest {
         String apk = "FredVPN.apk";
         String result = "";
 
-        new watcher(device, Res.SETTINGS_WATCHER_PATTERN).checkForCondition();
+        new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
         // Install TestVPN, if not already present.
         boolean isTestVPNInstalled = PackageInstallationUtil.
                 isPackageInstalled(instrumentation, testPackageName);

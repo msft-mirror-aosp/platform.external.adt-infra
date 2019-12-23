@@ -86,7 +86,7 @@ public class AppLauncher {
                     description("Apps"));
                 if (new Wait().until(launcherIcon::exists)) {
                     launcherIcon.clickAndWaitForNewWindow();
-                  new watcher(device, Res.SETTINGS_WATCHER_PATTERN).checkForCondition();
+                    new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
                 }
             }
             try {
