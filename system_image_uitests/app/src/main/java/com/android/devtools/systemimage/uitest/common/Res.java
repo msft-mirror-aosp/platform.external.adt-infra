@@ -37,7 +37,6 @@ public class Res {
     public static final String CHROME_MENU_BADGE_RES = "com.android.chrome:id/menu_badge";
     public static final String CHROME_SIGNIN_PROMO_ACCOUNT_RES = "com.android.chrome:id/signin_promo_choose_account_button";
     public static final String CHROME_SIGNIN_PROMO_CLOSE_RES = "com.android.chrome:id/signin_promo_close_button";
-    public static final String CHROME_CLOSE_MENU_BUTTON_RES = "com.android.chrome:id/close_menu_id";
     public static final String CHROME_TITLE_RES = "com.android.chrome:id/title";
     public static final String CHROME_NO_THANKS_BUTTON_RES = "com.android.chrome\\d*:id" + "/(no_thanks_button|negative_button)";
     public static final String CHROME_PROGRESS_BAR_RES = "com.android.chrome:id/progress";
@@ -63,23 +62,16 @@ public class Res {
     public static final String APPS_TAB_CONTAINER_RES = "com.android.settings:id/pager";
     public static final String NETWORK_SWITCHES_RECYCLER_VIEW_RES =
             "com.android.settings:id/list";  // Added in API 24.
-    public static final String SETTINGS_ADVANCED_OPTION_RES = "com.android.settings:id/advanced";
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container|list_container)";
-    public static final String Q_SETTINGS_LIST_CONTAINER_RES =
-            "(com.android.settings|android):id/(main_content_scrollable_container)";
     public static final String SETTINGS_ACTION_BAR_RES = "com.android.settings:id/action_bar";
 
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";
     public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";
     public static final String CAMERA_FILE_THUMBNAIL_RES = "com.android.camera2:id/rounded_thumbnail_view";
-    public static final String CAMERA_FILE_DELETE_RES = "com.android.camera2:id/filmstrip_bottom_control_delete";
     public static final String PACKAGE_INSTALL_DONE_RES = "com.android.packageinstaller:id/done_button";
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
     public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
-    public static final String NOTIFICATION_QUICK_PANEL_RES = "com.android.systemui:id/quick_qs_panel";
-    public static final String NOTIFICATION_BAR_EXPAND_RES = "com.android.systemui:id/expand_indicator";
-    public static final String NOTIFICATION_BAR_HEADER_RES = "com.android.systemui:id/header";
     public static final String MENU_LIST_RES = "com.android.documentsui:id/menu_list";
     public static final String OPTION_MENU_LIST_RES = "com.android.documentsui:id/option_menu_list";
     public static final String OPTION_MENU_SEARCH_RES = "com.android.documentsui:id/option_menu_search";
@@ -89,7 +81,6 @@ public class Res {
     public static final String GOOGLE_PLAY_ACTIVE_RES = "com.android.vending:id/search_box_active_text_view";
     public static final String GOOGLE_PLAY_INPUT_RES =
             "(com.android.vending:id/search_box_text_input|com.android.vending:id/search_bar_text_input)";
-    public static final String GOOGLE_PLAY_LIST_TITLE_RES = "com.android.vending:id/li_title";
     public static final String GOOGLE_PLAY_FILTER_TOGGLE_RES = "com.android.vending:id/content_filter_on_off_toggle";
     public static final String GOOGLE_UNAUTHORIZED_SIGN_IN_RES = "com.android.vending:id/unauth_home_sign_in_button";
     public static final String GOOGLE_PLAY_ONBOARD_BUTTON_RES = "com.android.vending:id/play_onboard_center_button";
@@ -102,13 +93,10 @@ public class Res {
             "com.android.chrome:id/next_button";
     public static final String GOOGLE_SERVICES_ACCEPT_BUTTON_RES =
             "com.google.android.gms:id/next_button";
-    public static final String NOW_SIGNIN_ACCEPT_BUTTON_RES =
-            "com.google.android.googlequicksearchbox\\d*:id/accept_button";
     public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
     public static final String GOOGLE_BACKUP_SWITCH_RES =
             "com.google.android.gms:id/sud_items_switch";
-    public static final String SIGN_IN_CONSENT_RES = "com.google.android.gms:id/signinconsentNext";
 
     public static final String SEARCH_TEXT_BOX =
             "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)" +
@@ -151,6 +139,8 @@ public class Res {
     public static final String WEAR_SHOW_ALL_BUTTON = "com.google.android.wearable.app:id/show_all_btn";
     public static final String WEAR_WATCH_FACE_PICKER =
             "com.google.android.wearable.app:id/watchface_picker_all_title";
+
+    public static final String NEXT_EXISTING_BUTTON = "com.google.android.gsf.login:id/next_button";
 
     public static final String YOUTUBE_UPDATE_LATER_BUTTON_RES = "com.google.android.youtube:id/later_button";
 

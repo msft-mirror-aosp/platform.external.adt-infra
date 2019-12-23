@@ -36,6 +36,7 @@ import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -86,6 +87,7 @@ public class ApiDemosTest {
      */
     @Test
     @TestInfo(id = "T144630615")
+    @Ignore("Disable due to b/146500804 until further clarification.")
     public void testPasswordQuality() throws Exception {
         boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
                 "com.example.android.apis");
