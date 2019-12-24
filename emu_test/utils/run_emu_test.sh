@@ -50,7 +50,7 @@ echo "Installing python dependencies"
 python -m virtualenv &>/dev/null || python -m easy_install --user virtualenv
 python -m virtualenv venv
 . venv/bin/activate
-pip install -r requirements.txt
+pip install -r external/adt-infra/emu_test/requirements.txt
 
 echo "Generating protobuf stubs"
 PROTOSRC=$SESSION_DIR/emu-master-dev/emulator/lib/
