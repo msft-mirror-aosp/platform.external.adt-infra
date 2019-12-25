@@ -99,8 +99,7 @@ public class Res {
             "com.google.android.gms:id/sud_items_switch";
 
     public static final String SEARCH_TEXT_BOX =
-            "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)" +
-                    "/(search_omnibox_text_box|textbox|edit_textbox)";
+            "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)/(search_omnibox_text_box|textbox|edit_textbox)";
     public static final String GOOGLE_AR_SNACKBAR_RES =
             "com.google.ar.core.examples.c.helloar:id/snackbar_text";
 
@@ -150,7 +149,7 @@ public class Res {
     public static final String CAMERA_ACCESS_PERM_WATCHER_PATTERN = "(?i)(ok|allow|next|got|continue|deny)(?-i)";
     public static final String GOOGLE_APP_CONF_WATCHER_PATTERN = "(?i).*(yes|accept|agree)(?-i)";
     public static final String GOOGLE_APP_CONT_WATCHER_PATTERN = "(?i)(continue|confirm|skip|next|accept)(?-i)";
-    public static final String MAPS_WATCHER_PATTERN = "(?i)(accept|skip|got|ok|ride)(?-i)";
+    public static final String MAPS_WATCHER_PATTERN = "(?i)(accept|accept & continue|skip|got|ok|ride)(?-i)";
     public static final String NETWORK_UTIL_WATCHER_PATTERN = "(?i)(ok)(?-i)";
     public static final String PKG_INSTALL_WATCHER_PATTERN = "(?i)(new|decline)(?-i)";
     public static final String PLAY_STORE_WATCHER_PATTERN = "(?i)(ok|save)(?-i)";
