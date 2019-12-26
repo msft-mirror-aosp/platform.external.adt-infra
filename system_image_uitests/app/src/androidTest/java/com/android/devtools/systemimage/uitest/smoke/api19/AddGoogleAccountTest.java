@@ -24,11 +24,13 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
+import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -72,17 +74,15 @@ public class AddGoogleAccountTest {
 
         AppLauncher.launch(instrumentation, "People");
         // Check if the app is running for the first time.
-        new AddGoogleAccountWatcher(mDevice).checkForCondition();
+        new watcher(mDevice, Res.APP_WATCHER_PATTERN).checkForCondition();
 
         UiObject addAccount = mDevice.findObject(
-                new UiSelector().textMatches(("(?i)add account(?-i)")));
+                new UiSelector().resourceId((Res.NEXT_EXISTING_BUTTON)));
 
         boolean isFound = addAccount.waitForExists(5L);
         if (isFound) {
             addAccount.clickAndWaitForNewWindow();
         }
-
-        new AddGoogleAccountWatcher(mDevice).checkForCondition();
 
         assertTrue("Add Google account page not found",
                 new Wait().until(new Wait.ExpectedCondition() {
