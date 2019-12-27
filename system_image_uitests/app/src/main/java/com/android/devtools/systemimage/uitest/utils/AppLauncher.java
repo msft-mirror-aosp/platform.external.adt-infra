@@ -79,7 +79,7 @@ public class AppLauncher {
             Log.i(TAG, "Opened app in first attempt");
         }
         else {
-            if (api == 18) {
+            if (api >= 18 && api <= 21 ) {
                 final UiObject launcherIcon = device.findObject(new UiSelector().
                     className("android.widget.TextView").
                     packageName("com.android.launcher").

@@ -89,12 +89,7 @@ public class NetworkIOTest {
             final UiObject progress =
                     device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
             boolean isSuccess =
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return !progress.exists();
-                        }
-                    });
+                    new Wait().until(() -> !progress.exists());
             assertTrue("Failed to dismiss the loading bar.", isSuccess);
         }
     }
@@ -142,12 +137,7 @@ public class NetworkIOTest {
                 packageName(Res.ANDROID_PHONE_RES));
 
         // Wait for 2G data mode icon
-        boolean data2GModeActive = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-                return data2GPreferred.exists();
-            }
-        });
+        boolean data2GModeActive = new Wait().until(data2GPreferred::exists);
 
         assertTrue("3G data mode is not disabled.", data2GModeActive);
 
