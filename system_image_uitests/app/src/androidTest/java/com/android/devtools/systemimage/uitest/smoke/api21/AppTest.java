@@ -31,6 +31,7 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppTestUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -176,6 +177,7 @@ public class AppTest {
      */
     @Test
     @TestInfo(id = "8649851d-da41-45f8-8e73-82b98ea418d0")
+    @Ignore("Disable due to b/146940892")
     public void setHomePageInBrowser() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
