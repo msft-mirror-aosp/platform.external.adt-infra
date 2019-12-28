@@ -42,6 +42,8 @@ public class Res {
     public static final String CHROME_PROGRESS_BAR_RES = "com.android.chrome:id/progress";
     public static final String CHROME_POSITIVE_BUTTON_RES = "com.android.chrome:id/positive_button";
 
+    public static final String CREATE_NEW_CONTACT = "com.android.contacts:id/create_contact_button";
+
     public static final String ANDROID_LAUNCHER_WELCOME_CLING_RES =
             "com.android.launcher\\d*:id/cling_dismiss";
     public static final String ANDROID_WELCOME_CLING_RES =
@@ -144,6 +146,7 @@ public class Res {
     public static final String YOUTUBE_UPDATE_LATER_BUTTON_RES = "com.google.android.youtube:id/later_button";
 
     public static final String ADD_GOOGLE_ACC_WATCHER_PATTERN = "(?i)(not|accept|ok|cancel)(?-i)";
+    public static final String ADD_ACCOUNT_WATCHER_PATTERN = "(?i)(add account)(?-i)";
     public static final String API_DEMOS_WATCHER_PATTERN = "(?i)(thanks|no|continue)(?-i)";
     public static final String APP_WATCHER_PATTERN = "(?i)(ok|thanks)(?-i)";
     public static final String CAMERA_ACCESS_PERM_WATCHER_PATTERN = "(?i)(ok|allow|next|got|continue|deny)(?-i)";
