@@ -69,7 +69,7 @@ public class GoogleServicesTest {
     public void verifyGoogleApps() throws Exception{
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        if (!testFramework.isGoogleApiImage() || !testFramework.isGoogleApiAndPlayImage()) {
+        if (!testFramework.isGoogleApiImage()) {
             return;
         }
 
@@ -124,15 +124,14 @@ public class GoogleServicesTest {
                 );
         itemList.setAsVerticalList();
 
-        UiObject location = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
-                        "Location");
-        location.clickAndWaitForNewWindow();
+        UiObject item =
+            itemList.getChildByText(
+                new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
+                "Location access");
+        item.clickAndWaitForNewWindow();
 
-        assertTrue("Cannot find location toggle button", device.findObject(
-                new UiSelector().className("android.widget.Switch")).exists());
-        assertTrue("Cannot find mode", device.findObject(new UiSelector().text(
-                "Mode")).exists());
-        assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
-                "Recent location requests")).exists());
+        // API specific assertion, since mode and recent location requests are absent in API 18
+        assertTrue("Cannot find location toggle button", device.findObject(new
+            UiSelector().className("android.widget.Switch")).exists());
     }
 }

@@ -126,41 +126,22 @@ public class SettingsTest {
         final UiObject2 widget = SettingsUtil.navigateToDateTimeSwitch("Automatic date & time", instrumentation, Res.ANDROID_LIST_RES);
 
         // Test requires "Automatic date & time" widget to start in the enabled state.
+        assert widget != null;
         if (!widget.isChecked()) {
             widget.click();
         }
         assertTrue("Failed to disable set date.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return !device.findObject(new UiSelector().text("Set date")).isEnabled();
-                  }
-              })
+            new Wait().until(() -> !device.findObject(new UiSelector().text("Set date")).isEnabled())
         );
         assertTrue("Failed to disable set time.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return !device.findObject(new UiSelector().text("Set time")).isEnabled();
-                  }
-              })
+            new Wait().until(() -> !device.findObject(new UiSelector().text("Set time")).isEnabled())
         );
         widget.click();
         assertTrue("Failed to enable set date.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("Set date")).isEnabled();
-                  }
-              })
+            new Wait().until(() -> device.findObject(new UiSelector().text("Set date")).isEnabled())
         );
         assertTrue("Failed to enable set time.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("Set time")).isEnabled();
-                  }
-              })
+            new Wait().until(() -> device.findObject(new UiSelector().text("Set time")).isEnabled())
         );
         device.findObject(new UiSelector().text("Set date")).clickAndWaitForNewWindow();
 
@@ -204,39 +185,25 @@ public class SettingsTest {
         final UiObject2 widget = SettingsUtil.navigateToDateTimeSwitch("Automatic time zone", instrumentation, Res.ANDROID_LIST_RES);
 
         // Initialize automatic time zone option to enabled state.
+        assert widget != null;
         if (!widget.isChecked()) {
             widget.click();
         }
         assertTrue("Failed to disable select time zone",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return !device.findObject(new UiSelector().text("Select time zone")).isEnabled();
-                  }
-              })
+            new Wait().until(() -> !device.findObject(new UiSelector().text("Select time zone")).isEnabled())
         );
         // Disable automatic time zone option.
         widget.click();
         final UiObject selectTimeZone = device.findObject(
                 new UiSelector().text("Select time zone"));
         assertTrue("Failed to enable select time zone",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return selectTimeZone.isEnabled();
-                  }
-              })
+            new Wait().until(selectTimeZone::isEnabled)
         );
         selectTimeZone.clickAndWaitForNewWindow();
 
         assertTrue("Failed to load Select time zone screen.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(
-                                new UiSelector().text("Select time zone")).exists();
-                    }
-              })
+            new Wait().until(() -> device.findObject(
+                    new UiSelector().text("Select time zone")).exists())
         );
 
         UiObject timeZoneLabel = device.findObject(new UiSelector().text("Time zone").
@@ -283,12 +250,7 @@ public class SettingsTest {
         final UiObject2 useTwentyFourSwitch = SettingsUtil.navigateToDateTimeSwitch("Use 24-hour format", instrumentation, Res.ANDROID_LIST_RES);
 
         assertTrue("Failed to find Use 24-hour format switch.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return useTwentyFourSwitch != null;
-                    }
-                })
+            new Wait().until(() -> useTwentyFourSwitch != null)
         );
 
         boolean useTwentyFourWasEnabled = false;
@@ -297,34 +259,21 @@ public class SettingsTest {
         // Initialize 24-hour format option to disabled state.
         if (thirteenHundredLabel.exists()) {
             useTwentyFourWasEnabled = true;
+            assert useTwentyFourSwitch != null;
             useTwentyFourSwitch.click();
         }
         assertTrue("Failed to find Use 24-hour format label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(
-                                new UiSelector().text("Use 24-hour format")).exists();
-                  }
-              })
+            new Wait().until(() -> device.findObject(
+                new UiSelector().text("Use 24-hour format")).exists())
         );
         assertTrue("Failed to find 1:00 PM label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("1:00 PM")).exists();
-                  }
-              })
+            new Wait().until(() -> device.findObject(new UiSelector().text("1:00 PM")).exists())
         );
         // Enable 24-hour format.
+        assert useTwentyFourSwitch != null;
         useTwentyFourSwitch.click();
         assertTrue("Failed to find 13:00 label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                      return thirteenHundredLabel.exists();
-                  }
-              })
+            new Wait().until(thirteenHundredLabel::exists)
         );
 
         // Clean up by disabling 24-hour format option.
