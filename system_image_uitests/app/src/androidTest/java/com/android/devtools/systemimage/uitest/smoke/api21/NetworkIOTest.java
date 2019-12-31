@@ -76,12 +76,15 @@ public class NetworkIOTest {
         // Check network connectivity.
         if (NetworkUtil.hasCellularNetworkConnection(instrumentation)) {
             AppLauncher.launch(instrumentation, "Browser");
-            device.findObject(new UiSelector().resourceId(
-                    Res.BROWSER_URL_TEXT_FIELD_RES)).click();
-            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                    .clearTextField();
-            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                    .setText("google.com");
+            final UiObject browserUrl =
+                device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES));
+            boolean browserOpened =
+                new Wait().until(browserUrl::exists);
+            assertTrue("Could not find browser url text field", browserOpened);
+
+            browserUrl.click();
+            browserUrl.clearTextField();
+            browserUrl.setText("google.com");
             device.pressEnter();
 
             // Verify if the load bar is there at first,

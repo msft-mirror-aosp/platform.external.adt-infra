@@ -72,6 +72,7 @@ public class Res {
     public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";
     public static final String CAMERA_FILE_THUMBNAIL_RES = "com.android.camera2:id/rounded_thumbnail_view";
     public static final String PACKAGE_INSTALL_DONE_RES = "com.android.packageinstaller:id/done_button";
+    public static final String PACKAGE_INSTALL_OK_RES = "com.android.packageinstaller:id/ok_button";
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
     public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
     public static final String MENU_LIST_RES = "com.android.documentsui:id/menu_list";

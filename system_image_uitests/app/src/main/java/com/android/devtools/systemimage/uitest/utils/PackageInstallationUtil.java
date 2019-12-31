@@ -103,7 +103,7 @@ public class PackageInstallationUtil {
 
         String result = "";
 
-        Boolean useV2 = isV2.length > 0 ? isV2[0] : false;
+        boolean useV2 = isV2.length > 0 ? isV2[0] : false;
         if (useV2) {
             context.startActivity(createIntent_v2(apkFile));
         } else {
@@ -141,7 +141,12 @@ public class PackageInstallationUtil {
         if (hasInstallButton) {
             installButton.clickAndWaitForNewWindow();
         } else {
-            result += "Could not find install button. ";
+            installButton = device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_OK_RES));
+            if (installButton.exists()) {
+                installButton.clickAndWaitForNewWindow();
+            } else {
+                result += "Could not find install button.";
+            }
         }
 
         new watcher(device, Res.PKG_INSTALL_WATCHER_PATTERN).checkForCondition();
@@ -152,18 +157,13 @@ public class PackageInstallationUtil {
         final UiObject doneLabel = device.findObject(new UiSelector().text("App installed."));
 
         boolean installationSuccess = new Wait(INSTALL_WAIT * 12L).
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return doneButtonText.exists() || doneButtonRes.exists() || doneLabel.exists();
-                    }
-                });
+            until(() -> doneButtonText.exists() || doneButtonRes.exists() || doneLabel.exists());
 
         result = installationSuccess ? INSTALL_COMPLETE : result + "Could not find done button. ";
 
         if (!result.isEmpty()) {
             Log.w(TAG, result);
-            Assert.assertTrue("Package installation was unsuccessful: " + result, false);
+            Assert.fail("Package installation was unsuccessful: " + result);
         }
 
         device.pressHome();
