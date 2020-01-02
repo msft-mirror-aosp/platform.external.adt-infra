@@ -82,32 +82,35 @@ then
     echo "Boot test timeout"
 fi
 
-echo "Installing python dependencies"
-python -m virtualenv &>/dev/null || python -m easy_install --user virtualenv==15.1.0
-python -m virtualenv venv
-. venv/bin/activate
-pip install -r external/adt-infra/emu_test/requirements.txt
-
-echo "Generating protobuf stubs"
-PROTOSRC=$SESSION_DIR/emu-master-dev/emulator/lib/
-PROTOS=$(ls -1 $PROTOSRC/*.proto)
-PROTODIR=external/adt-infra/emu_test/proto
-mkdir -p $PROTODIR
-touch $PROTODIR/__init__.py
-for PROTO in ${PROTOS}
-do
-    python -m grpc.tools.protoc -I${PROTODIR} -I${PROTOSRC} \
-        --python_out=${PROTODIR} --grpc_python_out=${PROTODIR} ${PROTO}
-done
-
-echo "Running Snapshot tests"
-echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml"
-$TIMEOUT_CMD 3600 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml
-
-if [[ ! -f $SESSION_DIR/snapshot_test/test_report.xml ]]
+if [[ $OSTYPE != *"darwin"* ]]
 then
-    STATUS=1
-    echo "Snapshot test timeout"
+    echo "Installing python dependencies"
+    python -m virtualenv &>/dev/null || python -m easy_install --user virtualenv
+    python -m virtualenv venv
+    . venv/bin/activate
+    pip install -r external/adt-infra/emu_test/requirements.txt
+
+    echo "Generating protobuf stubs"
+    PROTOSRC=$SESSION_DIR/emu-master-dev/emulator/lib/
+    PROTOS=$(ls -1 $PROTOSRC/*.proto)
+    PROTODIR=external/adt-infra/emu_test/proto
+    mkdir -p $PROTODIR
+    touch $PROTODIR/__init__.py
+    for PROTO in ${PROTOS}
+    do
+        python -m grpc.tools.protoc -I${PROTODIR} -I${PROTOSRC} \
+            --python_out=${PROTODIR} --grpc_python_out=${PROTODIR} ${PROTO}
+    done
+
+    echo "Running Snapshot tests"
+    echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml"
+    $TIMEOUT_CMD 3600 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml
+
+    if [[ ! -f $SESSION_DIR/snapshot_test/test_report.xml ]]
+    then
+        STATUS=1
+        echo "Snapshot test timeout"
+    fi
 fi
 
 echo "Running Console tests"
