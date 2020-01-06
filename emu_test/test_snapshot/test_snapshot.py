@@ -14,6 +14,7 @@ import psutil
 import emu_test.utils.emu_testcase
 import emu_test.utils.path_utils as path_utils
 from emu_test.test_snapshot.snapshot import SnapshotService
+from emu_test.test_snapshot.waterfall_adb import WaterfallService
 from emu_test.utils.emu_argparser import emu_args
 from emu_test.utils.emu_error import *
 from emu_test.utils.emu_testcase import AVDConfig, EmuBaseTestCase
@@ -84,10 +85,16 @@ class SnapshotTestCase(EmuBaseTestCase):
             self.m_logger.error("Error in cleanup - %r" % e)
             pass
 
+    def waterfall_check(self, wfall):
+        """Checks that waterfall is working as expected."""
+        sout, _, exitcode = wfall.get_props()
+        return exitcode == 0 and "sys.boot_completed" in sout
+
+
     def snapshot_check(self, avd):
         grpc_port = find_free_port()
         try:
-            self.launch_emu_and_wait(avd, ["-grpc", str(grpc_port)])
+            self.launch_emu_and_wait(avd, ["-grpc", str(grpc_port), "-waterfall", "adb"])
             self.m_logger.debug("Emulator is up and ready")
         except TimeoutError:
             self.m_logger.error("AVD %s, time out.." % str(avd))
@@ -96,12 +103,18 @@ class SnapshotTestCase(EmuBaseTestCase):
         try:
             self.m_logger.debug("Getting a snapshot")
             snapshot = SnapshotService(grpc_port, self.m_logger)
+            wfall = WaterfallService(grpc_port, self.m_logger)
+            self.assertTrue(self.waterfall_check(wfall))
+
             initial = snapshot.lists()
 
             # Local snapshot test create/list/load/delete/list
             self.assertTrue(snapshot.save("foo"))
             self.assertTrue("foo" in snapshot.lists())
             self.assertTrue(snapshot.load("foo"))
+
+            # Waterfall will reconnect properly after snapshot restore
+            self.assertTrue(self.waterfall_check(wfall))
             self.assertTrue(snapshot.delete("foo"))
             self.assertFalse("foo" in snapshot.lists())
 
@@ -114,9 +127,14 @@ class SnapshotTestCase(EmuBaseTestCase):
                 self.assertTrue(snapshot.delete("foo"))
                 self.assertFalse("foo" in snapshot.lists())
                 self.assertFalse(snapshot.load("foo"))
+
+                # Waterfall over adb still functions after failed restore
+                self.assertTrue(self.waterfall_check(wfall))
                 self.assertTrue(snapshot.push(os.path.join(d, "foo.tar.gz")))
                 self.assertTrue("foo" in snapshot.lists())
                 self.assertTrue(snapshot.load("foo"))
+                # Waterfall over adb still functions after successfull restore
+                self.assertTrue(self.waterfall_check(wfall))
         except:
             self.m_logger.error("Fatal error in main test", exc_info=True)
 
