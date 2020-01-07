@@ -33,12 +33,16 @@ import org.junit.runner.RunWith;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
 
 /**
  * Test on shell utility.
  */
 @RunWith(AndroidJUnit4.class)
 public class ShellUtilTest {
+    private final String TAG = "ShellUtilTest";
+
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
@@ -68,17 +72,17 @@ public class ShellUtilTest {
         String cmd = "ls /system/bin";
         ShellUtil.ShellResult result = ShellUtil.invokeCommand(cmd);
         // Check if the cmd is executed correctly.
-        Assert.assertTrue(result.stderr, result.stderr.length() == 0);
+        Assert.assertEquals(result.stderr, 0, result.stderr.length());
 
         // Verify the integrity of the shell utilities.
         InputStream inputStream = instrumentation.getTargetContext().getAssets().open("util.txt");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
         String line;
         StringBuilder util = new StringBuilder();
         while ((line = reader.readLine()) != null) {
             util.append(line).append("\n");
         }
         Assert.assertThat("Failure: The shell util is incomplete.", result.stderr,
-                Matchers.isEmptyOrNullString());
+            Matchers.isEmptyOrNullString());
     }
 }

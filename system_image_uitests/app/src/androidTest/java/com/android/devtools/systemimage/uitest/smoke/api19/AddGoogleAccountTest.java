@@ -20,7 +20,6 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -29,7 +28,6 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Rule;
@@ -77,7 +75,7 @@ public class AddGoogleAccountTest {
         new watcher(mDevice, Res.APP_WATCHER_PATTERN).checkForCondition();
 
         UiObject addAccount = mDevice.findObject(
-                new UiSelector().resourceId((Res.NEXT_EXISTING_BUTTON)));
+            new UiSelector().resourceId((Res.NEXT_EXISTING_BUTTON)));
 
         boolean isFound = addAccount.waitForExists(5L);
         if (isFound) {
@@ -85,13 +83,8 @@ public class AddGoogleAccountTest {
         }
 
         assertTrue("Add Google account page not found",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return UiAutomatorPlus.findObjectMatchingAny(instrumentation,
-                                new UiSelector().descriptionMatches(("(?i)sign in(?-i)")),
-                                new UiSelector().textMatches(("(?i)sign in(?-i)"))).exists();
-                    }
-                }));
+            new Wait().until(() -> UiAutomatorPlus.findObjectMatchingAny(instrumentation,
+                new UiSelector().descriptionMatches(("(?i)sign in(?-i)")),
+                new UiSelector().textMatches(("(?i)sign in(?-i)"))).exists()));
     }
 }
