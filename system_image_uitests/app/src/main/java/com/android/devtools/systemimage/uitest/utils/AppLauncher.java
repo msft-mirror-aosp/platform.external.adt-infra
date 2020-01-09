@@ -88,14 +88,26 @@ public class AppLauncher {
                     launcherIcon.clickAndWaitForNewWindow();
                     new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
                 }
+            } else if (api == 22) {
+                device.pressHome();
+                final UiObject launcherIcon = device.findObject(new UiSelector().
+                    packageName("com.google.android.googlequicksearchbox").
+                    description("Apps"));
+                if (new Wait().until(launcherIcon::exists)) {
+                    launcherIcon.clickAndWaitForNewWindow();
+                    new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
+                }
             }
             try {
-                scrollable.setAsVerticalList();
-                appNameFound = new Wait().until(() -> scrollable.scrollIntoView(appSelector));
-
+                appNameFound = new Wait().until(appObject::exists);
                 if (!appNameFound) {
-                    scrollable.setAsHorizontalList();
+                    scrollable.setAsVerticalList();
                     appNameFound = new Wait().until(() -> scrollable.scrollIntoView(appSelector));
+
+                    if (!appNameFound) {
+                        scrollable.setAsHorizontalList();
+                        appNameFound = new Wait().until(() -> scrollable.scrollIntoView(appSelector));
+                    }
                 }
             } catch (UiObjectNotFoundException e) {
                 device.pressHome();
