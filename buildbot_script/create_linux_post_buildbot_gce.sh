@@ -10,8 +10,10 @@
 # adt-emu-buildbot-4        Includes script to start buildbot
 # adt-emu-buildbot-5        mount src to tmpfs
 # adt-emu-buildbot-5-test   Image to be used for test machines
-#                            (does not start buildbot)
 # adt-emu-buildbot-5-prod   Image to be used for buildbots
+# adt-emu-buildbot-6-test   Added darwin cross compiler
+#                            (does not start buildbot)
+# adt-emu-buildbot-6-prod   Added darwin cross compiler
 #                            (starts buildbot on startup)
 
 if [ $# -ne 2 ]
@@ -33,7 +35,7 @@ then
    export IMAGE_TYPE="prod"
 fi
 
-export IMAGE_NAME=adt-emu-buildbot-5-$IMAGE_TYPE
+export IMAGE_NAME=adt-emu-buildbot-6-$IMAGE_TYPE
 export TEMP_INSTANCE=adt-emu-buildbot-$1
 export PROJECT=android-studio-build
 export FULL_PROJECT=android-studio-build
