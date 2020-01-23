@@ -102,7 +102,9 @@ public class Res {
             "com.google.android.gms:id/sud_items_switch";
 
     public static final String SEARCH_TEXT_BOX =
-            "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)/(search_omnibox_text_box|textbox|edit_textbox)";
+        "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)/(search_omnibox_text_box|search_omnibox_edit_text|textbox|edit_textbox)";
+    public static final String SEARCH_TEXT_CLEAR = "com.google.android.apps.gmm:id/search_omnibox_text_clear";
+    public static final String GOOGLE_ACCEPT_BUTTON = "com.google.android.apps.gmm:id/accept_button";
     public static final String GOOGLE_AR_SNACKBAR_RES =
             "com.google.ar.core.examples.c.helloar:id/snackbar_text";
 

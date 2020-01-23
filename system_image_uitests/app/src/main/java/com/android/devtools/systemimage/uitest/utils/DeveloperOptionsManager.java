@@ -46,25 +46,25 @@ public class DeveloperOptionsManager {
 
         // Click "Build number"
         UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.ABOUT_PHONE_LIST_CONTAINER_RES)
-                );
+            new UiScrollable(
+                new UiSelector().resourceIdMatches(Res.ABOUT_PHONE_LIST_CONTAINER_RES)
+            );
         itemList.setAsVerticalList();
 
         final UiObject buildNumberLabel =
-                itemList.getChildByText(
-                        new UiSelector().className("android.widget.TextView"),
-                        "Build number"
-                );
+            itemList.getChildByText(
+                new UiSelector().className("android.widget.TextView"),
+                "Build number"
+            );
 
         boolean hasBuildNumberLabel = new Wait(TimeUnit.MILLISECONDS.convert(
-                10L, TimeUnit.SECONDS)).
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return buildNumberLabel.waitForExists(10L);
-                    }
-                });
+            10L, TimeUnit.SECONDS)).
+            until(new Wait.ExpectedCondition() {
+                @Override
+                public boolean isTrue() {
+                    return buildNumberLabel.waitForExists(10L);
+                }
+            });
 
         Assert.assertTrue("Developer options could not be enabled.", hasBuildNumberLabel);
 
@@ -84,13 +84,13 @@ public class DeveloperOptionsManager {
      * @throws Exception if it fails to find a UI widget.
      */
     public static void enableDeveloperOptions_v1(SystemImageTestFramework testFramework)
-            throws Exception {
+        throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
         try {
-            AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "About emulated device"});
+            AppLauncher.launchPath(instrumentation, true, "Settings", "About phone");
         } catch (UiObjectNotFoundException e) {
-            AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "About phone"});
+            AppLauncher.launchPath(instrumentation, true, "Settings", "About emulated device");
         }
 
         enableOptions(instrumentation);
@@ -106,19 +106,19 @@ public class DeveloperOptionsManager {
      * @throws Exception if it fails to find a UI widget.
      */
     public static void enableDeveloperOptions_v2(SystemImageTestFramework testFramework)
-            throws Exception {
+        throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
         try {
-            AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "System", "About emulated device"});
+            AppLauncher.launchPath(instrumentation, true, "Settings", "System", "About emulated device");
         } catch (UiObjectNotFoundException e) {
             try {
-                AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "System", "About phone"});
+                AppLauncher.launchPath(instrumentation, true, "Settings", "System", "About phone");
             } catch (UiObjectNotFoundException e1) {
                 try {
-                    AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "About emulated device"});
+                    AppLauncher.launchPath(instrumentation, true, "Settings", "About emulated device");
                 } catch (UiObjectNotFoundException e2) {
-                    AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "About phone"});
+                    AppLauncher.launchPath(instrumentation, true, "Settings", "About phone");
                 }
             }
         }
