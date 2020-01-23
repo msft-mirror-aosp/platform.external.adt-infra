@@ -1,0 +1,7 @@
+*.pyc
+acloud.egg-info/
+emu_icebox.egg-info/
+*egg
+emu_boot.egg-info/
+venv
+vp2
