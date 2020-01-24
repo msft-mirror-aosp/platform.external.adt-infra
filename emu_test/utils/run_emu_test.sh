@@ -156,6 +156,20 @@ then
     echo "PSQ Snapshot test timeout"
 fi
 
+echo "Running icebox tests"
+echo "Remove any existing AVDs"
+echo "rm -rf $ANDROID_AVD_HOME/*"
+rm -rf $ANDROID_AVD_HOME/*
+
+echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Icebox_test --file_pattern 'test_icebox.*' --config_file external/adt-infra/emu_test/config/icebox_cfg.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml"
+$TIMEOUT_CMD 1800 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Icebox_test --file_pattern 'test_icebox.*' --config_file external/adt-infra/emu_test/config/icebox_cfg.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
+
+if [[ ! -f $SESSION_DIR/Icebox_test/test_report.xml ]]
+then
+    STATUS=1
+    echo "Icebox test timeout"
+fi
+
 echo "Remove deployed emulator"
 echo "Run rm -rf $SESSION_DIR/emu-master-dev"
 rm -rf $SESSION_DIR/emu-master-dev
