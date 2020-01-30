@@ -23,7 +23,7 @@ echo "Deploy emulator"
 echo "Run mkdir %SESSION_DIR%\emu-master-dev"
 mkdir %SESSION_DIR%\emu-master-dev
 
-set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%\sdk_tools_mingw
+set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%\sdk_tools_windows
 
 echo "Run unzip -o %BUILD_DIR%\sdk-repo-windows-emulator-[0-9]*.zip -d %SESSION_DIR%\emu-master-dev\"
 unzip -o %BUILD_DIR%\sdk-repo-windows-emulator-[0-9]*.zip -d %SESSION_DIR%\emu-master-dev\
@@ -46,12 +46,6 @@ python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR
 
 echo "Run python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --api 29 --metric_tag 29"
 python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --api 29 --metric_tag 29
-
-echo "Run python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --metric_tag mingw --api 28"
-python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --metric_tag mingw --api 28
-
-echo "Run python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --metric_tag mingw_29 --api 29"
-python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --metric_tag mingw_29 --api 29
 
 echo "Zip Perf Data"
 7z a %SESSION_DIR%\Perf_test\test.outputs\outputs.zip %SESSION_DIR%\Perf_test\test.outputs\*.json
