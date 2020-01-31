@@ -369,8 +369,12 @@ def launch_application(package_name):
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
   subprocess.call([adb_binary, 'shell', 'am', 'start', package_name])
 
+def stop_application(package_name):
+  adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+  subprocess.call([adb_binary, 'shell', 'am', 'force-stop', package_name])
+
 def get_device_density():
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
   output = subprocess.check_output([adb_binary, 'shell', 'dumpsys', 'window', 'displays', '|', 'grep', 'init'])
   res_values = re.compile('\w+').findall(output)
-  return res_values
+  return res_values[res_values.index("init")+1], res_values[res_values.index("cur")+1]

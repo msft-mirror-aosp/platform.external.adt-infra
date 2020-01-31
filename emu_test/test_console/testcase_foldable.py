@@ -36,8 +36,8 @@ class FoldableTest(testcase_base.BaseConsoleTest):
 
     @classmethod
     def tearDownClass(cls):
-        check_state = util.get_device_density()
-        if check_state[1] == check_state[4]:
+        init, cur = util.get_device_density()
+        if init == cur:
             adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
             subprocess.check_output([adb_binary, 'emu', CMD_AVD_FOLD])
 
@@ -56,15 +56,15 @@ class FoldableTest(testcase_base.BaseConsoleTest):
       """
       this_function_name = sys._getframe().f_code.co_name
       print 'Running test: %s' % this_function_name
-      device_density = util.get_device_density()
-      if device_density[1] != device_density[4]:
+      init, cur = util.get_device_density()
+      if init != cur:
           self._execute_command_and_verify(CMD_AVD_UNFOLD, util.OK, MSG_CMD_UNFOLD_FAIL)
-          device_density = util.get_device_density()
-          assert device_density[1] == device_density[4], ASSERT_MSG_UNFOLD_FAIL
+          init, cur = util.get_device_density()
+          assert init == cur, ASSERT_MSG_UNFOLD_FAIL
 
       self._execute_command_and_verify(CMD_AVD_FOLD, util.OK, MSG_CMD_FOLD_FAIL)
-      device_density = util.get_device_density()
-      assert device_density[1] != device_density[4], ASSERT_MSG_FOLD_FAIL
+      init, cur = util.get_device_density()
+      assert init != cur, ASSERT_MSG_FOLD_FAIL
 
     def test_unfold_feature(self):
       """Verifies unfold command, returns OK.
@@ -81,15 +81,15 @@ class FoldableTest(testcase_base.BaseConsoleTest):
       """
       this_function_name = sys._getframe().f_code.co_name
       print 'Running test: %s' % this_function_name
-      check_state = util.get_device_density()
-      if check_state[1] == check_state[4]:
+      init, cur = util.get_device_density()
+      if init == cur:
           self._execute_command_and_verify(CMD_AVD_FOLD, util.OK, MSG_CMD_FOLD_FAIL)
-          device_density = util.get_device_density()
-          assert device_density[1] != device_density[4], ASSERT_MSG_FOLD_FAIL
+          init, cur = util.get_device_density()
+          assert init != cur, ASSERT_MSG_FOLD_FAIL
 
       self._execute_command_and_verify(CMD_AVD_UNFOLD, util.OK, MSG_CMD_UNFOLD_FAIL)
-      device_density = util.get_device_density()
-      assert device_density[1] == device_density[4], ASSERT_MSG_UNFOLD_FAIL
+      init, cur = util.get_device_density()
+      assert init == cur, ASSERT_MSG_UNFOLD_FAIL
 
     def test_fold_with_snapshot(self):
       """Verifies snapshot behavior with AVD in fold state.
@@ -111,11 +111,11 @@ class FoldableTest(testcase_base.BaseConsoleTest):
       """
       this_function_name = sys._getframe().f_code.co_name
       print 'Running test: %s' % this_function_name
-      check_state = util.get_device_density()
-      if check_state[1] == check_state[4]:
+      init, cur = util.get_device_density()
+      if init == cur:
           self._execute_command_and_verify(CMD_AVD_FOLD, util.OK, MSG_CMD_FOLD_FAIL)
-          device_density = util.get_device_density()
-          assert device_density[1] != device_density[4], ASSERT_MSG_FOLD_FAIL
+          init, cur = util.get_device_density()
+          assert init != cur, ASSERT_MSG_FOLD_FAIL
 
       snapshot_string_fold = SNAPSHOT_PREFIX + PREFIX_FOLD
       self._execute_command_and_verify(CMD_AVD_SNAPSHOT_SAVE + snapshot_string_fold + NEW_LINE_COMMAND,
@@ -123,8 +123,8 @@ class FoldableTest(testcase_base.BaseConsoleTest):
       list_snapshots = util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_LIST, snapshot_string_fold)
       if list_snapshots[0] is True:
         self.fold_unfold_util(CMD_AVD_UNFOLD, snapshot_string_fold)
-        device_density = util.get_device_density()
-        assert device_density[1] != device_density[4], ASSERT_MSG_FOLD_FAIL
+        init, cur = util.get_device_density()
+        assert init != cur, ASSERT_MSG_FOLD_FAIL
 
     def test_unfold_with_snapshot(self):
       """Verifies snapshot behavior with AVD in unfold state.
@@ -146,11 +146,11 @@ class FoldableTest(testcase_base.BaseConsoleTest):
       """
       this_function_name = sys._getframe().f_code.co_name
       print 'Running test: %s' % this_function_name
-      check_state = util.get_device_density()
-      if check_state[1] != check_state[4]:
+      init, cur = util.get_device_density()
+      if init != cur:
           self._execute_command_and_verify(CMD_AVD_UNFOLD, util.OK, MSG_CMD_UNFOLD_FAIL)
-          device_density = util.get_device_density()
-          assert device_density[1] == device_density[4], ASSERT_MSG_UNFOLD_FAIL
+          init, cur = util.get_device_density()
+          assert init == cur, ASSERT_MSG_UNFOLD_FAIL
 
       snapshot_string_unfold = SNAPSHOT_PREFIX + PREFIX_UNFOLD
       self._execute_command_and_verify(CMD_AVD_SNAPSHOT_SAVE + snapshot_string_unfold + NEW_LINE_COMMAND,
@@ -158,8 +158,8 @@ class FoldableTest(testcase_base.BaseConsoleTest):
       list_snapshots = util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_LIST, snapshot_string_unfold)
       if list_snapshots[0] is True:
           self.fold_unfold_util(CMD_AVD_FOLD, snapshot_string_unfold)
-          device_density = util.get_device_density()
-          assert device_density[1] == device_density[4], ASSERT_MSG_FOLD_FAIL
+          init, cur = util.get_device_density()
+          assert init == cur, ASSERT_MSG_FOLD_FAIL
 
     def fold_unfold_util(self, device_state, snapshot_name):
         """Folds/unfolds AVD and loads required snapshot.

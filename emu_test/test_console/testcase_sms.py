@@ -56,6 +56,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
     print 'Running test: %s' % (this_function_name)
     util.launch_application(CONSOLE_TEST_PACKAGE_NAME + '/com.example.ConsoleTest.MainActivity')
     self._execute_command_and_verify(CMD_SMS_SEND.format(SENDER_PHONE_NUMBER, TEXT_MESSAGE), util.OK, ASSERT_MSG)
+    util.stop_application(CONSOLE_TEST_PACKAGE_NAME)
     self._poll_and_verify_sms(MSG_MATCHING_STRING.format(SENDER_PHONE_NUMBER, TEXT_MESSAGE))
 
   def test_send_inbound_sms_pdu(self):
@@ -77,6 +78,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
     print 'Running test: %s' % (this_function_name)
     util.launch_application(CONSOLE_TEST_PACKAGE_NAME + '/com.example.ConsoleTest.MainActivity')
     self._execute_command_and_verify(CMD_SMS_PDU.format(PDU_FORMAT_MESSAGE), util.OK, ASSERT_MSG)
+    util.stop_application(CONSOLE_TEST_PACKAGE_NAME)
     self._poll_and_verify_sms(MSG_MATCHING_STRING.format(PDU_PHONE_NUMBER, PDU_MESSAGE))
 
   def _execute_command_and_verify(self, command, expected_output, assert_msg):
