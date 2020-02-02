@@ -377,4 +377,5 @@ def get_device_density():
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
   output = subprocess.check_output([adb_binary, 'shell', 'dumpsys', 'window', 'displays', '|', 'grep', 'init'])
   res_values = re.compile('\w+').findall(output)
+  print 'density: %s' % output
   return res_values[res_values.index("init")+1], res_values[res_values.index("cur")+1]

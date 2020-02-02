@@ -183,6 +183,7 @@ class FoldableTest(testcase_base.BaseConsoleTest):
           expected_output: Expected console output.
           assert_msg: Assertion message.
         """
+        print 'running command %s' % command
         is_command_successful, output = util.execute_console_command(
             self.telnet, command, expected_output)
         self.assert_cmd_successful(is_command_successful, assert_msg, False, '',
