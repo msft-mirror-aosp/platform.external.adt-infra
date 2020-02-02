@@ -7,7 +7,7 @@ import subprocess
 import testcase_base
 from utils import util
 
-SENDER_PHONE_NUMBER = '+1987654321'
+SENDER_PHONE_NUMBER = '987654321'
 TEXT_MESSAGE = 'Hello There'
 MSG_MATCHING_STRING = ' Sender:{} || Message:{}'
 CMD_SMS_SEND = 'sms send {} {}\n'
