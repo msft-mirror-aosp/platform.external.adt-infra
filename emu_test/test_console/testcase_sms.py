@@ -9,7 +9,7 @@ from utils import util
 
 SENDER_PHONE_NUMBER = '987654321'
 TEXT_MESSAGE = 'Hello There'
-MSG_MATCHING_STRING = ' Sender:{} || Message:{}'
+MSG_MATCHING_STRING = 'Sender:{} || Message:{}'
 CMD_SMS_SEND = 'sms send {} {}\n'
 CMD_SMS_PDU = 'sms pdu {}\n'
 PDU_FORMAT_MESSAGE = '07911326040000F0040B911346610089F60000208062917314080CC8F71D14969741F977FD07'
@@ -97,6 +97,9 @@ class SmsTest(testcase_base.BaseConsoleTest):
     adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
     test_process = subprocess.check_output([adb_binary, 'logcat', '-d'])
     is_match_successful = msg_string in str(test_process)
+    for line in test_process.splitlines():
+      if "Sender" in line:
+        print "Line %s" % line
     self.assertTrue(is_match_successful, ASSERT_MSG_MATCH_FAILURE)
 
 if __name__ == '__main__':

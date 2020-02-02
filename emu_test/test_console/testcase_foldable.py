@@ -170,10 +170,10 @@ class FoldableTest(testcase_base.BaseConsoleTest):
         """
         self._execute_command_and_verify(device_state, util.OK,
                                          'Error in ' + device_state + 'ing the AVD')
-        time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
+        time.sleep(util.CMD_DELAY_VALUE)
         self._execute_command_and_verify(CMD_AVD_SNAPSHOT_LOAD + snapshot_name + NEW_LINE_COMMAND,
                                          util.OK, 'Error in loading ' + device_state + 'ed snapshot')
-        time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
+        time.sleep(util.CMD_DELAY_VALUE)
 
     def _execute_command_and_verify(self, command, expected_output, assert_msg):
         """Executes console command and verify output.
@@ -188,6 +188,7 @@ class FoldableTest(testcase_base.BaseConsoleTest):
             self.telnet, command, expected_output)
         self.assert_cmd_successful(is_command_successful, assert_msg, False, '',
                                    'Pattern: \n%s' % expected_output, output)
+        time.sleep(util.CMD_DELAY_VALUE)
 
 if __name__ == '__main__':
     print '======= Foldable Test ======='

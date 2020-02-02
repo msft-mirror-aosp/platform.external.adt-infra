@@ -76,13 +76,13 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     this_function_name = sys._getframe().f_code.co_name
     print 'Running test: %s' % (this_function_name)
     util.launch_application(util.CONTACT_PACKAGE_NAME)
-    time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
+    time.sleep(util.CMD_DELAY_VALUE)
     snapshot_string = SNAPSHOT_PREFIX + this_function_name
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_SAVE + snapshot_string + NEW_LINE_COMMAND, util.OK)
     subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CONTACT_PACKAGE_NAME])
-    time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
+    time.sleep(util.CMD_DELAY_VALUE)
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LOAD+snapshot_string+ NEW_LINE_COMMAND, util.OK)
-    time.sleep(util.CMD_AVD_SNAPSHOT_DELAY_VALUE)
+    time.sleep(util.CMD_DELAY_VALUE)
     self.assertTrue(util.check_running_app())
     util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
     subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CONTACT_PACKAGE_NAME])
