@@ -95,7 +95,7 @@ class IceboxTestCase(EmuBaseTestCase):
         # wait for the app to launch
         time.sleep(5)
         tries = 0
-        while tries < 10:
+        while tries < 20:
             try:
                 pid = self.run_and_log([adb_binary, "shell", "pidof", "com.example.myapplication"])
                 break
@@ -103,7 +103,7 @@ class IceboxTestCase(EmuBaseTestCase):
                 self.m_logger.info("Get pid failed, retrying %d times in 1 sec" % tries)
                 time.sleep(1)
                 tries = tries + 1
-        assert tries < 10, "Maximum retries exceeded when getting pid"
+        assert tries < 20, "Maximum retries exceeded when getting pid"
 
         pid = pid.rstrip()
         time.sleep(5)
@@ -111,7 +111,15 @@ class IceboxTestCase(EmuBaseTestCase):
         test_thread.join(20)
         assert "FAILURES!!!" in self.test_result
         snapshot_list = self.run_and_log([adb_binary, "emu", "avd", "snapshot", "list"])
-        assert "test_failure_snapshot" in snapshot_list
+        snapshot_name = "test_failure_snapshot"
+        # BUG: 148689571
+        # adb emu command does not list the snapshots on buildbot
+        assert 'ANDROID_AVD_HOME' in os.environ, "ANDROID_AVD_HOME not set"
+        assert snapshot_name in snapshot_list or os.path.isdir(
+            os.path.join(os.environ['ANDROID_AVD_HOME'],
+                         '%s.avd' % self.avd_config.name(),
+                         'snapshots',
+                         snapshot_name))
 
 if emu_args.config_file is not None:
     emu_test.utils.emu_testcase.create_test_case_from_file("Icebox", IceboxTestCase, IceboxTestCase.run_icebox_test)
