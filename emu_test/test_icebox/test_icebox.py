@@ -108,7 +108,7 @@ class IceboxTestCase(EmuBaseTestCase):
         pid = pid.rstrip()
         time.sleep(5)
         self.run_and_log([adb_binary, "emu", "icebox", "track", pid])
-        test_thread.join(20)
+        test_thread.join(60)
         assert "FAILURES!!!" in self.test_result
         snapshot_list = self.run_and_log([adb_binary, "emu", "avd", "snapshot", "list"])
         snapshot_name = "test_failure_snapshot"
