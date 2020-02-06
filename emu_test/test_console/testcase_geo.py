@@ -37,7 +37,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
 
   @classmethod
   def setUpClass(cls):
-    util.install_with_permission()
+    util.install_with_permission("ConsoleTest.apk")
 
   @classmethod
   def tearDownClass(cls):

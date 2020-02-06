@@ -4,6 +4,7 @@ import os
 import unittest
 import sys
 import subprocess
+import time
 import testcase_base
 from utils import util
 
@@ -15,7 +16,7 @@ CMD_SMS_PDU = 'sms pdu {}\n'
 PDU_FORMAT_MESSAGE = '07911326040000F0040B911346610089F60000208062917314080CC8F71D14969741F977FD07'
 PDU_MESSAGE = 'How are you?'
 PDU_PHONE_NUMBER = '+31641600986'
-CONSOLE_TEST_PACKAGE_NAME = 'com.example.ConsoleTest'
+CONSOLE_TEST_PACKAGE_NAME = 'com.example.smstesthelper'
 ASSERT_MSG_MATCH_FAILURE = 'Message/ Sender do not match'
 ASSERT_MSG = 'Message sending failed'
 
@@ -33,7 +34,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
 
   @classmethod
   def setUpClass(cls):
-    util.install_with_permission();
+    util.install_with_permission("SmsTestHelper.apk");
 
   @classmethod
   def tearDownClass(cls):
@@ -54,10 +55,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
     """
     this_function_name = sys._getframe().f_code.co_name
     print 'Running test: %s' % (this_function_name)
-    util.launch_application(CONSOLE_TEST_PACKAGE_NAME + '/com.example.ConsoleTest.MainActivity')
-    subprocess.Popen(['adb', 'logcat', '-c'], stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     self._execute_command_and_verify(CMD_SMS_SEND.format(SENDER_PHONE_NUMBER, TEXT_MESSAGE), util.OK, ASSERT_MSG)
-    util.stop_application(CONSOLE_TEST_PACKAGE_NAME)
     self._poll_and_verify_sms(MSG_MATCHING_STRING.format(SENDER_PHONE_NUMBER, TEXT_MESSAGE))
 
   def test_send_inbound_sms_pdu(self):
@@ -77,10 +75,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
     """
     this_function_name = sys._getframe().f_code.co_name
     print 'Running test: %s' % (this_function_name)
-    util.launch_application(CONSOLE_TEST_PACKAGE_NAME + '/com.example.ConsoleTest.MainActivity')
-    subprocess.Popen(['adb', 'logcat', '-c'], stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     self._execute_command_and_verify(CMD_SMS_PDU.format(PDU_FORMAT_MESSAGE), util.OK, ASSERT_MSG)
-    util.stop_application(CONSOLE_TEST_PACKAGE_NAME)
     self._poll_and_verify_sms(MSG_MATCHING_STRING.format(PDU_PHONE_NUMBER, PDU_MESSAGE))
 
   def _execute_command_and_verify(self, command, expected_output, assert_msg):
@@ -97,11 +92,12 @@ class SmsTest(testcase_base.BaseConsoleTest):
 
   def _poll_and_verify_sms(self, msg_string):
     adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+    subprocess.Popen(['adb', 'logcat', '-c'], stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    util.launch_application(CONSOLE_TEST_PACKAGE_NAME + '/com.example.smstesthelper.MainActivity')
+    time.sleep(1)
     test_process = subprocess.check_output([adb_binary, 'logcat', '-d'])
+    util.stop_application(CONSOLE_TEST_PACKAGE_NAME)
     is_match_successful = msg_string in str(test_process)
-    for line in test_process.splitlines():
-      if "Sender" in line:
-        print "Line %s" % line
     self.assertTrue(is_match_successful, ASSERT_MSG_MATCH_FAILURE)
 
 if __name__ == '__main__':
