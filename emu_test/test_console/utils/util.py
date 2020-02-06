@@ -359,10 +359,10 @@ def unstall_apps(package_name):
       time.sleep(ADB_TRIAL_WAIT_TIME_S)
       num_trials += 1
 
-def install_with_permission():
+def install_with_permission(app_name):
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
   print ('Run adb install for  %s' % TESTCASE_CALL_DIR)
-  path_to_apk = os.path.join(TESTCASE_CALL_DIR, CONSOLE_TEST_APK)
+  path_to_apk = os.path.join(TESTCASE_CALL_DIR, app_name)
   subprocess.call([adb_binary, 'install', '-g', path_to_apk])
 
 def launch_application(package_name):
