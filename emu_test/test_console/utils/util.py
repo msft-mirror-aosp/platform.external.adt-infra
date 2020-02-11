@@ -374,8 +374,11 @@ def stop_application(package_name):
   subprocess.call([adb_binary, 'shell', 'am', 'force-stop', package_name])
 
 def get_device_density():
+  time.sleep(2)
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+  print 'check density'
   output = subprocess.check_output([adb_binary, 'shell', 'dumpsys', 'window', 'displays', '|', 'grep', 'init'])
+  print 'extract init and cur'
   res_values = re.compile('\w+').findall(output)
   print 'density: %s' % output
   return res_values[res_values.index("init")+1], res_values[res_values.index("cur")+1]
