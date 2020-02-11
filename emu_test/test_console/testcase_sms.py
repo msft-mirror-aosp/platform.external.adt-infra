@@ -91,13 +91,19 @@ class SmsTest(testcase_base.BaseConsoleTest):
                                'Pattern: \n%s' % expected_output, output)
 
   def _poll_and_verify_sms(self, msg_string):
+    time.sleep(5)
     adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+    print 'Clear logcat'
     subprocess.Popen(['adb', 'logcat', '-c'], stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    print 'Launch activity'
     util.launch_application(CONSOLE_TEST_PACKAGE_NAME + '/com.example.smstesthelper.MainActivity')
     time.sleep(1)
+    print 'Get logcat'
     test_process = subprocess.check_output([adb_binary, 'logcat', '-d'])
+    print 'Stop activity'
     util.stop_application(CONSOLE_TEST_PACKAGE_NAME)
     is_match_successful = msg_string in str(test_process)
+    print 'Logcat checked'
     self.assertTrue(is_match_successful, ASSERT_MSG_MATCH_FAILURE)
 
 if __name__ == '__main__':
