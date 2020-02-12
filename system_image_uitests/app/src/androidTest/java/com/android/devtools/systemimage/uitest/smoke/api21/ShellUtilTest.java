@@ -145,12 +145,12 @@ public class ShellUtilTest {
                             Log.d(TAG, "ls result " + result);
                             boolean success =
                                     result.matches("(?s).*bugreport.*\\.png.*")
-                                            && result.matches("(?s).*bugreport.*\\.zip.*");
+                                            && result.matches("(?s).*bugreport.*\\.txt.*");
 
                             return success;
                         }
                     });
-            Assert.assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
+            Assert.assertTrue("Missing bug report files for png and txt.", gotPngAndZip);
         } finally {
             ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
         }
