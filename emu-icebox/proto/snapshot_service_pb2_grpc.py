@@ -27,28 +27,28 @@ class SnapshotServiceStub(object):
         )
     self.pullSnapshot = channel.unary_stream(
         '/android.emulation.control.SnapshotService/pullSnapshot',
-        request_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
-        response_deserializer=snapshot__service__pb2.Snapshot.FromString,
+        request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
+        response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
         )
     self.pushSnapshot = channel.stream_unary(
         '/android.emulation.control.SnapshotService/pushSnapshot',
-        request_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
-        response_deserializer=snapshot__service__pb2.Snapshot.FromString,
+        request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
+        response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
         )
     self.loadSnapshot = channel.unary_unary(
         '/android.emulation.control.SnapshotService/loadSnapshot',
-        request_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
-        response_deserializer=snapshot__service__pb2.Snapshot.FromString,
+        request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
+        response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
         )
     self.saveSnapshot = channel.unary_unary(
         '/android.emulation.control.SnapshotService/saveSnapshot',
-        request_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
-        response_deserializer=snapshot__service__pb2.Snapshot.FromString,
+        request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
+        response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
         )
     self.deleteSnapshot = channel.unary_unary(
         '/android.emulation.control.SnapshotService/deleteSnapshot',
-        request_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
-        response_deserializer=snapshot__service__pb2.Snapshot.FromString,
+        request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
+        response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
         )
 
 
@@ -114,28 +114,28 @@ def add_SnapshotServiceServicer_to_server(servicer, server):
       ),
       'pullSnapshot': grpc.unary_stream_rpc_method_handler(
           servicer.pullSnapshot,
-          request_deserializer=snapshot__service__pb2.Snapshot.FromString,
-          response_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
+          request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
+          response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
       ),
       'pushSnapshot': grpc.stream_unary_rpc_method_handler(
           servicer.pushSnapshot,
-          request_deserializer=snapshot__service__pb2.Snapshot.FromString,
-          response_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
+          request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
+          response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
       ),
       'loadSnapshot': grpc.unary_unary_rpc_method_handler(
           servicer.loadSnapshot,
-          request_deserializer=snapshot__service__pb2.Snapshot.FromString,
-          response_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
+          request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
+          response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
       ),
       'saveSnapshot': grpc.unary_unary_rpc_method_handler(
           servicer.saveSnapshot,
-          request_deserializer=snapshot__service__pb2.Snapshot.FromString,
-          response_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
+          request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
+          response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
       ),
       'deleteSnapshot': grpc.unary_unary_rpc_method_handler(
           servicer.deleteSnapshot,
-          request_deserializer=snapshot__service__pb2.Snapshot.FromString,
-          response_serializer=snapshot__service__pb2.Snapshot.SerializeToString,
+          request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
+          response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

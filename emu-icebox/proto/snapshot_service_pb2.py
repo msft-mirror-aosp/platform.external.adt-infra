@@ -30,7 +30,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
 
 _SNAPSHOT_FORMAT = _descriptor.EnumDescriptor(
   name='Format',
-  full_name='android.emulation.control.Snapshot.Format',
+  full_name='android.emulation.control.SnapshotPackage.Format',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -53,41 +53,41 @@ _sym_db.RegisterEnumDescriptor(_SNAPSHOT_FORMAT)
 
 _SNAPSHOT = _descriptor.Descriptor(
   name='Snapshot',
-  full_name='android.emulation.control.Snapshot',
+  full_name='android.emulation.control.SnapshotPackage',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='snapshot_id', full_name='android.emulation.control.Snapshot.snapshot_id', index=0,
+      name='snapshot_id', full_name='android.emulation.control.SnapshotPackage.snapshot_id', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='payload', full_name='android.emulation.control.Snapshot.payload', index=1,
+      name='payload', full_name='android.emulation.control.SnapshotPackage.payload', index=1,
       number=2, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='success', full_name='android.emulation.control.Snapshot.success', index=2,
+      name='success', full_name='android.emulation.control.SnapshotPackage.success', index=2,
       number=3, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='err', full_name='android.emulation.control.Snapshot.err', index=3,
+      name='err', full_name='android.emulation.control.SnapshotPackage.err', index=3,
       number=4, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='format', full_name='android.emulation.control.Snapshot.format', index=4,
+      name='format', full_name='android.emulation.control.SnapshotPackage.format', index=4,
       number=5, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -188,7 +188,7 @@ DESCRIPTOR.message_types_by_name['SnapshotDetails'] = _SNAPSHOTDETAILS
 DESCRIPTOR.message_types_by_name['SnapshotList'] = _SNAPSHOTLIST
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-Snapshot = _reflection.GeneratedProtocolMessageType('Snapshot', (_message.Message,), {
+Snapshot = _reflection.GeneratedProtocolMessageType('SnapshotPackage', (_message.Message,), {
   'DESCRIPTOR' : _SNAPSHOT,
   '__module__' : 'snapshot_service_pb2'
   # @@protoc_insertion_point(class_scope:android.emulation.control.Snapshot)

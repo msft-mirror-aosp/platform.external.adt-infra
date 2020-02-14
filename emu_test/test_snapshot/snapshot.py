@@ -7,7 +7,7 @@ import os
 import grpc
 from google.protobuf import empty_pb2
 
-from emu_test.proto.snapshot_service_pb2 import Snapshot
+from emu_test.proto.snapshot_service_pb2 import SnapshotPackage
 from emu_test.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
 from emu_test.test_snapshot.channel_provider import getEmulatorChannel
 
@@ -46,7 +46,7 @@ class SnapshotService(object):
         fname = os.path.join(dest, snap_id + ".tar.gz")
         self.logger.debug("Pulling %s -> %s", snap_id, fname)
         try:
-            it = self.stub.pullSnapshot(Snapshot(snapshot_id=snap_id))
+            it = self.stub.pullSnapshot(SnapshotPackage(snapshot_id=snap_id))
             with open(fname, "wb") as fn:
                 for msg in it:
                     if not msg.success:
@@ -81,10 +81,10 @@ class SnapshotService(object):
             2. A stream of byte objects from the tar.gz file.
             """
             snap_id = os.path.basename(fname).replace(".tar.gz", "")
-            yield Snapshot(snapshot_id=snap_id)
+            yield SnapshotPackage(snapshot_id=snap_id)
             with open(fname, "rb") as snap:
                 for chunk in read_in_chunks(snap):
-                    yield Snapshot(payload=chunk)
+                    yield SnapshotPackage(payload=chunk)
 
         return self._exec_unary_grpc("pushSnapshot", push_snap_iterator(src))
 
@@ -97,12 +97,12 @@ class SnapshotService(object):
 
     def load(self, snap_id):
         """Loads a snapshot inside the emulator."""
-        return self._exec_unary_grpc("loadSnapshot", Snapshot(snapshot_id=snap_id))
+        return self._exec_unary_grpc("loadSnapshot", SnapshotPackage(snapshot_id=snap_id))
 
     def save(self, snap_id):
         """Saves a snapshot inside the emulator."""
-        return self._exec_unary_grpc("saveSnapshot", Snapshot(snapshot_id=snap_id))
+        return self._exec_unary_grpc("saveSnapshot", SnapshotPackage(snapshot_id=snap_id))
 
     def delete(self, snap_id):
         """Deletes the given snapshot from the emulator."""
-        return self._exec_unary_grpc("deleteSnapshot", Snapshot(snapshot_id=snap_id))
+        return self._exec_unary_grpc("deleteSnapshot", SnapshotPackage(snapshot_id=snap_id))
