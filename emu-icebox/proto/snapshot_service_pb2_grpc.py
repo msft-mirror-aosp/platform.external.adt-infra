@@ -20,35 +20,40 @@ class SnapshotServiceStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.listSnapshots = channel.unary_unary(
-        '/android.emulation.control.SnapshotService/listSnapshots',
+    self.ListSnapshots = channel.unary_unary(
+        '/android.emulation.control.SnapshotService/ListSnapshots',
         request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
         response_deserializer=snapshot__service__pb2.SnapshotList.FromString,
         )
-    self.pullSnapshot = channel.unary_stream(
-        '/android.emulation.control.SnapshotService/pullSnapshot',
+    self.PullSnapshot = channel.unary_stream(
+        '/android.emulation.control.SnapshotService/PullSnapshot',
         request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
         response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
         )
-    self.pushSnapshot = channel.stream_unary(
-        '/android.emulation.control.SnapshotService/pushSnapshot',
+    self.PushSnapshot = channel.stream_unary(
+        '/android.emulation.control.SnapshotService/PushSnapshot',
         request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
         response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
         )
-    self.loadSnapshot = channel.unary_unary(
-        '/android.emulation.control.SnapshotService/loadSnapshot',
+    self.LoadSnapshot = channel.unary_unary(
+        '/android.emulation.control.SnapshotService/LoadSnapshot',
         request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
         response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
         )
-    self.saveSnapshot = channel.unary_unary(
-        '/android.emulation.control.SnapshotService/saveSnapshot',
+    self.SaveSnapshot = channel.unary_unary(
+        '/android.emulation.control.SnapshotService/SaveSnapshot',
         request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
         response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
         )
-    self.deleteSnapshot = channel.unary_unary(
-        '/android.emulation.control.SnapshotService/deleteSnapshot',
+    self.DeleteSnapshot = channel.unary_unary(
+        '/android.emulation.control.SnapshotService/DeleteSnapshot',
         request_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
         response_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
+        )
+    self.TrackProcess = channel.unary_unary(
+        '/android.emulation.control.SnapshotService/TrackProcess',
+        request_serializer=snapshot__service__pb2.IceboxTarget.SerializeToString,
+        response_deserializer=snapshot__service__pb2.IceboxTarget.FromString,
         )
 
 
@@ -61,7 +66,7 @@ class SnapshotServiceServicer(object):
   3. There are no guarantees that you will be able to load the snapshot
   """
 
-  def listSnapshots(self, request, context):
+  def ListSnapshots(self, request, context):
     """Lists all the valid snapshots that are stored locally for the currently
     running avd.
     """
@@ -69,36 +74,44 @@ class SnapshotServiceServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def pullSnapshot(self, request, context):
+  def PullSnapshot(self, request, context):
     """Pulls down the snapshot stored inside the AVD as a tar.gz stream
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def pushSnapshot(self, request_iterator, context):
+  def PushSnapshot(self, request_iterator, context):
     """Push a tar.gz stream contain the snapshot.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def loadSnapshot(self, request, context):
+  def LoadSnapshot(self, request, context):
     """Loads the given snapshot inside the emulator.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def saveSnapshot(self, request, context):
+  def SaveSnapshot(self, request, context):
     """Create as a snapshot of the current state of the emulator.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def deleteSnapshot(self, request, context):
+  def DeleteSnapshot(self, request, context):
     """Deletes the given snapshot from the avd.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def TrackProcess(self, request, context):
+    """Tracks the given process for automated snapshot creation in case of
+    assert failures.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -107,35 +120,40 @@ class SnapshotServiceServicer(object):
 
 def add_SnapshotServiceServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'listSnapshots': grpc.unary_unary_rpc_method_handler(
-          servicer.listSnapshots,
+      'ListSnapshots': grpc.unary_unary_rpc_method_handler(
+          servicer.ListSnapshots,
           request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
           response_serializer=snapshot__service__pb2.SnapshotList.SerializeToString,
       ),
-      'pullSnapshot': grpc.unary_stream_rpc_method_handler(
-          servicer.pullSnapshot,
+      'PullSnapshot': grpc.unary_stream_rpc_method_handler(
+          servicer.PullSnapshot,
           request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
           response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
       ),
-      'pushSnapshot': grpc.stream_unary_rpc_method_handler(
-          servicer.pushSnapshot,
+      'PushSnapshot': grpc.stream_unary_rpc_method_handler(
+          servicer.PushSnapshot,
           request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
           response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
       ),
-      'loadSnapshot': grpc.unary_unary_rpc_method_handler(
-          servicer.loadSnapshot,
+      'LoadSnapshot': grpc.unary_unary_rpc_method_handler(
+          servicer.LoadSnapshot,
           request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
           response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
       ),
-      'saveSnapshot': grpc.unary_unary_rpc_method_handler(
-          servicer.saveSnapshot,
+      'SaveSnapshot': grpc.unary_unary_rpc_method_handler(
+          servicer.SaveSnapshot,
           request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
           response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
       ),
-      'deleteSnapshot': grpc.unary_unary_rpc_method_handler(
-          servicer.deleteSnapshot,
+      'DeleteSnapshot': grpc.unary_unary_rpc_method_handler(
+          servicer.DeleteSnapshot,
           request_deserializer=snapshot__service__pb2.SnapshotPackage.FromString,
           response_serializer=snapshot__service__pb2.SnapshotPackage.SerializeToString,
+      ),
+      'TrackProcess': grpc.unary_unary_rpc_method_handler(
+          servicer.TrackProcess,
+          request_deserializer=snapshot__service__pb2.IceboxTarget.FromString,
+          response_serializer=snapshot__service__pb2.IceboxTarget.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

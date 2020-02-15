@@ -46,7 +46,7 @@ class SnapshotService(object):
         fname = os.path.join(dest, snap_id + ".tar.gz")
         self.logger.debug("Pulling %s -> %s", snap_id, fname)
         try:
-            it = self.stub.pullSnapshot(SnapshotPackage(snapshot_id=snap_id))
+            it = self.stub.PullSnapshot(SnapshotPackage(snapshot_id=snap_id))
             with open(fname, "wb") as fn:
                 for msg in it:
                     if not msg.success:
@@ -86,23 +86,23 @@ class SnapshotService(object):
                 for chunk in read_in_chunks(snap):
                     yield SnapshotPackage(payload=chunk)
 
-        return self._exec_unary_grpc("pushSnapshot", push_snap_iterator(src))
+        return self._exec_unary_grpc("PushSnapshot", push_snap_iterator(src))
 
     def lists(self):
         """Lists all available snapshots."""
         self.logger.debug("Retrieving snapshots")
-        response = self.stub.listSnapshots(_EMPTY_)
+        response = self.stub.ListSnapshots(_EMPTY_)
         self.logger.debug("Response %s", response)
         return [f.snapshot_id for f in response.snapshots]
 
     def load(self, snap_id):
         """Loads a snapshot inside the emulator."""
-        return self._exec_unary_grpc("loadSnapshot", SnapshotPackage(snapshot_id=snap_id))
+        return self._exec_unary_grpc("LoadSnapshot", SnapshotPackage(snapshot_id=snap_id))
 
     def save(self, snap_id):
         """Saves a snapshot inside the emulator."""
-        return self._exec_unary_grpc("saveSnapshot", SnapshotPackage(snapshot_id=snap_id))
+        return self._exec_unary_grpc("SaveSnapshot", SnapshotPackage(snapshot_id=snap_id))
 
     def delete(self, snap_id):
         """Deletes the given snapshot from the emulator."""
-        return self._exec_unary_grpc("deleteSnapshot", SnapshotPackage(snapshot_id=snap_id))
+        return self._exec_unary_grpc("DeleteSnapshot", SnapshotPackage(snapshot_id=snap_id))
