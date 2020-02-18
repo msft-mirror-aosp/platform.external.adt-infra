@@ -49,7 +49,7 @@ public class AppLauncher {
      * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
     public static boolean launch(Instrumentation instrumentation, String appName) throws Exception  {
-        Log.i(TAG, "Open "+appName);
+        Log.i(TAG, "Open "+ appName);
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
@@ -58,11 +58,11 @@ public class AppLauncher {
         UiObject scrollView = device.findObject(new UiSelector().resourceId("android:id/content"));
         // Scroll to the end to open app drawer.
         device.drag(
-            0,
-            appsLabel.getBounds().top,
-            0,
-            scrollView.getBounds().top,
-            10);
+                0,
+                appsLabel.getBounds().top,
+                0,
+                scrollView.getBounds().top,
+                10);
 
         // Attempt to scroll through the list twice, first vertically, and then horizontally.
         // If the target object cannot be found while scrolling, fling forward by a
@@ -79,20 +79,13 @@ public class AppLauncher {
             Log.i(TAG, "Opened app in first attempt");
         }
         else {
-            if (api >= 18 && api <= 21 ) {
-                final UiObject launcherIcon = device.findObject(new UiSelector().
-                    className("android.widget.TextView").
-                    packageName("com.android.launcher").
-                    description("Apps"));
-                if (new Wait().until(launcherIcon::exists)) {
-                    launcherIcon.clickAndWaitForNewWindow();
-                    new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
-                }
-            } else if (api == 22) {
+            if (api >= 18 && api <= 23 ) {
                 device.pressHome();
                 final UiObject launcherIcon = device.findObject(new UiSelector().
-                    packageName("com.google.android.googlequicksearchbox").
-                    description("Apps"));
+                        className("android.widget.TextView").
+                        packageName(device.getLauncherPackageName()).
+                        description("Apps")
+                );
                 if (new Wait().until(launcherIcon::exists)) {
                     launcherIcon.clickAndWaitForNewWindow();
                     new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
@@ -112,23 +105,23 @@ public class AppLauncher {
             } catch (UiObjectNotFoundException e) {
                 device.pressHome();
                 device.drag(
-                    0,
-                    appsLabel.getBounds().top,
-                    0,
-                    scrollView.getBounds().top,
-                    10);
+                        0,
+                        appsLabel.getBounds().top,
+                        0,
+                        scrollView.getBounds().top,
+                        10);
 
                 if (!appObject.exists()) {
                     if (api >= 28) {
                         device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
                         final UiObject launcherDismiss = device.findObject(new UiSelector().
-                            resourceId(Res.LAUNCHER_LIST_DISMISS_RES));
+                                resourceId(Res.LAUNCHER_LIST_DISMISS_RES));
                         if (new Wait().until(launcherDismiss::exists)) {
                             launcherDismiss.clickAndWaitForNewWindow();
                         }
                     } else {
                         final UiObject launcherList = device.findObject(new UiSelector().
-                            resourceId(Res.LAUNCHER_LIST_CONTAINER_RES));
+                                resourceId(Res.LAUNCHER_LIST_CONTAINER_RES));
                         boolean launcherListFound = new Wait().until(launcherList::exists);
                         if (launcherListFound) {
                             launcherList.clickAndWaitForNewWindow();
@@ -158,7 +151,7 @@ public class AppLauncher {
      * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
     public static boolean launchPath(Instrumentation instrumentation, boolean firstAttempt, String... appPath)
-        throws Exception {
+            throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         boolean status = launch(instrumentation, appPath[0]);
 

@@ -23,6 +23,8 @@ import android.content.res.AssetManager;
 import android.net.Uri;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
@@ -82,6 +84,46 @@ public class PackageInstallationUtil {
         return false;
     }
 
+    private static boolean allowInstallation(UiDevice device) throws UiObjectNotFoundException {
+        UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)").
+                className("android.widget.Button"));
+        if (!settingsButton.waitForExists(5000)) {
+            return false;
+        }
+
+        settingsButton.clickAndWaitForNewWindow();
+        final UiScrollable settingsList = new UiScrollable(new UiSelector().scrollable(true));
+        settingsList.setAsVerticalList();
+        boolean permissionGranted = false;
+        UiObject allowSwitch = device.findObject(new UiSelector()
+                .textMatches(Res.UNKNOWN_SOURCES_PATTERN));
+        if (settingsList.scrollIntoView(allowSwitch)) {
+            allowSwitch.click();
+            UiObject allowMessage = device.findObject(new UiSelector()
+                    .textMatches(Res.UNKNOWN_SOURCES_PATTERN));
+            boolean hasAllowMessage = allowMessage.waitForExists(TimeUnit.MILLISECONDS.convert(
+                    INSTALL_WAIT, TimeUnit.SECONDS));
+            if (!hasAllowMessage) {
+                allowSwitch.click();
+                permissionGranted = true;
+            } else {
+                permissionGranted = new watcher(device, Res.PKG_INSTALL_WATCHER_PATTERN).
+                        checkForCondition();
+            }
+            device.pressBack();
+        } else {
+            settingsList.scrollToBeginning(10);
+            allowSwitch = device.findObject(new UiSelector().className("android.widget.Switch"));
+            if (settingsList.scrollIntoView(allowSwitch)) {
+                if (allowSwitch.getText().equals("OFF")) {
+                    allowSwitch.click();
+                }
+                device.pressBack();
+                permissionGranted = true;
+            }
+        }
+        return permissionGranted;
+    }
     /**
      * Installs the target apk on the android image
      *
@@ -116,22 +158,13 @@ public class PackageInstallationUtil {
 
         boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(
                 INSTALL_WAIT, TimeUnit.SECONDS));
+
         if (hasSettings) {
-            settingsButton.clickAndWaitForNewWindow();
+            if (!allowInstallation(device)) {
+                result += "Could not allow installation from outside sources.";
+            }
         } else {
             result += "Could not find settings icon. ";
-        }
-
-        UiObject allowSwitch = device.findObject(new UiSelector().className("android.widget.Switch"));
-        boolean hasAllowSwitch = allowSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(
-                INSTALL_WAIT, TimeUnit.SECONDS));
-        if (hasAllowSwitch) {
-            if (allowSwitch.getText().equals("OFF")) {
-                allowSwitch.click();
-            }
-            device.pressBack();
-        } else {
-            result += "Could not allow installation from outside sources. ";
         }
 
         UiObject installButton = device.findObject(new UiSelector().textMatches("(?i)install(?-i)").
@@ -157,7 +190,7 @@ public class PackageInstallationUtil {
         final UiObject doneLabel = device.findObject(new UiSelector().text("App installed."));
 
         boolean installationSuccess = new Wait(INSTALL_WAIT * 12L).
-            until(() -> doneButtonText.exists() || doneButtonRes.exists() || doneLabel.exists());
+                until(() -> doneButtonText.exists() || doneButtonRes.exists() || doneLabel.exists());
 
         result = installationSuccess ? INSTALL_COMPLETE : result + "Could not find done button. ";
 
