@@ -74,7 +74,7 @@ public class AppLauncher {
         final UiObject appObject = device.findObject(appSelector);
 
         boolean appNameFound = false;
-        if (new Wait().until(appObject::exists) && api != 22) {
+        if (new Wait().until(appObject::exists) && (api < 22 && api > 23)) {
             appObject.clickAndWaitForNewWindow();
             Log.i(TAG, "Opened app in first attempt");
         }

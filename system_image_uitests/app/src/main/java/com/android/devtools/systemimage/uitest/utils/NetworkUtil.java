@@ -67,9 +67,7 @@ public class NetworkUtil {
      * @return
      */
     public static UiObject getAirplaneModeIcon_v1(UiDevice device) {
-        UiObject airplaneModeIcon = device.findObject(new UiSelector().resourceId("com.android.systemui:id/airplane"));
-
-        return airplaneModeIcon;
+        return device.findObject(new UiSelector().resourceId("com.android.systemui:id/airplane"));
     }
 
     /**
@@ -79,9 +77,7 @@ public class NetworkUtil {
      * @return
      */
     public static UiObject getAirplaneModeIcon_v2(UiDevice device) {
-        UiObject airplaneModeIcon = device.findObject(new UiSelector().description("Airplane mode"));
-
-        return airplaneModeIcon;
+        return device.findObject(new UiSelector().description("Airplane mode"));
     }
 
     /**
@@ -91,10 +87,8 @@ public class NetworkUtil {
      * @return
      */
     public static UiObject getAirplaneModeIcon_v3(UiDevice device) {
-        UiObject airplaneModeIcon = device.findObject(new UiSelector().description("Airplane mode").
+        return device.findObject(new UiSelector().description("Airplane mode").
                 className("android.widget.Switch"));
-
-        return airplaneModeIcon;
     }
 
     public static boolean isAirplaneModeEnabled(UiDevice device, UiObject airplaneModeIcon) throws Exception {
@@ -113,10 +107,10 @@ public class NetworkUtil {
         return status;
     }
 
-    public static void openExtendedNotificationsPanel(UiDevice device) throws UiObjectNotFoundException, InterruptedException {
+    static void openExtendedNotificationsPanel(UiDevice device) throws UiObjectNotFoundException, InterruptedException {
         device.pressHome();
 
-        UiObject pan = device.findObject(new UiSelector().resourceId("com.google.android.apps.nexuslauncher:id/scrim_view"));
+        UiObject pan = device.findObject(new UiSelector().resourceIdMatches(Res.ANDROID_NOTIFICATION_DRAWER));
         Rect panRect = pan.getBounds();
 
         device.openNotification();

@@ -49,6 +49,8 @@ public class Res {
     public static final String ANDROID_WELCOME_CLING_RES =
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
                     + "/cling_dismiss_longpress_info";
+    public static final String ANDROID_NOTIFICATION_DRAWER =
+            "(com.google.android.apps.nexuslauncher\\d*:id|com.android.launcher3\\d*:id)/(scrim_view|launcher)";
     public static final String LAUNCHER_LIST_CONTAINER_RES =
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id|com.google.android.apps.nexuslauncher\\d*:id|com.android.launcher3\\d*:id/active)"
                     + "/(all_apps_container|all_apps_handle|apps_customize_pane_content|apps_list_view|drag_indicator)";
