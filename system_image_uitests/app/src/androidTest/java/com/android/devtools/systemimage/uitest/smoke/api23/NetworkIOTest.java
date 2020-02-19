@@ -82,12 +82,15 @@ public class NetworkIOTest {
         // Check network connectivity.
         if (NetworkUtil.hasCellularNetworkConnection(instrumentation)) {
             AppLauncher.launch(instrumentation, "Browser");
-            device.findObject(new UiSelector().resourceId(
-                    Res.BROWSER_URL_TEXT_FIELD_RES)).click();
-            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                    .clearTextField();
-            device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES))
-                    .setText("google.com");
+            final UiObject browserUrl =
+                    device.findObject(new UiSelector().resourceId(Res.BROWSER_URL_TEXT_FIELD_RES));
+            boolean browserOpened =
+                    new Wait().until(browserUrl::exists);
+            assertTrue("Could not find browser url text field", browserOpened);
+
+            browserUrl.click();
+            browserUrl.clearTextField();
+            browserUrl.setText("google.com");
             device.pressEnter();
 
             // Verify if the load bar is there at first,
@@ -95,12 +98,7 @@ public class NetworkIOTest {
             final UiObject progress =
                     device.findObject(new UiSelector().resourceId(Res.BROWSER_SEARCH_ICON_RES));
             boolean isSuccess =
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            return !progress.exists();
-                        }
-                    });
+                    new Wait().until(() -> !progress.exists());
             assertTrue("Failed to dismiss the loading bar.", isSuccess);
         }
     }
@@ -142,12 +140,8 @@ public class NetworkIOTest {
         if (scrollable.waitForExists(3L)) {
             scrollable.scrollIntoView(billingCycle);
         }
-        assertTrue("Data switch not found.", new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return dataSwitch.exists();
-            }
-        }));
+        assertTrue("Data switch not found.",
+                new Wait().until(dataSwitch::exists));
 
         if (!billingCycle.exists() || !billingCycle.isEnabled()) {
             dataSwitch.click();
@@ -159,24 +153,16 @@ public class NetworkIOTest {
         TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
         new NetworkUtilPopupWatcher(device).checkForCondition();
 
-        assertTrue("Disabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
-                return !billingCycle.exists() || !billingCycle.isEnabled();
-            }
-        }));
+        assertTrue("Disabled billing cycle label not found.",
+                new Wait().until(() -> !billingCycle.exists() || !billingCycle.isEnabled()));
 
         // Enable Cellular data.
         dataSwitch.click();
         TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
         new NetworkUtilPopupWatcher(device).checkForCondition();
 
-        assertTrue("Enabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
-                return billingCycle.exists() && billingCycle.isEnabled();
-            }
-        }));
+        assertTrue("Enabled billing cycle label not found.",
+                new Wait().until(() -> billingCycle.exists() && billingCycle.isEnabled()));
     }
 
     /**
@@ -311,12 +297,7 @@ public class NetworkIOTest {
                 packageName(Res.ANDROID_PHONE_RES));
 
         // Wait for 2G data mode icon
-        boolean data2GModeActive = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-                return data2GPreferred.exists();
-            }
-        });
+        boolean data2GModeActive = new Wait().until(data2GPreferred::exists);
 
         assertTrue("3G data mode is not disabled.", data2GModeActive);
 
