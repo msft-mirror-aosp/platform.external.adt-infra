@@ -84,7 +84,7 @@ fi
 
 if [[ $OSTYPE != *"darwin"* ]]
 then
-    echo "Installing python dependencies"
+    echo "Installing python dependencies for grpc based tests"
     python -m virtualenv &>/dev/null || python -m easy_install --user virtualenv
     python -m virtualenv venv
     . venv/bin/activate
@@ -110,6 +110,17 @@ then
     then
         STATUS=1
         echo "Snapshot test timeout"
+    fi
+
+
+    echo "Running general grpc tests"
+    echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir grpc_test --file_pattern 'test_grpc.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml"
+    $TIMEOUT_CMD 3600 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir grpc_test --file_pattern 'test_grpc.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml
+
+    if [[ ! -f $SESSION_DIR/grpc_test/test_report.xml ]]
+    then
+        STATUS=1
+        echo "grpc test timeout"
     fi
 fi
 
