@@ -19,18 +19,15 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-import android.widget.EditText;
-import android.widget.ScrollView;
-import android.widget.TextView;
+import android.view.KeyEvent;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.MapsWatcher;
+import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -68,7 +65,7 @@ public class MapsTest {
      *   5. Enter search query, "San Francisco", select it from the auto fill results.
      *   6. "San Francisco" location card opens.
      *   7. Select "San Francisco".
-     *   8. Tap on the Drive icon.
+     *   8. Tap on the Directions icon.
      *   Verify:
      *   1. Map points to San Francisco location.
      *   2. Navigation overview is displayed.
@@ -80,80 +77,70 @@ public class MapsTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice mDevice = testFramework.getDevice();
 
-        if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
+        if (testFramework.isGoogleApiImage()) {
             AppLauncher.launch(instrumentation, "Maps");
 
-            new MapsWatcher(mDevice).checkForCondition();
+            final UiObject acceptButton = mDevice.findObject(new UiSelector()
+                    .resourceIdMatches(Res.GOOGLE_ACCEPT_BUTTON)
+            );
+            if (acceptButton.waitForExists(3000)) {
+                acceptButton.click();
+            }
 
-            final UiObject searchUiObject = mDevice.findObject(new UiSelector().
-                    resourceIdMatches(Res.SEARCH_TEXT_BOX));
-            assertTrue("Failed to find search text box", new Wait(5L).until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws Exception {
-                    return searchUiObject.exists();
-                }
-            }));
+            new watcher(mDevice, Res.MAPS_WATCHER_PATTERN).checkForCondition();
 
-            searchUiObject.clickAndWaitForNewWindow();
+            final UiObject searchTextClear = mDevice.findObject(new UiSelector()
+                    .resourceIdMatches(Res.SEARCH_TEXT_CLEAR));
+            if (searchTextClear.waitForExists(3000)) {
+                searchTextClear.click();
+            }
 
-            UiObject searchEditText;
-            UiObject selectedLocation;
-            searchEditText = searchUiObject.getChild(new UiSelector().className(EditText.class.getName()));
-            searchEditText.setText(QUERY_STRING);
-            UiScrollable scrollView = new UiScrollable(new UiSelector().className(ScrollView.class.getName()));
+            final UiObject searchEditText = mDevice.findObject(new UiSelector()
+                    .resourceIdMatches(Res.SEARCH_TEXT_BOX)
+            );
+            if (searchEditText.waitForExists(3000)) {
+                searchEditText.click();
+                // This is required because the setText method on searchEditText was failing
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_S);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_A);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_N);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_SPACE);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_F);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_R);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_A);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_N);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_C);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_I);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_S);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_C);
+                mDevice.pressKeyCode(KeyEvent.KEYCODE_O);
+            }
 
             final UiObject locationString = mDevice.findObject(new UiSelector().text(QUERY_STRING));
-            boolean hasLocationString = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return locationString.exists();
-                }
-            });
-
-            if (hasLocationString) {
-                scrollView.scrollIntoView(locationString);
-            }
-
-            selectedLocation = scrollView.getChildByText(new UiSelector()
-                    .className(TextView.class.getName()), QUERY_STRING);
             Assert.assertTrue("Selected location " + QUERY_STRING + " not found.",
-                    selectedLocation.exists());
-            selectedLocation.clickAndWaitForNewWindow();
+                    new Wait().until(locationString::exists));
+            locationString.clickAndWaitForNewWindow();
 
-            // Verify the Query String is present after completing search.
-            final UiObject searchTextView =
-                    searchUiObject.getChild(new UiSelector().className(TextView.class.getName()));
-
-            boolean hasSearchText = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return searchTextView.exists();
-                }
-            });
-
+            final UiObject destinationLabelText = mDevice.findObject(new UiSelector()
+                    .text(QUERY_STRING)
+            );
+            boolean hasSearchText = new Wait().until(destinationLabelText::exists);
             if (hasSearchText) {
                 Assert.assertTrue("Search string " + QUERY_STRING + " not found.",
-                        searchTextView.getText().contains(QUERY_STRING));
+                        destinationLabelText.getText().contains(QUERY_STRING));
             }
 
-            // Verify the directions/route link exists and clicking on it opens the directions page
-            // verify query string is pre filled in the destination("to") field.
-            UiObject directions;
-            boolean isSuccess = mDevice.findObject(new UiSelector().descriptionMatches(".*Directions.*|.*Route.*"))
-                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            // Verify that the directions icon exists and clicking on it opens the directions page.
+            UiObject routeIcon = mDevice.findObject(
+                    new UiSelector().descriptionMatches(".*Directions.*"));
+            Assert.assertTrue("Could not find route icon",
+                    routeIcon.waitForExists(3000));
+            routeIcon.clickAndWaitForNewWindow();
 
-            if (isSuccess) {
-                directions = mDevice.findObject(new UiSelector().descriptionMatches(".*Directions.*|.*Route.*"));
-            } else {
-                directions = mDevice.findObject(new UiSelector().text("DIRECTIONS"));
-            }
-            Assert.assertTrue(directions.exists());
-            directions.clickAndWaitForNewWindow();
-
+            // Verify that the query string is pre filled in the destination field.
             UiObject destination = mDevice.findObject(new UiSelector().textContains(QUERY_STRING));
-            new MapsWatcher(mDevice).checkForCondition();
-
-            Assert.assertTrue(destination.exists());
+            Assert.assertTrue("Could not find destination icon",
+                    destination.waitForExists(3000));
 
             for (int i = 0; i < 5; i++) {
                 mDevice.pressBack();
