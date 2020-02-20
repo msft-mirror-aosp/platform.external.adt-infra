@@ -89,7 +89,7 @@ public class DeveloperOptionsManager {
 
         try {
             AppLauncher.launchPath(instrumentation, true, "Settings", "About phone");
-        } catch (UiObjectNotFoundException e) {
+        } catch (Exception e) {
             AppLauncher.launchPath(instrumentation, true, "Settings", "About emulated device");
         }
 
