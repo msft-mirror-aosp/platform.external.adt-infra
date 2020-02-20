@@ -105,26 +105,17 @@ public class SettingsTest {
                         "Location");
         location.clickAndWaitForNewWindow();
 
-        boolean isLocationDisabled = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
-                return device.findObject(new UiSelector().textMatches("(?i)yes")).exists();
-            }
-        });
+        boolean isLocationDisabled = new Wait().until(() -> device.findObject(
+                new UiSelector().textMatches("(?i)yes")).exists());
 
         if (isLocationDisabled) {
             device.findObject(new UiSelector().textMatches("(?i)yes")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().textMatches("(?i)location")).clickAndWaitForNewWindow();
         }
         assertTrue("Failed to find Location title.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("Location")).exists() &&
-                                device.findObject(new UiSelector().text("Recent location requests"))
-                                        .exists();
-                    }
-                }));
+                new Wait().until(() -> device.findObject(new UiSelector().text("Location")).exists() &&
+                        device.findObject(new UiSelector().text("Recent location requests"))
+                                .exists()));
     }
 
     /**
@@ -167,14 +158,9 @@ public class SettingsTest {
         device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_PAD_RES)).click();
 
         assertTrue("Did not prompt for lack of Phone permission.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text(
-                                "This application cannot make outgoing calls without the Phone permission.")).
-                                        exists();
-                        }
-                })
+                new Wait().until(() -> device.findObject(new UiSelector().text(
+                        "This application cannot make outgoing calls without the Phone permission.")).
+                        exists())
         );
 
         SettingsUtil.setAppPermissions_v1(instrumentation, app, app, true, "Deny", "Apps");
@@ -231,13 +217,8 @@ public class SettingsTest {
         device.findObject(new UiSelector().description("Move to your location"))
                 .clickAndWaitForNewWindow();
         assertTrue("Did not prompt for lack of Maps permission.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector()
-                                .text("Allow Maps to access this device's location?")).exists();
-                    }
-                })
+                new Wait().until(() -> device.findObject(new UiSelector()
+                        .text("Allow Maps to access this device's location?")).exists())
         );
 
         SettingsUtil.setAppPermissions_v1(instrumentation, appType, appName, true, "Deny", "Apps");
@@ -269,7 +250,6 @@ public class SettingsTest {
 
         assertTrue(SettingsUtil.getAppPermissions_v1(instrumentation, "Calendar", "Apps")
                 && SettingsUtil.getAppPermissions_v1(instrumentation, "Camera", "Apps")
-                && SettingsUtil.getAppPermissions_v1(instrumentation, "Location", "Apps")
                 && SettingsUtil.getAppPermissions_v1(instrumentation, "Phone", "Apps"));
     }
 
@@ -332,41 +312,22 @@ public class SettingsTest {
         final UiObject2 widget = SettingsUtil.navigateToDateTimeSwitch("Automatic date & time", instrumentation, Res.ANDROID_LIST_RES);
 
         // Test requires "Automatic date & time" widget to start in the enabled state.
+        assert widget != null;
         if (!widget.isChecked()) {
             widget.click();
         }
         assertTrue("Failed to disable set date.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return !device.findObject(new UiSelector().text("Set date")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> !device.findObject(new UiSelector().text("Set date")).isEnabled())
         );
         assertTrue("Failed to disable set time.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return !device.findObject(new UiSelector().text("Set time")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> !device.findObject(new UiSelector().text("Set time")).isEnabled())
         );
         widget.click();
         assertTrue("Failed to enable set date.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("Set date")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> device.findObject(new UiSelector().text("Set date")).isEnabled())
         );
         assertTrue("Failed to enable set time.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("Set time")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> device.findObject(new UiSelector().text("Set time")).isEnabled())
         );
         device.findObject(new UiSelector().text("Set date")).clickAndWaitForNewWindow();
 
@@ -410,39 +371,25 @@ public class SettingsTest {
         final UiObject2 widget = SettingsUtil.navigateToDateTimeSwitch("Automatic time zone", instrumentation, Res.ANDROID_LIST_RES);
 
         // Initialize automatic time zone option to enabled state.
+        assert widget != null;
         if (!widget.isChecked()) {
             widget.click();
         }
         assertTrue("Failed to disable select time zone",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return !device.findObject(new UiSelector().text("Select time zone")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> !device.findObject(new UiSelector().text("Select time zone")).isEnabled())
         );
         // Disable automatic time zone option.
         widget.click();
         final UiObject selectTimeZone = device.findObject(
                 new UiSelector().text("Select time zone"));
         assertTrue("Failed to enable select time zone",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return selectTimeZone.isEnabled();
-                  }
-              })
+                new Wait().until(selectTimeZone::isEnabled)
         );
         selectTimeZone.clickAndWaitForNewWindow();
 
         assertTrue("Failed to load Select time zone screen.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(
-                                new UiSelector().text("Select time zone")).exists();
-                    }
-              })
+                new Wait().until(() -> device.findObject(
+                        new UiSelector().text("Select time zone")).exists())
         );
 
         UiObject timeZoneLabel = device.findObject(new UiSelector().text("Time zone").
@@ -503,34 +450,21 @@ public class SettingsTest {
         // Initialize 24-hour format option to disabled state.
         if (thirteenHundredLabel.exists()) {
             useTwentyFourWasEnabled = true;
+            assert useTwentyFourSwitch != null;
             useTwentyFourSwitch.click();
         }
         assertTrue("Failed to find Use 24-hour format label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(
-                                new UiSelector().text("Use 24-hour format")).exists();
-                  }
-              })
+                new Wait().until(() -> device.findObject(
+                        new UiSelector().text("Use 24-hour format")).exists())
         );
         assertTrue("Failed to find 1:00 PM label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("1:00 PM")).exists();
-                  }
-              })
+                new Wait().until(() -> device.findObject(new UiSelector().text("1:00 PM")).exists())
         );
         // Enable 24-hour format.
+        assert useTwentyFourSwitch != null;
         useTwentyFourSwitch.click();
         assertTrue("Failed to find 13:00 label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                      return thirteenHundredLabel.exists();
-                  }
-              })
+                new Wait().until(thirteenHundredLabel::exists)
         );
 
         // Clean up by disabling 24-hour format option.
