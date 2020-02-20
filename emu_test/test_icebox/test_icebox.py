@@ -115,10 +115,13 @@ class IceboxTestCase(EmuBaseTestCase):
         # BUG: 148689571
         # adb emu command does not list the snapshots on buildbot
         assert 'ANDROID_AVD_HOME' in os.environ, "ANDROID_AVD_HOME not set"
-        assert snapshot_name in snapshot_list or os.path.isdir(
-            os.path.join(os.environ['ANDROID_AVD_HOME'],
+        snapshot_folder = os.path.join(os.environ['ANDROID_AVD_HOME'],
                          '%s.avd' % self.avd_config.name(),
-                         'snapshots',
+                         'snapshots')
+        self.run_and_log(['ls', snapshot_folder])
+        self.run_and_log(['df', '-h'])
+        assert snapshot_name in snapshot_list or os.path.isdir(
+            os.path.join(snapshot_folder,
                          snapshot_name))
 
 if emu_args.config_file is not None:
