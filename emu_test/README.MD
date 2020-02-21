@@ -8,10 +8,14 @@ In this directory you will find a set of integration tests that are run as part 
 
 If you are a developer you will likely want to run the tests as you go. You can do this as follows:
 
-- First make sure you have an emulator build.
+
+
+- First make sure you have an emulator build and have all the python requirements installed
   ```sh
 
+  export AOSP=~/src/emu-master-dev # Point to your root..
   cd $AOSP/external/qemu && android/rebuild
+  pip install -r $AOSP/external/adt-infra/emu_test/requirements.txt
   ```
 
 

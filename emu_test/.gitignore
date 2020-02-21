@@ -1,6 +1,7 @@
 # Let's ignore the virtual environment
 # as well as compiled python files and swap files.
 venv
+virtualenv
 *.swp
 *.pyc
 

@@ -21,6 +21,14 @@ class EmulatorService(object):
         self.stub = EmulatorControllerStub(self.channel)
         self.logger = logger
 
+
+    def sendText(self, text):
+        self.stub.sendKey(KeyboardEvent(text=text))
+
+    def sendKeyEvent(self, javascript_keycode, evt):
+        """Sends a key event. """
+        self.stub.sendKey(KeyboardEvent(key=javascript_keycode, eventType=evt))
+
     def sendKeyPress(self, javascript_keycode):
         """Sends the javascript keyo code as a single event."""
-        self.stub.sendKey(KeyboardEvent(key=javascript_keycode))
+        self.sendKeyEvent(javascript_keycode, KeyboardEvent.keypress)
