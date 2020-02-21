@@ -55,8 +55,17 @@ class IceboxTestCase(EmuBaseTestCase):
 
     def run_and_log(self, cmd):
         self.m_logger.info(cmd)
-        out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        out= subprocess.check_output(cmd, stderr=subprocess.STDOUT)
         self.m_logger.info(out)
+        return out
+
+    def run_and_log_catch_exceptions(self, cmd):
+        try:
+            out = self.run_and_log(cmd)
+        except subprocess.CalledProcessError as err:
+            self.m_logger.info("cmd failed, error code %d" % err.returncode)
+            self.m_logger.info(err.out)
+            out = err.output
         return out
 
     def am_thread_run(self, cmd):
@@ -110,7 +119,7 @@ class IceboxTestCase(EmuBaseTestCase):
         self.run_and_log([adb_binary, "emu", "icebox", "track", pid])
         test_thread.join(60)
         assert "FAILURES!!!" in self.test_result
-        snapshot_list = self.run_and_log([adb_binary, "emu", "avd", "snapshot", "list"])
+        snapshot_list = self.run_and_log_catch_exceptions([adb_binary, "emu", "avd", "snapshot", "list"])
         snapshot_name = "test_failure_snapshot"
         # BUG: 148689571
         # adb emu command does not list the snapshots on buildbot
@@ -118,8 +127,8 @@ class IceboxTestCase(EmuBaseTestCase):
         snapshot_folder = os.path.join(os.environ['ANDROID_AVD_HOME'],
                          '%s.avd' % self.avd_config.name(),
                          'snapshots')
-        self.run_and_log(['ls', snapshot_folder])
-        self.run_and_log(['df', '-h'])
+        self.run_and_log_catch_exceptions(['df', '-h'])
+        self.run_and_log_catch_exceptions(['ls', snapshot_folder])
         assert snapshot_name in snapshot_list or os.path.isdir(
             os.path.join(snapshot_folder,
                          snapshot_name))
