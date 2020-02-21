@@ -35,6 +35,10 @@ class FoldableTest(testcase_base.BaseConsoleTest):
         self.builder_name = builder_name
 
     @classmethod
+    def setUpClass(cls):
+        time.sleep(20)
+
+    @classmethod
     def tearDownClass(cls):
         init, cur = util.get_device_density()
         if init == cur:
