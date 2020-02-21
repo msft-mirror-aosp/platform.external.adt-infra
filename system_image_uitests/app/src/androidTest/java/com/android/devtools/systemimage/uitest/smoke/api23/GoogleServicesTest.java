@@ -28,7 +28,6 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
-import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,7 +69,7 @@ public class GoogleServicesTest {
     public void verifyGoogleApps() throws Exception{
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        if (!testFramework.isGoogleApiImage() || !testFramework.isGoogleApiAndPlayImage()) {
+        if (!testFramework.isGoogleApiImage()) {
             return;
         }
 
@@ -87,6 +86,9 @@ public class GoogleServicesTest {
         assertTrue("Cannot find Google Services Framework", appList.getChildByText(
                 new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
                 "Google Services Framework").exists());
+        assertTrue("Cannot find Google Play Games", appList.getChildByText(
+                new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
+                "Google Play Games").exists());
         assertTrue("Cannot find Maps", appList.getChildByText(
                 new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
                 "Maps").exists());
@@ -117,7 +119,6 @@ public class GoogleServicesTest {
 
         // Open settings
         AppLauncher.launch(instrumentation, "Settings");
-        new AddGoogleAccountWatcher(device).checkForCondition();
 
         // Find and click "Location" in Settings
         UiScrollable itemList =
@@ -125,30 +126,17 @@ public class GoogleServicesTest {
                         new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
                 );
 
-        if (itemList.waitForExists(3L)) {
-            itemList.setAsVerticalList();
-        }
-
-        String securityLabel = "Security & location";
-        UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                securityLabel);
-
-        if (security.waitForExists(3L)) {
-            security.clickAndWaitForNewWindow();
-        }
-
+        itemList.setAsVerticalList();
 
         UiObject location = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
                 "Location");
-        if (location.waitForExists(3L)) {
-            location.clickAndWaitForNewWindow();
-        }
+        location.clickAndWaitForNewWindow();
 
         assertTrue("Cannot find location toggle button", device.findObject(
-                new UiSelector().className("android.widget.Switch")).waitForExists(3L));
+                new UiSelector().className("android.widget.Switch")).exists());
         assertTrue("Cannot find mode", device.findObject(new UiSelector().text(
-                "Mode")).waitForExists(3L));
+                "Mode")).exists());
         assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
-                "Recent location requests")).waitForExists(3L));
+                "Recent location requests")).exists());
     }
 }
