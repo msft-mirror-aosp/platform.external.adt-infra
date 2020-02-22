@@ -78,7 +78,7 @@ public class ShellUtilTest {
         String cmd = "ls /system/bin";
         ShellUtil.ShellResult result = ShellUtil.invokeCommand(cmd);
         // Check if the cmd is executed correctly.
-        Assert.assertTrue(result.stderr, result.stderr.length() == 0);
+        Assert.assertEquals(result.stderr, 0, result.stderr.length());
 
         // Verify the integrity of the shell utilities.
         InputStream inputStream = instrumentation.getTargetContext().getAssets().open("util.txt");
@@ -123,7 +123,7 @@ public class ShellUtilTest {
             DeveloperOptionsManager.enableDeveloperOptions_v1(testFramework);
         }
 
-        AppLauncher.launchPath(instrumentation, true, new String[] {"Settings", "System", "Developer options"});
+        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Developer options");
         // Remove bug report files even if the test fails.
         try {
             device.findObject(
