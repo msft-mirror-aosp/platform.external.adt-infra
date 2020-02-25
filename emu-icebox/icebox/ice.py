@@ -46,6 +46,7 @@ flags.DEFINE_string("gradle", None, "Directory with the gradle project")
 flags.DEFINE_string("restore", None, "Directory with the gradle project")
 flags.DEFINE_integer("port", 5559, "Adb forward port")
 flags.DEFINE_string("grpc", "localhost:8556", "gRPC port")
+flags.DEFINE_string("base", "icebox-demo-0", "The acloud base image used as a launcher.")
 
 TEST_FAIL = "test_failure_snapshot"
 
@@ -63,14 +64,14 @@ def restore(gradle, config):
     adb = Adb()
     test_name = zlib.crc32(gradle.encode("utf-8"))
 
-    img = IceboxImage()
+    img = IceboxImage(FLAGS.base)
     device = img.launch_with_acloud(config, adb)
     logging.info("Waiting for device to become available..")
     device.available()
+    url = device.get_grpc_url()
 
-
-    logging.info("Connecting to %s", device.get_grpc_url())
-    snapshotService = SnapshotService(device.get_grpc_url())
+    logging.info("Connecting to %s", url)
+    snapshotService = SnapshotService(url)
     snapshotService.push(os.path.join("/tmp", TEST_FAIL + ".tar"))
     snapshotService.load(TEST_FAIL)
     logging.info("You should now be able to connect to the device..")
@@ -104,6 +105,7 @@ def run_gradle(grpc, bucket, gradle):
 
     # storage_client = storage.Client()
     # bucket = storage_client.bucket(FLAGS.bucket)
+    logging.info("Processing snapshots..")
     snaps = snapshotService.lists()
     for snap in snaps:
         # Pull it down.
