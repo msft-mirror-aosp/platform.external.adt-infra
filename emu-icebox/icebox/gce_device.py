@@ -139,7 +139,7 @@ class GCEDevice:
             "rsa_key_file": self.cfg.ssh_private_key_path,
             "ssh_user": getpass.getuser(),
             "ip_addr": self.instance_ip(),
-            "cmd": "sudo cp /home/vsoc-01/.android/adbkey /tmp && sudo chmod 777 /tmp/adbkey",
+            "cmd": "sudo cp /opt/emulator/adbkey /tmp && sudo chmod 777 /tmp/adbkey",
         }
 
         ssh_del = GCEDevice.SSH_ARGS % {
