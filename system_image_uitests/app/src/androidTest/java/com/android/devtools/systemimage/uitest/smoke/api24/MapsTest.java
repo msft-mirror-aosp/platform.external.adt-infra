@@ -87,12 +87,7 @@ public class MapsTest {
 
             final UiObject searchUiObject = mDevice.findObject(new UiSelector().
                     resourceIdMatches(Res.SEARCH_TEXT_BOX));
-            assertTrue("Failed to find search text box", new Wait(5L).until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws Exception {
-                    return searchUiObject.exists();
-                }
-            }));
+            assertTrue("Failed to find search text box", new Wait(5L).until(searchUiObject::exists));
 
             searchUiObject.clickAndWaitForNewWindow();
 
@@ -103,12 +98,7 @@ public class MapsTest {
             UiScrollable scrollView = new UiScrollable(new UiSelector().className(ScrollView.class.getName()));
 
             final UiObject locationString = mDevice.findObject(new UiSelector().text(QUERY_STRING));
-            boolean hasLocationString = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return locationString.exists();
-                }
-            });
+            boolean hasLocationString = new Wait().until(locationString::exists);
 
             if (hasLocationString) {
                 scrollView.scrollIntoView(locationString);
@@ -124,12 +114,7 @@ public class MapsTest {
             final UiObject searchTextView =
                     searchUiObject.getChild(new UiSelector().className(TextView.class.getName()));
 
-            boolean hasSearchText = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return searchTextView.exists();
-                }
-            });
+            boolean hasSearchText = new Wait().until(searchTextView::exists);
 
             new MapsWatcher(mDevice).checkForCondition();
 
