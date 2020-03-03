@@ -26,6 +26,7 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.common.Res;
@@ -147,7 +148,7 @@ public class PackageInstallationUtil {
 
         boolean useV2 = isV2.length > 0 ? isV2[0] : false;
         if (useV2) {
-            context.startActivity(createIntent_v2(apkFile));
+            context.startActivity(createIntent_v2(context, apkFile));
         } else {
             context.startActivity(createIntent_v1(apkFile));
         }
@@ -210,12 +211,15 @@ public class PackageInstallationUtil {
         return intent;
     }
 
-    private static Intent createIntent_v2(File apkFile) {
-        Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-        intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
-        intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true);
-        intent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    private static Intent createIntent_v2(Context context, File apkFile) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        Uri apkURI = FileProvider.getUriForFile(
+                context,
+                context.getApplicationContext()
+                        .getPackageName() + ".provider", apkFile);
+        intent.setDataAndType(apkURI, "application/vnd.android.package-archive");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return intent;
     }
 
