@@ -457,17 +457,17 @@ public class SettingsUtil {
 
             final UiObject appLabel = device.findObject(new UiSelector().text("App"));
             if (new Wait().until(appLabel::exists)) {
-                device.findObject(new UiSelector().textContains("App")).click();
+                appLabel.click();
             }
 
             final UiObject deviceAdminLabel = device.findObject(new UiSelector().text("Device Admin"));
             if (new Wait().until(deviceAdminLabel::exists)) {
-                device.findObject(new UiSelector().text("Device Admin")).click();
+                deviceAdminLabel.click();
             }
 
             final UiObject generalLabel = device.findObject(new UiSelector().text("General"));
             if (new Wait().until(generalLabel::exists)) {
-                device.findObject(new UiSelector().text("General")).click();
+                generalLabel.click();
             }
 
             final UiObject enableCamerasCheckbox = device.findObject(
