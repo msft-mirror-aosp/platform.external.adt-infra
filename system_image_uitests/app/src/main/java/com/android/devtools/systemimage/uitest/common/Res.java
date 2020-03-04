@@ -154,7 +154,7 @@ public class Res {
     public static final String ADD_ACCOUNT_WATCHER_PATTERN = "(?i)(add account)(?-i)";
     public static final String API_DEMOS_WATCHER_PATTERN = "(?i)(thanks|no|continue)(?-i)";
     public static final String APP_WATCHER_PATTERN = "(?i)(ok|thanks)(?-i)";
-    public static final String CAMERA_ACCESS_PERM_WATCHER_PATTERN = "(?i)(ok|allow|next|got|continue|deny)(?-i)";
+    public static final String CAMERA_ACCESS_PERM_WATCHER_PATTERN = "(?i)(ok|allow|next|got|continue|deny|dismiss)(?-i)";
     public static final String GOOGLE_APP_CONF_WATCHER_PATTERN = "(?i).*(yes|accept|agree)(?-i)";
     public static final String GOOGLE_APP_CONT_WATCHER_PATTERN = "(?i)(continue|confirm|skip|next|accept)(?-i)";
     public static final String MAPS_WATCHER_PATTERN = "(?i)(accept|accept & continue|skip|got|ok|ride)(?-i)";

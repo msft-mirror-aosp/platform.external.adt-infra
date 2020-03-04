@@ -88,11 +88,13 @@ public class DeveloperOptionsManager {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
         try {
-            AppLauncher.launchPath(instrumentation, true, "Settings", "About phone");
+            SettingsUtil.findItem(instrumentation, "About phone");
+            UiDevice.getInstance(instrumentation).findObject(
+                    new UiSelector().text("About phone")).clickAndWaitForNewWindow();
         } catch (Exception e) {
-            AppLauncher.launchPath(instrumentation, true, "Settings", "About emulated device");
+            UiDevice.getInstance(instrumentation).findObject(
+                    new UiSelector().text("About emulated device")).clickAndWaitForNewWindow();
         }
-
         enableOptions(instrumentation);
     }
 
