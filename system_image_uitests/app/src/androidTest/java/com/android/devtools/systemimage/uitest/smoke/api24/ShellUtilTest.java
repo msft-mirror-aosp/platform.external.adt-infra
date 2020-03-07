@@ -40,6 +40,7 @@ import org.junit.runner.RunWith;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -78,11 +79,11 @@ public class ShellUtilTest {
         String cmd = "ls /system/bin";
         ShellUtil.ShellResult result = ShellUtil.invokeCommand(cmd);
         // Check if the cmd is executed correctly.
-        Assert.assertTrue(result.stderr, result.stderr.length() == 0);
+        Assert.assertEquals(result.stderr, 0, result.stderr.length());
 
         // Verify the integrity of the shell utilities.
         InputStream inputStream = instrumentation.getTargetContext().getAssets().open("util.txt");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
         String line;
         StringBuilder util = new StringBuilder();
         while ((line = reader.readLine()) != null) {
@@ -115,7 +116,7 @@ public class ShellUtilTest {
     public void createBugReport() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
-        final String BUG_REPORT_DIR = "/bugreports";
+        final String BUG_REPORT_DIR = "/data/data/com.android.shell/files/bugreports";
 
         ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
 
@@ -123,7 +124,7 @@ public class ShellUtilTest {
             DeveloperOptionsManager.enableDeveloperOptions_v1(testFramework);
         }
 
-        AppLauncher.launchPath(instrumentation, true, new String[] {"Settings", "System", "Developer options"});
+        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Developer options");
         // Remove bug report files even if the test fails.
         try {
             device.findObject(
@@ -138,17 +139,12 @@ public class ShellUtilTest {
             }
             boolean gotPngAndZip = new Wait(
                     TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
-                    new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() throws Exception {
-                            String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
-                            Log.d(TAG, "ls result " + result);
-                            boolean success =
-                                    result.matches("(?s).*bugreport.*\\.png.*")
-                                            && result.matches("(?s).*bugreport.*\\.zip.*");
+                    () -> {
+                        String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
+                        Log.d(TAG, "ls result " + result);
 
-                            return success;
-                        }
+                        return result.matches("(?s).*bugreport.*\\.png.*")
+                            && result.matches("(?s).*bugreport.*\\.zip.*");
                     });
             Assert.assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
         } finally {
