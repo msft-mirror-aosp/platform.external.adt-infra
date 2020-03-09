@@ -14,6 +14,7 @@ import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.YouTubeUtil;
 
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -58,6 +59,7 @@ public class YouTubeTest {
      */
     @Test
     @TestInfo(id = "XXXX")
+    @Ignore("b/151111450 - YouTube app is not compatible with emulated device")
     public void checkYouTubeVersion() throws Exception{
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
@@ -84,6 +86,7 @@ public class YouTubeTest {
      */
     @Test
     @TestInfo(id = "XXXX")
+    @Ignore("b/151111450 - YouTube app is not compatible with emulated device")
     public void loginYouTube() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         GoogleAppUtil.logoutGoogleChrome(instrumentation);
