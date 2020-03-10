@@ -75,8 +75,7 @@ then
     python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 29 --metric_tag 29
 
     echo "Zip perf data"
-    sh -c "cd $SESSION_DIR && zip -rm Perf_test/test.outputs/outputs.zip Perf_test/test.outputs/*.json"
-    sh -c "cd $SESSION_DIR && zip -rm $DISTRIB_DIR/perfgate_data.zip Perf_test/test.outputs/*"
+    sh -c "cd $SESSION_DIR && zip -rm $DISTRIB_DIR/perfgate_data.zip Perf_test/test.outputs/*.json"
 
     if [[ ! -f $DISTRIB_DIR/perfgate_data.zip ]]
     then
