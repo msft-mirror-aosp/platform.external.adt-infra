@@ -46,32 +46,6 @@ echo "Remove any existing AVDs"
 echo "rm -rf $ANDROID_AVD_HOME/*"
 rm -rf $ANDROID_AVD_HOME/*
 
-echo "Generate Perf Data"
-echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf"
-$TIMEOUT_CMD 14000 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf
-
-if [[ $? -ne 0 ]]
-then
-    STATUS=1
-    echo "Perf test timeout"
-fi
-
-echo "Run python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 28"
-python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 28
-
-echo "Run python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 29 --metric_tag 29"
-python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 29 --metric_tag 29
-
-echo "Zip perf data"
-sh -c "cd $SESSION_DIR && zip -rm Perf_test/test.outputs/outputs.zip Perf_test/test.outputs/*.json"
-sh -c "cd $SESSION_DIR && zip -rm $DISTRIB_DIR/perfgate_data.zip Perf_test/test.outputs/*"
-
-if [[ ! -f $DISTRIB_DIR/perfgate_data.zip ]]
-then
-    STATUS=1
-    echo "Perf zip fail"
-fi
-
 echo "Running Boot tests"
 echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Boot_test --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public"}' --generate_xml"
 $TIMEOUT_CMD 3600 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Boot_test --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public"}' --generate_xml
@@ -84,6 +58,32 @@ fi
 
 if [[ $OSTYPE != *"darwin"* ]]
 then
+    echo "Generate Perf Data"
+    echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf"
+    $TIMEOUT_CMD 14000 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Perf_test --file_pattern 'test_perf.*' --config_file external/adt-infra/emu_test/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori": "public-perf"}' --generate_perf
+
+    if [[ $? -ne 0 ]]
+    then
+        STATUS=1
+        echo "Perf test timeout"
+    fi
+
+    echo "Run python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 28"
+    python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 28
+
+    echo "Run python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 29 --metric_tag 29"
+    python -u external/adt-infra/emu_test/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 29 --metric_tag 29
+
+    echo "Zip perf data"
+    sh -c "cd $SESSION_DIR && zip -rm Perf_test/test.outputs/outputs.zip Perf_test/test.outputs/*.json"
+    sh -c "cd $SESSION_DIR && zip -rm $DISTRIB_DIR/perfgate_data.zip Perf_test/test.outputs/*"
+
+    if [[ ! -f $DISTRIB_DIR/perfgate_data.zip ]]
+    then
+        STATUS=1
+        echo "Perf zip fail"
+    fi
+
     echo "Installing python dependencies for grpc based tests"
     python -m virtualenv &>/dev/null || python -m easy_install --user virtualenv
     python -m virtualenv venv
