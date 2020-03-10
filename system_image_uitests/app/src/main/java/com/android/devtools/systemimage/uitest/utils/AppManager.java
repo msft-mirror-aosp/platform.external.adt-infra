@@ -19,22 +19,12 @@ package com.android.devtools.systemimage.uitest.utils;
 import com.android.devtools.systemimage.uitest.common.Res;
 
 import android.app.Instrumentation;
-import android.content.Context;
-import android.content.Intent;
-import android.content.res.AssetManager;
-import android.net.Uri;
-import android.os.Environment;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import junit.framework.Assert;
 

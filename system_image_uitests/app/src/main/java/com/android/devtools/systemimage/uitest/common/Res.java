@@ -94,6 +94,7 @@ public class Res {
     public static final String DIALER_PAD_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/dialpad_floating_action_button";
     public static final String DIALER_DIGITS_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/digits";
 
+    public static final String GOOGLE_SIGN_IN_CONSENT_NEXT_RES = "signinconsentNext";
     public static final String GOOGLE_SERVICES_NEXT_BUTTON_RES=
             "com.android.chrome:id/next_button";
     public static final String GOOGLE_SERVICES_ACCEPT_BUTTON_RES =
