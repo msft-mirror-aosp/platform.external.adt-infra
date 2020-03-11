@@ -20,11 +20,13 @@ import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
+import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 import java.util.concurrent.TimeUnit;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import static org.junit.Assert.assertTrue;
 
@@ -37,11 +39,8 @@ public class GoogleAppUtil {
         throw new AssertionError();
     }
 
-    private final static String TAG = GoogleAppUtil.class.getName();
     private static final int api = SystemUtil.getApiLevel();
     private static final String email = "pstester1980@gmail.com";
-    private static final String password = "pst4lif3";
-    private static final long TIMEOUT = 8000;
 
     /**
      * Log a user into a Google application
@@ -86,12 +85,7 @@ public class GoogleAppUtil {
                 new UiSelector().textMatches(("(?i)sign in(?-i)")));
 
         boolean needsSignIn = new Wait().
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return signInButton.exists();
-                    }
-                });
+                until(signInButton::exists);
 
         if (!needsSignIn) {
             Log.i("Login", "Sign in does not exist");
@@ -122,13 +116,11 @@ public class GoogleAppUtil {
             return loginGoogleApp(instrumentation, false);
         }
 
-        UiObject inputEmailField = device.findObject(new UiSelector().description("Email or phone"));
         UiObject forgotEmailLink = api >= 27 ? device.findObject(new UiSelector().text("Forgot email?")) :
                 device.findObject(new UiSelector().description("Forgot email?"));
 
-        boolean needsEmail = api == 24 ? inputEmailField.waitForExists(
-                TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)) :
-                forgotEmailLink.waitForExists(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
+        boolean needsEmail = forgotEmailLink.waitForExists(
+                TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
         assertTrue("Forgot email not found", firstAttempt || needsEmail);
         if ( !needsEmail ) {
             Log.i("Login", "Retry google login");
@@ -155,11 +147,28 @@ public class GoogleAppUtil {
         }
 
         Log.i("Login", "enter password");
-        editInput.clearTextField();
-        editInput.setText(password);
+        device.pressKeyCode(KeyEvent.KEYCODE_P);
+        device.pressKeyCode(KeyEvent.KEYCODE_S);
+        device.pressKeyCode(KeyEvent.KEYCODE_T);
+        device.pressKeyCode(KeyEvent.KEYCODE_4);
+        device.pressKeyCode(KeyEvent.KEYCODE_L);
+        device.pressKeyCode(KeyEvent.KEYCODE_I);
+        device.pressKeyCode(KeyEvent.KEYCODE_F);
+        device.pressKeyCode(KeyEvent.KEYCODE_3);
         clickNext(device);
 
-        boolean isSignedIn = new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
+        boolean isSignedIn = false;
+        isSignedIn = new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
+
+        if (api == 24) {
+            UiObject signInConsentButton = device.findObject(
+                    new UiSelector().resourceId(Res.GOOGLE_SIGN_IN_CONSENT_NEXT_RES));
+            if (signInConsentButton.waitForExists(20L)) {
+                signInConsentButton.click();
+                isSignedIn = true;
+            }
+        }
+
         assertTrue("Login failed", firstAttempt || isSignedIn);
         if ( !isSignedIn ) {
             Log.i("Login", "Retry google login");
@@ -168,12 +177,19 @@ public class GoogleAppUtil {
             return loginGoogleApp(instrumentation, false);
         }
 
+        final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        scrollable.setAsVerticalList();
+        if (scrollable.exists()) {
+            scrollable.scrollToEnd(10);
+        }
+
         UiObject backupSwitch = device.findObject(new UiSelector().resourceId(Res.GOOGLE_BACKUP_SWITCH_RES));
         if (backupSwitch.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             backupSwitch.click();
         }
 
-        UiObject agreeButton = device.findObject(new UiSelector().resourceId(Res.GOOGLE_SERVICES_ACCEPT_BUTTON_RES));
+        UiObject agreeButton = device.findObject(
+                new UiSelector().resourceId(Res.GOOGLE_SERVICES_ACCEPT_BUTTON_RES));
         if(agreeButton.exists()){
             agreeButton.clickAndWaitForNewWindow();
         }
@@ -190,14 +206,14 @@ public class GoogleAppUtil {
             agreeButton.clickAndWaitForNewWindow();
         }
 
-        UiObject gotitButton = device.findObject(new UiSelector().textMatches("(?i)ok, got it(?-i)"));
-        if (gotitButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
-            gotitButton.clickAndWaitForNewWindow();
+        UiObject gotItButton = device.findObject(new UiSelector().textMatches("(?i)ok, got it(?-i)"));
+        if (gotItButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            gotItButton.clickAndWaitForNewWindow();
         }
 
         device.pressHome();
         TimeUnit.SECONDS.sleep(10);
-        return isSignedIn;
+        return true;
     }
 
     public static boolean logoutGoogleChrome(Instrumentation instrumentation) throws Exception {
@@ -209,21 +225,13 @@ public class GoogleAppUtil {
                 new UiSelector().resourceId(Res.ANDROID_ICON_RES).
                         className("android.widget.ImageView"));
 
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return androidIconButton.exists();
-            }})) {
+        if (new Wait().until(androidIconButton::exists)) {
             androidIconButton.clickAndWaitForNewWindow();
         }
 
         final UiObject signOutLabel = device.findObject(new UiSelector().text("Sign out of Chrome"));
 
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return signOutLabel.exists();
-            }})) {
+        if (new Wait().until(signOutLabel::exists)) {
             signOutLabel.clickAndWaitForNewWindow();
         } else {
             return true;
@@ -231,11 +239,7 @@ public class GoogleAppUtil {
 
         final UiObject signOutButton = device.findObject(new UiSelector().textMatches("(?i)(SIGN OUT)(?-i)"));
 
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return signOutButton.exists();
-            }})) {
+        if (new Wait().until(signOutButton::exists)) {
             signOutButton.clickAndWaitForNewWindow();
         }
 
@@ -267,34 +271,20 @@ public class GoogleAppUtil {
                 new UiSelector().resourceId(Res.CHROME_MENU_BADGE_RES)
         );
 
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return chromeUpdateButton.exists();
-            }
-        })) {
+        if (new Wait().until(chromeUpdateButton::exists)) {
             chromeUpdateButton.clickAndWaitForNewWindow();
         }
 
         final UiObject chromeMenuButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_MENU_BUTTON_RES));
 
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return chromeMenuButton.exists();
-            }
-        })) {
+        if (new Wait().until(chromeMenuButton::exists)) {
             chromeMenuButton.clickAndWaitForNewWindow();
         }
 
         final UiObject settingsButton = device.findObject(new UiSelector().text("Settings"));
 
-        if (new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return settingsButton.exists();
-            }})) {
+        if (new Wait().until(settingsButton::exists)) {
             settingsButton.clickAndWaitForNewWindow();
         }
     }
@@ -313,7 +303,7 @@ public class GoogleAppUtil {
     public static void deleteAccount(Instrumentation instrumentation) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "Accounts"});
+        AppLauncher.launchPath(instrumentation, true, "Settings", "Accounts");
 
         UiObject account = device.findObject(new UiSelector().text(email));
 
