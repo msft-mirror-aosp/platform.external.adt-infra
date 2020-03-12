@@ -648,7 +648,7 @@ class EmuBaseTestCase(LoggedTestCase):
         try:
             snap_dir = os.environ["SNAPSHOT_DIR"]
             avd = avd_config.name()
-            avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
+            avd_dir = os.environ['ANDROID_AVD_HOME']
             self.m_logger.info("copy %s to %s", os.path.join(snap_dir, avd+'.avd'), os.path.join(avd_dir, avd+'.avd'))
             shutil.copytree(os.path.join(snap_dir, avd+'.avd'), os.path.join(avd_dir, avd+'.avd'))
             self.m_logger.info("copy %s to %s", os.path.join(snap_dir, avd+'.ini'), os.path.join(avd_dir, avd+'.ini'))
@@ -702,8 +702,7 @@ class EmuBaseTestCase(LoggedTestCase):
             :param avd_config_instance: AVDConfig instance.
             :return: Zero on creation success.  Nonzero on failure.
             """
-            # AVD directory is located at $HOME/.android/avd/
-            avd_base_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
+            avd_base_dir = os.environ['ANDROID_AVD_HOME']
             avd_dir = os.path.join(avd_base_dir, '%s.avd' % avd_name)
             api_target = avd_config_instance.api
             if 'google' in avd_config_instance.tag:

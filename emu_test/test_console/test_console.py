@@ -56,8 +56,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
     def tearDown(self):
         result = self.kill_emulator()
         self.m_logger.info('Remove AVD inside of tear down')
-        # avd should be found $HOME/.android/avd/
-        avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
+        avd_dir = os.environ['ANDROID_AVD_HOME']
         try:
             if result and self.start_proc:
                 self.start_proc.wait()

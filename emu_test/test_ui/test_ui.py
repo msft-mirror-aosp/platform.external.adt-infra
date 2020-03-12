@@ -35,8 +35,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             result = self.term_check(timeout=10)
             self.m_logger.debug("term_check after psutil.kill - %s", result)
         self.m_logger.info("Remove AVD inside of tear down")
-        # avd should be found $HOME/.android/avd/
-        avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd')
+        avd_dir = os.environ['ANDROID_AVD_HOME']
 
         if emu_args.save_snapshot:
           try:
