@@ -517,9 +517,7 @@ class EmuBaseTestCase(LoggedTestCase):
             for conf in config.options(target_section):
                 set_val(config_parser, conf, config_parser.get(target_section, conf))
 
-        # AVD directory is located at $HOME/.android/avd/
-        avd_dir = os.path.join(os.path.expanduser('~'), '.android', 'avd',
-                               '%s.avd' % avd_config.name())
+        avd_dir = os.environ['ANDROID_AVD_HOME']
         dst_path = os.path.join(avd_dir, 'config.ini')
         config = ConfigParser.ConfigParser()
         config.optionxform = str

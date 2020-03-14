@@ -171,8 +171,7 @@ class crashTestCase(EmuBaseTestCase):
     def tearDown(self):
         self.kill_emulator()
         self.m_logger.info("Remove AVD inside of tear down")
-        # avd should be found $HOME/.android/avd/
-        avd_dir = os.path.join(os.path.expanduser("~"), ".android", "avd")
+        avd_dir = os.environ['ANDROID_AVD_HOME']
         try:
             os.remove(os.path.join(avd_dir, "%s.ini" % self.avd_config.name()))
             shutil.rmtree(

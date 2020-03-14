@@ -179,6 +179,13 @@ if __name__ == '__main__':
       2.  It ensures we do not hold up Buildbot code by holding on to a child process, blocking slave return.
     """
     os.environ["SHELL"] = "/bin/bash"
+    # Make sure that ANDROID_SDK_ROOT and ANDROID_AVD_HOME env are defined
+    if "ANDROID_SDK_ROOT" not in os.environ:
+        print "Please define ANDROID_SDK_ROOT"
+        sys.exit(1)
+    if "ANDROID_AVD_HOME" not in os.environ:
+        print "Please define ANDROID_AVD_HOME"
+        sys.exit(1)
 
     try:
         emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
