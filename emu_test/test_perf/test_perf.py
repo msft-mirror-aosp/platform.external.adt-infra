@@ -70,11 +70,11 @@ class PerfTestCase(EmuBaseTestCase):
     def generate_perf_data_idle(self, avd):
         metric = "New_AVD_" + avd.tag + "_" + avd.gpu + "_idle"
         self.launch_emulator(metric, avd)
-        time.sleep(300)
+        time.sleep(120)
         self.result = self.kill_emulator()
         metric = "Existing_AVD_" + avd.tag + "_" + avd.gpu + "_idle"
         self.launch_emulator(metric, avd)
-        time.sleep(300)
+        time.sleep(120)
         self.result = self.kill_emulator()
 
     def generate_perf_data_gpu_stress(self, avd):
@@ -86,7 +86,7 @@ class PerfTestCase(EmuBaseTestCase):
         subprocess.call([adb_binary, 'install', path_to_apk])
         subprocess.call([adb_binary, "shell", "am", "start",
                          "com.android.gpu_emulation_stress_test/com.android.gpu_emulation_stress_test.MainActivity"])
-        time.sleep(300)
+        time.sleep(120)
         self.result = self.kill_emulator()
 
     def generate_perf_data_large_apk(self, avd):

@@ -243,6 +243,8 @@ class EmuBaseTestCase(LoggedTestCase):
         self.m_logger.info('Launching Emulator with AVD, ...: %s', str(avd))
         emulator_bin = emu_argparser.emu_args.emulator_exec
         launch_cmd = [emulator_bin, "-avd", str(avd), "-verbose", "-show-kernel"]
+        if emu_argparser.emu_args.headless:
+            launch_cmd += ["-no-window"]
         if emu_argparser.emu_args.generate_perf:
             launch_cmd += ["-perf-stat", self.perf_file]
         if avd.gpu == "swiftshader":

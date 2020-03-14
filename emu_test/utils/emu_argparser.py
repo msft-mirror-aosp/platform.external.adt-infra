@@ -76,4 +76,6 @@ def get_parser():
     parser.add_argument('--load_snapshot', action='store_true',
                         help='when defined, load previously saved snapshot')
     parser.add_argument('unittest_args', nargs='*')
+    parser.add_argument('--headless', action='store_true',
+                        help='when defined, launch emulator with -no-window')
     return parser

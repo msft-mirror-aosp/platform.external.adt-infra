@@ -1,12 +1,15 @@
 #!/bin/bash
 
-# This is used to run system image UI tests.
-# This will be invoked by system image source.
-#  {src}/platform_testing/ui_test/run_ui_test.sh
+# This is used to run system image boot tests.
+# This will be invoked by devtools-test branch source.
+#  {src}/test/run_sys_img_test.sh
+
+set -x
+echo $@
+env
 
 DISTRIB_DIR=$1
-ORI=$2
-API=$3
+FILTER=$2
 
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 
@@ -22,20 +25,13 @@ else
     fi
 fi
 
-echo "Running BOOT test for $API"
-echo "Remove any existing AVDs"
-echo "sudo rm -rf $ANDROID_AVD_HOME/*"
-sudo rm -rf $ANDROID_AVD_HOME/*
+rm -rf $ANDROID_AVD_HOME/*
 
 SESSION_DIR=$DISTRIB_DIR/testlogs
 mkdir -p $SESSION_DIR
 
-FILTER={\"ori\":\"$ORI\"}
+python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml --headless
 
-echo "Run python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator-headless --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml"
-python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator-headless --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml
-
-echo "Remove any empty file"
 find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
 
 echo "Boot test completed"
