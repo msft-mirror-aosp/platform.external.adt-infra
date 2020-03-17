@@ -80,6 +80,9 @@ public class Res {
     public static final String MENU_LIST_RES = "com.android.documentsui:id/menu_list";
     public static final String OPTION_MENU_LIST_RES = "com.android.documentsui:id/option_menu_list";
     public static final String OPTION_MENU_SEARCH_RES = "com.android.documentsui:id/option_menu_search";
+    public static final String OPTION_MENU_SORT_RES = "com.android.documentsui:id/menu_sort";
+    public static final String DIRECTORY_LIST_RES = "com.android.documentsui:id/dir_list";
+    public static final String IMAGE_ICON_THUMB_RES = "com.android.documentsui:id/icon_thumb";
 
     public static final String GOOGLE_PLAY_VENDING_RES = "com.android.vending";
     public static final String GOOGLE_PLAY_IDLE_RES = "(com.android.vending:id/search_box_idle_text|com.android.vending:id/search_bar_hint)";
@@ -130,6 +133,7 @@ public class Res {
     public static final String ANDROID_SWITCH_WIDGET = "android:id/switch_widget";
     public static final String ANDROID_ICON_RES = "android:id/icon";
     public static final String ANDROID_ERROR_CLOSE_RES = "android:id/aerr_close";
+    public static final String ANDROID_BUTTON_ONE = "android:id/button1";
 
     // Android TV Resources.
     public static final String TV_LAUNCHER = "com.google.android.tvlauncher:id/button_icon";
