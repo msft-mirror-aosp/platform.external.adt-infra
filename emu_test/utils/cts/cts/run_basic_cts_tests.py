@@ -15,7 +15,7 @@ test_list = [
 
     # Network
     "-m CtsNetTestCases -t android.net.cts.IpSecBaseTest",
-    "-m CtsNetTestCases -t android.net.wifi.cts.WifiManagerTest",
+    "-m CtsWifiTestCases -t android.net.wifi.cts.WifiManagerTest",
     "-m CtsLibcoreTestCases -t libcore.java.net.InetAddressTest",
     "-m CtsLibcoreTestCases -t libcore.javax.net.ServerSocketFactoryTest",
 
