@@ -92,6 +92,8 @@ public class Res {
     public static final String GOOGLE_PLAY_FILTER_TOGGLE_RES = "com.android.vending:id/content_filter_on_off_toggle";
     public static final String GOOGLE_UNAUTHORIZED_SIGN_IN_RES = "com.android.vending:id/unauth_home_sign_in_button";
     public static final String GOOGLE_PLAY_ONBOARD_BUTTON_RES = "com.android.vending:id/play_onboard_center_button";
+    public static final String GOOGLE_PLAY_VENDING_CARD_RES= "com.android.vending:id/play_card";
+    public static final String GOOGLE_PLAY_VENDING_TITLE_RES= "com.android.vending:id/title";
 
     public static final String DIALER_PHONE_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/(floating_action_button|fab)";
     public static final String DIALER_PAD_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/dialpad_floating_action_button";
