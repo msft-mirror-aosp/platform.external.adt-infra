@@ -15,7 +15,7 @@ If you are a developer you will likely want to run the tests as you go. You can 
 
   export AOSP=~/src/emu-master-dev # Point to your root..
   cd $AOSP/external/qemu && android/rebuild
-  pip install -r $AOSP/external/adt-infra/emu_test/requirements.txt
+  make -C $AOSP/external/adt-infra/emu_test protoc
   ```
 
 
@@ -25,12 +25,14 @@ If you are a developer you will likely want to run the tests as you go. You can 
 ```sh
  export TEST_PATTERN='test_grpc.*'
  export CONFIG_FILE=external/adt-infra/emu_test/config/snapshot_cfg_byob.csv
+ export ANDROID_AVD_HOME=/tmp/avds
  ```
 
 - Next you can launch the test you are interested in as follows:
 
 ```sh
   cd $AOSP; \
+  mkdir -p $ANDROID_AVD_HOME; \
   rm -rf /tmp/test/; mkdir -p /tmp/test; \
   ninja -C $AOSP/external/qemu/objs &&
   python -u external/adt-infra/emu_test/dotest.py \

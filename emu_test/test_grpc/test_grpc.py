@@ -1,5 +1,6 @@
 """Test the emulator Grpc grpc endpoints."""
 
+import datetime
 import os
 import shutil
 import socket
@@ -63,7 +64,7 @@ class GrpcTestCase(EmuBaseTestCase):
     def tearDown(self):
         self.kill_emulator()
         self.m_logger.info("Remove AVD inside of tear down")
-        avd_dir = os.environ['ANDROID_AVD_HOME']
+        avd_dir = os.environ["ANDROID_AVD_HOME"]
         try:
             os.remove(os.path.join(avd_dir, "%s.ini" % self.avd_config.name()))
             shutil.rmtree(
@@ -84,24 +85,30 @@ class GrpcTestCase(EmuBaseTestCase):
         )
         self.emu.sendKeyPress(jskey)
 
-        # We expect event to have been delivered by now.
-        time.sleep(0.3)
-
-        # Retrieve the latest received codes and validate that they are as expected.
-        evts = self.wfall.get_latest_keyevents()
-        codes = [(int(x.keyCode), x.action) for x in evts]
+        # There is some concurrency weirdness, so we are willing to wait a few sec
+        # to see if all the events arrived.
+        timeout = time.time() + 2
         expected_codes = [
             (ANDROID_KEY_CODE_MAP[expected_code], "DOWN"),
             (ANDROID_KEY_CODE_MAP[expected_code], "UP"),
         ]
-        for expect in expected_codes:
-            self.assertIn(
-                expect,
-                codes,
-                msg="Send [{}], expecting to read code: {} down got: {}".format(
-                    jskey, expected_code, " ".join([str(e) for e in evts])
-                ),
-            )
+        evts = []
+        good = False
+        while not good and time.time() < timeout:
+            good = True
+            # Retrieve the latest received codes and validate that they are as expected.
+            evts = self.wfall.get_latest_keyevents()
+            codes = [(int(x.keyCode), x.action) for x in evts]
+            for expect in expected_codes:
+                if expect in codes:
+                    good = expect and good
+
+        self.assertTrue(
+            good,
+            msg="Send [{}], expecting to read code: {} down got: {}".format(
+                jskey, expected_code, " ".join([str(e) for e in evts])
+            ),
+        )
 
     def check_keyevents(self):
         """Checks that the set of key events are processed as expected."""
@@ -138,9 +145,8 @@ class GrpcTestCase(EmuBaseTestCase):
             self.keypress_expects(letter, code)
 
     def do_not_lock(self):
-        self.emu.sendText('\xc6\x80 <-- Used to deadlock')
-        self.keypress_expects('x', "KEYCODE_X")
-
+        self.emu.sendText("\xc6\x80 <-- Used to deadlock")
+        self.keypress_expects("x", "KEYCODE_X")
 
     def check_all(self, avd):
         grpc_port = find_free_port()
