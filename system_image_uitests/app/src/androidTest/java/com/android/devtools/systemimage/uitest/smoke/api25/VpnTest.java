@@ -47,6 +47,7 @@ public class VpnTest {
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(120);
+
     /**
      * Tests if VPN works as expected.
      * <p>
@@ -79,7 +80,7 @@ public class VpnTest {
                 isPackageInstalled(instrumentation, testPackageName);
 
         if (!isTestVPNInstalled) {
-            result = PackageInstallationUtil.installApk(instrumentation, apk);
+            result = PackageInstallationUtil.installApk(instrumentation, apk, true);
             isTestVPNInstalled = PackageInstallationUtil.
                     isPackageInstalled(instrumentation, testPackageName);
         }

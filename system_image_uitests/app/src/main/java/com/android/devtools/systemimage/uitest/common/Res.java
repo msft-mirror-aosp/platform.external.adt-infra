@@ -54,6 +54,7 @@ public class Res {
     public static final String LAUNCHER_LIST_CONTAINER_RES =
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id|com.google.android.apps.nexuslauncher\\d*:id|com.android.launcher3\\d*:id/active)"
                     + "/(all_apps_container|all_apps_handle|apps_customize_pane_content|apps_list_view|drag_indicator)";
+    public static final String ALL_APPS_HANDLE_RES = "com.google.android.apps.nexuslauncher:id/all_apps_handle";
     public static final String LAUNCHER_LIST_DISMISS_RES = "com.google.android.apps.nexuslauncher:id/dismiss";
     public static final String CANCEL_SETUP_WIZARD_RES = "com.google.android.setupwizard:id/welcome_cancel_button";
     public static final String DEFERRED_SNOOZE_ITEM_RES = "com.google.android.setupwizard:id/deferred_snooze_item";
@@ -166,7 +167,7 @@ public class Res {
     public static final String GOOGLE_APP_CONT_WATCHER_PATTERN = "(?i)(continue|confirm|skip|next|accept)(?-i)";
     public static final String MAPS_WATCHER_PATTERN = "(?i)(accept|accept & continue|skip|got|ok|ride)(?-i)";
     public static final String NETWORK_UTIL_WATCHER_PATTERN = "(?i)(ok)(?-i)";
-    public static final String PKG_INSTALL_WATCHER_PATTERN = "(?i)(new|decline|ok)(?-i)";
+    public static final String PKG_INSTALL_WATCHER_PATTERN = "(?i)(new|decline|ok|allow)(?-i)";
     public static final String PLAY_STORE_WATCHER_PATTERN = "(?i)(ok|save)(?-i)";
     public static final String SETTINGS_WATCHER_PATTERN = "(?i)(ok)(?-i)";
     public static final String VPN_WATCHER_PATTERN = "(?i)(trust|ok)(?-i)";

@@ -79,7 +79,7 @@ public class AppLauncher {
             Log.i(TAG, "Opened app in first attempt");
         }
         else {
-            if (api >= 18 && api <= 24 ) {
+            if (api >= 18 && api <= 25 ) {
                 device.pressHome();
                 final UiObject launcherIcon = device.findObject(new UiSelector().
                         className("android.widget.TextView").
@@ -120,8 +120,12 @@ public class AppLauncher {
                             launcherDismiss.clickAndWaitForNewWindow();
                         }
                     } else {
-                        final UiObject launcherList = device.findObject(new UiSelector().
-                                resourceId(Res.LAUNCHER_LIST_CONTAINER_RES));
+                        device.pressHome();
+                        final UiObject launcherList = api == 25 ?
+                                device.findObject(new UiSelector().resourceId(
+                                        Res.ALL_APPS_HANDLE_RES)) :
+                                device.findObject(new UiSelector().resourceId(
+                                        Res.LAUNCHER_LIST_CONTAINER_RES));
                         boolean launcherListFound = new Wait().until(launcherList::exists);
                         if (launcherListFound) {
                             launcherList.clickAndWaitForNewWindow();
