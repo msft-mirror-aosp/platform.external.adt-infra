@@ -55,7 +55,7 @@ This build IS suitable for public release.
 Bug: {bug}
 """
 
-BUMP_VERSION_COMMIT_MESSAGE = """atv-sdk: bump revision for GmsCore update
+BUMP_VERSION_COMMIT_MESSAGE = """sdk: bump revision for GmsCore update
 
 Bug: {bug}
 """
@@ -120,7 +120,8 @@ API_LEVEL_AND_BRANCH_NAME = [
     ('25','nyc-mr1-emu-dev'),
     ('26', 'oc-emu-dev'),
     ('27', 'oc-mr1-emu-dev'),
-    ('28', 'pi-emu-dev')
+    ('28', 'pi-emu-dev'),
+    ('29', 'qt-emu-dev')
 ]
 
 WHAT_TO_DROP_19 = {
@@ -202,6 +203,8 @@ def GmsCoreVersionDir(api_level):
     return 'v17'
   elif api_level == '28':
     return 'v20'
+  elif api_level == '29':
+    return 'v26'
   else:
     raise ValueError("Unsupported API level: {}".format(api_level))
 
@@ -377,8 +380,8 @@ def GetApkFileTransferInfo(git_dir,
           if apk_type == 'full':
             if x20_candidate_dir.find('prod/') >= 0:
               if build_type == 'atv':
-                file_glob = 'GmsCore_{}_{}_{}_release_signed.apk'.format(
-                  build_type, arch, dpi)
+                file_glob = '{}/GmsCore_{}_{}_{}_release_signed.apk'.format(
+                  PROD_ARCH_TO_DIR[arch], build_type, arch, dpi)
               else:
                 file_glob = '{}/GmsCore_{}_{}_{}_release.apk'.format(
                   PROD_ARCH_TO_DIR[arch], build_type, arch, dpi)
