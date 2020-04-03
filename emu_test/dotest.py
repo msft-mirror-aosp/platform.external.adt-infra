@@ -192,7 +192,7 @@ if __name__ == '__main__':
         setupLogger()
         logging.getLogger().info(emu_argparser.emu_args)
 
-        if emu_argparser.emu_args.avd_list is None:
+        if not emu_argparser.emu_args.use_device and emu_argparser.emu_args.avd_list is None:
             emu_argparser.emu_args.avd_list = findSystemAVDs()
 
         test_root_dir = os.path.dirname(os.path.realpath(__file__))

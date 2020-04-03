@@ -7,6 +7,7 @@ import subprocess
 import testcase_base
 import adb_util
 
+@unittest.skip("These tests are running in presubmit for Linux on aosp")
 class GeneralTest(testcase_base.BaseAdbTest):
     """This class aims to run adb/device integration tests from general-tests."""
 
