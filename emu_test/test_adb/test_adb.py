@@ -50,6 +50,8 @@ class AdbTestCase(emu_testcase.EmuBaseTestCase):
         return result
 
     def tearDown(self):
+        if emu_argparser.emu_args.use_device:
+            return
         self.m_logger.info("Remove AVD inside of tear down")
         avd_dir = os.environ['ANDROID_AVD_HOME']
         try:
@@ -179,7 +181,8 @@ class AdbTestCase(emu_testcase.EmuBaseTestCase):
           avd: The running avd.
         """
         self.m_logger.info('ADB tests (%s) start.' % self._testMethodName)
-        self.launch_emu_and_wait(avd)
+        if not emu_argparser.emu_args.use_device:
+            self.launch_emu_and_wait(avd)
         test_classes = self.get_all_adb_test_classes()
         emu_suite = unittest.TestSuite()
         for test_class in test_classes:
@@ -189,7 +192,8 @@ class AdbTestCase(emu_testcase.EmuBaseTestCase):
 
         emu_runner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
         emu_result = emu_runner.run(emu_suite)
-        self.result = self.kill_emulator()
+        if not emu_argparser.emu_args.use_device:
+            self.result = self.kill_emulator()
         self.print_adb_result(emu_result)
         self.run_with_timeout([adb_binary, 'kill-server'], 20)
         self.assertTrue(emu_result.wasSuccessful(),
@@ -205,7 +209,8 @@ class AdbTestCase(emu_testcase.EmuBaseTestCase):
           avd_config: The avd configuration.
         """
         self.avd_config = avd_config
-        self.assertEqual(self.create_avd(avd_config), 0)
+        if not emu_argparser.emu_args.use_device:
+            self.assertEqual(self.create_avd(avd_config), 0)
         self.adb_test_check(avd_config)
 
 

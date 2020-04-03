@@ -78,4 +78,6 @@ def get_parser():
     parser.add_argument('unittest_args', nargs='*')
     parser.add_argument('--headless', action='store_true',
                         help='when defined, launch emulator with -no-window')
+    parser.add_argument('--use_device', action='store_true',
+                        help='when defined, run tests on a connected device')
     return parser
