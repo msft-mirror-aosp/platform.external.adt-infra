@@ -69,10 +69,11 @@ pushd cts
 python setup.py test install --user && python cts\run_basic_cts_tests.py --log %SESSION_DIR%\cts\cts_test.xml -v 1
 popd
 
-
 echo "Remove deployed emulator"
 echo "Run rmdir /s /q %SESSION_DIR%\emu-master-dev"
 rmdir /s /q %SESSION_DIR%\emu-master-dev
+
+cmd.exe /c %ANDROID_HOME%\platform-tools\adb.exe kill-server
 
 echo "Cleanup prebuilts"
 for /f %%d in ('dir /b C:\buildbot\prebuilt') do (rmdir /s /q C:\buildbot\prebuilt\%%d)
