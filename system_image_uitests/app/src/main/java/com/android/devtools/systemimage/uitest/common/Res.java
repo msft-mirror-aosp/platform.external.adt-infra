@@ -61,6 +61,7 @@ public class Res {
     public static final String ANDROID_PHONE_RES = "com.android.phone";
     public static final String ANDROID_SETTINGS_RES = "com.android.settings";
     public static final String ANDROID_SWITCH_TEXT_RES = "com.android.settings:id/switch_text";
+    public static final String ANDROID_SWITCH_WIDGET_RES = "com.android.settings:id/switch_widget";
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
             "com.android.settings:id/container_material";
     public static final String APPS_LIST_CONTAINER_RES = "com.android.settings:id/list_container";

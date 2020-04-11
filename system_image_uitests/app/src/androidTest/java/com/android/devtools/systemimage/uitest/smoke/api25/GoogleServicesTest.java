@@ -22,7 +22,6 @@ import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
-import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
@@ -107,8 +106,8 @@ public class GoogleServicesTest {
      *   2. Open Settings > Location
      *   Verify:
      *   Location enable toggle button
-     *   Verify location Mode
-     *   Verify recent location requests
+     *   Verify Google Play services
+     *   Verify Google Location History
      *   </pre>
      */
     @Test
@@ -131,22 +130,21 @@ public class GoogleServicesTest {
             itemList.setAsVerticalList();
         }
 
-        String LocationLabel = "Location";
-        UiObject location = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                LocationLabel);
+        String securityLabel = "Location";
+        UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                securityLabel);
 
-        if (location.waitForExists(3L)) {
-            location.clickAndWaitForNewWindow();
-        }else{
-            assertTrue("Cannot find Location in Settings", location.exists());
+        if (security.waitForExists(3L)) {
+            security.clickAndWaitForNewWindow();
         }
 
         assertTrue("Cannot find location toggle button", device.findObject(
-                new UiSelector().className("android.widget.Switch")).waitForExists(3L));
-        assertTrue("Cannot find mode", device.findObject(new UiSelector().text(
-                "Mode")).waitForExists(3L));
-        assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
-                "Recent location requests")).waitForExists(3L));
+                new UiSelector().resourceId(
+                        Res.ANDROID_SWITCH_WIDGET_RES)).waitForExists(3L));
+        assertTrue("Cannot find Google Play services", device.findObject(
+                new UiSelector().text("Google Play services")).waitForExists(3L));
+        assertTrue("Cannot find Google Location History", device.findObject(
+                new UiSelector().text("Google Location History")).waitForExists(3L));
     }
 
     /**
