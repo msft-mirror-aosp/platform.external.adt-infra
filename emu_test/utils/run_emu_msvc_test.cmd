@@ -30,7 +30,7 @@ echo "Generate Perf Data"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 7200 --process_regex dotest"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Perf_test --file_pattern test_perf.* --config_file external\adt-infra\emu_test\config\perf_cfg_byob.csv --buildername 'Windows_gce' --filter {\"ori\":\"public-perf\"} --timeout 900 --generate_perf"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Perf_test --file_pattern test_perf.* --config_file external\adt-infra\emu_test\config\perf_cfg_byob.csv --buildername Windows_gce --filter {\"ori\":\"public-perf\"} --timeout 900 --generate_perf
-for /f %%i in ('python -u kill_process.py --timeout 0 --process_regex kill_process') do set VAR1=%%i
+for /f %%i in ('python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 0 --process_regex kill_process') do set VAR1=%%i
 if "%VAR1%" EQU "1" goto PerfTimeOut
 goto PerfDone
 
@@ -53,7 +53,7 @@ echo "Running Boot tests"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 3600 --process_regex dotest"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_byob.csv --buildername 'Windows_gce' --filter {\"ori\":\"public\"} --timeout 900 --generate_xml"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_byob.csv --buildername Windows_gce --filter {\"ori\":\"public\"} --timeout 900 --generate_xml
-for /f %%i in ('python -u kill_process.py --timeout 0 --process_regex kill_process') do set VAR2=%%i
+for /f %%i in ('python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 0 --process_regex kill_process') do set VAR2=%%i
 if "%VAR2%" EQU "1" goto BootTimeOut
 goto BootDone
 
