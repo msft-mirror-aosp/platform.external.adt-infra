@@ -27,6 +27,7 @@ start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kil
 echo "Run python -u %ADT_INFRA%\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir ADB_test --file_pattern test_adb.* --config_file %ADT_INFRA%\emu_test\config\adb_cfg_byob.csv --buildername Windows_gce --filter {\"ori\":\"public\"} --timeout 900 --headless"
 python -u %ADT_INFRA%\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %ANDROID_SDK_ROOT%\emulator\emulator --test_dir ADB_test --file_pattern test_adb.* --config_file %ADT_INFRA%\emu_test\config\adb_cfg_byob.csv --buildername Windows_gce --filter {\"ori\":\"public\"} --timeout 900 --headless
 for /f %%i in ('python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 0 --process_regex kill_process') do set VAR1=%%i
+echo "kill timer status %VAR1%"
 if "%VAR1%" EQU "1" goto ADBTimeOut
 goto ADBDone
 

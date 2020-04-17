@@ -29,11 +29,13 @@ if __name__ == '__main__':
             if pid != self_pid:
                 py_pids.append(pid)
 
+    # DO NOT ADD ANY PRINT STATEMENTS IN THE SCRIPT
+    # IT SHOULD PRINT ONLY STATUS AT THE END
+
     status=0
     for pid in py_pids:
         pid_details = subprocess.check_output(["C:\\PSTools\\tlist.exe", pid])
         if args.process_regex in pid_details:
-            print "kill timer process " + pid
             if "windows" in platform.system().lower():
                 subprocess.check_output(["C:\\PSTools\\pskill.exe", "-t", pid])
                 status=1
