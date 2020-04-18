@@ -30,8 +30,10 @@ unzip -o %BUILD_DIR%\sdk-repo-windows-emulator-[0-9]*.zip -d %SESSION_DIR%\emu-m
 
 echo "Generate Perf Data"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 7200 --process_regex dotest"
+echo  "start test at %date%-%time%"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Perf_test --file_pattern test_perf.* --config_file external\adt-infra\emu_test\config\perf_cfg_byob.csv --buildername 'Windows_gce' --filter {\"ori\":\"public-perf\"} --timeout 900 --generate_perf"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Perf_test --file_pattern test_perf.* --config_file external\adt-infra\emu_test\config\perf_cfg_byob.csv --buildername Windows_gce --filter {\"ori\":\"public-perf\"} --timeout 900 --generate_perf
+echo  "test end at %date%-%time%"
 for /f %%i in ('python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 0 --process_regex kill_process') do set VAR1=%%i
 echo "kill timer status %VAR1%"
 if "%VAR1%" EQU "1" goto PerfTimeOut
@@ -52,8 +54,10 @@ echo "Zip Perf Data"
 
 echo "Running Boot tests"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 3600 --process_regex dotest"
+echo  "start test at %date%-%time%"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_byob.csv --buildername 'Windows_gce' --filter {\"ori\":\"public\"} --timeout 900 --generate_xml"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir BOOT_test --file_pattern test_boot.* --config_file external\adt-infra\emu_test\config\boot_cfg_byob.csv --buildername Windows_gce --filter {\"ori\":\"public\"} --timeout 900 --generate_xml
+echo  "test end at %date%-%time%"
 for /f %%i in ('python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 0 --process_regex kill_process') do set VAR2=%%i
 echo "kill timer status %VAR2%"
 if "%VAR2%" EQU "1" goto BootTimeOut
@@ -65,8 +69,10 @@ echo "Boot test timed out"
 :BootDone
 echo "Running AVD tests"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 1200 --process_regex dotest"
+echo  "start test at %date%-%time%"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir AVD_test --file_pattern *launch_avd*.* --config_file external\adt-infra\emu_test\config\avd_cfg_byob.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900 --generate_xml"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir AVD_test --file_pattern *launch_avd*.* --config_file external\adt-infra\emu_test\config\avd_cfg_byob.csv --buildername Windows_gce --skip-adb-perf --timeout 900 --generate_xml
+echo  "test end at %date%-%time%"
 for /f %%i in ('python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 0 --process_regex kill_process') do set VAR3=%%i
 echo "kill timer status %VAR3%"
 if "%VAR3%" EQU "1" goto AVDTimeOut
@@ -78,8 +84,10 @@ echo "AVD test timed out"
 :AVDDone
 echo "Running Console tests"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 3600 --process_regex dotest"
+echo  "start test at %date%-%time%"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Console_test --file_pattern test_console.* --config_file external\adt-infra\emu_test\config\console_cfg_byob.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Console_test --file_pattern test_console.* --config_file external\adt-infra\emu_test\config\console_cfg_byob.csv --buildername Windows_gce --skip-adb-perf --timeout 900
+echo  "test end at %date%-%time%"
 for /f %%i in ('python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 0 --process_regex kill_process') do set VAR4=%%i
 echo "kill timer status %VAR4%"
 if "%VAR4%" EQU "1" goto ConsoleTimeOut
@@ -91,8 +99,10 @@ echo "Console test timed out"
 :ConsoleDone
 echo "Running psq snapshot tests"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 1200 --process_regex dotest"
+echo  "start test at %date%-%time%"
 echo "Run python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Snapshot_test --file_pattern psq_test.* --config_file external\adt-infra\emu_test\config\psq_cfg_byob.csv --buildername 'Windows_gce' --skip-adb-perf --timeout 900 --generate_xml"
 python -u external\adt-infra\emu_test\dotest.py --loglevel DEBUG --session_dir %SESSION_DIR% --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --test_dir Snapshot_test --file_pattern psq_test.* --config_file external\adt-infra\emu_test\config\psq_cfg_byob.csv --buildername Windows_gce --skip-adb-perf --timeout 900 --generate_xml
+echo  "test end at %date%-%time%"
 for /f %%i in ('python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 0 --process_regex kill_process') do set VAR5=%%i
 echo "kill timer status %VAR5%"
 if "%VAR5%" EQU "1" goto PsqTimeOut
