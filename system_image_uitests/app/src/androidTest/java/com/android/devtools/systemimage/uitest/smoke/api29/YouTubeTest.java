@@ -11,7 +11,6 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
-import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.utils.YouTubeUtil;
 
 import org.junit.FixMethodOrder;
@@ -102,14 +101,14 @@ public class YouTubeTest {
             updateLaterButton.clickAndWaitForNewWindow();
         }
 
-        YouTubeUtil.openYouTubeSettings(instrumentation, "Account");
+        YouTubeUtil.openYouTubeSettings(instrumentation);
         UiObject signInLabel = device.findObject(new UiSelector().text("SIGN IN"));
         assertFalse("YouTube log in was unsuccessful", signInLabel.waitForExists(5L));
 
         GoogleAppUtil.deleteAccount(instrumentation);
 
         AppLauncher.launch(instrumentation, "YouTube");
-        YouTubeUtil.openYouTubeSettings(instrumentation, "Account");
+        YouTubeUtil.openYouTubeSettings(instrumentation);
         signInLabel = device.findObject(new UiSelector().text("SIGN IN"));
         assertTrue("YouTube log out was unsuccessful", signInLabel.waitForExists(5L));
     }

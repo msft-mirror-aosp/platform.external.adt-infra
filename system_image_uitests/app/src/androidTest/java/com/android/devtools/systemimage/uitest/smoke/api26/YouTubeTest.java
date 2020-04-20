@@ -100,13 +100,13 @@ public class YouTubeTest {
             updateLaterButton.clickAndWaitForNewWindow();
         }
 
-        YouTubeUtil.openYouTubeSettings(instrumentation, "More options");
+        YouTubeUtil.openYouTubeSettings(instrumentation);
         final UiObject signOutButton = device.findObject(new UiSelector().text("Sign out"));
         boolean isButtonSignOutPresent = signOutButton.exists();
         assertTrue("Sign Out button not found", isButtonSignOutPresent);
         signOutButton.clickAndWaitForNewWindow();
 
-        YouTubeUtil.openYouTubeSettings(instrumentation, "More options");
+        YouTubeUtil.openYouTubeSettings(instrumentation);
         final UiObject signInLabel = device.findObject(new UiSelector().text("Sign in"));
         assertTrue("YouTube log out was unsuccessful", signInLabel.waitForExists(5L));
     }

@@ -154,10 +154,18 @@ public class Res {
     public static final String WEAR_SHOW_ALL_BUTTON = "com.google.android.wearable.app:id/show_all_btn";
     public static final String WEAR_WATCH_FACE_PICKER =
             "com.google.android.wearable.app:id/watchface_picker_all_title";
-
     public static final String NEXT_EXISTING_BUTTON = "com.google.android.gsf.login:id/next_button";
 
     public static final String YOUTUBE_UPDATE_LATER_BUTTON_RES = "com.google.android.youtube:id/later_button";
+    public static final String YOUTUBE_SIGN_IN_BODY_TEXT_RES = "com.google.android.youtube:id/body_text";
+    public static final String YOUTUBE_DISMISS_RES = "com.google.android.youtube:id/dismiss";
+    public static final String YOUTUBE_SIGN_OUT_FOOTER_RES = "com.google.android.youtube:id/sign_out_footer";
+    public static final String YOUTUBE_SIGN_IN_FOOTER_RES = "com.google.android.youtube:id/sign_in_footer";
+    public static final String YOUTUBE_BUTTON_RES = "com.google.android.youtube:id/button";
+    public static final String YOUTUBE_LIST_RES = "com.google.android.youtube:id/list";
+    public static final String YOUTUBE_TITLE_RES = "com.google.android.youtube:id/title";
+    public static final String YOUTUBE_TOPBAR_AVATAR_RES = "com.google.android.youtube:id/mobile_topbar_avatar";
+    public static final String YOUTUBE_PACKAGE = "com.google.android.youtube";
 
     public static final String ADD_GOOGLE_ACC_WATCHER_PATTERN = "(?i)(not|accept|ok|cancel)(?-i)";
     public static final String ADD_ACCOUNT_WATCHER_PATTERN = "(?i)(add account)(?-i)";
