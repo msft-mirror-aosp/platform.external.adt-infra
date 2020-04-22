@@ -71,7 +71,11 @@ class SleepWakeTest(testcase_base.BaseAdbTest):
         return success
 
     def adb_sleep_wake(self, dut):
-        return self.adb_test_sleep(dut) and self.adb_test_wake(dut)
+        time.sleep(1)
+        success = self.adb_test_sleep(dut)
+        time.sleep(1)
+        success = self.adb_test_wake(dut) and success
+        return success
 
     def test_adb_sleep_wake_stress(self):
         print 'Running test: ADB Sleep Wake stress'

@@ -99,7 +99,11 @@ class PushPullTest(testcase_base.BaseAdbTest):
         Args:
             dut: device under test
         """
-        return self.adb_test_push(dut) and self.adb_test_pull(dut)
+        time.sleep(1)
+        success = self.adb_test_push(dut)
+        time.sleep(1)
+        success = self.adb_test_pull(dut) and success
+        return success
 
     def test_adb_push_pull_stress(self):
         print 'Running test: ADB Push Pull stress'
