@@ -3,6 +3,7 @@
 import os
 import unittest
 import subprocess
+import time
 
 import testcase_base
 import adb_util
