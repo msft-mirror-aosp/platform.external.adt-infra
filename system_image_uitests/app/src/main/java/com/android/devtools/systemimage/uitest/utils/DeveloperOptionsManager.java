@@ -86,16 +86,33 @@ public class DeveloperOptionsManager {
     public static void enableDeveloperOptions_v1(SystemImageTestFramework testFramework)
         throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-
         try {
-            SettingsUtil.findItem(instrumentation, "About phone");
-            UiDevice.getInstance(instrumentation).findObject(
-                    new UiSelector().text("About phone")).clickAndWaitForNewWindow();
+            selectDeviceByType(instrumentation,"phone");
         } catch (Exception e) {
-            UiDevice.getInstance(instrumentation).findObject(
-                    new UiSelector().text("About emulated device")).clickAndWaitForNewWindow();
+            selectDeviceByType(instrumentation,"emulated device");
         }
         enableOptions(instrumentation);
+    }
+
+    /**
+     * Attempt to enable developer options by trying both 'About phone' and
+     * 'About emulated device' links
+     *
+     * @param instrumentation
+     * @param type
+     * @throws Exception if it fails to find a UI widget.
+     */
+    private static void selectDeviceByType(Instrumentation instrumentation, String type)
+            throws Exception {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        String deviceLabel = "About " +  type;
+        UiObject aboutDevice = device.findObject(new UiSelector().text(deviceLabel));
+        SettingsUtil.findItem(instrumentation, deviceLabel);
+        if (aboutDevice.waitForExists(5L)) {
+            aboutDevice.clickAndWaitForNewWindow();
+        } else {
+            throw new UiObjectNotFoundException(deviceLabel + " not found");
+        }
     }
 
     /**
