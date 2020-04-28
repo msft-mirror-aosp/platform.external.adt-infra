@@ -21,13 +21,11 @@ ASSERT_MSG_ORIENTATION = 'Failed to fetch orientation values'
 class OrientationTest(testcase_base.BaseConsoleTest):
   """This class aims to test rotate-related emulator console commands."""
 
-  def __init__(self, method_name=None, avd=None, builder_name=None):
+  def __init__(self, method_name=None):
     if method_name:
       super(OrientationTest, self).__init__(method_name)
     else:
       super(OrientationTest, self).__init__()
-    self.avd = avd
-    self.builder_name = builder_name
 
   def _execute_command_and_verify(self, command, expected_output, assert_msg):
     """Executes console command and verify output.

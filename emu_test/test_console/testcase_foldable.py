@@ -26,13 +26,11 @@ MSG_CMD_UNFOLD_FAIL = 'Error in unfolding the AVD'
 class FoldableTest(testcase_base.BaseConsoleTest):
     """Tests for AVD's with fold feature."""
 
-    def __init__(self, method_name=None, avd=None, builder_name=None):
+    def __init__(self, method_name=None):
         if method_name:
             super(FoldableTest, self).__init__(method_name)
         else:
             super(FoldableTest, self).__init__()
-        self.avd = avd
-        self.builder_name = builder_name
 
     @classmethod
     def setUpClass(cls):

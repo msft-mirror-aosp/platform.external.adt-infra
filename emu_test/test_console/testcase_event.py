@@ -28,13 +28,11 @@ CMD_EVENT_CODES_EV_ABS = '%s EV_ABS\n' % CMD_EVENT_CODES_PRE
 class EventTest(testcase_base.BaseConsoleTest):
   """This class aims to test event-related emulator console commands."""
 
-  def __init__(self, method_name=None, avd=None, builder_name=None):
+  def __init__(self, method_name=None):
     if method_name:
       super(EventTest, self).__init__(method_name)
     else:
       super(EventTest, self).__init__()
-    self.avd = avd
-    self.builder_name = builder_name
 
   def _verify_events_no_alias(self, command):
     is_cmd_successful, output_event_list_all = util.execute_console_command(

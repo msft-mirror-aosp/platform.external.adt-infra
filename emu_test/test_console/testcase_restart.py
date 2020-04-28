@@ -16,13 +16,11 @@ RESTART_WAIT_TIMEOUT_S = 30 # This timeout needs to calibrate on buildbot.
 class RestartTest(testcase_base.BaseConsoleTest):
   """This class aims to test restart-related emulator console commands."""
 
-  def __init__(self, method_name=None, avd=None, builder_name=None):
+  def __init__(self, method_name=None):
     if method_name:
       super(RestartTest, self).__init__(method_name)
     else:
       super(RestartTest, self).__init__()
-    self.avd = avd
-    self.builder_name = builder_name
 
   def _telnet_to_emulator_and_auth(self):
     """Telnet to emulator and auth token"""
@@ -45,7 +43,7 @@ class RestartTest(testcase_base.BaseConsoleTest):
       4. Run: restart, and verify output
       5. Repeat step 2-3, and verify it works, which means emulator restarted
     """
-    if util.WIN_BUILDER_NAME in self.builder_name:
+    if util.isWindows():
       print 'Skip restart test on Win.'
       pass
       return

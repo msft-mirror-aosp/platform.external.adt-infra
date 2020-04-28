@@ -21,12 +21,11 @@ from utils import util
 class BaseConsoleTest(unittest.TestCase):
   """This is the base clase for fall console test."""
 
-  def __init__(self, method_name=None, avd=None):
+  def __init__(self, method_name=None):
     if method_name:
       super(BaseConsoleTest, self).__init__(method_name)
     else:
       super(BaseConsoleTest, self).__init__()
-    self.avd = avd
 
   def setUp(self):
     auth_token = util.get_auth_token()

@@ -11,12 +11,11 @@ import adb_util
 class GeneralTest(testcase_base.BaseAdbTest):
     """This class aims to run adb/device integration tests from general-tests."""
 
-    def __init__(self, method_name=None, avd=None):
+    def __init__(self, method_name=None):
         if method_name:
             super(GeneralTest, self).__init__(method_name)
         else:
             super(GeneralTest, self).__init__()
-        self.avd = avd
 
     def setUp(self):
         """There is nothing to do in setUp()."""

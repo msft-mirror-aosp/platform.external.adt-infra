@@ -25,13 +25,11 @@ NETWORK_SPEED_ASSERT_MSG_PREFIX = 'Failed to set network speed to'
 class NetworkTest(testcase_base.BaseConsoleTest):
   """Tests for network-related commands."""
 
-  def __init__(self, method_name=None, avd=None, builder_name=None):
+  def __init__(self, method_name=None):
     if method_name:
       super(NetworkTest, self).__init__(method_name)
     else:
       super(NetworkTest, self).__init__()
-    self.avd = avd
-    self.builder_name = builder_name
 
   def test_set_network_speed(self):
     """Test for command: setting network speed.

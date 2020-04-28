@@ -749,6 +749,9 @@ class EmuBaseTestCase(LoggedTestCase):
                 print "Exception Thrown: " + traceback.format_exc()
             return 0
         # Function execution starts here.
+        if avd_config is None:
+            return 0
+
         avd_name = str(avd_config)
         ret = self.check_system_image(avd_config)
         if ret == 1:
@@ -903,14 +906,11 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
                     return False
         return True
 
-    def create_test_case(avd_config, op, builder_name=None, pattern=None, variant=None):
+    def create_test_case_with_avd_config(avd_config, op, variant=None):
         """
 
         :param avd_config:
         :param op: Operation we want to perform for this test.
-        :param builder_name: Name of the builder that is performing this build.
-        :param pattern: Filename pattern we use to create Test-Cases.  For example, 'test_boot*.' finds all files
-            starting with test_boot and searches for valid UnitTest objects within them.
         :param variant: Iterable.  If present, create test case for each variant.
         :return:
         """
@@ -923,17 +923,10 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
         if op == "S" or op == "" or not valid_case(checker_avd_config):
             return
 
-        # For console tests, pass the builder name to it.
-        if pattern and 'console' in pattern:
-            if variant is not None:
-                func = lambda self: test_func(self, avd_config, builder_name, variant)
-            else:
-                func = lambda self: test_func(self, avd_config, builder_name)
+        if variant is not None:
+            func = lambda self: test_func(self, avd_config, variant)
         else:
-            if variant is not None:
-                func = lambda self: test_func(self, avd_config, variant)
-            else:
-                func = lambda self: test_func(self, avd_config)
+            func = lambda self: test_func(self, avd_config)
 
         if op == "X":
             func = unittest.expectedFailure(func)
@@ -944,6 +937,13 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
         variant_str = "%s_" % variant if variant is not None else ""
         # Group test results by ClassName_AVD-type.
         test_name = "test_%s%s_test_%s%s" % (variant_str, str(avd_config), desc, qemu_str)
+        setattr(testcase_class, test_name, func)
+
+    def create_test_case_with_device():
+        """
+        """
+        func = lambda self: test_func(self, None)
+        test_name = "test_%s_device" % (desc)
         setattr(testcase_class, test_name, func)
 
     def get_ui_test_class_names(api, tag):
@@ -971,8 +971,13 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
         return classes
 
     # Function execution starts here.
+    if emu_argparser.emu_args.use_device:
+        create_test_case_with_device()
+        return
+
     is_cts = True if desc == "cts" else False
     is_ui = True if desc == "ui" else False
+
     with open(emu_argparser.emu_args.config_file, "rb") as file:
         reader = csv.reader(file)
         for row in reader:
@@ -1029,5 +1034,4 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
                     if generate_test_class:
                         variants = get_ui_test_class_names(api, tag)
                     for variant in variants or [None]:
-                        create_test_case(avd_config, op, emu_argparser.emu_args.builder_name,
-                                         emu_argparser.emu_args.pattern, variant)
+                        create_test_case_with_avd_config(avd_config, op, variant)

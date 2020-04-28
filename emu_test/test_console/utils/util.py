@@ -77,7 +77,6 @@ CMD_RANDOM_AUTH_TOKEN = '%s axxB123cc\n' % AUTH
 CMD_EMPTY_AUTH_TOKEN = '%s \n' % AUTH
 CMD_EXIT = 'exit\n'
 CMD_ROTATE = 'rotate\n'
-WIN_BUILDER_NAME = 'Win'
 
 CONTACT_PACKAGE_NAME = 'com.android.contacts'
 CONSOLE_TEST_APK = 'ConsoleTest.apk'
@@ -326,12 +325,13 @@ def telnet_emulator():
 
   return telnet
 
+def isWindows():
+  return os.name == WINDOWS_OS_NAME
 
 def wait_on_windows():
   """Waits for few seconds on Windows machine."""
-  if os.name == WINDOWS_OS_NAME:
+  if isWindows():
     time.sleep(0.5)
-
 
 def exit_emulator_console(telnet):
   """Exits from emulator console."""

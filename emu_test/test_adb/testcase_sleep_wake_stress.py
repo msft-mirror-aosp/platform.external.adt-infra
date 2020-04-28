@@ -11,12 +11,11 @@ import adb_util
 class SleepWakeTest(testcase_base.BaseAdbTest):
     """This class aims to test ADB sleep/wake commands."""
 
-    def __init__(self, method_name=None, avd=None):
+    def __init__(self, method_name=None):
         if method_name:
             super(SleepWakeTest, self).__init__(method_name)
         else:
             super(SleepWakeTest, self).__init__()
-        self.avd = avd
 
     def setUp(self):
         """There is nothing to do in setUp()."""

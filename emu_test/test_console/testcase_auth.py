@@ -17,13 +17,11 @@ AUTH_TOKEN_MISSING_OUTPUT = 'KO: missing authentication token'
 class AuthTest(testcase_base.BaseConsoleTest):
   """This class aims to test auth-related emulator console commands."""
 
-  def __init__(self, method_name=None, avd=None, builder_name=None):
+  def __init__(self, method_name=None):
     if method_name:
       super(AuthTest, self).__init__(method_name)
     else:
       super(AuthTest, self).__init__()
-    self.avd = avd
-    self.builder_name = builder_name
 
   def setUp(self):
     """There is nothing to do in setUp()."""

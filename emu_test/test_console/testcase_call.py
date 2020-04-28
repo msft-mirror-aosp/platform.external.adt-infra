@@ -26,13 +26,11 @@ ASSERT_MSG = 'Failed to execute {} command'
 class PhoneCallTest(testcase_base.BaseConsoleTest):
   """This class aims to test call-related emulator console commands."""
 
-  def __init__(self, method_name=None, avd=None, builder_name=None):
+  def __init__(self, method_name=None):
     if method_name:
       super(PhoneCallTest, self).__init__(method_name)
     else:
       super(PhoneCallTest, self).__init__()
-    self.avd = avd
-    self.builder_name = builder_name
 
   def tearDown(self):
     if (self._execute_command_and_verify(CMD_GSM_LIST, util.OK, ASSERT_MSG.format(CMD_LIST)) is True):

@@ -188,7 +188,7 @@ class AdbTestCase(emu_testcase.EmuBaseTestCase):
         for test_class in test_classes:
             for method in dir(test_class):
                 if method.startswith('test_'):
-                    emu_suite.addTest(test_class(method, avd))
+                    emu_suite.addTest(test_class(method))
 
         emu_runner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
         emu_result = emu_runner.run(emu_suite)
@@ -209,8 +209,7 @@ class AdbTestCase(emu_testcase.EmuBaseTestCase):
           avd_config: The avd configuration.
         """
         self.avd_config = avd_config
-        if not emu_argparser.emu_args.use_device:
-            self.assertEqual(self.create_avd(avd_config), 0)
+        self.assertEqual(self.create_avd(avd_config), 0)
         self.adb_test_check(avd_config)
 
 

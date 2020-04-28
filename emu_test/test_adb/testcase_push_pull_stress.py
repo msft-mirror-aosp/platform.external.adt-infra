@@ -16,12 +16,11 @@ FILE_SIZE = 100
 class PushPullTest(testcase_base.BaseAdbTest):
     """This class aims to test ADB push/pull commands."""
 
-    def __init__(self, method_name=None, avd=None):
+    def __init__(self, method_name=None):
         if method_name:
             super(PushPullTest, self).__init__(method_name)
         else:
             super(PushPullTest, self).__init__()
-        self.avd = avd
 
     def setUp(self):
         """There is nothing to do in setUp()."""

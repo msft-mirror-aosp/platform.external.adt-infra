@@ -9,12 +9,11 @@ import emu_test.utils.path_utils as path_utils
 class BaseAdbTest(unittest.TestCase):
   """This is the base clase for fall adb test."""
 
-  def __init__(self, method_name=None, avd=None):
+  def __init__(self, method_name=None):
     if method_name:
       super(BaseAdbTest, self).__init__(method_name)
     else:
       super(BaseAdbTest, self).__init__()
-    self.avd = avd
     self.adb_binary = path_utils.get_adb_binary()
 
   def setUp(self):

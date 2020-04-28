@@ -27,13 +27,11 @@ RESPONSE_FOR_INVALID_CMD = 'KO'
 class GeoTest(testcase_base.BaseConsoleTest):
   """This class aims to test geo-related emulator console commands."""
 
-  def __init__(self, method_name=None, avd=None, builder_name=None):
+  def __init__(self, method_name=None):
     if method_name:
       super(GeoTest, self).__init__(method_name)
     else:
       super(GeoTest, self).__init__()
-    self.avd = avd
-    self.builder_name = builder_name
 
   @classmethod
   def setUpClass(cls):
