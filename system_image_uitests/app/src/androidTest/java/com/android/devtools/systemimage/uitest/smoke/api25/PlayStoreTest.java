@@ -168,7 +168,7 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String application = "Google Voice";
+            final String application = "Weather Channel";
 
             PlayStoreUtil.selectApplication(instrumentation, application);
             new GoogleAppConfirmationWatcher(device).checkForCondition();

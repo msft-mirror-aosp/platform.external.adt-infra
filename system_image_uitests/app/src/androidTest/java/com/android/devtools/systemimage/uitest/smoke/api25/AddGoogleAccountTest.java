@@ -20,15 +20,11 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
-import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
-import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -89,19 +85,13 @@ public class AddGoogleAccountTest {
         }
 
         UiObject GoogleAccount = mDevice.findObject(new UiSelector().text("Google"));
-        if(GoogleAccount.waitForExists(5000)){
+        if (GoogleAccount.waitForExists(10000L)){
             GoogleAccount.clickAndWaitForNewWindow();
         }
 
-        Thread.sleep(5000);
         assertTrue("Add Google account page not found",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return UiAutomatorPlus.findObjectMatchingAny(instrumentation,
-                                new UiSelector().descriptionMatches(("(?i)sign in(?-i)")),
-                                new UiSelector().textMatches(("(?i)sign in(?-i)"))).exists();
-                    }
-                }));
+                mDevice.findObject(new UiSelector().description((
+                        "Sign in with your Google Account. Learn more")))
+                        .waitForExists(20000L));
     }
 }

@@ -157,10 +157,12 @@ public class GoogleAppUtil {
         device.pressKeyCode(KeyEvent.KEYCODE_3);
         clickNext(device);
 
-        boolean isSignedIn = false;
-        isSignedIn = new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
+        boolean isSignedIn =
+                new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
-        if (api == 24) {
+
+
+        if (api == 24 || api == 25) {
             UiObject signInConsentButton = device.findObject(
                     new UiSelector().resourceId(Res.GOOGLE_SIGN_IN_CONSENT_NEXT_RES));
             if (signInConsentButton.waitForExists(20L)) {
