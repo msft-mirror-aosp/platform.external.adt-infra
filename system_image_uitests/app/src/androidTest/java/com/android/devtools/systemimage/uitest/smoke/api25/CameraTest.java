@@ -67,7 +67,7 @@ public class CameraTest {
     public void testPhotoCapture() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        boolean photoTestSuccess = CameraTestUtil.useCamera_v1(instrumentation, "Camera");
+        boolean photoTestSuccess = CameraTestUtil.useCamera(instrumentation, "Camera", 1);
 
         Assert.assertTrue("New photo was not deleted from the gallery", photoTestSuccess);
     }
@@ -99,7 +99,7 @@ public class CameraTest {
     public void testVideoCapture() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        boolean videoTestSuccess = CameraTestUtil.useCamera_v1(instrumentation, "Videos");
+        boolean videoTestSuccess = CameraTestUtil.useCamera(instrumentation, "Videos", 1);
         Assert.assertTrue("New video was not deleted from the gallery", videoTestSuccess);
     }
 }

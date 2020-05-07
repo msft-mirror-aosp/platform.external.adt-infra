@@ -902,7 +902,6 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
                     cmp_op = "=="
                     cmp_val = value
                 if not op_lookup[cmp_op](getattr(avd_config, key), cmp_val):
-                    print "Error.  Detected invalid case in filter_dict."
                     return False
         return True
 
@@ -914,15 +913,6 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
         :param variant: Iterable.  If present, create test case for each variant.
         :return:
         """
-        if avd_config.gpu in ['swiftshader_indirect', 'guest']:
-            # Set gpu back to its original value of 'yes' so that validate_case doesn't complain
-            # about "invalid case" in filter_dict.
-            checker_avd_config = avd_config._replace(gpu='yes')
-        else:
-            checker_avd_config = avd_config
-        if op == "S" or op == "" or not valid_case(checker_avd_config):
-            return
-
         if variant is not None:
             func = lambda self: test_func(self, avd_config, variant)
         else:
@@ -1030,6 +1020,8 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
                       device = "default"
                     avd_config = AVDConfig(api, alt_version, tag, abi, device, ram, gpu, classic,
                                            get_port(), is_cts, ori)
+                    if not valid_case(avd_config):
+                        continue
                     variants = None
                     if generate_test_class:
                         variants = get_ui_test_class_names(api, tag)

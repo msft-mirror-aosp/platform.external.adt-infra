@@ -88,7 +88,7 @@ public class PlayStoreTest {
             final String application = "Messenger";
 
             assertTrue("Application not found in search.",
-                    PlayStoreUtil.hasTestApp(instrumentation, application, false));
+                    PlayStoreUtil.hasTestApp(instrumentation, application));
             PlayStoreUtil.resetPlayStore(instrumentation);
             device.pressHome();
         }
@@ -275,14 +275,14 @@ public class PlayStoreTest {
             final String restrictedApplication = "Truth or Dare ? Dirty !";
 
             assertTrue("Adult application is not found in search.",
-                    PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true));
+                    PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication));
 
             PlayStoreUtil.setRestrictions(instrumentation,  "Apps", "Everyone 10+");
 
 
             assertTrue("Adult application found in search.",
-                    !PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication, true) &&
-                            PlayStoreUtil.hasTestApp(instrumentation, familyApplication, true));
+                    !PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication) &&
+                            PlayStoreUtil.hasTestApp(instrumentation, familyApplication));
 
             PlayStoreUtil.toggleParentalControls(device, false);
             device.pressHome();
