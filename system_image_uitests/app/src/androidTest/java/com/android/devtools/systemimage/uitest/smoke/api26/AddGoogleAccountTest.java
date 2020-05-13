@@ -20,15 +20,11 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
-import com.android.devtools.systemimage.uitest.utils.UiAutomatorPlus;
-import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.AddGoogleAccountWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -71,13 +67,14 @@ public class AddGoogleAccountTest {
         final UiDevice mDevice = testFramework.getDevice();
 
         AppLauncher.launch(instrumentation, "Contacts");
+
         // Check if the app is running for the first time.
         UiObject checkingInfo =
                 mDevice.findObject(new UiSelector().textContains("Checking Info"));
         if (checkingInfo.exists()) {
             mDevice.pressBack();
+            AppLauncher.launch(instrumentation, "Contacts");
         }
-        AppLauncher.launch(instrumentation, "Contacts");
 
         UiObject addAccount = mDevice.findObject(
                 new UiSelector().textMatches(("(?i)add account(?-i)")));
@@ -87,16 +84,14 @@ public class AddGoogleAccountTest {
             addAccount.clickAndWaitForNewWindow();
         }
 
-        new AddGoogleAccountWatcher(mDevice).checkForCondition();
+        UiObject GoogleAccount = mDevice.findObject(new UiSelector().text("Google"));
+        if (GoogleAccount.waitForExists(10000L)) {
+            GoogleAccount.clickAndWaitForNewWindow();
+        }
 
         assertTrue("Add Google account page not found",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return UiAutomatorPlus.findObjectMatchingAny(instrumentation,
-                                new UiSelector().descriptionMatches(("(?i)sign in(?-i)")),
-                                new UiSelector().textMatches(("(?i)sign in(?-i)"))).exists();
-                    }
-                }));
+                mDevice.findObject(new UiSelector().description((
+                        "Sign in with your Google Account. Learn more")))
+                        .waitForExists(20000L));
     }
 }
