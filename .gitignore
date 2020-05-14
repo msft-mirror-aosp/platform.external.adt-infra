@@ -1,2 +1,16 @@
 venv
 .vscode
+system_image_uitests/.gradle
+system_image_uitests/.idea
+system_image_uitests/app/app.iml
+system_image_uitests/app/build
+system_image_uitests/build
+system_image_uitests/local.properties
+system_image_uitests/system_image_uitests.iml
+adb_wireless_test/.gradle
+adb_wireless_test/.idea
+adb_wireless_test/app/app.iml
+adb_wireless_test/app/build
+adb_wireless_test/build
+adb_wireless_test/local.properties
+adb_wireless_test/adb_wireless_test.iml
