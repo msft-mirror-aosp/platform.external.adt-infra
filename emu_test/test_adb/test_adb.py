@@ -213,11 +213,8 @@ class AdbTestCase(emu_testcase.EmuBaseTestCase):
         self.adb_test_check(avd_config)
 
 
-if emu_argparser.emu_args.config_file is None:
-    sys.exit(-1)
-else:
-    emu_test.utils.emu_testcase.create_test_case_from_file(
-        'adb', AdbTestCase, AdbTestCase.run_adb_test)
+emu_test.utils.emu_testcase.create_test_case_from_file(
+    'adb', AdbTestCase, AdbTestCase.run_adb_test)
 
 if __name__ == '__main__':
     os.environ['SHELL'] = '/bin/bash'
