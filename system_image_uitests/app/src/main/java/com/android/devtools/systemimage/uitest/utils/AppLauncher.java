@@ -74,12 +74,12 @@ public class AppLauncher {
         final UiObject appObject = device.findObject(appSelector);
 
         boolean appNameFound = false;
-        if (new Wait().until(appObject::exists) && (api < 22 || api > 24)) {
+        if (new Wait().until(appObject::exists) && (api < 22 || api >= 27)) {
             appObject.clickAndWaitForNewWindow();
             Log.i(TAG, "Opened app in first attempt");
         }
         else {
-            if (api >= 18 && api <= 25 ) {
+            if (api >= 23 && api < 27 ) {
                 device.pressHome();
                 final UiObject launcherIcon = device.findObject(new UiSelector().
                         className("android.widget.TextView").
