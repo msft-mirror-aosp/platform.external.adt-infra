@@ -162,7 +162,7 @@ public class GoogleAppUtil {
 
 
 
-        if (api == 24 || api == 25) {
+        if (api >= 24 && api <= 26) {
             UiObject signInConsentButton = device.findObject(
                     new UiSelector().resourceId(Res.GOOGLE_SIGN_IN_CONSENT_NEXT_RES));
             if (signInConsentButton.waitForExists(20L)) {

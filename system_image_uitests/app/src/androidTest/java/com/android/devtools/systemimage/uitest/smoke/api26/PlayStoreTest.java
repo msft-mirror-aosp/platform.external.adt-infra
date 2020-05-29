@@ -35,8 +35,7 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
-import java.util.concurrent.TimeUnit;
-
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -49,14 +48,14 @@ public class PlayStoreTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(360);
+    public Timeout globalTimeout = Timeout.seconds(500);
 
     @Before
     public void verifyPlayStore() throws Exception {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
 
-            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v2(instrumentation);
+            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v1(instrumentation);
             boolean loggedInToPlayStore = playStoreInstalled &&
                     PlayStoreUtil.loginGooglePlay(instrumentation);
             assertTrue("PlayStore login failed.", loggedInToPlayStore);
@@ -85,7 +84,7 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String application = "Messenger";
+            final String application = "Wheather Channel";
 
             assertTrue("Application not found in search.",
                     PlayStoreUtil.hasTestApp(instrumentation, application));
@@ -169,7 +168,7 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String application = "Google Voice";
+            final String application = "Wheather Channel";
 
             PlayStoreUtil.selectApplication(instrumentation, application);
             new GoogleAppConfirmationWatcher(device).checkForCondition();
@@ -178,14 +177,10 @@ public class PlayStoreTest {
                     PlayStoreUtil.installApplication(instrumentation));
 
             AppLauncher.launch(instrumentation, "Play Store");
-            device.findObject(new UiSelector().text("OPEN")).clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().textMatches("(?i)open(?-i)")).clickAndWaitForNewWindow();
             assertTrue("App could not be opened",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return device.findObject(new UiSelector()
-                                    .textContains(application)).exists(); }
-                    }));
+                    new Wait().until(() -> device.findObject(new UiSelector()
+                            .textContains(application)).exists()));
 
             AppLauncher.launch(instrumentation, "Play Store");
             assertTrue("Unable to uninstall the application from Google Play",
@@ -218,22 +213,16 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String application = "Tasker";
+            final String application = "PowerAudio Pro";
 
             PlayStoreUtil.selectApplication(instrumentation, application);
             new GoogleAppConfirmationWatcher(device).checkForCondition();
 
             assertTrue("Target application is not a pay app",
-                    new Wait(TimeUnit.MILLISECONDS.convert(10L,
-                            TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            UiSelector payButton = new UiSelector().
-                                    className("android.widget.Button").packageName(
-                                    Res.GOOGLE_PLAY_VENDING_RES);
-                            return device.findObject(payButton.textContains("$")).exists();
-                        }
-                    }));
+                    device.findObject(new UiSelector()
+                            .className("android.widget.Button")
+                            .packageName(Res.GOOGLE_PLAY_VENDING_RES)
+                            .textContains("$")).waitForExists(10L));
 
             PlayStoreUtil.resetPlayStore(instrumentation);
             device.pressHome();
@@ -271,18 +260,26 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             final Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String familyApplication = "YouTube Kids";
-            final String restrictedApplication = "Truth or Dare ? Dirty !";
+            final String familyApplication = "Weather Channel";
+            final String restrictedApplication = "Reddit";
 
-            assertTrue("Adult application is not found in search.",
+            assertTrue("Adult application is found in search.",
                     PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication));
+
+            device.pressBack();
 
             PlayStoreUtil.setRestrictions(instrumentation,  "Apps", "Everyone 10+");
 
+            assertFalse("Adult application is not found in restricted search.",
+                    PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication));
 
-            assertTrue("Adult application found in search.",
-                    !PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication) &&
-                            PlayStoreUtil.hasTestApp(instrumentation, familyApplication));
+            device.pressBack();
+
+            assertTrue("Family application is found in restricted search.",
+                    PlayStoreUtil.hasTestApp(instrumentation, familyApplication));
+
+
+            device.pressBack();
 
             PlayStoreUtil.toggleParentalControls(device, false);
             device.pressHome();

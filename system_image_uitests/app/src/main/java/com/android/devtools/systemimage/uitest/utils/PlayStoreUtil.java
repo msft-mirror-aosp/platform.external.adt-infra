@@ -137,6 +137,11 @@ public class PlayStoreUtil {
                 device.findObject(
                     new UiSelector().resourceId(Res.GOOGLE_PLAY_ACTIVE_RES)).exists());
         if (loggedIn) {
+            UiObject notNowButton = device.findObject(
+                    new UiSelector().resourceId(Res.GOOGLE_PLAY_SECONDARY_BUTTON_RES));
+            if (notNowButton.waitForExists(5L)) {
+                notNowButton.clickAndWaitForNewWindow();
+            }
             return true;
         }
 

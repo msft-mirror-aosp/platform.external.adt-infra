@@ -89,6 +89,7 @@ public class Res {
     public static final String GOOGLE_PLAY_VENDING_RES = "com.android.vending";
     public static final String GOOGLE_PLAY_IDLE_RES = "(com.android.vending:id/search_box_idle_text|com.android.vending:id/search_bar_hint)";
     public static final String GOOGLE_PLAY_ACTIVE_RES = "com.android.vending:id/search_box_active_text_view";
+    public static final String GOOGLE_PLAY_SECONDARY_BUTTON_RES = "com.android.vending:id/secondary_button";
     public static final String GOOGLE_PLAY_INPUT_RES =
             "(com.android.vending:id/search_box_text_input|com.android.vending:id/search_bar_text_input)";
     public static final String GOOGLE_PLAY_FILTER_TOGGLE_RES = "com.android.vending:id/content_filter_on_off_toggle";
