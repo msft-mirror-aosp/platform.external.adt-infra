@@ -79,7 +79,7 @@ class SleepWakeTest(testcase_base.BaseAdbTest):
 
     def test_adb_sleep_wake_stress(self):
         print 'Running test: ADB Sleep Wake stress'
-        status = adb_util.launcher(self.adb_sleep_wake, 0.25, 1,
+        status = adb_util.launcher(self.adb_sleep_wake, 0.05, 1,
                                    is_print_progress=True)
         self.assertTrue(status, "ADB Sleep/Wake failed")
 

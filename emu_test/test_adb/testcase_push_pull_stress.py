@@ -107,7 +107,7 @@ class PushPullTest(testcase_base.BaseAdbTest):
 
     def test_adb_push_pull_stress(self):
         print 'Running test: ADB Push Pull stress'
-        status = adb_util.launcher(self.adb_push_pull, 0.25, 1,
+        status = adb_util.launcher(self.adb_push_pull, 0.05, 1,
                                    setup=self.create_temp_files, cleanup=self.delete_temp_files,
                                    is_print_progress=True)
         self.assertTrue(status, "ADB Push/Pull failed")
