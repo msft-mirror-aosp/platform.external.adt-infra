@@ -88,17 +88,16 @@ public class PackageInstallationUtil {
     private static boolean allowInstallation(UiDevice device) throws UiObjectNotFoundException {
         UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)").
                 className("android.widget.Button"));
-        if (!settingsButton.waitForExists(5000)) {
-            return false;
+        if (settingsButton.waitForExists(5000)) {
+            settingsButton.clickAndWaitForNewWindow();
         }
 
-        settingsButton.clickAndWaitForNewWindow();
         final UiScrollable settingsList = new UiScrollable(new UiSelector().scrollable(true));
         settingsList.setAsVerticalList();
         boolean permissionGranted = false;
         UiObject allowSwitch = device.findObject(new UiSelector()
                 .textMatches(Res.UNKNOWN_SOURCES_PATTERN));
-        if (settingsList.scrollIntoView(allowSwitch)) {
+        if (settingsList.waitForExists(5000) && settingsList.scrollIntoView(allowSwitch)) {
             allowSwitch.click();
             UiObject allowMessage = device.findObject(new UiSelector()
                     .textMatches(Res.UNKNOWN_SOURCES_PATTERN));
@@ -113,9 +112,12 @@ public class PackageInstallationUtil {
             }
             device.pressBack();
         } else {
-            settingsList.scrollToBeginning(10);
             allowSwitch = device.findObject(new UiSelector().className("android.widget.Switch"));
-            if (settingsList.scrollIntoView(allowSwitch)) {
+            if (settingsList.exists()) {
+                settingsList.scrollToBeginning(10);
+                settingsList.scrollIntoView(allowSwitch);
+            }
+            if (allowSwitch.waitForExists(3000)) {
                 if (allowSwitch.getText().equals("OFF")) {
                     allowSwitch.click();
                 }
@@ -136,6 +138,7 @@ public class PackageInstallationUtil {
     @TargetApi(26)
     public static String installApk(Instrumentation instrumentation, String apkName, Boolean... isV2) throws Exception {
         Context context = instrumentation.getTargetContext();
+        UiDevice device = UiDevice.getInstance(instrumentation);
         AssetManager assetManager = context.getAssets();
         InputStream in = assetManager.open(apkName);
         File apkFile = new File(context.getExternalFilesDir(null), apkName);
@@ -146,21 +149,27 @@ public class PackageInstallationUtil {
 
         String result = "";
 
-        boolean useV2 = isV2.length > 0 ? isV2[0] : false;
-        if (useV2) {
-            context.startActivity(createIntent_v2(context, apkFile));
-        } else {
+        if (isV2.length == 0) {
             context.startActivity(createIntent_v1(apkFile));
         }
+        else if (isV2[0]) {
+            context.startActivity(createIntent_v2(context, apkFile));
+        } else {
+            UiObject allowFromSourceOff = UiDevice.getInstance(instrumentation).
+                    findObject(new UiSelector().textMatches("(?i)off(?-i)").
+                            className("android.widget.Switch"));
+            if (!allowFromSourceOff.waitForExists(5000)) {
+                context.startActivity(createIntent_v3(context, apkFile));
+            }
+        }
 
-        UiDevice device = UiDevice.getInstance(instrumentation);
         UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)").
                 className("android.widget.Button"));
 
         boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(
                 INSTALL_WAIT, TimeUnit.SECONDS));
 
-        if (hasSettings) {
+        if (hasSettings || isV2[0] == false) {
             if (!allowInstallation(device)) {
                 result += "Could not allow installation from outside sources.";
             }
@@ -219,6 +228,18 @@ public class PackageInstallationUtil {
                 context.getApplicationContext()
                         .getPackageName() + ".provider", apkFile);
         intent.setDataAndType(apkURI, "application/vnd.android.package-archive");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        return intent;
+    }
+
+    private static Intent createIntent_v3(Context context, File apkFile) {
+        Uri apkURI = FileProvider.getUriForFile(
+                context,
+                context.getApplicationContext()
+                        .getPackageName() + ".provider", apkFile);
+        Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
+        intent.setDataAndType(apkURI, "application/vnd.android.package-archive");
+
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return intent;
     }

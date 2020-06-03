@@ -18,12 +18,9 @@ package com.android.devtools.systemimage.uitest.smoke.api26;
 
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.Until;
 import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -34,6 +31,7 @@ import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AppWatcher;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppContinueWatcher;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,6 +41,7 @@ import org.junit.runner.RunWith;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test for app interactions.
@@ -54,8 +53,6 @@ public class AppTest {
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(360);
-
-    private final String TAG = "AppTest";
 
     /**
      * Verifies an app runs on the emulator.
@@ -80,10 +77,8 @@ public class AppTest {
     @TestInfo(id = "14578823")
     public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        UiDevice device = UiDevice.getInstance(instrumentation);
         String testPackageName = "com.example.android.rs.hellocompute";
         String apk = "HelloCompute.apk";
-        String appName = "RsHelloCompute";
         String result = "";
 
         // Install RsHelloCompute, if not already present.
@@ -91,8 +86,7 @@ public class AppTest {
                 isPackageInstalled(instrumentation, testPackageName);
 
         if (!isHelloComputeInstalled) {
-            result = PackageInstallationUtil.installApk(instrumentation, apk);
-            new AppWatcher(device).checkForCondition();
+            result = PackageInstallationUtil.installApk(instrumentation, apk, false);
             isHelloComputeInstalled = PackageInstallationUtil.
                     isPackageInstalled(instrumentation, testPackageName);
         }
@@ -100,11 +94,9 @@ public class AppTest {
         assertTrue("Application " + apk + " is not installed. Result: " + result,
                 isHelloComputeInstalled);
 
-        AppLauncher.launch(instrumentation, appName);
-        boolean hasApplication = testFramework.getDevice().findObject(new UiSelector().resourceId(
-                Res.APP_IMAGE_VIEW_ID)).waitForExists(5L);
-
-        assertTrue("Application " + appName + " did not launch", hasApplication);
+        AppLauncher.launch(instrumentation, "RsHelloCompute");
+        assertTrue(testFramework.getDevice().findObject(new UiSelector().resourceId(
+                Res.APP_IMAGE_VIEW_ID)).exists());
     }
 
     /**
@@ -136,6 +128,11 @@ public class AppTest {
         if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
             GoogleAppUtil.loginGoogleApp(instrumentation, true);
             AppLauncher.launch(instrumentation, "Chrome");
+            device.pressBack();
+            AppLauncher.launch(instrumentation, "Chrome");
+
+            new GoogleAppContinueWatcher(device).checkForCondition();
+            new AppWatcher(device).checkForCondition();
 
             // Click the search box if it's there.
             UiObject searchBox = device.findObject(new UiSelector().resourceId(
@@ -158,12 +155,8 @@ public class AppTest {
                 device.pressMenu();
             }
 
-            boolean notBookmarked = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() throws UiObjectNotFoundException {
-                    return device.findObject(new UiSelector().description("Bookmark this page")).exists();
-                }
-            });
+            boolean notBookmarked = new Wait().until(() -> device.findObject(
+                    new UiSelector().description("Bookmark this page")).exists());
             if (notBookmarked) {
                 device.findObject(new UiSelector().description("Bookmark this page")).click();
                 new AppWatcher(device).checkForCondition();
@@ -172,7 +165,11 @@ public class AppTest {
             // After bookmarking, the button description changes.
             UiObject editBookmarkText = device.findObject(new UiSelector().description("Edit bookmark"));
             editBookmarkText.waitForExists(TimeUnit.SECONDS.toMillis(15));
-            assertTrue("Bookmark was not set", editBookmarkText.exists());
+            if (editBookmarkText.exists()) {
+                editBookmarkText.clickAndWaitForNewWindow();
+            } else {
+                fail("Bookmark was not set");
+            }
 
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(15));
@@ -180,6 +177,7 @@ public class AppTest {
                 bookmarks.clickAndWaitForNewWindow();
             }
 
+            String TAG = "AppTest";
             Log.d(TAG, "The bookmark is set");
             new AppWatcher(device).checkForCondition();
 
@@ -196,14 +194,9 @@ public class AppTest {
             final UiObject bookmarkedSite = device.findObject(new UiSelector().textContains("ESPN"));
 
             assertTrue("Cannot find bookmark",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return device.findObject(
-                                    new UiSelector().textContains(("kmarks"))).exists() &&
-                                    bookmarkedSite.exists();
-                        }
-                    })
+                    new Wait().until(() -> device.findObject(
+                            new UiSelector().textContains(("kmarks"))).exists() &&
+                            bookmarkedSite.exists())
             );
 
             bookmarkedSite.dragTo(bookmarkedSite,20);
@@ -212,16 +205,10 @@ public class AppTest {
                     description("Delete bookmarks"));
             // Delete the bookmark.
             assertTrue("Cannot find trash",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return trashCan.exists();
-                        }
-                    })
+                    new Wait().until(trashCan::exists)
             );
 
             trashCan.click();
-
         }
     }
 }
