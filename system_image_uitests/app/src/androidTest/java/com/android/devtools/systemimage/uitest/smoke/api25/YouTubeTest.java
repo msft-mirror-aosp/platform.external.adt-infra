@@ -93,6 +93,24 @@ public class YouTubeTest {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         AppLauncher.launch(instrumentation, "YouTube");
 
+        UiObject youTubeInstall = device.findObject(
+                new UiSelector().resourceId(Res.YOUTUBE_INSTALL_BUTTON_RES));
+        if (youTubeInstall.waitForExists(5L)) {
+            youTubeInstall.clickAndWaitForNewWindow();
+
+            UiObject youTubeLeftButton = device.findObject(new UiSelector().
+                    resourceId(Res.GOOGLE_PLAY_LEFT_BUTTON_RES).textMatches("(?i)update(?-i)"));
+            if (youTubeLeftButton.waitForExists(1000L)) {
+                youTubeLeftButton.clickAndWaitForNewWindow();
+            }
+
+            UiObject youTubeRightButton = device.findObject(new UiSelector().
+                    resourceId(Res.GOOGLE_PLAY_RIGHT_BUTTON_RES).textMatches("(?i)open(?-i)"));
+            if (youTubeRightButton.waitForExists(30000L)) {
+                youTubeRightButton.clickAndWaitForNewWindow();
+            }
+        }
+
         UiObject youTubeClose = device.findObject(
                 new UiSelector().packageName(Res.YOUTUBE_PACKAGE).description("Close"));
         if (youTubeClose.waitForExists(5L)) {
