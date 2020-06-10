@@ -36,6 +36,7 @@ import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,7 +57,7 @@ public class ApiDemosTest {
 
     @Before
     public void activateDeviceAdmin() throws Exception {
-        ApiDemosInstaller.installApp("Security & Location", "Device admin apps");
+        ApiDemosInstaller.installApp("Security", "Device administrators");
     }
 
     /**
@@ -86,6 +87,7 @@ public class ApiDemosTest {
      */
     @Test
     @TestInfo(id = "T144630615")
+    @Ignore("Disable due to b/146500804 until further clarification.")
     public void testPasswordQuality() throws Exception {
         boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
                 "com.example.android.apis");
@@ -99,32 +101,24 @@ public class ApiDemosTest {
             UiScrollable itemList =
                     new UiScrollable(new UiSelector().resourceId(Res.ANDROID_LIST_RES));
             itemList.setAsVerticalList();
-            Assert.assertTrue("Could not list items", itemList.exists());
-
+            Assert.assertTrue(itemList.exists());
             UiObject appItem = itemList.getChildByText(
                     new UiSelector().className("android.widget.TextView"), "App");
-            appItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
-            if (appItem.exists()) {
-                appItem.click();
-            }
+            appItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
+            appItem.click();
             UiObject deviceAdminItem = itemList.getChildByText(
                     new UiSelector().className("android.widget.TextView"), "Device Admin");
-            deviceAdminItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
-            if (deviceAdminItem.exists()) {
-                deviceAdminItem.click();
-            }
+            deviceAdminItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
+            deviceAdminItem.click();
             UiObject passwordQualityItem = itemList.getChildByText(
                     new UiSelector().className("android.widget.TextView"), "Password quality");
-            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
-            if (passwordQualityItem.exists()) {
-                passwordQualityItem.click();
-            }
+            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
+            passwordQualityItem.clickAndWaitForNewWindow(3L);
+
             passwordQualityItem = itemList.getChildByText(
                     new UiSelector().className("android.widget.RelativeLayout"), "Password quality");
-            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(6L));
-            if (passwordQualityItem.exists()) {
-                passwordQualityItem.click();
-            }
+            passwordQualityItem.waitForExists(TimeUnit.SECONDS.toMillis(3L));
+            passwordQualityItem.clickAndWaitForNewWindow(3L);
 
             // Set the criteria for password to 'Complex' type.
             device.findObject(new UiSelector().text("Complex")).clickAndWaitForNewWindow();
@@ -151,13 +145,13 @@ public class ApiDemosTest {
             ApiDemosTestUtil.setPasswordCriteria("Minimum non-letter", "1", device);
 
             //Verify that setting the password meets the "PASSWORD QUALITY" criteria.
-            ApiDemosTestUtil.verifyPasswordQuality(instrumentation, device, "Security & Location", "Continue");
+            ApiDemosTestUtil.verifyPasswordQuality(instrumentation, device, "Security", "Continue");
         }
     }
 
     @After
     public void restoreState() throws Exception{
         //Deactivate "Device Admin" to restore the state.
-        SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security & Location", "Device admin apps");
+        SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security", "Device administrators");
     }
 }
