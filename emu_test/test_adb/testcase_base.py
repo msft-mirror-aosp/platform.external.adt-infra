@@ -14,7 +14,10 @@ class BaseAdbTest(unittest.TestCase):
       super(BaseAdbTest, self).__init__(method_name)
     else:
       super(BaseAdbTest, self).__init__()
-    self.adb_binary = path_utils.get_adb_binary()
+    if emu_argparser.emu_args.adb_exec:
+      self.adb_binary = emu_argparser.emu_args.adb_exec
+    else:
+      self.adb_binary = path_utils.get_adb_binary()
 
   def setUp(self):
     print ('Start ADB Test')

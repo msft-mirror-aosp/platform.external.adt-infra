@@ -80,4 +80,7 @@ def get_parser():
                         help='when defined, launch emulator with -no-window')
     parser.add_argument('--use_device', action='store_true',
                         help='when defined, run tests on a connected device')
+    parser.add_argument('--adb', type=str, dest='adb_exec', action='store',
+                        default=None,
+                        help='path of adb executable')
     return parser

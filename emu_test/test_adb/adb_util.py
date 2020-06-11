@@ -14,8 +14,6 @@ import emu_test.utils.path_utils as path_utils
 
 MAX_CONNECTION_FAILURES = 3
 
-adb_binary = path_utils.get_adb_binary()
-
 def print_progress(perc, prefix='',
                    suffix='', decimals=1, bar_len=100):
     """Call in a loop to create terminal progress bar.
@@ -94,7 +92,7 @@ class ProgressPrinter(object):
                 self.timer.cancel()
 
 
-def get_connected_devices():
+def get_connected_devices(adb_binary):
     """Returns list of adb device ids that are connected."""
     cmd = adb_binary + ' devices'
     proc = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
@@ -114,7 +112,7 @@ def get_connected_devices():
     return connected
 
 
-def test_connected(devices):
+def test_connected(adb_binary, devices):
     """Verify that the expected number of devices/emulators are still connected.
 
     Args:
@@ -129,7 +127,7 @@ def test_connected(devices):
     """
     # verify expected emulators/devices are present
     # Note that since Windows includes a carriage return, we do it in a seperate loop.
-    connected = get_connected_devices()
+    connected = get_connected_devices(adb_binary)
     success = True
     if len(connected) != devices:
         print('\n\nERROR:\nExpected number of connections: ' +
@@ -188,7 +186,7 @@ class Atom(object):
         return self.lock.__exit__(*args)
 
 
-def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_progress=False, log_dir='logs'):
+def launcher(test_fn, duration, devices, adb_binary, setup=noop, cleanup=noop, is_print_progress=False, log_dir='logs'):
     """Higher-order function for launching tests
 
         Args:
@@ -197,6 +195,7 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
                      or failure (False) of the test. Failure may also be indicated by raising an exception.
             duration: Maximum elapsed running time
             devices: Number of expected devices.
+            adb_binary: Path to the adb binary to be used.
             setup: Function that performs any necessary setup steps before the test is run
                    (optional — defaults to noop).
             cleanup: Function that performs any necessary cleanup steps after the test is run
@@ -225,7 +224,7 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
             progress_printer = ProgressPrinter(start, stop, 60)
             progress_printer.start()
 
-        connection_success, connected = test_connected(devices)
+        connection_success, connected = test_connected(adb_binary, devices)
         if not connection_success:
             if devices != 1 or len(connected) == 0:
                 return False
@@ -237,7 +236,7 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
             iteration = 0
             success = True
             while time.time() < stop:
-                connected = get_connected_devices()
+                connected = get_connected_devices(adb_binary)
                 if device in connected:
                     if not connection_failures_remaining:
                         with connected_devices:
@@ -250,7 +249,7 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
                     connection_failures_remaining = MAX_CONNECTION_FAILURES
 
                     success = test_fn(device) and success
-                    log = logcat(device)
+                    log = logcat(adb_binary, device)
 
                     # Capture logcat.
                     if log:
@@ -301,23 +300,25 @@ def launcher(test_fn, duration, devices, setup=noop, cleanup=noop, is_print_prog
             progress_printer.kill()
         cleanup()
 
-def adb(dut, cmd):
+def adb(adb_binary, dut, cmd):
     """Helper function for running adb commands.
 
     Args:
+      adb_binary: Path to adb binary.
       dut: Device under tests.
       cmd: List containing adb command to run arguments.
 
     Returns:
       String containing the comand's output.
     """
-    adb_cmd = ['adb', '-s', dut] + cmd
+    adb_cmd = [adb_binary, '-s', dut] + cmd
     return subprocess.check_output(adb_cmd)
 
-def logcat(dut):
+def logcat(adb_binary, dut):
     """Get logcat of specified device.
 
     Args:
+      adb_binary: Path to adb binary.
       dut: Device under test.
       cmd: List containing adb command to run arguments.
 
@@ -326,7 +327,7 @@ def logcat(dut):
     """
     try:
         cmd = ['shell', 'logcat', '-d', '-v', 'threadtime']
-        return adb(dut, cmd)
+        return adb(adb_binary, dut, cmd)
     except:
         return None
 
