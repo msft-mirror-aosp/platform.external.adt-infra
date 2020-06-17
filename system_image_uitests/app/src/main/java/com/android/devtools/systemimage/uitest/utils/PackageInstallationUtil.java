@@ -169,7 +169,7 @@ public class PackageInstallationUtil {
         boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(
                 INSTALL_WAIT, TimeUnit.SECONDS));
 
-        if (hasSettings || isV2[0] == false) {
+        if (hasSettings || !isV2[0]) {
             if (!allowInstallation(device)) {
                 result += "Could not allow installation from outside sources.";
             }

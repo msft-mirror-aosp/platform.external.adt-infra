@@ -70,7 +70,7 @@ public class SettingsTest {
 
     @Before
     public void activateDeviceAdmin() throws Exception {
-        ApiDemosInstaller.installApp("Security & Location", "Device admin apps");
+        ApiDemosInstaller.installApp("Security", "Device administrators");
     }
 
     /**
@@ -94,43 +94,20 @@ public class SettingsTest {
             return;
         }
 
-        AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
+        AppLauncher.launchPath(instrumentation, true,
+                "Settings", "Security & Location", "Location");
 
-        String securityLabel = "Security & Location";
-        UiObject security = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                securityLabel);
-        security.clickAndWaitForNewWindow();
-
-        UiObject location =
-                itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                        "Location");
-        location.clickAndWaitForNewWindow();
-
-        boolean isLocationDisabled = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
-                return device.findObject(new UiSelector().textMatches("(?i)yes")).exists();
-            }
-        });
+        boolean isLocationDisabled = new Wait().until(() ->
+                device.findObject(new UiSelector().textMatches("(?i)yes")).exists());
 
         if (isLocationDisabled) {
             device.findObject(new UiSelector().textMatches("(?i)yes")).clickAndWaitForNewWindow();
             device.findObject(new UiSelector().textMatches("(?i)location")).clickAndWaitForNewWindow();
         }
         assertTrue("Failed to find Location title.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("Location")).exists() &&
-                                device.findObject(new UiSelector().text("Recent location requests"))
-                                        .exists();
-                    }
-                }));
+                new Wait().until(() -> device.findObject(new UiSelector().text("Location")).exists() &&
+                        device.findObject(new UiSelector().text("Recent location requests"))
+                                .exists()));
     }
 
     /**
@@ -155,7 +132,6 @@ public class SettingsTest {
      *   Verify:
      *   Dialog stating "This application cannot make outgoing calls without the Phone permission."
      *   </pre>
-     * <p>
      *
      */
     @Test
@@ -163,30 +139,28 @@ public class SettingsTest {
     public void testPhonePermissions() throws Exception {
         final String app = "Phone";
 
-        SettingsUtil.setAppPermissions_v2(instrumentation, app, app, false,
-                "DENY ANYWAY", "Apps & notifications", "App permissions");
+        SettingsUtil.setAppPermissions_v1(instrumentation, app, app,
+                false, "DENY ANYWAY", "Apps & notifications");
         device.pressHome();
 
         AppLauncher.launch(instrumentation, app);
 
-        device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_PHONE_RES)).
-                clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_DIGITS_RES)).setText("555");
-        device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_PAD_RES)).click();
-
+        UiObject dialer = device.findObject(
+                new UiSelector().resourceIdMatches("com.google.android.dialer:id/digits"));
+        if (dialer.waitForExists(5L)) {
+            device.findObject(new UiSelector().resourceIdMatches("com.google.android.dialer:id/digits")).
+                    clickAndWaitForNewWindow();
+            device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_DIGITS_RES)).setText("555");
+            device.findObject(new UiSelector().resourceIdMatches(Res.DIALER_PAD_RES)).click();
+        }
         assertTrue("Did not prompt for lack of Phone permission.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text(
-                                "This application cannot make outgoing calls without the Phone permission.")).
-                                        exists();
-                        }
-                })
+                new Wait().until(() -> device.findObject(new UiSelector().text(
+                        "This application cannot make outgoing calls without the Phone permission.")).
+                        exists())
         );
 
-        SettingsUtil.setAppPermissions_v2(instrumentation, app, app, true,
-                "DENY ANYWAY", "Apps & notifications", "App permissions");
+        SettingsUtil.setAppPermissions_v1(instrumentation, app, app,
+                true, "DENY ANYWAY", "Apps & notifications");
         device.pressHome();
     }
 
@@ -220,11 +194,12 @@ public class SettingsTest {
             return;
         }
 
-        SettingsUtil.setAppPermissions_v2(instrumentation, appType, appName, false,
-                "DENY ANYWAY", "Apps & notifications", "App permissions");
+        SettingsUtil.setAppPermissions_v1(instrumentation, appType, appName, false, "DENY ANYWAY", "Apps");
         device.pressHome();
-
-        AppLauncher.launch(instrumentation, appName);
+        UiObject mapsApp = device.findObject(new UiSelector().text(appName));
+        assertTrue("Failed to find Maps application", new Wait(5L)
+                .until(mapsApp::exists));
+        mapsApp.clickAndWaitForNewWindow();
         final UiObject acceptAndContinueButton;
         acceptAndContinueButton = device.findObject(new UiSelector().
                 textMatches("(?i)accept\\s&\\scontinue"));
@@ -241,17 +216,11 @@ public class SettingsTest {
         device.findObject(new UiSelector().description("Move to your location"))
                 .clickAndWaitForNewWindow();
         assertTrue("Did not prompt for lack of Maps permission.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector()
-                                .text("Allow Maps to access this device's location?")).exists();
-                    }
-                })
+                new Wait().until(() -> device.findObject(new UiSelector()
+                        .text("Allow Maps to access this device's location?")).exists())
         );
 
-        SettingsUtil.setAppPermissions_v2(instrumentation, appType, appName, true,
-                "DENY ANYWAY", "Apps & notifications", "App permissions");
+        SettingsUtil.setAppPermissions_v1(instrumentation, appType, appName, true, "DENY ANYWAY", "Apps");
         device.pressHome();
     }
 
@@ -275,13 +244,11 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void displayConfigureAppPermissions() throws Exception {
-        AppManager.openAppList_v2(instrumentation);
-        SettingsUtil.clickAdvancedMenu(device);
-
-        assertTrue(SettingsUtil.getAppPermissions_v2(instrumentation, "Calendar", "Apps & notifications", "App permissions").exists()
-                && SettingsUtil.getAppPermissions_v2(instrumentation, "Camera", "Apps & notifications", "App permissions").exists()
-                && SettingsUtil.getAppPermissions_v2(instrumentation, "Location", "Apps & notifications", "App permissions").exists()
-                && SettingsUtil.getAppPermissions_v2(instrumentation, "Phone", "Apps & notifications", "App permissions").exists());
+        AppLauncher.launchPath(instrumentation, true, "Settings", "Apps & notifications");
+        device.findObject(new UiSelector().textContains("App permissions")).clickAndWaitForNewWindow();
+        assertTrue(SettingsUtil.getAppPermissions_v3("Calendar")
+                && SettingsUtil.getAppPermissions_v3("Camera")
+                && SettingsUtil.getAppPermissions_v3("Phone"));
     }
 
     /**
@@ -304,13 +271,11 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
-        } else {
-            return;
+        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v1(testFramework)) {
+            DeveloperOptionsManager.enableDeveloperOptions_v1(testFramework);
+            assertTrue("Failed to enable Developer options.",
+                    DeveloperOptionsManager.isDeveloperOptionsEnabled_v1(testFramework));
         }
-        assertTrue("Failed to enable Developer options.",
-                DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
     }
 
     /**
@@ -334,52 +299,26 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
-        try {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text("Date & time"))
-                    .clickAndWaitForNewWindow();
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        }
-
+        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Date & time");
         final UiObject2 widget = SettingsUtil.navigateToDateTimeSwitch("Automatic date & time", instrumentation, Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES);
 
         // Test requires "Automatic date & time" widget to start in the enabled state.
+        assert widget != null;
         if (!widget.isChecked()) {
             widget.click();
         }
         assertTrue("Failed to disable set date.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return !device.findObject(new UiSelector().text("Set date")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> !device.findObject(new UiSelector().text("Set date")).isEnabled())
         );
         assertTrue("Failed to disable set time.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return !device.findObject(new UiSelector().text("Set time")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> !device.findObject(new UiSelector().text("Set time")).isEnabled())
         );
         widget.click();
         assertTrue("Failed to enable set date.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("Set date")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> device.findObject(new UiSelector().text("Set date")).isEnabled())
         );
         assertTrue("Failed to enable set time.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("Set time")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> device.findObject(new UiSelector().text("Set time")).isEnabled())
         );
         device.findObject(new UiSelector().text("Set date")).clickAndWaitForNewWindow();
 
@@ -414,50 +353,30 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
-        try {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text("Date & time"))
-                    .clickAndWaitForNewWindow();
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        }
+        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Date & time");
 
         final UiObject2 widget = SettingsUtil.navigateToDateTimeSwitch("Automatic time zone", instrumentation, Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES);
 
         // Initialize automatic time zone option to enabled state.
+        assert widget != null;
         if (!widget.isChecked()) {
             widget.click();
         }
         assertTrue("Failed to disable select time zone",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return !device.findObject(new UiSelector().text("Select time zone")).isEnabled();
-                  }
-              })
+                new Wait().until(() -> !device.findObject(new UiSelector().text("Select time zone")).isEnabled())
         );
         // Disable automatic time zone option.
         widget.click();
         final UiObject selectTimeZone = device.findObject(
                 new UiSelector().text("Select time zone"));
         assertTrue("Failed to enable select time zone",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return selectTimeZone.isEnabled();
-                  }
-              })
+                new Wait().until(selectTimeZone::isEnabled)
         );
         selectTimeZone.clickAndWaitForNewWindow();
 
         assertTrue("Failed to load Select time zone screen.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(
-                                new UiSelector().text("Select time zone")).exists();
-                    }
-              })
+                new Wait().until(() -> device.findObject(
+                        new UiSelector().text("Select time zone")).exists())
         );
 
         UiObject timeZoneLabel = device.findObject(new UiSelector().text("Time zone").
@@ -495,23 +414,11 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
-        try {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text("Date & time"))
-                    .clickAndWaitForNewWindow();
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        }
-
+        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Date & time");
         final UiObject2 useTwentyFourSwitch = SettingsUtil.navigateToDateTimeSwitch("Use 24-hour format", instrumentation, Res.NETWORK_SWITCHES_RECYCLER_VIEW_RES);
 
         assertTrue("Failed to find Use 24-hour format switch.",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return useTwentyFourSwitch != null;
-                    }
-                })
+                new Wait().until(() -> useTwentyFourSwitch != null)
         );
 
         boolean useTwentyFourWasEnabled = false;
@@ -520,34 +427,21 @@ public class SettingsTest {
         // Initialize 24-hour format option to disabled state.
         if (thirteenHundredLabel.exists()) {
             useTwentyFourWasEnabled = true;
+            assert useTwentyFourSwitch != null;
             useTwentyFourSwitch.click();
         }
         assertTrue("Failed to find Use 24-hour format label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(
-                                new UiSelector().text("Use 24-hour format")).exists();
-                  }
-              })
+                new Wait().until(() -> device.findObject(
+                        new UiSelector().text("Use 24-hour format")).exists())
         );
         assertTrue("Failed to find 1:00 PM label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                        return device.findObject(new UiSelector().text("1:00 PM")).exists();
-                  }
-              })
+                new Wait().until(() -> device.findObject(new UiSelector().text("1:00 PM")).exists())
         );
         // Enable 24-hour format.
+        assert useTwentyFourSwitch != null;
         useTwentyFourSwitch.click();
         assertTrue("Failed to find 13:00 label.",
-              new Wait().until(new Wait.ExpectedCondition() {
-                  @Override
-                    public boolean isTrue() throws Exception {
-                      return thirteenHundredLabel.exists();
-                  }
-              })
+                new Wait().until(thirteenHundredLabel::exists)
         );
 
         // Clean up by disabling 24-hour format option.
@@ -582,7 +476,7 @@ public class SettingsTest {
                 "com.example.android.apis");
 
         if (isAPIDemoInstalled) {
-            SettingsUtil.launchDeviceAdminApps(instrumentation, "Security & Location", "Device admin apps");
+            AppLauncher.launchPath(instrumentation, true, "Settings", "Security & Location", "Device admin apps");
 
             if (SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.CheckBox", Res.ANDROID_LIST_RES)) {
                 SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security & Location", "Device admin apps");
@@ -677,7 +571,8 @@ public class SettingsTest {
         boolean phoneSwitchState;
         boolean storageSwitchState;
 
-        AppManager.openAppList_v2(instrumentation);
+        AppLauncher.launchPath(instrumentation, true,
+                "Settings","Apps & notifications", "App info");
         AppManager.openSystemAppList_v2(instrumentation);
 
         // Find and click "Maps" in apps list.
@@ -781,15 +676,18 @@ public class SettingsTest {
      */
     @Test
     public void revokeDebugAuth() throws Exception {
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
+        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v1(testFramework)) {
+            DeveloperOptionsManager.enableDeveloperOptions_v1(testFramework);
         }
 
         Assert.assertTrue("Could not enable developer options",
-                DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
+                DeveloperOptionsManager.isDeveloperOptionsEnabled_v1(testFramework));
 
-        AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "System", "Developer options"});
-
+        UiObject developerOptionsItem = UiDevice.getInstance(instrumentation).findObject(
+                new UiSelector().text("Developer options"));
+        if (developerOptionsItem.waitForExists(5L)) {
+            developerOptionsItem.clickAndWaitForNewWindow();
+        }
         UiScrollable itemList =
                 new UiScrollable(
                         new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
@@ -836,7 +734,7 @@ public class SettingsTest {
      */
     @Test
     public void listConnectedDevices() throws Exception {
-        AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "Connected devices"});
+        AppLauncher.launchPath(instrumentation, true, "Settings", "Connected devices");
 
         UiObject androidErrorClose = device.findObject(
                 new UiSelector().resourceId(Res.ANDROID_ERROR_CLOSE_RES));
@@ -876,7 +774,7 @@ public class SettingsTest {
         String[] testFileNames = {"test_text_01.txt", "test_text_02.txt", "test_text_03.txt"};
 
         for (String name : testFileNames) {
-            AppLauncher.launchPath(instrumentation, true, new String[]{"Settings", "Storage", "Internal shared storage", "Files"});
+            AppLauncher.launchPath(instrumentation, true, "Settings", "Storage", "Internal shared storage", "Files");
 
             if (SettingsUtil.hasTestFile(instrumentation, name)) {
                 SettingsUtil.deleteTestFile_v1(instrumentation, name);
