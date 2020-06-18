@@ -11,7 +11,7 @@ from google.protobuf import empty_pb2
 
 from emu_test.proto.waterfall_pb2 import CmdProgress, Cmd
 from emu_test.proto.waterfall_pb2_grpc import WaterfallStub
-from emu_test.test_grpc.channel_provider import getEmulatorChannel
+from emu_test.test_grpc.channel.channel_provider import getEmulatorChannel
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -65,9 +65,9 @@ class WaterfallService(object):
         r"\s*KeyEvent\(deviceId=(\d+), source=(.*), displayId=(.*), action=(UP|DOWN), flags=(.*), keyCode=(.*), scanCode=(.*), metaState=(.*), repeatCount=(\d+)\), policyFlags=(.*), age=(\d+.\d+)ms\s*"
     )
 
-    def __init__(self, port, logger=logging.getLogger()):
+    def __init__(self, logger=logging.getLogger()):
         """Connect to the emulator on the given port, and log on the given logger."""
-        self.channel = getEmulatorChannel(port)
+        self.channel = getEmulatorChannel()
         self.stub = WaterfallStub(self.channel)
         self.logger = logger
 

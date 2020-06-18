@@ -22,14 +22,6 @@ from emu_test.utils.emu_error import TimeoutError
 from emu_test.utils.emu_testcase import AVDConfig, EmuBaseTestCase
 
 
-def find_free_port():
-    """Finds an avalaible free port."""
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(("", 0))
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return s.getsockname()[1]
-
-
 class GrpcTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
         super(GrpcTestCase, self).__init__(*args, **kwargs)
@@ -149,10 +141,9 @@ class GrpcTestCase(EmuBaseTestCase):
         self.keypress_expects("x", "KEYCODE_X")
 
     def check_all(self, avd):
-        grpc_port = find_free_port()
         try:
             self.launch_emu_and_wait(
-                avd, ["-grpc", str(grpc_port), "-waterfall", "adb"]
+                avd, ["-waterfall", "adb"]
             )
             self.m_logger.debug("Emulator is up and ready")
         except TimeoutError:
@@ -161,8 +152,8 @@ class GrpcTestCase(EmuBaseTestCase):
 
         try:
             self.m_logger.debug("Init things")
-            self.wfall = WaterfallService(grpc_port, self.m_logger)
-            self.emu = EmulatorService(grpc_port, self.m_logger)
+            self.wfall = WaterfallService(self.m_logger)
+            self.emu = EmulatorService(self.m_logger)
         except:
             self.m_logger.error("Fatal error in main test", exc_info=True)
             self.fail()
