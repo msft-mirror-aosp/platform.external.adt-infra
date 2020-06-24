@@ -192,8 +192,7 @@ public class SettingsUtil {
 
     /**
      * Fetch permissions settings for a given application type.
-     * For API <= 25
-     *
+     * For API <= 26
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
      * @param appType String describing the application type, as listed on the App permissions
@@ -212,8 +211,10 @@ public class SettingsUtil {
             appPermissions.clickAndWaitForNewWindow();
         }
         UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+
         if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(20))) {
-            appPermissionsList.getChildByText(new UiSelector().className("android.widget.TextView"), appType).clickAndWaitForNewWindow();
+            appPermissionsList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                    appType).clickAndWaitForNewWindow();
         } else {
             throw new UiObjectNotFoundException("Failed to find the item in Apps.");
         }
@@ -306,12 +307,12 @@ public class SettingsUtil {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        getAppPermissions_v1(instrumentation, appName, appText);
+        getAppPermissions_v1(instrumentation, appType, appText);
 
         UiObject2 permissionsBtn = UiAutomatorPlus.findObjectByRelative(
                 instrumentation,
                 By.clazz("android.widget.Switch"),
-                By.text(appType),
+                By.text(appName),
                 By.clazz("android.widget.LinearLayout"),
                 2);
 
@@ -609,14 +610,15 @@ public class SettingsUtil {
      * @param device
      * @throws Exception
      */
-    public static void enableSampleDeviceAdmin_v2(Instrumentation instrumentation, final UiDevice device) throws Exception {
+    public static void enableSampleDeviceAdmin_v2(Instrumentation instrumentation, final UiDevice device, String... location) throws Exception {
         boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
                 "com.example.android.apis");
 
         if (isAPIDemoInstalled) {
             AppLauncher.launch(instrumentation, "Settings");
+            String securityLabel = location != null && location[0] != null ? location[0] : "Security";
 
-            findObjectInScrollable(new UiSelector().textContains("Security")).click();
+            findObjectInScrollable(new UiSelector().textContains(securityLabel)).click();
             findObjectInScrollable(new UiSelector().textContains("Device admin").
                     resourceId(Res.ANDROID_TITLE_RES)).click();
 
