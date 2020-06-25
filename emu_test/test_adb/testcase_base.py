@@ -5,6 +5,7 @@ This class is a parent class for all subordniate "testcase_" classes.
 
 import unittest
 import emu_test.utils.path_utils as path_utils
+from emu_test.utils import emu_argparser
 
 class BaseAdbTest(unittest.TestCase):
   """This is the base clase for fall adb test."""
