@@ -74,6 +74,16 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         f.write(err)
         f.close()
 
+        dst_path = os.path.join(emu_args.session_dir,
+                                emu_args.test_dir,
+                                'adb_util_details')
+        p = psutil.Popen([self.adb_binary, 'pull', '/sdcard/Logs', dst_path],
+                         cwd='.', stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+        (out1, err1) = p.communicate()
+
+        connect_ip = ''
+        pair_ip = ''
+        pair_code = ''
         # Extract ip, pair code and ports
         for line in out.split('\n'):
             print line
@@ -84,9 +94,9 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
             elif 'pair code' in line:
                 pair_code = line.split()[-1]
 
-        self.assertTrue(connect_ip, "Connect ip not found")
-        self.assertTrue(pair_ip, "Pair ip not found")
-        self.assertTrue(pair_code, "Pair code not found")
+        self.assertTrue(connect_ip != '', "Connect ip not found")
+        self.assertTrue(pair_ip != '', "Pair ip not found")
+        self.assertTrue(pair_code != '', "Pair code not found")
 
         print "connect ip " + connect_ip
         print "pair ip " + pair_ip
