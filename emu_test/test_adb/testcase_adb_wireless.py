@@ -74,8 +74,8 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         f.write(err)
         f.close()
 
-        dst_path = os.path.join(emu_args.session_dir,
-                                emu_args.test_dir,
+        dst_path = os.path.join(emu_argparser.emu_args.session_dir,
+                                emu_argparser.emu_args.test_dir,
                                 'adb_util_details')
         p = psutil.Popen([self.adb_binary, 'pull', '/sdcard/Logs', dst_path],
                          cwd='.', stdout=PIPE, stderr=PIPE, shell=self.use_shell)
