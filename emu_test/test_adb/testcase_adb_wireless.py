@@ -36,7 +36,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
 
         # Clear device logcat
         p3 = psutil.Popen([self.adb_binary, 'logcat', '-b', 'all', '-c'],
-                          cwd=self.adbUtils_dir, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+                          cwd='.', stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         p3.communicate()
 
     def tearDown(self):
@@ -47,7 +47,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         p = psutil.Popen([self.adb_binary, 'shell', 'am', 'instrument', '-w',
                           '-e', 'class', 'com.android.devtools.adbtestutils.AdbTestUtils#'+util_func,
                           'com.android.devtools.adbtestutils.test/android.support.test.runner.AndroidJUnitRunner'],
-                         cwd=self.adbUtils_dir, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+                         cwd='.', stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         (out, err) = p.communicate()
 
     def test_adb_wireless_connect(self):
@@ -59,7 +59,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
 
         # Gather logcat
         p = psutil.Popen([self.adb_binary, 'logcat', '-d', 'ADBWireless:I', '*:S'],
-                         cwd=self.adbUtils_dir, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+                         cwd='.', stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         (out, err) = p.communicate()
 
         # Extract ip, pair code and ports
@@ -76,12 +76,12 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         print "pair ip " + pair_ip
         print "pair code " + pair_code
 
-        p = psutil.Popen([self.sdb_binary, 'pair', pair_ip],
-                         cwd=self.adbUtils_dir, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+        p = psutil.Popen([self.adb_binary, 'pair', pair_ip],
+                         cwd='.', stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         (out, err) = p.communicate(pair_code)
 
-        p = psutil.Popen([self.sdb_binary, 'connect', connect_ip],
-                         cwd=self.adbUtils_dir, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
+        p = psutil.Popen([self.adb_binary, 'connect', connect_ip],
+                         cwd='.', stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         (out, err) = p.communicate()
 
 
