@@ -49,6 +49,9 @@ class AppLauncher {
         device.pressHome();
         device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
 
+        final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true)).setAsVerticalList();
+        scrollable.scrollToEnd(5);
+
         final UiSelector appSelector = new UiSelector().text(appName);
         final UiObject appObject = device.findObject(appSelector);
 

@@ -41,6 +41,18 @@ public class AdbTestUtils {
     @Test
     public void openPairCode() throws Exception {
         AppLauncher.launchPath(instrumentation,
+                true,
+                "Settings",
+                "About phone",
+                "Build number");
+
+        UiSelector buildNumberLable = new UiSelector().textContains("Build number");
+        UiObject buildNumber = device.findObject(buildNumberLable);
+        for ( int i=0; i<10; i++) {
+            buildNumber.click();
+        }
+
+        AppLauncher.launchPath(instrumentation,
             true,
             "Settings",
             "System",

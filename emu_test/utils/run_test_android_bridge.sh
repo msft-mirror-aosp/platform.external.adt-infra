@@ -10,11 +10,9 @@ env
 
 DISTRIB_DIR=$1
 ADB_EXEC=$2
+SERIAL=$3
 
-export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools
-
-echo "using ADB"
-which adb
+export $ANDROID_SERIAL=$SERIAL
 
 BUILDERNAME="Linux"
 if [[ $OSTYPE == *"darwin"* ]]
