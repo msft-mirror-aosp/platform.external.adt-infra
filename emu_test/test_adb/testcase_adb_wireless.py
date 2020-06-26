@@ -7,6 +7,7 @@ import unittest
 from subprocess import PIPE
 
 import testcase_base
+from emu_test.utils import emu_argparser
 
 class AdbWirelessTest(testcase_base.BaseAdbTest):
     """This class aims to run adb wireless tests."""
@@ -51,8 +52,6 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         (out, err) = p.communicate()
 
     def test_adb_wireless_connect(self):
-        print 'DONOT RUN WIRELESS FOR NOW'
-        pass
         print 'Running test: %s' % (inspect.stack()[0][3])
         # Run util function
         self._run_adb_wireless_util_func('openPairCode')
@@ -61,6 +60,19 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         p = psutil.Popen([self.adb_binary, 'logcat', '-d', 'ADBWireless:I', '*:S'],
                          cwd='.', stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         (out, err) = p.communicate()
+
+        logcat_file = os.path.join(emu_argparser.emu_args.session_dir,
+                                   emu_argparser.emu_args.test_dir,
+                                   'adb_util_logcat.log')
+        logcat_err_file = os.path.join(emu_argparser.emu_args.session_dir,
+                                       emu_argparser.emu_args.test_dir,
+                                       'adb_util_logcat.err')
+        f = open(logcat_file, 'w')
+        f.write(out)
+        f.close()
+        f = open(logcat_err_file, 'w')
+        f.write(err)
+        f.close()
 
         # Extract ip, pair code and ports
         for line in out.split('\n'):
@@ -71,6 +83,10 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
                 pair_ip = line.split()[-1]
             elif 'pair code' in line:
                 pair_code = line.split()[-1]
+
+        self.assertTrue(connect_ip, "Connect ip not found")
+        self.assertTrue(pair_ip, "Pair ip not found")
+        self.assertTrue(pair_code, "Pair code not found")
 
         print "connect ip " + connect_ip
         print "pair ip " + pair_ip

@@ -12,7 +12,7 @@ DISTRIB_DIR=$1
 ADB_EXEC=$2
 SERIAL=$3
 
-export $ANDROID_SERIAL=$SERIAL
+export ANDROID_SERIAL=$SERIAL
 
 BUILDERNAME="Linux"
 if [[ $OSTYPE == *"darwin"* ]]

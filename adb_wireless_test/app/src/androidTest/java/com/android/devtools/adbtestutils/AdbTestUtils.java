@@ -40,19 +40,28 @@ public class AdbTestUtils {
 
     @Test
     public void openPairCode() throws Exception {
-        AppLauncher.launchPath(instrumentation,
+        boolean status;
+
+        status = AppLauncher.launchPath(instrumentation,
                 true,
                 "Settings",
                 "About phone",
                 "Build number");
 
-        UiSelector buildNumberLable = new UiSelector().textContains("Build number");
-        UiObject buildNumber = device.findObject(buildNumberLable);
+        if ( !status ) {
+            Log.i(TAG, "Could not open Build Number");
+            return;
+        }
+
+        UiSelector buildNumberLabel = new UiSelector().textContains("Build number");
+        UiObject buildNumber = device.findObject(buildNumberLabel);
         for ( int i=0; i<10; i++) {
             buildNumber.click();
         }
 
-        AppLauncher.launchPath(instrumentation,
+        Log.i(TAG, "Developer options enabled");
+
+        status = AppLauncher.launchPath(instrumentation,
             true,
             "Settings",
             "System",
@@ -60,9 +69,14 @@ public class AdbTestUtils {
             "Developer options",
             "Wireless debugging");
 
+        if ( !status ) {
+            Log.i(TAG, "Could not open Wireless debugging options");
+            return;
+        }
+
         final UiObject wirelessSwitch =
             device.findObject(new UiSelector().resourceId("com.android.settings:id/switch_widget"));
-        boolean status = wirelessSwitch.isChecked();
+        status = wirelessSwitch.isChecked();
         if (!status) {
             wirelessSwitch.clickAndWaitForNewWindow();
 
