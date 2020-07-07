@@ -37,7 +37,7 @@ public class ApiDemosInstaller {
      * Installs API Demos test onto image, if not present
      */
 
-    public static void installApp(String text1, String text2)
+    public static void installApp(String text1, String text2, Boolean... isV2)
             throws Exception {
         SystemImageTestFramework testFramework = new SystemImageTestFramework();
         Instrumentation instrumentation = testFramework.getInstrumentation();
@@ -58,7 +58,7 @@ public class ApiDemosInstaller {
                         testPackageName);
 
                 if (!isAPIDemoInstalled) {
-                    result = PackageInstallationUtil.installApk(instrumentation, apk);
+                    result = PackageInstallationUtil.installApk(instrumentation, apk, isV2);
                     isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
                             testPackageName);
                 }

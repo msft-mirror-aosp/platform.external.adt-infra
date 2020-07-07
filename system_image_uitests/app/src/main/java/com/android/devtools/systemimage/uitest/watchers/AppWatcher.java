@@ -35,22 +35,24 @@ public class AppWatcher implements UiWatcher {
 
     @Override
     public boolean checkForCondition() {
+        String NO_THANKS = "(?i)no,? thanks,?(?-i)";
+        String OK = "(?i)ok(?-i)";
+
         boolean condition = false;
-        boolean isSuccess = mDevice.findObject(new UiSelector().textMatches(("(?i)no thanks(?-i)")))
+        boolean isSuccess = mDevice.findObject(new UiSelector().textMatches((NO_THANKS)))
                 .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         try {
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().textMatches(("(?i)no thanks(?-i)"))).click();
+                mDevice.findObject(new UiSelector().textMatches((NO_THANKS))).click();
                 condition = true;
             }
-            isSuccess = mDevice.findObject(new UiSelector().textMatches(("(?i)ok(?-i)")))
+            isSuccess = mDevice.findObject(new UiSelector().textMatches((OK)))
                     .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
-                mDevice.findObject(new UiSelector().textMatches(("(?i)ok(?-i)"))).click();
+                mDevice.findObject(new UiSelector().textMatches((OK))).click();
                 condition = true;
             }
-        }
-        catch (UiObjectNotFoundException e) {
+        } catch (UiObjectNotFoundException e) {
             throw new AssertionError("Failed to dismiss the AppTest popup dialog");
         }
         return condition;
