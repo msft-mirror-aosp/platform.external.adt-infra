@@ -95,3 +95,6 @@ find $SESSION_DIR -size 0 -delete || echo "Did not remove any empty files."
 grep -q "failures=\"0\"" $SESSION_DIR/Boot_test/test_report.xml || panic "Failures in boot test"
 grep -q "failures=\"0\"" $SESSION_DIR/Crash_test/test_report.xml || panic "Failures in crash test"
 echo "Success!"
+
+echo "Kill adb, if running"
+kill -9 `pidof adb`
