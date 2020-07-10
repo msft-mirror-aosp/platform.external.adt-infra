@@ -97,4 +97,4 @@ grep -q "failures=\"0\"" $SESSION_DIR/Crash_test/test_report.xml || panic "Failu
 echo "Success!"
 
 echo "Kill adb, if running"
-kill -9 `pidof adb`
+ps -A | grep adb | awk '{ print $1; }' | xargs kill -9 || true
