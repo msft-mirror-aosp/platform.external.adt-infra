@@ -138,8 +138,8 @@ class EmuBaseTestCase(LoggedTestCase):
         for proc in psutil.process_iter():
             try:
                 """
-                emulator.exe is simply a wrapper around the emulator process qemu.  That is why we filter it. 
-                Qemu 1 is named emulator-<arch>, whereas Qemu 2 is named qemu-system-<arch>    
+                emulator.exe is simply a wrapper around the emulator process qemu.  That is why we filter it.
+                Qemu 1 is named emulator-<arch>, whereas Qemu 2 is named qemu-system-<arch>
                 """
                 if proc.name() != "emulator.exe" \
                         and "crash-service" not in proc.name() \
@@ -305,7 +305,7 @@ class EmuBaseTestCase(LoggedTestCase):
             (thread_info['stdout'], thread_info['stderr']) = thread_info['process'].communicate()
             thread_info['returncode'] = thread_info['process'].returncode
 
-        print "Starting command with timeout: %s, cmd: %s" % (timeout, " ".join(cmd))
+        self.m_logger.info("Starting command with timeout: %s, cmd: %s", timeout, " ".join(cmd))
         thread = threading.Thread(target=run_cmd)
         thread.start()
         thread.join(timeout)
@@ -844,7 +844,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
     Create one or more test cases based on test configuration file.
 
     If the `generate_test_class` parameter is included and set to true, create multiple
-    test cases, passing each as an extra parameter to `test_func`. This is used, for example, 
+    test cases, passing each as an extra parameter to `test_func`. This is used, for example,
     in the UI tests to create a separate test case for each test class.
     :param desc: Description of the testcase_class.
     :param testcase_class: The class to add the test cases to.
