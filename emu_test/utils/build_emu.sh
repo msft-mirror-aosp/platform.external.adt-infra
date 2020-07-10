@@ -99,4 +99,4 @@ find $SESSION_DIR -size 0 -delete || echo "Did not remove any empty files."
 echo "Success!"
 
 echo "Kill adb, if running"
-kill -9 `pidof adb`
+ps -A | grep adb | awk '{ print $1; }' | xargs kill -9 || true
