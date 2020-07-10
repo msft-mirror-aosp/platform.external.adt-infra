@@ -168,6 +168,17 @@ then
     echo "Icebox test timeout"
 fi
 
+# Remove left over python installations and run the embedded tests
+rm -rf $HOME/.local
+echo "Run external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator"
+$TIMEOUT_CMD 600 external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator
+
+if [[ ! -f $SESSION_DIR/embedded_test/test_report.xml ]]
+then
+    STATUS=1
+    echo "Embedded tests timeout"
+fi
+
 echo "Remove deployed emulator"
 echo "Run rm -rf $SESSION_DIR/emu-master-dev"
 rm -rf $SESSION_DIR/emu-master-dev
