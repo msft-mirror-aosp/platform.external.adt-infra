@@ -38,4 +38,3 @@ def test_physical_rotation():
                         value=ParameterValue(data=[x, y, z]),
                     ),
                 )
-

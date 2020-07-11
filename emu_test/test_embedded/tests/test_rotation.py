@@ -11,15 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pytest
 import logging
-from tests.test_utils import fmt_proto, StreamingCall
+
+import pytest
 from aemu.proto.emulator_controller_pb2 import (
     ImageFormat,
+    KeyboardEvent,
     ParameterValue,
     PhysicalModelValue,
     Rotation,
 )
+
+from tests.test_utils import StreamingCall, fmt_proto
 
 
 @pytest.mark.e2e
@@ -44,7 +47,7 @@ def test_rotation_observable_through_screenshot():
 
 @pytest.mark.e2e
 @pytest.mark.timeout(10)
-def test_rotation_observable_through_stream_screenshot():
+def test_rotation_observable_through_stream_screenshot(at_home):
     """Test that setting the rotation, is observable through streaming screenshot."""
     emu = pytest.emulator.get_emulator_controller()
     imgStream = emu.streamScreenshot(ImageFormat(width=320, height=200))
@@ -60,6 +63,11 @@ def test_rotation_observable_through_stream_screenshot():
                     target=PhysicalModelValue.ROTATION,
                     value=ParameterValue(data=[0, 0, fine]),
                 )
+            )
+
+            # Make sure we have some screen action.
+            pytest.emulator.get_emulator_controller().sendKey(
+                KeyboardEvent(text="Hello ")
             )
 
             # Keep looking at the queue until we see what we need.
@@ -124,7 +132,7 @@ def test_rotation_through_console_observable_through_screenshot():
 
 @pytest.mark.e2e
 @pytest.mark.timeout(10)
-def test_rotation_through_console_observable_through_stream_screenshot():
+def test_rotation_through_console_observable_through_stream_screenshot(at_home):
     """Test that rotate through console, is observable through stream screenshot.
 
     bug: b/159635109, b/160171559
@@ -146,7 +154,13 @@ def test_rotation_through_console_observable_through_stream_screenshot():
             (90, Rotation.LANDSCAPE),
             (0, Rotation.PORTRAIT),
         ]:
+
             pytest.emulator.adb(["emu", "rotate"])
+
+            # Make sure we have some screen action.
+            pytest.emulator.get_emulator_controller().sendKey(
+                KeyboardEvent(text="Hello ")
+            )
 
             cnt = 0
             # Keep looking at the queue until we see what we need.

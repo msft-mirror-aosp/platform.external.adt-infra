@@ -25,7 +25,7 @@ PYTHON=python
 
 if [ ! -f "./venv/bin/activate" ]; then
   # Prefer python3 if it is available.
-  if command -v python3 &>/dev/null; then
+  if  python3 --version &>/dev/null; then
      echo "Using python 3"
      PYTHON=python3
      $PYTHON -m venv venv
@@ -33,13 +33,13 @@ if [ ! -f "./venv/bin/activate" ]; then
      [ -e ./venv/bin/pip ] && ./venv/bin/pip install --upgrade setuptools
   else
     echo "Using python 2 ----<< Deprecated! See: https://python3statement.org/.."
-    $PYTHON -m virtualenv &>/dev/null || { echo "This script relies on virtualenv, you can install it with 'pip install virtualenv' (https://virtualenv.pypa.io)"; return ; }
+    $PYTHON -m virtualenv --version &>/dev/null || { echo "This script relies on virtualenv, you can install it with 'pip install virtualenv' (https://virtualenv.pypa.io)"; return ; }
     $PYTHON -m virtualenv venv
   fi
 fi
 if [ -e ./venv/bin/activate ]; then
    . ./venv/bin/activate
    make deps
-   pip install -e .
+   python setup.py develop
    echo "Ready to run emu-embeded tests.!"
 fi

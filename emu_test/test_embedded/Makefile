@@ -18,8 +18,10 @@ CURRENT_DIR :=  $(abspath $(MAKEFILE_PATH)/..)
 OUTPUT_DIR :=  $(if $(SESSION_DIR),$(SESSION_DIR)/embedded_test,$(CURRENT_DIR)/.tox)
 QEMU_ROOT := $(abspath $(MAKEFILE_PATH)/../../../../qemu)
 AEMU_ROOT := $(abspath $(QEMU_ROOT)/android/android-grpc/python)
+SNAP_ROOT := $(abspath $(QEMU_ROOT)/android/android-grpc/docs/python/snaptool)
 WHEEL_DIR := $(abspath $(OUTPUT_DIR)/wheels)
 WHEEL := $(WHEEL_DIR)/aemu_grpc-0.0.1-py$(PY_VERSION)-none-any.whl
+SNAP  := $(WHEEL_DIR)/emu_snap-1.0-py$(PY_VERSION)-none-any.whl
 
 $(info Python: $(PY_VERSION) Output: $(OUTPUT_DIR), Qemu: $(QEMU_ROOT))
 $(WHEEL_DIR):
@@ -28,8 +30,11 @@ $(WHEEL_DIR):
 $(WHEEL): $(WHEEL_DIR)
 	make -C $(AEMU_ROOT) DIST=$(WHEEL_DIR)
 
-deps:  $(WHEEL)
-	$(PYTHON) -m pip install -q --upgrade -r$(CURRENT_DIR)/requirements.txt $(WHEEL)
+$(SNAP): $(WHEEL)
+	make -C $(SNAP_ROOT) DIST=$(WHEEL_DIR)
+
+deps:  $(WHEEL) $(SNAP)
+	$(PYTHON) -m pip install -q --upgrade -r$(CURRENT_DIR)/requirements.txt $(WHEEL) $(SNAP)
 
 clean:
 	rm -rf $(WHEEL_DIR)

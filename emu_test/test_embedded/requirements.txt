@@ -4,3 +4,4 @@ tox
 grpcio-tools
 pytest
 pytest-timeout
+jinja2
