@@ -83,6 +83,11 @@ then
         echo "Perf zip fail"
     fi
 
+    # Remove left over python installations and run the embedded tests
+    rm -rf $HOME/.local
+    echo "Run external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator"
+    $TIMEOUT_CMD 600 external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator
+
     echo "Installing python dependencies for grpc based tests"
     python -m virtualenv &>/dev/null || python -m easy_install --user virtualenv
     python -m virtualenv venv
@@ -166,6 +171,13 @@ if [[ ! -f $SESSION_DIR/Icebox_test/test_report.xml ]]
 then
     STATUS=1
     echo "Icebox test timeout"
+fi
+
+
+if [[ ! -f $SESSION_DIR/embedded_test/test_report.xml ]]
+then
+    STATUS=1
+    echo "Embedded tests timeout"
 fi
 
 echo "Remove deployed emulator"
