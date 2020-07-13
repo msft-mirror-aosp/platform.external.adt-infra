@@ -116,7 +116,7 @@ public class GoogleAppUtil {
             return loginGoogleApp(instrumentation, false);
         }
 
-        UiObject forgotEmailLink = api >= 27 ? device.findObject(new UiSelector().text("Forgot email?")) :
+        UiObject forgotEmailLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot email?")) :
                 device.findObject(new UiSelector().description("Forgot email?"));
 
         boolean needsEmail = forgotEmailLink.waitForExists(
@@ -134,10 +134,10 @@ public class GoogleAppUtil {
         editInput.setText(email);
         clickNext(device);
 
-        UiObject forgotPasswordLink = api >= 27 ? device.findObject(new UiSelector().text("Forgot password?")) :
+        UiObject forgotPasswordLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot password?")) :
                 device.findObject(new UiSelector().description("Forgot password?"));
         boolean needsPassword = forgotPasswordLink.waitForExists(
-                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+                TimeUnit.MILLISECONDS.convert(1000L, TimeUnit.SECONDS));
         assertTrue("Forgot password not found", firstAttempt || needsPassword);
         if ( !needsPassword ) {
             Log.i("Login", "Retry google login");
@@ -162,7 +162,7 @@ public class GoogleAppUtil {
 
 
 
-        if (api >= 24 && api <= 26) {
+        if (api >= 24 && api <= 27) {
             UiObject signInConsentButton = device.findObject(
                     new UiSelector().resourceId(Res.GOOGLE_SIGN_IN_CONSENT_NEXT_RES));
             if (signInConsentButton.waitForExists(20L)) {
