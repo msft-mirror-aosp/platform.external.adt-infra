@@ -94,13 +94,8 @@ public class AddGoogleAccountTest {
         new AddGoogleAccountWatcher(mDevice).checkForCondition();
 
         assertTrue("Add Google account page not found",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return UiAutomatorPlus.findObjectMatchingAny(instrumentation,
-                                new UiSelector().descriptionMatches(("(?i)sign in(?-i)")),
-                                new UiSelector().textMatches(("(?i)sign in(?-i)"))).exists();
-                    }
-                }));
+                new Wait().until(() -> UiAutomatorPlus.findObjectMatchingAny(instrumentation,
+                        new UiSelector().descriptionMatches(("(?i)sign in(?-i)")),
+                        new UiSelector().textMatches(("(?i)sign in(?-i)"))).exists()));
     }
 }
