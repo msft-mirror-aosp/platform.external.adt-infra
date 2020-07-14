@@ -173,13 +173,6 @@ then
     echo "Icebox test timeout"
 fi
 
-
-if [[ ! -f $SESSION_DIR/embedded_test/test_report.xml ]]
-then
-    STATUS=1
-    echo "Embedded tests timeout"
-fi
-
 echo "Remove deployed emulator"
 echo "Run rm -rf $SESSION_DIR/emu-master-dev"
 rm -rf $SESSION_DIR/emu-master-dev
