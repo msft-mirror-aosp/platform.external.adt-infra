@@ -75,8 +75,9 @@ public class GoogleServicesTest {
             return;
         }
 
-        AppManager.openAppList_v2(instrumentation);
-        AppManager.openSystemAppList_v2(instrumentation);
+        String[] path = new String[]{"Settings", "Apps & notifications", "App info"};
+
+        AppLauncher.launchPath(instrumentation, true, path);
 
         UiScrollable appList=
                 new UiScrollable(new UiSelector().resourceIdMatches(Res.APPS_LIST_CONTAINER_RES));
@@ -85,9 +86,9 @@ public class GoogleServicesTest {
         assertTrue("Cannot find Google Play services", appList.getChildByText(
                 new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
                 "Google Play services").exists());
-        assertTrue("Cannot find Google Services Framework", appList.getChildByText(
+        assertTrue("Cannot find Google App", appList.getChildByText(
                 new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
-                "Google Services Framework").exists());
+                "Google App").exists());
         assertTrue("Cannot find Maps", appList.getChildByText(
                 new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
                 "Maps").exists());
@@ -106,8 +107,8 @@ public class GoogleServicesTest {
      *   2. Open Settings > Location
      *   Verify:
      *   Location enable toggle button
-     *   Verify location Mode
-     *   Verify recent location requests
+     *   Verify Google Play services
+     *   Verify Google Location History
      *   </pre>
      */
     @Test
@@ -138,19 +139,18 @@ public class GoogleServicesTest {
             security.clickAndWaitForNewWindow();
         }
 
-
-        UiObject location = itemList.getChildByText(new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
-                "Location");
+        UiObject location = device.findObject(new UiSelector().text("Location"));
         if (location.waitForExists(3L)) {
             location.clickAndWaitForNewWindow();
         }
 
         assertTrue("Cannot find location toggle button", device.findObject(
-                new UiSelector().className("android.widget.Switch")).waitForExists(3L));
-        assertTrue("Cannot find mode", device.findObject(new UiSelector().text(
-                "Mode")).waitForExists(3L));
-        assertTrue("Cannot find recent location", device.findObject(new UiSelector().text(
-                "Recent location requests")).waitForExists(3L));
+                new UiSelector().resourceId(
+                        Res.ANDROID_SWITCH_WIDGET_RES)).waitForExists(3L));
+        assertTrue("Cannot find Google Play services", device.findObject(
+                new UiSelector().text("Google Play services")).waitForExists(3L));
+        assertTrue("Cannot find Google Location History", device.findObject(
+                new UiSelector().text("Google Location History")).waitForExists(3L));
     }
 
     /**
