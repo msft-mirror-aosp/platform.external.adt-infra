@@ -78,7 +78,7 @@ public class ShellUtilTest {
         String cmd = "ls /system/bin";
         ShellUtil.ShellResult result = ShellUtil.invokeCommand(cmd);
         // Check if the cmd is executed correctly.
-        Assert.assertTrue(result.stderr, result.stderr.length() == 0);
+        Assert.assertEquals(result.stderr, 0, result.stderr.length());
 
         // Verify the integrity of the shell utilities.
         InputStream inputStream = instrumentation.getTargetContext().getAssets().open("util.txt");
@@ -123,37 +123,17 @@ public class ShellUtilTest {
             DeveloperOptionsManager.enableDeveloperOptions_v2(testFramework);
         }
 
-        AppLauncher.launchPath(instrumentation, true, new String[] {"Settings", "System", "Developer options"});
+        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Developer options");
         // Remove bug report files even if the test fails.
         try {
             device.findObject(
                     new UiSelector().text("Take bug report")).clickAndWaitForNewWindow();
-
-            final UiObject fullReportButton = device.findObject(new UiSelector().
-                    textMatches("(?i)full report(?-i)"));
-            boolean fullReportButtonExists = new Wait(
-                    TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS)).until(
-                    new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return fullReportButton.exists();
-                        }
-                    });
-            if (fullReportButtonExists) {
+            UiObject fullReportButton = device.findObject(new UiSelector().textMatches("(?i)full report(?-i)"));
+            if (fullReportButton.exists()) {
                 fullReportButton.clickAndWaitForNewWindow();
             }
-
-            final UiObject reportButton = device.findObject(new UiSelector().
-                    textMatches("(?i)report(?-i)"));
-            boolean reportButtonExists = new Wait(
-                    TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS)).until(
-                    new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return reportButton.exists();
-                        }
-                    });
-            if (reportButtonExists) {
+            UiObject reportButton = device.findObject(new UiSelector().textMatches("(?i)report(?-i)"));
+            if (reportButton.exists()) {
                 reportButton.click();
             }
             boolean gotPngAndZip = new Wait(
@@ -163,11 +143,9 @@ public class ShellUtilTest {
                         public boolean isTrue() throws Exception {
                             String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
                             Log.d(TAG, "ls result " + result);
-                            boolean success =
-                                    result.matches("(?s).*bugreport.*\\.png.*")
-                                            && result.matches("(?s).*bugreport.*\\.zip.*");
 
-                            return success;
+                            return result.matches("(?s).*bugreport.*\\.png.*")
+                                    && result.matches("(?s).*bugreport.*\\.zip.*");
                         }
                     });
             Assert.assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
