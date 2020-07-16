@@ -74,12 +74,12 @@ public class AppLauncher {
         final UiObject appObject = device.findObject(appSelector);
 
         boolean appNameFound = false;
-        if (new Wait().until(appObject::exists) && (api < 22 || api >= 27)) {
+        if (new Wait().until(appObject::exists) && (api < 22 || api >= 28)) {
             appObject.clickAndWaitForNewWindow();
             Log.i(TAG, "Opened app in first attempt");
         }
         else {
-            if (api >= 23 && api < 27 ) {
+            if (api >= 23 && api < 28) {
                 device.pressHome();
                 final UiObject launcherIcon = device.findObject(new UiSelector().
                         className("android.widget.TextView").
@@ -159,7 +159,9 @@ public class AppLauncher {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         boolean status = launch(instrumentation, appPath[0]);
 
-        if ( !status ) return false;
+        if ( !status ) {
+            return false;
+        }
 
         for (int i = 1; i < appPath.length && status; ++i) {
             status = false;
@@ -167,23 +169,44 @@ public class AppLauncher {
             UiSelector regexSelector = new UiSelector().textMatches(appPath[i]);
             UiSelector textSelector = new UiSelector().textContains(appPath[i]);
 
-            UiObject target = device.findObject(regexSelector);
+            UiObject appByRegex = device.findObject(regexSelector);
+            UiObject appByText = device.findObject(regexSelector);
+
+            if (appByRegex.waitForExists(5L)) {
+                appByRegex.clickAndWaitForNewWindow();
+                status = true;
+                continue;
+            }
+
+            if (appByText.waitForExists(5L)) {
+                appByText.clickAndWaitForNewWindow();
+                status = true;
+                continue;
+            }
+
             try {
                 UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-                boolean isFound = scrollable.scrollIntoView(regexSelector);
-                if (!isFound) {
-                    target = device.findObject(textSelector);
-                    scrollable.scrollIntoView(textSelector);
+                if (!scrollable.waitForExists(5L)) {
+                    status = false;
+                    continue;
                 }
-                target.clickAndWaitForNewWindow();
-                status = true;
-            }
-            catch (UiObjectNotFoundException e) {
-                Log.w(TAG, e.getMessage());
-                if (target.exists()) {
-                    target.clickAndWaitForNewWindow();
+
+                if (scrollable.scrollIntoView(regexSelector)) {
+                    appByRegex.clickAndWaitForNewWindow();
                     status = true;
+                    continue;
                 }
+
+                if (scrollable.scrollIntoView(textSelector)) {
+                    appByText.clickAndWaitForNewWindow();
+                    status = true;
+                    continue;
+                }
+
+                return false;
+            } catch (UiObjectNotFoundException e) {
+                Log.w(TAG, e.getMessage());
+                Log.w(TAG, "Application " + appPath[i] + " could not be launched");
             }
         }
 

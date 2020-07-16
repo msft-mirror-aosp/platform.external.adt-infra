@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Rect;
 import android.os.Environment;
-import android.provider.Contacts;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
@@ -42,8 +41,7 @@ public class SettingsUtil {
      */
     private static UiScrollable launchAndGetItemList(
             Instrumentation instrumentation) throws Exception {
-        assertTrue("Could not open Settings",
-                AppLauncher.launch(instrumentation, "Settings"));
+        AppLauncher.launch(instrumentation, "Settings");
 
         UiScrollable itemList = new UiScrollable(new UiSelector().resourceIdMatches(
                 Res.SETTINGS_LIST_CONTAINER_RES));
@@ -75,7 +73,7 @@ public class SettingsUtil {
     /**
      * Launches Settings and find the item with the given name. Returns the item.
      */
-    static UiObject findItem_v2(Instrumentation instrumentation, String name) throws Exception {
+    static void findItem_v2(Instrumentation instrumentation, String name) throws Exception {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
         UiObject systemListItem = UiDevice.getInstance(instrumentation).findObject(
                 new UiSelector().text("System"));
@@ -88,7 +86,6 @@ public class SettingsUtil {
         assertTrue("Failed to find the item in Settings list.",
                 item.waitForExists(TimeUnit.SECONDS.toMillis(5)));
 
-        return item;
     }
 
     /**
