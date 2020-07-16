@@ -18,6 +18,7 @@ import subprocess
 import time
 
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
+from snaptool.snapshot import SnapshotService
 from google.protobuf import empty_pb2
 
 from emu.logcat import Logcat
@@ -53,6 +54,10 @@ class Emulator(object):
         """Gets the emulator controller stub to this emulator."""
         return self.desc.get_emulator_controller()
 
+    def get_snapshot_service(self):
+        """Gets a snapshot service to interact with snaphsots."""
+        return SnapshotService(snapshot_service = self.desc.get_snapshot_service())
+
     def get_logcat(self):
         """Gets access to logcat of this device."""
         return Logcat(self.get_emulator_controller())
@@ -64,7 +69,7 @@ class Emulator(object):
            to talk to this emulator.
         """
         logging.info("adb %s", " ".join(cmd))
-        subprocess.call([self.adb_binary, "-s", self.desc.name()] + cmd)
+        return subprocess.check_output([self.adb_binary, "-s", self.desc.name()] + cmd).decode("utf-8")
 
     def wait_for_boot(self, max_wait=120):
         """Wait at most max_wait seconds until the status of the device says it is booted.

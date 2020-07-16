@@ -1,8 +1,10 @@
 import os
+import time
+
 import pytest
+from aemu.proto.emulator_controller_pb2 import KeyboardEvent
 
 from emu.emulator import Emulator
-
 
 
 def pytest_addoption(parser):
@@ -52,3 +54,18 @@ def startup_emulator(request, pytestconfig):
     pytest.emulator = emu
     if not pytestconfig.getoption("debug_emulator"):
         request.addfinalizer(teardown_emulator)
+
+
+@pytest.fixture
+def at_home():
+    """Fixture to make sure the emulator returns to the home screen.
+
+       Use this if you want to make sure the emulator returns to the
+       home screen.
+    """
+    home = "shell am start -a android.intent.action.MAIN -c android.intent.category.HOME".split(
+        " "
+    )
+    pytest.emulator.adb(home)
+    yield
+    pytest.emulator.adb(home)
