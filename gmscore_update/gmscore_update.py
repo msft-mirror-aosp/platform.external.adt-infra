@@ -212,7 +212,7 @@ def GmsCoreVersionDir(api_level):
 def SdkImageVersionDirs(api_level):
   if api_level > '25':
     return {'atv' : 'device/google/atv', 'sdk' : 'platform/vendor/google/sdk'}
-  elif api_level > '23':
+  elif api_level >= '23':
     return {'atv' : 'device/google/atv', 'sdk' : 'platform/vendor/google'}
   else:
     return {'sdk' : 'platform/vendor/google'} 
