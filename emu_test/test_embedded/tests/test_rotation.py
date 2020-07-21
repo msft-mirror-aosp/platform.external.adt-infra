@@ -21,7 +21,7 @@ from aemu.proto.emulator_controller_pb2 import (
     PhysicalModelValue,
     Rotation,
 )
-
+from time import sleep
 from tests.test_utils import StreamingCall, fmt_proto
 
 
@@ -66,9 +66,8 @@ def test_rotation_observable_through_stream_screenshot(at_home):
             )
 
             # Make sure we have some screen action.
-            pytest.emulator.get_emulator_controller().sendKey(
-                KeyboardEvent(text="Hello ")
-            )
+            emu.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
+            emu.sendKey(KeyboardEvent(key="AppSwitch", eventType=KeyboardEvent.keypress))
 
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
@@ -99,6 +98,7 @@ def test_rotation_through_console_observable_through_physical_model():
         (90, Rotation.LANDSCAPE),
         (0, Rotation.PORTRAIT),
     ]:
+        sleep(0.5)
         pytest.emulator.adb(["emu", "rotate"])
         rotate = emu.getPhysicalModel(
             PhysicalModelValue(target=PhysicalModelValue.ROTATION)
@@ -125,6 +125,7 @@ def test_rotation_through_console_observable_through_screenshot():
         (90, Rotation.LANDSCAPE),
         (0, Rotation.PORTRAIT),
     ]:
+        sleep(0.5)
         pytest.emulator.adb(["emu", "rotate"])
         img = emu.getScreenshot(ImageFormat())
         assert img.format.rotation.rotation == coarse
@@ -154,13 +155,10 @@ def test_rotation_through_console_observable_through_stream_screenshot(at_home):
             (90, Rotation.LANDSCAPE),
             (0, Rotation.PORTRAIT),
         ]:
-
+            sleep(0.5)
             pytest.emulator.adb(["emu", "rotate"])
-
-            # Make sure we have some screen action.
-            pytest.emulator.get_emulator_controller().sendKey(
-                KeyboardEvent(text="Hello ")
-            )
+            emu.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
+            emu.sendKey(KeyboardEvent(key="AppSwitch", eventType=KeyboardEvent.keypress))
 
             cnt = 0
             # Keep looking at the queue until we see what we need.

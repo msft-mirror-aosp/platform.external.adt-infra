@@ -63,9 +63,8 @@ def at_home():
        Use this if you want to make sure the emulator returns to the
        home screen.
     """
-    home = "shell am start -a android.intent.action.MAIN -c android.intent.category.HOME".split(
-        " "
-    )
-    pytest.emulator.adb(home)
+    stub = pytest.emulator.get_emulator_controller()
+    stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
     yield
-    pytest.emulator.adb(home)
+    stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
+
