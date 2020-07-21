@@ -207,16 +207,21 @@ public class SettingsUtil {
         if (appPermissions.waitForExists(5L)) {
             appPermissions.clickAndWaitForNewWindow();
         }
-        UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+        UiScrollable appPermissionsList = new UiScrollable(
+                new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
 
-        if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(20))) {
-            appPermissionsList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                    appType).clickAndWaitForNewWindow();
+        if (appPermissionsList.waitForExists(200L)) {
+            appPermissionsList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"), appType)
+                    .clickAndWaitForNewWindow();
         } else {
             throw new UiObjectNotFoundException("Failed to find the item in Apps.");
         }
 
-        UiObject appPermissionsLabel = device.findObject(new UiSelector().text("Permissions"));
+        UiObject appPermissionsLabel = device.findObject(
+                new UiSelector()
+                        .textMatches("(?i)"+appType+"\\spermissions(?-i)")
+        );
         boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
         if (hasAppPermissionsLabel) {
             appPermissionsLabel.clickAndWaitForNewWindow();
