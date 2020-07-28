@@ -127,6 +127,10 @@ class Emulator(object):
                 "-grpc-use-token",
                 "-idle-grpc-timeout",
                 "300",
+                "-verbose",
+                "-show-kernel",
+                #"-logcat",
+                #"'*:v"
             ]
         )
 
@@ -137,7 +141,8 @@ class Emulator(object):
         until the discovery file has been written.
         """
         self.avd_gen = AvdGenerator(self.sdk_root)
-        avd = self.avd_gen.get_avd()
+        # This is the most used system image.
+        avd = self.avd_gen.get_avd("28", "x86", "google_apis_playstore")
         cmd = [self.emulator, "-avd", avd]
 
         if additional_args:

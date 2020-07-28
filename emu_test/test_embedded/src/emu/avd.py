@@ -15,6 +15,7 @@
 import logging
 import os
 import re
+import subprocess
 import shutil
 import tempfile
 from emu.template_writer import TemplateWriter
@@ -32,12 +33,10 @@ class AvdGenerator(object):
     )
 
     def __init__(self, sdk_root):
+        self.sdk_root = sdk_root
         self.sys_root = os.path.abspath(os.path.join(sdk_root, "system-images"))
         self.tmpdir = tempfile.mkdtemp("avd")
         self.writer = TemplateWriter(self.tmpdir)
-        self.available = sorted(
-            list(self._find_images()), key=lambda x: x["api"], reverse=True
-        )
 
     def __del__(self):
         shutil.rmtree(self.tmpdir)
@@ -60,15 +59,35 @@ class AvdGenerator(object):
                 "avd_dir": os.path.join(self.tmpdir, "Pixel2.avd"),
             }
 
-    def _create_avd(self):
-        avd = self.available[0]
+    def _find_avd(self, api, abi, tag):
+        return [
+            x
+            for x in self._find_images()
+            if x["api"] == api and x["abi"] == abi and x["tag"] == tag
+        ]
+
+    def _install_sys_image(self, api, abi, tag="google_apis"):
+        subprocess.check_output(
+            [
+                os.path.join(self.sdk_root, "tools", "bin", "sdkmanager"),
+                "system-images;android-{};{};{}".format(api, tag, abi),
+            ]
+        )
+
+    def _create_avd(self, api, abi, tag):
+        avds = self._find_avd(api, abi, tag)
+        if not avds:
+            self._install_sys_image(api, abi, tag)
+            avds = self._find_avd(api, abi, tag)
+        avd = avds[0]
+
         self.writer.write_template("Pixel2.ini", avd)
         self.writer.write_template("Pixel2.avd/config.ini", avd)
 
-    def get_avd(self):
+    def get_avd(self, api, abi, tag):
         """Returns the AVD name, creating it if needed."""
         if not os.path.exists(os.path.join(self.tmpdir, "Pixel2.ini")):
-            self._create_avd()
+            self._create_avd(api, abi, tag)
 
         return "Pixel2"
 
