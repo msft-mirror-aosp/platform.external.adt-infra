@@ -127,6 +127,8 @@ public class DeveloperOptionsManager {
     public static void enableDeveloperOptions_v2(SystemImageTestFramework testFramework)
         throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        device.pressHome();
 
         try {
             AppLauncher.launchPath(instrumentation, true, "Settings", "System", "About emulated device");

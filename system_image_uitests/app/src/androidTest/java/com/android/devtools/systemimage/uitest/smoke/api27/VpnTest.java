@@ -80,7 +80,7 @@ public class VpnTest {
                 isPackageInstalled(instrumentation, testPackageName);
 
         if (!isTestVPNInstalled) {
-            result = PackageInstallationUtil.installApk(instrumentation, apk);
+            result = PackageInstallationUtil.installApk(instrumentation, apk, false);
             isTestVPNInstalled = PackageInstallationUtil.
                     isPackageInstalled(instrumentation, testPackageName);
         }

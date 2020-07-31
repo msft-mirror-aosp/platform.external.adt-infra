@@ -75,8 +75,8 @@ public class PlayStoreUtil {
         device.pressHome();
 
         isInstalled = new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)).
-            until(() -> device.findObject(new UiSelector().text(playStore)).exists() ||
-                device.findObject(new UiSelector().description(playStore)).exists());
+                until(() -> device.findObject(new UiSelector().text(playStore)).exists() ||
+                        device.findObject(new UiSelector().description(playStore)).exists());
 
         return isInstalled;
     }
@@ -103,20 +103,27 @@ public class PlayStoreUtil {
         AppLauncher.launch(instrumentation, "Play Store");
 
         boolean idleTextFieldExists = new Wait().until(() -> device.findObject(
-            new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).exists());
+                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).exists());
 
         if (idleTextFieldExists) {
             device.findObject(
-                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).click();
+                    new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).click();
+        }
+
+        UiObject nextButton = device.findObject(
+                new UiSelector().description("Next").className("android.widget.Button"));
+
+        if (nextButton.waitForExists(1000L)) {
+            nextButton.clickAndWaitForNewWindow();
         }
 
         boolean inputTextFieldExists = new Wait().until(() -> device.findObject(
-            new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES)).exists());
+                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES)).exists());
 
         assertTrue("Input text field not found", inputTextFieldExists);
 
         UiObject inputTextField = device.findObject(
-            new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES));
+                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES));
         inputTextField.clearTextField();
         inputTextField.setText(appName);
         device.pressEnter();
@@ -132,10 +139,10 @@ public class PlayStoreUtil {
         new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
         boolean loggedIn = new Wait(TimeUnit.SECONDS.toMillis(5)).
-            until(() -> device.findObject(
-                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).exists() ||
-                device.findObject(
-                    new UiSelector().resourceId(Res.GOOGLE_PLAY_ACTIVE_RES)).exists());
+                until(() -> device.findObject(
+                        new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).exists() ||
+                        device.findObject(
+                                new UiSelector().resourceId(Res.GOOGLE_PLAY_ACTIVE_RES)).exists());
         if (loggedIn) {
             UiObject notNowButton = device.findObject(
                     new UiSelector().resourceId(Res.GOOGLE_PLAY_SECONDARY_BUTTON_RES));
@@ -146,9 +153,9 @@ public class PlayStoreUtil {
         }
 
         final UiObject unauthorizedUserButton = device.findObject(
-            new UiSelector().resourceId((Res.GOOGLE_UNAUTHORIZED_SIGN_IN_RES)));
+                new UiSelector().resourceId((Res.GOOGLE_UNAUTHORIZED_SIGN_IN_RES)));
         boolean unauthorizedUser = new Wait().
-            until(unauthorizedUserButton::exists);
+                until(unauthorizedUserButton::exists);
         if (unauthorizedUser) {
             unauthorizedUserButton.clickAndWaitForNewWindow();
         }
@@ -159,10 +166,10 @@ public class PlayStoreUtil {
         new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
         final UiObject onboardButton = device.findObject(
-            new UiSelector().resourceId(Res.GOOGLE_PLAY_ONBOARD_BUTTON_RES));
+                new UiSelector().resourceId(Res.GOOGLE_PLAY_ONBOARD_BUTTON_RES));
 
         boolean hasOnboardButton = new Wait(TimeUnit.SECONDS.toMillis(5)).
-            until(onboardButton::exists);
+                until(onboardButton::exists);
 
         if (hasOnboardButton) {
             onboardButton.clickAndWaitForNewWindow();
@@ -207,20 +214,20 @@ public class PlayStoreUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         boolean isUninstallable = new Wait(
-            TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS))
-            .until(() -> device.findObject(new UiSelector()
-                .textMatches("(?i)uninstall(?-i)")).exists());
+                TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS))
+                .until(() -> device.findObject(new UiSelector()
+                        .textMatches("(?i)uninstall(?-i)")).exists());
 
         if (!isUninstallable) {
             return new Wait().until(() -> device.findObject(new UiSelector()
-                .textMatches("(?i)install(?-i)")).exists());
+                    .textMatches("(?i)install(?-i)")).exists());
         }
 
         device.findObject(new UiSelector().textMatches("(?i)uninstall(?-i)")).clickAndWaitForNewWindow();
         device.findObject(new UiSelector().textMatches("(?i)ok(?-i)")).clickAndWaitForNewWindow();
 
         UiObject installButton = device.findObject(new UiSelector()
-            .textMatches("(?i)install(?-i)"));
+                .textMatches("(?i)install(?-i)"));
 
         return installButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
     }
@@ -229,19 +236,19 @@ public class PlayStoreUtil {
      * Selects an application listed in Play Store, if found.
      */
     public static void selectApplication(Instrumentation instrumentation,
-        String application) throws Exception {
+                                         String application) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         boolean isFound = hasTestApp(instrumentation, application);
         if (isFound) {
             UiObject testAppListing = device.findObject(new UiSelector()
-                .descriptionContains(application).resourceId(Res.GOOGLE_PLAY_VENDING_CARD_RES));
+                    .descriptionContains(application).resourceId(Res.GOOGLE_PLAY_VENDING_CARD_RES));
             if (testAppListing.waitForExists(5L)) {
                 testAppListing.clickAndWaitForNewWindow();
             }
 
             UiObject testAppPage = device.findObject(new UiSelector()
-                .textContains(application).resourceId(Res.GOOGLE_PLAY_VENDING_TITLE_RES));
+                    .textContains(application).resourceId(Res.GOOGLE_PLAY_VENDING_TITLE_RES));
             if (testAppPage.waitForExists(5L)) {
                 testAppPage.clickAndWaitForNewWindow();
             }
@@ -253,7 +260,7 @@ public class PlayStoreUtil {
      * Return true if found, false if not.
      */
     public static boolean hasTestApp(Instrumentation instrumentation, final String application)
-        throws Exception {
+            throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
@@ -261,8 +268,16 @@ public class PlayStoreUtil {
         PlayStoreUtil.launchGooglePlay(instrumentation, appName);
 
         new watcher(device, Res.PLAY_STORE_WATCHER_PATTERN).checkForCondition();
-        return device.findObject(new UiSelector().resourceId("com.android.vending:id/right_button"))
-            .waitForExists(10L);
+
+        UiObject tryGooglePlay = device.findObject(
+                new UiSelector().resourceId(Res.GOOGLE_PLAY_SECONDARY_BUTTON_RES));
+
+        if (tryGooglePlay.waitForExists(10L)) {
+            tryGooglePlay.clickAndWaitForNewWindow(10L);
+        }
+
+        return device.findObject(new UiSelector().resourceId(Res.GOOGLE_PLAY_RIGHT_BUTTON_RES))
+                .waitForExists(10L);
     }
     /**
      * Opens the Parental Controls menu
@@ -275,7 +290,7 @@ public class PlayStoreUtil {
         }
 
         UiObject navigationDrawer = testDevice.findObject(new UiSelector().
-            description("Show navigation drawer"));
+                description("Show navigation drawer"));
         if (navigationDrawer.waitForExists(TimeUnit.SECONDS.toMillis(10L))) {
             navigationDrawer.clickAndWaitForNewWindow();
         }
@@ -298,7 +313,7 @@ public class PlayStoreUtil {
         }
 
         final UiObject parentalControlsButton = scrollable.getChild(new UiSelector().text(
-            "Parental controls"));
+                "Parental controls"));
         parentalControlsButton.waitForExists(3L);
         if (!parentalControlsButton.exists()) {
             new Wait().until(() -> {
@@ -318,7 +333,7 @@ public class PlayStoreUtil {
         openParentalControls(testDevice);
 
         final UiObject toggleButton = testDevice.findObject(new UiSelector().resourceId(
-            Res.GOOGLE_PLAY_FILTER_TOGGLE_RES));
+                Res.GOOGLE_PLAY_FILTER_TOGGLE_RES));
 
         boolean toggleButtonExists = new Wait().until(toggleButton::exists);
 
@@ -332,7 +347,7 @@ public class PlayStoreUtil {
      * Change parental control restrictions in an application category to the given ages
      */
     public static void setRestrictions(Instrumentation instrumentation,
-        String category, String ages) throws Exception {
+                                       String category, String ages) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         final String appCategory = category;
         toggleParentalControls(device, true);
@@ -341,9 +356,9 @@ public class PlayStoreUtil {
         device.findObject(new UiSelector().textStartsWith(appCategory)).clickAndWaitForNewWindow();
         setParentalControlPin(device);
         device.findObject(new UiSelector().text(ages))
-            .waitForExists(TimeUnit.SECONDS.toMillis(3));
+                .waitForExists(TimeUnit.SECONDS.toMillis(3));
         device.findObject(new UiSelector().text(ages))
-            .clickAndWaitForNewWindow();
+                .clickAndWaitForNewWindow();
         new watcher(device, Res.PLAY_STORE_WATCHER_PATTERN).checkForCondition();
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         scrollable.waitForExists(3L);
@@ -361,7 +376,7 @@ public class PlayStoreUtil {
         final UiDevice device = testDevice;
 
         boolean hasPinDialog = new Wait().until(() ->
-            device.findObject(new UiSelector().text("Type PIN")).exists());
+                device.findObject(new UiSelector().text("Type PIN")).exists());
 
         if (!hasPinDialog) {
             return;
@@ -371,7 +386,7 @@ public class PlayStoreUtil {
         device.findObject(new UiSelector().text("OK")).clickAndWaitForNewWindow();
 
         boolean needsConfirmation = new Wait().until(() ->
-            device.findObject(new UiSelector().text("Type PIN")).exists());
+                device.findObject(new UiSelector().text("Type PIN")).exists());
 
         if (needsConfirmation) {
             device.findObject(new UiSelector().text("Type PIN")).setText("1111");

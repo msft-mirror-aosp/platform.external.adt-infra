@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Rect;
 import android.os.Environment;
-import android.provider.Contacts;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
@@ -42,8 +41,7 @@ public class SettingsUtil {
      */
     private static UiScrollable launchAndGetItemList(
             Instrumentation instrumentation) throws Exception {
-        assertTrue("Could not open Settings",
-                AppLauncher.launch(instrumentation, "Settings"));
+        AppLauncher.launch(instrumentation, "Settings");
 
         UiScrollable itemList = new UiScrollable(new UiSelector().resourceIdMatches(
                 Res.SETTINGS_LIST_CONTAINER_RES));
@@ -75,7 +73,7 @@ public class SettingsUtil {
     /**
      * Launches Settings and find the item with the given name. Returns the item.
      */
-    static UiObject findItem_v2(Instrumentation instrumentation, String name) throws Exception {
+    static void findItem_v2(Instrumentation instrumentation, String name) throws Exception {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
         UiObject systemListItem = UiDevice.getInstance(instrumentation).findObject(
                 new UiSelector().text("System"));
@@ -88,7 +86,6 @@ public class SettingsUtil {
         assertTrue("Failed to find the item in Settings list.",
                 item.waitForExists(TimeUnit.SECONDS.toMillis(5)));
 
-        return item;
     }
 
     /**
@@ -210,16 +207,21 @@ public class SettingsUtil {
         if (appPermissions.waitForExists(5L)) {
             appPermissions.clickAndWaitForNewWindow();
         }
-        UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+        UiScrollable appPermissionsList = new UiScrollable(
+                new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
 
-        if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(20))) {
-            appPermissionsList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                    appType).clickAndWaitForNewWindow();
+        if (appPermissionsList.waitForExists(200L)) {
+            appPermissionsList.getChildByText(
+                    new UiSelector().className("android.widget.TextView"), appType)
+                    .clickAndWaitForNewWindow();
         } else {
             throw new UiObjectNotFoundException("Failed to find the item in Apps.");
         }
 
-        UiObject appPermissionsLabel = device.findObject(new UiSelector().text("Permissions"));
+        UiObject appPermissionsLabel = device.findObject(
+                new UiSelector()
+                        .textMatches("(?i)"+appType+"\\spermissions(?-i)")
+        );
         boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
         if (hasAppPermissionsLabel) {
             appPermissionsLabel.clickAndWaitForNewWindow();

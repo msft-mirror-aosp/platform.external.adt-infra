@@ -83,31 +83,18 @@ then
         echo "Perf zip fail"
     fi
 
-    echo "Installing python dependencies for grpc based tests"
-    python -m virtualenv &>/dev/null || python -m easy_install --user virtualenv
-    python -m virtualenv venv
-    . venv/bin/activate
-    make -C external/adt-infra/emu_test protoc
+    # Remove left over python installations and run the embedded tests
+    rm -rf $HOME/.local
+    echo "Run external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator"
+    $TIMEOUT_CMD 600 external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator
 
-    echo "Running Snapshot tests"
-    echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml"
-    $TIMEOUT_CMD 3600 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml
-
-    if [[ ! -f $SESSION_DIR/snapshot_test/test_report.xml ]]
-    then
+    #  If  the command times out, and --preserve-status is not set, then exit with status 124.  Otherwise, exit with the status of COMMAND.
+    #  If no signal is specified, send the TERM signal upon timeout.
+    #  The TERM signal kills any process that does not block or catch that signal.
+    #  It may be necessary to use the KILL (9) signal, since this signal cannot be caught, in which case the exit status is 128+9 rather than 124.
+    if [[ $? -eq 128 ]] || [[ $? -eq 137 ]]; then
         STATUS=1
-        echo "Snapshot test timeout"
-    fi
-
-
-    echo "Running general grpc tests"
-    echo "Run python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir grpc_test --file_pattern 'test_grpc.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml"
-    $TIMEOUT_CMD 3600 python -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir grpc_test --file_pattern 'test_grpc.*' --config_file external/adt-infra/emu_test/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml
-
-    if [[ ! -f $SESSION_DIR/grpc_test/test_report.xml ]]
-    then
-        STATUS=1
-        echo "grpc test timeout"
+        echo "Embedded tests timeout"
     fi
 fi
 
