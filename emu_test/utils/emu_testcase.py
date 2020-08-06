@@ -51,6 +51,44 @@ class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram
     def name(self):
         return str(self)
 
+class LevelSplitter(logging.StreamHandler):
+    """A logging handler that logs everything above the info level
+       to stderr.
+    """
+
+    def __init__(self):
+        super(LevelSplitter, self).__init__(sys.stdout)
+
+    def _log_to_stderr(self, record):
+        """Emits the record to stderr.
+
+        This temporarily sets the handler stream to stderr, calls
+        StreamHandler.emit, then reverts the stream back.
+
+        Args:
+          record: logging.LogRecord, the record to log.
+        """
+        # emit() is protected by a lock in logging.Handler, so we don't need to
+        # protect here again.
+        old_stream = self.stream
+        self.stream = sys.stderr
+        try:
+            super(LevelSplitter, self).emit(record)
+        finally:
+            self.stream = old_stream
+
+    def emit(self, record):
+        """Emits the record to stdout, or stderr if the level is above
+           info (20).
+
+        Args:
+          record: logging.LogRecord, the record to log.
+        """
+        if record.levelno > 20:
+            self._log_to_stderr(record)
+        else:
+            super(LevelSplitter, self).emit(record)
+
 
 class LoggedTestCase(unittest.TestCase):
     """
@@ -84,7 +122,7 @@ class LoggedTestCase(unittest.TestCase):
         file_handler.setFormatter(formatter)
         file_handler.setLevel(logging.DEBUG)
         # Redirect message to standard out, these messages indicate test progress, they don't belong to stderr
-        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler = LevelSplitter()
         console_handler.setFormatter(formatter)
         console_handler.setLevel(getattr(logging, emu_argparser.emu_args.loglevel.upper()))
 

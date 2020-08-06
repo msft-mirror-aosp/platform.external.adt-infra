@@ -533,7 +533,7 @@ run_timeout() {
     #
     # The subshell will produce the standard exit code or 137 in case the kill
     # -9 arrived at itself.
-    (cmdpid=$(exec sh -c 'echo $PPID'); (sleep $time; kill -9 $cmdpid >/dev/null 2>&1) & exec ${cmd} >&2)
+    (cmdpid=$(exec sh -c 'echo $PPID'); (sleep $time; kill -9 $cmdpid >/dev/null 2>&1) & exec ${cmd})
 
     # see https://tldp.org/LDP/abs/html/exitcodes.html
     # kill -9 results in 137 (128+9)
@@ -561,8 +561,8 @@ run_test() {
     # see failures on the build_err log
     log2err "Running ${test_name}"
 
-    # A test should not run for longer than 15 mins.
-    run_timeout 900 ${test_cmd}
+    # Tests can take a while to run on a mac.
+    run_timeout 1800 ${test_cmd}
 }
 
 clean_avds() {
