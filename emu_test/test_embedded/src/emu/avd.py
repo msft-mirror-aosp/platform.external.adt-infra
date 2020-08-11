@@ -67,6 +67,7 @@ class AvdGenerator(object):
         ]
 
     def _install_sys_image(self, api, abi, tag="google_apis"):
+        logging.info("Installing system-images;android-{};{};{}".format(api, tag, abi));
         subprocess.check_output(
             [
                 os.path.join(self.sdk_root, "tools", "bin", "sdkmanager"),

@@ -9,6 +9,8 @@ https://packaging.python.org/guides/distributing-packages-using-setuptools/
 # Python 3 only projects can skip this import
 from io import open
 from os import path
+import subprocess
+import shutil
 
 # Always prefer setuptools over distutils
 from setuptools import find_packages, setup
@@ -19,9 +21,9 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
+
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
-
 setup(
     # This is the name of your project. The first time you publish this
     # package, this name will be registered for you. It will determine how
@@ -128,7 +130,7 @@ setup(
     # projects.
     extras_require={
         "dev": ["check-manifest", "black"],
-        "test": ["coverage", "mock", "tox", "pytest", "pytest-timeout"],
+        "test": ["coverage", "mock", "tox", "pytest", "pytest-timeout", "pytest-benchmark"],
     },  # Optional
     # If there are data files included in your packages that need to be
     # installed, specify them here.
@@ -136,7 +138,11 @@ setup(
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
     package_data={  # Optional
-        "emu": ["templates/Pixel2.ini", "templates/Pixel2.avd/config.ini",],
+        "emu": [
+            "templates/Pixel2.ini",
+            "templates/Pixel2.avd/config.ini",
+            "apk/app-debug.apk",
+        ],
     },
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:

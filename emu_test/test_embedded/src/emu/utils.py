@@ -16,7 +16,7 @@ import os
 import platform
 import subprocess
 from threading import Thread
-
+from functools import partial
 import six
 
 if six.PY2:
@@ -44,24 +44,33 @@ def run(cmd, local_env=None):
         env=local_env,
     )
 
-    Thread(target=_log_std_out, args=[proc]).start()
-    return proc
+    q = _log_proc(proc)
+    return proc, q
 
 
-def _reader(pipe, queue):
+def log_to_queue(q, line):
+    """Logs the output of the given process."""
+    if q.full():
+        q.get()
+
+    logging.info(line)
+    q.put(line)
+
+
+def _reader(pipe, logfn):
     try:
         with pipe:
             for line in iter(pipe.readline, b""):
-                queue.put((pipe, line[:-1]))
+                logfn(line[:-1].decode("utf-8").strip())
     finally:
-        queue.put(None)
+        pass
 
 
-def _log_std_out(proc):
+def _log_proc(proc):
     """Logs the output of the given process."""
     q = Queue()
-    Thread(target=_reader, args=[proc.stdout, q]).start()
-    Thread(target=_reader, args=[proc.stderr, q]).start()
-    for _ in range(2):
-        for _, line in iter(q.get, None):
-            logging.info(line)
+    log_with_queue = partial(log_to_queue, q)
+    for args in [[proc.stdout, log_with_queue], [proc.stderr, logging.error]]:
+        Thread(target=_reader, args=args).start()
+
+    return q

@@ -1,10 +1,12 @@
+import logging
 import os
-import time
+import re
 
 import pytest
-from aemu.proto.emulator_controller_pb2 import KeyboardEvent
 
+from aemu.proto.emulator_controller_pb2 import KeyboardEvent
 from emu.emulator import Emulator
+from tests.test_utils import StreamingCall, time_to_str
 
 
 def pytest_addoption(parser):
@@ -46,12 +48,19 @@ def startup_emulator(request, pytestconfig):
         emu.first_running()
     else:
         emu.launch_like_studio()
+        emu.adb(['kill-server'])
+        emu.adb(['start-server'])
         assert emu.wait_for_boot()
+
+    def stop_telnet_console():
+        pytest.emulator.disconnect()
 
     def teardown_emulator():
         pytest.emulator.stop()
 
     pytest.emulator = emu
+
+    request.addfinalizer(stop_telnet_console)
     if not pytestconfig.getoption("debug_emulator"):
         request.addfinalizer(teardown_emulator)
 
@@ -68,3 +77,15 @@ def at_home():
     yield
     stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
 
+
+@pytest.fixture
+def emulator_log():
+    """Returns the emulator log.
+
+       The log will be emptied first.
+    """
+    emu = pytest.emulator
+    if emu.log:
+        while not emu.log.empty():
+            emu.log.get(False)
+    return emu.log

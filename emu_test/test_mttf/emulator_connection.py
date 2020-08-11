@@ -89,6 +89,8 @@ class EmulatorConnection(asyncio.Protocol):
     """Sends plain text to the emulator"""
     if self.connected:
       self.transport.write("{}\n".format(msg).encode())
+    else:
+      logging.info("Dropping %s", msg)
 
   @staticmethod
   def connect(port, callback=None):

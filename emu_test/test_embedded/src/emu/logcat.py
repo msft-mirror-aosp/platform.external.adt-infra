@@ -16,7 +16,11 @@
 
 from __future__ import absolute_import, division, print_function
 
+import logging
+import subprocess
+
 from aemu.proto.emulator_controller_pb2 import LogMessage
+from emu.utils import run
 
 
 class Logcat(object):
@@ -32,6 +36,8 @@ class Logcat(object):
         response = self.grpc.getLogcat(logcat)
         self.start = response.next
         return response.entries
+
+
 
     def reset(self):
         """Reset the starting point from which we retrieve logs."""
@@ -70,3 +76,39 @@ class Logcat(object):
         """Retrieves the log from the last timestamp, filtering by_tag if needed."""
         log = self._get_logcat()
         return [x for x in log if not by_tag or by_tag == x.tag]
+
+
+class AdbStream(object):
+    """Streaming adb command that can be observed
+    """
+    def __init__(self, adb_binary, emulator_name, cmd):
+        self._queue = None
+        self.proc = None
+        self.cmd = [adb_binary, "-s", emulator_name] +  cmd
+
+    def __enter__(self):
+        self.proc, self._queue = run(self.cmd)
+        return self._queue
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # We left scope, cancel from the client side.
+        if self.proc:
+            self.proc.send_signal(9)
+
+
+class AdbLogcatStream(AdbStream):
+    """
+    Logcat stream that can be used to observe logcat
+    """
+
+    def __init__(self, adb_binary, emulator_name, tag, clear):
+        super(AdbLogcatStream).__init__(adb_binary, emulator_name, ["logcat"])
+        if clear:
+            self.clear()
+
+        if tag:
+            self.cmd += ["-s", tag]
+
+    def clear(self):
+        logging.info("Clearing log")
+        subprocess.check_call(self.cmd + ['-c'])

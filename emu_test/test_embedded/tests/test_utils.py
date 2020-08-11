@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import time
 from threading import Thread
 
 import google.protobuf.text_format
@@ -27,6 +28,12 @@ else:
 def fmt_proto(msg):
     """Formats a protobuf message as a single line."""
     return google.protobuf.text_format.MessageToString(msg, as_one_line=True)
+
+
+def time_to_str(epoch_in_seconds):
+    """Formats an epoch time in seconds into a human readable string."""
+    s, ms = divmod(epoch_in_seconds * 1000, 1000)
+    return "{}.{:03d}".format(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(epoch_in_seconds)), int(ms))
 
 
 class StreamingCall(object):
