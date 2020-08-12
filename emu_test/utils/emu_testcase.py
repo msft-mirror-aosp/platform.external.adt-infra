@@ -51,6 +51,44 @@ class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram
     def name(self):
         return str(self)
 
+class LevelSplitter(logging.StreamHandler):
+    """A logging handler that logs everything above the info level
+       to stderr.
+    """
+
+    def __init__(self):
+        super(LevelSplitter, self).__init__(sys.stdout)
+
+    def _log_to_stderr(self, record):
+        """Emits the record to stderr.
+
+        This temporarily sets the handler stream to stderr, calls
+        StreamHandler.emit, then reverts the stream back.
+
+        Args:
+          record: logging.LogRecord, the record to log.
+        """
+        # emit() is protected by a lock in logging.Handler, so we don't need to
+        # protect here again.
+        old_stream = self.stream
+        self.stream = sys.stderr
+        try:
+            super(LevelSplitter, self).emit(record)
+        finally:
+            self.stream = old_stream
+
+    def emit(self, record):
+        """Emits the record to stdout, or stderr if the level is above
+           info (20).
+
+        Args:
+          record: logging.LogRecord, the record to log.
+        """
+        if record.levelno > 20:
+            self._log_to_stderr(record)
+        else:
+            super(LevelSplitter, self).emit(record)
+
 
 class LoggedTestCase(unittest.TestCase):
     """
@@ -84,7 +122,7 @@ class LoggedTestCase(unittest.TestCase):
         file_handler.setFormatter(formatter)
         file_handler.setLevel(logging.DEBUG)
         # Redirect message to standard out, these messages indicate test progress, they don't belong to stderr
-        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler = LevelSplitter()
         console_handler.setFormatter(formatter)
         console_handler.setLevel(getattr(logging, emu_argparser.emu_args.loglevel.upper()))
 
@@ -138,8 +176,8 @@ class EmuBaseTestCase(LoggedTestCase):
         for proc in psutil.process_iter():
             try:
                 """
-                emulator.exe is simply a wrapper around the emulator process qemu.  That is why we filter it. 
-                Qemu 1 is named emulator-<arch>, whereas Qemu 2 is named qemu-system-<arch>    
+                emulator.exe is simply a wrapper around the emulator process qemu.  That is why we filter it.
+                Qemu 1 is named emulator-<arch>, whereas Qemu 2 is named qemu-system-<arch>
                 """
                 if proc.name() != "emulator.exe" \
                         and "crash-service" not in proc.name() \
@@ -305,7 +343,7 @@ class EmuBaseTestCase(LoggedTestCase):
             (thread_info['stdout'], thread_info['stderr']) = thread_info['process'].communicate()
             thread_info['returncode'] = thread_info['process'].returncode
 
-        print "Starting command with timeout: %s, cmd: %s" % (timeout, " ".join(cmd))
+        self.m_logger.info("Starting command with timeout: %s, cmd: %s", timeout, " ".join(cmd))
         thread = threading.Thread(target=run_cmd)
         thread.start()
         thread.join(timeout)
@@ -844,7 +882,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
     Create one or more test cases based on test configuration file.
 
     If the `generate_test_class` parameter is included and set to true, create multiple
-    test cases, passing each as an extra parameter to `test_func`. This is used, for example, 
+    test cases, passing each as an extra parameter to `test_func`. This is used, for example,
     in the UI tests to create a separate test case for each test class.
     :param desc: Description of the testcase_class.
     :param testcase_class: The class to add the test cases to.

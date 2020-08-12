@@ -86,7 +86,6 @@ def printResult(result):
     """
     def getTestName(id):
         return id.rsplit('.', 1)[-1]
-    print
     logging.getLogger().info("Test Summary")
     logging.getLogger().info("Run %d tests (%d fail, %d pass, %d xfail, %d xpass)",
                      result.testsRun, len(result.failures)+len(result.errors), len(result.passes),
@@ -181,10 +180,10 @@ if __name__ == '__main__':
     os.environ["SHELL"] = "/bin/bash"
     # Make sure that ANDROID_SDK_ROOT and ANDROID_AVD_HOME env are defined
     if "ANDROID_SDK_ROOT" not in os.environ:
-        print "Please define ANDROID_SDK_ROOT"
+        logging.error("Please define ANDROID_SDK_ROOT")
         sys.exit(1)
     if "ANDROID_AVD_HOME" not in os.environ:
-        print "Please define ANDROID_AVD_HOME"
+        logging.error("Please define ANDROID_AVD_HOME")
         sys.exit(1)
 
     try:
@@ -201,15 +200,15 @@ if __name__ == '__main__':
         emuResult = emuRunner.run(emuSuite)
         printResult(emuResult)
     except Exception:
-        print "Error in dotest.py : " + traceback.format_exc()
-        
+        logging.exception("Error in dotest.py")
+
     # Always attempt to kill the adb server.  We are now done testing with it.
     try:
-        print "Try to kill adb server"
+        logging.info("Try to kill adb server")
         adb_binary = path_utils.get_adb_binary()
         check_call([adb_binary, 'kill-server'], stdout=PIPE, stdin=PIPE)
-        print "adb server killed"
+        logging.info("adb server killed")
     except CalledProcessError:
-        print "Error shutting down adb.  Error: " + traceback.format_exc()
-    print "Test complete"
+        logging.exception("Error shutting down adb")
+    logging.info("Test complete")
     sys.exit(not emuResult.wasSuccessful())
