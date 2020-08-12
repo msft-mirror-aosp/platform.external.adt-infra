@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 
@@ -48,8 +47,8 @@ def startup_emulator(request, pytestconfig):
         emu.first_running()
     else:
         emu.launch_like_studio()
-        emu.adb(['kill-server'])
-        emu.adb(['start-server'])
+        emu.adb(["kill-server"])
+        emu.adb(["start-server"])
         assert emu.wait_for_boot()
 
     def stop_telnet_console():
@@ -59,11 +58,11 @@ def startup_emulator(request, pytestconfig):
         pytest.emulator.stop()
 
     pytest.emulator = emu
-
     request.addfinalizer(stop_telnet_console)
     if not pytestconfig.getoption("debug_emulator"):
         request.addfinalizer(teardown_emulator)
 
+    emu.adb(["install", os.path.join(Emulator.here, "apk", "app-debug.apk")])
 
 @pytest.fixture
 def at_home():
@@ -89,3 +88,40 @@ def emulator_log():
         while not emu.log.empty():
             emu.log.get(False)
     return emu.log
+
+
+@pytest.fixture
+def animation_app():
+    """Activates the animation apk.
+
+    The apk will be closed upon completion, and you will return to home.
+    """
+
+    def _wait_for_launch(stream):
+        """Waits until the timing entry has been written by our app."""
+        TIMING_RE = re.compile(r".*Timing: (\d+), (\d+)")
+        for line in iter(stream.get, None):
+            m = TIMING_RE.match(line)
+            if m:
+                return int(m.group(1)), int(m.group(2))
+
+    emu = pytest.emulator
+    emu.adb(["logcat", "-c"])
+    emu.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
+    with emu.adb_stream(["logcat", "-s", "aemu"]) as stream:
+        emu.adb(
+            [
+                "shell",
+                "am",
+                "start",
+                "-n",
+                "com.google.AnimateBox/com.google.emu.MainActivity",
+            ]
+        )
+        _wait_for_launch(stream)
+
+    yield
+    emu.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
+    emu.get_emulator_controller().sendKey(
+        KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress)
+    )
