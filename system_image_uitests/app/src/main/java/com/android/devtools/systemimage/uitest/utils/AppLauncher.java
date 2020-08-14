@@ -74,7 +74,7 @@ public class AppLauncher {
         final UiObject appObject = device.findObject(appSelector);
 
         boolean appNameFound = false;
-        if (new Wait().until(appObject::exists) && (api < 22 || api >= 28)) {
+        if (new Wait().until(appObject::exists) && (api < 22 || api >= 29)) {
             appObject.clickAndWaitForNewWindow();
             Log.i(TAG, "Opened app in first attempt");
         }
@@ -112,7 +112,7 @@ public class AppLauncher {
                         10);
 
                 if (!appObject.exists()) {
-                    if (api >= 28) {
+                    if (api >= 29) {
                         device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
                         final UiObject launcherDismiss = device.findObject(new UiSelector().
                                 resourceId(Res.LAUNCHER_LIST_DISMISS_RES));

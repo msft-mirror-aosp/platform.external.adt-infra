@@ -21,7 +21,6 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
-import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
@@ -82,11 +81,9 @@ public class VpnTest {
                 isPackageInstalled(instrumentation, testPackageName);
 
         if (!isTestVPNInstalled) {
-            Log.i("VPN", "VPN app not installed");
-            result = PackageInstallationUtil.installApk(instrumentation, apk);
+            result = PackageInstallationUtil.installApk(instrumentation, apk, false);
             isTestVPNInstalled = PackageInstallationUtil.
                     isPackageInstalled(instrumentation, testPackageName);
-            Log.i("VPN", "VPN app installed");
         }
 
         assertTrue("Application " + apk + " is not installed. Result: " + result,
@@ -95,15 +92,13 @@ public class VpnTest {
         // Check if VPN is on. If true, skip.
         if (!VpnTestUtil.verifyVpnStatus_v2(device)) {
             AppLauncher.launch(instrumentation, "TestVPN");
-            Log.i("VPN", "Test VPN application launched");
-
-            new VpnPopupWatcher(device).checkForCondition();
-            UiObject startVPN = device.findObject(
-                    new UiSelector().resourceId(Res.START_VPN_BUTTON_RES));
-            if (startVPN.waitForExists(3L)) {
-                startVPN.clickAndWaitForNewWindow();
-                Log.i("VPN", "VPN started");
+            UiObject olderVersionWarning = device.findObject(
+                    new UiSelector().textMatches("(?i)ok(?-i)"));
+            if (olderVersionWarning.waitForExists(5000)) {
+                olderVersionWarning.clickAndWaitForNewWindow();
             }
+            device.findObject(new UiSelector().resourceId(Res.START_VPN_BUTTON_RES))
+                    .clickAndWaitForNewWindow();
             new VpnPopupWatcher(device).checkForCondition();
             Assert.assertTrue("Failed to find the VPN lock icon after starting VPN!",
                     VpnTestUtil.verifyVpnStatus_v2(device));

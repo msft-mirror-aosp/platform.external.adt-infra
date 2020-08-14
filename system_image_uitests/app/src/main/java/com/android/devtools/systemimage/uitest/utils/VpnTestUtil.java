@@ -58,7 +58,7 @@ public class VpnTestUtil {
     }
 
     /**
-     * Version 2 for api >= 24 && <= 28.
+     * Version 2 for api >= 24 && <= 29.
      *
      * @param device
      * @return
