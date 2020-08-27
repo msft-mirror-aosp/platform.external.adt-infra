@@ -95,7 +95,8 @@ public class PlayStoreUtil {
     /**
      * Launches Google Play Store, opening to the given application
      */
-    private static void launchGooglePlay(Instrumentation instrumentation, String appName) throws Exception {
+    private static void launchGooglePlay(Instrumentation instrumentation, String application)
+            throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
 
@@ -117,15 +118,21 @@ public class PlayStoreUtil {
             nextButton.clickAndWaitForNewWindow();
         }
 
-        boolean inputTextFieldExists = new Wait().until(() -> device.findObject(
-                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES)).exists());
-
-        assertTrue("Input text field not found", inputTextFieldExists);
-
         UiObject inputTextField = device.findObject(
                 new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES));
+
+        UiObject finalInputTextField = inputTextField;
+        boolean inputTextFieldExists = new Wait().until(() -> finalInputTextField.exists());
+
+        if (inputTextFieldExists == false) {
+            inputTextField = device.findObject(
+                    new UiSelector().text("Search for apps & games"));
+        }
+
+        assertTrue("Input text field not found", inputTextField.exists());
         inputTextField.clearTextField();
-        inputTextField.setText(appName);
+        inputTextField.click();
+        inputTextField.setText(application);
         device.pressEnter();
     }
 
@@ -264,8 +271,7 @@ public class PlayStoreUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
-        String appName = application.toLowerCase();
-        PlayStoreUtil.launchGooglePlay(instrumentation, appName);
+        PlayStoreUtil.launchGooglePlay(instrumentation, application);
 
         new watcher(device, Res.PLAY_STORE_WATCHER_PATTERN).checkForCondition();
 
