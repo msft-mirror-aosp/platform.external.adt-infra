@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke.api28;
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -34,6 +35,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -53,12 +56,13 @@ public class PlayStoreTest {
 
     @Before
     public void verifyPlayStore() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-
-        boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v2(instrumentation);
-        boolean loggedInToPlayStore = playStoreInstalled &&
-                PlayStoreUtil.loginGooglePlay(instrumentation);
-        assertTrue("PlayStore login failed.", loggedInToPlayStore);
+        if (testFramework.isGoogleApiAndPlayImage()) {
+            Instrumentation instrumentation = testFramework.getInstrumentation();
+            boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v2(instrumentation);
+            boolean loggedInToPlayStore = playStoreInstalled &&
+                    PlayStoreUtil.loginGooglePlay(instrumentation);
+            assertTrue("PlayStore login failed.", loggedInToPlayStore);
+        }
     }
 
     /**
@@ -116,17 +120,19 @@ public class PlayStoreTest {
     @Test
     @TestInfo(id = "cb0ccd97-f045-42fa-8293-a32e94e838aa")
     public void testAppInstallation() throws Exception {
-        Instrumentation instrumentation = testFramework.getInstrumentation();
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        PlayStoreUtil.selectApplication(instrumentation, testApplication);
-        new GoogleAppConfirmationWatcher(device).checkForCondition();
-        assertTrue("Unable to install the application from Google Play",
-                PlayStoreUtil.installApplication(instrumentation));
-        AppLauncher.launch(instrumentation, "Play Store");
-        assertTrue("Unable to uninstall the application from Google Play",
-                PlayStoreUtil.uninstallApplication(instrumentation));
-        PlayStoreUtil.resetPlayStore(instrumentation);
-        device.pressHome();
+        if (testFramework.isGoogleApiAndPlayImage()) {
+            Instrumentation instrumentation = testFramework.getInstrumentation();
+            final UiDevice device = UiDevice.getInstance(instrumentation);
+            PlayStoreUtil.selectApplication(instrumentation, testApplication);
+            new GoogleAppConfirmationWatcher(device).checkForCondition();
+            assertTrue("Unable to install the application from Google Play",
+                    PlayStoreUtil.installApplication(instrumentation));
+            AppLauncher.launch(instrumentation, "Play Store");
+            assertTrue("Unable to uninstall the application from Google Play",
+                    PlayStoreUtil.uninstallApplication(instrumentation));
+            PlayStoreUtil.resetPlayStore(instrumentation);
+            device.pressHome();
+        }
     }
 
     /**
@@ -166,16 +172,27 @@ public class PlayStoreTest {
             assertTrue("Unable to install the application from Google Play",
                     PlayStoreUtil.installApplication(instrumentation));
 
-            AppLauncher.launch(instrumentation, "Play Store");
+            UiObject installedLabel = device.findObject(new UiSelector()
+                    .textMatches("(?i)installed(?-i)"));
+            boolean hasInstalled = new Wait(
+                    TimeUnit.MILLISECONDS.convert(40L, TimeUnit.SECONDS))
+                    .until(installedLabel::exists);
+            assertTrue("Unable to install the application from Google Play",
+                    hasInstalled);
+
             device.findObject(new UiSelector().textMatches("(?i)open(?-i)"))
                     .clickAndWaitForNewWindow();
             assertTrue("App could not be opened",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return device.findObject(new UiSelector()
-                                    .textContains(testApplication)).exists(); }
-                    }));
+                    new Wait(TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
+                            .until(() -> device.findObject(new UiSelector()
+                                    .packageName("com.weather.Weather")).exists()));
+            AppLauncher.launch(instrumentation, "Play Store");
+            hasInstalled = new Wait(
+                    TimeUnit.MILLISECONDS.convert(40L, TimeUnit.SECONDS))
+                    .until(installedLabel::exists);
+            if (hasInstalled) {
+                installedLabel.clickAndWaitForNewWindow();
+            }
 
             AppLauncher.launch(instrumentation, "Play Store");
             assertTrue("Unable to uninstall the application from Google Play",
