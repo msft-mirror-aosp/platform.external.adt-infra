@@ -95,13 +95,6 @@ public class SettingsTest {
             return;
         }
 
-        AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-
         AppLauncher.launchPath(instrumentation, true,
                 "Settings", "Security & location", "Location");
 
@@ -639,7 +632,7 @@ public class SettingsTest {
      *   2. Open Settings > Apps.
      *   3. Open the menu (3 vertical dots) and tap on "Show System".
      *   4. Tap on any app, say Maps and select "Permissions".
-     *   5. Enable all available permissions for the app.
+     *   5. Enable permissions for the app.
      *   6. Press back button.
      *   7. Open the menu > Reset app preferences > Reset apps.
      *   Verify:
@@ -653,12 +646,14 @@ public class SettingsTest {
         String appName = "Maps";
         String contactsText = "Contacts";
         String locationText = "Location";
+        String microphoneText = "Microphone";
         String phoneText = "Phone";
         String storageText = "Storage";
 
         // Variables to store the state of permissions.
         boolean contactsSwitchState;
         boolean locationSwitchState;
+        boolean microphoneSwitchState;
         boolean phoneSwitchState;
         boolean storageSwitchState;
 
@@ -698,20 +693,24 @@ public class SettingsTest {
         UiObject contactSwitch =
                 SettingsUtil.findObjectByRelative(permissionList,contactsText,LinearLayout.class.getName());
         UiObject locationSwitch =
-                SettingsUtil.findObjectByRelative(permissionList,locationText,LinearLayout.class.getName());
+                SettingsUtil.findObjectByRelative(permissionList, locationText, LinearLayout.class.getName());
+        UiObject microphoneSwitch =
+                SettingsUtil.findObjectByRelative(permissionList, microphoneText, LinearLayout.class.getName());
         UiObject phoneSwitch =
-                SettingsUtil.findObjectByRelative(permissionList,phoneText,LinearLayout.class.getName());
+                SettingsUtil.findObjectByRelative(permissionList, phoneText, LinearLayout.class.getName());
         UiObject storageSwitch =
-                SettingsUtil.findObjectByRelative(permissionList,storageText,LinearLayout.class.getName());
+                SettingsUtil.findObjectByRelative(permissionList, storageText, LinearLayout.class.getName());
 
         //Store current permissions state of switch widgets.
         contactsSwitchState = contactSwitch.isChecked();
         locationSwitchState = locationSwitch.isChecked();
+        microphoneSwitchState = microphoneSwitch.isChecked();
         phoneSwitchState = phoneSwitch.isChecked();
         storageSwitchState = storageSwitch.isChecked();
 
         //Modify application permission.
         contactSwitch.click();
+        microphoneSwitch.click();
         phoneSwitch.click();
         storageSwitch.click();
         locationSwitch.clickAndWaitForNewWindow();
@@ -740,16 +739,19 @@ public class SettingsTest {
 
         assertEquals(contactsSwitchState,
                 SettingsUtil.findObjectByRelative(
-                        permissionList,"Contacts",LinearLayout.class.getName()).isChecked());
+                        permissionList, contactsText, LinearLayout.class.getName()).isChecked());
         assertEquals(locationSwitchState,
                 SettingsUtil.findObjectByRelative(
-                        permissionList,"Location",LinearLayout.class.getName()).isChecked());
+                        permissionList, locationText, LinearLayout.class.getName()).isChecked());
+        assertEquals(microphoneSwitchState,
+                SettingsUtil.findObjectByRelative(
+                        permissionList, microphoneText, LinearLayout.class.getName()).isChecked());
         assertEquals(phoneSwitchState,
                 SettingsUtil.findObjectByRelative(
-                        permissionList,"Phone",LinearLayout.class.getName()).isChecked());
+                        permissionList, phoneText, LinearLayout.class.getName()).isChecked());
         assertEquals(storageSwitchState,
                 SettingsUtil.findObjectByRelative(
-                        permissionList,"Storage",LinearLayout.class.getName()).isChecked());
+                        permissionList, storageText, LinearLayout.class.getName()).isChecked());
     }
 
     /**
