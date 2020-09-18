@@ -105,9 +105,9 @@ public class DeveloperOptionsManager {
     private static void selectDeviceByType(Instrumentation instrumentation, String type)
             throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
+        AppLauncher.launchPath(instrumentation, true, "Settings", "System");
         String deviceLabel = "About " +  type;
-        UiObject aboutDevice = device.findObject(new UiSelector().text(deviceLabel));
-        SettingsUtil.findItem(instrumentation, deviceLabel);
+        UiObject aboutDevice = device.findObject(new UiSelector().textContains(deviceLabel));
         if (aboutDevice.waitForExists(5L)) {
             aboutDevice.clickAndWaitForNewWindow();
         } else {

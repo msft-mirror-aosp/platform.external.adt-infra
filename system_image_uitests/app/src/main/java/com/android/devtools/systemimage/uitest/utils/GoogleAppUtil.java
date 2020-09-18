@@ -134,8 +134,16 @@ public class GoogleAppUtil {
         editInput.setText(email);
         clickNext(device);
 
-        UiObject forgotPasswordLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot password?")) :
-                device.findObject(new UiSelector().description("Forgot password?"));
+        UiObject forgotPasswordLink;
+
+        if (api == 27 || api == 28) {
+            forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
+        } else if (api >= 29) {
+            forgotPasswordLink = device.findObject(new UiSelector().text("Forgot password?"));
+        } else {
+            forgotPasswordLink = device.findObject(new UiSelector().description("Forgot password?"));
+        }
+
         boolean needsPassword = forgotPasswordLink.waitForExists(
                 TimeUnit.MILLISECONDS.convert(1000L, TimeUnit.SECONDS));
         assertTrue("Forgot password not found", firstAttempt || needsPassword);
@@ -160,9 +168,7 @@ public class GoogleAppUtil {
         boolean isSignedIn =
                 new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
-
-
-        if (api >= 24 && api <= 27) {
+        if (api >= 24 && api <= 28) {
             UiObject signInConsentButton = device.findObject(
                     new UiSelector().resourceId(Res.GOOGLE_SIGN_IN_CONSENT_NEXT_RES));
             if (signInConsentButton.waitForExists(20L)) {
@@ -295,6 +301,14 @@ public class GoogleAppUtil {
         UiObject nextButton = device.findObject(new UiSelector().textMatches(("(?i)next(?-i)")));
         if (!nextButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             nextButton = device.findObject(new UiSelector().descriptionMatches(("(?i)next(?-i)")));
+        }
+
+        if (!nextButton.exists()) {
+            nextButton = device.findObject(new UiSelector().resourceId(("identifierNext")));
+        }
+
+        if (!nextButton.exists()) {
+            nextButton = device.findObject(new UiSelector().resourceId(("passwordNext")));
         }
 
         if (nextButton.exists()) {

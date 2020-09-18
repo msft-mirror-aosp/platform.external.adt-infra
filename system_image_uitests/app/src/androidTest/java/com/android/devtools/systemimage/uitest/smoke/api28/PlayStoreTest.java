@@ -19,6 +19,7 @@ package com.android.devtools.systemimage.uitest.smoke.api28;
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
+import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -38,6 +39,7 @@ import org.junit.runner.RunWith;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 /**
  * Test to verify that Google services are available on Google API images
@@ -49,13 +51,13 @@ public class PlayStoreTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(360);
+    public Timeout globalTimeout = Timeout.seconds(600);
+    private String testApplication = "The Weather Channel";
 
     @Before
     public void verifyPlayStore() throws Exception {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
-
             boolean playStoreInstalled = PlayStoreUtil.isPlayStoreInstalled_v2(instrumentation);
             boolean loggedInToPlayStore = playStoreInstalled &&
                     PlayStoreUtil.loginGooglePlay(instrumentation);
@@ -85,10 +87,49 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String application = "Messenger";
 
             assertTrue("Application not found in search.",
-                    PlayStoreUtil.hasTestApp(instrumentation, application));
+                    PlayStoreUtil.hasTestApp(instrumentation, testApplication));
+            PlayStoreUtil.resetPlayStore(instrumentation);
+            device.pressHome();
+        }
+    }
+
+    /**
+     * Verify that Google Play can install and uninstall a free app on the device.
+     * <p>
+     * TT ID: cb0ccd97-f045-42fa-8293-a32e94e838aa
+     * <p>
+     *   <pre>
+     *   Test Steps:
+     *   1. Start an emulator and launch home screen.
+     *   2. Open Apps drawer.
+     *   3. Confirm that Play Store is present, then launch.
+     *   4. Search for free app in store.
+     *   5. If app is available for install, begin installation.
+     *   6. Uninstall the app.
+     *   Verify:
+     *      1a. If Install button was displayed, allow installation to complete then
+     *      confirm that the Open button to launch the app is present.
+     *      1b. If Install button was not displayed, confirm that the Open button to
+     *      launch the app is present.
+     *      2. Confirm that the app was subsequently uninstalled.
+     *   </pre>
+     */
+
+    @Test
+    @TestInfo(id = "cb0ccd97-f045-42fa-8293-a32e94e838aa")
+    public void testAppInstallation() throws Exception {
+        if (testFramework.isGoogleApiAndPlayImage()) {
+            Instrumentation instrumentation = testFramework.getInstrumentation();
+            final UiDevice device = UiDevice.getInstance(instrumentation);
+            PlayStoreUtil.selectApplication(instrumentation, testApplication);
+            new GoogleAppConfirmationWatcher(device).checkForCondition();
+            assertTrue("Unable to install the application from Google Play",
+                    PlayStoreUtil.installApplication(instrumentation));
+            AppLauncher.launch(instrumentation, "Play Store");
+            assertTrue("Unable to uninstall the application from Google Play",
+                    PlayStoreUtil.uninstallApplication(instrumentation));
             PlayStoreUtil.resetPlayStore(instrumentation);
             device.pressHome();
         }
@@ -124,23 +165,34 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String application = "Google Voice";
 
-            PlayStoreUtil.selectApplication(instrumentation, application);
+            PlayStoreUtil.selectApplication(instrumentation, testApplication);
             new GoogleAppConfirmationWatcher(device).checkForCondition();
 
             assertTrue("Unable to install the application from Google Play",
                     PlayStoreUtil.installApplication(instrumentation));
 
-            AppLauncher.launch(instrumentation, "Play Store");
-            device.findObject(new UiSelector().textMatches("(?i)open(?-i)")).clickAndWaitForNewWindow();
+            UiObject installedLabel = device.findObject(new UiSelector()
+                    .textMatches("(?i)installed(?-i)"));
+            boolean hasInstalled = new Wait(
+                    TimeUnit.MILLISECONDS.convert(40L, TimeUnit.SECONDS))
+                    .until(installedLabel::exists);
+            assertTrue("Unable to install the application from Google Play",
+                    hasInstalled);
+
+            device.findObject(new UiSelector().textMatches("(?i)open(?-i)"))
+                    .clickAndWaitForNewWindow();
             assertTrue("App could not be opened",
-                    new Wait().until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return device.findObject(new UiSelector()
-                                    .textContains(application)).exists(); }
-                    }));
+                    new Wait(TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
+                            .until(() -> device.findObject(new UiSelector()
+                                    .packageName("com.weather.Weather")).exists()));
+            AppLauncher.launch(instrumentation, "Play Store");
+            hasInstalled = new Wait(
+                    TimeUnit.MILLISECONDS.convert(40L, TimeUnit.SECONDS))
+                    .until(installedLabel::exists);
+            if (hasInstalled) {
+                installedLabel.clickAndWaitForNewWindow();
+            }
 
             AppLauncher.launch(instrumentation, "Play Store");
             assertTrue("Unable to uninstall the application from Google Play",
@@ -173,22 +225,16 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String application = "Tasker";
+            final String payApplication = "PowerAudio Pro";
 
-            PlayStoreUtil.selectApplication(instrumentation, application);
+            PlayStoreUtil.selectApplication(instrumentation, payApplication);
             new GoogleAppConfirmationWatcher(device).checkForCondition();
 
             assertTrue("Target application is not a pay app",
-                    new Wait(TimeUnit.MILLISECONDS.convert(10L,
-                            TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            UiSelector payButton = new UiSelector().
-                                    className("android.widget.Button").packageName(
-                                    Res.GOOGLE_PLAY_VENDING_RES);
-                            return device.findObject(payButton.textContains("$")).exists();
-                        }
-                    }));
+                    device.findObject(new UiSelector()
+                            .className("android.widget.Button")
+                            .packageName(Res.GOOGLE_PLAY_VENDING_RES)
+                            .textContains("$")).waitForExists(10L));
 
             PlayStoreUtil.resetPlayStore(instrumentation);
             device.pressHome();
@@ -226,19 +272,21 @@ public class PlayStoreTest {
         if (testFramework.isGoogleApiAndPlayImage()) {
             final Instrumentation instrumentation = testFramework.getInstrumentation();
             final UiDevice device = UiDevice.getInstance(instrumentation);
-            final String familyApplication = "YouTube Kids";
-            final String restrictedApplication = "Truth Or Dare: Dirty";
+            final String restrictedApplication = "Reddit";
 
-            AppLauncher.launch(instrumentation, "Play Store");
-            PlayStoreUtil.toggleParentalControls(device, false);
-            assertTrue("Adult application is not found in search.",
+            assertTrue("Adult application is found in search.",
                     PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication));
+            device.pressBack();
 
             PlayStoreUtil.setRestrictions(instrumentation,  "Apps", "Everyone 10+");
 
-            assertTrue("Adult application found in search.",
-                    !PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication) &&
-                            PlayStoreUtil.hasTestApp(instrumentation, familyApplication));
+            assertFalse("Adult application is not found in restricted search.",
+                    PlayStoreUtil.hasTestApp(instrumentation, restrictedApplication));
+            device.pressBack();
+
+            assertTrue("Family application is found in restricted search.",
+                    PlayStoreUtil.hasTestApp(instrumentation, testApplication));
+            device.pressBack();
 
             PlayStoreUtil.toggleParentalControls(device, false);
             device.pressHome();

@@ -21,9 +21,10 @@ from aemu.discovery.emulator_discovery import EmulatorDiscovery
 from snaptool.snapshot import SnapshotService
 from google.protobuf import empty_pb2
 
-from emu.logcat import Logcat
+from emu.logcat import Logcat, AdbLogcatStream, AdbStream
 from emu.utils import run
 from emu.avd import AvdGenerator
+from emu.emulator_connection import EmulatorConnection
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -34,12 +35,16 @@ class Emulator(object):
        This launcher mimics how studio will launch the emulator.
     """
 
+    here = os.path.abspath(os.path.dirname(__file__))
+
     def __init__(self, emulator_exe, sdk_root=None):
         self.sdk_root = os.path.abspath(sdk_root or os.environ.get("ANDROID_SDK_ROOT"))
         self.adb_binary = os.path.join(self.sdk_root, "platform-tools", "adb")
         self.avd_gen = None
         self.desc = None
         self.proc = None
+        self.log = None
+        self.telnet = None
         if emulator_exe and os.path.exists(emulator_exe):
             self.emulator = emulator_exe
         else:
@@ -50,17 +55,24 @@ class Emulator(object):
             )
             self.emulator = os.path.join(self.sdk_root, "emulator", "emulator")
 
+
     def get_emulator_controller(self):
         """Gets the emulator controller stub to this emulator."""
         return self.desc.get_emulator_controller()
 
     def get_snapshot_service(self):
         """Gets a snapshot service to interact with snaphsots."""
-        return SnapshotService(snapshot_service = self.desc.get_snapshot_service())
+        return SnapshotService(snapshot_service=self.desc.get_snapshot_service())
 
-    def get_logcat(self):
-        """Gets access to logcat of this device."""
-        return Logcat(self.get_emulator_controller())
+    def name(self):
+        return self.desc.name()
+
+    def adb_stream(self, cmd):
+        return AdbStream(self.adb_binary, self.desc.name(), cmd)
+
+    def get_emu_logqueue(self):
+        """Gets access to the log queue."""
+        return self.log
 
     def adb(self, cmd):
         """Executes the given adb command.
@@ -69,19 +81,34 @@ class Emulator(object):
            to talk to this emulator.
         """
         logging.info("adb %s", " ".join(cmd))
-        return subprocess.check_output([self.adb_binary, "-s", self.desc.name()] + cmd).decode("utf-8")
+        return subprocess.check_output(
+            [self.adb_binary, "-s", self.desc.name()] + cmd
+        ).decode("utf-8")
+
+    def get_telnet(self):
+        return self.telnet
+
+    def disconnect(self):
+        self.telnet.stop()
+        self.desc = None
 
     def wait_for_boot(self, max_wait=120):
         """Wait at most max_wait seconds until the status of the device says it is booted.
 
            This is done by querying the gRPC endpoint.
         """
+        timeout = time.time() + max_wait
         emu = self.get_emulator_controller()
         response = emu.getStatus(_EMPTY_)
-        while not response.booted and max_wait > 0:
+        while not response.booted and time.time() < timeout:
             logging.info("Waiting for boot..")
             time.sleep(1)
             response = emu.getStatus(_EMPTY_)
+
+        proc, _ = run([self.adb_binary, "wait-for-device"])
+        while proc.poll() and time.time() < timeout:
+            logging.info("Waiting for adb device..")
+            time.sleep(1)
 
         return response.booted
 
@@ -112,6 +139,10 @@ class Emulator(object):
         """Discover the first running emulator."""
         discovery = EmulatorDiscovery()
         self.desc = discovery.first()
+        self.connect()
+
+    def connect(self):
+        self.telnet = EmulatorConnection.connect(self.desc.get("port.serial"))
 
     def launch_like_studio(self):
         """Launches the emulator similarly as how studio will invoke it."""
@@ -129,8 +160,9 @@ class Emulator(object):
                 "300",
                 "-verbose",
                 "-show-kernel",
-                #"-logcat",
-                #"'*:v"
+                "-debug-events"
+                # "-logcat",
+                # "'*:v"
             ]
         )
 
@@ -142,7 +174,7 @@ class Emulator(object):
         """
         self.avd_gen = AvdGenerator(self.sdk_root)
         # This is the most used system image.
-        avd = self.avd_gen.get_avd("28", "x86", "google_apis_playstore")
+        avd = self.avd_gen.get_avd("29", "x86", "google_apis_playstore")
         cmd = [self.emulator, "-avd", avd]
 
         if additional_args:
@@ -154,7 +186,7 @@ class Emulator(object):
         local_env["ANDROID_AVD_HOME"] = self.avd_gen.get_avd_home()
         local_env["ANDROID_SDK_ROOT"] = self.sdk_root
 
-        self.proc = run(cmd, local_env)
+        self.proc, self.log = run(cmd, local_env)
         logging.info("Emulator running as pid: %s", self.proc.pid)
 
         # The emulator immediately writes a discovery file,
@@ -180,3 +212,5 @@ class Emulator(object):
         self.desc = discovery.find_by_pid(self.proc.pid)
         if self.desc is None:
             raise Exception("Failed to launch {} - {}".format(self.emulator, avd))
+        self.connect()
+

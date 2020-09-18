@@ -46,8 +46,8 @@ def test_rotation_observable_through_screenshot():
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(10)
-def test_rotation_observable_through_stream_screenshot(at_home):
+@pytest.mark.timeout(timeout=10, func_only=True)
+def test_rotation_observable_through_stream_screenshot(animation_app):
     """Test that setting the rotation, is observable through streaming screenshot."""
     emu = pytest.emulator.get_emulator_controller()
     imgStream = emu.streamScreenshot(ImageFormat(width=320, height=200))
@@ -64,11 +64,6 @@ def test_rotation_observable_through_stream_screenshot(at_home):
                     value=ParameterValue(data=[0, 0, fine]),
                 )
             )
-
-            # Make sure we have some screen action.
-            emu.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
-            emu.sendKey(KeyboardEvent(key="AppSwitch", eventType=KeyboardEvent.keypress))
-
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
             for img in iter(stream.get, None):
@@ -132,8 +127,8 @@ def test_rotation_through_console_observable_through_screenshot():
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(10)
-def test_rotation_through_console_observable_through_stream_screenshot(at_home):
+@pytest.mark.timeout(timeout=10, func_only=True)
+def test_rotation_through_console_observable_through_stream_screenshot(animation_app):
     """Test that rotate through console, is observable through stream screenshot.
 
     bug: b/159635109, b/160171559
@@ -157,8 +152,6 @@ def test_rotation_through_console_observable_through_stream_screenshot(at_home):
         ]:
             sleep(0.5)
             pytest.emulator.adb(["emu", "rotate"])
-            emu.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
-            emu.sendKey(KeyboardEvent(key="AppSwitch", eventType=KeyboardEvent.keypress))
 
             cnt = 0
             # Keep looking at the queue until we see what we need.

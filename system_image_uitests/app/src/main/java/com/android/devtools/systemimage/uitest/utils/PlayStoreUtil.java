@@ -95,7 +95,8 @@ public class PlayStoreUtil {
     /**
      * Launches Google Play Store, opening to the given application
      */
-    private static void launchGooglePlay(Instrumentation instrumentation, String appName) throws Exception {
+    private static void launchGooglePlay(Instrumentation instrumentation, String application)
+            throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
 
@@ -117,15 +118,21 @@ public class PlayStoreUtil {
             nextButton.clickAndWaitForNewWindow();
         }
 
-        boolean inputTextFieldExists = new Wait().until(() -> device.findObject(
-                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES)).exists());
-
-        assertTrue("Input text field not found", inputTextFieldExists);
-
         UiObject inputTextField = device.findObject(
                 new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES));
+
+        UiObject finalInputTextField = inputTextField;
+        boolean inputTextFieldExists = new Wait().until(finalInputTextField::exists);
+
+        if (!inputTextFieldExists) {
+            inputTextField = device.findObject(
+                    new UiSelector().text("Search for apps & games"));
+        }
+
+        assertTrue("Input text field not found", inputTextField.exists());
         inputTextField.clearTextField();
-        inputTextField.setText(appName);
+        inputTextField.click();
+        inputTextField.setText(application);
         device.pressEnter();
     }
 
@@ -213,14 +220,23 @@ public class PlayStoreUtil {
     public static boolean uninstallApplication(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        boolean isUninstallable = new Wait(
-                TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS))
+        boolean hasUninstall = new Wait(
+                TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
                 .until(() -> device.findObject(new UiSelector()
                         .textMatches("(?i)uninstall(?-i)")).exists());
 
-        if (!isUninstallable) {
-            return new Wait().until(() -> device.findObject(new UiSelector()
-                    .textMatches("(?i)install(?-i)")).exists());
+        if (!hasUninstall) {
+            UiObject installedLabel = device.findObject(new UiSelector()
+                    .textMatches("(?i)installed(?-i)"));
+            boolean hasInstalled = new Wait(
+                    TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
+                    .until(installedLabel::exists);
+            if (hasInstalled) {
+                installedLabel.clickAndWaitForNewWindow();
+            } else {
+                return new Wait().until(() -> device.findObject(new UiSelector()
+                        .textMatches("(?i)install(?-i)")).exists());
+            }
         }
 
         device.findObject(new UiSelector().textMatches("(?i)uninstall(?-i)")).clickAndWaitForNewWindow();
@@ -264,8 +280,7 @@ public class PlayStoreUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
-        String appName = application.toLowerCase();
-        PlayStoreUtil.launchGooglePlay(instrumentation, appName);
+        PlayStoreUtil.launchGooglePlay(instrumentation, application);
 
         new watcher(device, Res.PLAY_STORE_WATCHER_PATTERN).checkForCondition();
 
@@ -276,7 +291,7 @@ public class PlayStoreUtil {
             tryGooglePlay.clickAndWaitForNewWindow(10L);
         }
 
-        return device.findObject(new UiSelector().resourceId(Res.GOOGLE_PLAY_RIGHT_BUTTON_RES))
+        return device.findObject(new UiSelector().textMatches(("(?i)install(?-i)")))
                 .waitForExists(10L);
     }
     /**
@@ -332,10 +347,16 @@ public class PlayStoreUtil {
     public static void toggleParentalControls(UiDevice testDevice, boolean setChecked) throws Exception {
         openParentalControls(testDevice);
 
-        final UiObject toggleButton = testDevice.findObject(new UiSelector().resourceId(
+        UiObject toggleButton = testDevice.findObject(new UiSelector().resourceId(
                 Res.GOOGLE_PLAY_FILTER_TOGGLE_RES));
 
         boolean toggleButtonExists = new Wait().until(toggleButton::exists);
+
+        if (!toggleButtonExists) {
+            toggleButton = testDevice.findObject(new UiSelector().className("android.widget.Switch")
+                    .description("Parental controls"));
+            toggleButtonExists = new Wait().until(toggleButton::exists);
+        }
 
         if (toggleButtonExists && toggleButton.isChecked() != setChecked) {
             toggleButton.clickAndWaitForNewWindow();

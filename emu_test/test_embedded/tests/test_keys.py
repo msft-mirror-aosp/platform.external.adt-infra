@@ -116,7 +116,7 @@ def test_whitespace_chrs(at_home):
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(10)
+@pytest.mark.timeout(timeout=10, func_only=True)
 def test_unicode_no_deadlock(at_home):
     """Tests that we properly handle unicode characters."""
     pytest.emulator.get_emulator_controller().sendKey(
