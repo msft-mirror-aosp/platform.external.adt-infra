@@ -11,8 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import tarfile
 import os
+import tarfile
+import time
+
 import pytest
 from snaptool.snapshot import SnapshotService
 
@@ -50,7 +52,7 @@ def test_that_delete_removes(snapshot_service):
 
 @pytest.mark.e2e
 def test_pull_gets_a_tar(snapshot_service, tmpdir):
-    path = str(tmpdir.realpath()) # Needed for py2 compatibility
+    path = str(tmpdir.realpath())  # Needed for py2 compatibility
     assert snapshot_service.save("foo")
     assert snapshot_service.pull("foo", path)
 
@@ -61,7 +63,7 @@ def test_pull_gets_a_tar(snapshot_service, tmpdir):
 
 @pytest.mark.e2e
 def test_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
-    path = str(tmpdir.realpath()) # Needed for py2 compatibility
+    path = str(tmpdir.realpath())  # Needed for py2 compatibility
     assert snapshot_service.save("foo")
     assert snapshot_service.pull("foo", path)
     assert snapshot_service.delete("foo")
@@ -70,3 +72,17 @@ def test_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     assert snapshot_service.push(os.path.join(path, "foo.tar"))
     assert "foo" in snapshot_service.lists()
     assert snapshot_service.load("foo")
+
+
+@pytest.mark.perf
+@pytest.mark.benchmark(group="snapshot")
+def test_list_snapshot_perf(benchmark, snapshot_service, animation_app):
+    # create a 10 snapshots while we are running the animation app.
+    for i in range(0, 10):
+        # Make sure the animation state is changing the state a bit.
+        time.sleep(1.0)
+        snapshot_service.save("test-{}".format(i))
+
+    # And measure the lists service.
+    benchmark(snapshot_service.lists)
+
