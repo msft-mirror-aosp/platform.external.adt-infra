@@ -46,25 +46,25 @@ public class DeveloperOptionsManager {
 
         // Click "Build number"
         UiScrollable itemList =
-            new UiScrollable(
-                new UiSelector().resourceIdMatches(Res.ABOUT_PHONE_LIST_CONTAINER_RES)
-            );
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.ABOUT_PHONE_LIST_CONTAINER_RES)
+                );
         itemList.setAsVerticalList();
 
         final UiObject buildNumberLabel =
-            itemList.getChildByText(
-                new UiSelector().className("android.widget.TextView"),
-                "Build number"
-            );
+                itemList.getChildByText(
+                        new UiSelector().className("android.widget.TextView"),
+                        "Build number"
+                );
 
         boolean hasBuildNumberLabel = new Wait(TimeUnit.MILLISECONDS.convert(
-            10L, TimeUnit.SECONDS)).
-            until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return buildNumberLabel.waitForExists(10L);
-                }
-            });
+                10L, TimeUnit.SECONDS)).
+                until(new Wait.ExpectedCondition() {
+                    @Override
+                    public boolean isTrue() {
+                        return buildNumberLabel.waitForExists(10L);
+                    }
+                });
 
         Assert.assertTrue("Developer options could not be enabled.", hasBuildNumberLabel);
 
@@ -84,36 +84,16 @@ public class DeveloperOptionsManager {
      * @throws Exception if it fails to find a UI widget.
      */
     public static void enableDeveloperOptions_v1(SystemImageTestFramework testFramework)
-        throws Exception {
+            throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         try {
-            selectDeviceByType(instrumentation,"phone");
+            selectDeviceByType_v1(instrumentation,"phone");
         } catch (Exception e) {
-            selectDeviceByType(instrumentation,"emulated device");
+            selectDeviceByType_v1(instrumentation,"emulated device");
         }
         enableOptions(instrumentation);
     }
 
-    /**
-     * Attempt to enable developer options by trying both 'About phone' and
-     * 'About emulated device' links
-     *
-     * @param instrumentation
-     * @param type
-     * @throws Exception if it fails to find a UI widget.
-     */
-    private static void selectDeviceByType(Instrumentation instrumentation, String type)
-            throws Exception {
-        UiDevice device = UiDevice.getInstance(instrumentation);
-        AppLauncher.launchPath(instrumentation, true, "Settings", "System");
-        String deviceLabel = "About " +  type;
-        UiObject aboutDevice = device.findObject(new UiSelector().textContains(deviceLabel));
-        if (aboutDevice.waitForExists(5L)) {
-            aboutDevice.clickAndWaitForNewWindow();
-        } else {
-            throw new UiObjectNotFoundException(deviceLabel + " not found");
-        }
-    }
 
     /**
      * Enables developer options.
@@ -125,7 +105,7 @@ public class DeveloperOptionsManager {
      * @throws Exception if it fails to find a UI widget.
      */
     public static void enableDeveloperOptions_v2(SystemImageTestFramework testFramework)
-        throws Exception {
+            throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
@@ -145,6 +125,73 @@ public class DeveloperOptionsManager {
         }
 
         enableOptions(instrumentation);
+    }
+
+
+    /**
+     * Enables developer options.
+     *
+     * Version 1 for api == 29
+     *
+     * @param testFramework see {
+     *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
+     * @throws Exception if it fails to find a UI widget.
+     */
+    public static void enableDeveloperOptions_v3(SystemImageTestFramework testFramework)
+            throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        try {
+            selectDeviceByType_v2(instrumentation,"phone");
+        } catch (Exception e) {
+            selectDeviceByType_v2(instrumentation,"emulated device");
+        }
+        enableOptions(instrumentation);
+    }
+
+    /**
+     * Attempt to enable developer options by trying both 'About phone' and
+     * 'About emulated device' links for api's < 29
+     *
+     * @param instrumentation
+     * @param type
+     * @throws Exception if it fails to find a UI widget.
+     */
+    private static void selectDeviceByType_v1(Instrumentation instrumentation, String type)
+            throws Exception {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        AppLauncher.launchPath(instrumentation, true, "Settings", "System");
+        String deviceLabel = "About " +  type;
+        UiObject aboutDevice = device.findObject(new UiSelector().textContains(deviceLabel));
+
+        if (aboutDevice.waitForExists(5L)) {
+            aboutDevice.clickAndWaitForNewWindow();
+        } else {
+            throw new UiObjectNotFoundException(deviceLabel + " not found");
+        }
+    }
+
+    /**
+     * Attempt to enable developer options by trying both 'About phone' and
+     * 'About emulated device' links for api 29
+     *
+     * @param instrumentation
+     * @param type
+     * @throws Exception if it fails to find a UI widget.
+     */
+    private static void selectDeviceByType_v2(Instrumentation instrumentation, String type)
+            throws Exception {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        AppLauncher.launchPath(instrumentation, true, "Settings");
+        String deviceLabel = "About " +  type;
+
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        final UiObject aboutDevice = device.findObject(new UiSelector().textContains(deviceLabel));
+
+        if (scrollable.scrollIntoView(aboutDevice)) {
+            aboutDevice.clickAndWaitForNewWindow();
+        } else {
+            throw new UiObjectNotFoundException(deviceLabel + " not found");
+        }
     }
 
     /**

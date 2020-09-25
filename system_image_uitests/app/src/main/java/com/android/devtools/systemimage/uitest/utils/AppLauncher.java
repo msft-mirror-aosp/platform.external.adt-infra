@@ -74,73 +74,70 @@ public class AppLauncher {
         final UiObject appObject = device.findObject(appSelector);
 
         boolean appNameFound = false;
-        if (new Wait().until(appObject::exists) && (api < 22 || api >= 29)) {
+        if (new Wait().until(appObject::exists) && api < 22) {
             appObject.clickAndWaitForNewWindow();
             Log.i(TAG, "Opened app in first attempt");
+        } else {
+            device.pressHome();
+            final UiObject launcherIcon = device.findObject(new UiSelector().
+                    className("android.widget.TextView").
+                    packageName(device.getLauncherPackageName()).
+                    description("Apps")
+            );
+            if (new Wait().until(launcherIcon::exists)) {
+                launcherIcon.clickAndWaitForNewWindow();
+                new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
+            }
         }
-        else {
-            if (api >= 23 && api < 28) {
-                device.pressHome();
-                final UiObject launcherIcon = device.findObject(new UiSelector().
-                        className("android.widget.TextView").
-                        packageName(device.getLauncherPackageName()).
-                        description("Apps")
-                );
-                if (new Wait().until(launcherIcon::exists)) {
-                    launcherIcon.clickAndWaitForNewWindow();
-                    new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
-                }
-            }
-            try {
-                appNameFound = new Wait().until(appObject::exists);
+        try {
+            appNameFound = new Wait().until(appObject::exists);
+            if (!appNameFound) {
+                scrollable.setAsVerticalList();
+                appNameFound = new Wait().until(() -> scrollable.scrollIntoView(appSelector));
+
                 if (!appNameFound) {
-                    scrollable.setAsVerticalList();
+                    scrollable.setAsHorizontalList();
                     appNameFound = new Wait().until(() -> scrollable.scrollIntoView(appSelector));
+                }
+            }
+        } catch (UiObjectNotFoundException e) {
+            device.pressHome();
+            device.drag(
+                    0,
+                    appsLabel.getBounds().top,
+                    0,
+                    scrollView.getBounds().top,
+                    10);
 
-                    if (!appNameFound) {
-                        scrollable.setAsHorizontalList();
-                        appNameFound = new Wait().until(() -> scrollable.scrollIntoView(appSelector));
+            if (!appObject.exists()) {
+                if (api >= 29) {
+                    device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
+                    final UiObject launcherDismiss = device.findObject(new UiSelector().
+                            resourceId(Res.LAUNCHER_LIST_DISMISS_RES));
+                    if (new Wait().until(launcherDismiss::exists)) {
+                        launcherDismiss.clickAndWaitForNewWindow();
+                    }
+                } else {
+                    device.pressHome();
+                    final UiObject launcherList = api == 25 ?
+                            device.findObject(new UiSelector().resourceId(
+                                    Res.ALL_APPS_HANDLE_RES)) :
+                            device.findObject(new UiSelector().resourceId(
+                                    Res.LAUNCHER_LIST_CONTAINER_RES));
+                    boolean launcherListFound = new Wait().until(launcherList::exists);
+                    if (launcherListFound) {
+                        launcherList.clickAndWaitForNewWindow();
+                    } else if (scrollable.exists()) {
+                        scrollable.flingForward();
                     }
                 }
-            } catch (UiObjectNotFoundException e) {
-                device.pressHome();
-                device.drag(
-                        0,
-                        appsLabel.getBounds().top,
-                        0,
-                        scrollView.getBounds().top,
-                        10);
-
-                if (!appObject.exists()) {
-                    if (api >= 29) {
-                        device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
-                        final UiObject launcherDismiss = device.findObject(new UiSelector().
-                                resourceId(Res.LAUNCHER_LIST_DISMISS_RES));
-                        if (new Wait().until(launcherDismiss::exists)) {
-                            launcherDismiss.clickAndWaitForNewWindow();
-                        }
-                    } else {
-                        device.pressHome();
-                        final UiObject launcherList = api == 25 ?
-                                device.findObject(new UiSelector().resourceId(
-                                        Res.ALL_APPS_HANDLE_RES)) :
-                                device.findObject(new UiSelector().resourceId(
-                                        Res.LAUNCHER_LIST_CONTAINER_RES));
-                        boolean launcherListFound = new Wait().until(launcherList::exists);
-                        if (launcherListFound) {
-                            launcherList.clickAndWaitForNewWindow();
-                        } else if (scrollable.exists()) {
-                            scrollable.flingForward();
-                        }
-                    }
-                }
-                appNameFound = new Wait().until(appObject::exists);
             }
+            appNameFound = new Wait().until(appObject::exists);
+        }
 
-            if (appNameFound) {
-                appObject.clickAndWaitForNewWindow();
-                Log.i(TAG, "Opened app in second attempt");
-            }
+        if (appNameFound) {
+            appObject.clickAndWaitForNewWindow();
+            Log.i(TAG, "Opened app in second attempt");
         }
 
         return appNameFound;
