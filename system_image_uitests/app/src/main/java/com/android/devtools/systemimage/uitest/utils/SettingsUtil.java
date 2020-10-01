@@ -523,7 +523,10 @@ public class SettingsUtil {
             if (new Wait().until(enableCamerasCheckbox::exists)) {
                 enableCamerasCheckbox.click();
             }
-
+            device.pressBack();
+            device.pressBack();
+            device.pressBack();
+            device.pressBack();
             device.pressHome();
         } else {
             Log.w(TAG, "setCameraEnabled: required APK is missing");
