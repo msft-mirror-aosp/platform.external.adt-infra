@@ -27,6 +27,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static android.os.SystemClock.sleep;
+
 /**
  * Test class for Android Settings page on Google API images.
  **/
@@ -111,5 +113,30 @@ public class AdbTestUtils {
         Log.i(TAG, "connect ip " + ip);
         Log.i(TAG, "pair ip " + ipPair);
         Log.i(TAG, "pair code " + pairCode);
+    }
+
+    @Test
+    public void toggleWirelessDebug() throws Exception {
+        boolean status;
+
+        status = AppLauncher.launchPath(instrumentation,
+                 true,
+                 "Settings",
+                 "System",
+                 "Advanced",
+                 "Developer options",
+                 "Wireless debugging");
+
+        if ( !status ) {
+            Log.i(TAG, "Could not open Wireless debugging options");
+            return;
+        }
+
+        final UiObject wirelessSwitch =
+                device.findObject(new UiSelector().resourceId("com.android.settings:id/switch_widget"));
+
+        wirelessSwitch.clickAndWaitForNewWindow();
+        sleep(5000);
+        wirelessSwitch.clickAndWaitForNewWindow();
     }
 }
