@@ -37,6 +37,7 @@ public class AppWatcher implements UiWatcher {
     public boolean checkForCondition() {
         String NO_THANKS = "(?i)no,? thanks,?(?-i)";
         String OK = "(?i)ok(?-i)";
+        String CONTINUE = "(?i)continue(?-i)";
 
         boolean condition = false;
         boolean isSuccess = mDevice.findObject(new UiSelector().textMatches((NO_THANKS)))
@@ -46,13 +47,20 @@ public class AppWatcher implements UiWatcher {
                 mDevice.findObject(new UiSelector().textMatches((NO_THANKS))).click();
                 condition = true;
             }
+            isSuccess = mDevice.findObject(new UiSelector().textMatches((CONTINUE)))
+                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().textMatches((CONTINUE))).click();
+                condition = true;
+            }
             isSuccess = mDevice.findObject(new UiSelector().textMatches((OK)))
                     .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().textMatches((OK))).click();
                 condition = true;
             }
-        } catch (UiObjectNotFoundException e) {
+        }
+        catch (UiObjectNotFoundException e) {
             throw new AssertionError("Failed to dismiss the AppTest popup dialog");
         }
         return condition;
