@@ -69,7 +69,7 @@ public class Res {
     public static final String NETWORK_SWITCHES_RECYCLER_VIEW_RES =
             "com.android.settings:id/list";  // Added in API 24.
     public static final String SETTINGS_LIST_CONTAINER_RES =
-            "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container|list_container)";
+            "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container|list_container|content_parent)";
     public static final String SETTINGS_ACTION_BAR_RES = "com.android.settings:id/action_bar";
 
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";

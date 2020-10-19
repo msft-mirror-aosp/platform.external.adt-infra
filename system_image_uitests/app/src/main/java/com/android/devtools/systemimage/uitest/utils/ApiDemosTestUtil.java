@@ -63,26 +63,24 @@ public class ApiDemosTestUtil {
     public static void verifyPasswordQuality(Instrumentation instrumentation, final UiDevice device, String securitySettings, String continueButtonLabel) throws Exception {
         Assert.assertTrue(SettingsUtil.openItem(instrumentation, securitySettings));
 
+        UiSelector settingsListSelector = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
         Assert.assertTrue("Scrollable list not found",
-                new Wait().until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return device.findObject(new UiSelector().
-                                resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)).exists();
-                    }
-                }));
+                new Wait().until(() -> device.findObject(settingsListSelector).exists()));
 
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-
+        UiScrollable itemList = new UiScrollable(settingsListSelector);
         itemList.setAsVerticalList();
 
-        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                "Screen lock").clickAndWaitForNewWindow();
-        itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                "Password").clickAndWaitForNewWindow();
+        UiObject screenLock = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                "Screen lock");
+        Assert.assertTrue("Screen lock not found",
+                new Wait().until(screenLock::exists));
+        screenLock.clickAndWaitForNewWindow();
+
+        UiObject password = itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
+                "Password");
+        Assert.assertTrue("Password not found",
+                new Wait().until(password::exists));
+        password.clickAndWaitForNewWindow();
 
         new watcher(device, Res.API_DEMOS_WATCHER_PATTERN).checkForCondition();
         UiObject passwordField = device.findObject(

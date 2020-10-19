@@ -60,7 +60,7 @@ public class ApiDemosTest {
 
     @Before
     public void activateDeviceAdmin() throws Exception {
-        SettingsUtil.activate(instrumentation, "Sample Device Admin", "Security", "Device admin apps");
+        ApiDemosInstaller.installApp("Security", "Device admin apps", false);
     }
 
     /**
