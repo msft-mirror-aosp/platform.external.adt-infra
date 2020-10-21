@@ -88,16 +88,15 @@ public class AddGoogleAccountTest {
             addAccount.clickAndWaitForNewWindow();
         }
 
-        new watcher(mDevice, Res.ADD_GOOGLE_ACC_WATCHER_PATTERN).checkForCondition();
+        UiObject signInHeader = mDevice.findObject(
+                new UiSelector().textMatches(("(?i)sign in(?-i)")).resourceId("headingText"));
+        boolean isSignInPage = new Wait(10000L).until(signInHeader::exists);
+
+        if (!isSignInPage) {
+            new watcher(mDevice, Res.ADD_GOOGLE_ACC_WATCHER_PATTERN).checkForCondition();
+        }
 
         assertTrue("Add Google account page not found",
-                new Wait(60).until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() throws UiObjectNotFoundException {
-                        return UiAutomatorPlus.findObjectMatchingAny(instrumentation,
-                                new UiSelector().descriptionMatches(("(?i)sign in(?-i)")),
-                                new UiSelector().textMatches(("(?i)sign in(?-i)"))).exists();
-                    }
-                }));
+                new Wait(10000L).until(signInHeader::exists));
     }
 }
