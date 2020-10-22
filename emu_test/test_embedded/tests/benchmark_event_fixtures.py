@@ -18,7 +18,6 @@ import time
 
 import pytest
 
-from emu.logcat import AdbStream
 from pytest_benchmark.stats import Metadata
 from tests.test_utils import time_to_str
 

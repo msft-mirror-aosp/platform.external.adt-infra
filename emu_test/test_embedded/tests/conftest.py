@@ -27,6 +27,12 @@ def pytest_addoption(parser):
         action="store_true",
         help="Connect to the first available emulator for debugging.",
     )
+    parser.addoption(
+        "--stream_test_time",
+        type=int,
+        default=10,
+        help="Number of seconds the frame perf test should last."
+    )
 
 
 # Workaround for
