@@ -21,7 +21,6 @@ import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.By;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.support.test.uiautomator.Until;
@@ -33,10 +32,11 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.NetworkIOTestUtil;
 import com.android.devtools.systemimage.uitest.utils.NetworkUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
-import com.android.devtools.systemimage.uitest.watchers.watcher;
+import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
 
 import junit.framework.Assert;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -56,7 +56,7 @@ public class NetworkIOTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(360);
+    public Timeout globalTimeout = Timeout.seconds(500);
 
     /**
      * Verifies test browser successfully loads a web page.
@@ -98,7 +98,7 @@ public class NetworkIOTest {
                 // If this is the first launch, dismiss the "Welcome to Chrome" screen.
                 UiObject acceptButton = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-                if (acceptButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+                if (acceptButton.exists()) {
                     acceptButton.clickAndWaitForNewWindow();
                 }
 
@@ -118,12 +118,7 @@ public class NetworkIOTest {
                 final UiObject textField = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_URL_BAR_RES));
                 Assert.assertTrue("Chrome URL bar not found",
-                        new Wait().until(new Wait.ExpectedCondition() {
-                            @Override
-                            public boolean isTrue() throws Exception {
-                                return textField.exists();
-                            }
-                        }));
+                        new Wait().until(textField::exists));
 
                 textField.click();
                 textField.clearTextField();
@@ -135,12 +130,7 @@ public class NetworkIOTest {
                 final UiObject progress =
                         device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
                 boolean isSuccess =
-                        new Wait().until(new Wait.ExpectedCondition() {
-                            @Override
-                            public boolean isTrue() throws Exception {
-                                return !progress.exists();
-                            }
-                        });
+                        new Wait().until(() -> !progress.exists());
                 assertTrue("Failed to dismiss the loading bar.", isSuccess);
             }
         }
@@ -157,7 +147,7 @@ public class NetworkIOTest {
      *   Test Steps:
      *   1. Start the emulator.
      *   2. Open Settings > Wireless and Networks > Data Usage
-     *   3. Check if billing cycle is enabled, toggle Cellular data switch on if not.
+     *   3. Check if 'Data warning & limit' is enabled, toggle Cellular data switch on if not.
      *   4. Toggle Cellular data switch off.
      *   5. Toggle Cellular data switch on.
      *   Verify:
@@ -171,7 +161,7 @@ public class NetworkIOTest {
     public void toggleCellularDataMode() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        String[] path = new String[] {"Settings", "Network & Internet", "Mobile network"};
+        String[] path = new String[] {"Settings", "Network & internet", "Mobile network"};
         String label = "Mobile data";
         final UiObject dataSwitch = device.findObject(new UiSelector().text(label));
 
@@ -183,41 +173,28 @@ public class NetworkIOTest {
         if (scrollable.waitForExists(3L)) {
             scrollable.scrollIntoView(dataWarning);
         }
-        assertTrue("Data switch not found.", new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return dataSwitch.exists();
-            }
-        }));
+        assertTrue("Data switch not found.", new Wait().until(dataSwitch::exists));
 
         if (!dataWarning.exists() || !dataWarning.isEnabled()) {
             dataSwitch.click();
-            new watcher(device, Res.NETWORK_UTIL_WATCHER_PATTERN).checkForCondition();
+            new NetworkUtilPopupWatcher(device).checkForCondition();
         }
 
         // Disable Cellular data.
         dataSwitch.click();
         TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
-        new watcher(device, Res.NETWORK_UTIL_WATCHER_PATTERN).checkForCondition();
+        new NetworkUtilPopupWatcher(device).checkForCondition();
 
-        assertTrue("Disabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
-                return !dataWarning.exists() || !dataWarning.isEnabled();
-            }
-        }));
+        assertTrue("Disabled 'Data warning & limit' label not found.",
+                new Wait().until(() -> !dataWarning.exists() || !dataWarning.isEnabled()));
 
         // Enable Cellular data.
         dataSwitch.click();
         TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
-        new watcher(device, Res.NETWORK_UTIL_WATCHER_PATTERN).checkForCondition();
+        new NetworkUtilPopupWatcher(device).checkForCondition();
 
-        assertTrue("Enabled billing cycle label not found.", new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws UiObjectNotFoundException {
-                return dataWarning.exists() && dataWarning.isEnabled();
-            }
-        }));
+        assertTrue("Enabled 'Data warning & limit' label not found.",
+                new Wait().until(() -> dataWarning.exists() && dataWarning.isEnabled()));
     }
 
     /**
@@ -240,21 +217,23 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        String[] path = new String[]{"Settings", "Network & Internet"};
+        String[] path = new String[]{"Settings", "Network & internet"};
         AppLauncher.launchPath(instrumentation, true, path);
 
-        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v3(device);
+        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v2(device);
 
         // Test requires "Airplane mode" switch widget to start in the off state.
         if (NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon)) {
             AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
         }
-        assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
+        assertFalse("Airplane mode is not disabled.",
+                NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
 
         AppLauncher.launchPath(instrumentation, true, path);
         NetworkIOTestUtil.toggleAirplaneMode(device);
-        assertTrue("Airplane mode is not enabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
+        assertTrue("Airplane mode is not enabled.",
+                NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
 
         // Disable airplane mode.
         AppLauncher.launchPath(instrumentation, true, path);
@@ -283,29 +262,31 @@ public class NetworkIOTest {
         UiDevice device = UiDevice.getInstance(instrumentation);
         int stressCount = 4;
 
-        String[] path = new String[]{"Settings", "Network & Internet"};
+        String[] path = new String[]{"Settings", "Network & internet"};
         AppLauncher.launchPath(instrumentation, true, path);
 
-        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v3(device);
+        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v2(device);
 
         // Test requires "Airplane mode" switch widget to start in the off state.
         if (NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon)) {
             AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
         }
-        assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
+        assertFalse("Airplane mode is not disabled.",
+                NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
 
         for (int i = 0; i < stressCount; i++) {
             AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
-            assertTrue("Airplane mode is not enabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
-            new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            assertTrue("Airplane mode is not enabled.",
+                    NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
 
             // Disable airplane mode.
             AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
-            assertFalse("Airplane mode is not disabled.", NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
-            new Wait(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+
+            assertFalse("Airplane mode is not disabled.",
+                    NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
         }
     }
 
@@ -330,7 +311,7 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        String[] path = new String[]{"Settings", "Network & Internet", "Mobile network", "Advanced", "Preferred network type"};
+        String[] path = new String[]{"Settings", "Network & internet", "Mobile network"};
 
         AppLauncher.launchPath(instrumentation, true, path);
 
@@ -338,31 +319,29 @@ public class NetworkIOTest {
         UiObject dataSwitch2G = device.findObject(new UiSelector().text("2G"));
 
         // Test requires image to start in 3G data mode.
-        if (!dataSwitch3G.isChecked()) {
+        if (dataSwitch3G.waitForExists(5L)) {
             dataSwitch3G.clickAndWaitForNewWindow();
-            UiObject preferredNetwork = device.findObject(new UiSelector().text("Preferred network type"));
-            if (preferredNetwork.exists()) {
-                preferredNetwork.clickAndWaitForNewWindow();
+            if (dataSwitch2G.waitForExists(5L) && !dataSwitch2G.isChecked()) {
+                // Enable 2G data mode option.
+                dataSwitch2G.clickAndWaitForNewWindow(5L);
             }
         }
-        // Enable 2G data mode option.
-        dataSwitch2G.click();
 
-        final UiObject data2GPreferred = device.findObject(new UiSelector().text("2G").
-                packageName(Res.ANDROID_SETTINGS_RES));
+        final UiObject data2GPreferred = device.findObject(new UiSelector().text("2G"));
 
         // Wait for 2G data mode icon
-        boolean data2GModeActive = new Wait(3L).until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() throws Exception {
-                return data2GPreferred.exists();
-            }
-        });
+        boolean data2GModeActive = new Wait().until(data2GPreferred::exists);
 
         assertTrue("3G data mode is not disabled.", data2GModeActive);
+        AppLauncher.launchPath(instrumentation, true, path);
 
         // Reset 3G mode.
-        data2GPreferred.clickAndWaitForNewWindow();
-        dataSwitch3G.click();
+        if (dataSwitch2G.waitForExists(5L)) {
+            dataSwitch2G.clickAndWaitForNewWindow();
+            if (dataSwitch3G.waitForExists(5L) && !dataSwitch3G.isChecked()) {
+                // Enable 3G data mode option.
+                dataSwitch3G.clickAndWaitForNewWindow(5L);
+            }
+        }
     }
 }
