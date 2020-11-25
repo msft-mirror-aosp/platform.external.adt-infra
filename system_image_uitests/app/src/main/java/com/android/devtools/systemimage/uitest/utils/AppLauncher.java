@@ -90,6 +90,9 @@ public class AppLauncher {
             }
         }
         try {
+            if (api == 30) {
+                throw new UiObjectNotFoundException("Catch API 30 due to known instability");
+            }
             appNameFound = new Wait().until(appObject::exists);
             if (!appNameFound) {
                 scrollable.setAsVerticalList();
