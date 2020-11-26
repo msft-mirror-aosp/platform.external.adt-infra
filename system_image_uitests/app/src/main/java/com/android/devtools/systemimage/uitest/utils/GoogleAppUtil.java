@@ -40,7 +40,7 @@ public class GoogleAppUtil {
     }
 
     private static final int api = SystemUtil.getApiLevel();
-    private static final String email = "pstester1980@gmail.com";
+    private static final String email = " ";
 
     /**
      * Log a user into a Google application
@@ -237,6 +237,8 @@ public class GoogleAppUtil {
             androidIconButton.clickAndWaitForNewWindow();
         }
 
+        refuseSync(device);
+
         final UiObject signOutLabel = device.findObject(new UiSelector().text("Sign out of Chrome"));
 
         if (new Wait().until(signOutLabel::exists)) {
@@ -268,6 +270,8 @@ public class GoogleAppUtil {
         if (termsAcceptButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             termsAcceptButton.clickAndWaitForNewWindow();
         }
+
+        refuseSync(device);
 
         UiObject nextButton = device.findObject(new UiSelector().
                 resourceId(Res.GOOGLE_SERVICES_NEXT_BUTTON_RES));
@@ -316,28 +320,11 @@ public class GoogleAppUtil {
         }
     }
 
-    public static void deleteAccount(Instrumentation instrumentation) throws Exception {
-        UiDevice device = UiDevice.getInstance(instrumentation);
-
-        AppLauncher.launchPath(instrumentation, true, "Settings", "Accounts");
-
-        UiObject account = device.findObject(new UiSelector().text(email));
-
-        if (account.waitForExists(5L))
-            account.clickAndWaitForNewWindow();
-        else
-            return;
-
-        UiObject removeAccount = device.findObject(new UiSelector().text("Remove account"));
-
-        assertTrue("Cannot find remove account", removeAccount.waitForExists(5L));
-
-        removeAccount.click();
-
-        UiObject removeAccountDialogue = device.findObject(new UiSelector().text("Remove account"));
-        if (removeAccountDialogue.waitForExists(5L))
-            removeAccountDialogue.click();
-
-        device.pressHome();
+    public static void refuseSync(UiDevice device) throws Exception {
+        UiObject noThanksButton = device.findObject(new UiSelector().
+                resourceIdMatches(Res.CHROME_NO_THANKS_BUTTON_RES));
+        if (noThanksButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            noThanksButton.clickAndWaitForNewWindow();
+        }
     }
 }
