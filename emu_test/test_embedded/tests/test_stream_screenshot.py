@@ -33,10 +33,10 @@ def read_pixel(width, height, pack, arr):
 @pytest.mark.parametrize(
     "fmt,channel",
     [
-        (ImageFormat.RGBA8888, ImageTransport.gRPC),
-        (ImageFormat.RGB888, ImageTransport.gRPC),
-        (ImageFormat.RGBA8888, ImageTransport.mmap),
-        (ImageFormat.RGB888, ImageTransport.mmap),
+        (ImageFormat.RGBA8888, ImageTransport.TRANSPORT_CHANNEL_UNSPECIFIED),
+        (ImageFormat.RGB888, ImageTransport.TRANSPORT_CHANNEL_UNSPECIFIED),
+        (ImageFormat.RGBA8888, ImageTransport.MMAP),
+        (ImageFormat.RGB888, ImageTransport.MMAP),
     ],
 )
 def test_stream_screenshot_receives_frames(animation_app, tmpdir, fmt, channel):
