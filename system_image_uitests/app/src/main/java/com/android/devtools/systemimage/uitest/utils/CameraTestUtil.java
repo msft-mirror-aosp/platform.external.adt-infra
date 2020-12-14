@@ -26,6 +26,8 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
+import org.junit.Assert;
+
 import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertTrue;
 
@@ -70,25 +72,15 @@ public class CameraTestUtil {
         new watcher(device, Res.CAMERA_ACCESS_PERM_WATCHER_PATTERN).checkForCondition();
 
         boolean cameraModeButtonExists = device.findObject(new UiSelector()
-            .descriptionStartsWith("Switch to")).waitForExists(30L);
+                .descriptionStartsWith("Switch to")).waitForExists(30L);
 
         org.junit.Assert.assertTrue("Button to select " + mode + " mode not found", cameraModeButtonExists);
 
-        if (mode.equals("Images")) {
-            device.findObject(new UiSelector().description("Switch to Camera Mode")).click();
-        } else {
+        if (mode.equals("Video")) {
             device.findObject(new UiSelector().description("Switch to Video Camera")).click();
-        }
-
-        createTestFile(device, mode);
-        if (version == 1) {
-            deleteTestFile_v1(instrumentation, device, mode);
         } else {
-            deleteTestFile_v2(instrumentation, device, mode);
+            device.findObject(new UiSelector().description("Switch to Camera Mode")).click();
         }
-
-        AppLauncher.launchPath(instrumentation, true, "Camera");
-        new watcher(device, Res.CAMERA_ACCESS_PERM_WATCHER_PATTERN).checkForCondition();
 
         createTestFile(device, mode);
         if (version == 1) {
@@ -117,7 +109,7 @@ public class CameraTestUtil {
         }
 
         int originalGallerySize = new UiCollection(new UiSelector().resourceId(Res.DIRECTORY_LIST_RES))
-            .getChildCount(new UiSelector().resourceId(Res.IMAGE_ICON_THUMB_RES));
+                .getChildCount(new UiSelector().resourceId(Res.IMAGE_ICON_THUMB_RES));
 
         UiObject trashButton = device.findObject(new UiSelector().resourceId(Res.OPTION_MENU_SORT_RES));
 
@@ -126,7 +118,7 @@ public class CameraTestUtil {
         }
 
         int finalGallerySize = new UiCollection(new UiSelector().resourceId(Res.DIRECTORY_LIST_RES))
-            .getChildCount(new UiSelector().resourceId(Res.IMAGE_ICON_THUMB_RES));
+                .getChildCount(new UiSelector().resourceId(Res.IMAGE_ICON_THUMB_RES));
 
         assertTrue("Delete was not successful", finalGallerySize != originalGallerySize - 1);
 
@@ -150,7 +142,7 @@ public class CameraTestUtil {
 
         device.findObject(new UiSelector().description("Show roots")).click();
 
-        UiObject fileButton = device.findObject(new UiSelector().text(mode).className("android.widget.TextView"));
+        UiObject fileButton = device.findObject(new UiSelector().textContains(mode).className("android.widget.TextView"));
 
         if ( fileButton.waitForExists(10)) {
             fileButton.click();
@@ -160,20 +152,23 @@ public class CameraTestUtil {
             }
         }
         UiObject fileThumbnail = device.findObject(new UiSelector().resourceId(Res.IMAGE_ICON_THUMB_RES));
-
         if (fileThumbnail.waitForExists(5L)) {
             fileThumbnail.dragTo(fileThumbnail, 20);
         }
 
+        boolean trashButtonExists = false;
         UiObject trashButton = device.findObject(new UiSelector().resourceIdMatches(Res.OPTION_MENU_LIST_RES));
         if (trashButton.waitForExists(5L)) {
+            trashButtonExists = true;
             trashButton.click();
         } else {
             trashButton = device.findObject(new UiSelector().resourceIdMatches(Res.OPTION_MENU_SEARCH_RES));
             if (trashButton.waitForExists(5L)) {
+                trashButtonExists = true;
                 trashButton.click();
             }
         }
+        Assert.assertTrue("Trash icon was not found", trashButtonExists);
 
         UiObject okButton = device.findObject(new UiSelector().resourceId(Res.ANDROID_BUTTON_ONE));
 

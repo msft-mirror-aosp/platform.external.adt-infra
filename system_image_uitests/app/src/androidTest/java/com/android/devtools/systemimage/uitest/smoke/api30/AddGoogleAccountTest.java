@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.devtools.systemimage.uitest.smoke.api29;
+package com.android.devtools.systemimage.uitest.smoke.api30;
 
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;

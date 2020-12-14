@@ -110,22 +110,12 @@ public class AppManager {
         final UiObject appInfoLabel = device.findObject(new UiSelector().textStartsWith("App info"));
         final UiObject seeAllLabel = device.findObject(new UiSelector().textStartsWith("See all"));
 
-        boolean appInfoLabelFound = new Wait().until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return appInfoLabel.exists();
-            }
-        });
+        boolean appInfoLabelFound = new Wait().until(appInfoLabel::exists);
 
         if (appInfoLabelFound) {
             appInfoLabel.clickAndWaitForNewWindow();
         } else {
-            boolean seeAllLabelFound = new Wait().until(new Wait.ExpectedCondition() {
-                @Override
-                public boolean isTrue() {
-                    return seeAllLabel.exists();
-                }
-            });
+            boolean seeAllLabelFound = new Wait().until(seeAllLabel::exists);
 
             if (seeAllLabelFound) {
                 seeAllLabel.clickAndWaitForNewWindow();
