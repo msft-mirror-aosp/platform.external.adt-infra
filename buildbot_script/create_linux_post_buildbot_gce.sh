@@ -20,9 +20,11 @@
 #                           2. Added toolchain for arc64
 #                            (starts buildbot on startup)
 # adt-emu-buildbot-10-prod  Git version 2.29
+#                            Upgrade SDK 10.15 cross buildchain
 #                            (does not start buildbot)
 # adt-emu-buildbot-10-test  Git version 2.29
 #                            (starts buildbot on startup)
+#                            Upgrade SDK 10.15 cross buildchain
 
 if [ $# -ne 2 ]
 then
