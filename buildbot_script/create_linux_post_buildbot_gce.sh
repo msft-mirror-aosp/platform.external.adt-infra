@@ -23,8 +23,8 @@
 #                            Upgrade SDK 10.15 cross buildchain
 #                            (does not start buildbot)
 # adt-emu-buildbot-10-test  Git version 2.29
-#                            (starts buildbot on startup)
 #                            Upgrade SDK 10.15 cross buildchain
+#                            (starts buildbot on startup)
 
 if [ $# -ne 2 ]
 then
@@ -32,6 +32,7 @@ then
     echo "You must supply an image type, either prod or test."
     exit -1
 fi
+
 
 if [ $1 -lt 1 ]
 then
