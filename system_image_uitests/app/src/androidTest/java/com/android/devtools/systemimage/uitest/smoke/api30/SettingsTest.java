@@ -56,8 +56,8 @@ public class SettingsTest {
     @Rule
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
-    private Instrumentation instrumentation = testFramework.getInstrumentation();
-    private UiDevice device = UiDevice.getInstance(instrumentation);
+    private final Instrumentation instrumentation = testFramework.getInstrumentation();
+    private final UiDevice device = UiDevice.getInstance(instrumentation);
 
     private final static String TAG = "SettingsTest";
 
@@ -144,6 +144,7 @@ public class SettingsTest {
      */
     @Test
     @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
+    @Ignore("Phone access cannot be revoked on API 30")
     public void testPhonePermissions() throws Exception {
         final String app = "Phone";
 
@@ -217,11 +218,11 @@ public class SettingsTest {
         gotItButton = device.findObject(new UiSelector().textMatches("(?i)got\\sit"));
         if (gotItButton.exists())
             gotItButton.clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().description("Move to your location"))
+        device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION))
                 .clickAndWaitForNewWindow();
         assertTrue("Did not prompt for lack of Maps permission.",
                 new Wait().until(() -> device.findObject(new UiSelector()
-                        .text("Allow Maps to access this device's location?")).exists())
+                        .resourceId(Res.ANDROID_PERMISSIONS_MESSAGE)).exists())
         );
 
         SettingsUtil.setAppPermissions_v3(instrumentation, appType, appName, true,
@@ -742,26 +743,40 @@ public class SettingsTest {
                 );
         itemList.setAsVerticalList();
 
-        UiSelector revokeUSBOption = new UiSelector().text("Revoke USB debugging authorizations");
-        itemList.scrollIntoView(revokeUSBOption);
+        UiSelector usbDebugging = new UiSelector().text("USB debugging");
+        itemList.scrollIntoView(usbDebugging);
 
-        UiObject revokeUSBDebug = device.findObject(revokeUSBOption);
+        UiObject allowUSBDebug = device.findObject(usbDebugging);
 
-        if (revokeUSBDebug.waitForExists(5L)) {
-            revokeUSBDebug.clickAndWaitForNewWindow();
+        if (allowUSBDebug.waitForExists(5L)) {
+            allowUSBDebug.clickAndWaitForNewWindow();
         }
 
         UiObject androidErrorClose = device.findObject(
                 new UiSelector().resourceId(Res.ANDROID_ERROR_CLOSE_RES));
         assertFalse("Settings Keeps Stopping error when revoking usb debugging", androidErrorClose.waitForExists(5L));
 
-        UiObject revokeText = device.findObject(
-                new UiSelector().text("Revoke access to USB debugging from all computers you’ve previously authorized?"));
-        UiObject cancelRevoke = device.findObject(
-                new UiSelector().text("Cancel").className("android.widget.Button"));
-        Assert.assertTrue("Unable to revoke USB debugging authorizations",
-                revokeText.waitForExists(5L) && cancelRevoke.waitForExists(5L));
-        cancelRevoke.click();
+        UiObject allowDebugging = device.findObject(
+                new UiSelector().text("Allow USB debugging"));
+
+        if (allowDebugging.waitForExists(5L)) {
+            UiObject okUSBDebugging = device.findObject(
+                    new UiSelector().text("OK").className("android.widget.Button"));
+            UiObject cancelUSBDebugging = device.findObject(
+                    new UiSelector().text("Cancel").className("android.widget.Button"));
+            Assert.assertTrue("Unable to control USB debugging authorizations",
+                    okUSBDebugging.waitForExists(5L) && cancelUSBDebugging.waitForExists(5L));
+            okUSBDebugging.click();
+        } else {
+            allowUSBDebug.clickAndWaitForNewWindow();
+            UiObject okUSBDebugging = device.findObject(
+                    new UiSelector().text("OK").className("android.widget.Button"));
+            UiObject cancelUSBDebugging = device.findObject(
+                    new UiSelector().text("Cancel").className("android.widget.Button"));
+            Assert.assertTrue("Unable to control USB debugging authorizations",
+                    okUSBDebugging.waitForExists(5L) && cancelUSBDebugging.waitForExists(5L));
+            okUSBDebugging.click();
+        }
     }
 
     /**

@@ -44,11 +44,17 @@ public class Res {
 
     public static final String CREATE_NEW_CONTACT = "com.android.contacts:id/create_contact_button";
 
+    public static final String ALLOW_PERMISSION_BUTTON = "(com.android.permissioncontroller\\d*:id)"
+            + "/(allow_radio_button|allow_always_radio_button)";
+    public static final String DENY_PERMISSION_BUTTON = "com.android.permissioncontroller:id/deny_radio_button";
+
     public static final String ANDROID_LAUNCHER_WELCOME_CLING_RES =
             "com.android.launcher\\d*:id/cling_dismiss";
     public static final String ANDROID_WELCOME_CLING_RES =
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
                     + "/cling_dismiss_longpress_info";
+    public static final String ANDROID_MY_LOCATION = "com.google.android.apps.maps:id/qu_mylocation_container";
+    public static final String ANDROID_PERMISSIONS_MESSAGE = "com.android.permissioncontroller:id/permission_message";
     public static final String ANDROID_NOTIFICATION_DRAWER =
             "(com.google.android.apps.nexuslauncher\\d*:id|com.android.launcher3\\d*:id)/(scrim_view|launcher)";
     public static final String LAUNCHER_LIST_CONTAINER_RES =
@@ -97,8 +103,8 @@ public class Res {
     public static final String GOOGLE_PLAY_FILTER_TOGGLE_RES = "com.android.vending:id/content_filter_on_off_toggle";
     public static final String GOOGLE_UNAUTHORIZED_SIGN_IN_RES = "com.android.vending:id/unauth_home_sign_in_button";
     public static final String GOOGLE_PLAY_ONBOARD_BUTTON_RES = "com.android.vending:id/play_onboard_center_button";
-    public static final String GOOGLE_PLAY_VENDING_CARD_RES= "com.android.vending:id/play_card";
-    public static final String GOOGLE_PLAY_VENDING_TITLE_RES= "com.android.vending:id/title";
+    public static final String GOOGLE_PLAY_VENDING_CARD_RES = "com.android.vending:id/play_card";
+    public static final String GOOGLE_PLAY_VENDING_TITLE_RES = "com.android.vending:id/title";
 
     public static final String DIALER_PHONE_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/(floating_action_button|fab)";
     public static final String DIALER_PAD_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/dialpad_floating_action_button";
@@ -189,4 +195,7 @@ public class Res {
 
     public static final String UNKNOWN_SOURCES_PATTERN =
             "^(.*?(?i)(\\bunknown\\ssources\\b)(?-i)[^$]*)$";
+
+    public static final String THIS_SOURCE_PATTERN =
+            "^(.*?(?i)(\\bthis\\ssource\\b)(?-i)[^$]*)$";
 }

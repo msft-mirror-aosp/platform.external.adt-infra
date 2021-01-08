@@ -249,12 +249,20 @@ public class SettingsUtil {
         SettingsUtil.openItem(instrumentation, appText);
 
         SettingsUtil.clickAdvancedMenu(device);
-        UiObject appPermissionsLabel = device.findObject(new UiSelector().text(permissionText));
+
+        UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+
+        UiSelector permissionsSelector = new UiSelector().text(permissionText);
+        UiObject appPermissionsLabel = device.findObject(permissionsSelector);
         boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
         if (hasAppPermissionsLabel) {
             appPermissionsLabel.clickAndWaitForNewWindow();
+        } else if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(60L))) {
+            appPermissionsList.setAsVerticalList();
+            if (appPermissionsList.scrollIntoView(permissionsSelector)) {
+                device.findObject(permissionsSelector).clickAndWaitForNewWindow();
+            }
         }
-        UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
         if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(60L))) {
             appPermissionsList.setAsVerticalList();
             UiSelector appSelector = new UiSelector().text(appType);
@@ -416,16 +424,19 @@ public class SettingsUtil {
         device.findObject(new UiSelector().text(appType)).click();
 
         UiScrollable permissionList = new UiScrollable(new UiSelector().resourceId("com.android.permissioncontroller:id/recycler_view"));
-        UiObject appButton = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), appName);
+
+        UiObject appButton = SystemUtil.getApiLevel() == 30 ?
+                permissionList.getChildByText(new UiSelector().className("android.widget.TextView").index(0), appName) :
+                permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), appName);
 
         if (appButton.exists()) {
             appButton.click();
         }
 
         UiObject permissionsAllowBtn = device.findObject(
-                new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
+                new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
         UiObject permissionsDenyBtn = device.findObject(
-                new UiSelector().resourceId("com.android.permissioncontroller:id/deny_radio_button"));
+                new UiSelector().resourceId(Res.DENY_PERMISSION_BUTTON));
 
         if (enablePermissions) {
             permissionsAllowBtn.click();
