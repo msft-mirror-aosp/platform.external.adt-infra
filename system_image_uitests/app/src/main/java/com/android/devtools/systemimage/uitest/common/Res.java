@@ -44,8 +44,10 @@ public class Res {
 
     public static final String CREATE_NEW_CONTACT = "com.android.contacts:id/create_contact_button";
 
+    public static final String PERMISSION_RECYCLER_VIEW = "com.android.permissioncontroller:id/recycler_view";
     public static final String ALLOW_PERMISSION_BUTTON = "(com.android.permissioncontroller\\d*:id)"
             + "/(allow_radio_button|allow_always_radio_button)";
+    public static final String ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON = "com.android.permissioncontroller:id/allow_foreground_only_radio_button";
     public static final String DENY_PERMISSION_BUTTON = "com.android.permissioncontroller:id/deny_radio_button";
 
     public static final String ANDROID_LAUNCHER_WELCOME_CLING_RES =

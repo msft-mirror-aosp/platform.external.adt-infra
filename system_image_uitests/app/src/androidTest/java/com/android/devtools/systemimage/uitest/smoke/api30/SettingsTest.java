@@ -542,11 +542,12 @@ public class SettingsTest {
      *   Verify:
      *   1. (Verify #1) camera app is enabled
      *   2. (Verify #2) camera app is disabled
-     *   2. (Verify #2) camera app is enabled
+     *   3. (Verify #3) camera app is enabled
      *   </pre>
      */
     @Test
     @TestInfo(id = "4db4a825-b584-4c68-a04d-c6a933b14e24")
+    @Ignore("b/177355186 - Disabling camera permissions does not deactivate camera app on API 30")
     public void testCameraAppDisabled() throws Exception {
         SettingsUtil.enableSampleDeviceAdmin_v2(instrumentation, device, "Security");
 
@@ -590,13 +591,13 @@ public class SettingsTest {
         String appName = "Maps";
         String contactsText = "Contacts";
         String locationText = "Location";
-        String phoneText = "Microphone";
-        String storageText = "Storage";
+        String microphoneText = "Microphone";
+        String storageText = "Files and media";
 
         // Variables to store the state of permissions.
         boolean contactsSwitchState;
         boolean locationSwitchState;
-        boolean phoneSwitchState;
+        boolean microphoneSwitchState;
         boolean storageSwitchState;
 
         AppManager.openAppList_v2(instrumentation);
@@ -622,42 +623,44 @@ public class SettingsTest {
         appInfoList.getChildByText(new UiSelector().
                 className(TextView.class.getName()),"Permissions").clickAndWaitForNewWindow();
 
-        UiScrollable permissionList = new UiScrollable(new UiSelector().resourceId("com.android.permissioncontroller:id/recycler_view"));
+        UiScrollable permissionList = new UiScrollable(new UiSelector().resourceId(Res.PERMISSION_RECYCLER_VIEW));
 
         //Get switch widgets UiObjects and
         //Store current permissions state of switch widgets.
         UiObject contactSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), contactsText);
         contactSwitch.click();
-        UiObject contactsAllowSwitch = device.findObject(new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
+        UiObject contactsAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
         contactsSwitchState = contactsAllowSwitch.isChecked();
-        contactsAllowSwitch.click();
+        contactsAllowSwitch.clickAndWaitForNewWindow(1000);
+        assertEquals(contactsSwitchState, !contactsAllowSwitch.isChecked());
         device.pressBack();
 
         UiObject locationSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), locationText);
         locationSwitch.click();
-        UiObject locationAllowSwitch = device.findObject(new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
+        UiObject locationAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
         locationSwitchState = locationAllowSwitch.isChecked();
-        UiObject locationDenySwitch = device.findObject(new UiSelector().resourceId("com.android.permissioncontroller:id/deny_radio_button"));
-        locationDenySwitch.click();
-        device.findObject(new UiSelector().textStartsWith("Deny")).clickAndWaitForNewWindow();
+        locationAllowSwitch.clickAndWaitForNewWindow(1000);
+        assertEquals(locationSwitchState, !locationAllowSwitch.isChecked());
         device.pressBack();
 
-        UiObject phoneSwitch =
-                permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), phoneText);
-        phoneSwitch.click();
-        UiObject phoneAllowSwitch = device.findObject(new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
-        phoneSwitchState = phoneAllowSwitch.isChecked();
-        phoneAllowSwitch.click();
+        UiObject microphoneSwitch =
+                permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), microphoneText);
+        microphoneSwitch.clickAndWaitForNewWindow(1000);
+        UiObject microphoneAllowSwitch = device.findObject(new UiSelector().resourceId(Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON));
+        microphoneSwitchState = microphoneAllowSwitch.isChecked();
+        microphoneAllowSwitch.clickAndWaitForNewWindow(1000);
+        assertEquals(microphoneSwitchState, !microphoneAllowSwitch.isChecked());
         device.pressBack();
 
         UiObject storageSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), storageText);
         storageSwitch.click();
-        UiObject storageAllowSwitch = device.findObject(new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
+        UiObject storageAllowSwitch = device.findObject(new UiSelector().resourceId(Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON));
         storageSwitchState = storageAllowSwitch.isChecked();
-        storageAllowSwitch.click();
+        storageAllowSwitch.clickAndWaitForNewWindow(1000);
+        assertEquals(storageSwitchState, !storageAllowSwitch.isChecked());
         device.pressBack();
 
 
@@ -681,30 +684,30 @@ public class SettingsTest {
         appInfoList.getChildByText(new UiSelector().
                 className(TextView.class.getName()),"Permissions").clickAndWaitForNewWindow();
 
-        permissionList = new UiScrollable(new UiSelector().resourceId("com.android.permissioncontroller:id/recycler_view"));
+        permissionList = new UiScrollable(new UiSelector().resourceId(Res.PERMISSION_RECYCLER_VIEW));
 
         contactSwitch = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), contactsText);
-        contactSwitch.click();
-        contactsAllowSwitch = device.findObject(new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
-        assertEquals(contactsSwitchState,contactsAllowSwitch.isChecked());
+        contactSwitch.clickAndWaitForNewWindow(1000);
+        contactsAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
+        assertEquals(contactsSwitchState, contactsAllowSwitch.isChecked());
         device.pressBack();
 
         locationSwitch = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), locationText);
-        locationSwitch.click();
-        locationAllowSwitch = device.findObject(new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
-        assertEquals(locationSwitchState,locationAllowSwitch.isChecked());
+        locationSwitch.clickAndWaitForNewWindow(1000);
+        locationAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
+        assertEquals(locationSwitchState, locationAllowSwitch.isChecked());
         device.pressBack();
 
-        phoneSwitch = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), phoneText);
-        phoneSwitch.click();
-        phoneAllowSwitch = device.findObject(new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
-        assertEquals(phoneSwitchState,phoneAllowSwitch.isChecked());
+        microphoneSwitch = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), microphoneText);
+        microphoneSwitch.clickAndWaitForNewWindow(1000);
+        microphoneAllowSwitch = device.findObject(new UiSelector().resourceId(Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON));
+        assertEquals(microphoneSwitchState, microphoneAllowSwitch.isChecked());
         device.pressBack();
 
         storageSwitch = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), storageText);
-        storageSwitch.click();
-        storageAllowSwitch = device.findObject(new UiSelector().resourceId("com.android.permissioncontroller:id/allow_radio_button"));
-        assertEquals(storageSwitchState,storageAllowSwitch.isChecked());
+        storageSwitch.clickAndWaitForNewWindow(1000);
+        storageAllowSwitch = device.findObject(new UiSelector().resourceId(Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON));
+        assertEquals(storageSwitchState, storageAllowSwitch.isChecked());
         device.pressBack();
     }
 
@@ -718,12 +721,10 @@ public class SettingsTest {
      *   1. Launch an emulator avd.
      *   2. If Developer Options are disabled, enable Developer Options.
      *   3. Launch Developers Options.
-     *   4. Scroll to Revoke USB Debugging Authorizations and click.
-     *   5. Detect that the Revoke USB Debugging message is presented.
+     *   4. Scroll to USB Debugging switch.
      *   Verify:
      *   1. Developer Options have been enabled.
-     *   2. 'Settings keeps stopping' error was not thrown.
-     *   3. Revoke USB Debugging option is available.
+     *   2. USB Debugging option is available.
      *   </pre>
      */
     @Test
@@ -743,40 +744,12 @@ public class SettingsTest {
                 );
         itemList.setAsVerticalList();
 
-        UiSelector usbDebugging = new UiSelector().text("USB debugging");
-        itemList.scrollIntoView(usbDebugging);
+        UiSelector usbDebuggingSelector = new UiSelector().text("USB debugging");
+        itemList.scrollIntoView(usbDebuggingSelector);
 
-        UiObject allowUSBDebug = device.findObject(usbDebugging);
+        UiObject usbDebugging = device.findObject(usbDebuggingSelector);
 
-        if (allowUSBDebug.waitForExists(5L)) {
-            allowUSBDebug.clickAndWaitForNewWindow();
-        }
-
-        UiObject androidErrorClose = device.findObject(
-                new UiSelector().resourceId(Res.ANDROID_ERROR_CLOSE_RES));
-        assertFalse("Settings Keeps Stopping error when revoking usb debugging", androidErrorClose.waitForExists(5L));
-
-        UiObject allowDebugging = device.findObject(
-                new UiSelector().text("Allow USB debugging"));
-
-        if (allowDebugging.waitForExists(5L)) {
-            UiObject okUSBDebugging = device.findObject(
-                    new UiSelector().text("OK").className("android.widget.Button"));
-            UiObject cancelUSBDebugging = device.findObject(
-                    new UiSelector().text("Cancel").className("android.widget.Button"));
-            Assert.assertTrue("Unable to control USB debugging authorizations",
-                    okUSBDebugging.waitForExists(5L) && cancelUSBDebugging.waitForExists(5L));
-            okUSBDebugging.click();
-        } else {
-            allowUSBDebug.clickAndWaitForNewWindow();
-            UiObject okUSBDebugging = device.findObject(
-                    new UiSelector().text("OK").className("android.widget.Button"));
-            UiObject cancelUSBDebugging = device.findObject(
-                    new UiSelector().text("Cancel").className("android.widget.Button"));
-            Assert.assertTrue("Unable to control USB debugging authorizations",
-                    okUSBDebugging.waitForExists(5L) && cancelUSBDebugging.waitForExists(5L));
-            okUSBDebugging.click();
-        }
+        assertTrue("USB debugging controls not found", usbDebugging.waitForExists(5L));
     }
 
     /**
