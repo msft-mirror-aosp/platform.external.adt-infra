@@ -9,7 +9,6 @@ https://packaging.python.org/guides/distributing-packages-using-setuptools/
 # Python 3 only projects can skip this import
 from io import open
 from os import path
-import subprocess
 import shutil
 
 # Always prefer setuptools over distutils
@@ -20,15 +19,6 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
-
-# Copy the apk into the distribution.
-apk = path.join(
-    here, "AnimateBox", "app", "build", "outputs", "apk", "debug", "app-debug.apk"
-)
-subprocess.check_output(
-    ["./gradlew", "assembleDebug"], cwd=path.join(here, "AnimateBox")
-)
-shutil.copy(apk, path.join(here, "src", "emu", "apk"))
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
@@ -124,11 +114,11 @@ setup(
     # and refuse to install the project if the version does not match. If you
     # do not support Python 2, you can simplify this to '>=3.5' or similar, see
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
+    python_requires="!=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is
     # installed, so they must be valid existing projects.
-    install_requires=["aemu-grpc", "jinja2"],  # Optional
+    install_requires=["aemu-grpc", "jinja2", "sh"],  # Optional
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
     # syntax, for example:

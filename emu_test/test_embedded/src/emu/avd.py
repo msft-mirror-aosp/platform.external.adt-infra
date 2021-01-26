@@ -32,14 +32,19 @@ class AvdGenerator(object):
         r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|android-tv)[\/\\](x86|x86_64)[\/\\]system.img$"
     )
 
-    def __init__(self, sdk_root):
+    def __init__(self, sdk_root, avd_home):
         self.sdk_root = sdk_root
         self.sys_root = os.path.abspath(os.path.join(sdk_root, "system-images"))
-        self.tmpdir = tempfile.mkdtemp("avd")
-        self.writer = TemplateWriter(self.tmpdir)
+        if os.path.exists(avd_home):
+            self.avd_home = avd_home
+        else:
+            self.tmpdir = tempfile.mkdtemp("avd")
+            self.avd_home = tmpdir
+        self.writer = TemplateWriter(self.avd_home)
 
     def __del__(self):
-        shutil.rmtree(self.tmpdir)
+        if self.tmpdir:
+            shutil.rmtree(self.tmpdir)
 
     def _find_images(self):
         for x in self._recursive_iglob(self.sys_root, [self.IMAGE.match]):
@@ -56,7 +61,7 @@ class AvdGenerator(object):
                     m.group(2),
                     m.group(3),
                 ),
-                "avd_dir": os.path.join(self.tmpdir, "Pixel2.avd"),
+                "avd_dir": os.path.join(self.avd_home, "Pixel2.avd"),
             }
 
     def _find_avd(self, api, abi, tag):
@@ -67,7 +72,7 @@ class AvdGenerator(object):
         ]
 
     def _install_sys_image(self, api, abi, tag="google_apis"):
-        logging.info("Installing system-images;android-{};{};{}".format(api, tag, abi));
+        logging.info("Installing system-images;android-{};{};{}".format(api, tag, abi))
         subprocess.check_output(
             [
                 os.path.join(self.sdk_root, "tools", "bin", "sdkmanager"),
@@ -87,17 +92,17 @@ class AvdGenerator(object):
 
     def get_avd(self, api, abi, tag):
         """Returns the AVD name, creating it if needed."""
-        if not os.path.exists(os.path.join(self.tmpdir, "Pixel2.ini")):
+        if not os.path.exists(os.path.join(self.avd_home, "Pixel2.ini")):
             self._create_avd(api, abi, tag)
 
         return "Pixel2"
 
     def get_avd_home(self):
         """Returns the ANDROID_AVD_HOME, creating the avd if needed"""
-        if not os.path.exists(os.path.join(self.tmpdir, "Pixel2.ini")):
+        if not os.path.exists(os.path.join(self.avd_home, "Pixel2.ini")):
             self._create_avd()
 
-        return self.tmpdir
+        return self.avd_home
 
     def _recursive_iglob(self, rootdir, pattern_fns):
         """Recursively glob the rootdir for any file that matches the pattern functions."""

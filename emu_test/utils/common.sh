@@ -583,6 +583,7 @@ check_test_succeed() {
     local TEST_REPORT=$SESSION_DIR/$TEST_DIR/test_report.xml
     [[ ! -f $TEST_REPORT ]] && panic "Test report $TEST_REPORT not found"
     grep -q "failures=\"0\"" $TEST_REPORT || panic "Failures in $TEST_DIR"
+    grep -q "errors=\"1\"" $TEST_REPORT && panic "Errors in $TEST_DIR"
 }
 
 # Explicitly use python2 if possible, this makes sure we can

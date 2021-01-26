@@ -37,8 +37,6 @@ class Logcat(object):
         self.start = response.next
         return response.entries
 
-
-
     def reset(self):
         """Reset the starting point from which we retrieve logs."""
         self.start = 0
@@ -79,12 +77,12 @@ class Logcat(object):
 
 
 class AdbStream(object):
-    """Streaming adb command that can be observed
-    """
+    """Streaming adb command that can be observed"""
+
     def __init__(self, adb_binary, emulator_name, cmd):
         self._queue = None
         self.proc = None
-        self.cmd = [adb_binary, "-s", emulator_name] +  cmd
+        self.cmd = [adb_binary, "-s", emulator_name] + cmd
 
     def __enter__(self):
         self.proc, self._queue = run(self.cmd)
@@ -111,4 +109,4 @@ class AdbLogcatStream(AdbStream):
 
     def clear(self):
         logging.info("Clearing log")
-        subprocess.check_call(self.cmd + ['-c'])
+        subprocess.check_call(self.cmd + ["-c"])

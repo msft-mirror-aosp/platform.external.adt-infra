@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-PYTHON := python
+PYTHON := python3
 PY_VERSION := $(shell $(PYTHON) -c "import sys;sys.stdout.write(str(sys.version_info[0]))")
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR :=  $(abspath $(MAKEFILE_PATH)/..)
@@ -30,16 +30,23 @@ $(WHEEL_DIR):
 $(WHEEL): $(WHEEL_DIR)
 	make -C $(AEMU_ROOT) DIST=$(WHEEL_DIR)
 
+AnimateBox/app/build/outputs/apk/debug/app-debug.apk:
+	cd AnimateBox && ./gradlew assembleDebug
+
+src/emu/apk/app-debug.apk: AnimateBox/app/build/outputs/apk/debug/app-debug.apk
+	cp AnimateBox/app/build/outputs/apk/debug/app-debug.apk src/emu/apk/app-debug.apk
+
 $(SNAP): $(WHEEL)
 	make -C $(SNAP_ROOT) DIST=$(WHEEL_DIR)
 
-deps:  $(WHEEL) $(SNAP)
+deps:  $(WHEEL) $(SNAP) src/emu/apk/app-debug.apk
 	$(PYTHON) -m pip install -q --upgrade -r$(CURRENT_DIR)/requirements.txt $(WHEEL) $(SNAP)
 
 clean:
 	rm -rf $(WHEEL_DIR)
+	rm -f AnimateBox/app/build/outputs/apk/debug/app-debug.apk
 
 check: deps
-	tox --workdir $(OUTPUT_DIR) -- --emulator=$(EMULATOR)
+	tox --workdir $(OUTPUT_DIR) -- -x --emulator=$(EMULATOR)
 
 .DEFAULT_GOAL := check

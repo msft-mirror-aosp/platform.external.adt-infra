@@ -25,16 +25,18 @@ from time import sleep
 from tests.test_utils import StreamingCall, fmt_proto
 
 
+ROTATION_MAPPING = [
+        (-90, Rotation.LANDSCAPE),
+        (-180, Rotation.REVERSE_PORTRAIT),
+        (90, Rotation.REVERSE_LANDSCAPE),
+        (0, Rotation.PORTRAIT),
+    ]
+
 @pytest.mark.e2e
 def test_rotation_observable_through_screenshot():
     """Test that setting the rotation, is observable through screenshot."""
     emu = pytest.emulator.get_emulator_controller()
-    for (fine, coarse) in [
-        (-180, Rotation.REVERSE_PORTRAIT),
-        (-90, Rotation.REVERSE_LANDSCAPE),
-        (0, Rotation.PORTRAIT),
-        (90, Rotation.LANDSCAPE),
-    ]:
+    for (fine, coarse) in ROTATION_MAPPING:
         emu.setPhysicalModel(
             PhysicalModelValue(
                 target=PhysicalModelValue.ROTATION,
@@ -42,6 +44,7 @@ def test_rotation_observable_through_screenshot():
             )
         )
         img = emu.getScreenshot(ImageFormat())
+        logging.info(img.format.rotation)
         assert img.format.rotation.rotation == coarse
 
 
@@ -52,12 +55,7 @@ def test_rotation_observable_through_stream_screenshot(animation_app):
     emu = pytest.emulator.get_emulator_controller()
     imgStream = emu.streamScreenshot(ImageFormat(width=320, height=200))
     with StreamingCall(imgStream) as stream:
-        for (fine, coarse) in [
-            (-180, Rotation.REVERSE_PORTRAIT),
-            (-90, Rotation.REVERSE_LANDSCAPE),
-            (0, Rotation.PORTRAIT),
-            (90, Rotation.LANDSCAPE),
-        ]:
+        for (fine, coarse) in ROTATION_MAPPING:
             emu.setPhysicalModel(
                 PhysicalModelValue(
                     target=PhysicalModelValue.ROTATION,
@@ -87,12 +85,7 @@ def test_rotation_through_console_observable_through_physical_model():
             target=PhysicalModelValue.ROTATION, value=ParameterValue(data=[0, 0, 0]),
         )
     )
-    for (angle, coarse) in [
-        (-90, Rotation.REVERSE_LANDSCAPE),
-        (-180, Rotation.REVERSE_PORTRAIT),
-        (90, Rotation.LANDSCAPE),
-        (0, Rotation.PORTRAIT),
-    ]:
+    for (angle, coarse) in ROTATION_MAPPING:
         sleep(0.5)
         pytest.emulator.adb(["emu", "rotate"])
         rotate = emu.getPhysicalModel(
@@ -114,12 +107,7 @@ def test_rotation_through_console_observable_through_screenshot():
             target=PhysicalModelValue.ROTATION, value=ParameterValue(data=[0, 0, 0]),
         )
     )
-    for (_, coarse) in [
-        (-90, Rotation.REVERSE_LANDSCAPE),
-        (-180, Rotation.REVERSE_PORTRAIT),
-        (90, Rotation.LANDSCAPE),
-        (0, Rotation.PORTRAIT),
-    ]:
+    for (_, coarse) in ROTATION_MAPPING:
         sleep(0.5)
         pytest.emulator.adb(["emu", "rotate"])
         img = emu.getScreenshot(ImageFormat())
@@ -144,12 +132,7 @@ def test_rotation_through_console_observable_through_stream_screenshot(animation
                 value=ParameterValue(data=[0, 0, 0]),
             )
         )
-        for (_, coarse) in [
-            (-90, Rotation.REVERSE_LANDSCAPE),
-            (-180, Rotation.REVERSE_PORTRAIT),
-            (90, Rotation.LANDSCAPE),
-            (0, Rotation.PORTRAIT),
-        ]:
+        for (_, coarse) in ROTATION_MAPPING:
             sleep(0.5)
             pytest.emulator.adb(["emu", "rotate"])
 

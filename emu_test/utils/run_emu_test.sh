@@ -84,10 +84,6 @@ if [[ $OSTYPE != *"darwin"* ]]; then
         warn "Perf zip fail"
     fi
 
-    # Remove left over $PYTHON installations and run the embedded tests
-    rm -rf $HOME/.local
-    run_test "Embedded tests" $TEST_DIR/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $EMULATOR_EXE
-
     run_test "snapshot tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file $TEST_DIR/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME --generate_xml
     run_test "grpc tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir grpc_test --file_pattern 'test_grpc.*' --config_file $TEST_DIR/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME --generate_xml
 fi

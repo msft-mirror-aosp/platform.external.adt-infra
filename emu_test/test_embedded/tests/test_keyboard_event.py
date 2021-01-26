@@ -23,7 +23,7 @@ from aemu.proto.emulator_controller_pb2 import KeyboardEvent
 from tests.benchmark_event_fixtures import benchmark_stat
 
 # Parse emulator log.
-EMU_MANY_KEY_EVENT = re.compile(r".* (\d+): sendKeyCodes: \[([0-9 ,]+)\]")
+EMU_MANY_KEY_EVENT = re.compile(r".* (\d+): sendKeyCodes: \[([0-9a-fA-F ,]+)\]")
 EMU_SINGLE_KEY_EVENT = re.compile(r".* (\d+): sendKeyCode: (\d+)")
 
 EV_DEV_LETTERS = {
@@ -60,30 +60,30 @@ EV_DEV_LETTERS = {
 def wait_for_keyboard(event_stream, ev_code, timeout=10):
     """Wait for the evdev value to occur in the given event stream
 
-        Args:
-            event_stream: A queue that produces log lines which contain
-              ev dev values.
-            ev_code: The evdev code we are looking for.
-            timeout: Maximum time in seconds we are willing to wait.
+    Args:
+        event_stream: A queue that produces log lines which contain
+          ev dev values.
+        ev_code: The evdev code we are looking for.
+        timeout: Maximum time in seconds we are willing to wait.
 
-        Returns:
-             the time in epoch seconds when this event occurred, or 0
-             if the event did not arrive before the timeout was reached.
-        """
+    Returns:
+         the time in epoch seconds when this event occurred, or 0
+         if the event did not arrive before the timeout was reached.
+    """
     until = time.time() + timeout
     while time.time() < until:
         while not event_stream.empty():
             line = event_stream.get(False)
             entry = EMU_MANY_KEY_EVENT.match(line)
             if entry:
-                codes = [int(x) for x in entry.group(2).split(",")]
+                codes = [int(x, 16) for x in entry.group(2).split(",")]
                 if ev_code in codes:
                     return int(entry.group(1)) / 1000000
             entry = EMU_SINGLE_KEY_EVENT.match(line)
             if entry and ev_code == int(entry.group(2)):
                 return int(entry.group(1)) / 1000000
 
-    return None
+    return 0
 
 
 def send_grpc_letter(letter):
@@ -129,15 +129,15 @@ def send_letter_over(send_fn, log):
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
-def test_letter_perf_host_host_grpc(emulator_log, benchmark_stat):
+def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over grpc.
 
-       This measures timestamp before calling send - observed timestamp at receipt in
-       host. This test will be skipped if you are using a debug emulator.
+    This measures timestamp before calling send - observed timestamp at receipt in
+    host. This test will be skipped if you are using a debug emulator.
 
-       It will:
-          send mouse click
-          wait until emulator_log in host log sees an event.
+    It will:
+       send mouse click
+       wait until emulator_log in host log sees an event.
     """
     # This test can only run if we launched the emulator
     if not emulator_log:
@@ -150,19 +150,19 @@ def test_letter_perf_host_host_grpc(emulator_log, benchmark_stat):
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
-def test_letter_perf_host_host_telnet(emulator_log, benchmark_stat):
+def test_letter_perf_host_host_telnet(emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over telnet.
 
-       This measures timestamp before calling send - observed timestamp at receipt in
-       host. This test will be skipped if you are using a debug emulator.
+    This measures timestamp before calling send - observed timestamp at receipt in
+    host. This test will be skipped if you are using a debug emulator.
 
-       It will:
-          send a letter
-          wait until emulator_log in host log sees an event.
+    It will:
+       send a letter
+       wait until emulator_log in host log sees an event.
     """
     # This test can only run if we launched the emulator
     if not emulator_log:
-        pytest.skip()
+        pytest.skip("Likely running under debugger without logger")
 
     for i in range(0, 40):
         benchmark_stat.update(send_letter_over(send_telnet_letter, emulator_log))

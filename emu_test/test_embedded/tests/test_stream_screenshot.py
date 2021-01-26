@@ -136,7 +136,7 @@ def test_stream_screenshot_perf_mmap(
             height=h,
             format=ImageFormat.RGB888,
             transport=ImageTransport(
-                channel=ImageTransport.mmap, handle="file://" + tmp_file
+                channel=ImageTransport.MMAP, handle="file://" + tmp_file
             ),
         )
     )
