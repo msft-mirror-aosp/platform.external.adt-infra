@@ -682,7 +682,7 @@ public class SettingsUtil {
     // Test file deletion for APIs 27 and above.
     public static void deleteTestFile_v2(Instrumentation instrumentation, String testFileName, String trashRes) throws UiObjectNotFoundException {
         deleteTestFile(instrumentation, testFileName,
-                UiDevice.getInstance(instrumentation).findObject(new UiSelector().resourceId(trashRes)));
+                UiDevice.getInstance(instrumentation).findObject(new UiSelector().resourceIdMatches(trashRes)));
     }
 
     // Delete test file from Downloads folder.

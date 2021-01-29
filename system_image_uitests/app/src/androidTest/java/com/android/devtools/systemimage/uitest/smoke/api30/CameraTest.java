@@ -26,7 +26,6 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.CameraTestUtil;
-import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 
@@ -76,7 +75,7 @@ public class CameraTest {
     public void testPhotoCapture() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        boolean photoTestSuccess = CameraTestUtil.useCamera(instrumentation, "Images", 2);
+        boolean photoTestSuccess = CameraTestUtil.useCamera(instrumentation, "Images", 3);
         Assert.assertTrue("New photo was not deleted from the gallery", photoTestSuccess);
     }
 
@@ -107,7 +106,7 @@ public class CameraTest {
     public void testVideoCapture() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
-        boolean videoTestSuccess = CameraTestUtil.useCamera(instrumentation, "Video", 2);
+        boolean videoTestSuccess = CameraTestUtil.useCamera(instrumentation, "Videos", 3);
         Assert.assertTrue("New video was not deleted from the gallery", videoTestSuccess);
     }
 

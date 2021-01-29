@@ -76,7 +76,7 @@ public class CameraTestUtil {
 
         org.junit.Assert.assertTrue("Button to select " + mode + " mode not found", cameraModeButtonExists);
 
-        if (mode.equals("Video")) {
+        if (mode.contains("Videos")) {
             device.findObject(new UiSelector().description("Switch to Video Camera")).click();
         } else {
             device.findObject(new UiSelector().description("Switch to Camera Mode")).click();
@@ -85,8 +85,10 @@ public class CameraTestUtil {
         createTestFile(device, mode);
         if (version == 1) {
             deleteTestFile_v1(instrumentation, device, mode);
-        } else {
+        } else if (version == 2) {
             deleteTestFile_v2(instrumentation, device, mode);
+        } else {
+            deleteTestFile_v3(instrumentation, device, mode);
         }
 
         return true;
@@ -169,6 +171,44 @@ public class CameraTestUtil {
             }
         }
         Assert.assertTrue("Trash icon was not found", trashButtonExists);
+
+        UiObject okButton = device.findObject(new UiSelector().resourceId(Res.ANDROID_BUTTON_ONE));
+
+        if (okButton.waitForExists(5L)) {
+            okButton.click();
+        }
+
+        device.pressHome();
+    }
+
+    private static void deleteTestFile_v3(Instrumentation instrumentation, UiDevice device, String mode) throws Exception {
+        device.pressHome();
+
+        AppLauncher.launchPath(instrumentation, true, "Files");
+
+        device.findObject(new UiSelector().description("Show roots")).click();
+
+        UiObject fileButton = device.findObject(new UiSelector().textContains(mode).className("android.widget.TextView"));
+
+        if ( fileButton.waitForExists(10)) {
+            fileButton.click();
+            UiObject cameraButton = device.findObject(new UiSelector().text(mode.equals("Images") ? "Pictures" : "Movies"));
+            if ( cameraButton.waitForExists(5L) ) {
+                cameraButton.click();
+            }
+        }
+        UiObject fileThumbnail = device.findObject(new UiSelector().textContains(mode.equals("Images") ? "IMG_" : "VID_"));
+        if (fileThumbnail.waitForExists(5L)) {
+            fileThumbnail.longClick();
+        }
+
+        UiObject trashButton = device.findObject(
+                new UiSelector().resourceIdMatches(Res.OPTION_MENU_SEARCH_RES));
+        if (trashButton.waitForExists(5L)) {
+            trashButton.click();
+        } else {
+            Assert.fail("Trash icon was not found");
+        }
 
         UiObject okButton = device.findObject(new UiSelector().resourceId(Res.ANDROID_BUTTON_ONE));
 

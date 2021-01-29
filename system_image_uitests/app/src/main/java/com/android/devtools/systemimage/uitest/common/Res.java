@@ -89,7 +89,7 @@ public class Res {
     public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
     public static final String MENU_LIST_RES = "com.android.documentsui:id/menu_list";
     public static final String OPTION_MENU_LIST_RES = "com.android.documentsui:id/option_menu_list";
-    public static final String OPTION_MENU_SEARCH_RES = "com.android.documentsui:id/option_menu_search";
+    public static final String OPTION_MENU_SEARCH_RES = "(com.android.documentsui\\d*:id|com.google.android.documentsui\\d*:id)"+"/option_menu_search";
     public static final String OPTION_MENU_SORT_RES = "com.android.documentsui:id/menu_sort";
     public static final String DIRECTORY_LIST_RES = "com.android.documentsui:id/dir_list";
     public static final String IMAGE_ICON_THUMB_RES = "com.android.documentsui:id/icon_thumb";
