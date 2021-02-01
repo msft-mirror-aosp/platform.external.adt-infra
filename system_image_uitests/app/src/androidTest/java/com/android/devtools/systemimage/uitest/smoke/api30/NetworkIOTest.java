@@ -36,7 +36,6 @@ import com.android.devtools.systemimage.uitest.watchers.NetworkUtilPopupWatcher;
 
 import junit.framework.Assert;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -291,57 +290,66 @@ public class NetworkIOTest {
     }
 
     /**
-     * Verifies disabling 3G Data mode
+     * Verifies setting Preferred Network Type
      *   <pre>
      *   Test Steps:
      *   1. Start the emulator.
-     *   2. Open Settings
-     *   3. Launch Preferred Network Type
-     *   4. Enable 3G Data mode if not enabled.
-     *   5. Toggle 2G Data mode on.
+     *   2. Open Settings > Network & internet > Mobile network > Preferred Network Type
+     *   3. Enable 5G Data mode, if not enabled.
+     *   4. Enable LTE Data mode.
+     *   5. Enable 3G Data mode.
+     *   6. Enable 2G Data mode.
+     *   7. Enable 5G Data mode.
      *   Verify:
-     *   2G Data mode icon is set as the Preferred Network Type
-     *   6. Toggle 3G Data mode on to reset image.
+     *   1. 5G is set as preferred network type.
+     *   2. LTE is set as preferred network type.
+     *   3. 3G is set as preferred network type.
+     *   4. 2G is set as preferred network type.
+     *   5. 5G is reset as preferred network type.
      *   </pre>
      * <p>
      */
     @Test
     @TestInfo(id = "14581152")
-    public void disable3GData() throws Exception {
+    public void togglePreferredNetworkType() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        String[] path = new String[]{"Settings", "Network & internet", "Mobile network"};
-
+        String[] path = new String[]{"Settings", "Network & internet", "Mobile network", "Preferred network type"};
         AppLauncher.launchPath(instrumentation, true, path);
 
+        UiObject dataSwitch5G = device.findObject(new UiSelector().text("5G (recommended)"));
+        UiObject dataSwitchLTE = device.findObject(new UiSelector().text("LTE"));
         UiObject dataSwitch3G = device.findObject(new UiSelector().text("3G"));
         UiObject dataSwitch2G = device.findObject(new UiSelector().text("2G"));
 
-        // Test requires image to start in 3G data mode.
-        if (dataSwitch3G.waitForExists(5L)) {
-            dataSwitch3G.clickAndWaitForNewWindow();
-            if (dataSwitch2G.waitForExists(5L) && !dataSwitch2G.isChecked()) {
-                // Enable 2G data mode option.
-                dataSwitch2G.clickAndWaitForNewWindow(5L);
-            }
+        if (dataSwitch5G.waitForExists(5L)) {
+            dataSwitch5G.clickAndWaitForNewWindow();
         }
-
-        final UiObject data2GPreferred = device.findObject(new UiSelector().text("2G"));
-
-        // Wait for 2G data mode icon
-        boolean data2GModeActive = new Wait().until(data2GPreferred::exists);
-
-        assertTrue("3G data mode is not disabled.", data2GModeActive);
+        assertTrue("5G data mode is not enabled.", new Wait().until(dataSwitch5G::exists));
         AppLauncher.launchPath(instrumentation, true, path);
 
-        // Reset 3G mode.
-        if (dataSwitch2G.waitForExists(5L)) {
-            dataSwitch2G.clickAndWaitForNewWindow();
-            if (dataSwitch3G.waitForExists(5L) && !dataSwitch3G.isChecked()) {
-                // Enable 3G data mode option.
-                dataSwitch3G.clickAndWaitForNewWindow(5L);
-            }
+        if (dataSwitchLTE.waitForExists(5L) && !dataSwitchLTE.isChecked()) {
+            dataSwitchLTE.clickAndWaitForNewWindow(5L);
         }
+        assertTrue("LTE data mode is not enabled.", new Wait().until(dataSwitchLTE::exists));
+        AppLauncher.launchPath(instrumentation, true, path);
+
+        if (dataSwitch3G.waitForExists(5L) && !dataSwitch3G.isChecked()) {
+            dataSwitch3G.clickAndWaitForNewWindow(5L);
+        }
+        assertTrue("3G data mode is not enabled.", new Wait().until(dataSwitch3G::exists));
+        AppLauncher.launchPath(instrumentation, true, path);
+
+        if (dataSwitch2G.waitForExists(5L) && !dataSwitch2G.isChecked()) {
+            dataSwitch2G.clickAndWaitForNewWindow(5L);
+        }
+        assertTrue("2G data mode is not enabled.", new Wait().until(dataSwitch2G::exists));
+        AppLauncher.launchPath(instrumentation, true, path);
+
+        if (dataSwitch5G.waitForExists(5L) && !dataSwitch5G.isChecked()) {
+            dataSwitch5G.clickAndWaitForNewWindow(5L);
+        }
+        assertTrue("5G data mode is not re-enabled.", new Wait().until(dataSwitch5G::exists));
     }
 }
