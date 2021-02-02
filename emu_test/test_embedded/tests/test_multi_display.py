@@ -89,7 +89,7 @@ def test_multidisplay_multiple_error(no_displays):
                 ]
             )
         )
-    assert exc_info.value.code() == StatusCode.ABORTED
+    assert exc_info.value.code() == StatusCode.INVALID_ARGUMENT
 
     # The failure leaves the displays untouched.
     cfg = emu.getDisplayConfigurations(_EMPTY_)
@@ -131,4 +131,4 @@ def test_multidisplay_double_ids_error(no_displays):
                 ]
             )
         )
-    assert exc_info.value.code() == StatusCode.ABORTED
+    assert exc_info.value.code() == StatusCode.INVALID_ARGUMENT
