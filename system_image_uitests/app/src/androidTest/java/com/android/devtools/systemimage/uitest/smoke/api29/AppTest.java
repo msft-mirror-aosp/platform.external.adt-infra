@@ -134,7 +134,7 @@ public class AppTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (true) {
+        if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
             GoogleAppUtil.loginGoogleApp(instrumentation, true);
             AppLauncher.launch(instrumentation, "Chrome");
 
