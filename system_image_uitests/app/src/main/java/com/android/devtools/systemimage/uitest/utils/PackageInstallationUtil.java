@@ -59,7 +59,7 @@ public class PackageInstallationUtil {
     }
     private final static String TAG = "PackageInstallationUtil";
     private final static String INSTALL_COMPLETE = "";
-    private final static long INSTALL_WAIT = 5L;
+    private final static long INSTALL_WAIT = 20L;
 
     @Rule
     public final static SystemImageTestFramework testFramework = new SystemImageTestFramework();
@@ -97,6 +97,10 @@ public class PackageInstallationUtil {
         boolean permissionGranted = false;
         UiObject allowSwitch = device.findObject(new UiSelector()
                 .textMatches(Res.UNKNOWN_SOURCES_PATTERN));
+        if (!allowSwitch.waitForExists(5000)) {
+            allowSwitch = device.findObject(new UiSelector()
+                    .textMatches(Res.UNKNOWN_SOURCES_PATTERN));
+        }
         if (settingsList.waitForExists(5000) && settingsList.scrollIntoView(allowSwitch)) {
             allowSwitch.click();
             UiObject allowMessage = device.findObject(new UiSelector()
@@ -118,11 +122,11 @@ public class PackageInstallationUtil {
                 settingsList.scrollIntoView(allowSwitch);
             }
             if (allowSwitch.waitForExists(3000)) {
-                if (allowSwitch.getText().equals("OFF")) {
+                if (allowSwitch.getText().equals("OFF") || !allowSwitch.isChecked()) {
                     allowSwitch.click();
+                    device.pressBack();
+                    return true;
                 }
-                device.pressBack();
-                permissionGranted = true;
             }
         }
         return permissionGranted;

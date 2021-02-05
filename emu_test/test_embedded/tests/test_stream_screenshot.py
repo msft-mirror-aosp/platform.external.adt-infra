@@ -79,7 +79,8 @@ def test_stream_screenshot_receives_frames(animation_app, tmpdir, fmt, channel):
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="animation")
 @pytest.mark.parametrize(
-    "w,h", [(270, 480), (360, 640), (720, 1280), (810, 1440), (1080, 1920), (1440, 2880)]
+    "w,h",
+    [(270, 480), (360, 640), (720, 1280), (810, 1440), (1080, 1920), (1440, 2880)],
 )
 def test_stream_screenshot_perf(animation_app, benchmark_stat, pytestconfig, w, h):
     """Test the performance of streaming frames."""
@@ -116,9 +117,12 @@ def test_stream_screenshot_perf(animation_app, benchmark_stat, pytestconfig, w, 
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="animation")
 @pytest.mark.parametrize(
-    "w,h", [(270, 480), (360, 640), (720, 1280), (810, 1440), (1080, 1920), (1440, 2880)]
+    "w,h",
+    [(270, 480), (360, 640), (720, 1280), (810, 1440), (1080, 1920), (1440, 2880)],
 )
-def test_stream_screenshot_perf_mmap(animation_app, benchmark_stat, pytestconfig, tmpdir, w, h):
+def test_stream_screenshot_perf_mmap(
+    animation_app, benchmark_stat, pytestconfig, tmpdir, w, h
+):
     """Test the performance of streaming frames."""
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     tmp_file = os.path.join(path, "image_file.img")
@@ -164,3 +168,23 @@ def test_stream_screenshot_perf_mmap(animation_app, benchmark_stat, pytestconfig
 
     logging.warning("Received %d frames and dropped %d frames", count, dropped)
     assert True
+
+
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.parametrize(
+    "fmt",
+    [ImageFormat.RGBA8888, ImageFormat.RGB888],
+)
+def test_screenshot_bytes_size(fmt):
+    """Test that getScreenshot returns the proper number of bytes."""
+    emu = pytest.emulator.get_emulator_controller()
+    image = emu.getScreenshot(
+        ImageFormat(
+            width=360,
+            height=640,
+            format=fmt,
+        )
+    )
+    pixelSize = 4 if fmt == ImageFormat.RGBA8888 else 3
+    assert image.format.width * image.format.height * pixelSize == len(image.image)

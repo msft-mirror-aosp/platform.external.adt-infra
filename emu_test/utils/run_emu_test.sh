@@ -102,7 +102,7 @@ clean_avds
 run_test "psq snapshot tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir psq_snapshot_test --file_pattern 'psq_test.*' --config_file $TEST_DIR/config/psq_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
 
 clean_avds
-run_test "Icebox tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Icebox_test --file_pattern 'test_icebox.*' --config_file $TEST_DIR/config/icebox_cfg.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
+#run_test "Icebox tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Icebox_test --file_pattern 'test_icebox.*' --config_file $TEST_DIR/config/icebox_cfg.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
 
 log "Remove deployed emulator"
 run rm -rf $SESSION_DIR/emu-master-dev
