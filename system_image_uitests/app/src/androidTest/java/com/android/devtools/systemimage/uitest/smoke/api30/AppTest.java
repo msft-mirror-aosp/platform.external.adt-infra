@@ -100,8 +100,8 @@ public class AppTest {
 
         AppLauncher.launch(instrumentation, appName);
         new AppWatcher(device).checkForCondition();
-        boolean hasApplication = testFramework.getDevice().findObject(new UiSelector().resourceId(
-                Res.APP_IMAGE_VIEW_ID)).waitForExists(5L);
+        boolean hasApplication = testFramework.getDevice().findObject(new UiSelector().text(
+                "BasicRenderScript")).waitForExists(5L);
 
         assertTrue("Application " + appName + " did not launch", hasApplication);
     }
