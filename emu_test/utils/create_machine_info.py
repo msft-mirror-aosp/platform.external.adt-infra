@@ -10,22 +10,22 @@ import json
 
 def main():
   if len(sys.argv) is not 2:
-    print 'Usage:  create_machine_info.py builders.pyl'
+    print('Usage:  create_machine_info.py builders.pyl')
     return 1
   try:
     with open(sys.argv[1]) as f:
       content =  f.read()
   except IOError as e:
-    print 'Cannot file builders.pyl file.  Aborting.'
+    print('Cannot file builders.pyl file.  Aborting.')
     return 1
   builders_dict = ast.literal_eval(content)
   master_info = {}
-  for builder in builders_dict['builders'].keys():
+  for builder in list(builders_dict['builders'].keys()):
     current_builder = builders_dict['builders'][builder]
-    if current_builder['tag'] not in master_info.keys():
+    if current_builder['tag'] not in list(master_info.keys()):
       master_info[current_builder['tag']] = {}
     for category in current_builder['categories']:
-      if category in master_info[current_builder['tag']].keys():
+      if category in list(master_info[current_builder['tag']].keys()):
         master_info[current_builder['tag']][category].append(builder)
       else:
         master_info[current_builder['tag']][category] = [builder,]
@@ -33,9 +33,9 @@ def main():
     with open('machine_info.json', 'w') as outfile:
       json.dump(master_info, outfile, indent=4)
   except IOError as e:
-    print 'Error writing JSON information ot machine_info.json file.  Aborting.'
+    print('Error writing JSON information ot machine_info.json file.  Aborting.')
     return 1
-  print 'File machine_info.json created in local directory.'
+  print('File machine_info.json created in local directory.')
   return 0
 
 if __name__ == '__main__':

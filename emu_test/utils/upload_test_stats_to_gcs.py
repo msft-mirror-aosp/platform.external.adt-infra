@@ -31,7 +31,7 @@ def get_platform_type(platform):
 
 def upload_to_gcs():
   def verbose_call(cmd):
-    print 'Run command {}'.format(' '.join(cmd))
+    print('Run command {}'.format(' '.join(cmd)))
     subprocess.check_call(cmd)
   requested_date = datetime.datetime.fromtimestamp(args.timestamp).date()
   filename = '{}_{}'.format(create_date_format(requested_date), args.buildnum)
@@ -47,7 +47,7 @@ def upload_to_gcs():
           get_platform_type(args.platform), filename)])
     verbose_call(['rm', cp_filename])
   else:
-    print "Uploading to GCS failed due to failure to find file"
+    print("Uploading to GCS failed due to failure to find file")
 
   return 0
 

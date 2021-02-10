@@ -20,7 +20,7 @@ import grpc
 import six
 
 if six.PY2:
-    from Queue import Queue
+    from queue import Queue
 else:
     from queue import Queue
 

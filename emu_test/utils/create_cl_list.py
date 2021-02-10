@@ -3,7 +3,7 @@ import argparse
 import subprocess
 import psutil
 import shutil
-from android_cl_scan import query_ab
+from .android_cl_scan import query_ab
 
 
 parser = argparse.ArgumentParser(description='Create a list of CL\'s for the passed in project between the two passed in build numbers.')
@@ -27,16 +27,16 @@ def create_cl_list():
   Returns:
     Nothing.  Prints out results to stdout, which is captured by buildbot in recipe stdout.
   '''
-  print 'Calling into query_ab with: %s, %s, %s' % (args.poller, args.prevRevision, args.curRevision)
+  print('Calling into query_ab with: %s, %s, %s' % (args.poller, args.prevRevision, args.curRevision))
   changeSets = query_ab(args.poller, args.prevRevision, args.curRevision)
-  print 'Changes included in this build:'
-  print ''
+  print('Changes included in this build:')
+  print('')
   for change in changeSets:
-    print 'CL %s' % (change['changeNumber'])
-    print 'https://android-review.googlesource.com/#/c/%s' % (change['changeNumber'])
-    print 'Owner: %s   in build: %s' % (change['email'], change['buildId'])
-    print change['subject']
-    print ''
+    print('CL %s' % (change['changeNumber']))
+    print('https://android-review.googlesource.com/#/c/%s' % (change['changeNumber']))
+    print('Owner: %s   in build: %s' % (change['email'], change['buildId']))
+    print(change['subject'])
+    print('')
   return 0
 
 

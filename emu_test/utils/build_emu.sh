@@ -50,7 +50,7 @@ if [[ $USE_QTWEBENGINE == "qtwebengine" ]]; then
     QTWEBENGINE_ARG="--qtwebengine"
 fi
 
-$PYTHON tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
+python tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
 
 # Contains what we distribute to the world.
 run unzip -o $DISTRIB_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."

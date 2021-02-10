@@ -5,8 +5,8 @@ import unittest
 import subprocess
 import time
 
-import testcase_base
-import adb_util
+from . import testcase_base
+from . import adb_util
 
 class SleepWakeTest(testcase_base.BaseAdbTest):
     """This class aims to test ADB sleep/wake commands."""
@@ -44,7 +44,7 @@ class SleepWakeTest(testcase_base.BaseAdbTest):
         for line in output.split('\n'):
             if line.startswith('adb: error'):
                 success = False
-                print('\nERROR:\nFAILED to put device to sleep: ' + str(dut))
+                print(('\nERROR:\nFAILED to put device to sleep: ' + str(dut)))
                 print(output)
 
         return success
@@ -64,7 +64,7 @@ class SleepWakeTest(testcase_base.BaseAdbTest):
         success = True
         for line in output.split('\n'):
             if line.startswith('adb: error'):
-                print('\nERROR:\nFAILED to wake device: ' + str(dut))
+                print(('\nERROR:\nFAILED to wake device: ' + str(dut)))
                 print(output)
                 success = False
 
@@ -78,11 +78,11 @@ class SleepWakeTest(testcase_base.BaseAdbTest):
         return success
 
     def test_adb_sleep_wake_stress(self):
-        print 'Running test: ADB Sleep Wake stress'
+        print('Running test: ADB Sleep Wake stress')
         status = adb_util.launcher(self.adb_sleep_wake, 0.05, 1, self.adb_binary,
                                    is_print_progress=True)
         self.assertTrue(status, "ADB Sleep/Wake failed")
 
 if __name__ == '__main__':
-  print '======= auth Test ======='
+  print('======= auth Test =======')
   unittest.main()

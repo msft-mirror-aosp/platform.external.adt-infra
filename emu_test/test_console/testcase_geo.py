@@ -5,8 +5,8 @@ import time
 import unittest
 import subprocess
 import sys
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 CMD_GEO_FIX = 'geo fix {} {} {}\n'
 COORDINATES_MATCHING_STRING = 'Longitude:{} || Latitude:{} || Altitude:{}'
@@ -58,7 +58,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
       Check Maps location centers on San Francisco.
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' %(this_function_name)
+    print(('Running test: %s' %(this_function_name)))
     self._execute_command_and_verify(CMD_GEO_FIX.format(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE), util.OK,
                                      ASSERT_MSG)
     self._poll_and_verify_coordinates(COORDINATES_MATCHING_STRING.format(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE))
@@ -66,7 +66,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
   def test_geo_stress(self):
     """Stress geo location by attempting to send invalid coordinates."""
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_GEO_FIX.format(SF_LONGITUDE, SF_LATITUDE, SF_ALTITUDE), util.OK,
                                      ASSERT_MSG)
     self._execute_command_and_verify(CMD_GEO_FIX.format(SF_INVALID_LONGITUDE, SF_INVALID_LATITUDE, SF_INVALID_ALTITUDE), RESPONSE_FOR_INVALID_CMD,
@@ -95,5 +95,5 @@ class GeoTest(testcase_base.BaseConsoleTest):
                                'Pattern: \n%s' % expected_output, output)
 
 if __name__ == '__main__':
-  print '======= geo Test ======='
+  print('======= geo Test =======')
   unittest.main()

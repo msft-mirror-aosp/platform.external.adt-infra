@@ -16,12 +16,12 @@ def get_connected_devices():
     # Collect connected devices.
     # Note that since Windows includes a carriage return, we
     # do it in a seperate loop.
-    if platform.system() is not 'Windows':
-        for emulator_entry in output.split('\n')[1:]:
+    if platform.system() != 'Windows':
+        for emulator_entry in output.split(bytes('\n', 'utf-8'))[1:]:
             if emulator_entry != '':
-                connected.append(emulator_entry.split('\t')[0])
+                connected.append(emulator_entry.split(bytes('\t', 'utf-8'))[0])
     else:
-        for emulator_entry in output.split('\r\n')[1:]:
+        for emulator_entry in output.split(bytes('\r\n', 'utf-8'))[1:]:
             if emulator_entry != '':
-                connected.append(emulator_entry.split('\t')[0])
+                connected.append(emulator_entry.split(bytes('\t', 'utf-8'))[0])
     return connected

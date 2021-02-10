@@ -4,8 +4,8 @@ import inspect
 import time
 import unittest
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 EMULATOR_PORT = '5554'
 HOST_PORT = '5556'
@@ -36,15 +36,15 @@ class PortTest(testcase_base.BaseConsoleTest):
     is_cmd_succ = False
 
     for i in range(util.NUM_MAX_TRIALS):
-      print ('Running %s, trial #%s' %
-             (inspect.stack()[0][3], str(i + 1)))
+      print(('Running %s, trial #%s' %
+             (inspect.stack()[0][3], str(i + 1))))
 
-      self.telnet.write(CMD_REDIR_ADD)
+      self.telnet.write(bytes(CMD_REDIR_ADD, 'utf-8'))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_redir_add = util.parse_output(self.telnet)
       assert output_redir_add == util.OK
 
-      self.telnet.write(CMD_REDIR_LIST)
+      self.telnet.write(bytes(CMD_REDIR_LIST, 'utf-8'))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_redir_list = util.parse_output(self.telnet)
 
@@ -63,10 +63,10 @@ class PortTest(testcase_base.BaseConsoleTest):
     is_cmd_succ = False
 
     for i in range(util.NUM_MAX_TRIALS):
-      print ('Running : %s, trial #%s' %
-             (inspect.stack()[0][3], str(i + 1)))
+      print(('Running : %s, trial #%s' %
+             (inspect.stack()[0][3], str(i + 1))))
 
-      self.telnet.write(CMD_REDIR_DEL)
+      self.telnet.write(bytes(CMD_REDIR_DEL, 'utf-8'))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_redir_del = util.parse_output(self.telnet)
       assert output_redir_del == util.OK
@@ -87,7 +87,7 @@ class PortTest(testcase_base.BaseConsoleTest):
 
     TT ID: fa2c6127-83e8-4f36-b5d9-8f87b42ed8eb
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._list_redir_cmd()
 
   def test_add_new_port_and_delete_port_redir(self):
@@ -99,11 +99,11 @@ class PortTest(testcase_base.BaseConsoleTest):
     b/210442:
       command "redir del" doesn't work on API 23/24 on Windows; but Linux.
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._add_port_redir_cmd()
     self._del_port_redir_cmd()
 
 
 if __name__ == '__main__':
-  print '======= Port Test ======='
+  print('======= Port Test =======')
   unittest.main()

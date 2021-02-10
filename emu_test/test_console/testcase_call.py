@@ -3,8 +3,8 @@
 import unittest
 import sys
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 CALL_NUMBER = '1234567890'
 CMD_GSM = 'gsm {} {}\n'
@@ -61,7 +61,7 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
        2. Phone call is terminated.
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_GSM.format(CMD_CALL, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_CALL))
     self._execute_command_and_verify(CMD_GSM_LIST, STATUS_TEMPLATE.format(CALL_NUMBER, STATUS_INCOMING), ASSERT_MSG.format(CMD_LIST))
     self._execute_command_and_verify(CMD_GSM.format(CMD_CANCEL, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_CANCEL))
@@ -77,7 +77,7 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
       2. Phone call is terminated.
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_GSM.format(CMD_CALL, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_CALL))
     self._execute_command_and_verify(CMD_GSM.format(CMD_HOLD, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_HOLD))
     self._execute_command_and_verify(CMD_GSM_LIST, STATUS_TEMPLATE.format(CALL_NUMBER, STATUS_HOLD),
@@ -95,7 +95,7 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
         2. Phone call is terminated.
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_GSM.format(CMD_CALL, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_CALL))
     self._execute_command_and_verify(CMD_GSM.format(CMD_ACCEPT, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_ACCEPT))
     self._execute_command_and_verify(CMD_GSM_LIST, STATUS_TEMPLATE.format(CALL_NUMBER, STATUS_ACTIVE),
@@ -113,12 +113,12 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
       2. Phone call is terminated.
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     util.make_inbound_call(CALL_NUMBER)
     self._execute_command_and_verify(CMD_GSM.format(CMD_BUSY, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_BUSY))
     self._execute_command_and_verify(CMD_GSM_LIST, util.OK,
                                      ASSERT_MSG.format(CMD_LIST))
 
 if __name__ == '__main__':
-  print '======= Call Test ======='
+  print('======= Call Test =======')
   unittest.main()

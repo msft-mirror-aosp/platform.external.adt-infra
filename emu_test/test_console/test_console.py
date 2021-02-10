@@ -24,7 +24,7 @@ from emu_test.utils import emu_argparser
 from emu_test.utils import emu_testcase
 from emu_test.utils import emu_unittest
 from emu_test.utils import path_utils
-from utils import util
+from .utils import util
 
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -64,7 +64,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
             self.kill_proc_by_name(['crash-service' 'adb'])
             os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
             shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
-        except Exception, e:
+        except Exception as e:
             self.m_logger.error('Error in cleanup - %r' % e)
             pass
 
@@ -225,6 +225,6 @@ else:
 if __name__ == '__main__':
     os.environ['SHELL'] = '/bin/bash'
     emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
-    print emu_argparser.emu_args
+    print((emu_argparser.emu_args))
     sys.argv[1:] = emu_argparser.emu_args.unittest_args
     unittest.main()

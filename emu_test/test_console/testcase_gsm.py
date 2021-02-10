@@ -4,8 +4,8 @@ import unittest
 import time
 import inspect
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 CMD_GSM_STATUS = 'gsm status\n'
 
@@ -41,7 +41,7 @@ class GSMTest(testcase_base.BaseConsoleTest):
     Verify:
       Success to set gsm data.
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
 
     self._set_gsm_data(CMD_GSM_DATA_OFF, GSM_DATA_OFF)
     self._set_gsm_data(CMD_GSM_DATA_ROAMING, GSM_DATA_ROAMING)
@@ -52,8 +52,8 @@ class GSMTest(testcase_base.BaseConsoleTest):
 
     is_cmd_successful = False
     for i in range(util.NUM_MAX_TRIALS):
-      print ('Running: %s, retrieve gsm state %s, trial # %s'
-             % (inspect.stack()[0][3], state, str(i + 1)))
+      print(('Running: %s, retrieve gsm state %s, trial # %s'
+             % (inspect.stack()[0][3], state, str(i + 1))))
 
       output_gsm_display = self._get_gsm_data(command)
 
@@ -71,10 +71,10 @@ class GSMTest(testcase_base.BaseConsoleTest):
       self.assert_cmd_successful(is_cmd_successful, assert_msg, False, '',
                                  'Pattern: \n%s', state)
 
-      print '%s %s' % (output_gsm_display, output_extracted)
+      print(('%s %s' % (output_gsm_display, output_extracted)))
 
-      print ('Test result: %s %s => %s'
-             % (inspect.stack()[0][3], state, str(is_cmd_successful)))
+      print(('Test result: %s %s => %s'
+             % (inspect.stack()[0][3], state, str(is_cmd_successful))))
 
   def _get_gsm_data(self, command):
     """Gets the console output for 'gsm data <gsm data>' command.
@@ -82,7 +82,7 @@ class GSMTest(testcase_base.BaseConsoleTest):
     Returns:
         output_gsm_data: The console output for 'gsm data <gsm data>' command.
     """
-    self.telnet.write(command)
+    self.telnet.write(bytes(command, 'utf-8'))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_gsm_data = util.parse_output(self.telnet)
     return output_gsm_data
@@ -94,11 +94,11 @@ class GSMTest(testcase_base.BaseConsoleTest):
     Returns:
         output_gsm_status: The console output for 'gsm status' command.
     """
-    self.telnet.write(CMD_GSM_STATUS)
+    self.telnet.write(bytes(CMD_GSM_STATUS, 'utf-8'))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_gsm_status = util.parse_output(self.telnet)
     return output_gsm_status
 
 if __name__ == '__main__':
-  print '======= GSMTest ======='
+  print('======= GSMTest =======')
   unittest.main()

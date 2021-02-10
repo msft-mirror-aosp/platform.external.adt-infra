@@ -14,7 +14,7 @@ import argparse
 import json
 import subprocess
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 from operator import attrgetter
 
@@ -54,26 +54,26 @@ def do_family(options):
     with open ('machine_info.json', 'r') as machine_info_json:
       machine_info = json.load(machine_info_json)
   except IOError as e:
-    print 'Unable to find machine_info.json file.  Exiting'
+    print('Unable to find machine_info.json file.  Exiting')
     return 1
-  if options.os not in machine_info.keys():
-    print 'Operating System not found in machine_info file.  Exiting.'
+  if options.os not in list(machine_info.keys()):
+    print('Operating System not found in machine_info file.  Exiting.')
     return 1
-  if options.builder_family not in machine_info[options.os].keys():
-    print 'Builder Family not found in machine_info file.  Exiting.'
+  if options.builder_family not in list(machine_info[options.os].keys()):
+    print('Builder Family not found in machine_info file.  Exiting.')
     return 1
   for machine in machine_info[options.os][options.builder_family]:
     builder_name = machine.replace(" ", "%20") + '_%s' % (options.builder_family)
-    build_range = range(-1, int(options.num_builds)*-1, -1)
+    build_range = list(range(-1, int(options.num_builds)*-1, -1))
     range_str = [str(x) for x in build_range]
     select_str = 'select=%s' % ('&select='.join(range_str))
     json_url_query = '%s/%s/builds?%s' % (JSON_PREFIX, builder_name, select_str)
-    response = urllib2.urlopen(json_url_query)
+    response = urllib.request.urlopen(json_url_query)
     builds_json = json.loads(response.read())
     for x in builds_json:
       build_num = builds_json[x]['number']
       builds_json[str(build_num)] = builds_json.pop(x)
-    print bcolors.BOLD + bcolors.HEADER + 'Failure information for Machine: %s' % (machine) + bcolors.ENDC
+    print(bcolors.BOLD + bcolors.HEADER + 'Failure information for Machine: %s' % (machine) + bcolors.ENDC)
     parse_results(builds_json)
 
 
@@ -83,13 +83,13 @@ def do_machine(options):
   builder_name = options.machine_name.replace(" ", "%20")
 
   # Use the options to create a buildbot json query and download json.
-  build_range = range(int(options.from_build), int(options.to_build)+1)
+  build_range = list(range(int(options.from_build), int(options.to_build)+1))
   range_str = [str(x) for x in build_range]
   select_str = 'select=%s' % ('&select='.join(range_str))
   json_url_query = '%s/%s/builds?%s' % (JSON_PREFIX, builder_name, select_str)
-  response = urllib2.urlopen(json_url_query)
+  response = urllib.request.urlopen(json_url_query)
   builds_json = json.loads(response.read())
-  print bcolors.BOLD + bcolors.OKBLUE + 'Failure information for Machine: %s' % (options.machine_name) + bcolors.ENDC
+  print(bcolors.BOLD + bcolors.OKBLUE + 'Failure information for Machine: %s' % (options.machine_name) + bcolors.ENDC)
   return parse_results(builds_json)
 
 
@@ -100,10 +100,10 @@ def parse_results(builds_json):
   trim_index = len('@google.com') * -1 # to trim @google.com from blamelists
   # There can be a wierd output occasionally that simply says 'error' with no index.
   # We are just pruning this possible output there (its useless to us anyway).
-  for build in builds_json.values():
-    if 'error' in build.keys():
+  for build in list(builds_json.values()):
+    if 'error' in list(build.keys()):
       builds_json.pop(build)
-  build_nums = [build['number'] for build in builds_json.values()]
+  build_nums = [build['number'] for build in list(builds_json.values())]
   for build_num in sorted(build_nums):
     build = builds_json[str(build_num)]
     # A breakage is defined as consecutive red builds for the same reason.
@@ -137,20 +137,20 @@ def parse_results(builds_json):
   # Print the breakages into a csv breakage report.
   # print 'from, to, reason, blame, fix, link'
   if len(breakages) <= 0:
-    print bcolors.OKGREEN + 'No Failures Detected on Machine' + bcolors.ENDC
-    print ''
+    print(bcolors.OKGREEN + 'No Failures Detected on Machine' + bcolors.ENDC)
+    print('')
   else:
-    print bcolors.FAIL + bcolors.BOLD + 'Failures Found on Machine' + bcolors.ENDC
+    print(bcolors.FAIL + bcolors.BOLD + 'Failures Found on Machine' + bcolors.ENDC)
     for breakage in breakages:
       build_range = breakage['build_range']
       link = '%s/builders/%s/builds/%s' % (URL_PREFIX,
                                            breakage['builder_name'].replace(" ", "%20"),
                                            build_range[0])
       blame = ':'.join(breakage['blame'])
-      print bcolors.WARNING + '   Build Range of Failure: ' + bcolors.ENDC + '%s:%s' % (build_range[0], build_range[1])
-      print bcolors.WARNING + '   Breakage Reason: ' + bcolors.ENDC + '%s' % (breakage['reason']) + bcolors.ENDC
-      print bcolors.WARNING + '   link: ' + bcolors.UNDERLINE + bcolors.OKBLUE + '%s' % (link) + bcolors.ENDC
-      print ''
+      print(bcolors.WARNING + '   Build Range of Failure: ' + bcolors.ENDC + '%s:%s' % (build_range[0], build_range[1]))
+      print(bcolors.WARNING + '   Breakage Reason: ' + bcolors.ENDC + '%s' % (breakage['reason']) + bcolors.ENDC)
+      print(bcolors.WARNING + '   link: ' + bcolors.UNDERLINE + bcolors.OKBLUE + '%s' % (link) + bcolors.ENDC)
+      print('')
   return
 
 
@@ -178,7 +178,7 @@ def main():
   elif 'family' in options.command:
     rc = do_family(options)
   else:
-    print 'Unknown command passed'
+    print('Unknown command passed')
 
 
 if __name__ == '__main__':

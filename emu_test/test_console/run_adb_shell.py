@@ -5,7 +5,7 @@ import sys
 import time
 import os
 
-from utils import util
+from .utils import util
 
 launcher_class_name = '%s.Server' % util.MAIN_APK_PACKAGE
 instrumentation_runner = 'android.support.test.runner.AndroidJUnitRunner'
@@ -16,8 +16,8 @@ while True:
     sys.exit(-1)
   try:
     adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
-    print ('Run adb shell instrumentation test command, trial num: %s'
-           % str(num_trials))
+    print(('Run adb shell instrumentation test command, trial num: %s'
+           % str(num_trials)))
     res_run_adb_shell = subprocess.call([adb_binary, 'shell', 'am', 'instrument',
                                          '-w', '-e' 'class',
                                          launcher_class_name,
@@ -28,17 +28,17 @@ while True:
     # Print GeoManagerService log for debugging geo test failure on API 23.
     cmd = adb_binary + " logcat"
     adb_logcat = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
-    print 'start: logcat'
+    print('start: logcat')
     while True:
       line = adb_logcat.stdout.readline()
       if not line:
         break
       if line.find("GeoManagerService") != -1:
-        print line
+        print(line)
     adb_logcat.terminate()
 
     break
   except subprocess.CalledProcessError as err:
-    print 'Subprocess call error: {0}'.format(err)
+    print('Subprocess call error: {0}'.format(err))
     time.sleep(util.ADB_TRIAL_WAIT_TIME_S)
     num_trials += 1

@@ -5,8 +5,8 @@ import sys
 import telnetlib
 import unittest
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 
 class HelpTest(testcase_base.BaseConsoleTest):
@@ -22,7 +22,7 @@ class HelpTest(testcase_base.BaseConsoleTest):
     """Only telnet to emulator, initially not need to run auth command."""
     self.telnet = telnetlib.Telnet(util.SERVER_NAME, util.CONSOLE_PORT)
     if not util.check_read_until(
-        self.telnet.read_until(util.OK, util.TIMEOUT_S)):
+        self.telnet.read_until(bytes(util.OK, 'utf-8'), util.TIMEOUT_S)):
       sys.exit(-1)
 
   def _help_command(self, expected_output):
@@ -63,10 +63,10 @@ class HelpTest(testcase_base.BaseConsoleTest):
     """Authorization user."""
     auth_token = util.get_auth_token()
     self.telnet = util.telnet_emulator()
-    self.telnet.write('%s %s\n' % (util.AUTH, auth_token))
+    self.telnet.write(bytes('%s %s\n' % (util.AUTH, auth_token), 'utf-8'))
     util.wait_on_windows()
     if (not util.check_read_until(
-        self.telnet.read_until(util.OK, util.TIMEOUT_S))):
+        self.telnet.read_until(bytes(util.OK, 'utf-8'), util.TIMEOUT_S))):
       sys.exit(-1)
 
   def test_help_command(self):
@@ -85,7 +85,7 @@ class HelpTest(testcase_base.BaseConsoleTest):
       2. crash, kill, redir, power, event, avd ,finger, geo, sms, cdma,
          gsm and rotate commands are available
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._help_command(util.CMDS_FOR_HELP_NO_AUTH)
     self._help_verbose_command(util.CMDS_FOR_HELP_VERBOSE_NO_AUTH)
 
@@ -96,5 +96,5 @@ class HelpTest(testcase_base.BaseConsoleTest):
 
 
 if __name__ == '__main__':
-  print '======= help Test ======='
+  print('======= help Test =======')
   unittest.main()

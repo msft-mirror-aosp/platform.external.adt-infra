@@ -51,7 +51,7 @@ def get_activity_name(line):
     ms = p.findall(line)
     if ms:
         return ms[0]
-    print "Failed to find topActivity=ComponentInfo{.*\} regex."
+    print("Failed to find topActivity=ComponentInfo{.*\} regex.")
     return ''
 
 
@@ -66,7 +66,7 @@ def find_top_activity(filename):
         for line in f:
             if 'topActivity' in line:
                 return get_activity_name(line)
-    print 'Failed to find topActivity in %s' % filename
+    print('Failed to find topActivity in %s' % filename)
     return ''
 
 
@@ -79,14 +79,14 @@ def find_home_activity(filename):
     """
     num_stacks = find_num_stack(filename)
     if num_stacks > 1:
-        print 'We have too many stacks.  Expected 1, got %s' % str(num_stacks)
+        print('We have too many stacks.  Expected 1, got %s' % str(num_stacks))
         return False
     top_activity = find_top_activity(filename)
     # If any of the EXPECTED_LAUNCHERS are the top activity, return true.
     if any(launcher in top_activity for launcher in EXPECTED_LAUNCHERS):
         return True
-    print "Did not detect expected launcher as top_activity.  Found %s, expected one of %s"\
-          % (top_activity, ",".join(EXPECTED_LAUNCHERS))
+    print("Did not detect expected launcher as top_activity.  Found %s, expected one of %s"\
+          % (top_activity, ",".join(EXPECTED_LAUNCHERS)))
     return False
 
 
@@ -142,7 +142,7 @@ def do_popup_test():
         active_launcher = find_package(root, launcher)
         if active_launcher:
             return True
-    print 'Failed to find one of Launchers %s' % ",".join(EXPECTED_LAUNCHERS)
+    print('Failed to find one of Launchers %s' % ",".join(EXPECTED_LAUNCHERS))
     return False
 
 
@@ -154,8 +154,8 @@ def do_homescreen_test():
     try:
         return do_activity_test() and do_popup_test()
     except Exception as e:
-        print 'Exception happened during homescreen test. Exception:'
-        print traceback.format_exc()
+        print('Exception happened during homescreen test. Exception:')
+        print(traceback.format_exc())
         return False
 
 
@@ -164,6 +164,6 @@ if __name__ == '__main__':
     Note that environment variable "ANDROID_SDK_ROOT" must be set to resolve location of ADB binary.
     """
     if not do_homescreen_test():
-        print 'Homescreen Test suite Failed.'
+        print('Homescreen Test suite Failed.')
         sys.exit(1)
-    print 'Homescreen Test suite Passed.'
+    print('Homescreen Test suite Passed.')

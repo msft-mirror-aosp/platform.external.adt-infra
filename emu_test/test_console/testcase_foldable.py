@@ -3,7 +3,7 @@ import unittest
 import time
 import subprocess
 import os
-from utils import util
+from .utils import util
 from emu_test.test_console import testcase_base
 
 sys.path.append("..")
@@ -57,7 +57,7 @@ class FoldableTest(testcase_base.BaseConsoleTest):
         1. Verify that unfolded AVD can be folded.
       """
       this_function_name = sys._getframe().f_code.co_name
-      print 'Running test: %s' % this_function_name
+      print(('Running test: %s' % this_function_name))
       init, cur = util.get_device_density()
       if init != cur:
           self._execute_command_and_verify(CMD_AVD_UNFOLD, util.OK, MSG_CMD_UNFOLD_FAIL)
@@ -82,7 +82,7 @@ class FoldableTest(testcase_base.BaseConsoleTest):
         1. Verify that folded AVD can be unfolded .
       """
       this_function_name = sys._getframe().f_code.co_name
-      print 'Running test: %s' % this_function_name
+      print(('Running test: %s' % this_function_name))
       init, cur = util.get_device_density()
       if init == cur:
           self._execute_command_and_verify(CMD_AVD_FOLD, util.OK, MSG_CMD_FOLD_FAIL)
@@ -112,7 +112,7 @@ class FoldableTest(testcase_base.BaseConsoleTest):
       makes an unfolded AVD, folded.
       """
       this_function_name = sys._getframe().f_code.co_name
-      print 'Running test: %s' % this_function_name
+      print(('Running test: %s' % this_function_name))
       init, cur = util.get_device_density()
       if init == cur:
           self._execute_command_and_verify(CMD_AVD_FOLD, util.OK, MSG_CMD_FOLD_FAIL)
@@ -147,7 +147,7 @@ class FoldableTest(testcase_base.BaseConsoleTest):
       makes an folded AVD, unfolded.
       """
       this_function_name = sys._getframe().f_code.co_name
-      print 'Running test: %s' % this_function_name
+      print(('Running test: %s' % this_function_name))
       init, cur = util.get_device_density()
       if init != cur:
           self._execute_command_and_verify(CMD_AVD_UNFOLD, util.OK, MSG_CMD_UNFOLD_FAIL)
@@ -185,7 +185,7 @@ class FoldableTest(testcase_base.BaseConsoleTest):
           expected_output: Expected console output.
           assert_msg: Assertion message.
         """
-        print 'running command %s' % command
+        print(('running command %s' % command))
         is_command_successful, output = util.execute_console_command(
             self.telnet, command, expected_output)
         self.assert_cmd_successful(is_command_successful, assert_msg, False, '',
@@ -193,5 +193,5 @@ class FoldableTest(testcase_base.BaseConsoleTest):
         time.sleep(util.CMD_DELAY_VALUE)
 
 if __name__ == '__main__':
-    print '======= Foldable Test ======='
+    print('======= Foldable Test =======')
     unittest.main()

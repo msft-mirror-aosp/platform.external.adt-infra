@@ -18,14 +18,14 @@ import tempfile
 import traceback
 import threading
 import shutil
-import ConfigParser
-from emu_error import *
+import configparser
+from .emu_error import *
 import emu_test.utils.emu_argparser as emu_argparser
 import emu_test.utils.path_utils as path_utils
 from subprocess import PIPE, STDOUT
 from collections import namedtuple
-import test_fingerprint
-import test_homescreen
+from . import test_fingerprint
+from . import test_homescreen
 
 
 class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram, gpu, classic, port, cts, ori')):
@@ -186,7 +186,7 @@ class EmuBaseTestCase(LoggedTestCase):
                     if proc.status() != psutil.STATUS_ZOMBIE:
                         return proc
             except psutil.NoSuchProcess:
-                print "Exception Thrown.  No Such process error while searching for emulator instance."
+                print("Exception Thrown.  No Such process error while searching for emulator instance.")
                 pass
         return None
 
@@ -206,8 +206,8 @@ class EmuBaseTestCase(LoggedTestCase):
                         self.m_logger.info("kill_proc_by_name - %s, %s" % (proc.name(), proc.status()))
                         proc.kill()
             except psutil.NoSuchProcess:
-                print "Exception Thrown as psutil says no such process."
-                print traceback.format_exc()
+                print("Exception Thrown as psutil says no such process.")
+                print((traceback.format_exc()))
 
     def launch_emu(self, avd, flags = None):
         """
@@ -257,8 +257,8 @@ class EmuBaseTestCase(LoggedTestCase):
                     logcat_proc.terminate()
                   except:
                     # Could not terminate logcat; probably already dead.
-                    print "Exception Thrown.  Logcat is not found even though it is expected."
-                    print traceback.format_exc()
+                    print("Exception Thrown.  Logcat is not found even though it is expected.")
+                    print(traceback.format_exc())
                     pass
 
         def readoutput_in_thread(filepath):
@@ -270,7 +270,7 @@ class EmuBaseTestCase(LoggedTestCase):
             with open(filepath, 'a') as log_output:
                 lines_iterator = iter(self.start_proc.stdout.readline, b"")
                 for line in lines_iterator:
-                    line = line.strip()
+                    line = line.strip().decode()
                     log_output.write(line)
                     # Just write everything back to builder as a heart-beat signal to avoid being killed
                     self.m_logger.info("Emulator Output - " + line)
@@ -356,7 +356,7 @@ class EmuBaseTestCase(LoggedTestCase):
                 self.kill_proc_by_name([cmd_binary])
             except Exception as e:
                 self.m_logger.error('Failed to terminate the command.')
-                print 'Exception Thrown: ' + traceback.format_exc()
+                print('Exception Thrown: ' + traceback.format_exc())
         return thread_info['returncode'], thread_info['stdout'], thread_info['stderr']
 
     def check_network_connectivity(self):
@@ -399,22 +399,22 @@ class EmuBaseTestCase(LoggedTestCase):
                 (exit_code, stdout, stderr) = self.run_with_timeout(cmd, 10)
             except Exception:
                 self.m_logger.error('Failed in call to ADB when looking for sys.boot_completed property.')
-                print 'Exception Thrown: ' + traceback.format_exc()
+                print('Exception Thrown: ' + traceback.format_exc())
                 continue
             # We will print out a status message every 20 invocations.  Keeps the log updated without spamming.
-            if counter % 20 is 0:
+            if counter % 20 == 0:
                 self.m_logger.info('Boot Timeout Max is set to %s, current is %s'
                                    % (real_time_out, time.time() - self.start_time))
                 self.m_logger.info('Ping AVD %s for boot completion. stdout: %s stderr: %s'
                                    % (str(avd), stdout.strip(), stderr.strip()))
             counter = counter + 1
-            if exit_code is 0:
-                completed = stdout.strip()
-            if completed is "1":
+            if exit_code == 0:
+               completed = stdout.strip().decode()
+            if completed == "1":
                 self.m_logger.info('AVD %s is fully booted.  getprop sys.boot_completed = 1' % str(avd))
                 break
             time.sleep(1)
-        if completed is not "1":
+        if completed != "1":
             self.m_logger.info('ADB Failed to detect a booted emulator and timeout has been reached.')
             self.m_logger.info('Command: %s')
             self.m_logger.info('stdout: %s' % stdout)
@@ -509,7 +509,7 @@ class EmuBaseTestCase(LoggedTestCase):
                 if os.path.isfile(test_file):
                     os.unlink(test_file)
                 self.m_logger.error('Exception for run_with_timeout %s:' % ' '.join(cmd))
-                print 'Exception Thrown: ' + traceback.format_exc()
+                print('Exception Thrown: ' + traceback.format_exc())
                 return
         if os.path.isfile(test_file):
             os.unlink(test_file)
@@ -557,7 +557,7 @@ class EmuBaseTestCase(LoggedTestCase):
 
         avd_dir = os.path.join(os.environ['ANDROID_AVD_HOME'], '%s.avd' % avd_config.name())
         dst_path = os.path.join(avd_dir, 'config.ini')
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.optionxform = str
         file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                  '..', 'config', 'avd_template.ini')
@@ -612,7 +612,7 @@ class EmuBaseTestCase(LoggedTestCase):
             os.unlink(dst_path)
         except OSError:
             self.m_logger.error('Error removing config file while trying to remove header.')
-            print traceback.format_exc()
+            print(traceback.format_exc())
         with open(dst_path, 'w') as fout:
             fout.writelines(data[1:])
         # Create the sdcard.img file for this AVD.
@@ -624,15 +624,15 @@ class EmuBaseTestCase(LoggedTestCase):
             create_img_cmd = [mksdcard_binary, config.get('Common', 'sdcard.size'), img_path]
             self.m_logger.info('Create sdcard.img for AVD. cmd: %s', ' '.join(create_img_cmd))
             stdout, stderr = psutil.Popen(create_img_cmd, stdout=PIPE, stderr=PIPE).communicate()
-        except ConfigParser.NoOptionError:
+        except configparser.NoOptionError:
             self.m_logger.exception('Failed to find sdcard.size. Check avd_template.ini')
             self.m_logger.error('stdout: %s, stderr: %s' % stdout, stderr)
-            print "Exception Thrown: " + traceback.format_exc()
+            print("Exception Thrown: " + traceback.format_exc())
             pass
         except:
             self.m_logger.exception('Failed to create sdcard.img for AVD.')
             self.m_logger.error('stdout: %s, stderr: %s' % stdout, stderr)
-            print "Exception Thrown: " + traceback.format_exc()
+            print("Exception Thrown: " + traceback.format_exc())
             pass
 
     def get_sub_dir(self, avd_config):
@@ -656,7 +656,7 @@ class EmuBaseTestCase(LoggedTestCase):
                                     "system-images", "chromeos-%s" % version, "chromeos")
         chromeos_tmp_dir = tempfile.mkdtemp(prefix="chromeos_gs_download")
         chromeos_tmp_zip = os.path.join(chromeos_tmp_dir, "chromeos-download.zip")
-        cmd = ['python', gsutil_path, 'cp',
+        cmd = ['python3', gsutil_path, 'cp',
                'gs://chromeos-emulator-test/images/system-%s.zip' % version, chromeos_tmp_zip]
         self.m_logger.info('Downloading new chromeos image: ' % ' '.join(cmd))
         update_proc = psutil.Popen(cmd, stdout=PIPE, stderr=PIPE)
@@ -784,7 +784,7 @@ class EmuBaseTestCase(LoggedTestCase):
                 os.makedirs(avd_dir)
             except Exception as e:
                 self.m_logger.error('Unable to create avd directory.')
-                print "Exception Thrown: " + traceback.format_exc()
+                print("Exception Thrown: " + traceback.format_exc())
             return 0
         # Function execution starts here.
         if avd_config is None:
@@ -854,7 +854,7 @@ class EmuBaseTestCase(LoggedTestCase):
         cmd = [sdkmanager_binary, '%s' % package]
         self.m_logger.info('Attempt to install SDK package: %s' % ' '.join(cmd))
         install_proc = psutil.Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        stdout, stderr = install_proc.communicate(input='y\n')
+        stdout, stderr = install_proc.communicate(input=bytes('y\n', 'utf-8'))
         self.simple_logger.debug(stdout)
         self.simple_logger.debug(stderr)
         self.m_logger.info('Return value of the sdkmanager call: %s', install_proc.poll())
@@ -929,7 +929,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
             "<=": fn_leq
             }
         if emu_argparser.emu_args.filter_dict is not None:
-            for key, value in emu_argparser.emu_args.filter_dict.iteritems():
+            for key, value in emu_argparser.emu_args.filter_dict.items():
                 if any([value.startswith(x) for x in ["==", "!=", "<>", ">=", "<="]]):
                     cmp_op = value[:2]
                     cmp_val = value[2:]
@@ -1006,7 +1006,7 @@ def create_test_case_from_file(desc, testcase_class, test_func, generate_test_cl
     is_cts = True if desc == "cts" else False
     is_ui = True if desc == "ui" else False
 
-    with open(emu_argparser.emu_args.config_file, "rb") as file:
+    with open(emu_argparser.emu_args.config_file, "r") as file:
         reader = csv.reader(file)
         for row in reader:
             # Skip the first line of the file.  It is only a Header for human readable viewing.

@@ -94,7 +94,7 @@ def check_read_until(console_output):
     or not.
   """
   console_output = console_output.strip()
-  index_ok = console_output.rfind(OK)
+  index_ok = console_output.rfind(bytes(OK, 'utf-8'))
   return index_ok == len(console_output) - len(OK)
 
 
@@ -107,8 +107,8 @@ def parse_output(telnet):
   Returns:
     parsed_output: The parsed output until 'OK' message.
   """
-  parsed_output = telnet.read_until(OK,10).strip()
-  return parsed_output
+  parsed_output = telnet.read_until(bytes(OK, 'utf-8'),10).strip()
+  return parsed_output.decode()
 
 
 def extract_field_from_output(output, keyword):
@@ -169,8 +169,8 @@ def parse_output_for_ev(telnet):
   Returns:
     parsed_output: The parsed console output.
   """
-  parsed_output = telnet.read_until('\n%s' % OK).strip()
-  return parsed_output
+  parsed_output = telnet.read_until(bytes('\n%s' % OK, 'utf-8')).strip()
+  return parsed_output.decode()
 
 
 def get_events_code_ev_key():
@@ -234,21 +234,21 @@ def execute_console_command(telnet, command, expected_output):
   is_command_successful = False
 
   for i in range(NUM_MAX_TRIALS):
-    print 'execute console command: %s, trial #%d' % (command.strip(), i)
+    print('execute console command: %s, trial #%d' % (command.strip(), i))
 
-    telnet.write(command)
+    telnet.write(bytes(command, 'utf-8'))
     time.sleep(CMD_WAIT_TIMEOUT_S)
 
     if command == 'crash\n':
       output = telnet.read_all()
     elif command == CMD_EMPTY_AUTH_TOKEN:
-      output = telnet.read_until('missing authentication token').strip()
+      output = telnet.read_until(bytes('missing authentication token', 'utf-8')).strip()
     elif command == CMD_RANDOM_AUTH_TOKEN:
-      output = telnet.read_until('emulator_console_auth_token').strip()
+      output = telnet.read_until(bytes('emulator_console_auth_token', 'utf-8')).strip()
     else:
-      output = parse_output(telnet)
+      output = bytes(parse_output(telnet), 'utf-8')
 
-    is_command_successful = pattern_match_output(output, expected_output)
+    is_command_successful = pattern_match_output(output, bytes(expected_output, 'utf-8'))
 
     if is_command_successful:
       break
@@ -284,25 +284,25 @@ def execute_help_command(telnet, command):
     output: The command output in the terminal.
   """
 
-  print 'execute console command: %s' % (command.strip())
+  print('execute console command: %s' % (command.strip()))
 
-  telnet.write(command)
+  telnet.write(bytes(command, 'utf-8'))
   time.sleep(CMD_WAIT_TIMEOUT_S)
 
   if command == 'crash\n':
     output = telnet.read_all()
   elif command == CMD_ROTATE: # No 'OK' output showing, only new line.
-    print 'command is rotate'
-    output = telnet.read_until('\n', 10)
-    print 'output = "%s"' % output
+    print('command is rotate')
+    output = telnet.read_until(bytes('\n', 'utf-8'), 10)
+    print('output = "%s"' % output)
   elif command == CMD_EMPTY_AUTH_TOKEN:
-    output = telnet.read_until('missing authentication token').strip()
+    output = telnet.read_until(bytes('missing authentication token', 'utf-8')).strip()
   elif command == CMD_RANDOM_AUTH_TOKEN:
-    output = telnet.read_until('emulator_console_auth_token').strip()
+    output = telnet.read_until(bytes('emulator_console_auth_token', 'utf-8')).strip()
   else:
-    output = parse_output(telnet)
+    output = bytes(parse_output(telnet), 'utf-8')
 
-  return output
+  return output.decode()
 
 
 def get_auth_token():
@@ -320,7 +320,7 @@ def get_auth_token():
 def telnet_emulator():
   """Only telnet to emulator, initially not need to run auth command."""
   telnet = telnetlib.Telnet(SERVER_NAME, CONSOLE_PORT)
-  if not check_read_until(telnet.read_until(OK, TIMEOUT_S)):
+  if not check_read_until(telnet.read_until(bytes(OK, 'utf-8'), TIMEOUT_S)):
     sys.exit(-1)
 
   return telnet
@@ -335,7 +335,7 @@ def wait_on_windows():
 
 def exit_emulator_console(telnet):
   """Exits from emulator console."""
-  telnet.write(CMD_EXIT)
+  telnet.write(bytes(CMD_EXIT, 'utf-8'))
   wait_on_windows()
   telnet.close()
 
@@ -351,17 +351,17 @@ def unstall_apps(package_name):
       sys.exit(-1)
     try:
       adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
-      print ('Run adb shell to uninstall apps, trial num: %s' % str(num_trials))
+      print(('Run adb shell to uninstall apps, trial num: %s' % str(num_trials)))
       subprocess.call([adb_binary, 'uninstall', package_name])
       break
     except subprocess.CalledProcessError as err:
-      print 'Subprocess call error: {0}'.format(err)
+      print('Subprocess call error: {0}'.format(err))
       time.sleep(ADB_TRIAL_WAIT_TIME_S)
       num_trials += 1
 
 def install_with_permission(app_name):
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
-  print ('Run adb install for  %s' % TESTCASE_CALL_DIR)
+  print(('Run adb install for  %s' % TESTCASE_CALL_DIR))
   path_to_apk = os.path.join(TESTCASE_CALL_DIR, app_name)
   subprocess.call([adb_binary, 'install', '-g', path_to_apk])
 
@@ -376,9 +376,9 @@ def stop_application(package_name):
 def get_device_density():
   time.sleep(20)
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
-  print 'check density'
+  print('check density')
   output = subprocess.check_output([adb_binary, 'shell', 'dumpsys', 'window', 'displays', '|', 'grep', 'init'])
-  print 'extract init and cur'
-  res_values = re.compile('\w+').findall(output)
-  print 'density: %s' % output
+  print('extract init and cur')
+  res_values = re.compile('\w+').findall(output.decode())
+  print('density: %s' % output)
   return res_values[res_values.index("init")+1], res_values[res_values.index("cur")+1]

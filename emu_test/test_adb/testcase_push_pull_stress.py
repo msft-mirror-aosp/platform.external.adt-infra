@@ -5,8 +5,8 @@ import unittest
 import subprocess
 import time
 
-import testcase_base
-import adb_util
+from . import testcase_base
+from . import adb_util
 
 TEMP_FILE = '__push_file.txt'
 
@@ -68,7 +68,7 @@ class PushPullTest(testcase_base.BaseAdbTest):
         for line in output.split('\n'):
             if line.startswith('adb: error'):
                 success = False
-                print('\nERROR:\nEPush FAILED for: ' + str(dut))
+                print(('\nERROR:\nEPush FAILED for: ' + str(dut)))
                 print(output)
 
         return success
@@ -87,7 +87,7 @@ class PushPullTest(testcase_base.BaseAdbTest):
         success = True
         for line in output.split('\n'):
             if line.startswith('adb: error'):
-                print('\nERROR:\nEPush FAILED for: ' + str(dut))
+                print(('\nERROR:\nEPush FAILED for: ' + str(dut)))
                 print(output)
                 success = False
 
@@ -106,12 +106,12 @@ class PushPullTest(testcase_base.BaseAdbTest):
         return success
 
     def test_adb_push_pull_stress(self):
-        print 'Running test: ADB Push Pull stress'
+        print('Running test: ADB Push Pull stress')
         status = adb_util.launcher(self.adb_push_pull, 0.05, 1, self.adb_binary,
                                    setup=self.create_temp_files, cleanup=self.delete_temp_files,
                                    is_print_progress=True)
         self.assertTrue(status, "ADB Push/Pull failed")
 
 if __name__ == '__main__':
-  print '======= auth Test ======='
+  print('======= auth Test =======')
   unittest.main()
