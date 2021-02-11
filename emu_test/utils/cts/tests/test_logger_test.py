@@ -1,9 +1,9 @@
 """Tests for  cts_suite.cts_test_runner."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-import StringIO
+
+
+
+import io
 from lxml import etree
 from .context import CtsTestLogger
 
@@ -29,7 +29,7 @@ class TestLoggerTest(absltest.TestCase):
   NASTY_STRING = '\nAn unlikeable <xml> & string \n\n\t'
 
   def setUp(self):
-    self.tmp = StringIO.StringIO()
+    self.tmp = io.StringIO()
     self.log = CtsTestLogger(self.tmp, timer=ZeroTimer())
 
   def tearDown(self):

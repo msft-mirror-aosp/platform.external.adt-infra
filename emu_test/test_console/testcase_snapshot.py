@@ -1,8 +1,8 @@
 """Test for snapshot-related emulator console commands."""
 
 import unittest
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 import time
 import subprocess
 import emu_test.utils.path_utils as path_utils
@@ -45,7 +45,7 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
       1. Verify that the retrieved snapshot name is the same that was saved.
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     snapshot_string = SNAPSHOT_PREFIX + this_function_name
     if util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_LIST, snapshot_string) is True:
       self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
@@ -72,7 +72,7 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     """
     adb_binary = path_utils.get_adb_binary()
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     util.launch_application(util.CONTACT_PACKAGE_NAME)
     time.sleep(util.CMD_DELAY_VALUE)
     snapshot_string = SNAPSHOT_PREFIX + this_function_name
@@ -101,7 +101,7 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
       1. Verify that output is "There is no snapshot available."
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     snapshot_string = SNAPSHOT_PREFIX + this_function_name
     result_execute_list = util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_LIST, snapshot_string)
     if result_execute_list[0] is False:
@@ -125,7 +125,7 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
       1.  Retrieved list contains the snapshot created.
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     snapshot_string = SNAPSHOT_PREFIX + this_function_name
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_SAVE+ snapshot_string +NEW_LINE_COMMAND, util.OK)
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LIST, snapshot_string)
@@ -147,5 +147,5 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
 
 
 if __name__ == '__main__':
-  print '======= Snapshot Test ======='
+  print('======= Snapshot Test =======')
   unittest.main()

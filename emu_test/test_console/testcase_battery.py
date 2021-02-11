@@ -4,8 +4,8 @@ import inspect
 import time
 import unittest
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 CMD_POWER_DISPLAY = 'power display\n'
 CMD_POWER_AC_PREFIX = 'power ac'
@@ -65,7 +65,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Returns:
         output_pwr_display: The console output for 'power display' command.
     """
-    self.telnet.write(CMD_POWER_DISPLAY)
+    self.telnet.write(bytes(CMD_POWER_DISPLAY, 'utf-8'))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_pwr_display = util.parse_output(self.telnet)
     return output_pwr_display
@@ -86,8 +86,8 @@ class BatteryTest(testcase_base.BaseConsoleTest):
 
     is_cmd_successful = False
     for i in range(util.NUM_MAX_TRIALS):
-      print ('Running: %s, retrieve status %s, trial # %s'
-             % (inspect.stack()[0][3], status, str(i + 1)))
+      print(('Running: %s, retrieve status %s, trial # %s'
+             % (inspect.stack()[0][3], status, str(i + 1))))
       output_pwr_display = self._get_power_display()
       output_extracted = util.extract_field_from_output(
           output_pwr_display, keyword)
@@ -103,13 +103,13 @@ class BatteryTest(testcase_base.BaseConsoleTest):
       elif CMD_POWER_CAPACITY_PREFIX == command_prefix:
         is_cmd_successful = (output_extracted == status)
       else:
-        print 'Un-handled command prefix: %s' % command_prefix
+        print(('Un-handled command prefix: %s' % command_prefix))
 
       if is_cmd_successful:
         break
       time.sleep(util.TRIAL_WAIT_TIMEOUT_S)
-    print ('Test result: %s %s => %s'
-           % (inspect.stack()[0][3], status, str(is_cmd_successful)))
+    print(('Test result: %s %s => %s'
+           % (inspect.stack()[0][3], status, str(is_cmd_successful))))
     self.assert_cmd_successful(is_cmd_successful,
                                'Failed to retrieve power status as %s' % status,
                                True, status, '%s' % status, output_extracted)
@@ -142,7 +142,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Power details are displayed
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     assert_msg = 'Failed to properly display power details.'
     self._execute_command_and_verify(CMD_POWER_DISPLAY, util.REGEX_PWR_DISPLAY,
                                      assert_msg)
@@ -164,7 +164,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
       1. Emulator displays AC as online
       2. Emulator displays AC as offline
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     assert_msg = 'Failed to properly display power details.'
     self._set_power_test(CMD_POWER_AC_PREFIX, 'off', assert_msg, util.AC)
     self._set_power_test(CMD_POWER_AC_PREFIX, 'on', assert_msg, util.AC)
@@ -182,7 +182,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power status to unknown
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_battery_status('unknown')
     self._reset_status_back_to_charging()
 
@@ -199,7 +199,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power status to charging
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_battery_status(CHARGING_STATUS)
 
   def test_set_battery_status_to_discharging(self):
@@ -215,7 +215,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power status to discharging
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_battery_status('discharging')
     self._reset_status_back_to_charging()
 
@@ -232,7 +232,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power status to not-charging
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_battery_status('not-charging')
     self._reset_status_back_to_charging()
 
@@ -249,7 +249,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power status to full
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_battery_status('full')
     self._reset_status_back_to_charging()
 
@@ -268,7 +268,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
       1. Success to set power presence to True
       2. Success to set power presence to False
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_presence_state('false')
     self._set_presence_state('true')
 
@@ -285,7 +285,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power health to unknown
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_health_state('unknown')
     self._reset_health_back_to_good()
 
@@ -302,7 +302,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power health to good
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_health_state('good')
 
   def test_set_battery_health_to_overheat(self):
@@ -318,7 +318,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power health to overheat
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_health_state('overheat')
     self._reset_health_back_to_good()
 
@@ -335,7 +335,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power health to dead
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_health_state('dead')
     self._reset_health_back_to_good()
 
@@ -352,7 +352,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power health to overvoltage
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_health_state('overvoltage')
     self._reset_health_back_to_good()
 
@@ -369,7 +369,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power health to failure
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._set_health_state('failure')
     self._reset_health_back_to_good()
 
@@ -386,7 +386,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Success to set power capacity to 75
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     assert_msg = '%s %s' % (HEATH_ASSERT_MSG_PREFIX, REMAINING_75)
     self._set_power_test(CMD_POWER_CAPACITY_PREFIX, REMAINING_75,
                          assert_msg, util.CAPACITY)
@@ -394,5 +394,5 @@ class BatteryTest(testcase_base.BaseConsoleTest):
 
 
 if __name__ == '__main__':
-  print '======= Battery Test ======='
+  print('======= Battery Test =======')
   unittest.main()

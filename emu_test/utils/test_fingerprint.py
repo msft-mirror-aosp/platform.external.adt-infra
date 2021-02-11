@@ -67,7 +67,7 @@ def find_location(root, name):
     for x in root.iter('node'):
         if name == x.get('text'):
             return get_middle(x.get('bounds'))
-    print 'ERROR: Failed to find ' + name + ' node element.'
+    print('ERROR: Failed to find ' + name + ' node element.')
     return []
 
 
@@ -108,7 +108,7 @@ def adb_touch_button(name):
     while tries < 10:
         coordinates = get_middle_location(name)
         if len(coordinates) == 0:
-            print "Failed to find the middle location of %s.  Will try again.", (name)
+            print("Failed to find the middle location of %s.  Will try again.", (name))
             time.sleep(2)
             tries = tries + 1
         else:
@@ -165,10 +165,10 @@ def check_screen_is_unlocked():
     adb_binary = path_utils.get_adb_binary()
     ret1 = subprocess.call([adb_binary, 'shell', 'dumpsys', 'deviceidle', '|', 'grep', 'mScreenLocked=false'])
     if ret1:
-        print 'Emulated screen is not reporting as unlocked.'
+        print('Emulated screen is not reporting as unlocked.')
         return False
     else:
-        print 'Emulated screen is reporting as unlocked.'
+        print('Emulated screen is reporting as unlocked.')
         return True
 
 
@@ -180,10 +180,10 @@ def check_screen_is_locked():
     adb_binary = path_utils.get_adb_binary()
     ret1 = subprocess.call([adb_binary, 'shell', 'dumpsys', 'deviceidle', '|', 'grep', 'mScreenLocked=true'])
     if ret1:
-        print 'Emulated screen is not reporting as locked.'
+        print('Emulated screen is not reporting as locked.')
         return False
     else:
-        print 'Emulated screen is reporting as locked.'
+        print('Emulated screen is reporting as locked.')
         return True
 
 
@@ -229,12 +229,12 @@ def do_fingerprint_test():
             # Check if the device reports as unlocked.
             ret = check_screen_is_unlocked()
             if ret:
-                print 'Successfully tested fingerprint test.'
+                print('Successfully tested fingerprint test.')
                 return True
         return False
     except Exception as e:
-        print 'Exception occurred while attempting fingerprint test'
-        print traceback.format_exc()
+        print('Exception occurred while attempting fingerprint test')
+        print(traceback.format_exc())
         return False
 
 

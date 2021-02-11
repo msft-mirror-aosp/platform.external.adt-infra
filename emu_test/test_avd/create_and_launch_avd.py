@@ -8,7 +8,7 @@ usage: create_and_launch_avd.py [-h] [-t TIMEOUT_IN_SECONDS] --avd AVD
 import os
 import sys
 import time
-import util
+from . import util
 import psutil
 import shutil
 import logging
@@ -52,7 +52,7 @@ class CreateAndLaunchAVDTest(EmuBaseTestCase):
             self.kill_proc_by_name(["crash-service", "adb"])
             os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
             shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
-        except Exception, e:
+        except Exception as e:
             self.m_logger.error("Error in cleanup - %r" % e)
             pass
 
@@ -144,13 +144,13 @@ class CreateAndLaunchAVDTest(EmuBaseTestCase):
            except Exception as e:
                log.error('exception run_with_timeout adb getprop: %r' % e)
                continue
-           if exit_code is 0:
-               completed = output.strip()
+           if exit_code == 0:
+               completed = output.strip().decode()
            if completed == "1":
                log.info('AVD %s is fully booted' % str(avd))
                break
            time.sleep(1)
-       if completed is not "1":
+       if completed != "1":
            log.debug('command output - %s %s' % (output,err))
            log.error('AVD %s didn\'t boot up within %s seconds' % (avd,real_time_out))
            raise TimeoutError(avd, real_time_out)
@@ -211,10 +211,10 @@ class CreateAndLaunchAVDTest(EmuBaseTestCase):
                           '-c', '20M']
             self.m_logger.info('Create AVD, cmd: %s' % ' '.join(create_cmd))
             avd_proc = psutil.Popen(create_cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE)
-            stdout, stderr = avd_proc.communicate(input='\n')
+            stdout, stderr = avd_proc.communicate(input=bytes('\n', 'utf-8'))
             self.simple_logger.debug(stdout)
             self.simple_logger.debug(stderr)
-            if 'Error' in stderr:
+            if 'Error' in stderr.decode():
                 return -1
             return avd_proc.poll()
 

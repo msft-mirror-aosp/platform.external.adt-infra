@@ -1,8 +1,8 @@
 """Tests for sensor-related commands."""
 
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 import unittest
 import sys
 
@@ -67,7 +67,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays magnetic-field values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(MAGNETIC_FIELD, UPDATED_MAGNETIC_FIELD), util.OK,
                                      ASSERT_MSG.format(PREFIX_SET, MAGNETIC_FIELD))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(MAGNETIC_FIELD), UPDATED_MAGNETIC_FIELD,
@@ -87,7 +87,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays acceleration values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(ACCELERATION,
                                      UPDATED_ACCELERATION), util.OK, ASSERT_MSG.format(PREFIX_SET, ACCELERATION))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(ACCELERATION), UPDATED_ACCELERATION,
@@ -108,7 +108,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays gyroscope values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(GYROSCOPE, UPDATED_GYROSCOPE), util.OK,
                                      ASSERT_MSG.format(PREFIX_SET, GYROSCOPE))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(GYROSCOPE), UPDATED_GYROSCOPE,
@@ -128,7 +128,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays orientation values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(ORIENTATION, UPDATED_ORIENTATION), util.OK,
                                      ASSERT_MSG.format(PREFIX_SET, ORIENTATION))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(ORIENTATION), UPDATED_ORIENTATION,
@@ -148,7 +148,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays temperature values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(TEMPERATURE, UPDATED_TEMPERATURE), util.OK,
                                      ASSERT_MSG.format(PREFIX_SET, TEMPERATURE))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(TEMPERATURE), UPDATED_TEMPERATURE,
@@ -168,7 +168,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays light values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(LIGHT, UPDATED_LIGHT), util.OK,
                                      ASSERT_MSG.format(PREFIX_SET, LIGHT))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(LIGHT), UPDATED_LIGHT,
@@ -188,7 +188,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays pressure values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(PRESSURE, UPDATED_PRESSURE), util.OK,
                                      ASSERT_MSG.format(PREFIX_SET, PRESSURE))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(PRESSURE), UPDATED_PRESSURE,
@@ -208,7 +208,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays proximity values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(PROXIMITY, UPDATED_PROXIMITY), util.OK,
                                      ASSERT_MSG.format(PREFIX_SET, PROXIMITY))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(PROXIMITY), UPDATED_PROXIMITY,
@@ -228,7 +228,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays humidity values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(HUMIDITY, UPDATED_HUMIDITY), util.OK,
                                      ASSERT_MSG.format(PREFIX_SET, HUMIDITY))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(HUMIDITY), UPDATED_HUMIDITY,
@@ -248,7 +248,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays magnetic_field_uncalibrated values as <value>
    """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(CMD_SENSOR_SET.format(UNCALIBRATED_MAGNETIC_FIELD, UPDATED_UNCALIBRATED_MAGNETIC_FIELD), util.OK,
                                      ASSERT_MSG.format(PREFIX_SET, UNCALIBRATED_MAGNETIC_FIELD))
     self._execute_command_and_verify(CMD_SENSOR_GET.format(UNCALIBRATED_MAGNETIC_FIELD), UPDATED_UNCALIBRATED_MAGNETIC_FIELD,
@@ -268,7 +268,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays gyroscope_uncalibrated values as <value>
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     self._execute_command_and_verify(
       CMD_SENSOR_SET.format(UNCALIBRATED_GYROSCOPE, UPDATED_UNCALIBRATED_GYROSCOPE), util.OK,
       ASSERT_MSG.format(PREFIX_SET, UNCALIBRATED_GYROSCOPE))
@@ -300,7 +300,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
       1. Emulator displays all the sensors with status enabled/disabled
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     assert_msg = 'Failed to properly display sensor details.'
     self._execute_command_and_verify(CMD_SENSOR_DISPLAY,
                                      REGEX_SENSOR_DISPLAY,
@@ -308,5 +308,5 @@ class SensorTest(testcase_base.BaseConsoleTest):
 
 
 if __name__ == '__main__':
-  print '======= Sensor Test ======='
+  print('======= Sensor Test =======')
   unittest.main()

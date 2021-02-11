@@ -5,7 +5,7 @@ import sys
 import time
 import os
 
-from utils import util
+from .utils import util
 
 test_apk_package = '%s.test' % util.MAIN_APK_PACKAGE
 
@@ -15,13 +15,13 @@ while True:
     sys.exit(-1)
   try:
     adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
-    print ('Run adb shell to uninstall apps, trial num: %s' % str(num_trials))
-    print ('Run adb uninstall %s' % test_apk_package)
+    print(('Run adb shell to uninstall apps, trial num: %s' % str(num_trials)))
+    print(('Run adb uninstall %s' % test_apk_package))
     subprocess.call([adb_binary, 'uninstall', test_apk_package])
-    print ('Run adb uninstall %s' % util.MAIN_APK_PACKAGE)
+    print(('Run adb uninstall %s' % util.MAIN_APK_PACKAGE))
     subprocess.call([adb_binary, 'uninstall', util.MAIN_APK_PACKAGE])
     break
   except subprocess.CalledProcessError as err:
-    print 'Subprocess call error: {0}'.format(err)
+    print('Subprocess call error: {0}'.format(err))
     time.sleep(util.ADB_TRIAL_WAIT_TIME_S)
     num_trials += 1

@@ -50,9 +50,9 @@ for uiTestDirectory in uiTestDirectories:
                 testDictionary = {testSuite:
                                   {'passedTests': passedTests, 'failedTests': failedTests}}
                 loopedDictionary.update(testDictionary)
-print("\nTesting Results in " + testLogsDirectory)
-print("Execution Looped " + str(runCount) + " Times")
-for uiTestSuite, uiTestResults in loopedDictionary.iteritems():
+print(("\nTesting Results in " + testLogsDirectory))
+print(("Execution Looped " + str(runCount) + " Times"))
+for uiTestSuite, uiTestResults in loopedDictionary.items():
     passedTests = uiTestResults['passedTests']
     failedTests = uiTestResults['failedTests']
     passedTests.sort()
@@ -60,23 +60,23 @@ for uiTestSuite, uiTestResults in loopedDictionary.iteritems():
     numPassed = len(passedTests)
     numFailed = len(failedTests)
     numTests = numPassed + numFailed
-    print("\nTest Suite: " + uiTestSuite)
+    print(("\nTest Suite: " + uiTestSuite))
     print("=======================================")
-    print("Number of Tests Passed: " + str(numPassed) + "/" + str(numTests))
-    print("Number of Tests Failed: " + str(numFailed) + "/" + str(numTests))
+    print(("Number of Tests Passed: " + str(numPassed) + "/" + str(numTests)))
+    print(("Number of Tests Failed: " + str(numFailed) + "/" + str(numTests)))
     print("=======================================")
     print("\nPassed Tests:")
     if numPassed > 0:
-        print('\n'.join(passedTests))
+        print(('\n'.join(passedTests)))
     else:
         print('None')
     print("\nFailed Tests:")
     if numFailed > 0:
-        print('\n'.join(failedTests))
+        print(('\n'.join(failedTests)))
     else:
         print('None')
     print("---------------------------------------")
 
-print ("\nAnalyzed " + str(testCount/runCount) + " Tests from " + testLogsDirectory)
-print ("Looped " + str(runCount) + " Times for " + str(testCount) + " Total Tests")
-print (str(passCount) + " Tests Passed and " + str(failCount) + " Tests Failed") 
+print(("\nAnalyzed " + str(testCount/runCount) + " Tests from " + testLogsDirectory))
+print(("Looped " + str(runCount) + " Times for " + str(testCount) + " Total Tests"))
+print((str(passCount) + " Tests Passed and " + str(failCount) + " Tests Failed")) 

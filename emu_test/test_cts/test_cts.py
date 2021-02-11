@@ -1,7 +1,7 @@
 """Run CTS tests for emulator"""
 
-import cts_results_parser as ctsparser
-from test_cts_exclusions import cts_plans_current_exclusions
+from . import cts_results_parser as ctsparser
+from .test_cts_exclusions import cts_plans_current_exclusions
 
 import json
 import xml.etree.ElementTree as ElementTree
@@ -152,7 +152,7 @@ class CTSTestCase(EmuBaseTestCase):
         # Now remove the Entries, whose index in the remaining list is
         # >= tests_per_shard.
         tests_remaining = num_tests - (shard_num * tests_per_shard)
-        for i in reversed(range(tests_per_shard, tests_remaining)):
+        for i in reversed(list(range(tests_per_shard, tests_remaining))):
             tree_root.remove(tree_root[i])
         tree.write(plan_shard_path)
         return plan_shard

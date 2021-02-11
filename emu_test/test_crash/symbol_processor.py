@@ -69,7 +69,7 @@ class SymbolProcessor(object):
             info = f.readline().split()
 
         if len(info) != 5 or info[0] != "MODULE":
-            raise ("Corrupt symbol file: %s, %s" % (symbol_file, info))
+            raise "Corrupt symbol file: %s, %s"
 
         return info
 

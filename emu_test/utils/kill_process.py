@@ -40,4 +40,4 @@ if __name__ == '__main__':
                 subprocess.check_output(["C:\\PSTools\\pskill.exe", "-t", pid])
                 status=0
 
-    print status
+    print(status)

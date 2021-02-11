@@ -47,7 +47,7 @@ class PsqSnapshotRunnerTestCase(EmuBaseTestCase):
             self.kill_proc_by_name(["crash-service", "adb"])
             os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
             shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
-        except Exception, e:
+        except Exception as e:
             self.m_logger.error("Error in cleanup - %r", e)
             pass
 
@@ -75,7 +75,7 @@ class PsqSnapshotRunnerTestCase(EmuBaseTestCase):
         launcher_emu.join(10)
         self.kill_emulator()
 
-        assert "OK (1 test)" in out
+        assert "OK (1 test)" in out.decode()
 
 if emu_args.config_file is not None:
     emu_test.utils.emu_testcase.create_test_case_from_file("SnapshotRunner", PsqSnapshotRunnerTestCase, PsqSnapshotRunnerTestCase.run_snapshot_runner_test)
@@ -83,6 +83,6 @@ if emu_args.config_file is not None:
 if __name__ == '__main__':
     os.environ["SHELL"] = "/bin/bash"
     emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
-    print emu_argparser.emu_args
+    print(emu_argparser.emu_args)
     sys.argv[1:] = emu_args.unittest_args
     unittest.main()

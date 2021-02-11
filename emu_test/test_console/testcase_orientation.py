@@ -3,8 +3,8 @@
 import unittest
 import sys
 import time
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 
 CMD_ROTATE = 'rotate\n'
@@ -57,7 +57,7 @@ class OrientationTest(testcase_base.BaseConsoleTest):
       Check to orientation and rotation of the launched app.
     """
     this_function_name = sys._getframe().f_code.co_name
-    print 'Running test: %s' % (this_function_name)
+    print(('Running test: %s' % (this_function_name)))
     # Rotate 90 degree and check orientation values.
     self._execute_command_and_verify(CMD_ROTATE, ROTATE_CMD_OUTPUT, ASSERT_MSG_ROTATE)
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
@@ -77,5 +77,5 @@ class OrientationTest(testcase_base.BaseConsoleTest):
 
 
 if __name__ == '__main__':
-  print '======= rotate Test ======='
+  print('======= rotate Test =======')
   unittest.main()

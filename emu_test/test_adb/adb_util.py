@@ -130,16 +130,16 @@ def test_connected(adb_binary, devices):
     connected = get_connected_devices(adb_binary)
     success = True
     if len(connected) != devices:
-        print('\n\nERROR:\nExpected number of connections: ' +
-              str(devices))
-        print('Found: ' + str(len(connected)))
+        print(('\n\nERROR:\nExpected number of connections: ' +
+              str(devices)))
+        print(('Found: ' + str(len(connected))))
 
         output, error = shell([adb_binary, 'devices'])
         print('\n<<<Begin Output of adb devices>>>')
         print(output)
         print('<<<End Output of adb devices>>>')
         print('')
-        print('The following devices were detected: %s' % connected)
+        print(('The following devices were detected: %s' % connected))
 
         success = False
 
@@ -279,7 +279,7 @@ def launcher(test_fn, duration, devices, adb_binary, setup=noop, cleanup=noop, i
 
                 iteration += 1
 
-            print('\nInteractions (%s): (%s\n' % (device, iteration))
+            print(('\nInteractions (%s): (%s\n' % (device, iteration)))
             return success
 
         # Run test against every device in parallel.

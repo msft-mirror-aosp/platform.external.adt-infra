@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
+
 
 import logging
 import subprocess
@@ -34,7 +34,7 @@ class Logcat(object):
     def _get_logcat(self):
         logcat = LogMessage(start=self.start, sort=1)
         response = self.grpc.getLogcat(logcat)
-        self.start = response.next
+        self.start = response.__next__
         return response.entries
 
     def reset(self):

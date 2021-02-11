@@ -1,7 +1,7 @@
 """Contains a TestLogger that can be used to log cts results."""
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
+
+
 
 import base64
 import sys

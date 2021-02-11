@@ -7,7 +7,7 @@ import time
 import unittest
 from subprocess import PIPE
 
-import testcase_base
+from . import testcase_base
 from emu_test.utils import emu_argparser
 
 class AdbWirelessTest(testcase_base.BaseAdbTest):
@@ -96,7 +96,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         pair_code = ''
         # Extract ip, pair code and ports
         for line in out.split('\n'):
-            print line
+            print(line)
             if 'connect ip' in line:
                 connect_ip = line.split()[-1]
             elif 'pair ip' in line:
@@ -108,9 +108,9 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         self.assertTrue(pair_ip != '', "Pair ip not found")
         self.assertTrue(pair_code != '', "Pair code not found")
 
-        print "connect ip " + connect_ip
-        print "pair ip " + pair_ip
-        print "pair code " + pair_code
+        print("connect ip " + connect_ip)
+        print("pair ip " + pair_ip)
+        print("pair code " + pair_code)
 
         p = psutil.Popen([self.adb_binary, 'pair', pair_ip],
                          cwd='.', stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
@@ -121,17 +121,17 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         (out, err) = p.communicate()
 
     def _is_connected(self, device):
-        print '==========================='
-        print self.serial
-        print device
-        print '==========================='
+        print('===========================')
+        print(self.serial)
+        print(device)
+        print('===========================')
         if not device:
             return False
 
         p = psutil.Popen([self.adb_binary, 'devices'],
                          cwd='.', stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         (out, err) = p.communicate()
-        print out
+        print(out)
 
         for line in out.split('\n'):
             if device in line:
@@ -153,7 +153,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         return ip.split(':')[0]
 
     def test_adb_wireless_connect(self):
-        print 'Running test: %s' % (inspect.stack()[0][3])
+        print('Running test: %s' % (inspect.stack()[0][3]))
         p = psutil.Popen([self.adb_binary, 'disconnect'],
                          cwd='.', stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         (out, err) = p.communicate()
@@ -165,7 +165,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         self.assertTrue(self._is_connected(device_ip), "Could not connect")
 
     def test_adb_wireless_reconnet_wifidebug_toggle(self):
-        print 'Running test: %s' % (inspect.stack()[0][3])
+        print('Running test: %s' % (inspect.stack()[0][3]))
 
         device_ip = self._get_ip()
 
@@ -174,14 +174,14 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
             self._adb_wireless_connect()
             self.assertTrue(self._is_connected(device_ip), "Could not connect")
 
-        print 'toggleWirelessDebug'
+        print('toggleWirelessDebug')
         self._run_adb_wireless_util_func('toggleWirelessDebug')
-        print 'toggleWirelessDebug done'
+        print('toggleWirelessDebug done')
         time.sleep(20)
 
         self.assertTrue(self._is_connected('adb-'+self.serial), "Could not connect")
 
 if __name__ == '__main__':
-    print '======= ADB Wireless Tests ======='
+    print('======= ADB Wireless Tests =======')
     unittest.main()
 

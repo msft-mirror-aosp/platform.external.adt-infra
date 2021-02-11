@@ -81,23 +81,23 @@ def get_dst_dir(remote_path):
   return None
 
 def clean_emu_proc():
-  print 'clean up any emulator process'
+  print('clean up any emulator process')
   for x in psutil.process_iter():
     try:
       proc = psutil.Process(x.pid)
       # mips 64 use qemu-system-mipsel64, others emulator-[arch]
       if "emulator" in proc.name() or "qemu-system" in proc.name():
-        print "trying to kill - %s, pid - %d, status - %s" % (proc.name(), proc.pid, proc.status())
+        print("trying to kill - %s, pid - %d, status - %s" % (proc.name(), proc.pid, proc.status()))
         proc.kill()
     except:
       pass
 
 def verbose_call(cmd):
-  print "Run command %s" % ' '.join(cmd)
+  print("Run command %s" % ' '.join(cmd))
   subprocess.check_call(cmd)
 
 def unzip_addon_dir(file_name, dst_dir):
-  print file_name, dst_dir
+  print(file_name, dst_dir)
   with open(file_name, 'rb') as fh:
     z = zipfile.ZipFile(fh)
     for name in z.namelist():
@@ -106,11 +106,11 @@ def unzip_addon_dir(file_name, dst_dir):
         if not base_name:
           abi = os.path.basename(os.path.normpath(name))
           verbose_call(["mkdir", "-p", os.path.join(dst_dir,abi)])
-          print "Found abi %s" % abi
+          print("Found abi %s" % abi)
           continue
         dst_path = os.path.join(dst_dir, abi, base_name)
         with z.open(name) as src, file(dst_path, "wb") as dst:
-          print "unzip from %s to %s" % (name, dst_path)
+          print("unzip from %s to %s" % (name, dst_path))
           shutil.copyfileobj(src, dst)
 
 gsutil_path = os.path.join(args.build_dir, 'third_party', 'gsutil', 'gsutil.py')
@@ -133,7 +133,7 @@ def get_file_list_cts():
             rev = output[output.rfind('/', 0, output.rfind('/'))+1:-1]
             maxrev = max(maxrev, int(rev))
         rev_list.append(str(maxrev))
-        print "Found last build %s from %s" % (maxrev, gspath)
+        print("Found last build %s from %s" % (maxrev, gspath))
         subpath = '%s%s/' % (gspath, maxrev)
         proc = subprocess.Popen(['python', gsutil_path, 'ls', '-R', subpath], stdout=subprocess.PIPE)
         while True:
@@ -154,7 +154,7 @@ def download_and_unzip():
   sdk_root = os.environ['ANDROID_SDK_ROOT']
   if 'image-builds' in sdk_root:
     image_dir = os.path.join(sdk_root, 'system-images')
-    print 'Remove system image directory: ', image_dir
+    print('Remove system image directory: ', image_dir)
     verbose_call(['rm', '-rf', image_dir])
   if args.remote_file_list == "cts":
     file_list = get_file_list_cts()
@@ -189,7 +189,7 @@ def download_and_unzip():
       else:
         raise ValueError('Error: Unknown branch!')
     except Exception as e:
-      print "Error in download_and_unzip %r" % e
+      print("Error in download_and_unzip %r" % e)
       return 1
   return 0
 

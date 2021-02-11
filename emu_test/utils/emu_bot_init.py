@@ -6,7 +6,7 @@ from subprocess import PIPE, STDOUT
 import psutil
 import logging
 import threading
-import path_utils
+from . import path_utils
 
 parser = argparse.ArgumentParser(description='Download and unzip a list of files separated by comma')
 parser.add_argument('--build-dir', dest='build_dir', action='store',

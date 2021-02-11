@@ -5,8 +5,8 @@ import os
 import telnetlib
 import unittest
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 AUTH_OUTPUT = 'Android Console: type \\\'help\\\' for a list of commands\r\nOK'
 AUTH_ERROR_OUTPUT = ('KO: authentication token does not match '
@@ -71,7 +71,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
     Verify:
       1. .emulator_console_auth_token file is created in home folder
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self.telnet = util.telnet_emulator()
     assert os.path.isfile(util.TOKEN_PATH)
     util.exit_emulator_console(self.telnet)
@@ -88,7 +88,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Short help information is displayed.
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self.telnet = util.telnet_emulator()
     self._verify_auth_command_by_enter_help_command(
         util.CMDS_FOR_HELP_NO_AUTH)
@@ -107,7 +107,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
     Verify:
       1. User is not authorized, and warning message is displayed.
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self.telnet = util.telnet_emulator()
     self._auth_user_for_emulator_console(util.CMD_RANDOM_AUTH_TOKEN,
                                          AUTH_ERROR_OUTPUT)
@@ -127,7 +127,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
       1. User is not authorized, and "missing authentication token"
          is displayed.
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self.telnet = util.telnet_emulator()
     self._auth_user_for_emulator_console(util.CMD_EMPTY_AUTH_TOKEN,
                                          AUTH_TOKEN_MISSING_OUTPUT)
@@ -148,7 +148,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
       1. User is not authorized
       2. The full help commands information is displayed
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self.telnet = util.telnet_emulator()
     auth_token = util.get_auth_token()
     valid_auth_cmd = '%s %s\n' % (util.AUTH, auth_token)
@@ -172,7 +172,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
       1. Emulator authentication is skipped and emulator console is usable
          (Here, we run help command to check.)
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
 
     # save auth token value and empty contents of auth token file
     valid_auth_token = util.get_auth_token()
@@ -193,7 +193,7 @@ class AuthTest(testcase_base.BaseConsoleTest):
 
       util.exit_emulator_console(self.telnet)
     except IOError as e:
-      print 'IOError on auth token file.'
+      print('IOError on auth token file.')
     finally:
       print ('The failure on resetting auth token file back will affact other '
              'tests running after this test. Hence, reset it again when '
@@ -229,5 +229,5 @@ class AuthTest(testcase_base.BaseConsoleTest):
 
 
 if __name__ == '__main__':
-  print '======= auth Test ======='
+  print('======= auth Test =======')
   unittest.main()

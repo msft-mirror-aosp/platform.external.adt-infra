@@ -1,6 +1,6 @@
 """Tests for  cts_suite.cts_test_parser."""
 
-from __future__ import absolute_import, division, print_function
+
 
 from mock import Mock
 from .context import CtsLogParser

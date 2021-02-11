@@ -4,8 +4,8 @@ import inspect
 import time
 import unittest
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 EVENT = 'event'
 CMD_EVENT_TYPES = '%s types\n' % EVENT
@@ -57,9 +57,9 @@ class EventTest(testcase_base.BaseConsoleTest):
   def _verify_event_codes(self, command, filename):
     is_cmd_successful = False
     for i in range(util.NUM_MAX_TRIALS):
-      print ('Running: %s verified against %s, trial #%s' %
-             (inspect.stack()[0][3], filename.strip(), str(i + 1)))
-      self.telnet.write(command)
+      print(('Running: %s verified against %s, trial #%s' %
+             (inspect.stack()[0][3], filename.strip(), str(i + 1))))
+      self.telnet.write(bytes(command, 'utf-8'))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_event_list_all = util.remove_all_spaces(
           util.parse_output_for_ev(self.telnet))
@@ -97,12 +97,12 @@ class EventTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Available event types are listed
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     is_cmd_successful = False
     for i in range(util.NUM_MAX_TRIALS):
-      print ('Running: %s, trial #%s' %
-             (inspect.stack()[0][3], str(i + 1)))
-      self.telnet.write(CMD_EVENT_TYPES)
+      print(('Running: %s, trial #%s' %
+             (inspect.stack()[0][3], str(i + 1))))
+      self.telnet.write(bytes(CMD_EVENT_TYPES, 'utf-8'))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_event_aliases = util.remove_all_spaces(
           util.parse_output_for_ev(self.telnet))
@@ -132,7 +132,7 @@ class EventTest(testcase_base.BaseConsoleTest):
     Verify:
       1. Available event code alias for the selected type are listed
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._verify_all_event_codes()
     self._verify_all_events_no_allias()
 
@@ -142,10 +142,10 @@ class EventTest(testcase_base.BaseConsoleTest):
     TT ID: b15436dd-dd0a-4943-aee7-41301cbe18e3
     """
     # b/204884
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     pass
 
 
 if __name__ == '__main__':
-  print '======= Event Test ======='
+  print('======= Event Test =======')
   unittest.main()

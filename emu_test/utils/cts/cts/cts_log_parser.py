@@ -1,5 +1,5 @@
 import re
-from test_logger import CtsTestLogger
+from .test_logger import CtsTestLogger
 
 class CtsLogParser(object):
 

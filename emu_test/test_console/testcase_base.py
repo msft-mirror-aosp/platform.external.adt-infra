@@ -15,7 +15,7 @@ import inspect
 import sys
 import unittest
 
-from utils import util
+from .utils import util
 
 
 class BaseConsoleTest(unittest.TestCase):
@@ -30,10 +30,10 @@ class BaseConsoleTest(unittest.TestCase):
   def setUp(self):
     auth_token = util.get_auth_token()
     self.telnet = util.telnet_emulator()
-    self.telnet.write('%s %s\n' % (util.AUTH, auth_token))
+    self.telnet.write(bytes('%s %s\n' % (util.AUTH, auth_token), 'utf-8'))
     util.wait_on_windows()
     if (not util.check_read_until(
-        self.telnet.read_until(util.OK, util.TIMEOUT_S))):
+        self.telnet.read_until(bytes(util.OK, 'utf-8'), util.TIMEOUT_S))):
       sys.exit(-1)
 
   def tearDown(self):
@@ -42,20 +42,20 @@ class BaseConsoleTest(unittest.TestCase):
   def assert_cmd_successful(self, is_cmd_successful, assertion_msg, has_status,
                             status, expected, actual):
     if has_status:
-      print ('Test result: %s status matches %s => %s' %
-             (inspect.stack()[0][3], status, str(is_cmd_successful)))
+      print(('Test result: %s status matches %s => %s' %
+             (inspect.stack()[0][3], status, str(is_cmd_successful))))
     else:
-      print ('Test result: %s => %s' %
-             (inspect.stack()[0][3], str(is_cmd_successful)))
+      print(('Test result: %s => %s' %
+             (inspect.stack()[0][3], str(is_cmd_successful))))
 
     if not is_cmd_successful:
-      print 'Expected output:'
-      print expected
-      print 'Actual Output:'
-      print actual
+      print('Expected output:')
+      print(expected)
+      print('Actual Output:')
+      print(actual)
     self.assertTrue(is_cmd_successful, assertion_msg)
 
 
 if __name__ == '__main__':
-  print '======= Base Console Test ======='
+  print('======= Base Console Test =======')
   unittest.main()
