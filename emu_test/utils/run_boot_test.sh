@@ -30,7 +30,7 @@ rm -rf $ANDROID_AVD_HOME/*
 SESSION_DIR=$DISTRIB_DIR/testlogs
 mkdir -p $SESSION_DIR
 
-python3 -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml --headless
+python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml --headless
 
 find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
 
