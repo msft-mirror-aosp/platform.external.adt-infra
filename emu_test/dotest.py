@@ -77,7 +77,7 @@ def print_xml(emu_result):
                             RESULT_XML_FILE)
 
     with open(dst_path, 'w+') as modified:
-        modified.write('%s' % g_xml_string_result)
+        modified.write('%s' % g_xml_string_result.decode())
 
 def printResult(result):
     """
