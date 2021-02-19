@@ -26,7 +26,7 @@ class RestartTest(testcase_base.BaseConsoleTest):
     """Telnet to emulator and auth token"""
     auth_token = util.get_auth_token()
     self.telnet = util.telnet_emulator()
-    self.telnet.write(bytes('%s %s\n' % (util.AUTH, auth_token), 'utf-8'))
+    self.telnet.write(util.toBytes('%s %s\n' % (util.AUTH, auth_token)))
     util.wait_on_windows()
     if (not util.check_read_until(
             self.telnet.read_until(util.OK, util.TIMEOUT_S))):
@@ -54,7 +54,7 @@ class RestartTest(testcase_base.BaseConsoleTest):
 
     print(('Running test: %s' % (inspect.stack()[0][3])))
 
-    self.telnet.write(bytes(RESTART_CMD, 'utf-8'))
+    self.telnet.write(util.toBytes(RESTART_CMD))
     self.assertTrue(RESTART_RESPONSE, self.telnet.read_all())
 
     time.sleep(RESTART_WAIT_TIMEOUT_S)

@@ -27,6 +27,14 @@ from collections import namedtuple
 from . import test_fingerprint
 from . import test_homescreen
 
+def toBytes(s):
+  PY3_OR_LATER = sys.version_info[0] >= 3
+
+  if PY3_OR_LATER:
+    return bytes(s, 'utf-8')
+  else:
+    return bytes(s)
+
 
 class AVDConfig(namedtuple('AVDConfig', 'api, alt_version, tag, abi, device, ram, gpu, classic, port, cts, ori')):
     """
@@ -854,7 +862,7 @@ class EmuBaseTestCase(LoggedTestCase):
         cmd = [sdkmanager_binary, '%s' % package]
         self.m_logger.info('Attempt to install SDK package: %s' % ' '.join(cmd))
         install_proc = psutil.Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE)
-        stdout, stderr = install_proc.communicate(input=bytes('y\n', 'utf-8'))
+        stdout, stderr = install_proc.communicate(input=toBytes('y\n'))
         self.simple_logger.debug(stdout)
         self.simple_logger.debug(stderr)
         self.m_logger.info('Return value of the sdkmanager call: %s', install_proc.poll())

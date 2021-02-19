@@ -86,7 +86,7 @@ class NetworkTest(testcase_base.BaseConsoleTest):
     Returns:
         output_network_status: The console output for 'network speed <network speed>' command.
     """
-    self.telnet.write(bytes(command, 'utf-8'))
+    self.telnet.write(util.toBytes(command))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_network_speed = util.parse_output(self.telnet)
     return output_network_speed
@@ -97,7 +97,7 @@ class NetworkTest(testcase_base.BaseConsoleTest):
     Returns:
         output_network_status: The console output for 'network status' command.
     """
-    self.telnet.write(bytes(CMD_NETWORK_STATUS, 'utf-8'))
+    self.telnet.write(util.toBytes(CMD_NETWORK_STATUS))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_network_status = util.parse_output(self.telnet)
     return output_network_status

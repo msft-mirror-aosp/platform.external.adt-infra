@@ -211,7 +211,7 @@ class CreateAndLaunchAVDTest(EmuBaseTestCase):
                           '-c', '20M']
             self.m_logger.info('Create AVD, cmd: %s' % ' '.join(create_cmd))
             avd_proc = psutil.Popen(create_cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE)
-            stdout, stderr = avd_proc.communicate(input=bytes('\n', 'utf-8'))
+            stdout, stderr = avd_proc.communicate(input=util.toBytes('\n'))
             self.simple_logger.debug(stdout)
             self.simple_logger.debug(stderr)
             if 'Error' in stderr.decode():

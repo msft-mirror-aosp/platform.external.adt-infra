@@ -39,12 +39,12 @@ class PortTest(testcase_base.BaseConsoleTest):
       print(('Running %s, trial #%s' %
              (inspect.stack()[0][3], str(i + 1))))
 
-      self.telnet.write(bytes(CMD_REDIR_ADD, 'utf-8'))
+      self.telnet.write(util.toBytes(CMD_REDIR_ADD))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_redir_add = util.parse_output(self.telnet)
       assert output_redir_add == util.OK
 
-      self.telnet.write(bytes(CMD_REDIR_LIST, 'utf-8'))
+      self.telnet.write(util.toBytes(CMD_REDIR_LIST))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_redir_list = util.parse_output(self.telnet)
 
@@ -66,7 +66,7 @@ class PortTest(testcase_base.BaseConsoleTest):
       print(('Running : %s, trial #%s' %
              (inspect.stack()[0][3], str(i + 1))))
 
-      self.telnet.write(bytes(CMD_REDIR_DEL, 'utf-8'))
+      self.telnet.write(util.toBytes(CMD_REDIR_DEL))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_redir_del = util.parse_output(self.telnet)
       assert output_redir_del == util.OK

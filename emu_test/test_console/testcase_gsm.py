@@ -82,7 +82,7 @@ class GSMTest(testcase_base.BaseConsoleTest):
     Returns:
         output_gsm_data: The console output for 'gsm data <gsm data>' command.
     """
-    self.telnet.write(bytes(command, 'utf-8'))
+    self.telnet.write(util.toBytes(command))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_gsm_data = util.parse_output(self.telnet)
     return output_gsm_data
@@ -94,7 +94,7 @@ class GSMTest(testcase_base.BaseConsoleTest):
     Returns:
         output_gsm_status: The console output for 'gsm status' command.
     """
-    self.telnet.write(bytes(CMD_GSM_STATUS, 'utf-8'))
+    self.telnet.write(util.toBytes(CMD_GSM_STATUS))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_gsm_status = util.parse_output(self.telnet)
     return output_gsm_status

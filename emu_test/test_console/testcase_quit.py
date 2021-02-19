@@ -30,7 +30,7 @@ class QuitTest(testcase_base.BaseConsoleTest):
   def _execute_command_and_verify(self, command):
     is_command_successful = False
 
-    self.telnet.write(bytes(command, 'utf-8'))
+    self.telnet.write(util.toBytes(command))
     util.wait_on_windows()
 
     output_exit = util.parse_output(self.telnet)

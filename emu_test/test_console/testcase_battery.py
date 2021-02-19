@@ -65,7 +65,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     Returns:
         output_pwr_display: The console output for 'power display' command.
     """
-    self.telnet.write(bytes(CMD_POWER_DISPLAY, 'utf-8'))
+    self.telnet.write(util.toBytes(CMD_POWER_DISPLAY))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_pwr_display = util.parse_output(self.telnet)
     return output_pwr_display

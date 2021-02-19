@@ -22,7 +22,7 @@ class HelpTest(testcase_base.BaseConsoleTest):
     """Only telnet to emulator, initially not need to run auth command."""
     self.telnet = telnetlib.Telnet(util.SERVER_NAME, util.CONSOLE_PORT)
     if not util.check_read_until(
-        self.telnet.read_until(bytes(util.OK, 'utf-8'), util.TIMEOUT_S)):
+        self.telnet.read_until(util.toBytes(util.OK), util.TIMEOUT_S)):
       sys.exit(-1)
 
   def _help_command(self, expected_output):
@@ -63,10 +63,10 @@ class HelpTest(testcase_base.BaseConsoleTest):
     """Authorization user."""
     auth_token = util.get_auth_token()
     self.telnet = util.telnet_emulator()
-    self.telnet.write(bytes('%s %s\n' % (util.AUTH, auth_token), 'utf-8'))
+    self.telnet.write(util.toBytes('%s %s\n' % (util.AUTH, auth_token)))
     util.wait_on_windows()
     if (not util.check_read_until(
-        self.telnet.read_until(bytes(util.OK, 'utf-8'), util.TIMEOUT_S))):
+        self.telnet.read_until(util.toBytes(util.OK), util.TIMEOUT_S))):
       sys.exit(-1)
 
   def test_help_command(self):

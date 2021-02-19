@@ -59,7 +59,7 @@ class EventTest(testcase_base.BaseConsoleTest):
     for i in range(util.NUM_MAX_TRIALS):
       print(('Running: %s verified against %s, trial #%s' %
              (inspect.stack()[0][3], filename.strip(), str(i + 1))))
-      self.telnet.write(bytes(command, 'utf-8'))
+      self.telnet.write(util.toBytes(command))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_event_list_all = util.remove_all_spaces(
           util.parse_output_for_ev(self.telnet))
@@ -102,7 +102,7 @@ class EventTest(testcase_base.BaseConsoleTest):
     for i in range(util.NUM_MAX_TRIALS):
       print(('Running: %s, trial #%s' %
              (inspect.stack()[0][3], str(i + 1))))
-      self.telnet.write(bytes(CMD_EVENT_TYPES, 'utf-8'))
+      self.telnet.write(util.toBytes(CMD_EVENT_TYPES))
       time.sleep(util.CMD_WAIT_TIMEOUT_S)
       output_event_aliases = util.remove_all_spaces(
           util.parse_output_for_ev(self.telnet))
