@@ -586,14 +586,22 @@ check_test_succeed() {
     grep -q "errors=\"1\"" $TEST_REPORT && panic "Errors in $TEST_DIR"
 }
 
-# Explicitly use python2 if possible, this makes sure we can
-# run the tests side by side on those who have a python3 as a
-# default install
-PYTHON=$(find_program python2)
-if [ -z "${PYTHON}" ]; then
-  log "No explicit python2 interpreter, using default"
-  PYTHON="python"
-fi
+# Setup virtualenv if available
+activate_virtualenv() {
+  mkdir py3env
+  pushd py3env
+  python3 -m venv env
+  popd
+  source py3env/env/bin/activate
+  pip3 install -r $TEST_DIR/utils/requirements.txt
+}
+
+deactivate_virtualenv() {
+  deactivate
+  rm -rf py3env
+}
+
+PYTHON="python"
 
 # Check that python is installed and working.
 PYVER=$($PYTHON --version)

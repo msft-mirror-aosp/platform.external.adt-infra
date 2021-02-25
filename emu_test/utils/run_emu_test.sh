@@ -65,6 +65,9 @@ run mkdir -p $SESSION_DIR
 run mkdir -p $SESSION_DIR/emu-master-dev
 run unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
 
+log "activate virtualenv"
+activate_virtualenv
+
 clean_avds
 run_test "Boot_test" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Boot_test --file_pattern 'test_boot.*' --config_file $TEST_DIR/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori":"public"}' --generate_xml
 
@@ -99,6 +102,9 @@ run_test "psq snapshot tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --
 
 clean_avds
 #run_test "Icebox tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Icebox_test --file_pattern 'test_icebox.*' --config_file $TEST_DIR/config/icebox_cfg.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
+
+log "deactivate virtualenv"
+deactivate_virtualenv
 
 log "Remove deployed emulator"
 run rm -rf $SESSION_DIR/emu-master-dev

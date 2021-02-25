@@ -61,6 +61,9 @@ run unzip -o $DISTRIB_DIR/sdk-repo-$OS-debug-emulator-[P,0-9]*.zip -d $SESSION_D
 log "Remove any existing AVDs in ${ANDROID_AVD_HOME}"
 run rm -rf $ANDROID_AVD_HOME/*
 
+log "activate virtualenv"
+activate_virtualenv
+
 # Run the android-studio embedded emulator tests
 run_test "Embedded tests" external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator
 check_test_succeed embedded_test
@@ -73,10 +76,11 @@ run_test "Running Crash tests" $PYTHON -u external/adt-infra/emu_test/dotest.py 
 check_test_succeed Crash_test
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 
-
-
 # These are a bit flaky
 # run_test "Running Snapshot save/load tests" $PYTHON -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Snapshot_test --file_pattern 'psq_test.*' --config_file external/adt-infra/emu_test/config/psq_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf
+
+log "deactivate virtualenv"
+deactivate_virtualenv
 
 log "Remove any empty file in $SESSION_DIR"
 find $SESSION_DIR -size 0 -delete || log "Did not remove any empty files."
