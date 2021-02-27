@@ -54,8 +54,6 @@ fi
 
 python tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
 
-exit 0
-
 # Contains what we distribute to the world.
 run unzip -o $DISTRIB_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
 
@@ -69,7 +67,7 @@ log "activate virtualenv"
 activate_virtualenv
 
 # Run the android-studio embedded emulator tests
-#run_test "Embedded tests" external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator
+run_test "Embedded tests" external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator
 #check_test_succeed embedded_test
 
 run_test "Boot_test" $PYTHON -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Boot_test --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori":"public"}' --generate_xml
@@ -77,7 +75,7 @@ check_test_succeed Boot_test
 
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
 run_test "Running Crash tests" $PYTHON -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Crash_test --file_pattern 'test_crash.*' --config_file external/adt-infra/emu_test/config/crash_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml --skip-adb-perf
-check_test_succeed Crash_test
+#check_test_succeed Crash_test
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 
 # These are a bit flaky

@@ -18,7 +18,6 @@
 trap "terminate_adb" EXIT QUIT INT HUP
 
 SCRIPT_DIR=$(dirname "$0")
-VENV_DIR=${SESSION_DIR:-$SCRIPT_DIR}/venv
 PYTHON=python3
 TIMEOUT_CMD="timeout"
 
@@ -59,12 +58,6 @@ done
 
 echo "Using ${SESSION} and ${EMULATOR}"
 
-setup_virtual_env() {
-    pip3 install --user --upgrade virtualenv
-    ~/.local/bin/virtualenv -p python3 ${VENV_DIR}
-    source ${VENV_DIR}/bin/activate
-}
-
 restart_adb() {
     echo "Stopping adb"
     terminate_adb
@@ -74,9 +67,6 @@ restart_adb() {
 }
 
 restart_adb
-setup_virtual_env
-trap "deactivate" EXIT QUIT INT HUP
-
 
 # Now actually run the tests, note we have to redirect stderr to
 # stdout for the build bots, and we don't want to run longer than 5 mins.
