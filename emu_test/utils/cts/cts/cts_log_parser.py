@@ -1,5 +1,5 @@
 import re
-from .test_logger import CtsTestLogger
+from test_logger import CtsTestLogger
 
 class CtsLogParser(object):
 
@@ -14,34 +14,34 @@ class CtsLogParser(object):
     self.fail_buffer = []
 
   def _is_start(self, line):
-    return re.search(CtsLogParser.START_REGEX, line)
+    return re.search(CtsLogParser.START_REGEX, line.decode())
 
   def _add_start(self, line):
-    m = re.match(CtsLogParser.START_REGEX, line)
+    m = re.match(CtsLogParser.START_REGEX, line.decode())
     self.cts_logger.start(m.group(1), int(m.group(2)))
 
   def _is_done(self, line):
-    return re.search(CtsLogParser.DONE_REGEX, line)
+    return re.search(CtsLogParser.DONE_REGEX, line.decode())
 
   def _add_done(self, line):
-    m = re.match(CtsLogParser.DONE_REGEX, line)
+    m = re.match(CtsLogParser.DONE_REGEX, line.decode())
     self.cts_logger.done(int(m.group(1)), int(m.group(2)))
 
   def _is_success(self, line):
-    return re.search(CtsLogParser.SUCCESS_REGEX, line)
+    return re.search(CtsLogParser.SUCCESS_REGEX, line.decode())
 
   def _add_success(self, line):
-    self.cts_logger.success(re.match(CtsLogParser.SUCCESS_REGEX, line).group(1))
+    self.cts_logger.success(re.match(CtsLogParser.SUCCESS_REGEX, line.decode()).group(1))
 
   def _is_fail(self, line):
-    return re.search(CtsLogParser.FAIL_REGEX, line)
+    return re.search(CtsLogParser.FAIL_REGEX, line.decode())
 
   def _is_logline(self, line):
-    return re.search(CtsLogParser.START_OF_LOGLINE, line)
+    return re.search(CtsLogParser.START_OF_LOGLINE, line.decode())
 
   def _add_fail(self, lines):
-     m = re.match(CtsLogParser.FAIL_REGEX, lines[0])
-     self.cts_logger.fail(m.group(1), '\n'.join([m.group(2)] + lines[1:]))
+    m = re.match(CtsLogParser.FAIL_REGEX, lines[0].decode())
+    self.cts_logger.fail(m.group(1), '\n'.join([m.group(2)] + lines[1:]))
 
   def add(self, line):
     # If this is a new CTS log line then flush the buffer .

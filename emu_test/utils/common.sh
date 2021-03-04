@@ -580,7 +580,7 @@ check_vars()  {
 check_test_succeed() {
     # Checks if the given test has a junit test report and has no failures in the test report
     local TEST_DIR=$1
-    local TEST_REPORT=$SESSION_DIR/$TEST_DIR/test_report.xml
+    local TEST_REPORT=$SESSION_DIR/$TEST_DIR/test_${TEST_DIR}.xml
     [[ ! -f $TEST_REPORT ]] && panic "Test report $TEST_REPORT not found"
     grep -q "failures=\"0\"" $TEST_REPORT || panic "Failures in $TEST_DIR"
     grep -q "errors=\"1\"" $TEST_REPORT && panic "Errors in $TEST_DIR"

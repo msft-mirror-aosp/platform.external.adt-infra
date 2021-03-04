@@ -21,11 +21,11 @@ if __name__ == '__main__':
 
     self_pid = str(os.getpid())
 
-    running_process = subprocess.check_output(["C:\\PSTools\\tlist.exe"]).split("\r\n")
+    running_process = subprocess.check_output(["C:\\PSTools\\tlist.exe"]).split("\r\n".encode())
     py_pids = []
     for process in running_process:
-        if "python.exe" in process:
-            pid = re.findall('\d+', process)[0]
+        if "python.exe" in process.decode():
+            pid = re.findall('\d+', process.decode())[0]
             if pid != self_pid:
                 py_pids.append(pid)
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     status=1
     for pid in py_pids:
         pid_details = subprocess.check_output(["C:\\PSTools\\tlist.exe", pid])
-        if args.process_regex in pid_details:
+        if args.process_regex in pid_details.decode():
             if "windows" in platform.system().lower():
                 subprocess.check_output(["C:\\PSTools\\pskill.exe", "-t", pid])
                 status=0

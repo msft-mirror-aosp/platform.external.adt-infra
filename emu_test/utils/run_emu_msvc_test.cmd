@@ -73,7 +73,7 @@ echo "Boot test timed out"
 :BootDone
 
 mkdir %SESSION_DIR%\cts
-python external\adt-infra\emu_test\utils\cts\setup.py test install --user && python external\adt-infra\emu_test\utils\cts\run_basic_cts_tests.py --log %SESSION_DIR%\cts\cts_test.xml -v 1
+python external\adt-infra\emu_test\utils\cts\setup.py test install --user && python external\adt-infra\emu_test\utils\cts\cts\run_basic_cts_tests.py --log %SESSION_DIR%\cts\test_cts.xml -v 1
 
 echo "Remove deployed emulator"
 echo "Run rmdir /s /q %SESSION_DIR%\emu-master-dev"

@@ -4,7 +4,7 @@ import subprocess
 import sys
 from queue import Queue
 from threading import Thread, currentThread
-from .cts_log_parser import CtsLogParser
+from cts_log_parser import CtsLogParser
 from absl import logging
 
 

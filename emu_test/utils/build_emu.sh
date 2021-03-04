@@ -84,6 +84,9 @@ export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 log "deactivate virtualenv"
 deactivate_virtualenv
 
+log "Remove deployed emulator builds"
+rm -rf $SESSION_DIR/emu-master-dev*
+
 log "Remove any empty file in $SESSION_DIR"
 find $SESSION_DIR -size 0 -delete || log "Did not remove any empty files."
 
