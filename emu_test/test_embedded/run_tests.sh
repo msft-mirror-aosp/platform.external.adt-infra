@@ -16,11 +16,10 @@
 # Upgrade this as soon as the build bots support python3.
 . $(dirname "$0")/../utils/common.sh
 trap "terminate_adb" EXIT QUIT INT HUP
-
 SCRIPT_DIR=$(dirname "$0")
 PYTHON=python3
 TIMEOUT_CMD="timeout"
-
+WARN=false
 
 PY_VER=$($PYTHON -c 'import sys; exit(1) if sys.version_info.major < 3 and sys.version_info.minor < 5 else exit(0)')
 $PY_VER || panic "No python3, not running these tests."
@@ -50,6 +49,12 @@ while [[ $# -gt 0 ]]; do
         shift # arg
         shift # val
         ;;
+    -w | --warn)
+        WARN=$2
+        echo "Treat failures/warnings as errors? $WARN"
+        shift
+        shift
+        ;;
     *)
         shift # ignore
         ;;
@@ -73,6 +78,17 @@ restart_adb
 ${TIMEOUT_CMD} 600 make -C ${SCRIPT_DIR} check EMULATOR=${EMULATOR} SESSION_DIR=${SESSION} 1>&2
 status=$?
 
+if [ $status -neq 0 ]; then
+    echo "============ FAILURE LOG ==============="
+    cat ${SESSION}/test_embedded/log/pytest.log
+    echo "============ FAILURE LOG ==============="
+fi
+
 # Forcefully terminate adb, as the build bots will hang otherwise.
 terminate_adb
-exit $status
+
+# Only propagate errors if --warn true has been requested.
+case "$WARN" in
+    *true* ) exit $status;;
+    * ) exit 0;;
+esac

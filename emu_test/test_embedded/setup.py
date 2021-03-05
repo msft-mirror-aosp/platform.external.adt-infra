@@ -129,7 +129,15 @@ setup(
     # projects.
     extras_require={
         "dev": ["check-manifest", "black"],
-        "test": ["coverage", "mock", "tox", "pytest", "pytest-timeout", "pytest-benchmark"],
+        "test": [
+            "coverage",
+            "mock",
+            "tox",
+            "pytest",
+            "pytest-timeout",
+            "pytest-benchmark",
+            "pytest-rerunfailures",
+        ],
     },  # Optional
     # If there are data files included in your packages that need to be
     # installed, specify them here.
@@ -153,7 +161,11 @@ setup(
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # `pip` to create the appropriate form of executable for the target
     # platform.
-    entry_points={"console_scripts": ["",],},  # Optional
+    entry_points={
+        "console_scripts": [
+            "",
+        ],
+    },  # Optional
     # List additional URLs that are relevant to your project as a dict.
     #
     # This field corresponds to the "Project-URL" metadata fields:

@@ -33,6 +33,7 @@ class AvdGenerator(object):
     )
 
     def __init__(self, sdk_root, avd_home):
+        self.tmpdir = None
         self.sdk_root = sdk_root
         self.sys_root = os.path.abspath(os.path.join(sdk_root, "system-images"))
         if os.path.exists(avd_home):

@@ -49,6 +49,7 @@ else
 fi
 
 
+
 log2err () {
     log "$@" >&2
 }
@@ -600,6 +601,16 @@ activate_virtualenv() {
 deactivate_virtualenv() {
   deactivate
   rm -rf py3env
+}
+
+# Returns true if the string starts with a P or p
+is_prebuilt () {
+  retval=false
+  case $1 in
+    P* ) retval=true;;
+    p* ) retval=true;;
+  esac
+  printf "$retval"
 }
 
 PYTHON="python"
