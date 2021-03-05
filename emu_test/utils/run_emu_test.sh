@@ -92,7 +92,7 @@ if [[ $OSTYPE != *"darwin"* ]]; then
 fi
 
 clean_avds
-run_test "Console tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME
+run_test "Console tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless
 
 clean_avds
 run_test "AVD tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file $TEST_DIR/config/avd_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml --headless
