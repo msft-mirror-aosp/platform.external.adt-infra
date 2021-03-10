@@ -588,12 +588,13 @@ check_test_succeed() {
 
 # Setup virtualenv if available
 activate_virtualenv() {
+  local UTIL_DIR=$1
   mkdir py3env
   pushd py3env
   python3 -m venv env
   popd
   source py3env/env/bin/activate
-  pip3 install -r $TEST_DIR/utils/requirements.txt
+  pip3 install -r $UTIL_DIR/requirements.txt
 }
 
 deactivate_virtualenv() {

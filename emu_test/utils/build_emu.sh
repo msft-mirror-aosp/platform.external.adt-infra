@@ -64,7 +64,7 @@ log "Remove any existing AVDs in ${ANDROID_AVD_HOME}"
 run rm -rf $ANDROID_AVD_HOME/*
 
 log "activate virtualenv"
-activate_virtualenv
+activate_virtualenv $TEST_DIR/utils
 
 # Run the android-studio embedded emulator tests
 run_test "Embedded tests" external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator
