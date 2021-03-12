@@ -60,9 +60,10 @@ class Square {
         // get handle to fragment shader's vColor member
         mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor")
         // Set color for drawing the triangle
-        color[0] = (1.0f/255)*(hexColor and 0xFF0000).toFloat()
-        color[1] = (1.0f/255)*(hexColor and 0xFF00).toFloat()
+        color[0] = (1.0f/255)*(hexColor and 0xFF0000).ushr(16).toFloat()
+        color[1] = (1.0f/255)*(hexColor and 0xFF00).ushr(8).toFloat()
         color[2] = (1.0f/255)*(hexColor and 0xFF).toFloat()
+
 
 
         GLES20.glUniform4fv(mColorHandle, 1, color, 0)
@@ -85,10 +86,10 @@ class Square {
         // number of coordinates per vertex in this array
         const val COORDS_PER_VERTEX = 3
         var squareCoords = floatArrayOf(
-            -0.5f, 0.5f, 0.0f,  // top left
-            -0.5f, -0.5f, 0.0f,  // bottom left
-            0.5f, -0.5f, 0.0f,  // bottom right
-            0.5f, 0.5f, 0.0f
+            -1.0f, 1.0f, 0.0f,  // top left
+            -1.0f, 0.8f, 0.0f,  // bottom left
+            -0.3f, 0.8f, 0.0f,  // bottom right
+            -0.3f, 1.0f, 0.0f
         ) // top right
     }
 

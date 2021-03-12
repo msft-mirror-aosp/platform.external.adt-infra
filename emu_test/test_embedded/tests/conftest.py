@@ -4,7 +4,13 @@ import time
 
 import pytest
 
-from aemu.proto.emulator_controller_pb2 import KeyboardEvent
+from aemu.proto.emulator_controller_pb2 import (
+    ImageFormat,
+    KeyboardEvent,
+    ParameterValue,
+    PhysicalModelValue,
+    Rotation,
+)
 from emu.emulator import Emulator
 
 
@@ -81,11 +87,17 @@ def go_home():
     stub = pytest.emulator.get_emulator_controller()
     pytest.emulator.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
+    stub.setPhysicalModel(
+        PhysicalModelValue(
+            target=PhysicalModelValue.ROTATION,
+            value=ParameterValue(data=[0, 0, 0]),
+        )
+    )
 
 
 @pytest.fixture
 def at_home():
-    """Fixture to make sure the emulator returns to the home screen.
+    """Fixture to make sure the emulator returns to the home screen and is in portrait mode.
 
     Use this if you want to make sure the emulator returns to the
     home screen.
