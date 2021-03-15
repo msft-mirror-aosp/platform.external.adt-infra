@@ -200,6 +200,7 @@ class Emulator(object):
                 "300",
                 "-debug-events", # Needed for some tests.
                 "-wipe-data",
+                "-experimental-enable-multidisplay" # Remove this once it is no longer experimental
                 # "-verbose",
                 # Enabling the onese below will cause a huge amount of logging.
                 # "-show-kernel",
@@ -258,6 +259,7 @@ class Emulator(object):
         logging.info("And we have: %s", self.adb(["devices"]))
         self.desc = discovery.find_by_pid(self.proc.pid)
         if self.desc is None:
+            logging.error("See b/181982371 if the failure is due unknown option: -experimental-enable-multidisplay")
             raise Exception("Failed to launch {} - {}".format(self.emulator, avd))
 
         self._get_dimensions()
