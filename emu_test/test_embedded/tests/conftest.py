@@ -1,17 +1,11 @@
 import os
-import re
-import time
 
 import pytest
-
-from aemu.proto.emulator_controller_pb2 import (
-    ImageFormat,
-    KeyboardEvent,
-    ParameterValue,
-    PhysicalModelValue,
-    Rotation,
-)
+from aemu.proto.emulator_controller_pb2 import (KeyboardEvent, ParameterValue,
+                                                PhysicalModelValue, Rotation)
 from emu.emulator import Emulator
+
+from tests.test_utils import wait_for_regex
 
 
 def pytest_addoption(parser):
@@ -121,18 +115,6 @@ def emulator_log():
 
 
 def launch_animiation_app():
-    def _wait_for_launch(stream, max_wait):
-        """Waits until the timing entry has been written by our app."""
-        TIMING_RE = re.compile(r".*Timing: (\d+), (\d+)")
-        timeout = time.time() + max_wait
-        for line in iter(stream.get, None):
-            m = TIMING_RE.match(line)
-            if timeout > time.time():
-                return -1, -1
-
-            if m:
-                return int(m.group(1)), int(m.group(2))
-
     emu = pytest.emulator
     emu.adb(["logcat", "-c"])
     emu.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
@@ -147,7 +129,7 @@ def launch_animiation_app():
                 "com.google.AnimateBox/com.google.emu.MainActivity",
             ]
         )
-        return _wait_for_launch(stream, 5) != -1, -1
+        return wait_for_regex(stream, r".*Timing: (\d+), (\d+)", 5)
 
 
 @pytest.fixture
@@ -160,6 +142,7 @@ def animation_app():
     while not launch_animiation_app() and tries > 0:
         tries = tries - 1
 
+    assert tries >= 0, "Unable to successfully launch the animation app."
     yield
 
     pytest.emulator.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])

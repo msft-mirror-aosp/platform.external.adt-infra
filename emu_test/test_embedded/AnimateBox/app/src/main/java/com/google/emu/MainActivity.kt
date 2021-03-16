@@ -14,12 +14,13 @@ import com.google.protobuf.MessageOrBuilder
 import com.google.protobuf.util.JsonFormat
 import android.hardware.SensorManager
 import android.view.View
+import com.android.emulator.control.KeyboardEvent
 
 
 class MainActivity : Activity() {
     private var orientationListener: OrientationEventListener? = null
     val TAG = "aemu"
-    private var mGLView: GLSurfaceView? = null
+    private var mGLView: MyGLSurfaceView? = null
 
     override fun onCreate(savedInstanceState: Bundle?)  {
         super.onCreate(savedInstanceState)
@@ -38,6 +39,27 @@ class MainActivity : Activity() {
             }
 
     }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        val key = KeyboardEvent.newBuilder().setKey(JsonLogger.translateKeyEvent(event))
+            .setEventType(KeyboardEvent.KeyEventType.keydown).build()
+        Log.i(TAG, JsonLogger.toJson("KeyboardEvent", key))
+
+        if (keyCode == KeyEvent.KEYCODE_P) {
+            mGLView!!.mPaused = !mGLView!!.mPaused
+        }
+        return true
+    }
+
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        val key = KeyboardEvent.newBuilder().setKey(JsonLogger.translateKeyEvent(event))
+            .setEventType(KeyboardEvent.KeyEventType.keyup).build()
+        Log.i(TAG, JsonLogger.toJson("KeyboardEvent", key))
+
+        return true
+    }
+
 
     override  protected fun onPause() {
         super.onPause()
