@@ -78,9 +78,9 @@ restart_adb
 ${TIMEOUT_CMD} 600 make -C ${SCRIPT_DIR} check EMULATOR=${EMULATOR} SESSION_DIR=${SESSION} 1>&2
 status=$?
 
-if [ $status -neq 0 ]; then
+if [ $status -ne 0 ]; then
     echo "============ FAILURE LOG ==============="
-    cat ${SESSION}/test_embedded/log/pytest.log
+    cat ${SESSION}/embedded_test/log/pytest.log
     echo "============ FAILURE LOG ==============="
 fi
 

@@ -67,8 +67,10 @@ log "activate virtualenv"
 activate_virtualenv $TEST_DIR/utils
 
 # Run the android-studio embedded emulator tests
-run_test "Embedded tests" external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_prebuilt)
-#check_test_succeed embedded_test
+run_test "Embedded tests" external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)
+if [[ $(is_presubmit $BID) == "true" ]]; then
+    check_test_succeed embedded_test
+fi
 
 run_test "Boot_test" $PYTHON -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Boot_test --file_pattern 'test_boot.*' --config_file external/adt-infra/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori":"public"}' --generate_xml
 check_test_succeed Boot_test
