@@ -5,8 +5,8 @@ import sys
 import time
 import unittest
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 RESTART_CMD = 'restart\n'
 RESTART_RESPONSE = 'OK: restarting emulator, bye bye.*\n.*OK'
@@ -26,7 +26,7 @@ class RestartTest(testcase_base.BaseConsoleTest):
     """Telnet to emulator and auth token"""
     auth_token = util.get_auth_token()
     self.telnet = util.telnet_emulator()
-    self.telnet.write('%s %s\n' % (util.AUTH, auth_token))
+    self.telnet.write(util.toBytes('%s %s\n' % (util.AUTH, auth_token)))
     util.wait_on_windows()
     if (not util.check_read_until(
             self.telnet.read_until(util.OK, util.TIMEOUT_S))):
@@ -44,17 +44,17 @@ class RestartTest(testcase_base.BaseConsoleTest):
       5. Repeat step 2-3, and verify it works, which means emulator restarted
     """
     if util.isWindows():
-      print 'Skip restart test on Win.'
+      print('Skip restart test on Win.')
       pass
       return
 
-    print 'Skip restart test.'
+    print('Skip restart test.')
     pass
     return
 
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
 
-    self.telnet.write(RESTART_CMD)
+    self.telnet.write(util.toBytes(RESTART_CMD))
     self.assertTrue(RESTART_RESPONSE, self.telnet.read_all())
 
     time.sleep(RESTART_WAIT_TIMEOUT_S)
@@ -62,5 +62,5 @@ class RestartTest(testcase_base.BaseConsoleTest):
 
 
 if __name__ == '__main__':
-  print '======= restart Test ======='
+  print('======= restart Test =======')
   unittest.main()

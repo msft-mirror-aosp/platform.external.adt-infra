@@ -219,20 +219,20 @@ public class NetworkIOTest {
         String[] path = new String[]{"Settings", "Network & internet"};
         AppLauncher.launchPath(instrumentation, true, path);
 
-        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v2(device);
+        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v3(device);
 
         // Test requires "Airplane mode" switch widget to start in the off state.
-        if (NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon)) {
+        if (NetworkUtil.isAirplaneModeEnabled_v2(device, airplaneModeIcon)) {
             AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
         }
         assertFalse("Airplane mode is not disabled.",
-                NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
+                NetworkUtil.isAirplaneModeEnabled_v2(device, airplaneModeIcon));
 
         AppLauncher.launchPath(instrumentation, true, path);
         NetworkIOTestUtil.toggleAirplaneMode(device);
         assertTrue("Airplane mode is not enabled.",
-                NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
+                NetworkUtil.isAirplaneModeEnabled_v2(device, airplaneModeIcon));
 
         // Disable airplane mode.
         AppLauncher.launchPath(instrumentation, true, path);
@@ -264,28 +264,28 @@ public class NetworkIOTest {
         String[] path = new String[]{"Settings", "Network & internet"};
         AppLauncher.launchPath(instrumentation, true, path);
 
-        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v2(device);
+        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v3(device);
 
         // Test requires "Airplane mode" switch widget to start in the off state.
-        if (NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon)) {
+        if (NetworkUtil.isAirplaneModeEnabled_v2(device, airplaneModeIcon)) {
             AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
         }
         assertFalse("Airplane mode is not disabled.",
-                NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
+                NetworkUtil.isAirplaneModeEnabled_v2(device, airplaneModeIcon));
 
         for (int i = 0; i < stressCount; i++) {
             AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
             assertTrue("Airplane mode is not enabled.",
-                    NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
+                    NetworkUtil.isAirplaneModeEnabled_v2(device, airplaneModeIcon));
 
             // Disable airplane mode.
             AppLauncher.launchPath(instrumentation, true, path);
             NetworkIOTestUtil.toggleAirplaneMode(device);
 
             assertFalse("Airplane mode is not disabled.",
-                    NetworkUtil.isAirplaneModeEnabled(device, airplaneModeIcon));
+                    NetworkUtil.isAirplaneModeEnabled_v2(device, airplaneModeIcon));
         }
     }
 

@@ -155,10 +155,10 @@ class EventTimeTester(object):
 
     # Parse emulator log.
     EMU_EVENT = re.compile(
-        r".* (\d+): sendGenericEvent: \[(\d+), (\d+), (\d+), (-?\d+)\]"
+        r".* (\d+): sendGenericEvent: \[\s+([0-9a-fA-F]+),\s+([0-9a-fA-F]+),\s+([0-9a-fA-F]+),\s+(-?[0-9a-fA-F]+)\]"
     )
 
-    def __init__(self, send_fn, event_stream, start_time_seconds):
+    def __init__(self, emulator, send_fn, event_stream, start_time_seconds):
         """ Creates an EventTimeTester object.
 
         Args:
@@ -168,6 +168,8 @@ class EventTimeTester(object):
             start_time_seconds: The start time of the emulator in seconds, only needed
               when receiving events from an adb_event_stream
         """
+        self.width = emulator.width
+        self.height = emulator.height
         self.send_fn = send_fn
         self.event_stream = event_stream
         self.start_time = start_time_seconds
@@ -203,9 +205,9 @@ class EventTimeTester(object):
         if m:
             return (
                 int(m.group(1)) / 1000000,
-                int(m.group(2)),
-                int(m.group(3)),
-                int(m.group(4)),
+                int(m.group(2), 16),
+                int(m.group(3), 16),
+                int(m.group(4), 16),
             )
 
     def scale_axis(self, value, min_in, max_in):
@@ -294,7 +296,7 @@ class EventTimeTester(object):
             return [(0x3, 0x03A, 00000000), (0x03, 0x39, 0xFFFFFFFF), (0, 0, 0)]
         else:
             return [
-                (0x3, 0x35, self.scale_axis(x, 0, 1080)),
-                (0x3, 0x36, self.scale_axis(y, 0, 1920)),
+                (0x3, 0x35, self.scale_axis(x, 0, self.width)),
+                (0x3, 0x36, self.scale_axis(y, 0, self.height)),
                 (0, 0, 0),
             ]

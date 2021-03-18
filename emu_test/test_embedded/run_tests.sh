@@ -14,11 +14,15 @@
 # limitations under the License.
 
 # Upgrade this as soon as the build bots support python3.
+. $(dirname "$0")/../utils/common.sh
+trap "terminate_adb" EXIT QUIT INT HUP
 SCRIPT_DIR=$(dirname "$0")
-VENV_DIR=${SESSION_DIR:-$SCRIPT_DIR}/venv
-PYTHON=python2
+PYTHON=python3
 TIMEOUT_CMD="timeout"
+WARN=false
 
+PY_VER=$($PYTHON -c 'import sys; exit(1) if sys.version_info.major < 3 and sys.version_info.minor < 5 else exit(0)')
+$PY_VER || panic "No python3, not running these tests."
 
 if ! command -v $TIMEOUT_CMD &>/dev/null; then
    TIMEOUT_CMD="gtimeout"
@@ -34,16 +38,22 @@ while [[ $# -gt 0 ]]; do
     -e | --emulator)
         # Use python as MacOs does not have "realpath"
         REALPATH=$(python -c "import os; print(os.path.realpath('$2'))")
-        EMULATOR="EMULATOR=$REALPATH"
+        EMULATOR="$REALPATH"
         shift # arg
         shift # val
         ;;
     -s | --session_dir)
         # Use python as MacOs does not have "realpath"
         REALPATH=$(python -c "import os; print(os.path.realpath('$2'))")
-        SESSION="SESSION_DIR=$REALPATH"
+        SESSION="$REALPATH"
         shift # arg
         shift # val
+        ;;
+    -w | --warn)
+        WARN=$2
+        echo "Treat failures/warnings as errors? $WARN"
+        shift
+        shift
         ;;
     *)
         shift # ignore
@@ -53,29 +63,32 @@ done
 
 echo "Using ${SESSION} and ${EMULATOR}"
 
-setup_virtual_env() {
-
-    ${PYTHON} -m pip &>/dev/null || ${PYTHON} -m easy_install --user pip==19.3.1
-    # First make sure we have the proper setuptools available.
-    # The bots are running very old versions of everything, so we have to separate
-    # all of these!
-    pip install -q --user setuptools
-
-    # Make sure virtualenv is available and activate it
-    pip install -q --user virtualenv
-
-    ${PYTHON} -m virtualenv ${VENV_DIR}
-    source ${VENV_DIR}/bin/activate
+restart_adb() {
+    echo "Stopping adb"
+    terminate_adb
+    ADB_TRACE=all
+    echo "Starting adb"
+    $ANDROID_SDK_ROOT/platform-tools/adb start-server
 }
 
-setup_virtual_env
+restart_adb
 
 # Now actually run the tests, note we have to redirect stderr to
 # stdout for the build bots, and we don't want to run longer than 5 mins.
-${TIMEOUT_CMD} 300 make -C ${SCRIPT_DIR} check ${EMULATOR} ${SESSION} 1>&2
+${TIMEOUT_CMD} 600 make -C ${SCRIPT_DIR} check EMULATOR=${EMULATOR} SESSION_DIR=${SESSION} 1>&2
 status=$?
 
-# Forcefully terminate adb, as the build bots will hang otherwise.
-ps -A | grep adb | awk '{ print $1; }' | xargs kill -9 || true
+if [ $status -neq 0 ]; then
+    echo "============ FAILURE LOG ==============="
+    cat ${SESSION}/test_embedded/log/pytest.log
+    echo "============ FAILURE LOG ==============="
+fi
 
-exit $status
+# Forcefully terminate adb, as the build bots will hang otherwise.
+terminate_adb
+
+# Only propagate errors if --warn true has been requested.
+case "$WARN" in
+    *true* ) exit $status;;
+    * ) exit 0;;
+esac

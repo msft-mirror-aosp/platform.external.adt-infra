@@ -17,6 +17,8 @@ class MyGLSurfaceView(context: Context?) : GLSurfaceView(context) {
     private var mPreviousX = 0f
     private var mPreviousY = 0f
 
+    var mPaused = false
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         // MotionEvent reports input details from the touch screen
         // and other input controls. In this case, you are only
@@ -35,19 +37,7 @@ class MyGLSurfaceView(context: Context?) : GLSurfaceView(context) {
         return true
     }
 
-    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        val key = KeyboardEvent.newBuilder().setKey(JsonLogger.translateKeyEvent(event))
-            .setEventType(KeyboardEvent.KeyEventType.keyup).build()
-        Log.i(TAG, JsonLogger.toJson("KeyboardEvent", key))
-        return true
-    }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        val key = KeyboardEvent.newBuilder().setKey(JsonLogger.translateKeyEvent(event))
-            .setEventType(KeyboardEvent.KeyEventType.keydown).build()
-        Log.i(TAG, JsonLogger.toJson("KeyboardEvent", key))
-        return true
-    }
 
 
     init {
@@ -61,9 +51,19 @@ class MyGLSurfaceView(context: Context?) : GLSurfaceView(context) {
 
         val thread = Thread {
             var frame = 0
+            var paused = mPaused
             while (true) {
-                mRenderer.angle += 1
-                mRenderer.color = frame++;
+                if (paused != mPaused) {
+                    paused = mPaused
+                    if (paused)
+                        Log.i(TAG, "Pausing animation.")
+                    else
+                        Log.i(TAG, "Resuming animation.")
+                }
+                if (!paused) {
+                    mRenderer.angle += 1
+                    mRenderer.color = frame++;
+                }
                 requestRender()
                 Thread.sleep(10);
             }

@@ -3,8 +3,8 @@
 import inspect
 import unittest
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 CMD_QUIT = 'quit\n'
 CMD_EXIT = 'exit\n'
@@ -30,7 +30,7 @@ class QuitTest(testcase_base.BaseConsoleTest):
   def _execute_command_and_verify(self, command):
     is_command_successful = False
 
-    self.telnet.write(command)
+    self.telnet.write(util.toBytes(command))
     util.wait_on_windows()
 
     output_exit = util.parse_output(self.telnet)
@@ -56,7 +56,7 @@ class QuitTest(testcase_base.BaseConsoleTest):
     Verify:
       We have quited from console.
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._execute_command_and_verify(CMD_QUIT)
 
   def test_exit_command(self):
@@ -73,10 +73,10 @@ class QuitTest(testcase_base.BaseConsoleTest):
     Verify:
       We have exited from console.
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._execute_command_and_verify(CMD_EXIT)
 
 
 if __name__ == '__main__':
-  print '======= Quit/Exit Test ======='
+  print('======= Quit/Exit Test =======')
   unittest.main()

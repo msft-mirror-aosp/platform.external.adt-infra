@@ -3,8 +3,8 @@
 import inspect
 import unittest
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 CMD_HELP_AVD = 'help avd\n'
 CMD_AVD_STOP = 'avd stop\n'
@@ -42,7 +42,7 @@ class AvdTest(testcase_base.BaseConsoleTest):
       1. Check console output is 'virtual device is stopped'
       2. Check console output is 'virtual device is running'
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     self._execute_console_command_and_verify(CMD_AVD_STOP, util.OK)
     self._execute_console_command_and_verify(CMD_AVD_STATUS, AVD_STOPPED)
     self._execute_console_command_and_verify(CMD_AVD_START, util.OK)
@@ -64,5 +64,5 @@ class AvdTest(testcase_base.BaseConsoleTest):
 
 
 if __name__ == '__main__':
-  print '======= avd Test ======='
+  print('======= avd Test =======')
   unittest.main()

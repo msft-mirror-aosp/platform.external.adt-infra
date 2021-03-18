@@ -4,8 +4,8 @@ import unittest
 import time
 import inspect
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 CMD_NETWORK_STATUS = 'network status\n'
 CMD_NETWORK_SPEED_EDGE = 'network speed edge\n'
@@ -44,7 +44,7 @@ class NetworkTest(testcase_base.BaseConsoleTest):
     Verify:
       Success to set network speed.
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
 
     self._set_network_speed(CMD_NETWORK_SPEED_EDGE, NETWORK_SPEED_EDGE, NETWORK_DOWNLOAD_SPEED_EDGE)
     self._set_network_speed(CMD_NETWORK_SPEED_GSM, NETWORK_SPEED_GSM, NETWORK_DOWNLOAD_SPEED_GSM)
@@ -56,8 +56,8 @@ class NetworkTest(testcase_base.BaseConsoleTest):
 
     is_cmd_successful = False
     for i in range(util.NUM_MAX_TRIALS):
-      print ('Running: %s, retrieve %s speed %s, trial # %s'
-             % (inspect.stack()[0][3], keyword, speed, str(i + 1)))
+      print(('Running: %s, retrieve %s speed %s, trial # %s'
+             % (inspect.stack()[0][3], keyword, speed, str(i + 1))))
 
       output_network_display = self._get_network_speed(command)
 
@@ -75,10 +75,10 @@ class NetworkTest(testcase_base.BaseConsoleTest):
       self.assert_cmd_successful(is_cmd_successful, assert_msg, False, '',
                                  'Pattern: \n%s' % speed, keyword)
 
-      print '%s %s' % (output_network_display, output_extracted)
+      print(('%s %s' % (output_network_display, output_extracted)))
 
-      print ('Test result: %s %s %s => %s'
-             % (inspect.stack()[0][3], keyword, speed, str(is_cmd_successful)))
+      print(('Test result: %s %s %s => %s'
+             % (inspect.stack()[0][3], keyword, speed, str(is_cmd_successful))))
 
   def _get_network_speed(self, command):
     """Gets the console output for 'network speed <network speed>' command.
@@ -86,7 +86,7 @@ class NetworkTest(testcase_base.BaseConsoleTest):
     Returns:
         output_network_status: The console output for 'network speed <network speed>' command.
     """
-    self.telnet.write(command)
+    self.telnet.write(util.toBytes(command))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_network_speed = util.parse_output(self.telnet)
     return output_network_speed
@@ -97,12 +97,12 @@ class NetworkTest(testcase_base.BaseConsoleTest):
     Returns:
         output_network_status: The console output for 'network status' command.
     """
-    self.telnet.write(CMD_NETWORK_STATUS)
+    self.telnet.write(util.toBytes(CMD_NETWORK_STATUS))
     time.sleep(util.CMD_WAIT_TIMEOUT_S)
     output_network_status = util.parse_output(self.telnet)
     return output_network_status
 
 
 if __name__ == '__main__':
-  print '======= NetworkTest ======='
+  print('======= NetworkTest =======')
   unittest.main()

@@ -65,8 +65,11 @@ run mkdir -p $SESSION_DIR
 run mkdir -p $SESSION_DIR/emu-master-dev
 run unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
 
+log "activate virtualenv"
+activate_virtualenv $TEST_DIR/utils
+
 clean_avds
-run_test "Boot_test" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Boot_test --file_pattern 'test_boot.*' --config_file $TEST_DIR/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori":"public"}' --generate_xml
+run_test "Boot_test" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Boot_test --file_pattern 'test_boot.*' --config_file $TEST_DIR/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori":"public"}' --generate_xml --headless
 
 if [[ $OSTYPE != *"darwin"* ]]; then
     log "Generate Perf Data"
@@ -84,25 +87,24 @@ if [[ $OSTYPE != *"darwin"* ]]; then
         warn "Perf zip fail"
     fi
 
-    # Remove left over $PYTHON installations and run the embedded tests
-    rm -rf $HOME/.local
-    run_test "Embedded tests" $TEST_DIR/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $EMULATOR_EXE
-
-    run_test "snapshot tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file $TEST_DIR/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME --generate_xml
-    run_test "grpc tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir grpc_test --file_pattern 'test_grpc.*' --config_file $TEST_DIR/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME --generate_xml
+    run_test "snapshot tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file $TEST_DIR/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME --generate_xml --headless
+    run_test "grpc tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir grpc_test --file_pattern 'test_grpc.*' --config_file $TEST_DIR/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME --generate_xml --headless
 fi
 
 clean_avds
-run_test "Console tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME
+run_test "Console tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless
 
 clean_avds
-run_test "AVD tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file $TEST_DIR/config/avd_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
+run_test "AVD tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file $TEST_DIR/config/avd_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml --headless
 
 clean_avds
-run_test "psq snapshot tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir psq_snapshot_test --file_pattern 'psq_test.*' --config_file $TEST_DIR/config/psq_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
+run_test "psq snapshot tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir psq_snapshot_test --file_pattern 'psq_test.*' --config_file $TEST_DIR/config/psq_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml --headless
 
 clean_avds
-#run_test "Icebox tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Icebox_test --file_pattern 'test_icebox.*' --config_file $TEST_DIR/config/icebox_cfg.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml
+#run_test "Icebox tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Icebox_test --file_pattern 'test_icebox.*' --config_file $TEST_DIR/config/icebox_cfg.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml --headless
+
+log "deactivate virtualenv"
+deactivate_virtualenv
 
 log "Remove deployed emulator"
 run rm -rf $SESSION_DIR/emu-master-dev

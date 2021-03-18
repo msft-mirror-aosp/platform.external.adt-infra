@@ -49,6 +49,7 @@ else
 fi
 
 
+
 log2err () {
     log "$@" >&2
 }
@@ -580,19 +581,39 @@ check_vars()  {
 check_test_succeed() {
     # Checks if the given test has a junit test report and has no failures in the test report
     local TEST_DIR=$1
-    local TEST_REPORT=$SESSION_DIR/$TEST_DIR/test_report.xml
+    local TEST_REPORT=$SESSION_DIR/$TEST_DIR/test_${TEST_DIR}.xml
     [[ ! -f $TEST_REPORT ]] && panic "Test report $TEST_REPORT not found"
     grep -q "failures=\"0\"" $TEST_REPORT || panic "Failures in $TEST_DIR"
+    grep -q "errors=\"1\"" $TEST_REPORT && panic "Errors in $TEST_DIR"
 }
 
-# Explicitly use python2 if possible, this makes sure we can
-# run the tests side by side on those who have a python3 as a
-# default install
-PYTHON=$(find_program python2)
-if [ -z "${PYTHON}" ]; then
-  log "No explicit python2 interpreter, using default"
-  PYTHON="python"
-fi
+# Setup virtualenv if available
+activate_virtualenv() {
+  local UTIL_DIR=$1
+  mkdir py3env
+  pushd py3env
+  python3 -m venv env
+  popd
+  source py3env/env/bin/activate
+  pip3 install -r $UTIL_DIR/requirements.txt
+}
+
+deactivate_virtualenv() {
+  deactivate
+  rm -rf py3env
+}
+
+# Returns true if the string starts with a P or p
+is_prebuilt () {
+  retval=false
+  case $1 in
+    P* ) retval=true;;
+    p* ) retval=true;;
+  esac
+  printf "$retval"
+}
+
+PYTHON="python"
 
 # Check that python is installed and working.
 PYVER=$($PYTHON --version)

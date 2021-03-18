@@ -15,14 +15,12 @@ import logging
 import os
 import platform
 import subprocess
-from threading import Thread
 from functools import partial
-import six
+from queue import Queue
+from threading import Thread
 
-if six.PY2:
-    from Queue import Queue
-else:
-    from queue import Queue
+import sh
+import six
 
 
 def run(cmd, local_env=None):
@@ -53,8 +51,9 @@ def log_to_queue(q, line):
     if q.full():
         q.get()
 
-    logging.info(line)
-    q.put(line)
+    strip = line.strip()
+    logging.info(strip)
+    q.put(strip)
 
 
 def _reader(pipe, logfn):
@@ -71,6 +70,18 @@ def _log_proc(proc):
     q = Queue()
     log_with_queue = partial(log_to_queue, q)
     for args in [[proc.stdout, log_with_queue], [proc.stderr, logging.error]]:
-        Thread(target=_reader, args=args).start()
+        t = Thread(target=_reader, args=args)
+        t.start()
 
     return q
+
+
+class LogObserver(object):
+    def __init__(self, logfile):
+        """Attaches a log queue to a file."""
+        self.queue = Queue()
+        log_with_queue = partial(log_to_queue, self.queue)
+        self.tail = sh.tail("-f", logfile, _out=log_with_queue, _bg=True)
+
+    def __del__(self):
+        self.tail.kill()

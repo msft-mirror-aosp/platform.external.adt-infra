@@ -8,6 +8,8 @@ set -x
 echo $@
 env
 
+. $(dirname "$0")/common.sh
+
 DISTRIB_DIR=$1
 ADB_EXEC=$2
 SERIAL=$3
@@ -23,7 +25,13 @@ fi
 SESSION_DIR=$DISTRIB_DIR/testlogs
 mkdir -p $SESSION_DIR
 
-python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --test_dir ADB_test --file_pattern 'test_adb.*' --use_device --adb $ADB_EXEC
+log "activate virtualenv"
+activate_virtualenv $ADT_INFRA/emu_test/utils
+
+python3 -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --test_dir ADB_test --file_pattern 'test_adb.*' --use_device --adb $ADB_EXEC
+
+log "deactivate virtualenv"
+deactivate_virtualenv
 
 find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
 

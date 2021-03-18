@@ -28,12 +28,13 @@
      - remove stacktraces etc from successful nodes.
 
 """
-from __future__ import print_function
+
 from copy import copy
 from lxml import etree
 import argparse
 import logging
 import sys
+from functools import reduce
 
 # List of exemptions
 thismodule = sys.modules[__name__]
@@ -115,7 +116,7 @@ def merge_node(left, right, attrib_resolver):
 
   # Merge all the attributes of this node.
   merged_attr = merge_attributes(left.attrib, right.attrib, attrib_resolver)
-  for k, v in merged_attr.iteritems():
+  for k, v in merged_attr.items():
     new_node.attrib[k] = v
 
   # We recursively merge the tree by ordered by tag and name if available..
@@ -255,7 +256,7 @@ def main(argv=None):
       exit(1)
 
     # Filter out all the success runs if desired
-    if args.filter: map(lambda x: filter_success(x), tree.xpath('//Module'))
+    if args.filter: list(map(lambda x: filter_success(x), tree.xpath('//Module')))
 
     # Visitor pattern to calculate pass/fail rate
     logging.info("Post processing counters, filtering: {0}".format(thismodule.exemptions))

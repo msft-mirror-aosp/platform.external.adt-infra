@@ -27,5 +27,5 @@ class BaseAdbTest(unittest.TestCase):
     print ('End ADB Test')
 
 if __name__ == '__main__':
-  print '======= Base Console Test ======='
+  print('======= Base Console Test =======')
   unittest.main()

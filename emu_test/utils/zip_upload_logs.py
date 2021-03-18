@@ -25,7 +25,7 @@ args = parser.parse_args()
 def zip_and_upload():
 
   def verbose_call(cmd):
-    print "Run command %s" % ' '.join(cmd)
+    print("Run command %s" % ' '.join(cmd))
     subprocess.check_call(cmd)
 
   # The below is a special utility function to convert remote_dir to UNIX filepath.
@@ -50,30 +50,30 @@ def zip_and_upload():
 
      # if it is emu psq test log, zip and upload to GCS
     if 'emu_psq_logs' in args.log_dir:
-      print 'Running command in directory: %s' % (os.getcwd())
+      print('Running command in directory: %s' % (os.getcwd()))
 
       verbose_call(zip_binary + ['-jr', args.zip_name, args.log_dir])
       emu_psq_gs_dst = 'gs://emu_psq_logs/%s/' % (args.zip_name[0:-4])
       verbose_call(['python', gsutil_path, 'cp', args.zip_name, emu_psq_gs_dst])
       # remove log zip files
       try:
-        print "Delete log zip %s" % args.zip_name
+        print("Delete log zip %s" % args.zip_name)
         os.remove(args.zip_name)
       except Exception as e:
-        print "Error in deleting log zip %r" % e
+        print("Error in deleting log zip %r" % e)
 
     # if it is adb stress test log, zip and upload to GCS
     if 'adb_stress_logs' in args.log_dir:
-      print 'Running command in directory: %s' % (os.getcwd())
+      print('Running command in directory: %s' % (os.getcwd()))
       verbose_call(zip_binary + ['-r', args.zip_name, args.log_dir])
       adb_stress_gs_dst = 'gs://adb_test_traces/%s/' % builderName
       verbose_call(['python', gsutil_path, 'cp', args.zip_name, adb_stress_gs_dst])
       # remove log zip files
       try:
-        print "Delete log zip %s" % args.zip_name
+        print("Delete log zip %s" % args.zip_name)
         os.remove(args.zip_name)
       except Exception as e:
-        print "Error in deleting log zip %r" % e
+        print("Error in deleting log zip %r" % e)
 
     # if cts result is available, upload to public_html directory
     for x in ['CTS', 'GTS']:
@@ -127,13 +127,13 @@ def zip_and_upload():
 
     # remove log directory
     try:
-      print "Delete directory %s" % args.log_dir
+      print("Delete directory %s" % args.log_dir)
       shutil.rmtree(args.log_dir)
     except Exception as e:
-      print "Error in deleting log directory %r" % e
+      print("Error in deleting log directory %r" % e)
 
   except Exception as e:
-    print "Error in zip_and_upload %r" % e
+    print("Error in zip_and_upload %r" % e)
     return 1
 
   return 0

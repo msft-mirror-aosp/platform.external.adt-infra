@@ -4,8 +4,8 @@ import os
 import unittest
 import subprocess
 
-import testcase_base
-import adb_util
+from . import testcase_base
+from . import adb_util
 
 @unittest.skip("These tests are running in presubmit for Linux on aosp")
 class GeneralTest(testcase_base.BaseAdbTest):
@@ -27,7 +27,7 @@ class GeneralTest(testcase_base.BaseAdbTest):
 
     def test_adb_integration_device(self):
         try:
-            print 'Running test: Device integration tests'
+            print('Running test: Device integration tests')
             test_dir = os.environ["GENERAL_TESTS_DIR"]
             test = os.path.join(test_dir,
                                 "adb_integration_test_device",
@@ -38,14 +38,14 @@ class GeneralTest(testcase_base.BaseAdbTest):
                                       stderr=subprocess.STDOUT)
 
             stdout, stderr = adbCmd.communicate()
-            print stdout
-            print stderr
+            print(stdout)
+            print(stderr)
         except KeyError:
-            print 'Define GENERAL_TESTS_DIR to point to directory containing adb_integration_test_device'
+            print('Define GENERAL_TESTS_DIR to point to directory containing adb_integration_test_device')
 
     def test_adb_integration_adb(self):
         try:
-            print 'Running test: ADB integration tests'
+            print('Running test: ADB integration tests')
             test_dir = os.environ["GENERAL_TESTS_DIR"]
             test = os.path.join(test_dir,
                                 "adb_integration_test_adb",
@@ -56,11 +56,11 @@ class GeneralTest(testcase_base.BaseAdbTest):
                                       stderr=subprocess.STDOUT)
 
             stdout, stderr = adbCmd.communicate()
-            print stdout
-            print stderr
+            print(stdout)
+            print(stderr)
         except KeyError:
-            print 'Define GENERAL_TESTS_DIR to point to directory containing adb_integration_test_adb'
+            print('Define GENERAL_TESTS_DIR to point to directory containing adb_integration_test_adb')
 
 if __name__ == '__main__':
-  print '======= Integration Tests ======='
+  print('======= Integration Tests =======')
   unittest.main()

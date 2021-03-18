@@ -69,13 +69,13 @@ class SymbolProcessor(object):
             info = f.readline().split()
 
         if len(info) != 5 or info[0] != "MODULE":
-            raise ("Corrupt symbol file: %s, %s" % (symbol_file, info))
+            raise "Corrupt symbol file: %s, %s"
 
         return info
 
     def trace_has(self, regex):
         """Returns true if the given regex occurs in the decoded stack trace."""
-        return re.compile(regex, re.M).findall(self.decoded)
+        return re.compile(regex, re.M).findall(self.decoded.decode())
 
     def recursive_iglob(self, rootdir, suffix):
         """Recursively glob the rootdir for any file that matches the given suffix."""

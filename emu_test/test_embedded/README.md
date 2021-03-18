@@ -29,17 +29,37 @@ You can run the test against a development emulator by:
 Where emulator points to your emulator of choice, and avd can be used to
 select the avd.
 
+### Running against an already running emulator
+
+Some test require access to the emulator logs, this means you must have run the emulator
+such that it produces logs. You must have *at least* specified the following flags
+and redirected the output. For example
+
+    $ ./objs/emulator @R -verbose -debug-events -debug-time  | tee /tmp/emu.log
+
+This will launch  the emulator and output the logs to /tmp/emu.log. Next you can run the
+pytests as follows:
+
+    $ pytest  --debug_emulator_log=/tmp/emu.log --debug_emulator  -k 'test_mouse_perf_host_host_grpc'
+
+
+This will run the test: `test_mouse_perf_host_host_grpc` against the emulator you started earlier.
+
+
+### Filtering tests
+
 You can use the standard pytest commands to run specific tests, and
-reconfigure the runner by modifying tox.ini
+reconfigure the runner by modifying tox.ini. For example you can use the `-k` flag to select
+tests of interest:
 
-### Making sure it will run successfully on the build bots.
+## Making sure it will run successfully on the build bots.
 
-The build bots are still using the deprecated version of python (2.7.17). If you wish
-to make sure the tests will succeed on the build bots you must have a python 2 interpreter
+The build bots are using python 3.6. If you wish
+to make sure the tests will succeed on the build bots you must have a python 3.6 interpreter
 installed on your system. One easy way to manage multiple python versions is to make use
 of [pyenv](https://github.com/pyenv/pyenv).
 
-*Note*: If you use run the tests using *tox* you will automatically use the python2 interpreter.
+*Note*: If you use run the tests using *tox* you will automatically use the python3 interpreter.
 
 ## I would like to add some tests
 

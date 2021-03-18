@@ -2,7 +2,7 @@ import os
 import platform
 import subprocess
 import sys
-from Queue import Queue
+from queue import Queue
 from threading import Thread, currentThread
 from cts_log_parser import CtsLogParser
 from absl import logging

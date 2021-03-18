@@ -59,7 +59,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
                 os.system(rm_avd)
             else:
                 shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
-        except Exception, e:
+        except Exception as e:
             self.m_logger.error("Error in cleanup - %r", e)
             pass
 
@@ -109,8 +109,8 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
                           '/sdcard/Logs', dst_path],
                          stdout=PIPE, stderr=PIPE)
         (out, err) = p.communicate()
-        self.m_logger.info('adb_pull_stdout:\n' + out)
-        self.m_logger.info('adb_pull_stderr:\n' + err)
+        self.m_logger.info('adb_pull_stdout:\n' + out.decode())
+        self.m_logger.info('adb_pull_stderr:\n' + err.decode())
 
     def _launch_single_class_ui_test_with_avd_configs(self, avd, class_name):
         """Launch a new AVD per class of tests.
@@ -213,8 +213,8 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.m_logger.info('Test class: %s', class_name)
         proc = self._launch_single_class_ui_test_with_avd_configs(avd, class_name)
         (out, err) = proc.communicate()
-        self.m_logger.info('gradle_stdout:\n' + out)
-        self.m_logger.info('gradle_stderr:\n' + err)
+        self.m_logger.info('gradle_stdout:\n' + out.decode())
+        self.m_logger.info('gradle_stderr:\n' + err.decode())
 
         # save gradle reports
         self._save_gradle_test_report(self._testMethodName)
@@ -289,6 +289,6 @@ else:
 if __name__ == '__main__':
     os.environ["SHELL"] = "/bin/bash"
     emu_argparser.emu_args = emu_argparser.get_parser().parse_args()
-    print emu_argparser.emu_args
+    print(emu_argparser.emu_args)
     sys.argv[1:] = emu_args.unittest_args
     unittest.main()

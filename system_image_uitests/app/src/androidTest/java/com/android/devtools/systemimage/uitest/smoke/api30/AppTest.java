@@ -20,7 +20,6 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 
@@ -54,7 +53,6 @@ public class AppTest {
     @Rule
     public Timeout globalTimeout = Timeout.seconds(360);
 
-    private final String TAG = "AppTest";
 
     /**
      * Verifies an app runs on the emulator.
@@ -68,7 +66,7 @@ public class AppTest {
      *   <pre>
      *   Test Steps:
      *   1. Start the emulator.
-     *   2. Install HelloComputer app.
+     *   2. Install BasicRenderScript app.
      *   3. Open the app.
      *   Verify:
      *   App runs on the emulator. Image of a leaf is displayed on the emulator.
@@ -80,30 +78,30 @@ public class AppTest {
     public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        String testPackageName = "com.example.android.rs.hellocompute";
-        String apk = "HelloCompute.apk";
-        String appName = "RsHelloCompute";
+        String testPackageName = "com.example.android.basicrenderscript";
+        String apk = "BasicRenderScript.apk";
+        String appName = "BasicRenderScript";
         String result = "";
 
-        // Install RsHelloCompute, if not already present.
-        boolean isHelloComputeInstalled = PackageInstallationUtil.
+        // Install BasicRenderScript, if not already present.
+        boolean isBasicRenderScriptInstalled = PackageInstallationUtil.
                 isPackageInstalled(instrumentation, testPackageName);
 
 
-        if (!isHelloComputeInstalled) {
+        if (!isBasicRenderScriptInstalled) {
             result = PackageInstallationUtil.installApk(instrumentation, apk, false);
             new AppWatcher(device).checkForCondition();
-            isHelloComputeInstalled = PackageInstallationUtil.
+            isBasicRenderScriptInstalled = PackageInstallationUtil.
                     isPackageInstalled(instrumentation, testPackageName);
         }
 
         assertTrue("Application " + apk + " is not installed. Result: " + result,
-                isHelloComputeInstalled);
+                isBasicRenderScriptInstalled);
 
         AppLauncher.launch(instrumentation, appName);
         new AppWatcher(device).checkForCondition();
-        boolean hasApplication = testFramework.getDevice().findObject(new UiSelector().resourceId(
-                Res.APP_IMAGE_VIEW_ID)).waitForExists(5L);
+        boolean hasApplication = testFramework.getDevice().findObject(new UiSelector().text(
+                "BasicRenderScript")).waitForExists(5L);
 
         assertTrue("Application " + appName + " did not launch", hasApplication);
     }
@@ -134,7 +132,7 @@ public class AppTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        if (true) {
+        if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
             GoogleAppUtil.loginGoogleApp(instrumentation, true);
             AppLauncher.launch(instrumentation, "Chrome");
 
@@ -176,6 +174,7 @@ public class AppTest {
                 bookmarks.clickAndWaitForNewWindow();
             }
 
+            String TAG = "AppTest";
             Log.d(TAG, "The bookmark is set");
 
             UiObject mobileBookmarks = device.findObject(new UiSelector().text("Mobile bookmarks")

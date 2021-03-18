@@ -32,14 +32,15 @@ if [ ! -f "./venv/bin/activate" ]; then
      [ -e ./venv/bin/pip ] && ./venv/bin/pip install --upgrade pip
      [ -e ./venv/bin/pip ] && ./venv/bin/pip install --upgrade setuptools
   else
-    echo "Using python 2 ----<< Deprecated! See: https://python3statement.org/.."
-    $PYTHON -m virtualenv --version &>/dev/null || { echo "This script relies on virtualenv, you can install it with 'pip install virtualenv' (https://virtualenv.pypa.io)"; return ; }
-    $PYTHON -m virtualenv venv
+    echo "Python 2 ----<< Deprecated! See: https://python3statement.org/. Not supported."
+    exit 1
   fi
 fi
 if [ -e ./venv/bin/activate ]; then
    . ./venv/bin/activate
    make deps
-   python setup.py develop
+   python3 setup.py develop
+   pip install pytest-timeout
+   pip install pytest-benchmark
    echo "Ready to run emu-embeded tests.!"
 fi

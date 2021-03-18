@@ -26,7 +26,7 @@ class TemplateWriter(object):
     def __init__(self, out_dir):
         """Creates a template writer that writes templates to the out_dir
 
-           The out directory will be created if needed.
+        The out directory will be created if needed.
         """
         self.env = Environment(loader=PackageLoader("emu", "templates"))
         self.dest = out_dir
@@ -41,8 +41,8 @@ class TemplateWriter(object):
     def _write_template_to(self, tmpl_file, dest_file, template_dict):
         """Loads the the given template, writing it to the dest_file
 
-            Note: the template will be written {dest_dir}/{tmpl_file},
-            directories will be created if the do not yet exist.
+        Note: the template will be written {dest_dir}/{tmpl_file},
+        directories will be created if the do not yet exist.
         """
         template = self.env.get_template(tmpl_file)
 

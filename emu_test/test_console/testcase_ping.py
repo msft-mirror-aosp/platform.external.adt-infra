@@ -4,8 +4,8 @@ import inspect
 import time
 import unittest
 
-import testcase_base
-from utils import util
+from . import testcase_base
+from .utils import util
 
 CMD_PING = 'ping\n'
 PING_RESPONSE = 'I am alive!.*\nOK'
@@ -39,10 +39,10 @@ class PingTest(testcase_base.BaseConsoleTest):
     """Authorize user."""
     auth_token = util.get_auth_token()
     self.telnet = util.telnet_emulator()
-    self.telnet.write('%s %s\n' % (util.AUTH, auth_token))
+    self.telnet.write(util.toBytes('%s %s\n' % (util.AUTH, auth_token)))
     util.wait_on_windows()
     if (not util.check_read_until(
-        self.telnet.read_until(util.OK, util.TIMEOUT_S))):
+        self.telnet.read_until(util.toBytes(util.OK), util.TIMEOUT_S))):
       sys.exit(-1)
 
   def test_ping(self):
@@ -60,12 +60,12 @@ class PingTest(testcase_base.BaseConsoleTest):
     Verify:
       1. The ping response is displayed
     """
-    print 'Running test: %s' % (inspect.stack()[0][3])
+    print(('Running test: %s' % (inspect.stack()[0][3])))
     assert_msg = 'Failed to properly display the ping response.'
     self._execute_command_and_verify(CMD_PING, PING_RESPONSE, assert_msg)
     self._auth_user_for_emulator_console()
     self._execute_command_and_verify(CMD_PING, PING_RESPONSE, assert_msg)
 
 if __name__ == '__main__':
-  print '======= Ping Test ======='
+  print('======= Ping Test =======')
   unittest.main()

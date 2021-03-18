@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
+
 
 import logging
 import subprocess
@@ -34,10 +34,8 @@ class Logcat(object):
     def _get_logcat(self):
         logcat = LogMessage(start=self.start, sort=1)
         response = self.grpc.getLogcat(logcat)
-        self.start = response.next
+        self.start = response.__next__
         return response.entries
-
-
 
     def reset(self):
         """Reset the starting point from which we retrieve logs."""
@@ -79,12 +77,12 @@ class Logcat(object):
 
 
 class AdbStream(object):
-    """Streaming adb command that can be observed
-    """
+    """Streaming adb command that can be observed"""
+
     def __init__(self, adb_binary, emulator_name, cmd):
         self._queue = None
         self.proc = None
-        self.cmd = [adb_binary, "-s", emulator_name] +  cmd
+        self.cmd = [adb_binary, "-s", emulator_name] + cmd
 
     def __enter__(self):
         self.proc, self._queue = run(self.cmd)
@@ -111,4 +109,4 @@ class AdbLogcatStream(AdbStream):
 
     def clear(self):
         logging.info("Clearing log")
-        subprocess.check_call(self.cmd + ['-c'])
+        subprocess.check_call(self.cmd + ["-c"])

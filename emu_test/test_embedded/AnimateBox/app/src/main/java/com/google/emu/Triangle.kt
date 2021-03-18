@@ -37,7 +37,7 @@ class Triangle {
      * @param mvpMatrix - The Model View Project matrix in which to draw
      * this shape.
      */
-    fun draw(mvpMatrix: FloatArray?) {
+    fun draw(mvpMatrix: FloatArray?, hexColor: Int) {
         // Add program to OpenGL environment
         GLES20.glUseProgram(mProgram)
         // get handle to vertex shader's vPosition member
@@ -52,6 +52,13 @@ class Triangle {
         )
         // get handle to fragment shader's vColor member
         mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor")
+        // Set color for drawing the triangle
+        color[0] = (1.0f/255)*(hexColor and 0xFF0000).ushr(16).toFloat()
+        color[1] = (1.0f/255)*(hexColor and 0xFF00).ushr(8).toFloat()
+        color[2] = (1.0f/255)*(hexColor and 0xFF).toFloat()
+
+
+        GLES20.glUniform4fv(mColorHandle, 1, color, 0)
         // Set color for drawing the triangle
         GLES20.glUniform4fv(mColorHandle, 1, color, 0)
         // get handle to shape's transformation matrix
