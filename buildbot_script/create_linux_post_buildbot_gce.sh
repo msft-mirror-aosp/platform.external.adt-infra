@@ -15,15 +15,15 @@
 # adt-emu-buildbot-6-prod   Added darwin cross compiler
 # adt-emu-buildbot-7-test   1. Upgrade to ubuntu18
 #                           2. Added toolchain for arc64
-#                            (does not start buildbot)
 # adt-emu-buildbot-7-prod   1. Upgrade to ubuntu18
 #                           2. Added toolchain for arc64
-#                            (starts buildbot on startup)
 # adt-emu-buildbot-10-prod  Git version 2.29
 #                            Upgrade SDK 10.15 cross buildchain
-#                            (does not start buildbot)
 # adt-emu-buildbot-10-test  Git version 2.29
 #                            Upgrade SDK 10.15 cross buildchain
+# adt-emu-buildbot-11-test  Windows 10 sdk toolchain update
+#                            (does not start buildbot)
+# adt-emu-buildbot-11-prod  Windows 10 sdk toolchain update
 #                            (starts buildbot on startup)
 
 if [ $# -ne 2 ]
@@ -46,7 +46,7 @@ then
    export IMAGE_TYPE="prod"
 fi
 
-export IMAGE_NAME=adt-emu-buildbot-10-$IMAGE_TYPE
+export IMAGE_NAME=adt-emu-buildbot-11-$IMAGE_TYPE
 export TEMP_INSTANCE=adt-emu-buildbot-$1
 export PROJECT=android-studio-build
 export FULL_PROJECT=android-studio-build
