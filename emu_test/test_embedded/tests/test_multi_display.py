@@ -34,7 +34,6 @@ def no_displays():
 
 
 @pytest.mark.e2e
-@pytest.mark.xfail(reason="Multi display is not yet supported for studio.")
 def test_multidisplay_none(no_displays):
     """Erasing displays leaves nothing behind."""
     emu = pytest.emulator.get_emulator_controller()
@@ -45,7 +44,6 @@ def test_multidisplay_none(no_displays):
 
 
 @pytest.mark.e2e
-@pytest.mark.xfail(reason="Multi display is not yet supported for studio.")
 def test_multidisplay_multiple(no_displays):
     """Adding a display should work."""
     emu = pytest.emulator.get_emulator_controller()
@@ -65,7 +63,6 @@ def test_multidisplay_multiple(no_displays):
 
 
 @pytest.mark.e2e
-@pytest.mark.xfail(reason="Multi display is not yet supported for studio.")
 def test_multidisplay_multiple_error(no_displays):
     """A failure should not modify the status."""
     emu = pytest.emulator.get_emulator_controller()
@@ -101,7 +98,6 @@ def test_multidisplay_multiple_error(no_displays):
 
 
 @pytest.mark.e2e
-@pytest.mark.xfail(reason="Multi display is not yet supported for studio.")
 def test_multidisplay_get_after_set(no_displays):
     """Adding a display should work."""
     emu = pytest.emulator.get_emulator_controller()
@@ -118,7 +114,6 @@ def test_multidisplay_get_after_set(no_displays):
 
 
 @pytest.mark.e2e
-@pytest.mark.xfail(reason="Multi display is not yet supported for studio.")
 def test_multidisplay_double_ids_error(no_displays):
     """Adding the same display twice should result in an error."""
     emu = pytest.emulator.get_emulator_controller()
