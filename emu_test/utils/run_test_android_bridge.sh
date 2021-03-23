@@ -26,7 +26,7 @@ SESSION_DIR=$DISTRIB_DIR/testlogs
 mkdir -p $SESSION_DIR
 
 log "activate virtualenv"
-activate_virtualenv $ADT_INFRA/emu_test/utils
+activate_virtualenv
 
 python3 -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --test_dir ADB_test --file_pattern 'test_adb.*' --use_device --adb $ADB_EXEC
 

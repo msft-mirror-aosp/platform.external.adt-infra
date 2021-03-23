@@ -49,7 +49,6 @@ else
 fi
 
 
-
 log2err () {
     log "$@" >&2
 }
@@ -589,28 +588,17 @@ check_test_succeed() {
 
 # Setup virtualenv if available
 activate_virtualenv() {
-  local UTIL_DIR=$1
   mkdir py3env
   pushd py3env
   python3 -m venv env
   popd
   source py3env/env/bin/activate
-  pip3 install -r $UTIL_DIR/requirements.txt
+  pip3 install -r $TEST_DIR/utils/requirements.txt
 }
 
 deactivate_virtualenv() {
   deactivate
   rm -rf py3env
-}
-
-# Returns true if the string starts with a P or p
-is_prebuilt () {
-  retval=false
-  case $1 in
-    P* ) retval=true;;
-    p* ) retval=true;;
-  esac
-  printf "$retval"
 }
 
 PYTHON="python"

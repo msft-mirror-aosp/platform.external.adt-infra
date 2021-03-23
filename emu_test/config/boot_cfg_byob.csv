@@ -9,9 +9,6 @@ API 28,google_apis,x86,Nexus 6P,2048,swiftshader,pi,P,P,P,P
 API 28,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,pi,P,P,P,P
 API 28,google_apis,x86_64,Nexus 6P,2048,swiftshader,pi,P,P,P,P
 API 28,android-wear,x86,Android Wear Round,2048,swiftshader,pi,P,P,P,P
-API 28,default,x86,Nexus 5,2048,swiftshader,public-perf,P,P,P,P
-API 28,google_apis,x86,Nexus 5,2048,swiftshader,public-perf,P,P,P,P
-API 28,google_apis_playstore,x86,Nexus 5,2048,swiftshader,public-perf,P,P,P,P
 API 27,android-tv,x86,Android TV (1080p),2048,swiftshader,oc-mr1,P,P,P,P
 API 27,google_apis,x86,Nexus 6P,2048,swiftshader,oc-mr1,P,P,P,P
 API 27,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,oc-mr1,P,P,P,P
@@ -21,21 +18,14 @@ API 26,google_apis,x86,Nexus 6P,2048,swiftshader,oc,P,P,P,P
 API 26,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,oc,P,P,P,P
 API 26,google_apis,x86_64,Nexus 6P,2048,swiftshader,oc,P,P,P,P
 API 26,android-wear,x86,Android Wear Round,2048,swiftshader,oc,P,P,P,P
-API 26,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P,P
 API 25,android-tv,x86,Android TV (1080p),2048,swiftshader,nyc-mr1,P,P,P,P
 API 25,google_apis,x86,Nexus 6P,2048,swiftshader,nyc-mr1,P,P,P,P
 API 25,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,nyc-mr1,P,P,P,P
 API 25,google_apis,x86_64,Nexus 6P,2048,swiftshader,nyc-mr1,P,P,P,P
+API 26,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P,P
 API 25,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P,P
 API 24,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P,P
-API 24,google_apis,x86_64,Nexus 6P,2048,swiftshader,nyc,P,P,P,P
-API 24,google_apis,x86,Nexus 6P,2048,swiftshader,nyc,P,P,P,P
-API 24,android-tv,x86,Android TV (1080p),2048,swiftshader,nyc,P,P,P,P
-API 23,google_apis,x86_64,Nexus 6P,2048,swiftshader,mnc,P,P,P,P
-API 23,google_apis,x86,Nexus 6P,2048,swiftshader,mnc,P,P,P,P
-API 22,google_apis,x86,Nexus 6P,2048,swiftshader,lmp-mr1,P,P,P,P
-API 22,android-tv,x86,Android TV (1080p),2048,swiftshader,lmp-mr1,P,P,P,P
 API 22,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P,P
-API 21,google_apis,x86_64,Nexus 6P,2048,swiftshader,lmp,P,P,P,P
-API 21,google_apis,x86,Nexus 6P,2048,swiftshader,lmp,P,P,P,P
-API 21,android-tv,x86,Android TV (1080p),2048,swiftshader,lmp,P,P,P,P
+API 28,default,x86,Nexus 5,2048,swiftshader,public-perf,P,P,P,P
+API 28,google_apis,x86,Nexus 5,2048,swiftshader,public-perf,P,P,P,P
+API 28,google_apis_playstore,x86,Nexus 5,2048,swiftshader,public-perf,P,P,P,P

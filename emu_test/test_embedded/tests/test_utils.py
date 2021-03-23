@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import re
 import time
-from queue import Queue
 from threading import Thread
 
 import google.protobuf.text_format
 import grpc
+import six
+
+if six.PY2:
+    from queue import Queue
+else:
+    from queue import Queue
 
 
 def fmt_proto(msg):
@@ -29,40 +33,20 @@ def fmt_proto(msg):
 def time_to_str(epoch_in_seconds):
     """Formats an epoch time in seconds into a human readable string."""
     s, ms = divmod(epoch_in_seconds * 1000, 1000)
-    return "{}.{:03d}".format(
-        time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(epoch_in_seconds)), int(ms)
-    )
-
-
-def wait_for_regex(stream, regex, max_wait):
-    """Waits for the given regex to appear on the logcat stream, or until max_wait time has passed.
-
-    Returns the match, or None in case of timeout.
-    """
-    compiled = re.compile(regex)
-    timeout_after = time.time() + max_wait
-    for line in iter(stream.get, None):
-
-        if timeout_after < time.time():
-            logging.warning("Timed out while waiting for %s", regex)
-            return None
-
-        m = compiled.match(line)
-        if m:
-            return m
+    return "{}.{:03d}".format(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(epoch_in_seconds)), int(ms))
 
 
 class StreamingCall(object):
     """A streaming call that receives data on a separate thread.
 
-    All the received messages will be placed in a queue that is returned
-    upon entering, tests can examine the queue to make sure it is behaving as expected.
+      All the received messages will be placed in a queue that is returned
+      upon entering, tests can examine the queue to make sure it is behaving as expected.
 
-    The call will automatically be cancelled upon exit. Use it
-    as follows:
+      The call will automatically be cancelled upon exit. Use it
+      as follows:
 
-    with StreamingCall(emu.streamXXX(xx)) as stream:
-        stream.get()
+      with StreamingCall(emu.streamXXX(xx)) as stream:
+          stream.get()
     """
 
     def __init__(self, stream_call):

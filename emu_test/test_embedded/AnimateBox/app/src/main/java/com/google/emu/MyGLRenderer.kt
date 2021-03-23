@@ -52,7 +52,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0)
         // Draw square
-        mSquare!!.draw(mMVPMatrix, 0xDECEBE)
+        mSquare!!.draw(mMVPMatrix, color)
         // Create a rotation for the triangle
         // Use the following code to generate constant rotation.
         // Leave this code out when using TouchEvents.
@@ -65,7 +65,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         // for the matrix multiplication product to be correct.
         Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mRotationMatrix, 0)
         // Draw triangle
-        mTriangle?.draw(scratch, color)
+        mTriangle?.draw(scratch)
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {

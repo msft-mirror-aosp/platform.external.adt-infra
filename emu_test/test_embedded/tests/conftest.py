@@ -1,11 +1,12 @@
 import os
+import re
+import logging
 
 import pytest
-from aemu.proto.emulator_controller_pb2 import (KeyboardEvent, ParameterValue,
-                                                PhysicalModelValue, Rotation)
-from emu.emulator import Emulator
 
-from tests.test_utils import wait_for_regex
+from aemu.proto.emulator_controller_pb2 import KeyboardEvent
+from emu.emulator import Emulator
+from tests.test_utils import StreamingCall, time_to_str
 
 
 def pytest_addoption(parser):
@@ -59,6 +60,7 @@ def startup_emulator(request, pytestconfig):
     else:
         emu.launch_like_studio()
 
+
     # Make sure the emulator is booted.
     assert emu.wait_for_boot()
     pytest.emulator = emu
@@ -77,28 +79,19 @@ def startup_emulator(request, pytestconfig):
     emu.adb(["install", os.path.join(Emulator.here, "apk", "app-debug.apk")])
 
 
-def go_home():
-    stub = pytest.emulator.get_emulator_controller()
-    pytest.emulator.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
-    stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
-    stub.setPhysicalModel(
-        PhysicalModelValue(
-            target=PhysicalModelValue.ROTATION,
-            value=ParameterValue(data=[0, 0, 0]),
-        )
-    )
-
-
 @pytest.fixture
 def at_home():
-    """Fixture to make sure the emulator returns to the home screen and is in portrait mode.
+    """Fixture to make sure the emulator returns to the home screen.
 
     Use this if you want to make sure the emulator returns to the
     home screen.
     """
-    go_home()
+    stub = pytest.emulator.get_emulator_controller()
+    pytest.emulator.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
+    stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
     yield
-    go_home()
+    stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
+    pytest.emulator.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
 
 
 @pytest.fixture
@@ -114,7 +107,21 @@ def emulator_log():
     return emu.log
 
 
-def launch_animiation_app():
+@pytest.fixture
+def animation_app():
+    """Activates the animation apk.
+
+    The apk will be closed upon completion, and you will return to home.
+    """
+
+    def _wait_for_launch(stream):
+        """Waits until the timing entry has been written by our app."""
+        TIMING_RE = re.compile(r".*Timing: (\d+), (\d+)")
+        for line in iter(stream.get, None):
+            m = TIMING_RE.match(line)
+            if m:
+                return int(m.group(1)), int(m.group(2))
+
     emu = pytest.emulator
     emu.adb(["logcat", "-c"])
     emu.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
@@ -129,21 +136,10 @@ def launch_animiation_app():
                 "com.google.AnimateBox/com.google.emu.MainActivity",
             ]
         )
-        return wait_for_regex(stream, r".*Timing: (\d+), (\d+)", 5)
+        _wait_for_launch(stream)
 
-
-@pytest.fixture
-def animation_app():
-    """Activates the animation apk.
-
-    The apk will be closed upon completion, and you will return to home.
-    """
-    tries = 3
-    while not launch_animiation_app() and tries > 0:
-        tries = tries - 1
-
-    assert tries >= 0, "Unable to successfully launch the animation app."
     yield
-
-    pytest.emulator.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
-    go_home()
+    emu.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
+    emu.get_emulator_controller().sendKey(
+        KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress)
+    )
