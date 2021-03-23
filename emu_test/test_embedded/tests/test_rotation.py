@@ -112,20 +112,21 @@ def test_rotation_observable_through_adbstream(at_home, animation_app):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_rotation_observable_through_stream_screenshot(animation_app):
     """Test that setting the rotation, is observable through streaming screenshot."""
     emu = pytest.emulator.get_emulator_controller()
-    imgStream = emu.streamScreenshot(ImageFormat(width=320, height=200))
+    imgStream = emu.streamScreenshot(ImageFormat(width=320, height=200), timeout=5)
     with StreamingCall(imgStream) as stream:
-        for (fine, coarse) in for_each_rotation(emu):
+        for (angle, coarse) in for_each_rotation(emu):
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
-            for img in iter(stream.get, None):
+            seen_rotation = False
+            for img in stream:
                 if img.format.rotation.rotation == coarse:
-                    logging.info(
-                        "Observered rotation to %s", fmt_proto(img.format.rotation)
-                    )
+                    seen_rotation = True
                     break
+            assert seen_rotation, "Did not observe rotation to {} in time".format(angle)
 
 
 # Pixel color of the square.
@@ -160,6 +161,7 @@ def square_in_quadrant(img):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_rotation_pixels_in_the_right_place(animation_app):
     """Test the colored square is in the expected location.
     The animation app draws a square in the top right corner (first quadrant).
@@ -171,12 +173,13 @@ def test_rotation_pixels_in_the_right_place(animation_app):
     """
     emu = pytest.emulator.get_emulator_controller()
     QUADRANT_MAP = {0: 1, 90: 2, -180: 3, -90: 4}
-    imgStream = emu.streamScreenshot(ImageFormat(format=ImageFormat.RGB888))
+    imgStream = emu.streamScreenshot(ImageFormat(format=ImageFormat.RGB888), timeout=5)
     with StreamingCall(imgStream) as stream:
         for (angle, coarse) in for_each_rotation(emu):
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
-            for img in iter(stream.get, None):
+            seen_rotation = False
+            for img in stream:
                 if (
                     square_is_visible(img)
                     and square_in_quadrant(img) == QUADRANT_MAP[angle]
@@ -186,7 +189,9 @@ def test_rotation_pixels_in_the_right_place(animation_app):
                         fmt_proto(img.format.rotation),
                         square_in_quadrant(img),
                     )
+                    seen_rotation = True
                     break
+            assert seen_rotation, "Did not see the rotation to {} in time.".format(angle)
 
 
 @pytest.mark.e2e
@@ -227,6 +232,7 @@ def test_rotation_through_console_observable_through_screenshot(at_home):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_rotation_through_console_observable_through_stream_screenshot(
     at_home, animation_app
 ):
@@ -235,21 +241,17 @@ def test_rotation_through_console_observable_through_stream_screenshot(
     bug: b/159635109, b/160171559
     """
     emu = pytest.emulator.get_emulator_controller()
-    imgStream = emu.streamScreenshot(ImageFormat(width=320, height=200))
+    imgStream = emu.streamScreenshot(ImageFormat(width=320, height=200), timeout=5)
     with StreamingCall(imgStream) as stream:
-        for (_, coarse) in ROTATION_MAPPING:
+        for (angle, coarse) in ROTATION_MAPPING:
             sleep(0.5)
             pytest.emulator.adb(["emu", "rotate"])
-
-            cnt = 0
+            seen_rotation = False
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
-            for img in iter(stream.get, None):
-                cnt = cnt + 1
+            for img in stream:
                 if img.format.rotation.rotation == coarse:
-                    logging.info(
-                        "Observered rotation to %s", fmt_proto(img.format.rotation)
-                    )
+                    seen_rotation = True
                     break
 
-            logging.info("Popped %d elements", cnt)
+            assert seen_rotation, "Did not observe rotation to {} in time".format(angle)

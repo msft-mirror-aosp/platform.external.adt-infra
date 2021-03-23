@@ -65,6 +65,8 @@ class StreamingCall(object):
         stream.get()
     """
 
+    __FINISHED_SENTINEL__ = {"Finished": True}
+
     def __init__(self, stream_call):
         self._queue = Queue()
         self._stream_call = stream_call
@@ -83,10 +85,21 @@ class StreamingCall(object):
                 e.details(),
                 received,
             )
+        self._queue.put(self.__FINISHED_SENTINEL__)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        result = self._queue.get()
+        if result != self.__FINISHED_SENTINEL__:
+            return result
+        else:
+            raise StopIteration
 
     def __enter__(self):
         Thread(target=self._observe_call).start()
-        return self._queue
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # We left scope, cancel from the client side.
