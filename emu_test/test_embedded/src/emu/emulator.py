@@ -64,6 +64,9 @@ class Emulator(object):
         """Gets the emulator controller stub to this emulator."""
         return self.desc.get_emulator_controller()
 
+    def get_ui_controller(self):
+        return self.desc.get_ui_controller_service()
+
     def get_snapshot_service(self):
         """Gets a snapshot service to interact with snaphsots."""
         return SnapshotService(snapshot_service=self.desc.get_snapshot_service())

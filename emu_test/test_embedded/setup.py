@@ -137,6 +137,8 @@ setup(
             "pytest-timeout",
             "pytest-benchmark",
             "pytest-rerunfailures",
+            "pytest-dependency",
+            "pytest-flakefinder"
         ],
     },  # Optional
     # If there are data files included in your packages that need to be
