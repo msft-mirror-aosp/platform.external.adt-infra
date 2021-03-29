@@ -13,8 +13,10 @@
 # limitations under the License.
 import pytest
 from grpc import RpcError, StatusCode
-from aemu.proto.emulator_controller_pb2 import (DisplayConfiguration,
-                                                DisplayConfigurations)
+from aemu.proto.emulator_controller_pb2 import (
+    DisplayConfiguration,
+    DisplayConfigurations,
+)
 from google.protobuf import empty_pb2
 
 _EMPTY_ = empty_pb2.Empty()
@@ -27,7 +29,7 @@ def no_displays():
     Use this if you want to make sure the emulator has no secondary displays
     """
     stub = pytest.emulator.get_emulator_controller()
-    pytest.emulator.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"]);
+    pytest.emulator.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     stub.setDisplayConfigurations(DisplayConfigurations(displays=[]))
     yield
     stub.setDisplayConfigurations(DisplayConfigurations(displays=[]))
@@ -82,7 +84,9 @@ def test_multidisplay_multiple_error(no_displays):
         cfg = emu.setDisplayConfigurations(
             DisplayConfigurations(
                 displays=[
-                    DisplayConfiguration(width=99720, height=991280, dpi=213, display=1),
+                    DisplayConfiguration(
+                        width=99720, height=991280, dpi=213, display=1
+                    ),
                 ]
             )
         )
@@ -127,3 +131,37 @@ def test_multidisplay_double_ids_error(no_displays):
             )
         )
     assert exc_info.value.code() == StatusCode.INVALID_ARGUMENT
+
+
+@pytest.mark.e2e
+def test_multidisplay_can_configure_four(no_displays):
+    """This tests makes sure that a total of 4 displays can be configured.
+
+    Adding 3 additional displays, should return a total of 4.
+    """
+    resolutions = [(720, 1280), (1080, 1920), (3840, 2160)]
+    displays = [
+        DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
+        for idx, x in enumerate(resolutions)
+    ]
+    emu = pytest.emulator.get_emulator_controller()
+    cfg = emu.setDisplayConfigurations(DisplayConfigurations(displays=displays))
+
+    # All screens have been made available.
+    assert all([x in cfg.displays for x in displays])
+
+    # We have default screen, + the ones we added.
+    assert len(cfg.displays) == len(displays) + 1
+
+
+@pytest.mark.e2e
+def test_multidisplay_error_too_many(no_displays):
+    """Adding too many displays should raise an exception."""
+    emu = pytest.emulator.get_emulator_controller()
+    resolutions = [(720, 1280), (1080, 1920), (3840, 2160), (900, 900)]
+    displays = [
+        DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
+        for idx, x in enumerate(resolutions)
+    ]
+    with pytest.raises(RpcError):
+        emu.setDisplayConfigurations(DisplayConfigurations(displays=displays))
