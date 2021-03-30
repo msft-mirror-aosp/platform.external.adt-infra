@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../test_snapshot"
+		},
+		{
+			"path": "../utils"
 		}
 	]
 }
