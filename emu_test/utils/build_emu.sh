@@ -52,7 +52,18 @@ if [[ $USE_QTWEBENGINE == "qtwebengine" ]]; then
     QTWEBENGINE_ARG="--qtwebengine"
 fi
 
-python tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
+
+if [ -d /mnt/tmpfs ];
+then
+    # Test to use tmpfs for compilation. This should result in:
+    # 1. Re-use of ccache as the paths will all be the same.
+    # 2. Fast access as we are using memory v.s. disk.
+    # 3. Bots have > 100gb of memory, build dir takes +/- 16gb
+    rm -rf /mnt/tmpfs/build
+    python tools/buildSrc/servers/build_tools.py --out_dir /mnt/tmpfs/build --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
+else
+    python tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
+fi
 
 # Contains what we distribute to the world.
 run unzip -o $DISTRIB_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
