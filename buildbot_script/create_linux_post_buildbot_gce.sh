@@ -25,7 +25,9 @@
 #                            (does not start buildbot)
 # adt-emu-buildbot-11-prod  Windows 10 sdk toolchain update
 #                            (starts buildbot on startup)
-
+# adr-emu-buildbot-12-test  No longer use tmpfs for tmp/src
+# adt-emu-buildbot-12-prod  No longer use tmpfs for tmp/src
+#                            (starts buildbot on startup)
 if [ $# -ne 2 ]
 then
     echo "You must supply a positive integer to append to the adt-emu-buildbot- prefix.  Integer must not currently be in use"
@@ -46,7 +48,7 @@ then
    export IMAGE_TYPE="prod"
 fi
 
-export IMAGE_NAME=adt-emu-buildbot-11-$IMAGE_TYPE
+export IMAGE_NAME=adt-emu-buildbot-12-$IMAGE_TYPE
 export TEMP_INSTANCE=adt-emu-buildbot-$1
 export PROJECT=android-studio-build
 export FULL_PROJECT=android-studio-build
