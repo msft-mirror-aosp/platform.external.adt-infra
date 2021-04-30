@@ -40,7 +40,8 @@ public class GoogleAppUtil {
     }
 
     private static final int api = SystemUtil.getApiLevel();
-    private static final String email = " ";
+    private static final String email = api == 30 ?
+            "demo.sysimg.user1@gmail.com" : "pstester1980@gmail.com";
 
     /**
      * Log a user into a Google application
@@ -66,6 +67,12 @@ public class GoogleAppUtil {
                 new UiSelector().text("Sign in to Chrome"));
         if (signInChromeLabel.waitForExists(5L)) {
             signInChromeLabel.clickAndWaitForNewWindow();
+        }
+
+        UiObject addAccountLabel = device.findObject(
+                new UiSelector().text("Add account"));
+        if (addAccountLabel.waitForExists(5L)) {
+            addAccountLabel.clickAndWaitForNewWindow();
         }
 
         UiObject testUserEmail = device.findObject(new UiSelector().text(email));
@@ -155,14 +162,18 @@ public class GoogleAppUtil {
         }
 
         Log.i("Login", "enter password");
-        device.pressKeyCode(KeyEvent.KEYCODE_P);
-        device.pressKeyCode(KeyEvent.KEYCODE_S);
-        device.pressKeyCode(KeyEvent.KEYCODE_T);
-        device.pressKeyCode(KeyEvent.KEYCODE_4);
-        device.pressKeyCode(KeyEvent.KEYCODE_L);
-        device.pressKeyCode(KeyEvent.KEYCODE_I);
-        device.pressKeyCode(KeyEvent.KEYCODE_F);
-        device.pressKeyCode(KeyEvent.KEYCODE_3);
+        if (api == 30) {
+            editInput.setText("4g070ls8id");
+        } else {
+            device.pressKeyCode(KeyEvent.KEYCODE_P);
+            device.pressKeyCode(KeyEvent.KEYCODE_S);
+            device.pressKeyCode(KeyEvent.KEYCODE_T);
+            device.pressKeyCode(KeyEvent.KEYCODE_4);
+            device.pressKeyCode(KeyEvent.KEYCODE_L);
+            device.pressKeyCode(KeyEvent.KEYCODE_I);
+            device.pressKeyCode(KeyEvent.KEYCODE_F);
+            device.pressKeyCode(KeyEvent.KEYCODE_3);
+        }
         clickNext(device);
 
         boolean isSignedIn =
@@ -219,6 +230,11 @@ public class GoogleAppUtil {
             gotItButton.clickAndWaitForNewWindow();
         }
 
+        UiObject yesImInButton = device.findObject(new UiSelector().textMatches("(?i)yes, i'm in(?-i)"));
+        if (yesImInButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            yesImInButton.clickAndWaitForNewWindow();
+        }
+
         device.pressHome();
         TimeUnit.SECONDS.sleep(10);
         return true;
@@ -243,7 +259,7 @@ public class GoogleAppUtil {
 
         if (new Wait().until(signOutLabel::exists)) {
             signOutLabel.clickAndWaitForNewWindow();
-        } else {
+        } else if (api != 30) {
             return true;
         }
 
@@ -253,11 +269,31 @@ public class GoogleAppUtil {
             signOutButton.clickAndWaitForNewWindow();
         }
 
+
+        for (int i = 0; i < 3; i++) {
+            UiObject loggedInUser =
+                    device.findObject(new UiSelector().text(email));
+            if (new Wait().until(loggedInUser::exists)) {
+                loggedInUser.clickAndWaitForNewWindow();
+            }
+        }
+
+        for (int i = 0; i < 2; i++) {
+            UiObject removeAccountButton = device.findObject(
+                    new UiSelector().textMatches("(?i)remove account(?-i)").className("android.widget.Button"));
+            if (new Wait().until(removeAccountButton::exists)) {
+                removeAccountButton.clickAndWaitForNewWindow();
+            }
+        }
+
         final UiObject signInLabel = device.findObject(new UiSelector().text("Sign in to Chrome"));
         final UiObject signInPromoCloseButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_CLOSE_RES));
+        final UiObject addAccountButton = device.findObject(
+                new UiSelector().text("Add account"));
 
-        return signInLabel.exists() || signInPromoCloseButton.exists();
+        return new Wait().until(signInLabel::exists) || new Wait().until(signInPromoCloseButton::exists)
+                || new Wait().until(addAccountButton::exists);
     }
 
     private static void openChromeSettings(Instrumentation instrumentation) throws Exception {
