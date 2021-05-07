@@ -143,6 +143,15 @@ public class PlayStoreUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         resetPlayStore(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
+
+        new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
+
+        final UiObject signInButton = device.findObject(
+                new UiSelector().packageName("com.android.vending").textMatches("(?i)sign in(?-i)"));
+        if (new Wait().until(signInButton::exists)) {
+            signInButton.clickAndWaitForNewWindow();
+        }
+
         new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
         boolean loggedIn = new Wait(TimeUnit.SECONDS.toMillis(5)).
