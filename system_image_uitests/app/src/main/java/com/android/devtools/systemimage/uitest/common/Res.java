@@ -192,7 +192,7 @@ public class Res {
     public static final String MAPS_WATCHER_PATTERN = "(?i)(accept|accept & continue|skip|got|ok|ride)(?-i)";
     public static final String NETWORK_UTIL_WATCHER_PATTERN = "(?i)(ok)(?-i)";
     public static final String PKG_INSTALL_WATCHER_PATTERN = "(?i)(new|decline|ok|allow)(?-i)";
-    public static final String PLAY_STORE_WATCHER_PATTERN = "(?i)(ok|save)(?-i)";
+    public static final String PLAY_STORE_WATCHER_PATTERN = "(?i)(ok|save|got it)(?-i)";
     public static final String SETTINGS_WATCHER_PATTERN = "(?i)(ok)(?-i)";
     public static final String VPN_WATCHER_PATTERN = "(?i)(trust|ok)(?-i)";
 

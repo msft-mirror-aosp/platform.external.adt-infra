@@ -19,7 +19,6 @@ package com.android.devtools.systemimage.uitest.utils;
 import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
@@ -307,20 +306,29 @@ public class PlayStoreUtil {
      * Opens the Parental Controls menu
      */
     private static void openParentalControls(UiDevice testDevice) throws Exception {
+        String playStoreUser = "demo.sysimg.user1@gmail.com";
+        UiObject signedInAs = testDevice.findObject(
+                new UiSelector().descriptionContains(playStoreUser));
+        boolean hasSignedInAs = signedInAs.waitForExists(3);
+        if (hasSignedInAs) {
+            signedInAs.clickAndWaitForNewWindow();
+        } else {
+            UiObject backButton = testDevice.findObject(new UiSelector().description("Back"));
+            if (backButton.waitForExists(3)) {
+                backButton.clickAndWaitForNewWindow();
+            }
 
-        UiObject backButton =  testDevice.findObject(new UiSelector().description("Back"));
-        if (backButton.waitForExists(3)) {
-            backButton.clickAndWaitForNewWindow();
-        }
-
-        UiObject navigationDrawer = testDevice.findObject(new UiSelector().
-                description("Show navigation drawer"));
-        if (navigationDrawer.waitForExists(TimeUnit.SECONDS.toMillis(10L))) {
-            navigationDrawer.clickAndWaitForNewWindow();
+            UiObject navigationDrawer = testDevice.findObject(new UiSelector().
+                    description("Show navigation drawer"));
+            if (navigationDrawer.waitForExists(TimeUnit.SECONDS.toMillis(10L))) {
+                navigationDrawer.clickAndWaitForNewWindow();
+            }
         }
 
         final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-        final UiObject settingsLink = scrollable.getChild(new UiSelector().text("Settings"));
+        final UiSelector settingsSelector = hasSignedInAs ?
+                new UiSelector().description("Settings") : new UiSelector().text("Settings");
+        final UiObject settingsLink = scrollable.getChild(settingsSelector);
         settingsLink.waitForExists(3L);
         if (!settingsLink.exists()) {
             new Wait().until(() -> {
@@ -336,17 +344,24 @@ public class PlayStoreUtil {
             settingsLink.clickAndWaitForNewWindow();
         }
 
-        final UiObject parentalControlsButton = scrollable.getChild(new UiSelector().text(
-                "Parental controls"));
-        parentalControlsButton.waitForExists(3L);
-        if (!parentalControlsButton.exists()) {
+        UiObject parentalControlsButton = hasSignedInAs ?
+                testDevice.findObject(new UiSelector().text("Parental control, parent guide")) :
+                scrollable.getChild(new UiSelector().text("Parental controls"));
+        if (parentalControlsButton.waitForExists(3L)) {
+            parentalControlsButton.clickAndWaitForNewWindow();
+            UiObject parentalControlsListItem =
+                    testDevice.findObject(new UiSelector().text("Parental controls"));
+            if (parentalControlsListItem.exists()) {
+                parentalControlsListItem.clickAndWaitForNewWindow();
+            }
+        } else {
             new Wait().until(() -> {
                 scrollable.scrollIntoView(parentalControlsButton);
                 return parentalControlsButton.exists();
             });
-        }
-        if (parentalControlsButton.exists()) {
-            parentalControlsButton.clickAndWaitForNewWindow();
+            if (parentalControlsButton.exists()) {
+                parentalControlsButton.clickAndWaitForNewWindow();
+            }
         }
     }
 
