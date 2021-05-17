@@ -203,7 +203,6 @@ class Emulator(object):
                 "300",
                 "-debug-events", # Needed for some tests.
                 "-wipe-data",
-                "-experimental-enable-multidisplay" # Remove this once it is no longer experimental
                 # "-verbose",
                 # Enabling the onese below will cause a huge amount of logging.
                 # "-show-kernel",
