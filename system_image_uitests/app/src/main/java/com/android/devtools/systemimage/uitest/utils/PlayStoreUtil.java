@@ -37,6 +37,7 @@ public class PlayStoreUtil {
         throw new AssertionError();
     }
 
+    private static final int api = SystemUtil.getApiLevel();
     /**
      * Version 1 for api = 24
      *
@@ -247,8 +248,17 @@ public class PlayStoreUtil {
             }
         }
 
-        device.findObject(new UiSelector().textMatches("(?i)uninstall(?-i)")).clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().textMatches("(?i)ok(?-i)")).clickAndWaitForNewWindow();
+        UiObject uninstallButton = device.findObject(new UiSelector().textMatches("(?i)uninstall(?-i)"));
+        if (uninstallButton.waitForExists(10)) {
+            uninstallButton.clickAndWaitForNewWindow();
+        }
+        UiObject okButton = device.findObject(new UiSelector().textMatches("(?i)ok(?-i)"));
+        if (okButton.waitForExists(3)) {
+            okButton.clickAndWaitForNewWindow();
+        }
+        if (uninstallButton.waitForExists(3)) {
+            uninstallButton.clickAndWaitForNewWindow();
+        }
 
         UiObject installButton = device.findObject(new UiSelector()
                 .textMatches("(?i)install(?-i)"));
@@ -307,11 +317,13 @@ public class PlayStoreUtil {
      */
     private static void openParentalControls(UiDevice testDevice) throws Exception {
         String playStoreUser = "demo.sysimg.user1@gmail.com";
-        UiObject signedInAs = testDevice.findObject(
-                new UiSelector().descriptionContains(playStoreUser));
-        boolean hasSignedInAs = signedInAs.waitForExists(3);
-        if (hasSignedInAs) {
-            signedInAs.clickAndWaitForNewWindow();
+
+        if (api == 30) {
+            UiObject signedInAs = testDevice.findObject(
+                    new UiSelector().descriptionContains(playStoreUser));
+            if (signedInAs.waitForExists(3)) {
+                signedInAs.clickAndWaitForNewWindow();
+            }
         } else {
             UiObject backButton = testDevice.findObject(new UiSelector().description("Back"));
             if (backButton.waitForExists(3)) {
@@ -326,7 +338,7 @@ public class PlayStoreUtil {
         }
 
         final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-        final UiSelector settingsSelector = hasSignedInAs ?
+        final UiSelector settingsSelector = api == 30 ?
                 new UiSelector().description("Settings") : new UiSelector().text("Settings");
         final UiObject settingsLink = scrollable.getChild(settingsSelector);
         settingsLink.waitForExists(3L);
@@ -344,7 +356,7 @@ public class PlayStoreUtil {
             settingsLink.clickAndWaitForNewWindow();
         }
 
-        UiObject parentalControlsButton = hasSignedInAs ?
+        UiObject parentalControlsButton = api == 30 ?
                 testDevice.findObject(new UiSelector().text("Parental control, parent guide")) :
                 scrollable.getChild(new UiSelector().text("Parental controls"));
         if (parentalControlsButton.waitForExists(3L)) {
