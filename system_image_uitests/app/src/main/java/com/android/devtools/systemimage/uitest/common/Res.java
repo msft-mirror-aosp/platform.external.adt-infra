@@ -41,7 +41,7 @@ public class Res {
     public static final String CHROME_NO_THANKS_BUTTON_RES = "com.android.chrome\\d*:id" + "/(no_thanks_button|negative_button)";
     public static final String CHROME_PROGRESS_BAR_RES = "com.android.chrome:id/progress";
     public static final String CHROME_POSITIVE_BUTTON_RES = "com.android.chrome:id/positive_button";
-
+    public static final String CHROME_ACCOUNT_SELECTION_MARK_RES = "com.android.chrome:id/account_selection_mark";
     public static final String CREATE_NEW_CONTACT = "com.android.contacts:id/create_contact_button";
 
     public static final String PERMISSION_RECYCLER_VIEW = "com.android.permissioncontroller:id/recycler_view";

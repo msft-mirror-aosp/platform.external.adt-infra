@@ -40,7 +40,7 @@ public class GoogleAppUtil {
     }
 
     private static final int api = SystemUtil.getApiLevel();
-    private static final String email = api == 30 ?
+    private static final String email = api == 29 ?
             "demo.sysimg.user1@gmail.com" : "pstester1980@gmail.com";
 
     /**
@@ -69,13 +69,19 @@ public class GoogleAppUtil {
             signInChromeLabel.clickAndWaitForNewWindow();
         }
 
+        UiObject testUserEmail = device.findObject(new UiSelector().text(email));
+        UiObject accountSelectionMark = device.findObject(new UiSelector().resourceId(
+                Res.CHROME_ACCOUNT_SELECTION_MARK_RES));
+        if (testUserEmail.waitForExists(5L) && accountSelectionMark.waitForExists(5L)) {
+            return true;
+        }
+
         UiObject addAccountLabel = device.findObject(
                 new UiSelector().text("Add account"));
         if (addAccountLabel.waitForExists(5L)) {
             addAccountLabel.clickAndWaitForNewWindow();
         }
 
-        UiObject testUserEmail = device.findObject(new UiSelector().text(email));
         if (testUserEmail.waitForExists(5L)) {
             new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
             UiObject chromePositiveButton = device.findObject(
@@ -162,7 +168,7 @@ public class GoogleAppUtil {
         }
 
         Log.i("Login", "enter password");
-        if (api == 30) {
+        if (api == 29) {
             editInput.setText("4g070ls8id");
         } else {
             device.pressKeyCode(KeyEvent.KEYCODE_P);
