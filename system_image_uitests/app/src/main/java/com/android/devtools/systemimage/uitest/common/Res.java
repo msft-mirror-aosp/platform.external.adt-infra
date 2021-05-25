@@ -175,6 +175,7 @@ public class Res {
     public static final String YOUTUBE_DISMISS_RES = "com.google.android.youtube:id/dismiss";
     public static final String YOUTUBE_SIGN_OUT_FOOTER_RES = "com.google.android.youtube:id/sign_out_footer";
     public static final String YOUTUBE_SIGN_IN_FOOTER_RES = "com.google.android.youtube:id/sign_in_footer";
+    public static final String YOUTUBE_EMAIL_ACCOUNT_RES = "com.google.android.youtube:id/email";
     public static final String YOUTUBE_BUTTON_RES = "com.google.android.youtube:id/button";
     public static final String YOUTUBE_LIST_RES = "com.google.android.youtube:id/list";
     public static final String YOUTUBE_TITLE_RES = "com.google.android.youtube:id/title";

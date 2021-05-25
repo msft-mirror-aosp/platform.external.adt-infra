@@ -4,6 +4,7 @@ import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
+import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
@@ -40,7 +41,7 @@ public class YouTubeTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(600);
+    public Timeout globalTimeout = Timeout.seconds(1200);
 
     /**
      * Verify YouTube has the latest version or not.
@@ -75,11 +76,9 @@ public class YouTubeTest {
      *   Test Steps:
      *   1. Start an emulator and launch home screen.
      *   2. Open Apps.
-     *   3. Launch Chrome app. and signIn to Chrome .
-     *   4. Launch YouTube app. and signOut
+     *   3. Launch Chrome app. and signIn to Chrome
      *   Verify:
      *      1. Verify that there is user can sign in via Chrome.
-     *      2. Verify that user has signed out of the YouTube app.
      *   </pre>
      */
     @Test
@@ -88,50 +87,20 @@ public class YouTubeTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         GoogleAppUtil.logoutGoogleChrome(instrumentation);
         boolean logInSuccess = GoogleAppUtil.loginGoogleApp(instrumentation, true);
-        assertTrue("YouTube log in was unsuccessful", logInSuccess);
+        assertTrue("Google log in was unsuccessful", logInSuccess);
 
+        assertTrue("YouTube log in was unsuccessful",
+                isTestUserLoggedIn(instrumentation));
+
+        GoogleAppUtil.logoutGoogleChrome(instrumentation);
+
+        assertFalse("YouTube log out was unsuccessful",
+                isTestUserLoggedIn(instrumentation));
+    }
+
+    private boolean isTestUserLoggedIn(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         AppLauncher.launch(instrumentation, "YouTube");
-
-        UiObject youTubeInstall = device.findObject(
-                new UiSelector().resourceId(Res.YOUTUBE_INSTALL_BUTTON_RES));
-        if (youTubeInstall.waitForExists(5L)) {
-            youTubeInstall.clickAndWaitForNewWindow();
-
-            UiObject youTubeLeftButton = device.findObject(new UiSelector().
-                    resourceId(Res.GOOGLE_PLAY_LEFT_BUTTON_RES));
-            if (youTubeLeftButton.waitForExists(1000L)) {
-                youTubeLeftButton.clickAndWaitForNewWindow();
-            } else {
-                youTubeLeftButton = device.findObject(new UiSelector().textMatches("(?i)update(?-i)"));
-                if (youTubeLeftButton.exists()) {
-                    youTubeLeftButton.clickAndWaitForNewWindow();
-                }
-            }
-
-            UiObject youTubeRightButton = device.findObject(new UiSelector().
-                    resourceId(Res.GOOGLE_PLAY_RIGHT_BUTTON_RES).textMatches("(?i)open(?-i)"));
-            if (youTubeRightButton.waitForExists(30000L)) {
-                youTubeRightButton.clickAndWaitForNewWindow();
-            } else {
-                youTubeRightButton = device.findObject(new UiSelector().textMatches("(?i)open(?-i)"));
-                if (youTubeRightButton.exists()) {
-                    youTubeRightButton.clickAndWaitForNewWindow();
-                }
-            }
-        }
-
-        UiObject youTubeClose = device.findObject(
-                new UiSelector().packageName(Res.YOUTUBE_PACKAGE).description("Close"));
-        if (youTubeClose.waitForExists(5L)) {
-            youTubeClose.clickAndWaitForNewWindow();
-        }
-
-        UiObject updateLaterButton = device.findObject(
-                new UiSelector().resourceId(Res.YOUTUBE_UPDATE_LATER_BUTTON_RES));
-        if (updateLaterButton.waitForExists(5L)) {
-            updateLaterButton.clickAndWaitForNewWindow();
-        }
 
         UiObject mobileAvatar = device.findObject(
                 new UiSelector().resourceId(Res.YOUTUBE_TOPBAR_AVATAR_RES)
@@ -140,58 +109,14 @@ public class YouTubeTest {
             mobileAvatar.clickAndWaitForNewWindow();
         }
 
-        UiObject signInButton = device.findObject(
-                new UiSelector().resourceId(Res.YOUTUBE_BUTTON_RES)
-                        .packageName(Res.YOUTUBE_PACKAGE).text("SIGN IN"));
-        if (signInButton.waitForExists(5L)) {
-            signInButton.clickAndWaitForNewWindow();
-        }
-
-        UiObject youTubeSignIn = device.findObject(
-                new UiSelector().resourceId(Res.YOUTUBE_SIGN_IN_FOOTER_RES)
-                        .packageName(Res.YOUTUBE_PACKAGE)
-                        .text("Sign in"));
-
-        if (youTubeSignIn.waitForExists(5L)) {
-            youTubeSignIn.clickAndWaitForNewWindow();
-        }
-
-        UiObject playAccount = device.findObject(
-                new UiSelector().packageName(Res.YOUTUBE_PACKAGE)
-                        .text("David Play"));
-
-        if (playAccount.waitForExists(5L)) {
-            playAccount.clickAndWaitForNewWindow();
-        }
-
-        if (mobileAvatar.waitForExists(5L)) {
+        if (mobileAvatar.waitForExists(30000L)) {
             mobileAvatar.clickAndWaitForNewWindow();
         }
 
-        UiObject youTubeSignOut = device.findObject(
-                new UiSelector().resourceId(Res.YOUTUBE_SIGN_OUT_FOOTER_RES)
-                        .packageName(Res.YOUTUBE_PACKAGE)
-                        .text("Sign out"));
-        if (youTubeSignOut.waitForExists(5L)) {
-            youTubeSignOut.clickAndWaitForNewWindow();
-        }
+        UiObject testUserLoggedIn = device.findObject(
+                new UiSelector().resourceId(Res.YOUTUBE_EMAIL_ACCOUNT_RES)
+                        .text(GoogleAppUtil.getUserEmail()));
 
-        UiObject noThanksButton = device.findObject(
-                new UiSelector().resourceId(Res.YOUTUBE_DISMISS_RES)
-                        .packageName(Res.YOUTUBE_PACKAGE).text("NO THANKS"));
-        if (noThanksButton.waitForExists(5L)) {
-            noThanksButton.clickAndWaitForNewWindow();
-        }
-
-        if (mobileAvatar.waitForExists(5L)) {
-            mobileAvatar.clickAndWaitForNewWindow();
-        }
-
-        UiObject signInMessage = device.findObject(
-                new UiSelector().resourceId(Res.YOUTUBE_SIGN_IN_BODY_TEXT_RES)
-                        .packageName(Res.YOUTUBE_PACKAGE));
-
-        assertTrue("YouTube log out was unsuccessful",
-                signInMessage.waitForExists(10L));
+        return testUserLoggedIn.waitForExists(1000L);
     }
 }
