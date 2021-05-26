@@ -97,7 +97,7 @@ public class GoogleAppUtil {
         final UiObject signInButton = device.findObject(
                 new UiSelector().textMatches(("(?i)sign in(?-i)")));
 
-        boolean needsSignIn = new Wait().
+        boolean needsSignIn = new Wait(30000L).
                 until(signInButton::exists);
 
         if (!needsSignIn) {
@@ -368,5 +368,9 @@ public class GoogleAppUtil {
         if (noThanksButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             noThanksButton.clickAndWaitForNewWindow();
         }
+    }
+
+    public static String getUserEmail() {
+        return email;
     }
 }
