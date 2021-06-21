@@ -115,7 +115,7 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
 
         # Refresh the current whole test result page.
         with open(dst_path, 'w+') as modified:
-            modified.write(('%s' % xml_string_result))
+            modified.write(('%s' % xml_string_result.decode()))
             self.m_logger.info("Wrote %s" % dst_path)
 
     def print_console_result(self, emu_result):

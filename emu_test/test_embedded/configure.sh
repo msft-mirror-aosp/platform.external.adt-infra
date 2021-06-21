@@ -39,8 +39,6 @@ fi
 if [ -e ./venv/bin/activate ]; then
    . ./venv/bin/activate
    make deps
-   python3 setup.py develop
-   pip install pytest-timeout
-   pip install pytest-benchmark
+   pip install -e .\[test\]
    echo "Ready to run emu-embeded tests.!"
 fi

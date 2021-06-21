@@ -33,53 +33,24 @@ class PortTest(testcase_base.BaseConsoleTest):
     return output_redir_list
 
   def _add_port_redir_cmd(self):
-    is_cmd_succ = False
-
-    for i in range(util.NUM_MAX_TRIALS):
-      print(('Running %s, trial #%s' %
-             (inspect.stack()[0][3], str(i + 1))))
-
-      self.telnet.write(util.toBytes(CMD_REDIR_ADD))
-      time.sleep(util.CMD_WAIT_TIMEOUT_S)
-      output_redir_add = util.parse_output(self.telnet)
-      assert output_redir_add == util.OK
-
-      self.telnet.write(util.toBytes(CMD_REDIR_LIST))
-      time.sleep(util.CMD_WAIT_TIMEOUT_S)
-      output_redir_list = util.parse_output(self.telnet)
-
-      is_cmd_succ = (output_redir_list == util.PORT_REDIR_ADD)
-
-      if is_cmd_succ:
-        break
-
-      time.sleep(util.TRIAL_WAIT_TIMEOUT)
-
+    is_cmd_succ, output_redir_add = util.execute_console_command(
+        self.telnet, CMD_REDIR_ADD, util.OK)
     self.assert_cmd_successful(
-        is_cmd_succ, 'Failed to properly add a new port redirection',
-        False, '', util.PORT_REDIR_ADD, output_redir_add)
+        is_cmd_succ, 'Failed to properly add port redirection.',
+        False, '', util.OK, output_redir_add)
+
+    is_cmd_succ, output_redir_list = util.execute_console_command(
+        self.telnet, CMD_REDIR_LIST, util.PORT_REDIR_ADD)
+    self.assert_cmd_successful(
+        is_cmd_succ, 'Failed to properly list port redirection.',
+        False, '', util.PORT_REDIR_ADD, output_redir_list)
 
   def _del_port_redir_cmd(self):
-    is_cmd_succ = False
 
-    for i in range(util.NUM_MAX_TRIALS):
-      print(('Running : %s, trial #%s' %
-             (inspect.stack()[0][3], str(i + 1))))
-
-      self.telnet.write(util.toBytes(CMD_REDIR_DEL))
-      time.sleep(util.CMD_WAIT_TIMEOUT_S)
-      output_redir_del = util.parse_output(self.telnet)
-      assert output_redir_del == util.OK
-
-      is_cmd_succ = (self._list_redir_cmd() == util.PORT_NO_REDIR)
-
-      if is_cmd_succ:
-        break
-
-      time.sleep(util.TRIAL_WAIT_TIMEOUT_S)
-
+    is_cmd_succ, output_redir_del = util.execute_console_command(
+        self.telnet, CMD_REDIR_DEL, util.OK)
     self.assert_cmd_successful(
-        is_cmd_succ, 'Failed to properly delete a port redirection',
+        is_cmd_succ, 'Failed to properly delete port redirection.',
         False, '', util.OK, output_redir_del)
 
   def test_list_port_redir(self):

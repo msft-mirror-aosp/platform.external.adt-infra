@@ -25,6 +25,7 @@ from emu.logcat import Logcat, AdbLogcatStream, AdbStream
 from emu.utils import run, LogObserver
 from emu.avd import AvdGenerator
 from emu.emulator_connection import EmulatorConnection
+from pathlib import Path
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -39,7 +40,7 @@ class Emulator(object):
 
     def __init__(self, emulator_exe, sdk_root=None, avd_home=None):
         self.sdk_root = os.path.abspath(sdk_root or os.environ.get("ANDROID_SDK_ROOT"))
-        self.avd_home = avd_home or os.environ.get("ANDROID_AVD_HOME")
+        self.avd_home = avd_home or os.environ.get("ANDROID_AVD_HOME") or os.path.join(Path.home(), ".android", "avd")
         self.adb_binary = os.path.join(self.sdk_root, "platform-tools", "adb")
         self.avd_gen = None
         self.desc = None
@@ -62,6 +63,9 @@ class Emulator(object):
     def get_emulator_controller(self):
         """Gets the emulator controller stub to this emulator."""
         return self.desc.get_emulator_controller()
+
+    def get_ui_controller(self):
+        return self.desc.get_ui_controller_service()
 
     def get_snapshot_service(self):
         """Gets a snapshot service to interact with snaphsots."""
@@ -257,6 +261,7 @@ class Emulator(object):
         logging.info("And we have: %s", self.adb(["devices"]))
         self.desc = discovery.find_by_pid(self.proc.pid)
         if self.desc is None:
+            logging.error("See b/181982371 if the failure is due unknown option: -experimental-enable-multidisplay")
             raise Exception("Failed to launch {} - {}".format(self.emulator, avd))
 
         self._get_dimensions()

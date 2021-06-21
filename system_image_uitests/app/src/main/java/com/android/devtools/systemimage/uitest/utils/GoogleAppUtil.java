@@ -40,7 +40,8 @@ public class GoogleAppUtil {
     }
 
     private static final int api = SystemUtil.getApiLevel();
-    private static final String email = " ";
+    private static final String email = api == 29 ?
+            "demo.sysimg.user1@gmail.com" : "pstester1980@gmail.com";
 
     /**
      * Log a user into a Google application
@@ -69,6 +70,18 @@ public class GoogleAppUtil {
         }
 
         UiObject testUserEmail = device.findObject(new UiSelector().text(email));
+        UiObject accountSelectionMark = device.findObject(new UiSelector().resourceId(
+                Res.CHROME_ACCOUNT_SELECTION_MARK_RES));
+        if (testUserEmail.waitForExists(5L) && accountSelectionMark.waitForExists(5L)) {
+            return true;
+        }
+
+        UiObject addAccountLabel = device.findObject(
+                new UiSelector().text("Add account"));
+        if (addAccountLabel.waitForExists(5L)) {
+            addAccountLabel.clickAndWaitForNewWindow();
+        }
+
         if (testUserEmail.waitForExists(5L)) {
             new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
             UiObject chromePositiveButton = device.findObject(
@@ -84,7 +97,7 @@ public class GoogleAppUtil {
         final UiObject signInButton = device.findObject(
                 new UiSelector().textMatches(("(?i)sign in(?-i)")));
 
-        boolean needsSignIn = new Wait().
+        boolean needsSignIn = new Wait(30000L).
                 until(signInButton::exists);
 
         if (!needsSignIn) {
@@ -155,14 +168,18 @@ public class GoogleAppUtil {
         }
 
         Log.i("Login", "enter password");
-        device.pressKeyCode(KeyEvent.KEYCODE_P);
-        device.pressKeyCode(KeyEvent.KEYCODE_S);
-        device.pressKeyCode(KeyEvent.KEYCODE_T);
-        device.pressKeyCode(KeyEvent.KEYCODE_4);
-        device.pressKeyCode(KeyEvent.KEYCODE_L);
-        device.pressKeyCode(KeyEvent.KEYCODE_I);
-        device.pressKeyCode(KeyEvent.KEYCODE_F);
-        device.pressKeyCode(KeyEvent.KEYCODE_3);
+        if (api == 29) {
+            editInput.setText("4g070ls8id");
+        } else {
+            device.pressKeyCode(KeyEvent.KEYCODE_P);
+            device.pressKeyCode(KeyEvent.KEYCODE_S);
+            device.pressKeyCode(KeyEvent.KEYCODE_T);
+            device.pressKeyCode(KeyEvent.KEYCODE_4);
+            device.pressKeyCode(KeyEvent.KEYCODE_L);
+            device.pressKeyCode(KeyEvent.KEYCODE_I);
+            device.pressKeyCode(KeyEvent.KEYCODE_F);
+            device.pressKeyCode(KeyEvent.KEYCODE_3);
+        }
         clickNext(device);
 
         boolean isSignedIn =
@@ -219,6 +236,11 @@ public class GoogleAppUtil {
             gotItButton.clickAndWaitForNewWindow();
         }
 
+        UiObject yesImInButton = device.findObject(new UiSelector().textMatches("(?i)yes, i'm in(?-i)"));
+        if (yesImInButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            yesImInButton.clickAndWaitForNewWindow();
+        }
+
         device.pressHome();
         TimeUnit.SECONDS.sleep(10);
         return true;
@@ -243,7 +265,7 @@ public class GoogleAppUtil {
 
         if (new Wait().until(signOutLabel::exists)) {
             signOutLabel.clickAndWaitForNewWindow();
-        } else {
+        } else if (api != 30) {
             return true;
         }
 
@@ -253,11 +275,31 @@ public class GoogleAppUtil {
             signOutButton.clickAndWaitForNewWindow();
         }
 
+
+        for (int i = 0; i < 3; i++) {
+            UiObject loggedInUser =
+                    device.findObject(new UiSelector().text(email));
+            if (new Wait().until(loggedInUser::exists)) {
+                loggedInUser.clickAndWaitForNewWindow();
+            }
+        }
+
+        for (int i = 0; i < 2; i++) {
+            UiObject removeAccountButton = device.findObject(
+                    new UiSelector().textMatches("(?i)remove account(?-i)").className("android.widget.Button"));
+            if (new Wait().until(removeAccountButton::exists)) {
+                removeAccountButton.clickAndWaitForNewWindow();
+            }
+        }
+
         final UiObject signInLabel = device.findObject(new UiSelector().text("Sign in to Chrome"));
         final UiObject signInPromoCloseButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_CLOSE_RES));
+        final UiObject addAccountButton = device.findObject(
+                new UiSelector().text("Add account"));
 
-        return signInLabel.exists() || signInPromoCloseButton.exists();
+        return new Wait().until(signInLabel::exists) || new Wait().until(signInPromoCloseButton::exists)
+                || new Wait().until(addAccountButton::exists);
     }
 
     private static void openChromeSettings(Instrumentation instrumentation) throws Exception {
@@ -326,5 +368,9 @@ public class GoogleAppUtil {
         if (noThanksButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             noThanksButton.clickAndWaitForNewWindow();
         }
+    }
+
+    public static String getUserEmail() {
+        return email;
     }
 }

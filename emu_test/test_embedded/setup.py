@@ -118,7 +118,7 @@ setup(
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is
     # installed, so they must be valid existing projects.
-    install_requires=["aemu-grpc", "jinja2", "sh"],  # Optional
+    install_requires=["aemu-grpc", "jinja2", "sh", "pillow"],  # Optional
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
     # syntax, for example:
@@ -129,7 +129,17 @@ setup(
     # projects.
     extras_require={
         "dev": ["check-manifest", "black"],
-        "test": ["coverage", "mock", "tox", "pytest", "pytest-timeout", "pytest-benchmark"],
+        "test": [
+            "coverage",
+            "mock",
+            "tox",
+            "pytest",
+            "pytest-timeout",
+            "pytest-benchmark",
+            "pytest-rerunfailures",
+            "pytest-dependency",
+            "pytest-flakefinder"
+        ],
     },  # Optional
     # If there are data files included in your packages that need to be
     # installed, specify them here.
@@ -153,7 +163,11 @@ setup(
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # `pip` to create the appropriate form of executable for the target
     # platform.
-    entry_points={"console_scripts": ["",],},  # Optional
+    entry_points={
+        "console_scripts": [
+            "",
+        ],
+    },  # Optional
     # List additional URLs that are relevant to your project as a dict.
     #
     # This field corresponds to the "Project-URL" metadata fields:

@@ -41,7 +41,7 @@ public class Res {
     public static final String CHROME_NO_THANKS_BUTTON_RES = "com.android.chrome\\d*:id" + "/(no_thanks_button|negative_button)";
     public static final String CHROME_PROGRESS_BAR_RES = "com.android.chrome:id/progress";
     public static final String CHROME_POSITIVE_BUTTON_RES = "com.android.chrome:id/positive_button";
-
+    public static final String CHROME_ACCOUNT_SELECTION_MARK_RES = "com.android.chrome:id/account_selection_mark";
     public static final String CREATE_NEW_CONTACT = "com.android.contacts:id/create_contact_button";
 
     public static final String PERMISSION_RECYCLER_VIEW = "com.android.permissioncontroller:id/recycler_view";
@@ -175,6 +175,7 @@ public class Res {
     public static final String YOUTUBE_DISMISS_RES = "com.google.android.youtube:id/dismiss";
     public static final String YOUTUBE_SIGN_OUT_FOOTER_RES = "com.google.android.youtube:id/sign_out_footer";
     public static final String YOUTUBE_SIGN_IN_FOOTER_RES = "com.google.android.youtube:id/sign_in_footer";
+    public static final String YOUTUBE_EMAIL_ACCOUNT_RES = "com.google.android.youtube:id/email";
     public static final String YOUTUBE_BUTTON_RES = "com.google.android.youtube:id/button";
     public static final String YOUTUBE_LIST_RES = "com.google.android.youtube:id/list";
     public static final String YOUTUBE_TITLE_RES = "com.google.android.youtube:id/title";
@@ -192,7 +193,7 @@ public class Res {
     public static final String MAPS_WATCHER_PATTERN = "(?i)(accept|accept & continue|skip|got|ok|ride)(?-i)";
     public static final String NETWORK_UTIL_WATCHER_PATTERN = "(?i)(ok)(?-i)";
     public static final String PKG_INSTALL_WATCHER_PATTERN = "(?i)(new|decline|ok|allow)(?-i)";
-    public static final String PLAY_STORE_WATCHER_PATTERN = "(?i)(ok|save)(?-i)";
+    public static final String PLAY_STORE_WATCHER_PATTERN = "(?i)(ok|save|got it)(?-i)";
     public static final String SETTINGS_WATCHER_PATTERN = "(?i)(ok)(?-i)";
     public static final String VPN_WATCHER_PATTERN = "(?i)(trust|ok)(?-i)";
 

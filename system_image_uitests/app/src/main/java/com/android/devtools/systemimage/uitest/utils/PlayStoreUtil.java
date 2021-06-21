@@ -19,7 +19,6 @@ package com.android.devtools.systemimage.uitest.utils;
 import android.app.Instrumentation;
 import android.support.test.uiautomator.UiDevice;
 import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
@@ -38,6 +37,7 @@ public class PlayStoreUtil {
         throw new AssertionError();
     }
 
+    private static final int api = SystemUtil.getApiLevel();
     /**
      * Version 1 for api = 24
      *
@@ -143,6 +143,15 @@ public class PlayStoreUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         resetPlayStore(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
+
+        new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
+
+        final UiObject signInButton = device.findObject(
+                new UiSelector().packageName("com.android.vending").textMatches("(?i)sign in(?-i)"));
+        if (new Wait().until(signInButton::exists)) {
+            signInButton.clickAndWaitForNewWindow();
+        }
+
         new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
         boolean loggedIn = new Wait(TimeUnit.SECONDS.toMillis(5)).
@@ -239,8 +248,17 @@ public class PlayStoreUtil {
             }
         }
 
-        device.findObject(new UiSelector().textMatches("(?i)uninstall(?-i)")).clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().textMatches("(?i)ok(?-i)")).clickAndWaitForNewWindow();
+        UiObject uninstallButton = device.findObject(new UiSelector().textMatches("(?i)uninstall(?-i)"));
+        if (uninstallButton.waitForExists(10)) {
+            uninstallButton.clickAndWaitForNewWindow();
+        }
+        UiObject okButton = device.findObject(new UiSelector().textMatches("(?i)ok(?-i)"));
+        if (okButton.waitForExists(3)) {
+            okButton.clickAndWaitForNewWindow();
+        }
+        if (uninstallButton.waitForExists(3)) {
+            uninstallButton.clickAndWaitForNewWindow();
+        }
 
         UiObject installButton = device.findObject(new UiSelector()
                 .textMatches("(?i)install(?-i)"));
@@ -298,20 +316,31 @@ public class PlayStoreUtil {
      * Opens the Parental Controls menu
      */
     private static void openParentalControls(UiDevice testDevice) throws Exception {
+        String playStoreUser = "demo.sysimg.user1@gmail.com";
 
-        UiObject backButton =  testDevice.findObject(new UiSelector().description("Back"));
-        if (backButton.waitForExists(3)) {
-            backButton.clickAndWaitForNewWindow();
-        }
+        if (api == 30) {
+            UiObject signedInAs = testDevice.findObject(
+                    new UiSelector().descriptionContains(playStoreUser));
+            if (signedInAs.waitForExists(3)) {
+                signedInAs.clickAndWaitForNewWindow();
+            }
+        } else {
+            UiObject backButton = testDevice.findObject(new UiSelector().description("Back"));
+            if (backButton.waitForExists(3)) {
+                backButton.clickAndWaitForNewWindow();
+            }
 
-        UiObject navigationDrawer = testDevice.findObject(new UiSelector().
-                description("Show navigation drawer"));
-        if (navigationDrawer.waitForExists(TimeUnit.SECONDS.toMillis(10L))) {
-            navigationDrawer.clickAndWaitForNewWindow();
+            UiObject navigationDrawer = testDevice.findObject(new UiSelector().
+                    description("Show navigation drawer"));
+            if (navigationDrawer.waitForExists(TimeUnit.SECONDS.toMillis(10L))) {
+                navigationDrawer.clickAndWaitForNewWindow();
+            }
         }
 
         final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-        final UiObject settingsLink = scrollable.getChild(new UiSelector().text("Settings"));
+        final UiSelector settingsSelector = api == 30 ?
+                new UiSelector().description("Settings") : new UiSelector().text("Settings");
+        final UiObject settingsLink = scrollable.getChild(settingsSelector);
         settingsLink.waitForExists(3L);
         if (!settingsLink.exists()) {
             new Wait().until(() -> {
@@ -327,17 +356,24 @@ public class PlayStoreUtil {
             settingsLink.clickAndWaitForNewWindow();
         }
 
-        final UiObject parentalControlsButton = scrollable.getChild(new UiSelector().text(
-                "Parental controls"));
-        parentalControlsButton.waitForExists(3L);
-        if (!parentalControlsButton.exists()) {
+        UiObject parentalControlsButton = api == 30 ?
+                testDevice.findObject(new UiSelector().text("Parental control, parent guide")) :
+                scrollable.getChild(new UiSelector().text("Parental controls"));
+        if (parentalControlsButton.waitForExists(3L)) {
+            parentalControlsButton.clickAndWaitForNewWindow();
+            UiObject parentalControlsListItem =
+                    testDevice.findObject(new UiSelector().text("Parental controls"));
+            if (parentalControlsListItem.exists()) {
+                parentalControlsListItem.clickAndWaitForNewWindow();
+            }
+        } else {
             new Wait().until(() -> {
                 scrollable.scrollIntoView(parentalControlsButton);
                 return parentalControlsButton.exists();
             });
-        }
-        if (parentalControlsButton.exists()) {
-            parentalControlsButton.clickAndWaitForNewWindow();
+            if (parentalControlsButton.exists()) {
+                parentalControlsButton.clickAndWaitForNewWindow();
+            }
         }
     }
 

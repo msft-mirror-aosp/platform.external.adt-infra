@@ -29,6 +29,7 @@ def read_pixel(width, height, pack, arr):
 
 
 @pytest.mark.e2e
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "fmt,channel",
@@ -53,26 +54,28 @@ def test_stream_screenshot_receives_frames(animation_app, tmpdir, fmt, channel):
             height=640,
             format=fmt,
             transport=ImageTransport(channel=channel, handle="file://" + tmp_file),
-        )
+        ),
+        timeout = 5
     )
     count = 0
     dropped = 0
-    seq = None
+    seq = -1
 
-    # We enter some text, which should bring up the search bar.
     with StreamingCall(stream) as stream:
-        # We should get a continous sequence of frames..
-        for img in iter(stream.get, None):
-            if seq and seq + 1 < img.seq:
+        for img in stream:
+            if seq + 1 < img.seq:
                 dropped += img.seq - seq + 1
+
+            assert seq < img.seq
             seq = img.seq
 
             count += 1
             if count > 10:
                 break
 
+        assert count > 10
+
     logging.warning("Received %d frames and dropped %d frames", count, dropped)
-    assert True
 
 
 @pytest.mark.perf
@@ -87,7 +90,7 @@ def test_stream_screenshot_perf(animation_app, benchmark_stat, pytestconfig, w, 
     # This test can only run if we launched the emulator
     emu = pytest.emulator.get_emulator_controller()
     stream = emu.streamScreenshot(
-        ImageFormat(width=w, height=h, format=ImageFormat.RGB888)
+        ImageFormat(width=w, height=h, format=ImageFormat.RGB888),
     )
     count = 0
     dropped = 0
@@ -97,7 +100,7 @@ def test_stream_screenshot_perf(animation_app, benchmark_stat, pytestconfig, w, 
     with StreamingCall(stream) as stream:
         # We should get a continous sequence of frames..
         start_time = time.time()
-        for img in iter(stream.get, None):
+        for img in stream:
             receive_time = time.time()
             benchmark_stat.update(receive_time - start_time)
 
@@ -151,7 +154,7 @@ def test_stream_screenshot_perf_mmap(
         with StreamingCall(stream) as stream:
             # We should get a continous sequence of frames..
             start_time = time.time()
-            for img in iter(stream.get, None):
+            for img in stream:
                 # Force a read, as the gRPC call reads all the bytes as well.
                 mm.seek(0)
                 img_bytes = mm.read()
