@@ -56,13 +56,17 @@ public class AppLauncher {
         final UiObject appsLabel = device.findObject(new UiSelector().descriptionContains("Apps"));
 
         UiObject scrollView = device.findObject(new UiSelector().resourceId("android:id/content"));
+        int startY = new Wait().until(appsLabel::exists) ? appsLabel.getBounds().top : 1000;
+        int endY =  new Wait().until(scrollView::exists) ? scrollView.getBounds().top : 0;
+
         // Scroll to the end to open app drawer.
         device.drag(
                 0,
-                appsLabel.getBounds().top,
+                startY,
                 0,
-                scrollView.getBounds().top,
+                endY,
                 10);
+        //  }
 
         // Attempt to scroll through the list twice, first vertically, and then horizontally.
         // If the target object cannot be found while scrolling, fling forward by a
@@ -90,8 +94,8 @@ public class AppLauncher {
             }
         }
         try {
-            if (api == 30) {
-                throw new UiObjectNotFoundException("Catch API 30 due to known instability");
+            if (api == 30 || api == 31) {
+                throw new UiObjectNotFoundException("Catch due to known instability");
             }
             appNameFound = new Wait().until(appObject::exists);
             if (!appNameFound) {
@@ -107,9 +111,9 @@ public class AppLauncher {
             device.pressHome();
             device.drag(
                     0,
-                    appsLabel.getBounds().top,
+                    startY,
                     0,
-                    scrollView.getBounds().top,
+                    endY,
                     10);
 
             if (!appObject.exists()) {
