@@ -129,6 +129,25 @@ public class NetworkUtil {
         return status;
     }
 
+    /**
+     * Version 3 added for api 30.
+     *
+     * @param device
+     * @param airplaneModeIcon
+     * @return
+     */
+    public static boolean isAirplaneModeEnabled_v3(UiDevice device, UiObject airplaneModeIcon) throws Exception {
+        boolean status = false;
+
+        openExtendedNotificationsPanel(device);
+        if (airplaneModeIcon.waitForExists(5L) && airplaneModeIcon.getText().equalsIgnoreCase("On")) {
+            status = true;
+        }
+
+        device.pressHome();
+        return status;
+    }
+
     static void openExtendedNotificationsPanel(UiDevice device) throws UiObjectNotFoundException, InterruptedException {
         device.pressHome();
 

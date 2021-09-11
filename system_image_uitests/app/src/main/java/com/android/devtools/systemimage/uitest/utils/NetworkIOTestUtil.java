@@ -50,7 +50,7 @@ public class NetworkIOTestUtil {
         try {
             String key = Settings.Global.DATA_ROAMING;
             ContentResolver cr = context.getContentResolver();
-            return Settings.Global.getInt(cr, key, 0) == 1 ? true : false;
+            return Settings.Global.getInt(cr, key, 0) == 1;
         } catch (Exception exception) {
             return false;
         }

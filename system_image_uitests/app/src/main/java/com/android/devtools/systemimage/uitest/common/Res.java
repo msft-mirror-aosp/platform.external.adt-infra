@@ -87,6 +87,7 @@ public class Res {
     public static final String PACKAGE_INSTALL_OK_RES = "com.android.packageinstaller:id/ok_button";
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
     public static final String NOTIFICATIONS_TILE_PAGE = "com.android.systemui:id/tile_page";
+    public static final String NOTIFICATIONS_TILE_LABEL = "com.android.systemui:id/tile_label";
     public static final String VPN_LOCK_ICON_RES = "com.android.systemui:id/vpn";
     public static final String MENU_LIST_RES = "com.android.documentsui:id/menu_list";
     public static final String OPTION_MENU_LIST_RES = "com.android.documentsui:id/option_menu_list";
