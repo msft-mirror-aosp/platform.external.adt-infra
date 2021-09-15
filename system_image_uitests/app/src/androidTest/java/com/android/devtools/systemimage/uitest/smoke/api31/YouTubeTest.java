@@ -54,7 +54,7 @@ public class YouTubeTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(1200);
+    public Timeout globalTimeout = Timeout.seconds(1500);
 
     /**
      * Verify YouTube has the latest version or not.
@@ -90,8 +90,11 @@ public class YouTubeTest {
      *   1. Start an emulator and launch home screen.
      *   2. Open Apps.
      *   3. Launch Chrome app. and signIn to Chrome
+     *   4. Launch YouTube and check for user account
+     *   5. Sign out of Chrome
      *   Verify:
-     *      1. Verify that there is user can sign in via Chrome.
+     *      1. Verify that Chrome login synced with YouTube login
+     *      2. Verify that Chrome logout did not remove YouTube user
      *   </pre>
      */
     @Test
@@ -107,7 +110,7 @@ public class YouTubeTest {
 
         GoogleAppUtil.logoutGoogleChrome(instrumentation);
 
-        assertFalse("YouTube log out was unsuccessful",
+        assertTrue("Chrome logout removed YouTube account",
                 isTestUserLoggedIn(instrumentation));
     }
 

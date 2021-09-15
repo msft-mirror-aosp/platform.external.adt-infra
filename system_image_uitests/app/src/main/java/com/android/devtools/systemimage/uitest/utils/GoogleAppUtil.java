@@ -40,7 +40,7 @@ public class GoogleAppUtil {
     }
 
     private static final int api = SystemUtil.getApiLevel();
-    private static final String email = api == 29 ?
+    private static final String email = api >= 29 ?
             "demo.sysimg.user1@gmail.com" : "pstester1980@gmail.com";
 
     /**
@@ -52,6 +52,12 @@ public class GoogleAppUtil {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
         GoogleAppUtil.openChromeSettings(instrumentation);
+        UiObject syncAndPersonalizeButton = device.findObject(
+                new UiSelector().text("Sync and personalize across devices"));
+        if (syncAndPersonalizeButton.waitForExists(5L)) {
+            syncAndPersonalizeButton.clickAndWaitForNewWindow();
+        }
+
         UiObject accountPromoButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_ACCOUNT_RES));
         if (accountPromoButton.waitForExists(5L)) {
@@ -151,7 +157,7 @@ public class GoogleAppUtil {
 
         if (api == 27 || api == 28) {
             forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
-        } else if (api >= 29) {
+        } else if (api == 29 || api == 30) {
             forgotPasswordLink = device.findObject(new UiSelector().text("Forgot password?"));
         } else {
             forgotPasswordLink = device.findObject(new UiSelector().description("Forgot password?"));
@@ -159,7 +165,7 @@ public class GoogleAppUtil {
 
         boolean needsPassword = forgotPasswordLink.waitForExists(
                 TimeUnit.MILLISECONDS.convert(1000L, TimeUnit.SECONDS));
-        assertTrue("Forgot password not found", firstAttempt || needsPassword);
+        assertTrue("Forgot password not found", firstAttempt ||needsPassword);
         if ( !needsPassword ) {
             Log.i("Login", "Retry google login");
             device.pressHome();
@@ -168,7 +174,7 @@ public class GoogleAppUtil {
         }
 
         Log.i("Login", "enter password");
-        if (api == 29) {
+        if (api >= 29) {
             editInput.setText("4g070ls8id");
         } else {
             device.pressKeyCode(KeyEvent.KEYCODE_P);
@@ -261,10 +267,13 @@ public class GoogleAppUtil {
 
         refuseSync(device);
 
-        final UiObject signOutLabel = device.findObject(new UiSelector().text("Sign out of Chrome"));
+        final UiObject signOutLabel = api == 31 ?
+                device.findObject(new UiSelector().text("Sign out and turn off sync")) :
+                device.findObject(new UiSelector().text("Sign out of Chrome"));
 
         if (new Wait().until(signOutLabel::exists)) {
             signOutLabel.clickAndWaitForNewWindow();
+            new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
         } else if (api != 30) {
             return true;
         }
