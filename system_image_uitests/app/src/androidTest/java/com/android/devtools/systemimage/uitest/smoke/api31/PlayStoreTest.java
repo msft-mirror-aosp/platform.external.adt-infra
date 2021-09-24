@@ -161,11 +161,20 @@ public class PlayStoreTest {
                     PlayStoreUtil.installApplication(instrumentation));
             UiObject installedLabel = device.findObject(new UiSelector()
                     .textMatches("(?i)installed(?-i)"));
-            boolean hasInstalled = new Wait(
+            boolean hasInstalledLabel = new Wait(
                     TimeUnit.MILLISECONDS.convert(40L, TimeUnit.SECONDS))
                     .until(installedLabel::exists);
+
+            UiObject installedDescription = device.findObject(new UiSelector()
+                    .descriptionContains("Installed"));
+            boolean hasInstalledDescription = new Wait(
+                    TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS))
+                    .until(installedDescription::exists);
+            if (hasInstalledDescription) {
+                installedDescription.clickAndWaitForNewWindow();
+            }
             assertTrue("Unable to install the application from Google Play",
-                    hasInstalled);
+                    hasInstalledLabel || hasInstalledDescription);
 
             device.findObject(new UiSelector().textMatches("(?i)open(?-i)"))
                     .clickAndWaitForNewWindow();
@@ -174,10 +183,17 @@ public class PlayStoreTest {
                             .until(() -> device.findObject(new UiSelector()
                                     .packageName("com.weather.Weather")).exists()));
             AppLauncher.launch(instrumentation, "Play Store");
-            hasInstalled = new Wait(
+            hasInstalledDescription = new Wait(
                     TimeUnit.MILLISECONDS.convert(40L, TimeUnit.SECONDS))
+                    .until(installedDescription::exists);
+            if (hasInstalledDescription) {
+                installedDescription.clickAndWaitForNewWindow();
+            }
+
+            hasInstalledLabel = new Wait(
+                    TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS))
                     .until(installedLabel::exists);
-            if (hasInstalled) {
+            if (hasInstalledLabel) {
                 installedLabel.clickAndWaitForNewWindow();
             }
             assertTrue("Unable to uninstall the application from Google Play",

@@ -23,6 +23,7 @@ import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.common.Res;
+import com.android.devtools.systemimage.uitest.watchers.GoogleAppConfirmationWatcher;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import java.util.concurrent.TimeUnit;
@@ -99,6 +100,7 @@ public class PlayStoreUtil {
             throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
+        new GoogleAppConfirmationWatcher(device).checkForCondition();
 
         resetPlayStore(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
@@ -237,14 +239,23 @@ public class PlayStoreUtil {
         if (!hasUninstall) {
             UiObject installedLabel = device.findObject(new UiSelector()
                     .textMatches("(?i)installed(?-i)"));
-            boolean hasInstalled = new Wait(
+            boolean hasInstalledLabel = new Wait(
                     TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
                     .until(installedLabel::exists);
-            if (hasInstalled) {
+            if (hasInstalledLabel) {
                 installedLabel.clickAndWaitForNewWindow();
             } else {
-                return new Wait().until(() -> device.findObject(new UiSelector()
-                        .textMatches("(?i)install(?-i)")).exists());
+                UiObject installedDescription = device.findObject(new UiSelector()
+                        .descriptionContains("Installed"));
+                boolean hasInstalledDescription = new Wait(
+                        TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
+                        .until(installedDescription::exists);
+                if (hasInstalledDescription) {
+                    installedDescription.clickAndWaitForNewWindow();
+                } else {
+                    return new Wait().until(() -> device.findObject(new UiSelector()
+                            .textMatches("(?i)install(?-i)")).exists());
+                }
             }
         }
 
@@ -312,13 +323,14 @@ public class PlayStoreUtil {
         return device.findObject(new UiSelector().textMatches(("(?i)install(?-i)")))
                 .waitForExists(10L);
     }
+
     /**
      * Opens the Parental Controls menu
      */
     private static void openParentalControls(UiDevice testDevice) throws Exception {
         String playStoreUser = "demo.sysimg.user1@gmail.com";
 
-        if (api == 30) {
+        if (api >= 30) {
             UiObject signedInAs = testDevice.findObject(
                     new UiSelector().descriptionContains(playStoreUser));
             if (signedInAs.waitForExists(3)) {
@@ -356,7 +368,7 @@ public class PlayStoreUtil {
             settingsLink.clickAndWaitForNewWindow();
         }
 
-        UiObject parentalControlsButton = api == 30 ?
+        UiObject parentalControlsButton = api >= 30 ?
                 testDevice.findObject(new UiSelector().text("Parental control, parent guide")) :
                 scrollable.getChild(new UiSelector().text("Parental controls"));
         if (parentalControlsButton.waitForExists(3L)) {
