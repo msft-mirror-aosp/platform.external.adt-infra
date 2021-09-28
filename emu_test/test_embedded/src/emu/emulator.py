@@ -131,6 +131,7 @@ class Emulator(object):
                 self.width = int(entry.value)
             if entry.key == "hw.lcd.height":
                 self.height = int(entry.value)
+        logging.info("Dimensions: %d x %d", self.width, self.height)
 
     def wait_for_boot(self, max_wait=600):
         """Wait at most max_wait seconds until the status of the device says it is booted.

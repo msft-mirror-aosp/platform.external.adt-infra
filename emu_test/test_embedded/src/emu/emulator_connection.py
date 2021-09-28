@@ -34,12 +34,13 @@ class EmulatorConnection(object):
   It will authenticate immediately.
   """
 
-    def __init__(self, transport, callback):
+    def __init__(self, transport, callback, port):
         self.callback = callback
         self.start = time.time()
         self.transport = transport
         self.connected = False
         self.fstmsg = ""
+        self.port = port
 
     def is_connected(self):
         return self.connected
@@ -118,7 +119,7 @@ class EmulatorConnection(object):
       Thread that is running the event loop
     """
         sock = socket.create_connection(("localhost", port))
-        connection = EmulatorConnection(sock, callback)
+        connection = EmulatorConnection(sock, callback, port)
         t = Thread(target=connection.reader)
         t.start()
         signal.signal(signal.SIGINT, lambda: connection.stop())
