@@ -35,7 +35,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--stream_test_time",
         type=int,
-        default=10,
+        default=30,
         help="Number of seconds the frame perf test should last.",
     )
 

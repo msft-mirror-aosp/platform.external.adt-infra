@@ -39,6 +39,7 @@ fi
 if [ -e ./venv/bin/activate ]; then
    . ./venv/bin/activate
    make deps
+   make -C ../../../qemu/android/android-grpc/python
    pip install -e .\[test\]
    echo "Ready to run emu-embeded tests.!"
 fi
