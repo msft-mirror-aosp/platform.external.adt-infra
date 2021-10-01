@@ -91,6 +91,21 @@ if [[ $OSTYPE != *"darwin"* ]]; then
     run_test "grpc tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir grpc_test --file_pattern 'test_grpc.*' --config_file $TEST_DIR/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME --generate_xml --headless
 fi
 
+# Run the android-studio embedded emulator tests
+export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
+clean_avds
+run_test "Embedded tests" external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)
+if [[ $(is_presubmit $BID) == "true" ]]; then
+    # Ignore failures until the tests have stabilised.
+    # See b/183949465 for details.
+    # check_test_succeed embedded_test
+    echo "Ignoring potential errors due to  b/183949465"
+fi
+
+export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
+run_test "Running Crash tests" $PYTHON -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Crash_test --file_pattern 'test_crash.*' --config_file external/adt-infra/emu_test/config/crash_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml --skip-adb-perf
+
+export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 clean_avds
 run_test "Console tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless
 
