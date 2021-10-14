@@ -75,19 +75,25 @@ public class GoogleServicesTest {
             return;
         }
 
-        AppManager.openAppList_v2(instrumentation);
+        AppManager.openAppList_v3(instrumentation);
         AppManager.openSystemAppList_v2(instrumentation);
 
         UiScrollable appList=
-                new UiScrollable(new UiSelector().resourceIdMatches(Res.APPS_LIST_CONTAINER_RES));
+                new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
         appList.setAsVerticalList();
 
+        assertTrue("Cannot find Gmail", appList.getChildByText(
+                new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
+                "Gmail").exists());
+        assertTrue("Cannot find Google", appList.getChildByText(
+                new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
+                "Google").exists());
         assertTrue("Cannot find Google Play services", appList.getChildByText(
                 new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
                 "Google Play services").exists());
-        assertTrue("Cannot find Google Services Framework", appList.getChildByText(
+        assertTrue("Cannot find Google Play Store", appList.getChildByText(
                 new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
-                "Google Services Framework").exists());
+                "Google Play Store").exists());
         assertTrue("Cannot find Maps", appList.getChildByText(
                 new UiSelector().className(WIDGET_TEXT_VIEW_CLASS),
                 "Maps").exists());

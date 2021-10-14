@@ -25,6 +25,11 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import junit.framework.Assert;
 
@@ -123,6 +128,34 @@ public class AppManager {
         }
         Assert.assertTrue("Application info not found",
                 appInfoLabel.exists() || seeAllLabel.exists());
+    }
+
+
+    /**
+     * Clicks "Settings" and "Apps" options to launch the "Apps" page.
+     *
+     * Version 3 for api == 31
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     *
+     * @throws Exception if it fails to find a UI widget.
+     */
+    public static void openAppList_v3(Instrumentation instrumentation) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        SettingsUtil.openItem(instrumentation, "Apps");
+        final UiObject seeAllLabel = device.findObject(new UiSelector().textStartsWith("See all"));
+
+        boolean seeAllLabelFound = new Wait().until(seeAllLabel::exists);
+
+        if (seeAllLabelFound) {
+            seeAllLabel.clickAndWaitForNewWindow();
+        }
+
+        final UiObject allAppsLabel = device.findObject(new UiSelector()
+                .resourceId(Res.SETTINGS_COLLAPSING_TOOLBAR_RES).description("All apps"));
+        Assert.assertTrue("Application info not found", allAppsLabel.exists());
     }
 
     /**

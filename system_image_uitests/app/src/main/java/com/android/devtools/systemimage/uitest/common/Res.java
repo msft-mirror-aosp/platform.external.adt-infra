@@ -37,6 +37,7 @@ public class Res {
     public static final String CHROME_MENU_BADGE_RES = "com.android.chrome:id/menu_badge";
     public static final String CHROME_SIGNIN_PROMO_ACCOUNT_RES = "com.android.chrome:id/signin_promo_choose_account_button";
     public static final String CHROME_SIGNIN_PROMO_CLOSE_RES = "com.android.chrome:id/signin_promo_close_button";
+    public static final String CHROME_SIGNIN_PROMO_BUTTON_RES = "com.android.chrome:id/signin_promo_signin_button";
     public static final String CHROME_TITLE_RES = "com.android.chrome:id/title";
     public static final String CHROME_NO_THANKS_BUTTON_RES = "com.android.chrome\\d*:id" + "/(no_thanks_button|negative_button)";
     public static final String CHROME_PROGRESS_BAR_RES = "com.android.chrome:id/progress";
@@ -79,6 +80,7 @@ public class Res {
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container|list_container|content_parent)";
     public static final String SETTINGS_ACTION_BAR_RES = "com.android.settings:id/action_bar";
+    public static final String SETTINGS_COLLAPSING_TOOLBAR_RES = "com.android.settings:id/collapsing_toolbar";
 
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";
     public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";

@@ -159,6 +159,8 @@ public class GoogleAppUtil {
             forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
         } else if (api == 29 || api == 30) {
             forgotPasswordLink = device.findObject(new UiSelector().text("Forgot password?"));
+        } else if (api == 31) {
+            forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
         } else {
             forgotPasswordLink = device.findObject(new UiSelector().description("Forgot password?"));
         }
@@ -219,9 +221,13 @@ public class GoogleAppUtil {
             backupSwitch.click();
         }
 
-        UiObject agreeButton = device.findObject(
-                new UiSelector().resourceId(Res.GOOGLE_SERVICES_ACCEPT_BUTTON_RES));
-        if(agreeButton.exists()){
+        UiObject agreeButton = api == 31 ?
+                device.findObject(
+                        new UiSelector().className("android.widget.Button").text("I agree")) :
+                device.findObject(
+                        new UiSelector().resourceId(Res.GOOGLE_SERVICES_ACCEPT_BUTTON_RES));
+
+        if (agreeButton.exists()){
             agreeButton.clickAndWaitForNewWindow();
         }
 
@@ -257,15 +263,26 @@ public class GoogleAppUtil {
 
         GoogleAppUtil.openChromeSettings(instrumentation);
 
-        final UiObject androidIconButton = device.findObject(
-                new UiSelector().resourceId(Res.ANDROID_ICON_RES).
-                        className("android.widget.ImageView"));
+        final UiObject androidIconButton = api == 31 ?
+                device.findObject(
+                        new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_BUTTON_RES)) :
+                device.findObject(
+                        new UiSelector().resourceId(Res.ANDROID_ICON_RES).
+                                className("android.widget.ImageView"));
 
         if (new Wait().until(androidIconButton::exists)) {
             androidIconButton.clickAndWaitForNewWindow();
         }
 
         refuseSync(device);
+
+        if (api == 31) {
+            final UiObject emailLabel = device.findObject(
+                    new UiSelector().text(email).resourceId(Res.ANDROID_SUMMARY_RES));
+            if (new Wait().until(emailLabel::exists)) {
+                emailLabel.clickAndWaitForNewWindow();
+            }
+        }
 
         final UiObject signOutLabel = api == 31 ?
                 device.findObject(new UiSelector().text("Sign out and turn off sync")) :
@@ -274,8 +291,6 @@ public class GoogleAppUtil {
         if (new Wait().until(signOutLabel::exists)) {
             signOutLabel.clickAndWaitForNewWindow();
             new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
-        } else if (api != 30) {
-            return true;
         }
 
         final UiObject signOutButton = device.findObject(new UiSelector().textMatches("(?i)(SIGN OUT)(?-i)"));
@@ -301,7 +316,9 @@ public class GoogleAppUtil {
             }
         }
 
-        final UiObject signInLabel = device.findObject(new UiSelector().text("Sign in to Chrome"));
+
+        String signInText = api >= 30 ? "Turn on sync" : "Sign in to Chrome";
+        final UiObject signInLabel = device.findObject(new UiSelector().text(signInText));
         final UiObject signInPromoCloseButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_CLOSE_RES));
         final UiObject addAccountButton = device.findObject(
