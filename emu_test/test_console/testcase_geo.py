@@ -11,7 +11,7 @@ from .utils import util
 CMD_GEO_FIX = 'geo fix {} {} {}\n'
 COORDINATES_MATCHING_STRING = 'Longitude:{} || Latitude:{} || Altitude:{}'
 SF_LONGITUDE = -122.0
-SF_LATITUDE = 38.0
+SF_LATITUDE = 37.0
 SF_ALTITUDE = 0.0
 
 SF_INVALID_LONGITUDE = 200
