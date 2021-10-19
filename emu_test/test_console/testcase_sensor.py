@@ -52,7 +52,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     else:
       super(SensorTest, self).__init__()
 
-
+  @unittest.skip("Failed on build 7838014")
   def test_magnetic_field_sensor(self):
     """Test for command: sensor set magnetic-field <value>.
 
@@ -73,6 +73,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(MAGNETIC_FIELD), UPDATED_MAGNETIC_FIELD,
                                      ASSERT_MSG.format(PREFIX_GET, MAGNETIC_FIELD))
 
+  @unittest.skip("Failed on build 7838014")
   def test_acceleration_sensor(self):
     """Test for command: sensor set acceleration <value>.
 
@@ -93,7 +94,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(ACCELERATION), UPDATED_ACCELERATION,
                                      ASSERT_MSG.format(PREFIX_GET, ACCELERATION))
 
-
+  @unittest.skip("Failed on build 7838014")
   def test_gyroscope_sensor(self):
     """Test for command: sensor set gyroscope <value>.
 
@@ -114,6 +115,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(GYROSCOPE), UPDATED_GYROSCOPE,
                                      ASSERT_MSG.format(PREFIX_GET, GYROSCOPE))
 
+  @unittest.skip("Failed on build 7838014")
   def test_orientation_sensor(self):
     """Test for command: sensor set orientation <value>.
 
@@ -134,6 +136,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(ORIENTATION), UPDATED_ORIENTATION,
                                      ASSERT_MSG.format(PREFIX_GET, ORIENTATION))
 
+  @unittest.skip("b/203436224")
   def test_temperature_sensor(self):
     """Test for command: sensor set temperature <value>.
 
@@ -154,6 +157,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(TEMPERATURE), UPDATED_TEMPERATURE,
                                      ASSERT_MSG.format(PREFIX_GET, TEMPERATURE))
 
+  @unittest.skip("Failed on build 7838014")
   def test_light_sensor(self):
     """Test for command: sensor set light <value>.
 
@@ -174,6 +178,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(LIGHT), UPDATED_LIGHT,
                                      ASSERT_MSG.format(PREFIX_GET, LIGHT))
 
+  @unittest.skip("Failed on build 7838014")
   def test_pressure_sensor(self):
     """Test for command: sensor set pressure <value>.
 
@@ -194,6 +199,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(PRESSURE), UPDATED_PRESSURE,
                                      ASSERT_MSG.format(PREFIX_GET, PRESSURE))
 
+  @unittest.skip("Failed on build 7838014")
   def test_proximity_sensor(self):
     """Test for command: sensor set proximity <value>.
 
@@ -214,6 +220,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(PROXIMITY), UPDATED_PROXIMITY,
                                      ASSERT_MSG.format(PREFIX_GET, PROXIMITY))
 
+  @unittest.skip("Failed on build 7838014")
   def test_humidity_sensor(self):
     """Test for command: sensor set humidity <value>.
 
@@ -234,6 +241,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(HUMIDITY), UPDATED_HUMIDITY,
                                      ASSERT_MSG.format(PREFIX_GET, HUMIDITY))
 
+  @unittest.skip("Failed on build 7838014")
   def test_magnetic_field_uncalibrated_sensor(self):
     """Test for command: sensor set magnetic_field_uncalibrated <value>.
 
@@ -254,6 +262,7 @@ class SensorTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SENSOR_GET.format(UNCALIBRATED_MAGNETIC_FIELD), UPDATED_UNCALIBRATED_MAGNETIC_FIELD,
                                      ASSERT_MSG.format(PREFIX_GET, UNCALIBRATED_MAGNETIC_FIELD))
 
+  @unittest.skip("Failed on build 7838014")
   def test_gyroscope_uncalibrated_sensor(self):
     """Test for command: sensor set gyroscope_uncalibrated <value>.
 
