@@ -41,6 +41,7 @@ class GeoTest(testcase_base.BaseConsoleTest):
   def tearDownClass(cls):
     util.unstall_apps(CONSOLE_TEST_PACKAGE_NAME)
 
+  @unittest.skip("b/203429388")
   def test_geo(self):
     """Test command for: geo fix xxx
 
