@@ -83,6 +83,7 @@ class EventTest(testcase_base.BaseConsoleTest):
     self._verify_event_codes(CMD_EVENT_CODES_EV_SW,
                              util.EVENTS_CODE_EV_SW_FILENAME)
 
+  @unittest.skip("b/203432620")
   def test_list_event_aliases(self):
     """Test for command: event types.
 
@@ -118,6 +119,7 @@ class EventTest(testcase_base.BaseConsoleTest):
         is_cmd_successful, 'Listing all aliases of events failed',
         False, '', correct_output, output_event_aliases)
 
+  @unittest.skip("b/203434537")
   def test_list_all_code_aliases(self):
     """Test for command: event codes <type>" (for example: event codes EV_REL).
 

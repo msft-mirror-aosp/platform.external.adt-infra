@@ -66,6 +66,7 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_GSM_LIST, STATUS_TEMPLATE.format(CALL_NUMBER, STATUS_INCOMING), ASSERT_MSG.format(CMD_LIST))
     self._execute_command_and_verify(CMD_GSM.format(CMD_CANCEL, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_CANCEL))
 
+  @unittest.skip("b/203462196")
   def test_inbound_call_hold(self):
     """Test for command: gsm hold <phonenumber>.
     Test steps:
@@ -102,6 +103,7 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
                                        ASSERT_MSG.format(CMD_LIST))
     self._execute_command_and_verify(CMD_GSM.format(CMD_CANCEL, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_CANCEL))
 
+  @unittest.skip("b/203463348")
   def test_inbound_call_busy(self):
     """Test for command: gsm busy <phonenumber>.
     Test steps:
