@@ -94,7 +94,7 @@ fi
 # Run the android-studio embedded emulator tests
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
 clean_avds
-run_test "Embedded tests" external/adt-infra/emu_test/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)
+run_test "Embedded tests" external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)
 if [[ $(is_presubmit $BID) == "true" ]]; then
     # Ignore failures until the tests have stabilised.
     # See b/183949465 for details.
