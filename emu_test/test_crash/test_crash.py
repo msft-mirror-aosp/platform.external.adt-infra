@@ -33,6 +33,7 @@ class TemporaryDirectory(object):
         shutil.rmtree(self.location)
 
 
+@unittest.skip("b/204195497")
 class crashTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
         super(crashTestCase, self).__init__(*args, **kwargs)

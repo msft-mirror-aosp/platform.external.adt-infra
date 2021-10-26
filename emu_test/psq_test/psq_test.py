@@ -2,6 +2,8 @@
 
 import os
 import time
+import unittest
+
 import psutil
 import shutil
 import subprocess
@@ -56,6 +58,7 @@ class PsqSnapshotRunnerTestCase(EmuBaseTestCase):
         self.m_logger.info(out)
         return out
 
+    @unittest.skip("b/204191396")
     def run_snapshot_runner_test(self, avd_config):
         self.avd_config = avd_config
         avd = self.create_avd(avd_config)
