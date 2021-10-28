@@ -131,6 +131,39 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LIST, snapshot_string)
     util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
 
+  def test_app_launch_after_snapshot_load(self):
+    """Verifies snapshot command load, returns OK.
+
+    This test case is used to test if system app. can be launched
+    after snapshot load without any crash.
+
+    TT ID: f2bbab31-1cdc-4324-a350-c6d28779363c
+    Test steps:
+      1. Save a snapshot.
+      2. Load the snapshot created above.
+      3. Launch an app from Home screen(Ex: Clock app.)
+      4. Verify AVD is up and running.
+      5. Delete the snapshot created in the test.
+
+    Verify:
+      1. Verify AVD is up and running.
+    """
+    adb_binary = path_utils.get_adb_binary()
+    this_function_name = sys._getframe().f_code.co_name
+    print(('Running test: %s' % (this_function_name)))
+    for i in range(3):
+      snapshot_string = SNAPSHOT_PREFIX + this_function_name
+      self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_SAVE + snapshot_string + NEW_LINE_COMMAND, util.OK)
+      time.sleep(util.CMD_DELAY_VALUE)
+      self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LOAD+snapshot_string+ NEW_LINE_COMMAND, util.OK)
+      time.sleep(util.CMD_DELAY_VALUE)
+      util.launch_application(util.CLOCK_PACKAGE_NAME)
+      time.sleep(util.CMD_DELAY_VALUE)
+      subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CLOCK_PACKAGE_NAME])
+      time.sleep(util.CMD_DELAY_VALUE)
+    self.assertTrue(util.check_if_avd_online())
+
+
   def _execute_console_command_and_verify(self, command, expected_output):
     """Executes emulator console command and verify the command output.
 

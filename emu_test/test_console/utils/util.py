@@ -79,9 +79,12 @@ CMD_EXIT = 'exit\n'
 CMD_ROTATE = 'rotate\n'
 
 CONTACT_PACKAGE_NAME = 'com.android.contacts'
+CLOCK_PACKAGE_NAME = 'com.google.android.deskclock'
 CONSOLE_TEST_APK = 'ConsoleTest.apk'
 project_default_path = os.path.dirname(os.path.realpath(__file__))
 TESTCASE_CALL_DIR = apk_dir = os.path.join(project_default_path, 'apks')
+AVD_NAME = 'emulator-5554'
+AVD_STATUS = 'device'
 
 def toBytes(s):
   PY3_OR_LATER = sys.version_info[0] >= 3
@@ -390,3 +393,12 @@ def get_device_density():
   res_values = re.compile('\w+').findall(output.decode())
   print('density: %s' % output)
   return res_values[res_values.index("init")+1], res_values[res_values.index("cur")+1]
+
+def check_if_avd_online():
+  adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
+  test_process = subprocess.check_output([adb_binary, 'devices'])
+  test_process = str(test_process)
+  if AVD_NAME in test_process.rstrip() and AVD_STATUS in test_process.rstrip():
+    return True
+  else:
+    return False
