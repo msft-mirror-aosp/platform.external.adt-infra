@@ -17,6 +17,8 @@ from emu_test.utils.emu_error import *
 
 adb_binary = path_utils.get_adb_binary()
 
+
+@unittest.skip("b/204191396")
 class PsqSnapshotRunnerTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
         super(PsqSnapshotRunnerTestCase, self).__init__(*args, **kwargs)
@@ -58,7 +60,6 @@ class PsqSnapshotRunnerTestCase(EmuBaseTestCase):
         self.m_logger.info(out)
         return out
 
-    @unittest.skip("b/204191396")
     def run_snapshot_runner_test(self, avd_config):
         self.avd_config = avd_config
         avd = self.create_avd(avd_config)
