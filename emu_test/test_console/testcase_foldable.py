@@ -131,6 +131,7 @@ class FoldableTest(testcase_base.BaseConsoleTest):
         init, cur = util.get_device_density()
         assert init != cur, ASSERT_MSG_FOLD_FAIL
 
+    unittest.skip("b/204568120")
     def test_unfold_with_snapshot(self):
       """Verifies snapshot behavior with AVD in unfold state.
 
