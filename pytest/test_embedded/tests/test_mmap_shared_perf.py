@@ -32,6 +32,7 @@ from tests.benchmark_event_fixtures import benchmark_stat
 from tests.test_utils import StreamingCall
 
 
+unittest.skip("b/203787882")
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
@@ -85,6 +86,7 @@ def test_mmap_grpc_perf(animation_app, tmpdir, benchmark_stat, pytestconfig):
     assert True
 
 
+unittest.skip("b/203787882")
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
