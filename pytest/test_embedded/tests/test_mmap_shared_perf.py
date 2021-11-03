@@ -23,6 +23,7 @@ import mmap
 import os
 import struct
 import time
+import unittest
 #from multiprocessing.shared_memory import SharedMemory
 
 import pytest
