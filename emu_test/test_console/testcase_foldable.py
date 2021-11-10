@@ -159,6 +159,7 @@ class FoldableTest(testcase_base.BaseConsoleTest):
           assert init == cur, ASSERT_MSG_UNFOLD_FAIL
 
       snapshot_string_unfold = SNAPSHOT_PREFIX + PREFIX_UNFOLD
+      time.sleep(util.CMD_DELAY_VALUE)
       self._execute_command_and_verify(CMD_AVD_SNAPSHOT_SAVE + snapshot_string_unfold + NEW_LINE_COMMAND,
                                        util.OK, 'Error in saving unfolded snapshot')
       list_snapshots = util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_LIST, snapshot_string_unfold)
