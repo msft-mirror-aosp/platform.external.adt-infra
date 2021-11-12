@@ -42,7 +42,7 @@ ADB_NUM_MAX_TRIALS = 5
 
 TIMEOUT_S = 1
 
-CMD_DELAY_VALUE = 5
+CMD_DELAY_VALUE = 15
 
 HOME = expanduser('~')
 CONSOLE_AUTH_TOKEN_FILE_NAME = '.emulator_console_auth_token'
@@ -271,11 +271,16 @@ def execute_console_command(telnet, command, expected_output):
 
 def check_running_app():
   adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
-  test_process = subprocess.check_output([adb_binary, 'shell', 'ps', '|',  'grep', CONTACT_PACKAGE_NAME])
-  if CONTACT_PACKAGE_NAME in str(test_process):
-    return True
-  else:
-    return False
+  try:
+   test_process = subprocess.check_output([adb_binary, 'shell', 'ps', '|', 'grep', CONTACT_PACKAGE_NAME])
+   if CONTACT_PACKAGE_NAME in str(test_process):
+     return True
+   else:
+     return False
+  except subprocess.CalledProcessError, e:
+    print("Ping stdout output###:\n", e.output)
+
+
 
 def make_inbound_call(CALL_NUMBER_OUTBOUND):
    adb_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'platform-tools', 'adb')
