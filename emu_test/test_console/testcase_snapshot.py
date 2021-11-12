@@ -51,7 +51,9 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
       self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
 
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_SAVE + snapshot_string + NEW_LINE_COMMAND, util.OK)
+    time.sleep(util.CMD_DELAY_VALUE)
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LIST, snapshot_string)
+    time.sleep(util.CMD_DELAY_VALUE)
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
 
   def test_avd_snapshot_load(self):
@@ -77,12 +79,14 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     time.sleep(util.CMD_DELAY_VALUE)
     snapshot_string = SNAPSHOT_PREFIX + this_function_name
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_SAVE + snapshot_string + NEW_LINE_COMMAND, util.OK)
+    time.sleep(util.CMD_DELAY_VALUE)
     subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CONTACT_PACKAGE_NAME])
     time.sleep(util.CMD_DELAY_VALUE)
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LOAD+snapshot_string+ NEW_LINE_COMMAND, util.OK)
     time.sleep(util.CMD_DELAY_VALUE)
     self.assertTrue(util.check_running_app())
     util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
+    time.sleep(util.CMD_DELAY_VALUE)
     subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CONTACT_PACKAGE_NAME])
 
   def test_avd_snapshot_del(self):
@@ -128,7 +132,9 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     print(('Running test: %s' % (this_function_name)))
     snapshot_string = SNAPSHOT_PREFIX + this_function_name
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_SAVE+ snapshot_string +NEW_LINE_COMMAND, util.OK)
+    time.sleep(util.CMD_DELAY_VALUE)
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LIST, snapshot_string)
+    time.sleep(util.CMD_DELAY_VALUE)
     util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
 
   def test_app_launch_after_snapshot_load(self):
