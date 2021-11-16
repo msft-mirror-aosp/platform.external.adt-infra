@@ -277,7 +277,7 @@ def check_running_app():
      return True
    else:
      return False
-  except subprocess.CalledProcessError, e:
+  except subprocess.CalledProcessError as e:
     print("Ping stdout output###:\n", e.output)
 
 
