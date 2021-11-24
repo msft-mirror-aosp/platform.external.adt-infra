@@ -29,8 +29,8 @@ if os.name == WINDOWS_OS_NAME:
 else:
   COMPARE_CMD = 'diff'
 
-MAC_OS_NAME = 'posix'
-if os.name == MAC_OS_NAME:
+LINUX_MAC_OS_NAME = 'posix'
+if os.name == LINUX_MAC_OS_NAME:
   COMPARE_CMD = 'FC'
 else:
   COMPARE_CMD = 'diff'

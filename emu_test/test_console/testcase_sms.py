@@ -5,6 +5,7 @@ import unittest
 import sys
 import subprocess
 import time
+from test_console.utils.util import WINDOWS_OS_NAME
 from . import testcase_base
 from .utils import util
 
@@ -19,6 +20,7 @@ PDU_PHONE_NUMBER = '+31641600986'
 CONSOLE_TEST_PACKAGE_NAME = 'com.example.smstesthelper'
 ASSERT_MSG_MATCH_FAILURE = 'Message/ Sender do not match'
 ASSERT_MSG = 'Message sending failed'
+
 
 
 class SmsTest(testcase_base.BaseConsoleTest):
@@ -56,6 +58,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SMS_SEND.format(SENDER_PHONE_NUMBER, TEXT_MESSAGE), util.OK, ASSERT_MSG)
     self._poll_and_verify_sms(MSG_MATCHING_STRING.format(SENDER_PHONE_NUMBER, TEXT_MESSAGE))
 
+  @unittest.skipIf(os.name == WINDOWS_OS_NAME, "b/182533490")
   def test_send_inbound_sms_pdu(self):
     """Test command for: sms send <phone number> <text message>.
 
