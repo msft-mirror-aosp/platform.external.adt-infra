@@ -40,6 +40,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
   def tearDownClass(cls):
     util.unstall_apps(CONSOLE_TEST_PACKAGE_NAME)
 
+  @unittest.skipIf(os.name == WINDOWS_OS_NAME, "b/208685745")
   def test_send_inbound_sms_text_message(self):
     """Test command for: sms send <phone number> <text message>.
 
