@@ -563,7 +563,7 @@ run_test() {
     log2err "Running ${test_name}"
 
     # Tests can take a while to run on a mac.
-    run_timeout 1800 ${test_cmd}
+    run_timeout 2700 ${test_cmd}
 }
 
 clean_avds() {
