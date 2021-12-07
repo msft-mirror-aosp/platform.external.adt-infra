@@ -250,17 +250,26 @@ public class SettingsUtil {
 
         SettingsUtil.clickAdvancedMenu(device);
 
+        UiObject seeAll = device.findObject(new UiSelector()
+                .textContains("See all"));
+
+        if (seeAll.waitForExists(3L)){
+            seeAll.clickAndWaitForNewWindow();
+        }
+
         UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
 
-        UiSelector permissionsSelector = new UiSelector().text(permissionText);
-        UiObject appPermissionsLabel = device.findObject(permissionsSelector);
-        boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
-        if (hasAppPermissionsLabel) {
-            appPermissionsLabel.clickAndWaitForNewWindow();
-        } else if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(60L))) {
-            appPermissionsList.setAsVerticalList();
-            if (appPermissionsList.scrollIntoView(permissionsSelector)) {
-                device.findObject(permissionsSelector).clickAndWaitForNewWindow();
+        if (SystemUtil.getApiLevel() < 31) {
+            UiSelector permissionsSelector = new UiSelector().text(permissionText);
+            UiObject appPermissionsLabel = device.findObject(permissionsSelector);
+            boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
+            if (hasAppPermissionsLabel) {
+                appPermissionsLabel.clickAndWaitForNewWindow();
+            } else if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(60L))) {
+                appPermissionsList.setAsVerticalList();
+                if (appPermissionsList.scrollIntoView(permissionsSelector)) {
+                    device.findObject(permissionsSelector).clickAndWaitForNewWindow();
+                }
             }
         }
         if (appPermissionsList.waitForExists(TimeUnit.SECONDS.toMillis(60L))) {
@@ -417,58 +426,84 @@ public class SettingsUtil {
             String permissionText)
             throws Exception {
 
+        String targetApp = SystemUtil.getApiLevel() == 31 ? appName : appType;
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        getAppPermissions_v2(instrumentation, appType, appText, permissionText);
+        getAppPermissions_v2(instrumentation, targetApp, appText, permissionText);
 
-        device.findObject(new UiSelector().text(appType)).click();
+        device.findObject(new UiSelector().text(targetApp)).click();
 
-        UiScrollable permissionList = new UiScrollable(new UiSelector().resourceId("com.android.permissioncontroller:id/recycler_view"));
+        if (SystemUtil.getApiLevel() <= 30) {
+            UiScrollable permissionList = new UiScrollable(new UiSelector().resourceId("com.android.permissioncontroller:id/recycler_view"));
 
-        UiObject appButton = SystemUtil.getApiLevel() == 30 ?
-                permissionList.getChildByText(new UiSelector().className("android.widget.TextView").index(0), appName) :
-                permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), appName);
+            UiObject appButton = SystemUtil.getApiLevel() == 30 ?
+                    permissionList.getChildByText(new UiSelector().className("android.widget.TextView").index(0), appName) :
+                    permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), appName);
 
-        if (appButton.exists()) {
-            appButton.click();
-        }
-
-        UiObject permissionsAllowBtn = device.findObject(
-                new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
-        UiObject permissionsDenyBtn = device.findObject(
-                new UiSelector().resourceId(Res.DENY_PERMISSION_BUTTON));
-
-        if (enablePermissions) {
-            permissionsAllowBtn.click();
-        } else if ((permissionsAllowBtn.isChecked())) {
-            permissionsDenyBtn.click();
-
-            final UiObject denyButton = device.findObject(new UiSelector().text(denyButtonText));
-
-            try {
-                boolean dialogLaunched = new Wait().until(denyButton::exists);
-                if (dialogLaunched) {
-                    denyButton.click();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (appButton.exists()) {
+                appButton.click();
             }
+
+            UiObject permissionsAllowBtn = device.findObject(
+                    new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
+            UiObject permissionsDenyBtn = device.findObject(
+                    new UiSelector().resourceId(Res.DENY_PERMISSION_BUTTON));
+
+            if (enablePermissions) {
+                permissionsAllowBtn.click();
+            } else if ((permissionsAllowBtn.isChecked())) {
+                permissionsDenyBtn.click();
+
+                final UiObject denyButton = device.findObject(new UiSelector().text(denyButtonText));
+
+                try {
+                    boolean dialogLaunched = new Wait().until(denyButton::exists);
+                    if (dialogLaunched) {
+                        denyButton.click();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            UiObject permissions = device.findObject(
+                    new UiSelector().text("Permissions"));
+            if (permissions.waitForExists(3L)) {
+                permissions.clickAndWaitForNewWindow();
+            }
+            UiScrollable permissionList = new UiScrollable(new UiSelector().
+                    resourceId("com.android.permissioncontroller:id/content_frame"));
+
+            UiObject location = device.findObject(
+                    new UiSelector().text("Location"));
+            permissionList.scrollIntoView(location);
+            if (location.waitForExists(5L)) {
+                location.clickAndWaitForNewWindow();
+            }
+            UiObject permissionsButton = device.findObject(
+                    new UiSelector().text(enablePermissions
+                            ? "Allow only while using the app" : "Don't allow"));
+
+            if (permissionsButton.waitForExists(3L)) {
+                permissionsButton.clickAndWaitForNewWindow();
+            }
+
         }
     }
 
     /*
      * Helper function to click "Advanced" is setting menu if it exists.
-     * Otherwiese it should do nothing and shopuld not throw any exception.
+     * Otherwise it should do nothing and should not throw any exception.
      */
     public static void clickAdvancedMenu(UiDevice device) {
         UiScrollable itemList =
                 new UiScrollable(
                         new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
                 );
-        itemList.setAsVerticalList();
-        UiSelector advancedButton = new UiSelector().text("Advanced");
 
         try {
+            itemList.setAsVerticalList();
+            UiSelector advancedButton = new UiSelector().text("Advanced");
             if (itemList.scrollIntoView(advancedButton)) {
                 device.findObject(advancedButton).click();
             }
