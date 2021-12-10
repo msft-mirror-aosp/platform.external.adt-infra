@@ -40,7 +40,7 @@ class HelpTest(testcase_base.BaseConsoleTest):
     self.assert_cmd_successful(
         is_command_successful,
         'Failed to properly list all command options.',
-        False, '', 'Pattern: \n%s' % expected_output, output)
+        False, '', 'Pattern: \n%s\n' % expected_output, output)
 
   def _help_verbose_command(self, expected_output):
     """Executes help-verbose command and verifies output.
@@ -57,7 +57,7 @@ class HelpTest(testcase_base.BaseConsoleTest):
     self.assert_cmd_successful(
         is_command_successful,
         'Failed to properly list all command options.',
-        False, '', 'Pattern: \n%s' % expected_output, output)
+        False, '', 'Pattern: \n%s\n' % expected_output, output)
 
   def _auth_user_for_emulator_console(self):
     """Authorization user."""
