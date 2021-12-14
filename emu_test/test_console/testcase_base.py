@@ -42,16 +42,16 @@ class BaseConsoleTest(unittest.TestCase):
   def assert_cmd_successful(self, is_cmd_successful, assertion_msg, has_status,
                             status, expected, actual):
     if has_status:
-      print(('Test result: %s status matches %s => %s' %
-             (inspect.stack()[0][3], status, str(is_cmd_successful))))
+      print(('Test result: %s status matches %s => %s | %s : PASS' %
+             (inspect.stack()[0][3], status, str(is_cmd_successful), inspect.stack()[0][3])))
     else:
-      print(('Test result: %s => %s' %
-             (inspect.stack()[0][3], str(is_cmd_successful))))
+      print(('Test result: %s => %s | %s : PASS' %
+             (inspect.stack()[0][3], str(is_cmd_successful), inspect.stack()[0][3])))
 
     if not is_cmd_successful:
-      print('Expected output:')
+      print('Expected Output:'.upper())
       print(expected)
-      print('Actual Output:')
+      print('Actual Output:'.upper())
       print(actual)
     self.assertTrue(is_cmd_successful, assertion_msg)
 

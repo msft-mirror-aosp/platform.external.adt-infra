@@ -191,10 +191,22 @@ class ConsoleTestCase(emu_testcase.EmuBaseTestCase):
 
         test_classes = self.get_all_console_test_classes()
         emu_suite = unittest.TestSuite()
-        for test_class in test_classes:
-            for method in dir(test_class):
-                if method.startswith('test_'):
-                    emu_suite.addTest(test_class(method))
+        test_case = emu_argparser.emu_args.console_test_selected
+        test_case_present = False
+
+        if test_case is not None:
+            for test_class_selected in test_classes:
+                if test_case in dir(test_class_selected):
+                    emu_suite.addTest(test_class_selected(test_case))
+                    test_case_present = True
+                else:
+                    if not test_case_present:
+                        self.m_logger.error("No test case exist with the name "+test_case+" exist in the test suite ")
+        else:
+            for test_class in test_classes:
+                for method in dir(test_class):
+                    if method.startswith('test_'):
+                        emu_suite.addTest(test_class(method))
 
         emu_runner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
         emu_result = emu_runner.run(emu_suite)

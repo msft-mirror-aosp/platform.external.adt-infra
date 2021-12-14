@@ -83,4 +83,7 @@ def get_parser():
     parser.add_argument('--adb', type=str, dest='adb_exec', action='store',
                         default=None,
                         help='path of adb executable')
+    parser.add_argument('--console_test_selected', type=str, dest='console_test_selected', action='store',
+                        default=None,
+                        help='specify the specific console test method that needs to be executed')
     return parser

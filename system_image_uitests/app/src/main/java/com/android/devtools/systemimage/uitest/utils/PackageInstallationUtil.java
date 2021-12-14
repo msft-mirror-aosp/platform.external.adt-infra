@@ -85,6 +85,32 @@ public class PackageInstallationUtil {
         return false;
     }
 
+    /**
+     * Checks if a given package is installed on the android image, for use with API 31
+     *
+     * @param instrumentation test instrumentation
+     * @param appName     the name of the package to verify (ie "TestApp")
+     */
+    public static boolean isPackageInstalled_V2(Instrumentation instrumentation, String appName)
+            throws Exception {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        AppLauncher.launchPath(instrumentation, true, "Settings", "Apps");
+
+        UiObject seeAll = device.findObject(new UiSelector()
+                .textContains("See all"));
+
+        if (seeAll.waitForExists(3L)){
+            seeAll.clickAndWaitForNewWindow();
+        }
+
+        UiScrollable appPermissionsList = new UiScrollable(
+                new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
+
+        UiObject appTitle = device.findObject(
+                new UiSelector().text(appName));
+        return appPermissionsList.scrollIntoView(appTitle);
+    }
+
     private static boolean allowInstallation(UiDevice device) throws UiObjectNotFoundException {
         UiObject settingsButton = device.findObject(new UiSelector().textMatches("(?i)settings(?-i)").
                 className("android.widget.Button"));
@@ -237,6 +263,7 @@ public class PackageInstallationUtil {
     }
 
     private static Intent createIntent_v3(Context context, File apkFile) {
+        final int api = SystemUtil.getApiLevel();
         Uri apkURI = FileProvider.getUriForFile(
                 context,
                 context.getApplicationContext()
@@ -245,6 +272,9 @@ public class PackageInstallationUtil {
         intent.setDataAndType(apkURI, "application/vnd.android.package-archive");
 
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        if (api == 31) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
         return intent;
     }
 
