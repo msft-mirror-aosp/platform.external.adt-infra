@@ -84,10 +84,11 @@ public class AppTest {
 
         // Install BasicRenderScript, if not already present.
         boolean isBasicRenderScriptInstalled = PackageInstallationUtil.
-                isPackageInstalled(instrumentation, testPackageName);
+                isPackageInstalled_V2(instrumentation, appName);
 
 
         if (!isBasicRenderScriptInstalled) {
+            device.pressHome();
             result = PackageInstallationUtil.installApk(instrumentation, apk, false);
             new AppWatcher(device).checkForCondition();
             isBasicRenderScriptInstalled = PackageInstallationUtil.
@@ -156,16 +157,19 @@ public class AppTest {
                 device.pressMenu();
             }
 
-            boolean notBookmarked = new Wait().until(() -> device.findObject(new UiSelector().description("Bookmark this page")).exists());
-            if (notBookmarked) {
-                device.findObject(new UiSelector().description("Bookmark this page")).click();
+            UiObject editBookmarkImage = device.findObject(new UiSelector()
+                    .description("Edit bookmark").className("android.widget.ImageButton"));
+            boolean isBookmarked = new Wait().until(editBookmarkImage::exists);
+            if (!isBookmarked) {
+                UiObject setBookmarkImage = device.findObject(new UiSelector()
+                        .description("Bookmark").className("android.widget.ImageButton"));
+                setBookmarkImage.click();
                 new watcher(device, Res.APP_WATCHER_PATTERN).checkForCondition();
                 device.pressMenu();
             }
             // After bookmarking, the button description changes.
-            UiObject editBookmarkText = device.findObject(new UiSelector().description("Edit bookmark"));
-            editBookmarkText.waitForExists(TimeUnit.SECONDS.toMillis(15));
-            assertTrue("Bookmark was not set", editBookmarkText.exists());
+            isBookmarked = editBookmarkImage.waitForExists(TimeUnit.SECONDS.toMillis(15));
+            assertTrue("Bookmark was not set", isBookmarked);
 
             UiObject bookmarks = device.findObject(new UiSelector().text("Bookmarks"));
             bookmarks.waitForExists(TimeUnit.SECONDS.toMillis(15));
