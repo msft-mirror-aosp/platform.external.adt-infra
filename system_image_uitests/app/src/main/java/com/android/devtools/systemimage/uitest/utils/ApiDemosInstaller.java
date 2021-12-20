@@ -45,6 +45,7 @@ public class ApiDemosInstaller {
 
         if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
             String testPackageName = "com.example.android.apis";
+            String testPackageTitle = "API Demos";
             String testPackageAPK32 = "ApiDemos_x86.apk";
             String testPackageAPK64 = "ApiDemos_x86_64.apk";
             String apk = "";
@@ -54,8 +55,9 @@ public class ApiDemosInstaller {
                 apk = TextUtils.join(", ", Build.SUPPORTED_ABIS).contains("64") ?
                         testPackageAPK64 : testPackageAPK32;
 
-                isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
-                        testPackageName);
+                isAPIDemoInstalled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ?
+                        PackageInstallationUtil.isPackageInstalled_V2(instrumentation, testPackageTitle) :
+                        PackageInstallationUtil.isPackageInstalled(instrumentation, testPackageName);
 
                 if (!isAPIDemoInstalled) {
                     result = PackageInstallationUtil.installApk(instrumentation, apk, isV2);
