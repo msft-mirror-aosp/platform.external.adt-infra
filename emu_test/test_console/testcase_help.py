@@ -25,7 +25,7 @@ class HelpTest(testcase_base.BaseConsoleTest):
         self.telnet.read_until(util.toBytes(util.OK), util.TIMEOUT_S)):
       sys.exit(-1)
 
-  def _help_command(self, expected_output):
+  def _help_command(self, expected_output, method_name=None):
     """Executes help command and verifies output.
 
     Args:
@@ -40,9 +40,9 @@ class HelpTest(testcase_base.BaseConsoleTest):
     self.assert_cmd_successful(
         is_command_successful,
         'Failed to properly list all command options.',
-        False, '', 'Pattern: \n%s\n' % expected_output, output)
+        False, '', 'Pattern: \n%s\n' % expected_output, output, method_name)
 
-  def _help_verbose_command(self, expected_output):
+  def _help_verbose_command(self, expected_output, method_name=None):
     """Executes help-verbose command and verifies output.
 
     Args:
@@ -57,7 +57,7 @@ class HelpTest(testcase_base.BaseConsoleTest):
     self.assert_cmd_successful(
         is_command_successful,
         'Failed to properly list all command options.',
-        False, '', 'Pattern: \n%s\n' % expected_output, output)
+        False, '', 'Pattern: \n%s\n' % expected_output, output, method_name)
 
   def _auth_user_for_emulator_console(self):
     """Authorization user."""
@@ -81,8 +81,8 @@ class HelpTest(testcase_base.BaseConsoleTest):
       1. help, auth, avd and quit/exit commands are available
     """
     print(('Running test: %s' % (inspect.stack()[0][3])))
-    self._help_command(util.CMDS_FOR_HELP_NO_AUTH)
-    self._help_verbose_command(util.CMDS_FOR_HELP_VERBOSE_NO_AUTH)
+    self._help_command(util.CMDS_FOR_HELP_NO_AUTH, inspect.stack()[0][3])
+    self._help_verbose_command(util.CMDS_FOR_HELP_VERBOSE_NO_AUTH, inspect.stack()[0][3])
 
   def test_help_command_auth(self):
     """Test command for: help.
@@ -99,8 +99,8 @@ class HelpTest(testcase_base.BaseConsoleTest):
     """
     print(('Running test: %s' % (inspect.stack()[0][3])))
     self._auth_user_for_emulator_console()
-    self._help_command(util.CMDS_FOR_HELP_AUTH)
-    self._help_verbose_command(util.CMDS_FOR_HELP_VERBOSE_DISPLAY_AUTH)
+    self._help_command(util.CMDS_FOR_HELP_AUTH, inspect.stack()[0][3])
+    self._help_verbose_command(util.CMDS_FOR_HELP_VERBOSE_DISPLAY_AUTH, inspect.stack()[0][3])
 
 
 if __name__ == '__main__':

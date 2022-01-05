@@ -40,13 +40,13 @@ class BaseConsoleTest(unittest.TestCase):
     util.exit_emulator_console(self.telnet)
 
   def assert_cmd_successful(self, is_cmd_successful, assertion_msg, has_status,
-                            status, expected, actual):
+                            status, expected, actual, method_name=None):
     if has_status:
       print(('Test result: %s status matches %s => %s | %s : PASS' %
-             (inspect.stack()[0][3], status, str(is_cmd_successful), inspect.stack()[0][3])))
+             (inspect.stack()[0][3], status, str(is_cmd_successful), method_name)))
     else:
       print(('Test result: %s => %s | %s : PASS' %
-             (inspect.stack()[0][3], str(is_cmd_successful), inspect.stack()[0][3])))
+             (inspect.stack()[0][3], str(is_cmd_successful), method_name)))
 
     if not is_cmd_successful:
       print('Expected Output:'.upper())
