@@ -49,7 +49,7 @@ def test_snapshot_delete_removes(snapshot_service):
     assert snapshot_service.delete("foo")
     assert "foo" not in [x.snapshot_id for x in snapshot_service.lists()]
 
-
+@pytest.mark.skip
 @pytest.mark.e2e
 def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
@@ -60,7 +60,7 @@ def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     tar = tarfile.open(os.path.join(path, "foo.tar"))
     assert tar.getmembers()
 
-
+@pytest.mark.skip
 @pytest.mark.e2e
 def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
