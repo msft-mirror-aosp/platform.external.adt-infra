@@ -22,7 +22,7 @@ ASSERT_MSG_UNFOLD_FAIL = 'Mismatch in unfold and fold device density, AVD still 
 MSG_CMD_FOLD_FAIL = 'Error in folding the AVD'
 MSG_CMD_UNFOLD_FAIL = 'Error in unfolding the AVD'
 
-
+@unittest.skip("b/214475110")
 class FoldableTest(testcase_base.BaseConsoleTest):
     """Tests for AVD's with fold feature."""
 

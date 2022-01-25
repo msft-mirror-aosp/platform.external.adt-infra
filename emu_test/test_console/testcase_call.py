@@ -2,9 +2,11 @@
 
 import unittest
 import sys
+import os
 
 from . import testcase_base
 from .utils import util
+from test_console.utils.util import WINDOWS_OS_NAME
 
 CALL_NUMBER = '1234567890'
 CMD_GSM = 'gsm {} {}\n'
@@ -85,6 +87,7 @@ class PhoneCallTest(testcase_base.BaseConsoleTest):
                                    ASSERT_MSG.format(CMD_LIST))
     self._execute_command_and_verify(CMD_GSM.format(CMD_CANCEL, CALL_NUMBER), util.OK, ASSERT_MSG.format(CMD_CANCEL))
 
+  @unittest.skipIf(os.name == WINDOWS_OS_NAME, "b/215437494")
   def test_inbound_call_accept(self):
     """Test for command: gsm accept <phonenumber>.
     Test steps:

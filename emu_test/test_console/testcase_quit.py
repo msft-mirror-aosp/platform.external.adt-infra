@@ -2,9 +2,11 @@
 
 import inspect
 import unittest
+import os
 
 from . import testcase_base
 from .utils import util
+from test_console.utils.util import LINUX_MAC_OS_NAME
 
 CMD_QUIT = 'quit\n'
 CMD_EXIT = 'exit\n'
@@ -42,6 +44,7 @@ class QuitTest(testcase_base.BaseConsoleTest):
         is_command_successful, 'Failed to properly quit/exit emulator.',
         False, '', EMPTY_OUTPUT, output_exit)
 
+  @unittest.skipIf(os.name == LINUX_MAC_OS_NAME, "b/215910720")
   def test_quit_command(self):
     """Test command for: quit.
 
@@ -59,6 +62,7 @@ class QuitTest(testcase_base.BaseConsoleTest):
     print(('Running test: %s' % (inspect.stack()[0][3])))
     self._execute_command_and_verify(CMD_QUIT)
 
+  @unittest.skipIf(os.name == LINUX_MAC_OS_NAME, "b/215910720")
   def test_exit_command(self):
     """Test command for: exit.
 
