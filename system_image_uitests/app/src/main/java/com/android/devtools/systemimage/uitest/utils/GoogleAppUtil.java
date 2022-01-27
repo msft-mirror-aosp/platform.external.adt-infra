@@ -40,8 +40,7 @@ public class GoogleAppUtil {
     }
 
     private static final int api = SystemUtil.getApiLevel();
-    private static final String email = api >= 29 ?
-            "demo.sysimg.user1@gmail.com" : "pstester1980@gmail.com";
+    private static final String email = "demo.sysimg.user1@gmail.com";
 
     /**
      * Log a user into a Google application
@@ -176,18 +175,7 @@ public class GoogleAppUtil {
         }
 
         Log.i("Login", "enter password");
-        if (api >= 29) {
-            editInput.setText("4g070ls8id");
-        } else {
-            device.pressKeyCode(KeyEvent.KEYCODE_P);
-            device.pressKeyCode(KeyEvent.KEYCODE_S);
-            device.pressKeyCode(KeyEvent.KEYCODE_T);
-            device.pressKeyCode(KeyEvent.KEYCODE_4);
-            device.pressKeyCode(KeyEvent.KEYCODE_L);
-            device.pressKeyCode(KeyEvent.KEYCODE_I);
-            device.pressKeyCode(KeyEvent.KEYCODE_F);
-            device.pressKeyCode(KeyEvent.KEYCODE_3);
-        }
+        editInput.setText("2u0of9osen");
         clickNext(device);
 
         boolean isSignedIn =

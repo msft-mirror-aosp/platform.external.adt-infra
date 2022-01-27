@@ -12,7 +12,9 @@ from emu_test.utils.emu_argparser import emu_args
 import emu_test.utils.emu_testcase
 from emu_test.utils.emu_testcase import EmuBaseTestCase, AVDConfig
 import emu_test.utils.path_utils as path_utils
+from test_console.utils.util import LINUX_MAC_OS_NAME
 
+@unittest.skipIf(os.name == LINUX_MAC_OS_NAME, "Flaky test for mac.")
 class BootTestCase(EmuBaseTestCase):
     def __init__(self, *args, **kwargs):
         super(BootTestCase, self).__init__(*args, **kwargs)

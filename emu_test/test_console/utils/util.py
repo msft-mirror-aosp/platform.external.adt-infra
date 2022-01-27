@@ -29,6 +29,12 @@ if os.name == WINDOWS_OS_NAME:
 else:
   COMPARE_CMD = 'diff'
 
+LINUX_MAC_OS_NAME = 'posix'
+if os.name == LINUX_MAC_OS_NAME:
+  COMPARE_CMD = 'FC'
+else:
+  COMPARE_CMD = 'diff'
+
 SERVER_NAME = 'localhost'
 CONSOLE_PORT = 5554
 
