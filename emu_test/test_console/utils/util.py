@@ -48,7 +48,7 @@ ADB_NUM_MAX_TRIALS = 5
 
 TIMEOUT_S = 1
 
-CMD_DELAY_VALUE = 15
+CMD_DELAY_VALUE = 25
 
 HOME = expanduser('~')
 CONSOLE_AUTH_TOKEN_FILE_NAME = '.emulator_console_auth_token'

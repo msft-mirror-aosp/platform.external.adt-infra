@@ -29,7 +29,6 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     else:
       super(SnapshotTest, self).__init__()
 
-  @unittest.skipIf(os.name == WINDOWS_OS_NAME, "Flaky test for windows")
   def test_avd_snapshot_save(self):
     """Verifies snapshot command save, returns OK.
 
@@ -58,7 +57,6 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     time.sleep(util.CMD_DELAY_VALUE)
     self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
 
-  @unittest.skipIf(os.name == WINDOWS_OS_NAME, "Flaky test for windows")
   def test_avd_snapshot_load(self):
     """Verifies snapshot command load, returns OK.
 
@@ -92,7 +90,6 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     time.sleep(util.CMD_DELAY_VALUE)
     subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CONTACT_PACKAGE_NAME])
 
-  @unittest.skipIf(os.name == WINDOWS_OS_NAME, "Flaky test for windows")
   def test_avd_snapshot_del(self):
     """Verifies snapshot command del, returns OK.
 
@@ -119,7 +116,6 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     result_execute_check_snapshot = util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_LIST, snapshot_string)
     self.assertFalse(result_execute_check_snapshot[0], "Snapshot "+snapshot_string+" is not deleted successfully.")    #Created snapshot is deleted and no more exist in the retrieved list"
 
-  @unittest.skipIf(os.name == WINDOWS_OS_NAME, "Flaky test for windows")
   def test_avd_snapshot_list(self):
     """Verifies snapshot command list, returns OK.
 
@@ -142,7 +138,6 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     time.sleep(util.CMD_DELAY_VALUE)
     util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
 
-  @unittest.skipIf(os.name == WINDOWS_OS_NAME, "Flaky test for windows")
   def test_app_launch_after_snapshot_load(self):
     """Verifies snapshot command load, returns OK.
 
