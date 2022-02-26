@@ -36,7 +36,7 @@ public class NetworkIOTestUtil {
     public static void toggleAirplaneMode(UiDevice device) throws UiObjectNotFoundException {
         UiObject airplaneModeText = device.findObject(
                 new UiSelector().text("Airplane mode"));
-        boolean isFound = airplaneModeText.waitForExists(3L);
+        boolean isFound = airplaneModeText.waitForExists(10L);
         if (isFound) {
             airplaneModeText.clickAndWaitForNewWindow();
         }

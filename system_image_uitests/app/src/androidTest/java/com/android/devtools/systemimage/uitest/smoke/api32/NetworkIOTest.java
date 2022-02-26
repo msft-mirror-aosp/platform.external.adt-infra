@@ -54,7 +54,7 @@ public class NetworkIOTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(500);
+    public Timeout globalTimeout = Timeout.seconds(600);
 
     /**
      * Verifies test browser successfully loads a web page.
@@ -89,7 +89,7 @@ public class NetworkIOTest {
                         new Wait().until(internetTile::exists));
                 internetTile.click();
                 UiObject connectWifiSummary = device.findObject(new UiSelector().resourceId(
-                        Res.ANDROID_SUMMARY_RES).text("Connected"));
+                        Res.ANDROID_WIFI_SUMMARY_RES).text("Connected"));
                 assertTrue("Could not connect to the network.",
                         new Wait().until(connectWifiSummary::exists));
                 device.pressHome();
@@ -118,7 +118,7 @@ public class NetworkIOTest {
                 final UiObject textField = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_URL_BAR_RES));
                 Assert.assertTrue("Chrome URL bar not found",
-                        new Wait().until(textField::exists));
+                        new Wait(3000).until(textField::exists));
 
                 textField.click();
                 textField.clearTextField();
@@ -254,6 +254,7 @@ public class NetworkIOTest {
         // Disable airplane mode.
         AppLauncher.launchPath(instrumentation, true, path);
         NetworkIOTestUtil.toggleAirplaneMode(device);
+        device.pressHome();
     }
 
     /**
@@ -289,7 +290,7 @@ public class NetworkIOTest {
             NetworkIOTestUtil.toggleAirplaneMode(device);
         }
         assertFalse("Airplane mode is not disabled.",
-                NetworkUtil.isAirplaneModeEnabled_v2(device, airplaneModeIcon));
+                NetworkUtil.isAirplaneModeEnabled_v3(device, airplaneModeIcon));
 
         for (int i = 0; i < stressCount; i++) {
             AppLauncher.launchPath(instrumentation, true, path);
@@ -304,6 +305,7 @@ public class NetworkIOTest {
             assertFalse("Airplane mode is not disabled.",
                     NetworkUtil.isAirplaneModeEnabled_v3(device, airplaneModeIcon));
         }
+        device.pressHome();
     }
 
     /**
