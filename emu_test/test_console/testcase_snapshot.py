@@ -178,12 +178,16 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
       command: Console command to be executed.
       expected_output: The expected command output.
     """
-    is_command_successful, output = util.execute_console_command(
-        self.telnet, command, expected_output)
+    if util.check_if_avd_online():
+      is_command_successful, output = util.execute_console_command(
+          self.telnet, command, expected_output)
 
-    self.assert_cmd_successful(
-        is_command_successful, 'Failed to properly execute: %s' % command,
-        False, '', expected_output, output)
+      self.assert_cmd_successful(
+          is_command_successful, 'Failed to properly execute: %s' % command,
+          False, '', expected_output, output)
+    #else:
+      #self.assertFalse(False, 'No running AVD exist')
+
 
 
 if __name__ == '__main__':
