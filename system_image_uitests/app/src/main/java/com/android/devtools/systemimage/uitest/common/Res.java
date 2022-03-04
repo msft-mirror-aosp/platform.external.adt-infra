@@ -155,6 +155,7 @@ public class Res {
     public static final String ANDROID_ICON_RES = "android:id/icon";
     public static final String ANDROID_ERROR_CLOSE_RES = "android:id/aerr_close";
     public static final String ANDROID_BUTTON_ONE = "android:id/button1";
+    public static final String ANDROID_WIFI_SUMMARY_RES = "com.android.systemui:id/wifi_connected_summary";
 
     // Android TV Resources.
     public static final String TV_LAUNCHER = "com.google.android.tvlauncher:id/button_icon";

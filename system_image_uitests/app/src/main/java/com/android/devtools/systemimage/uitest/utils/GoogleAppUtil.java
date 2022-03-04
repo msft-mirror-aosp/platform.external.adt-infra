@@ -158,7 +158,7 @@ public class GoogleAppUtil {
             forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
         } else if (api == 29 || api == 30) {
             forgotPasswordLink = device.findObject(new UiSelector().text("Forgot password?"));
-        } else if (api == 31) {
+        } else if (api >= 31) {
             forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
         } else {
             forgotPasswordLink = device.findObject(new UiSelector().description("Forgot password?"));
@@ -181,9 +181,12 @@ public class GoogleAppUtil {
         boolean isSignedIn =
                 new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
-        if (api >= 24 && api <= 28) {
-            UiObject signInConsentButton = device.findObject(
-                    new UiSelector().resourceId(Res.GOOGLE_SIGN_IN_CONSENT_NEXT_RES));
+        if ((api >= 24 && api <= 28) || api == 32) {
+            UiObject signInConsentButton = api == 32 ?
+                    device.findObject(
+                            new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES)) :
+                    device.findObject(
+                            new UiSelector().resourceId(Res.GOOGLE_SIGN_IN_CONSENT_NEXT_RES));
             if (signInConsentButton.waitForExists(20L)) {
                 signInConsentButton.click();
                 isSignedIn = true;
@@ -209,7 +212,7 @@ public class GoogleAppUtil {
             backupSwitch.click();
         }
 
-        UiObject agreeButton = api == 31 ?
+        UiObject agreeButton = api >= 31 ?
                 device.findObject(
                         new UiSelector().className("android.widget.Button").text("I agree")) :
                 device.findObject(
@@ -264,7 +267,7 @@ public class GoogleAppUtil {
 
         refuseSync(device);
 
-        if (api == 31) {
+        if (api >= 31) {
             final UiObject emailLabel = device.findObject(
                     new UiSelector().text(email).resourceId(Res.ANDROID_SUMMARY_RES));
             if (new Wait().until(emailLabel::exists)) {
@@ -272,7 +275,7 @@ public class GoogleAppUtil {
             }
         }
 
-        final UiObject signOutLabel = api == 31 ?
+        final UiObject signOutLabel = api >= 31 ?
                 device.findObject(new UiSelector().text("Sign out and turn off sync")) :
                 device.findObject(new UiSelector().text("Sign out of Chrome"));
 
