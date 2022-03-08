@@ -287,6 +287,7 @@ class EmuBaseTestCase(LoggedTestCase):
 
         # Function execution starts below
         self.m_logger.info('Launching Emulator with AVD, ...: %s', str(avd))
+        self.m_logger.info(traceback.format_exc())
         emulator_bin = emu_argparser.emu_args.emulator_exec
         launch_cmd = [emulator_bin, "-avd", str(avd), "-verbose", "-show-kernel"]
         if emu_argparser.emu_args.headless:
@@ -310,6 +311,11 @@ class EmuBaseTestCase(LoggedTestCase):
         launch_cmd += ['-no-audio']
         if 'test_boot' in emu_argparser.emu_args.pattern or 'test_perf' in emu_argparser.emu_args.pattern:
             launch_cmd += ['-no-snapshot']
+        # Special condition for embedded boot test check
+        if avd.gpu == "auto" and 'api29' in str(avd):
+            self.m_logger.info('Launching Emulator in Embedded Mode Initiated')
+            launch_cmd += ["-qt-hide-window"]
+            self.m_logger.info('Emulator is launched in Embedded Mode')
         if flags != None:
             launch_cmd += flags
         test_name  = self.id().rsplit('.', 1)[-1]
