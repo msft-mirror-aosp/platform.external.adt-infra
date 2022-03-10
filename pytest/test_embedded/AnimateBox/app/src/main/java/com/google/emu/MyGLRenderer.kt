@@ -59,7 +59,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         // long time = SystemClock.uptimeMillis() % 4000L;
         // float angle = 0.090f * ((int) time);
         Matrix.setRotateM(mRotationMatrix, 0, angle, 0f, 0f, 1.0f)
-        Matrix.scaleM(mRotationMatrix, 0, 0.5f, 0.5f, 0.5f)
+        Matrix.scaleM(mRotationMatrix, 0, 0.9f, 0.9f, 0.9f)
         // Combine the rotation matrix with the projection and camera view
         // Note that the mMVPMatrix factor *must be first* in order
         // for the matrix multiplication product to be correct.
