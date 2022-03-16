@@ -59,7 +59,7 @@ public class GoogleAppUtil {
 
         UiObject accountPromoButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_ACCOUNT_RES));
-        if (accountPromoButton.waitForExists(5L)) {
+        if (accountPromoButton.waitForExists(10L)) {
             accountPromoButton.clickAndWaitForNewWindow();
         }
         UiObject signInPromoCloseButton = device.findObject(
@@ -73,12 +73,25 @@ public class GoogleAppUtil {
         if (signInChromeLabel.waitForExists(5L)) {
             signInChromeLabel.clickAndWaitForNewWindow();
         }
+        UiObject chromePositiveButton = device.findObject(
+                new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES));
 
         UiObject testUserEmail = device.findObject(new UiSelector().text(email));
         UiObject accountSelectionMark = device.findObject(new UiSelector().resourceId(
                 Res.CHROME_ACCOUNT_SELECTION_MARK_RES));
-        if (testUserEmail.waitForExists(5L) && accountSelectionMark.waitForExists(5L)) {
-            return true;
+        UiObject continueButton = device.findObject(
+                new UiSelector()
+                        .text("Continue")
+                        .className("android.widget.Button")
+                        .resourceId(Res.CHROME_POSITIVE_BUTTON_RES));
+        if (testUserEmail.waitForExists(5L)
+                && accountSelectionMark.waitForExists(3L) &&
+                continueButton.waitForExists(3L)) {
+            continueButton.clickAndWaitForNewWindow();
+            if (chromePositiveButton.waitForExists(5L)) {
+                chromePositiveButton.clickAndWaitForNewWindow();
+                return true;
+            }
         }
 
         UiObject addAccountLabel = device.findObject(
@@ -89,8 +102,6 @@ public class GoogleAppUtil {
 
         if (testUserEmail.waitForExists(5L)) {
             new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
-            UiObject chromePositiveButton = device.findObject(
-                    new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES));
             if (chromePositiveButton.waitForExists(5L)) {
                 chromePositiveButton.clickAndWaitForNewWindow();
             }
@@ -181,7 +192,7 @@ public class GoogleAppUtil {
         boolean isSignedIn =
                 new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
-        if ((api >= 24 && api <= 28) || api == 32) {
+        if ((api >= 24 && api <= 29) || api == 32) {
             UiObject signInConsentButton = api == 32 ?
                     device.findObject(
                             new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES)) :
@@ -212,9 +223,8 @@ public class GoogleAppUtil {
             backupSwitch.click();
         }
 
-        UiObject agreeButton = api >= 31 ?
-                device.findObject(
-                        new UiSelector().className("android.widget.Button").text("I agree")) :
+        UiObject agreeButton = api >= 29 ?
+                device.findObject(new UiSelector().textMatches("(?i)agree(?-i)")) :
                 device.findObject(
                         new UiSelector().resourceId(Res.GOOGLE_SERVICES_ACCEPT_BUTTON_RES));
 
@@ -229,7 +239,6 @@ public class GoogleAppUtil {
 
         new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
 
-        agreeButton = device.findObject(new UiSelector().textMatches("(?i)agree(?-i)"));
         if (agreeButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             agreeButton.clickAndWaitForNewWindow();
         }

@@ -2,6 +2,7 @@
 
 import inspect
 import unittest
+import logging
 import os
 
 from . import testcase_base
@@ -15,6 +16,7 @@ EMPTY_OUTPUT = ''
 
 class QuitTest(testcase_base.BaseConsoleTest):
   """This class aims to test quit/exit-related emulator console commands."""
+
 
   def __init__(self, method_name=None):
     if method_name:
@@ -31,7 +33,9 @@ class QuitTest(testcase_base.BaseConsoleTest):
 
   def _execute_command_and_verify(self, command):
     is_command_successful = False
-
+    logger = logging
+    logger.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+    logger.info('Executed command is:'+command)
     self.telnet.write(util.toBytes(command))
     util.wait_on_windows()
 

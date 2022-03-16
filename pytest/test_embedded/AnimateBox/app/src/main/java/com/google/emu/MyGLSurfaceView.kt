@@ -16,6 +16,9 @@ class MyGLSurfaceView(context: Context?) : GLSurfaceView(context) {
     private val TOUCH_SCALE_FACTOR = 180.0f / 320
     private var mPreviousX = 0f
     private var mPreviousY = 0f
+    private var colIdx = 0
+
+    private val colors = arrayOf(0x0000ff, 0x008000, 0x800080, 0xFF0000);
 
     var mPaused = false
 
@@ -34,6 +37,8 @@ class MyGLSurfaceView(context: Context?) : GLSurfaceView(context) {
                 .build()
 
         Log.i(TAG, JsonLogger.toJson("MouseEvent", mouse))
+        if (event.actionMasked == MotionEvent.ACTION_DOWN)
+           mRenderer.color = colors[colIdx++ % colors.size];
         return true
     }
 
@@ -45,6 +50,7 @@ class MyGLSurfaceView(context: Context?) : GLSurfaceView(context) {
         setEGLContextClientVersion(2)
         // Set the Renderer for drawing on the GLSurfaceView
         mRenderer = MyGLRenderer()
+        mRenderer.color = colors[colIdx]
         setRenderer(mRenderer)
         // Render the view only when there is a change in the drawing data
         renderMode = RENDERMODE_WHEN_DIRTY
@@ -62,7 +68,6 @@ class MyGLSurfaceView(context: Context?) : GLSurfaceView(context) {
                 }
                 if (!paused) {
                     mRenderer.angle += 1
-                    mRenderer.color = frame++;
                 }
                 requestRender()
                 Thread.sleep(10);
