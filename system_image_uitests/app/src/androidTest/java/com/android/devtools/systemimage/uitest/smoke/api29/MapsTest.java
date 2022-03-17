@@ -86,9 +86,9 @@ public class MapsTest {
 
             final UiObject searchUiObject = mDevice.findObject(new UiSelector().
                     resourceIdMatches(Res.SEARCH_TEXT_BOX));
-            assertTrue("Failed to find search text box", new Wait(5L).until(new Wait.ExpectedCondition() {
+            assertTrue("Failed to find search text box", new Wait(10L).until(new Wait.ExpectedCondition() {
                 @Override
-                public boolean isTrue() throws Exception {
+                public boolean isTrue() {
                     return searchUiObject.exists();
                 }
             }));
@@ -103,13 +103,8 @@ public class MapsTest {
             final UiObject searchTextView =
                     searchUiObject.getChild(new UiSelector().className(TextView.class.getName()));
 
-            boolean hasSearchText = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).
-                    until(new Wait.ExpectedCondition() {
-                        @Override
-                        public boolean isTrue() {
-                            return searchTextView.waitForExists(10L);
-                        }
-                    });
+            boolean hasSearchText = new Wait(TimeUnit.MILLISECONDS.convert(15L, TimeUnit.SECONDS)).
+                    until(() -> searchTextView.waitForExists(15L));
 
             if (hasSearchText) {
                 Assert.assertTrue("Search string " + QUERY_STRING + " not found.",
