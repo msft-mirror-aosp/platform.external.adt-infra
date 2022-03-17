@@ -70,7 +70,6 @@ public class watcher implements UiWatcher {
             throw new AssertionError("Failed to dismiss popup dialogs");
         }
 
-        assertTrue("Failed to dismiss popup dialogs", (count <= 10));
         return condition;
     }
 }
