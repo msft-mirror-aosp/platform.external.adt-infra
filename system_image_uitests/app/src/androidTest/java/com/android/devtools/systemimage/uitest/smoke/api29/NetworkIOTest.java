@@ -81,60 +81,57 @@ public class NetworkIOTest {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
 
-        // Check network connectivity.
-        if (NetworkUtil.hasCellularNetworkConnection(instrumentation)) {
-            if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
-                device.openNotification();
-                String cellularData = "Mobile data";
-                boolean hasCellularData =
-                        device.wait(
-                                Until.hasObject(By.descContains(cellularData)),
-                                TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
-                        );
-                assertTrue("Could not connect to the network.", hasCellularData);
-                device.pressHome();
+        if (testFramework.isGoogleApiImage() || testFramework.isGoogleApiAndPlayImage()) {
+            device.openNotification();
+            String cellularData = "Mobile data";
+            boolean hasCellularData =
+                    device.wait(
+                            Until.hasObject(By.descContains(cellularData)),
+                            TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS)
+                    );
+            assertTrue("Could not connect to the network.", hasCellularData);
+            device.pressHome();
 
-                AppLauncher.launch(instrumentation, "Chrome");
-                // If this is the first launch, dismiss the "Welcome to Chrome" screen.
-                UiObject acceptButton = device.findObject(new UiSelector().resourceId(
-                        Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-                if (acceptButton.exists()) {
-                    acceptButton.clickAndWaitForNewWindow();
-                }
+            AppLauncher.launch(instrumentation, "Chrome");
+            // If this is the first launch, dismiss the "Welcome to Chrome" screen.
+            UiObject acceptButton = device.findObject(new UiSelector().resourceId(
+                    Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
+            if (acceptButton.exists()) {
+                acceptButton.clickAndWaitForNewWindow();
+            }
 
-                // Dismiss the "Sign in to Chrome" screen if it's there.
-                UiObject noThanksButton = device.findObject(new UiSelector().resourceIdMatches(
-                        Res.CHROME_NO_THANKS_BUTTON_RES));
-                if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
-                    noThanksButton.clickAndWaitForNewWindow();
-                }
+            // Dismiss the "Sign in to Chrome" screen if it's there.
+            UiObject noThanksButton = device.findObject(new UiSelector().resourceIdMatches(
+                    Res.CHROME_NO_THANKS_BUTTON_RES));
+            if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
+                noThanksButton.clickAndWaitForNewWindow();
+            }
 
-                UiObject searchBox = device.findObject(new UiSelector().resourceId(
-                        Res.CHROME_SEARCH_BOX_RES));
-                if (searchBox.exists()) {
-                    searchBox.clickAndWaitForNewWindow();
-                }
+            UiObject searchBox = device.findObject(new UiSelector().resourceId(
+                    Res.CHROME_SEARCH_BOX_RES));
+            if (searchBox.exists()) {
+                searchBox.clickAndWaitForNewWindow();
+            }
 
-                final UiObject textField = device.findObject(new UiSelector().resourceId(
-                        Res.CHROME_URL_BAR_RES));
-                Assert.assertTrue("Chrome URL bar not found",
-                        new Wait().until(textField::exists));
+            final UiObject textField = device.findObject(new UiSelector().resourceId(
+                    Res.CHROME_URL_BAR_RES));
+            Assert.assertTrue("Chrome URL bar not found",
+                    new Wait().until(textField::exists));
 
-                textField.click();
-                textField.clearTextField();
-                textField.setText("google.com");
-                device.pressEnter();
+            textField.click();
+            textField.clearTextField();
+            textField.setText("google.com");
+            device.pressEnter();
 
-                // Verify if the load bar is there at first. Then verify if the loading bar
-                // finishes within the default timeout on Wait().
-                final UiObject progress =
-                        device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
-                boolean isSuccess =
-                        new Wait().until(() -> !progress.exists());
-                assertTrue("Failed to dismiss the loading bar.", isSuccess);
+            // Verify if the load bar is there at first. Then verify if the loading bar
+            // finishes within the default timeout on Wait().
+            final UiObject progress =
+                    device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
+            boolean isSuccess =
+                    new Wait().until(() -> !progress.exists());
+            assertTrue("Failed to dismiss the loading bar.", isSuccess);
             }
         }
-    }
 
     /**
      * Verifies cellular data can be enabled and disabled.
