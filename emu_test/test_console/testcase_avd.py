@@ -24,7 +24,7 @@ class AvdTest(testcase_base.BaseConsoleTest):
     else:
       super(AvdTest, self).__init__()
 
-  @unittest.skip("Debugging for b/215910720")
+
   def test_avd_stop_and_start(self):
     """Test command for: avd stop, avd start, avd status.
 
