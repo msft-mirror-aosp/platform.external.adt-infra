@@ -39,7 +39,7 @@ CONSOLE_PORT = 5554
 
 NUM_MAX_TRIALS = 3
 TRIAL_WAIT_TIMEOUT_S = 0.5
-CMD_WAIT_TIMEOUT_S = 15
+CMD_WAIT_TIMEOUT_S = 3
 SETUP_WAIT_TIMEOUT_S = 5
 
 ADB_TRIAL_WAIT_TIME_S = 2
@@ -93,8 +93,6 @@ AVD_STATUS = 'device'
 
 
 def toBytes(s):
-    print("telnet query without utf" + str(bytes(s)))
-    print("telnet query with utf" + str(bytes(s).encode("utf-8")))
     PY3_OR_LATER = sys.version_info[0] >= 3
 
     if PY3_OR_LATER:

@@ -24,7 +24,7 @@ CMD_GSM_LIST = 'gsm list\n'
 STATUS_TEMPLATE = 'inbound from {} : {}'
 ASSERT_MSG = 'Failed to execute {} command'
 
-@unittest.skip("Debugging for b/215910720")
+
 class PhoneCallTest(testcase_base.BaseConsoleTest):
   """This class aims to test call-related emulator console commands."""
 
