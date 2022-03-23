@@ -93,6 +93,8 @@ AVD_STATUS = 'device'
 
 
 def toBytes(s):
+    print("telnet query without utf" + str(bytes(s)))
+    print("telnet query with utf" + str(bytes(s).encode("utf-8")))
     PY3_OR_LATER = sys.version_info[0] >= 3
 
     if PY3_OR_LATER:
