@@ -45,6 +45,21 @@ mkdir -p $SESSION_DIR
 # completes shall be the value it had before trap was invoked.
 trap "terminate_adb" EXIT QUIT INT HUP
 
+PYTHON=python
+
+# Prefer python3 if it is available.
+if command -v python3 &>/dev/null; then
+  log "Using python 3"
+  PYTHON=python3
+  $PYTHON -m venv $OUT_DIR/venv
+  [ -e $OUT_DIR/venv/bin/pip ] && $OUT_DIR/venv/bin/pip install --upgrade pip
+  [ -e $OUT_DIR/venv/bin/pip ] && $OUT_DIR/venv/bin/pip install --upgrade setuptools
+else
+  log "Using python 2.. This is no longer officially supported!"
+  log "https://python3statement.org/"
+fi
+
+
 log "Build Emulator"
 
 QTWEBENGINE_ARG=
@@ -60,9 +75,9 @@ then
     # 2. Fast access as we are using memory v.s. disk.
     # 3. Bots have > 100gb of memory, build dir takes +/- 16gb
     rm -rf /mnt/tmpfs/build
-    python tools/buildSrc/servers/build_tools.py --out_dir /mnt/tmpfs/build --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
+    $PYTHON tools/buildSrc/servers/build_tools.py --out_dir /mnt/tmpfs/build --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
 else
-    python tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
+    $PYTHON tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
 fi
 
 # Contains what we distribute to the world.
