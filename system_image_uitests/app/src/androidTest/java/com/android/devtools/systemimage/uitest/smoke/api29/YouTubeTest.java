@@ -158,7 +158,7 @@ public class YouTubeTest {
 
         UiObject playAccount = device.findObject(
                 new UiSelector().packageName(Res.YOUTUBE_PACKAGE)
-                        .text("David Play"));
+                        .text("David Yu"));
 
         if (playAccount.waitForExists(5L)) {
             playAccount.clickAndWaitForNewWindow();

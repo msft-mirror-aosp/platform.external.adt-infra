@@ -68,9 +68,6 @@ fi
 # Contains what we distribute to the world.
 run unzip -o $DISTRIB_DIR/sdk-repo-$OS-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
 
-# Contains all the unit tests, symbols, debug_information and testing tools needed for some e2e tests.
-run unzip -o $DISTRIB_DIR/sdk-repo-$OS-debug-emulator-[P,0-9]*.zip -d $SESSION_DIR/emu-master-dev-dbg
-
 log "Remove any existing AVDs in ${ANDROID_AVD_HOME}"
 run rm -rf $ANDROID_AVD_HOME/*
 
