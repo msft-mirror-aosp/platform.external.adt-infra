@@ -309,6 +309,7 @@ class EmuBaseTestCase(LoggedTestCase):
         launch_cmd += ["-feature", "GLESDynamicVersion"]
         launch_cmd += ['-dns-server', '8.8.8.8']
         launch_cmd += ['-no-audio']
+        launch_cmd += ['-debug', 'console,snapshot']
         if 'test_boot' in emu_argparser.emu_args.pattern or 'test_perf' in emu_argparser.emu_args.pattern:
             launch_cmd += ['-no-snapshot']
         # Special condition for embedded boot test check
