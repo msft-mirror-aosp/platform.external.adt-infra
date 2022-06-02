@@ -23,10 +23,10 @@ echo "Deploy emulator"
 echo "Run mkdir %SESSION_DIR%\emu-master-dev"
 mkdir %SESSION_DIR%\emu-master-dev
 
-set BUILD_DIR=C:\buildbot\prebuilt\%BUILD_NUMBER%\sdk_tools_windows
+set BUILD_DIR=out\prebuilt_cached\builds
 
-echo "Run unzip -o %BUILD_DIR%\sdk-repo-windows-emulator-[0-9]*.zip -d %SESSION_DIR%\emu-master-dev\"
-unzip -o %BUILD_DIR%\sdk-repo-windows-emulator-[0-9]*.zip -d %SESSION_DIR%\emu-master-dev\
+echo "Run tar -xf %BUILD_DIR%\sdk-repo-windows-emulator-%BUILD_NUMBER%.zip -C %SESSION_DIR%\emu-master-dev\"
+tar -xf %BUILD_DIR%\sdk-repo-windows-emulator-%BUILD_NUMBER%.zip -C %SESSION_DIR%\emu-master-dev\
 
 echo "Generate Perf Data"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 14000 --process_regex dotest"
@@ -52,7 +52,7 @@ echo "Run python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %S
 python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --api 29 --metric_tag 29
 
 echo "Zip Perf Data"
-7z a %DISTRIB_DIR%\perfgate_data.zip %SESSION_DIR%\Perf_test\test.outputs\*.json
+tar -cvzf %DISTRIB_DIR%\perfgate_data.zip %SESSION_DIR%\Perf_test\test.outputs\*.json
 
 echo "Running Boot tests"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 3600 --process_regex dotest"
