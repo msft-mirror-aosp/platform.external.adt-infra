@@ -52,7 +52,7 @@ echo "Run python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %S
 python -u external\adt-infra\emu_test\utils\perf_stats.py --log_dir %SESSION_DIR%\Perf_test --api 29 --metric_tag 29
 
 echo "Zip Perf Data"
-tar -cvzf %DISTRIB_DIR%\perfgate_data.zip %SESSION_DIR%\Perf_test\test.outputs\*.json
+tar -a -cvf %DISTRIB_DIR%\perfgate_data.zip %SESSION_DIR%\Perf_test\test.outputs\*.json
 
 echo "Running Boot tests"
 start cmd /c "title test_timer & python -u external\adt-infra\emu_test\utils\kill_process.py --timeout 3600 --process_regex dotest"
