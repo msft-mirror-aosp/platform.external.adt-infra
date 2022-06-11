@@ -99,7 +99,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
         correct_output = util.check_battery_status(status)
         is_cmd_successful = (output_extracted == correct_output)
       elif CMD_POWER_PRESENT_PREFIX == command_prefix:
-        is_cmd_successful = output_extracted
+        is_cmd_successful = (output_extracted == status)
       elif CMD_POWER_CAPACITY_PREFIX == command_prefix:
         is_cmd_successful = (output_extracted == status)
       else:
