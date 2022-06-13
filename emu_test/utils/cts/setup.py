@@ -27,7 +27,7 @@ setuptools.setup(
     python_requires='>=2',
     name='run-basic-cts',
     version='1.0',
-    setup_requires=["pytest-runner"],
+    setup_requires=["pytest-runner < 5.3.0"],
     tests_require=["pytest", "mock"],
     author='Erwin Jansen',
     author_email='jansene@google.com',
