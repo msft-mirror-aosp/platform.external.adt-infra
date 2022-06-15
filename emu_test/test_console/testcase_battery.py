@@ -253,6 +253,7 @@ class BatteryTest(testcase_base.BaseConsoleTest):
     self._set_battery_status('full')
     self._reset_status_back_to_charging()
 
+  @unittest.skip("b/236185030")
   def test_set_presence_state(self):
     """Test for command: power present <true_or_false>.
 
