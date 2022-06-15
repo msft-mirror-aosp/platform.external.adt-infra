@@ -219,8 +219,8 @@ class Emulator(object):
         until the discovery file has been written.
         """
         self.avd_gen = AvdGenerator(self.sdk_root, self.avd_home)
-        # This is the most used system image.
-        avd = self.avd_gen.get_avd("29", "x86", "google_apis_playstore")
+        # This is a popular image 
+        avd = self.avd_gen.get_avd("30", "x86", "google_apis_playstore")
         cmd = [self.emulator, "-avd", avd]
 
         if additional_args:

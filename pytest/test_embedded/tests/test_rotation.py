@@ -62,10 +62,10 @@ def counter_clockwise_to_clockwise(angle):
     return (360 - angle) % 360
 
 
-def for_each_rotation(emu):
+def for_each_rotation(emulator_controller):
     """Loops to each rotation mapping setting the physical rotation model and yielding z-axis and symbolic value."""
     for (fine, coarse) in ROTATION_MAPPING:
-        emu.setPhysicalModel(
+        emulator_controller.setPhysicalModel(
             PhysicalModelValue(
                 target=PhysicalModelValue.ROTATION,
                 value=ParameterValue(data=[0, 0, fine]),
@@ -78,22 +78,22 @@ def for_each_rotation(emu):
 
 
 @pytest.mark.e2e
-def test_rotation_observable_through_screenshot():
+def test_rotation_observable_through_screenshot(emulator_controller):
     """Test that setting the rotation, is observable through getting a screenshot."""
-    emu = pytest.emulator.get_emulator_controller()
-    for (fine, coarse) in for_each_rotation(emu):
-        img = emu.getScreenshot(ImageFormat())
+    for (fine, coarse) in for_each_rotation(emulator_controller):
+        img = emulator_controller.getScreenshot(ImageFormat())
         logging.info(img.format.rotation)
         assert img.format.rotation.rotation == coarse
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_rotation_observable_through_adbstream(at_home, animation_app):
+def test_rotation_observable_through_adbstream(
+    at_home, animation_app, emulator_controller
+):
     """Test that setting the rotation, is observable the adb logstream.
     This makes sure that android itself reports the orientation we are expecting.
     """
-    emu = pytest.emulator.get_emulator_controller()
     ROTATION_RE = re.compile(r".*Rotation: (\d+)")
     with pytest.emulator.adb_stream(["logcat", "-s", "aemu"]) as stream:
         # Wait for the first rotation (should be set to 0).
@@ -102,7 +102,7 @@ def test_rotation_observable_through_adbstream(at_home, animation_app):
             if m and int(m.group(1)) == 0:
                 break
 
-        for (fine, coarse) in for_each_rotation(emu):
+        for (fine, coarse) in for_each_rotation(emulator_controller):
             for line in iter(stream.get, None):
                 m = ROTATION_RE.match(line)
                 if m:
@@ -113,12 +113,15 @@ def test_rotation_observable_through_adbstream(at_home, animation_app):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
-def test_rotation_observable_through_stream_screenshot(animation_app):
+def test_rotation_observable_through_stream_screenshot(
+    animation_app, emulator_controller
+):
     """Test that setting the rotation, is observable through streaming screenshot."""
-    emu = pytest.emulator.get_emulator_controller()
-    imgStream = emu.streamScreenshot(ImageFormat(width=320, height=200), timeout=5)
+    imgStream = emulator_controller.streamScreenshot(
+        ImageFormat(width=320, height=200), timeout=5
+    )
     with StreamingCall(imgStream) as stream:
-        for (angle, coarse) in for_each_rotation(emu):
+        for (angle, coarse) in for_each_rotation(emulator_controller):
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
             seen_rotation = False
@@ -162,7 +165,7 @@ def square_in_quadrant(img):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
-def test_rotation_pixels_in_the_right_place(animation_app):
+def test_rotation_pixels_in_the_right_place(animation_app, emulator_controller):
     """Test the colored square is in the expected location.
     The animation app draws a square in the top right corner (first quadrant).
     During rotation we expect the square to end-up in the quadrant corresponding
@@ -171,9 +174,10 @@ def test_rotation_pixels_in_the_right_place(animation_app):
     This tests make sure that we are rendering the screenshot properly.
     b/179172837, b/176886063
     """
-    emu = pytest.emulator.get_emulator_controller()
     QUADRANT_MAP = {0: 1, 90: 2, -180: 3, -90: 4}
-    imgStream = emu.streamScreenshot(ImageFormat(format=ImageFormat.RGB888), timeout=5)
+    imgStream = emulator_controller.streamScreenshot(
+        ImageFormat(format=ImageFormat.RGB888), timeout=5
+    )
     with StreamingCall(imgStream) as stream:
         for (angle, coarse) in for_each_rotation(emu):
             # Keep looking at the queue until we see what we need.
@@ -191,18 +195,20 @@ def test_rotation_pixels_in_the_right_place(animation_app):
                     )
                     seen_rotation = True
                     break
-            assert seen_rotation, "Did not see the rotation to {} in time.".format(angle)
+            assert seen_rotation, "Did not see the rotation to {} in time.".format(
+                angle
+            )
 
 
 @pytest.mark.e2e
-def test_rotation_through_console_observable_through_physical_model():
+def test_rotation_through_console_observable_through_physical_model(
+    emulator_controller,
+):
     """Test that rotate through console, is observable through screenshot.
     bug: b/159635109
     """
-    emu = pytest.emulator.get_emulator_controller()
-
     # Make sure we start straight!
-    emu.setPhysicalModel(
+    emulator_controller.setPhysicalModel(
         PhysicalModelValue(
             target=PhysicalModelValue.ROTATION,
             value=ParameterValue(data=[0, 0, 0]),
@@ -211,22 +217,23 @@ def test_rotation_through_console_observable_through_physical_model():
     for (angle, coarse) in ROTATION_MAPPING:
         sleep(0.5)
         pytest.emulator.adb(["emu", "rotate"])
-        rotate = emu.getPhysicalModel(
+        rotate = emulator_controller.getPhysicalModel(
             PhysicalModelValue(target=PhysicalModelValue.ROTATION)
         )
         assert rotate.value.data[2] == angle
 
 
 @pytest.mark.e2e
-def test_rotation_through_console_observable_through_screenshot(at_home):
+def test_rotation_through_console_observable_through_screenshot(
+    at_home, emulator_controller
+):
     """Test that rotate through console, is observable through screenshot.
     bug: b/159635109
     """
-    emu = pytest.emulator.get_emulator_controller()
     for (_, coarse) in ROTATION_MAPPING:
         sleep(0.5)
         pytest.emulator.adb(["emu", "rotate"])
-        img = emu.getScreenshot(ImageFormat())
+        img = emulator_controller.getScreenshot(ImageFormat())
         assert img.format.rotation.rotation == coarse
 
 
@@ -234,14 +241,15 @@ def test_rotation_through_console_observable_through_screenshot(at_home):
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_rotation_through_console_observable_through_stream_screenshot(
-    at_home, animation_app
+    at_home, animation_app, emulator_controller
 ):
     """Test that rotate through console, is observable through stream screenshot.
 
     bug: b/159635109, b/160171559
     """
-    emu = pytest.emulator.get_emulator_controller()
-    imgStream = emu.streamScreenshot(ImageFormat(width=320, height=200), timeout=5)
+    imgStream = emulator_controller.streamScreenshot(
+        ImageFormat(width=320, height=200), timeout=5
+    )
     with StreamingCall(imgStream) as stream:
         for (angle, coarse) in ROTATION_MAPPING:
             sleep(0.5)

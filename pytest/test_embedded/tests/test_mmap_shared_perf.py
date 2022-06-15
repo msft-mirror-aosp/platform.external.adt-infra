@@ -24,7 +24,7 @@ import os
 import struct
 import time
 import unittest
-#from multiprocessing.shared_memory import SharedMemory
+from multiprocessing.shared_memory import SharedMemory
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat, ImageTransport

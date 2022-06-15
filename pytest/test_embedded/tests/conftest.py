@@ -1,8 +1,38 @@
-import os
+# Copyright 2022 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
+"""
+This contains a set of text fixtures that can be used when creating pytests.
+(see https://docs.pytest.org/en/6.2.x/fixture.html)
+
+A fixture initialize test functions.  They provide a fixed baseline so that tests
+execute reliably and produce consistent, repeatable, results. Initialization may
+setup services, state, or other operating environments.
+
+The fixtures below can be used to bring the emulator to a certain state, or to
+provide access to parts of the emulator.
+"""
+import os
 import pytest
-from aemu.proto.emulator_controller_pb2 import (KeyboardEvent, ParameterValue,
-                                                PhysicalModelValue, Rotation)
+import sys
+
+from aemu.proto.emulator_controller_pb2 import (
+    KeyboardEvent,
+    ParameterValue,
+    PhysicalModelValue,
+    Rotation,
+)
 from emu.emulator import Emulator
 
 from tests.test_utils import wait_for_regex
@@ -52,6 +82,12 @@ def startup_emulator(request, pytestconfig):
     """Starts the emulator and makes it globally accessible.
 
     Will timeout after 600s, or fail if it was not booted.
+
+    Startup is run before any test is run, and will do the following:
+
+    1. Create a Pixel2 avd if it does not exist.
+    2. Launch the emulator, unless the -debug_emulator flag is present
+    3. Install the app-debug.apk
     """
     emu = Emulator(pytestconfig.getoption("emulator"))
     if pytestconfig.getoption("debug_emulator"):
@@ -78,6 +114,17 @@ def startup_emulator(request, pytestconfig):
 
 
 def go_home():
+    """It does the following:
+
+    1. Wakes up the emulator by sending a WAKEUP
+    2. Press the android home key (The circle button)
+    3. Rotate the phone to 0,0,0
+
+    Usage:
+
+    def my_test(go_home):
+        assert(...)
+    """
     stub = pytest.emulator.get_emulator_controller()
     pytest.emulator.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
@@ -91,10 +138,16 @@ def go_home():
 
 @pytest.fixture
 def at_home():
-    """Fixture to make sure the emulator returns to the home screen and is in portrait mode.
+    """This calls the go_home fixture before running the test,
+    and after running the test.
 
-    Use this if you want to make sure the emulator returns to the
-    home screen.
+    This makes sure that the emulator ends up in a known state
+    after the test.
+
+    Usage:
+
+    def test_goes_home(go_home):
+      assert(...)
     """
     go_home()
     yield
@@ -103,9 +156,16 @@ def at_home():
 
 @pytest.fixture
 def emulator_log():
-    """Returns the emulator log.
+    """Returns the emulator log as a Queue (https://docs.python.org/3/library/queue.html)
+    This contains the output seen on the console when the emulator is launched.
 
-    The log will be emptied first.
+    The queue (log) will be emptied first.
+
+    Usage:
+
+    def test_logs_line(emulator_log):
+     line = emulator_log.get(block=True, timeout=1.5)
+     assert line == 'INFO    | Started GRPC server at 127.0.0.1:8554, security: Local, auth: none'
     """
     emu = pytest.emulator
     if emu.log:
@@ -115,6 +175,19 @@ def emulator_log():
 
 
 def launch_animiation_app():
+    """Launches the debug animation app.
+
+    This launches the animation app that ships with this library and
+    waits until it has launched. It will:
+
+    - Clear out logcat
+    - Wake-up the emulator (by sending the wakup code)
+    - Force stop any existing running animation app
+    - Start the activity
+    - Wait for the welcome message to appear on logcat.
+
+    It will wait for at most 5 seconds before continuing.
+    """
     emu = pytest.emulator
     emu.adb(["logcat", "-c"])
     emu.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
@@ -133,10 +206,50 @@ def launch_animiation_app():
 
 
 @pytest.fixture
-def animation_app():
-    """Activates the animation apk.
+def emu_controller():
+    """A grpc stub to the emulator controllor.
 
-    The apk will be closed upon completion, and you will return to home.
+    Usage:
+
+    def test_sample(emu_controller):
+       response = emu_controller.getStatus(empty_pb2.Empty())
+       assert response.booted
+    """
+    return pytest.emulator.get_emulator_controller()
+
+
+@pytest.fixture
+def emu_controller():
+    """A reference to the emulator object
+
+    Usage:
+
+    def test_sample(emulator):
+       emulator.adb_stream(["logcat"]) as stream:
+         for line in iter(stream.get, None):
+             print(line)
+    """
+    return pytest.emulator.get_emulator_controller()
+
+
+@pytest.fixture
+def animation_app():
+    """Activates the animation app that displays a rotating triangle.
+
+     The app does the following things:
+
+     1. Show a rotating triangle (60 fps)
+     2. Show a white box in the corner.
+     3. Write every received key event to logcat.
+
+    The app will be stopped at the end of the test, and will return
+    the emulator to the home screen.
+
+    Usage:
+
+     def test_sample(animation_app, emu_controller):
+       emu_controller.getScreenshot(ImageFormat(format=ImageFormat.PNG, width=180, height=180))
+
     """
     tries = 3
     while not launch_animiation_app() and tries > 0:
@@ -147,3 +260,16 @@ def animation_app():
 
     pytest.emulator.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
     go_home()
+
+
+ALL_PLATFORMS = set("darwin linux win32".split())
+
+
+def pytest_runtest_setup(item):
+    """Only run the test if it is supported on the platform."""
+    supported_platforms = ALL_PLATFORMS.intersection(
+        mark.name for mark in item.iter_markers()
+    )
+    plat = sys.platform
+    if supported_platforms and plat not in supported_platforms:
+        pytest.skip("cannot run on platform {}".format(plat))

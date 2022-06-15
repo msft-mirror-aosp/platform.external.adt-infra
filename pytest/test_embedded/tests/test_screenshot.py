@@ -68,24 +68,26 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 
 
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
-def test_screenshot_all_formats_are_equal(animation_app, w, h):
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_screenshot_all_formats_are_equal(emulator_controller, animation_app, w, h):
     """Make sure that all the screenshots are exactly the same, regardless of format.
 
     This is done by launching the animation app, and pausing it. This should make sure
     we always have the same frame displayed on the device.
     """
     assert pause_animation_app(pytest.emulator)
-    emu = pytest.emulator.get_emulator_controller()
     last_pixels = None
-    for fmt in [ImageFormat.RGBA8888, ImageFormat.RGB888, ImageFormat.PNG]:
-        image = emu.getScreenshot(ImageFormat(format=fmt, width=w, height=h))
+    for image_format in [ImageFormat.RGBA8888, ImageFormat.RGB888, ImageFormat.PNG]:
+        image = emulator_controller.getScreenshot(
+            ImageFormat(format=image_format, width=w, height=h)
+        )
 
         # Load and convert the image using pillow
         if image.format.format == ImageFormat.PNG:
             pillow_image = Image.open(BytesIO(image.image))
         else:
             pillow_image = Image.frombytes(
-                EMU_TO_PIL_IMAGE_FORMATS[fmt],
+                EMU_TO_PIL_IMAGE_FORMATS[image_format],
                 (image.format.width, image.format.height),
                 image.image,
             )
@@ -98,21 +100,23 @@ def test_screenshot_all_formats_are_equal(animation_app, w, h):
 
 
 @pytest.mark.parametrize(
-    "fmt,bpp",
+    "image_format,bpp",
     [(ImageFormat.RGB888, 3), (ImageFormat.RGBA8888, 4)],
 )
 @pytest.mark.parametrize("degrees", [0, 90])
-def test_screenshot_exact_amount_of_pixels(at_home, fmt, bpp, degrees):
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_screenshot_exact_amount_of_pixels(
+    at_home, emulator_controller, image_format, bpp, degrees
+):
     """Tests that the screenshot API delivers exactly the right amount of pixels.
 
     The number of pixels is determined by the bytes per pixel * w * h, irrespective of rotation.
     """
-    emu = pytest.emulator.get_emulator_controller()
-    rotate_device(emu, degrees)
+    rotate_device(emulator_controller, degrees)
 
-    image = emu.getScreenshot(
+    image = emulator_controller.getScreenshot(
         ImageFormat(
-            format=fmt,
+            format=image_format,
         )
     )
     assert len(image.image) == (bpp * image.format.width * image.format.height)

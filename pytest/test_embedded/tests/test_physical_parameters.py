@@ -25,14 +25,14 @@ def set_and_get_model(emu, model_value):
 
 
 @pytest.mark.e2e
-def test_physical_rotation():
-    """Test that setting the physical model is observable."""
-    emu = pytest.emulator.get_emulator_controller()
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_physical_rotation(emulator_controller):
+    """Test that setting the physical model is observable.""" 
     for x in [-180, 90, 0, 180]:
         for y in [-180, 90, 0, 180]:
             for z in [-180, 90, 0, 180]:
                 set_and_get_model(
-                    emu,
+                    emulator_controller,
                     PhysicalModelValue(
                         target=PhysicalModelValue.ROTATION,
                         value=ParameterValue(data=[x, y, z]),

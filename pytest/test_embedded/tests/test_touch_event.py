@@ -17,30 +17,36 @@ from aemu.proto.emulator_controller_pb2 import Touch, TouchEvent
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_touch_event_identifier_ranges(at_home):
+def test_touch_event_identifier_ranges(at_home, emulator_controller):
     """Tests that we properly handle identifiers."""
-    stub = pytest.emulator.get_emulator_controller()
-    stub.sendTouch(
+    emulator_controller.sendTouch(
         TouchEvent(touches=[Touch(x=661, y=1133, pressure=12, identifier=-23122)])
     )
-    stub.sendTouch(TouchEvent(touches=[Touch(x=661, y=1133, pressure=1)]))
-    stub.sendTouch(
+    emulator_controller.sendTouch(
+        TouchEvent(touches=[Touch(x=661, y=1133, pressure=1)])
+    )
+    emulator_controller.sendTouch(
         TouchEvent(touches=[Touch(x=335, y=940, identifier=-124543, pressure=1)])
     )
-    stub.sendTouch(TouchEvent(touches=[Touch(x=203, y=823, identifier=0)]))
-    stub.sendTouch(TouchEvent(touches=[Touch(x=203, y=823, identifier=-124543)]))
-    stub.sendTouch(TouchEvent(touches=[Touch(x=801, y=1281, identifier=-23122)]))
+    emulator_controller.sendTouch(
+        TouchEvent(touches=[Touch(x=203, y=823, identifier=0)])
+    )
+    emulator_controller.sendTouch(
+        TouchEvent(touches=[Touch(x=203, y=823, identifier=-124543)])
+    )
+    emulator_controller.sendTouch(
+        TouchEvent(touches=[Touch(x=801, y=1281, identifier=-23122)])
+    )
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_touch_event_identifier_to_many(at_home):
+def test_touch_event_identifier_to_many(at_home, emulator_controller):
     """Tests that we properly handle too many registered identifiers."""
-    stub = pytest.emulator.get_emulator_controller()
     x = 1
     for j in range(20):
         for i in range(10):
-            stub.sendTouch(
+            emulator_controller.sendTouch(
                 TouchEvent(
                     touches=[
                         Touch(x=i * 10, y=i * 10, pressure=12, identifier=j * 10 + i)
@@ -49,7 +55,7 @@ def test_touch_event_identifier_to_many(at_home):
             )
 
         for i in range(10):
-            stub.sendTouch(
+            emulator_controller.sendTouch(
                 TouchEvent(
                     touches=[
                         Touch(x=i * 10, y=i * 10, pressure=0, identifier=j * 10 + i)

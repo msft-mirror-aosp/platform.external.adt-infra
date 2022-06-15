@@ -36,20 +36,22 @@ def no_displays():
 
 
 @pytest.mark.e2e
-def test_multidisplay_none(no_displays):
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_multidisplay_none(no_displays, emulator_controller):
     """Erasing displays leaves nothing behind."""
-    emu = pytest.emulator.get_emulator_controller()
-    cfg = emu.setDisplayConfigurations(DisplayConfigurations(displays=[]))
+    cfg = emulator_controller.setDisplayConfigurations(
+        DisplayConfigurations(displays=[])
+    )
 
     # We only have the default display
     assert len(cfg.displays) == 1
 
 
 @pytest.mark.e2e
-def test_multidisplay_multiple(no_displays):
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_multidisplay_multiple(no_displays, emulator_controller):
     """Adding a display should work."""
-    emu = pytest.emulator.get_emulator_controller()
-    cfg = emu.setDisplayConfigurations(
+    cfg = emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(
             displays=[
                 DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
@@ -65,10 +67,10 @@ def test_multidisplay_multiple(no_displays):
 
 
 @pytest.mark.e2e
-def test_multidisplay_multiple_error(no_displays):
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_multidisplay_multiple_error(no_displays, emulator_controller):
     """A failure should not modify the status."""
-    emu = pytest.emulator.get_emulator_controller()
-    cfg = emu.setDisplayConfigurations(
+    cfg = emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(
             displays=[
                 DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
@@ -81,7 +83,7 @@ def test_multidisplay_multiple_error(no_displays):
 
     # Incorrectly modifying a display configuration should fail and leave the existing one intact
     with pytest.raises(RpcError) as exc_info:
-        cfg = emu.setDisplayConfigurations(
+        cfg = emulator_controller.setDisplayConfigurations(
             DisplayConfigurations(
                 displays=[
                     DisplayConfiguration(
@@ -93,7 +95,7 @@ def test_multidisplay_multiple_error(no_displays):
     assert exc_info.value.code() == StatusCode.INVALID_ARGUMENT
 
     # The failure leaves the displays untouched.
-    cfg = emu.getDisplayConfigurations(_EMPTY_)
+    cfg = emulator_controller.getDisplayConfigurations(_EMPTY_)
     assert len(cfg.displays) == 2
     assert cfg.displays[1].display == 2
     assert cfg.displays[1].dpi == 213
@@ -102,10 +104,10 @@ def test_multidisplay_multiple_error(no_displays):
 
 
 @pytest.mark.e2e
-def test_multidisplay_get_after_set(no_displays):
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_multidisplay_get_after_set(no_displays, emulator_controller):
     """Adding a display should work."""
-    emu = pytest.emulator.get_emulator_controller()
-    cfg = emu.setDisplayConfigurations(
+    cfg = emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(
             displays=[
                 DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
@@ -113,16 +115,16 @@ def test_multidisplay_get_after_set(no_displays):
         )
     )
 
-    cfg2 = emu.getDisplayConfigurations(_EMPTY_)
+    cfg2 = emulator_controller.getDisplayConfigurations(_EMPTY_)
     assert cfg == cfg2
 
 
 @pytest.mark.e2e
-def test_multidisplay_double_ids_error(no_displays):
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_multidisplay_double_ids_error(no_displays, emulator_controller):
     """Adding the same display twice should result in an error."""
-    emu = pytest.emulator.get_emulator_controller()
     with pytest.raises(RpcError) as exc_info:
-        emu.setDisplayConfigurations(
+        emulator_controller.setDisplayConfigurations(
             DisplayConfigurations(
                 displays=[
                     DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
@@ -134,7 +136,8 @@ def test_multidisplay_double_ids_error(no_displays):
 
 
 @pytest.mark.e2e
-def test_multidisplay_can_configure_four(no_displays):
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_multidisplay_can_configure_four(no_displays, emulator_controller):
     """This tests makes sure that a total of 4 displays can be configured.
 
     Adding 3 additional displays, should return a total of 4.
@@ -144,8 +147,9 @@ def test_multidisplay_can_configure_four(no_displays):
         DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
         for idx, x in enumerate(resolutions)
     ]
-    emu = pytest.emulator.get_emulator_controller()
-    cfg = emu.setDisplayConfigurations(DisplayConfigurations(displays=displays))
+    cfg = emulator_controller.setDisplayConfigurations(
+        DisplayConfigurations(displays=displays)
+    )
 
     # All screens have been made available.
     assert all([x in cfg.displays for x in displays])
@@ -155,13 +159,15 @@ def test_multidisplay_can_configure_four(no_displays):
 
 
 @pytest.mark.e2e
-def test_multidisplay_error_too_many(no_displays):
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_multidisplay_error_too_many(no_displays, emulator_controller):
     """Adding too many displays should raise an exception."""
-    emu = pytest.emulator.get_emulator_controller()
     resolutions = [(720, 1280), (1080, 1920), (3840, 2160), (900, 900)]
     displays = [
         DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
         for idx, x in enumerate(resolutions)
     ]
     with pytest.raises(RpcError):
-        emu.setDisplayConfigurations(DisplayConfigurations(displays=displays))
+        emulator_controller.setDisplayConfigurations(
+            DisplayConfigurations(displays=displays)
+        )

@@ -31,11 +31,13 @@ def snapshot_service():
 
 
 @pytest.mark.e2e
+@pytest.mark.timeout(timeout=20, func_only=True)
 def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
     assert not snapshot_service.load("foo")
 
 
 @pytest.mark.e2e
+@pytest.mark.timeout(timeout=60, func_only=True)
 def test_snapshot_can_save_and_load(snapshot_service):
     assert snapshot_service.save("foo")
     assert "foo" in [x.snapshot_id for x in snapshot_service.lists()]
@@ -43,6 +45,7 @@ def test_snapshot_can_save_and_load(snapshot_service):
 
 
 @pytest.mark.e2e
+@pytest.mark.timeout(timeout=60, func_only=True)
 def test_snapshot_delete_removes(snapshot_service):
     assert snapshot_service.save("foo")
     assert "foo" in [x.snapshot_id for x in snapshot_service.lists()]

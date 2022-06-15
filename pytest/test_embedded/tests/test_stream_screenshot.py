@@ -40,22 +40,23 @@ def read_pixel(width, height, pack, arr):
         (ImageFormat.RGB888, ImageTransport.MMAP),
     ],
 )
-def test_stream_screenshot_receives_frames(animation_app, tmpdir, fmt, channel):
+def test_stream_screenshot_receives_frames(
+    animation_app, emulator_controller, tmpdir, fmt, channel
+):
     """Test that streaming screenshot receives a series of frames."""
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     tmp_file = os.path.join(path, "image_file.img")
     with open(tmp_file, "wb") as out:
         out.truncate(360 * 640 * 4 + 1024)
 
-    emu = pytest.emulator.get_emulator_controller()
-    stream = emu.streamScreenshot(
+    stream = emulator_controller.streamScreenshot(
         ImageFormat(
             width=360,
             height=640,
             format=fmt,
             transport=ImageTransport(channel=channel, handle="file://" + tmp_file),
         ),
-        timeout = 5
+        timeout=5,
     )
     count = 0
     dropped = 0
@@ -85,11 +86,12 @@ def test_stream_screenshot_receives_frames(animation_app, tmpdir, fmt, channel):
     "w,h",
     [(270, 480), (360, 640), (720, 1280), (810, 1440), (1080, 1920), (1440, 2880)],
 )
-def test_stream_screenshot_perf(animation_app, benchmark_stat, pytestconfig, w, h):
+def test_stream_screenshot_perf(
+    animation_app, emulator_controller, benchmark_stat, pytestconfig, w, h
+):
     """Test the performance of streaming frames."""
     # This test can only run if we launched the emulator
-    emu = pytest.emulator.get_emulator_controller()
-    stream = emu.streamScreenshot(
+    stream = emulator_controller.streamScreenshot(
         ImageFormat(width=w, height=h, format=ImageFormat.RGB888),
     )
     count = 0
@@ -124,7 +126,7 @@ def test_stream_screenshot_perf(animation_app, benchmark_stat, pytestconfig, w, 
     [(270, 480), (360, 640), (720, 1280), (810, 1440), (1080, 1920), (1440, 2880)],
 )
 def test_stream_screenshot_perf_mmap(
-    animation_app, benchmark_stat, pytestconfig, tmpdir, w, h
+    emulator_controller, animation_app, benchmark_stat, pytestconfig, tmpdir, w, h
 ):
     """Test the performance of streaming frames."""
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
@@ -132,8 +134,7 @@ def test_stream_screenshot_perf_mmap(
     with open(tmp_file, "wb") as out:
         out.truncate(w * h * 4 + 1024)
 
-    emu = pytest.emulator.get_emulator_controller()
-    stream = emu.streamScreenshot(
+    stream = emulator_controller.streamScreenshot(
         ImageFormat(
             width=w,
             height=h,
@@ -179,10 +180,9 @@ def test_stream_screenshot_perf_mmap(
     "fmt",
     [ImageFormat.RGBA8888, ImageFormat.RGB888],
 )
-def test_screenshot_bytes_size(fmt):
+def test_screenshot_bytes_size(emulator_controller, fmt):
     """Test that getScreenshot returns the proper number of bytes."""
-    emu = pytest.emulator.get_emulator_controller()
-    image = emu.getScreenshot(
+    image = emulator_controller.getScreenshot(
         ImageFormat(
             width=360,
             height=640,
