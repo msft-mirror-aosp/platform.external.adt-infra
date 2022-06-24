@@ -82,6 +82,10 @@ CMD_RANDOM_AUTH_TOKEN = '%s axxB123cc\n' % AUTH
 CMD_EMPTY_AUTH_TOKEN = '%s \n' % AUTH
 CMD_EXIT = 'exit\n'
 CMD_ROTATE = 'rotate\n'
+CMD_CRASH = 'crash\n'
+CMD_AVD_SNAPSHOT_LIST = 'avd snapshot list\n'
+CMD_AVD_SNAPSHOT_LOAD = 'avd snapshot load '
+CMD_AVD_SNAPSHOT_SAVE = 'avd snapshot save '
 
 CONTACT_PACKAGE_NAME = 'com.android.contacts'
 CLOCK_PACKAGE_NAME = 'com.google.android.deskclock'
@@ -256,12 +260,18 @@ def execute_console_command(telnet, command, expected_output):
         telnet.write(toBytes(command))
         time.sleep(CMD_WAIT_TIMEOUT_S)
 
-        if command == 'crash\n':
+        if command == CMD_CRASH:
             output = telnet.read_all()
         elif command == CMD_EMPTY_AUTH_TOKEN:
             output = telnet.read_until(toBytes('missing authentication token')).strip()
         elif command == CMD_RANDOM_AUTH_TOKEN:
             output = telnet.read_until(toBytes('emulator_console_auth_token')).strip()
+        elif command == CMD_AVD_SNAPSHOT_LIST:
+            output = telnet.read_until(toBytes(OK))
+        elif CMD_AVD_SNAPSHOT_LOAD in command.strip():
+            output = telnet.read_until(toBytes(OK))
+        elif CMD_AVD_SNAPSHOT_SAVE in command.strip():
+            output = telnet.read_until(toBytes(OK))
         else:
             output = toBytes(parse_output(telnet))
 

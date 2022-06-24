@@ -158,8 +158,8 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     adb_binary = path_utils.get_adb_binary()
     this_function_name = sys._getframe().f_code.co_name
     print(('Running test: %s' % (this_function_name)))
+    snapshot_string = SNAPSHOT_PREFIX + this_function_name
     for i in range(3):
-      snapshot_string = SNAPSHOT_PREFIX + this_function_name
       self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_SAVE + snapshot_string + NEW_LINE_COMMAND, util.OK)
       time.sleep(util.CMD_DELAY_VALUE)
       self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LOAD+snapshot_string+ NEW_LINE_COMMAND, util.OK)
