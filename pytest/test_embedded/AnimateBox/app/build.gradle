@@ -44,8 +44,8 @@ dependencies {
     testImplementation 'junit:junit:4.+'
 
     implementation 'javax.annotation:javax.annotation-api:1.2'
-    implementation 'com.google.protobuf:protobuf-java:3.8.0'
-    implementation 'com.google.protobuf:protobuf-java-util:3.8.0'
+    implementation 'com.google.protobuf:protobuf-java:' + rootProject.protocVersion
+    implementation 'com.google.protobuf:protobuf-java-util:' + rootProject.protocVersion
 }
 
 protobuf {

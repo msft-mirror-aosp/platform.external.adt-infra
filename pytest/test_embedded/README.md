@@ -43,11 +43,10 @@ pytest
 You can run the test against a development emulator by:
 
 ```sh
-pytest --emulator=$HOME/src/emu/external/qemu/objs/emulator --avd=N
+pytest --emulator=$HOME/src/emu/external/qemu/objs/emulator
 ```
 
-Where emulator points to your emulator of choice, and avd can be used to
-select the avd.
+Where emulator points to your emulator of choice.
 
 ### Running against an already running emulator
 
@@ -74,7 +73,7 @@ You can use the standard pytest commands to run specific tests, and
 reconfigure the runner by modifying tox.ini. For example you can use the `-k` flag to select
 tests of interest:
 
-## Making sure it will run successfully on the build bots.
+## Making sure it will run successfully on the build bots
 
 The build bots are using python 3.6. If you wish
 to make sure the tests will succeed on the build bots you must have a python >3.6 interpreter
@@ -98,12 +97,23 @@ import pytest
 from google.protobuf import empty_pb2
 
 @pytest.mark.e2e
-def test_booted():
+def test_booted(emulator_controller):
     """Make sure the emulator status is set to booted."""
-    grpc = pytest.emulator.get_emulator_controller()
-    response = grpc.getStatus(empty_pb2.Empty())
+    response = emulator_controller.getStatus(empty_pb2.Empty())
     assert response.booted
 ```
+
+### Test Fixtures
+
+Pytest encourages you to use [test fixtures](https://docs.pytest.org/en/6.2.x/fixture.html).
+We have a set of test fixtures defined in [tests/conftest.py](tests/conftest.py) that can
+be used to interact with the emulator. Here is a short list of fixtures:
+
+- telnet: Gives access to the telnet console of the current emulator.
+- adb: Function that invokes the adb executable with the given parameters.
+- emulator_log: Access to the emulator logs.
+- animation_app: Activates the animation app that displays a rotating triangle.
+- emulator_controller: A grpc stub to the emulator controller.
 
 ### Test markers
 
@@ -152,3 +162,67 @@ plugin. This plugin will time each test and terminate it when it takes too long.
 def test_timeout():
     sleep(20)
 ```
+
+## Known Issuess
+
+Here's a list of known issues and workarounds. Most of these are related to Mac M1.
+
+### Tink is not (yet?) available on Mac M1
+
+The python modules rely on TINK, for which there is no M1 release yet.
+This means you will have to build TINK yourself and install the library locally.
+
+You can follow the instructions [here](https://github.com/google/tink/blob/master/docs/PYTHON-HOWTO.md) to install tink locally.
+
+To quickly get started:
+
+```bash
+git clone https://github.com/google/tink.git
+cd tink/python
+bazel build //...
+pip install .
+```
+
+### I want to run the tests on an M1
+
+Right now the tests install a default AVD that requires X86 architecture. As a 
+workaround you can run the emulator manually and launch the tests to connect
+to your running emulator. 
+
+For example:
+
+```bash
+$ANDROID_SDK_ROOT/emulator @T -verbose -debug-events -debug-time  -no-snapshot | tee /tmp/emu.log
+pytest -k 'test_rotation_through_console_observable_through_screenshot' --debug_emulator_log=/tmp/emu.log --debug_emulator
+```
+
+### Java exceptions on Pytest log
+
+If you see exceptions like the following when running pytest:
+
+```java
+Exception in thread "main" java.lang.NoClassDefFoundError: javax/xml/bind/annotation/XmlSchema
+	at com.android.repository.api.SchemaModule$SchemaModuleVersion.<init>(SchemaModule.java:156)
+	at com.android.repository.api.SchemaModule.<init>(SchemaModule.java:75)
+	at com.android.sdklib.repository.AndroidSdkHandler.<clinit>(AndroidSdkHandler.java:81)
+	at com.android.sdklib.tool.sdkmanager.SdkManagerCli.main(SdkManagerCli.java:73)
+	at com.android.sdklib.tool.sdkmanager.SdkManagerCli.main(SdkManagerCli.java:48)
+Caused by: java.lang.ClassNotFoundException: javax.xml.bind.annotation.XmlSchema
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:581)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:178)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:522)
+	... 5 more
+```
+
+You are likely not using the right java version for sdkmanager. The easiest solution
+is to install a java 8 runtime using [sdkman](https://sdkman.io/)
+
+For example:
+
+```bash
+curl -s "https://get.sdkman.io" | bash
+sdk install java 8.332.08.1-amzn
+sdk use java 8.332.08.1-amzn
+```
+
+This should set your default Java version to 8, after which you should be able to run the tests.

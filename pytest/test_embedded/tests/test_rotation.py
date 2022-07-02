@@ -202,7 +202,7 @@ def test_rotation_pixels_in_the_right_place(animation_app, emulator_controller):
 
 @pytest.mark.e2e
 def test_rotation_through_console_observable_through_physical_model(
-    emulator_controller,
+    emulator_controller, adb
 ):
     """Test that rotate through console, is observable through screenshot.
     bug: b/159635109
@@ -216,7 +216,7 @@ def test_rotation_through_console_observable_through_physical_model(
     )
     for (angle, coarse) in ROTATION_MAPPING:
         sleep(0.5)
-        pytest.emulator.adb(["emu", "rotate"])
+        adb(["emu", "rotate"])
         rotate = emulator_controller.getPhysicalModel(
             PhysicalModelValue(target=PhysicalModelValue.ROTATION)
         )
@@ -225,14 +225,14 @@ def test_rotation_through_console_observable_through_physical_model(
 
 @pytest.mark.e2e
 def test_rotation_through_console_observable_through_screenshot(
-    at_home, emulator_controller
+    at_home, emulator_controller, adb
 ):
     """Test that rotate through console, is observable through screenshot.
     bug: b/159635109
     """
     for (_, coarse) in ROTATION_MAPPING:
         sleep(0.5)
-        pytest.emulator.adb(["emu", "rotate"])
+        adb(["emu", "rotate"])
         img = emulator_controller.getScreenshot(ImageFormat())
         assert img.format.rotation.rotation == coarse
 
@@ -241,7 +241,7 @@ def test_rotation_through_console_observable_through_screenshot(
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_rotation_through_console_observable_through_stream_screenshot(
-    at_home, animation_app, emulator_controller
+    at_home, animation_app, emulator_controller, adb
 ):
     """Test that rotate through console, is observable through stream screenshot.
 
@@ -253,7 +253,7 @@ def test_rotation_through_console_observable_through_stream_screenshot(
     with StreamingCall(imgStream) as stream:
         for (angle, coarse) in ROTATION_MAPPING:
             sleep(0.5)
-            pytest.emulator.adb(["emu", "rotate"])
+            adb(["emu", "rotate"])
             seen_rotation = False
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.

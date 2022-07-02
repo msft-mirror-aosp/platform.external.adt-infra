@@ -206,28 +206,14 @@ def launch_animiation_app():
 
 
 @pytest.fixture
-def emu_controller():
-    """A grpc stub to the emulator controllor.
+def emulator_controller():
+    """A grpc stub to the emulator controller.
 
     Usage:
 
-    def test_sample(emu_controller):
+    def test_sample(emulator_controller):
        response = emu_controller.getStatus(empty_pb2.Empty())
        assert response.booted
-    """
-    return pytest.emulator.get_emulator_controller()
-
-
-@pytest.fixture
-def emu_controller():
-    """A reference to the emulator object
-
-    Usage:
-
-    def test_sample(emulator):
-       emulator.adb_stream(["logcat"]) as stream:
-         for line in iter(stream.get, None):
-             print(line)
     """
     return pytest.emulator.get_emulator_controller()
 
@@ -262,8 +248,30 @@ def animation_app():
     go_home()
 
 
-ALL_PLATFORMS = set("darwin linux win32".split())
+@pytest.fixture
+def adb():
+    """Function that invokes the adb executable with the given parameters.
+    
+       Usage:
 
+    def test_sample(adb):
+       adb(["emu", "rotate"])
+       assert response.booted
+    """
+    return pytest.emulator.adb
+
+@pytest.fixture
+def telnet():
+    """Access to the telnet console of the current emulator.
+    
+       Usage:
+
+    def test_sample(telnet):
+       telnet.send("event text")
+    """
+    return pytest.emulator.get_telnet()
+
+ALL_PLATFORMS = set("darwin linux win32".split())
 
 def pytest_runtest_setup(item):
     """Only run the test if it is supported on the platform."""
