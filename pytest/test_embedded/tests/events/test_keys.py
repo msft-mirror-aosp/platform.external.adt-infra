@@ -67,6 +67,7 @@ def keypress_expects(emulator, log, jskey, expected_code):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=5, func_only=True)
+@pytest.mark.skip(reason="-debug-events is not logging key events.")
 def test_hardware_keys(at_home, emulator_log):
     """Checks that the hardware key events that studio sends are working."""
     if not emulator_log:
@@ -88,6 +89,7 @@ def test_hardware_keys(at_home, emulator_log):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=5, func_only=True)
+@pytest.mark.skip(reason="-debug-events is not logging key events.")
 def test_whitespace_chrs(at_home, emulator_log):
     """Checks that the whitespace characters that studio sends are working."""
     if not emulator_log:

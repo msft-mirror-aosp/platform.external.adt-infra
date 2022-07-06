@@ -11,17 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import time
 
-import re
 import pytest
-from aemu.proto.emulator_controller_pb2 import (
-    ImageFormat,
-    ParameterValue,
-    PhysicalModelValue,
-)
+from aemu.proto.emulator_controller_pb2 import (ImageFormat, ParameterValue,
+                                                PhysicalModelValue)
 from PIL import Image
+
 
 def set_device_hinge_angle(emu, angle):
     """Change the device's hinge angle"""

@@ -78,6 +78,7 @@ def for_each_rotation(emulator_controller):
 
 
 @pytest.mark.e2e
+@pytest.mark.timeout(timeout=10, func_only=True)
 def test_rotation_observable_through_screenshot(emulator_controller):
     """Test that setting the rotation, is observable through getting a screenshot."""
     for (fine, coarse) in for_each_rotation(emulator_controller):
@@ -179,7 +180,7 @@ def test_rotation_pixels_in_the_right_place(animation_app, emulator_controller):
         ImageFormat(format=ImageFormat.RGB888), timeout=5
     )
     with StreamingCall(imgStream) as stream:
-        for (angle, coarse) in for_each_rotation(emu):
+        for (angle, coarse) in for_each_rotation(emulator_controller):
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
             seen_rotation = False
@@ -224,6 +225,7 @@ def test_rotation_through_console_observable_through_physical_model(
 
 
 @pytest.mark.e2e
+@pytest.mark.timeout(timeout=10, func_only=True)
 def test_rotation_through_console_observable_through_screenshot(
     at_home, emulator_controller, adb
 ):
@@ -239,7 +241,7 @@ def test_rotation_through_console_observable_through_screenshot(
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.skip(reason="Appears to crash emulator")
 def test_rotation_through_console_observable_through_stream_screenshot(
     at_home, animation_app, emulator_controller, adb
 ):
