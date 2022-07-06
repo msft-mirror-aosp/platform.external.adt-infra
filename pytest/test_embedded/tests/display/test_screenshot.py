@@ -11,18 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from io import BytesIO
-import time
-
 import re
+import time
+from io import BytesIO
+from time import sleep
+
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
     ImageFormat,
+    KeyboardEvent,
     ParameterValue,
     PhysicalModelValue,
-    KeyboardEvent,
 )
+from google.protobuf import empty_pb2
 from PIL import Image
 from tests.test_utils import wait_for_regex
 
@@ -120,3 +121,83 @@ def test_screenshot_exact_amount_of_pixels(
         )
     )
     assert len(image.image) == (bpp * image.format.width * image.format.height)
+
+
+@pytest.fixture
+def default_display_config(emulator_controller):
+    """A fixture that provides the default (display 0) configuration of the emulator."""
+    _EMPTY_ = empty_pb2.Empty()
+    display_cfg = emulator_controller.getDisplayConfigurations(_EMPTY_)
+    default_display_config = display_cfg.displays[0]
+    assert default_display_config.display == 0
+    return default_display_config
+
+
+@pytest.fixture(
+    params=[
+        "PORTRAIT",
+        "LANDSCAPE",
+        "REVERSE_PORTRAIT",
+        "REVERSE_LANDSCAPE",
+    ]
+)
+def all_orientations(emulator_controller, request):
+    """A fixture that will rotate the emulator in all possible orientations."""
+
+    # Map labels to orientation, this is mainly so the tests are are named nicely.
+    ROTATION_MAPPING = {
+        "REVERSE_LANDSCAPE": -90,
+        "REVERSE_PORTRAIT": -180,
+        "LANDSCAPE": 90,
+        "PORTRAIT": 0,
+    }
+
+    emulator_controller.setPhysicalModel(
+        PhysicalModelValue(
+            target=PhysicalModelValue.ROTATION,
+            value=ParameterValue(data=[0, 0, ROTATION_MAPPING[request.param]]),
+        )
+    )
+    # Give the emulator a chance to actually rotate around.
+    sleep(0.1)
+
+
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_screenshot_gets_default_resolution(
+    at_home, emulator_controller, default_display_config, all_orientations
+):
+    """Verifies that the default resolution will match the emulator display dimensions"""
+    image = emulator_controller.getScreenshot(ImageFormat())
+    fmt = image.format
+    assert (
+        fmt.width == default_display_config.width
+        or fmt.width == default_display_config.height
+    ), "The width should be equal to the device width (portrait), or device height (landscape)"
+    assert (
+        fmt.height == default_display_config.height
+        or fmt.height == default_display_config.width
+    ), "The height should be equal to the device height (portrait), or device width (landscape)"
+
+
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_screenshot_never_scales_up(
+    at_home, emulator_controller, default_display_config, all_orientations
+):
+    """Verifies b/238205075, streamScreenshot should not scale display images up."""
+    # The width and height are guaranteed to be larger than the actual screen
+    max_width = default_display_config.width + default_display_config.height
+    max_height = default_display_config.height + default_display_config.width
+
+    image = emulator_controller.getScreenshot(
+        ImageFormat(width=max_width, height=max_height, display=0)
+    )
+
+    fmt = image.format
+    assert (
+        fmt.width == default_display_config.width
+        or fmt.width == default_display_config.height
+    ), "The width should be equal to the device width (portrait), or device height (landscape)"
+    assert (
+        fmt.height == default_display_config.height
+        or fmt.height == default_display_config.width
+    ), "The height should be equal to the device height (portrait), or device width (landscape)"

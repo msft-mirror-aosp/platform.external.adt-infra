@@ -115,7 +115,7 @@ service EmulatorController {
   // Gets an individual screenshot in the desired format.
   //
   // The image will be scaled to the desired ImageFormat, while maintaining
-  // the aspect ratio. The returned image will never exceed the provided width
+  // the aspect ratio. The returned image will never exceed the device width
   // and height. Not setting the width or height (i.e. they are 0) will result
   // in using the device width and height.
   //
@@ -124,6 +124,14 @@ service EmulatorController {
   // 1080x1920 screen and is in landscape mode and called with no width or
   // height parameter, it will return an 1920x1080 image.
   //
+  // The provided width can never exceed the device width when in portrait
+  // mode and cannot exceed the height when in landscape mode. The reverse holds 
+  // for device height.
+  //
+  // For example this method will return a 1920x1080 screenshot, 
+  // if the device definition is 1080x1920 and a screenshot of 
+  // 2048x2048 is requested when the device is in landscape mode.
+  // 
   // This method will return an empty image if the display is not visible.
   rpc getScreenshot(ImageFormat) returns (Image) {}
 
