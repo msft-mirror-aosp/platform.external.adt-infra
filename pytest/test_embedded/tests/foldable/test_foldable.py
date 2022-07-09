@@ -19,6 +19,8 @@ from aemu.proto.emulator_controller_pb2 import (ImageFormat, ParameterValue,
 from PIL import Image
 
 
+avd_config = {"api": "33", "tag.id": "google_apis"}
+
 def set_device_hinge_angle(emu, angle):
     """Change the device's hinge angle"""
     emu.setPhysicalModel(
@@ -29,17 +31,15 @@ def set_device_hinge_angle(emu, angle):
     )
     time.sleep(5)
 
-
 @pytest.mark.skip(
-    reason="Curretly, e2e test doesn't support running a different AVD with foldable support."
+    reason="This test needst to be updated"
 )
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
-def test_foldable(fmt, fold_angle, unfold_angle):
-    emu = pytest.emulator.get_emulator_controller()
-    set_device_hinge_angle(emu, unfold_angle)
-    image1 = emu.getScreenshot(
+def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
+    set_device_hinge_angle(emulator_controller, unfold_angle)
+    image1 = emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
         )
@@ -49,8 +49,8 @@ def test_foldable(fmt, fold_angle, unfold_angle):
     assert image1.format.foldedDisplay.width == 0
     assert image1.format.foldedDisplay.height == 0
 
-    set_device_hinge_angle(emu, fold_angle)
-    image2 = emu.getScreenshot(
+    set_device_hinge_angle(emulator_controller, fold_angle)
+    image2 = emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
         )
@@ -61,9 +61,9 @@ def test_foldable(fmt, fold_angle, unfold_angle):
     # should be the same as the folded screen in config.ini
     assert image2.format.foldedDisplay.width == image2.format.width
     assert image2.format.foldedDisplay.height == image2.format.height
-    set_device_hinge_angle(emu, unfold_angle)
+    set_device_hinge_angle(emulator_controller, unfold_angle)
 
-    image3 = emu.getScreenshot(
+    image3 = emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
         )

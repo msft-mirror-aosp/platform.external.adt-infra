@@ -14,18 +14,20 @@
 """A basic emulator launcher and discoverer."""
 import logging
 import os
+import platform
+import shutil
 import subprocess
 import time
+from pathlib import Path
 
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
-from snaptool.snapshot import SnapshotService
 from google.protobuf import empty_pb2
+from snaptool.snapshot import SnapshotService
 
-from emu.logcat import Logcat, AdbLogcatStream, AdbStream
-from emu.utils import run, LogObserver
 from emu.avd import AvdGenerator
 from emu.emulator_connection import EmulatorConnection
-from pathlib import Path
+from emu.logcat import AdbLogcatStream, AdbStream, Logcat
+from emu.utils import LogObserver, run
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -40,9 +42,14 @@ class Emulator(object):
 
     def __init__(self, emulator_exe, sdk_root=None, avd_home=None):
         self.sdk_root = os.path.abspath(sdk_root or os.environ.get("ANDROID_SDK_ROOT"))
-        self.avd_home = avd_home or os.environ.get("ANDROID_AVD_HOME") or os.path.join(Path.home(), ".android", "avd")
+        self.avd_home = (
+            avd_home
+            or os.environ.get("ANDROID_AVD_HOME")
+            or os.path.join(Path.home(), ".android", "avd")
+        )
         self.adb_binary = os.path.join(self.sdk_root, "platform-tools", "adb")
         self.avd_gen = None
+        self.avd = None
         self.desc = None
         self.proc = None
         self.log = None
@@ -90,6 +97,20 @@ class Emulator(object):
             timeout=10,
         )
 
+    def delete(self):
+        """Deletes the created avd."""
+        if not self.avd:
+            logging.info("Not deleting avd that was not created.")
+            return
+
+        to_remove = os.path.join(self.avd_home, "{}.ini".format(self.avd))
+        logging.debug("Removing %s", to_remove)
+        os.remove(to_remove)
+
+        to_remove = os.path.join(self.avd_home, "{}.avd".format(self.avd))
+        logging.debug("Removing %s", to_remove)
+        shutil.rmtree(os.path.join(self.avd_home, "{}.avd".format(self.avd)))
+
     def check_adb(self):
         my_env = os.environ.copy()
         my_env["ADB_TRACE"] = "all"
@@ -100,6 +121,7 @@ class Emulator(object):
         )
         cmd = subprocess.check_output(
             [self.adb_binary, "-s", self.desc.name(), "shell", "true"],
+            env=my_env,
             timeout=10,
         )
         return True
@@ -110,8 +132,8 @@ class Emulator(object):
         cmd should be an array of strings, adb will be configured
         to talk to this emulator.
         """
-        logging.info("adb %s", " ".join(cmd))
-        name = ["-s", self.desc.name()] if self.desc else []
+        name = ["-s", self.desc.name()]
+        logging.info("adb %s", " ".join(name + cmd))
         cmd = subprocess.check_output([self.adb_binary] + name + cmd, timeout=60)
         logging.info("Result: %s", cmd)
         return cmd
@@ -138,29 +160,32 @@ class Emulator(object):
 
         This is done by querying the gRPC endpoint.
         """
+        subprocess.run(
+            [self.adb_binary, "wait-for-device"],
+            timeout=max_wait,
+        )
+        logging.info(
+            "%s", subprocess.check_output([self.adb_binary, "devices"]).decode("utf-8")
+        )
+
         timeout = time.time() + max_wait
         emu = self.get_emulator_controller()
         response = emu.getStatus(_EMPTY_)
 
         while not response.booted and time.time() < timeout:
-            logging.info("Waiting for boot..")
+            logging.info("Waiting for boot of %s", self.desc.name())
             time.sleep(1)
             response = emu.getStatus(_EMPTY_)
 
-        subprocess.run(
-            [self.adb_binary, "wait-for-device"],
-            timeout=timeout - time.time(),
-        )
-        logging.info("Found: %s", subprocess.check_output([self.adb_binary, "devices"]))
         return response.booted
 
     def stop(self, graceful_timeout=10):
         """Stops the emulator, first by sending sigint. If that fails, kill -9!."""
+        if not self.proc:
+            return
+
         logging.info("Sending SIGINT to emulator.")
         self.proc.send_signal(2)
-
-        # Gracefully end the adb server, this makes sure we do not have any dangling process.
-        self.adb(["kill-server"])
 
         # Wait until the process ends.
         while self.proc.poll() and graceful_timeout > 0:
@@ -173,9 +198,6 @@ class Emulator(object):
             self.proc.send_signal(9)
 
         logging.info("Bye bye!")
-        self.avd_gen = None
-
-        # Kill adb!
 
     def first_running(self, logfile):
         """Discover the first running emulator."""
@@ -190,9 +212,10 @@ class Emulator(object):
     def connect(self):
         self.telnet = EmulatorConnection.connect(self.desc.get("port.serial"))
 
-    def launch_like_studio(self):
+    def launch_like_studio(self, cfg):
         """Launches the emulator similarly as how studio will invoke it."""
         self.launch(
+            cfg,
             [
                 "-netdelay",
                 "none",
@@ -202,26 +225,25 @@ class Emulator(object):
                 "-grpc-use-token",
                 "-idle-grpc-timeout",
                 "300",
-                "-debug-events", # Needed for some tests.
+                "-debug-events",  # Needed for some tests.
                 "-wipe-data",
                 # "-verbose",
                 # Enabling the onese below will cause a huge amount of logging.
                 # "-show-kernel",
                 # "-logcat",
                 # "v:*",
-            ]
+            ],
         )
 
-    def launch(self, additional_args=None):
+    def launch(self, cfg, additional_args=None):
         """Launches an emulator with a clean avd.
 
         This will start the emulator with the configured avd, and will wait
         until the discovery file has been written.
         """
         self.avd_gen = AvdGenerator(self.sdk_root, self.avd_home)
-        # This is a popular image 
-        avd = self.avd_gen.get_avd("30", "x86", "google_apis_playstore")
-        cmd = [self.emulator, "-avd", avd]
+        self.avd = self.avd_gen.get_avd_by_config(cfg)
+        cmd = [self.emulator, "-avd", self.avd]
 
         if additional_args:
             cmd += additional_args
@@ -232,7 +254,7 @@ class Emulator(object):
         local_env = {
             "ANDROID_AVD_HOME": self.avd_gen.get_avd_home(),
             "ANDROID_SDK_ROOT": self.sdk_root,
-            "DISPLAY": os.environ.get("DISPLAY", ":0")
+            "DISPLAY": os.environ.get("DISPLAY", ":0"),
         }
 
         self.proc, self.log = run(cmd, local_env)
@@ -257,13 +279,19 @@ class Emulator(object):
             )
             time.sleep(1)
             discovery.discover()
+            logging.info("Have %s", discovery.emulators())
 
         logging.info("Looking for pid: %s", self.proc.pid)
-        logging.info("And we have: %s", self.adb(["devices"]))
         self.desc = discovery.find_by_pid(self.proc.pid)
+
         if self.desc is None:
-            logging.error("See b/181982371 if the failure is due unknown option: -experimental-enable-multidisplay")
+            logging.error("Discovered: %s", discovery.emulators())
             raise Exception("Failed to launch {} - {}".format(self.emulator, avd))
 
+        logging.info(
+            "From available device: %s, connecting to: %s",
+            self.adb(["devices"]),
+            self.desc.name(),
+        )
         self._get_dimensions()
         self.connect()

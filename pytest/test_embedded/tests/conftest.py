@@ -23,15 +23,16 @@ setup services, state, or other operating environments.
 The fixtures below can be used to bring the emulator to a certain state, or to
 provide access to parts of the emulator.
 """
+import logging
 import os
-import pytest
+import platform
 import sys
 
+import pytest
 from aemu.proto.emulator_controller_pb2 import (
     KeyboardEvent,
     ParameterValue,
     PhysicalModelValue,
-    Rotation,
 )
 from emu.emulator import Emulator
 
@@ -39,6 +40,7 @@ from tests.test_utils import wait_for_regex
 
 
 def pytest_addoption(parser):
+    """This parses the options that are passed in to pytest."""
     parser.addoption(
         "--emulator",
         action="store",
@@ -70,50 +72,113 @@ def pytest_addoption(parser):
     )
 
 
+ALL_PLATFORMS = set("darwin linux win32".split())
+
+
+def pytest_runtest_setup(item):
+    """Only run the test if it is supported on the platform."""
+    supported_platforms = ALL_PLATFORMS.intersection(
+        mark.name for mark in item.iter_markers()
+    )
+    plat = sys.platform
+    if supported_platforms and plat not in supported_platforms:
+        pytest.skip("cannot run on platform {}".format(plat))
+
+
 # Workaround for
 # https://docs.pytest.org/en/latest/deprecations.html#pytest-namespace
 def pytest_configure():
     pytest.emulator = None
+    pytest.emulators = {}
 
 
-@pytest.fixture(scope="session", autouse=True)
-@pytest.mark.timeout(600)
-def startup_emulator(request, pytestconfig):
-    """Starts the emulator and makes it globally accessible.
+def pytest_sessionfinish(session, exitstatus):
+    """Stops and remove all running emulators at the end of all tests."""
+    for name, emu in pytest.emulators.items():
+        logging.info("Shutting down and removing %s", name)
+        emu.disconnect()
+        emu.stop()
+        emu.delete()
 
-    Will timeout after 600s, or fail if it was not booted.
 
-    Startup is run before any test is run, and will do the following:
+# Session wide fixtures are below
 
-    1. Create a Pixel2 avd if it does not exist.
-    2. Launch the emulator, unless the -debug_emulator flag is present
-    3. Install the app-debug.apk
+@pytest.fixture(scope="module")
+@pytest.mark.timeout(180)
+def avd(request, pytestconfig):
+    """Makes a booted emulator accessible and install the animation apk.
+
+    Note: You usually don't need fixture, as it will be automatically provided
+    if you use any of the dependent fixtures.
+
+    This makes an emulator available with the following default configuration:
+    {
+        "api": "31",
+        "tag.id": "google_apis",
+        "cpu": platform.machine()
+    }
+
+    You can provide your own avd configuration, by defining the variable
+    avd_config = { ... } in your test module (i.e. test_xx.py)
+
+    The avd_config should contain a dictionary with all the values that you
+    would like to override in the config.ini that should be generated.
+
+    You should provide at least the following parameters:
+
+    - "api": The api level of the emulator you wish to run
+    - "tag.id": The tag of the system image that should be used.
+
+    The abi will be derived from the platform of the current running system.
+    For x64 this will be x86_64 and for M1 this will be arm64_v8a
+
+    This information will be used to obtain the system image:
+
+    "system-images;android-{};{};{}".format(api, tag, abi)
+
+    using sdkmanager that ships with the android sdk.
+
+    For example, the default configuration mentioned above will result in the
+    installation of the following avd:
+
+    sdkmanager "system-images;android-31;google_apis;arm64-v8a"
+
+    A created avd will remain running until all the tests completed, this means
+    that multiple emulators can be running during a test run.
+
+    At the end of the test run all the created emulators, and associated avds
+    will be deleted.
     """
-    emu = Emulator(pytestconfig.getoption("emulator"))
-    if pytestconfig.getoption("debug_emulator"):
-        emu.first_running(pytestconfig.getoption("debug_emulator_log"))
-    else:
-        emu.launch_like_studio()
+    avd_config = {
+        "api": "31",
+        "tag.id": "google_apis",
+        "cpu": platform.machine(),
+    }
+    avd_user_config = getattr(request.module, "avd_config", {})
+    avd_config.update(avd_user_config)
+    name = "{}_{}_{}".format(avd_config["api"], avd_config["tag.id"], avd_config["cpu"])
+
+    if name not in pytest.emulators:
+        logging.info("Launching %s", name)
+        emu = Emulator(pytestconfig.getoption("emulator"))
+        if pytestconfig.getoption("debug_emulator"):
+            emu.first_running(pytestconfig.getoption("debug_emulator_log"))
+        else:
+            emu.launch_like_studio(avd_config)
+
+        pytest.emulators[name] = emu
+
+    emu = pytest.emulators[name]
+
+    assert emu != None
 
     # Make sure the emulator is booted.
     assert emu.wait_for_boot()
-    pytest.emulator = emu
-
-    def stop_telnet_console():
-        pytest.emulator.disconnect()
-
-    def teardown_emulator():
-        pytest.emulator.stop()
-
-    request.addfinalizer(stop_telnet_console)
-    if not pytestconfig.getoption("debug_emulator"):
-        request.addfinalizer(teardown_emulator)
-
-    emu.check_adb()
     emu.adb(["install", os.path.join(Emulator.here, "apk", "app-debug.apk")])
+    return emu
 
 
-def go_home():
+def go_home(avd):
     """It does the following:
 
     1. Wakes up the emulator by sending a WAKEUP
@@ -125,8 +190,8 @@ def go_home():
     def my_test(go_home):
         assert(...)
     """
-    stub = pytest.emulator.get_emulator_controller()
-    pytest.emulator.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
+    stub = avd.get_emulator_controller()
+    avd.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
     stub.setPhysicalModel(
         PhysicalModelValue(
@@ -137,7 +202,7 @@ def go_home():
 
 
 @pytest.fixture
-def at_home():
+def at_home(avd):
     """This calls the go_home fixture before running the test,
     and after running the test.
 
@@ -147,15 +212,15 @@ def at_home():
     Usage:
 
     def test_goes_home(go_home):
-      assert(...)
+        assert(...)
     """
-    go_home()
+    go_home(avd)
     yield
-    go_home()
+    go_home(avd)
 
 
 @pytest.fixture
-def emulator_log():
+def emulator_log(avd):
     """Returns the emulator log as a Queue (https://docs.python.org/3/library/queue.html)
     This contains the output seen on the console when the emulator is launched.
 
@@ -164,17 +229,16 @@ def emulator_log():
     Usage:
 
     def test_logs_line(emulator_log):
-     line = emulator_log.get(block=True, timeout=1.5)
-     assert line == 'INFO    | Started GRPC server at 127.0.0.1:8554, security: Local, auth: none'
+        line = emulator_log.get(block=True, timeout=1.5)
+        assert line == 'INFO    | Started GRPC server at 127.0.0.1:8554, security: Local, auth: none'
     """
-    emu = pytest.emulator
-    if emu.log:
-        while not emu.log.empty():
-            emu.log.get(False)
-    return emu.log
+    if avd.log:
+        while not avd.log.empty():
+            avd.log.get(False)
+    return avd.log
 
 
-def launch_animiation_app():
+def launch_animiation_app(avd):
     """Launches the debug animation app.
 
     This launches the animation app that ships with this library and
@@ -188,12 +252,11 @@ def launch_animiation_app():
 
     It will wait for at most 5 seconds before continuing.
     """
-    emu = pytest.emulator
-    emu.adb(["logcat", "-c"])
-    emu.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
-    emu.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
-    with emu.adb_stream(["logcat", "-s", "aemu"]) as stream:
-        emu.adb(
+    avd.adb(["logcat", "-c"])
+    avd.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
+    avd.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
+    with avd.adb_stream(["logcat", "-s", "aemu"]) as stream:
+        avd.adb(
             [
                 "shell",
                 "am",
@@ -206,20 +269,21 @@ def launch_animiation_app():
 
 
 @pytest.fixture
-def emulator_controller():
+def emulator_controller(avd):
     """A grpc stub to the emulator controller.
 
     Usage:
 
     def test_sample(emulator_controller):
-       response = emu_controller.getStatus(empty_pb2.Empty())
-       assert response.booted
+        response = emulator_controller.getStatus(empty_pb2.Empty())
+        assert response.booted
     """
-    return pytest.emulator.get_emulator_controller()
+    ctrl = avd.get_emulator_controller()
+    return ctrl
 
 
 @pytest.fixture
-def animation_app():
+def animation_app(avd):
     """Activates the animation app that displays a rotating triangle.
 
      The app does the following things:
@@ -233,51 +297,40 @@ def animation_app():
 
     Usage:
 
-     def test_sample(animation_app, emu_controller):
-       emu_controller.getScreenshot(ImageFormat(format=ImageFormat.PNG, width=180, height=180))
+    def test_sample(animation_app, emulator_controller):
+        emulator_controller.getScreenshot(ImageFormat(format=ImageFormat.PNG, width=180, height=180))
 
     """
     tries = 3
-    while not launch_animiation_app() and tries > 0:
+    while not launch_animiation_app(avd) and tries > 0:
         tries = tries - 1
 
     assert tries >= 0, "Unable to successfully launch the animation app."
     yield
 
-    pytest.emulator.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
-    go_home()
+    avd.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
+    go_home(avd)
 
 
 @pytest.fixture
-def adb():
+def adb(avd):
     """Function that invokes the adb executable with the given parameters.
-    
-       Usage:
+
+    Usage:
 
     def test_sample(adb):
-       adb(["emu", "rotate"])
-       assert response.booted
+        adb(["emu", "rotate"])
     """
-    return pytest.emulator.adb
+    return avd.adb
+
 
 @pytest.fixture
-def telnet():
+def telnet(avd):
     """Access to the telnet console of the current emulator.
-    
-       Usage:
+
+    Usage:
 
     def test_sample(telnet):
-       telnet.send("event text")
+        telnet.send("event text")
     """
-    return pytest.emulator.get_telnet()
-
-ALL_PLATFORMS = set("darwin linux win32".split())
-
-def pytest_runtest_setup(item):
-    """Only run the test if it is supported on the platform."""
-    supported_platforms = ALL_PLATFORMS.intersection(
-        mark.name for mark in item.iter_markers()
-    )
-    plat = sys.platform
-    if supported_platforms and plat not in supported_platforms:
-        pytest.skip("cannot run on platform {}".format(plat))
+    return avd.get_telnet()

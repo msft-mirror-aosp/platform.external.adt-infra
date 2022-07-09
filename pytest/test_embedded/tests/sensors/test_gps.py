@@ -20,17 +20,15 @@ _EMPTY_ = empty_pb2.Empty()
 
 
 @pytest.fixture
-def default_gps_location():
-    emu = pytest.emulator.get_emulator_controller()
+def default_gps_location(emulator_controller):
     location = GpsState(latitude=39.237256, longitude=-123.150032, satellites=4)
-    emu.setGps(location)
+    emulator_controller.setGps(location)
     return location
 
 
-def set_and_get_gps(state):
-    emu = pytest.emulator.get_emulator_controller()
-    emu.setGps(state)
-    retrieved = emu.getGps(_EMPTY_)
+def set_and_get_gps(emulator_controller, state):
+    emulator_controller.setGps(state)
+    retrieved = emulator_controller.getGps(_EMPTY_)
     assert pytest.approx(retrieved.latitude) == state.latitude
     assert pytest.approx(retrieved.longitude) == state.longitude
     assert pytest.approx(retrieved.speed) == state.speed
@@ -41,49 +39,49 @@ def set_and_get_gps(state):
 
 @pytest.mark.skip(reason="b/178634941, -qt-hide-window still fires gps updates causing flakiness.")
 @pytest.mark.e2e
-def test_gps_latitude_is_observable(default_gps_location):
+def test_gps_latitude_is_observable(emulator_controller, default_gps_location):
     """Test observe latitude."""
     location = default_gps_location
     for inc in range(1, 100):
         location.latitude = location.latitude + 0.001
-        set_and_get_gps(location)
+        set_and_get_gps(emulator_controller, location)
 
 
 @pytest.mark.skip(reason="b/178634941, -qt-hide-window still fires gps updates causing flakiness.")
 @pytest.mark.e2e
-def test_gps_longitude_is_observable(default_gps_location):
+def test_gps_longitude_is_observable(emulator_controller, default_gps_location):
     """Test observe longitude."""
     location = default_gps_location
     for inc in range(1, 100):
         location.longitude = location.longitude + 0.001
-        set_and_get_gps(location)
+        set_and_get_gps(emulator_controller, location)
 
 
 @pytest.mark.skip(reason="b/178634941, -qt-hide-window still fires gps updates causing flakiness.")
 @pytest.mark.e2e
-def test_gps_rotation_is_observable(default_gps_location):
+def test_gps_rotation_is_observable(emulator_controller, default_gps_location):
     """Test observe rotation."""
     location = default_gps_location
     for direction in range(0, 360):
         location.bearing = direction
-        set_and_get_gps(location)
+        set_and_get_gps(emulator_controller, location)
 
 
 @pytest.mark.skip(reason="b/178634941, -qt-hide-window still fires gps updates causing flakiness.")
 @pytest.mark.e2e
-def test_gps_speed_is_observable(default_gps_location):
+def test_gps_speed_is_observable(emulator_controller, default_gps_location):
     """Test observe speed."""
     location = default_gps_location
     for speed in range(0, 100):
         location.speed = speed
-        set_and_get_gps(location)
+        set_and_get_gps(emulator_controller, location)
 
 
 @pytest.mark.skip(reason="b/178634941, -qt-hide-window still fires gps updates causing flakiness.")
 @pytest.mark.e2e
-def test_gps_altitude_is_observable(default_gps_location):
+def test_gps_altitude_is_observable(emulator_controller, default_gps_location):
     """Test observe altitude."""
     location = default_gps_location
     for altitude in range(0, 100):
         location.altitude = altitude
-        set_and_get_gps(location)
+        set_and_get_gps(emulator_controller, location)

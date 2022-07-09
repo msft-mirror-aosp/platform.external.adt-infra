@@ -60,6 +60,10 @@ class TemplateTest(unittest.TestCase):
         self.writer.write_template("Pixel2.ini", {}, "foo")
         self.assertTrue(os.path.exists(os.path.join(self.tmpdir, "foo")))
 
+    def test_makes_dict(self):
+        dict = self.writer.template_to_dict("Pixel2.ini", {"avd_dir": "foo"})
+        assert dict["path"] == "foo"
+
 
 if __name__ == "__main__":
     unittest.main()

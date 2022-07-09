@@ -20,9 +20,9 @@ from snaptool.snapshot import SnapshotService
 
 
 @pytest.fixture
-def snapshot_service():
+def snapshot_service(avd):
     """Fixture to make sure the emulator has no snapshots. """
-    snap = pytest.emulator.get_snapshot_service()
+    snap = avd.get_snapshot_service()
     for entry in snap.lists():
         snap.delete(entry.snapshot_id)
     yield snap

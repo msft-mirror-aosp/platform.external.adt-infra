@@ -89,14 +89,14 @@ def test_rotation_observable_through_screenshot(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_rotation_observable_through_adbstream(
+def test_rotation_observable_through_adbstream(avd,
     at_home, animation_app, emulator_controller
 ):
     """Test that setting the rotation, is observable the adb logstream.
     This makes sure that android itself reports the orientation we are expecting.
     """
     ROTATION_RE = re.compile(r".*Rotation: (\d+)")
-    with pytest.emulator.adb_stream(["logcat", "-s", "aemu"]) as stream:
+    with avd.adb_stream(["logcat", "-s", "aemu"]) as stream:
         # Wait for the first rotation (should be set to 0).
         for line in iter(stream.get, None):
             m = ROTATION_RE.match(line)

@@ -29,7 +29,7 @@ class AvdGenerator(object):
     """
 
     IMAGE = re.compile(
-        r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|android-tv)[\/\\](x86|x86_64)[\/\\]system.img$"
+        r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img$"
     )
 
     def __init__(self, sdk_root, avd_home):
@@ -81,22 +81,66 @@ class AvdGenerator(object):
             ]
         )
 
-    def _create_avd(self, api, abi, tag):
+    def _write_config_ini(self, name, avd, custom_cfg):
+        """Writes the custom config ini to the avd_home directory"""
+        cfg = self.writer.template_to_dict("Pixel2.avd/config.ini", avd)
+        cfg.update(custom_cfg)
+
+        cfg_file = "{}.avd/config.ini".format(name)
+        dest = os.path.join(self.avd_home, cfg_file)
+        logging.info("Writing confing ini to %s", dest)
+        dest_dir = os.path.dirname(dest)
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+
+        with open(dest, "w") as f:
+            for k, v in cfg.items():
+                f.write("{} = {}\n".format(k, v))
+
+    def _create_avd(self, api, abi, tag, name, custom_cfg):
         avds = self._find_avd(api, abi, tag)
         if not avds:
             self._install_sys_image(api, abi, tag)
             avds = self._find_avd(api, abi, tag)
         avd = avds[0]
+        avd["name"] = name
 
-        self.writer.write_template("Pixel2.ini", avd)
-        self.writer.write_template("Pixel2.avd/config.ini", avd)
+        self.writer.write_template("Pixel2.ini", avd, "{}.ini".format(name))
+        self._write_config_ini(name, avd, custom_cfg)
 
-    def get_avd(self, api, abi, tag):
-        """Returns the AVD name, creating it if needed."""
-        if not os.path.exists(os.path.join(self.avd_home, "Pixel2.ini")):
-            self._create_avd(api, abi, tag)
+    def get_avd_by_config(self, config):
+        cpu = config["cpu"]
+        tag = config["tag.id"]
+        api = config["api"]
+        name = "{}_{}_{}".format(api, tag, cpu)
 
-        return "Pixel2"
+        CPU_TO_ABI = {"arm64": "arm64-v8a", "x86_64": "x86_64", "i386": "x86"}
+        abi = CPU_TO_ABI.get(cpu,"x86_64")
+        avd_cfg = {
+            "AvdId" : name,
+            "tag.id" : tag,
+            "abi.type" : abi,
+            "hw.cpu.arch" : cpu,
+        }
+        avd_cfg.update(config)
+        self._create_avd(api, abi, tag, name, avd_cfg)
+        return name
+
+
+    def get_avd(self, api, cpu, tag, name="Pixel2", custom_cfg={}):
+        """Returns the AVD name, creating it if needd."""
+
+        CPU_TO_ABI = {"arm64": "arm64-v8a", "x86_64": "x86_64", "i386": "x86"}
+        abi = CPU_TO_ABI.get(cpu,"x86_64")
+        avd_cfg = {
+            "AvdId" : name,
+            "tag.id" : tag,
+            "abi.type" : abi,
+            "hw.cpu.arch" : cpu,
+        }
+        avd_cfg.update(custom_cfg)
+        self._create_avd(api, abi, tag, name, avd_cfg)
+        return name
 
     def get_avd_home(self):
         """Returns the ANDROID_AVD_HOME, creating the avd if needed"""

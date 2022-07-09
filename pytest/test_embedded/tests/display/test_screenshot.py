@@ -28,7 +28,7 @@ from PIL import Image
 from tests.test_utils import wait_for_regex
 
 
-def pause_animation_app(emu):
+def pause_animation_app(avd):
     """Pauses the animation app."""
 
     def _wait_for_pause(stream, max_wait):
@@ -43,8 +43,8 @@ def pause_animation_app(emu):
             if m:
                 return True
 
-    with emu.adb_stream(["logcat", "-s", "aemu"]) as stream:
-        emu.get_emulator_controller().sendKey(
+    with avd.adb_stream(["logcat", "-s", "aemu"]) as stream:
+        avd.get_emulator_controller().sendKey(
             KeyboardEvent(key="P", eventType=KeyboardEvent.keypress)
         )
         return wait_for_regex(stream, r".*Pausing animation.", 5)
@@ -70,13 +70,13 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
 @pytest.mark.timeout(timeout=20, func_only=True)
-def test_screenshot_all_formats_are_equal(emulator_controller, animation_app, w, h):
+def test_screenshot_all_formats_are_equal(avd, emulator_controller, animation_app, w, h):
     """Make sure that all the screenshots are exactly the same, regardless of format.
 
     This is done by launching the animation app, and pausing it. This should make sure
     we always have the same frame displayed on the device.
     """
-    assert pause_animation_app(pytest.emulator)
+    assert pause_animation_app(avd)
     last_pixels = None
     for image_format in [ImageFormat.RGBA8888, ImageFormat.RGB888, ImageFormat.PNG]:
         image = emulator_controller.getScreenshot(

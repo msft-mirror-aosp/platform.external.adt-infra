@@ -17,13 +17,7 @@ make check
 The tests are run using [tox](https://tox.readthedocs.io/en/latest/) which will
 isolate the tests and run them under Python 3.
 
-When you run a test the following will happen:
-
-- A default Pixel2 avd will be created with system image
-  31-x86-google_apis_playstore
-- The emulator will launch the avd
-- The runner will wait until the avd is boot complete
-- The set of selected tests will run
+The tests make use of fixturess to spawn and access an emulator that runs an avd.
 
 ## Development
 
@@ -86,8 +80,8 @@ of [pyenv](https://github.com/pyenv/pyenv).
 
 You can add test according to the [pytest](https://docs.pytest.org/en/stable/) framework.
 The test session will make an emulator object available for you. That is accessible
-as `pytest.emulator` this is an [Emulator](emu/emulator.py) object, which has some convenience
-methods to interact with the running emulator.
+through the `avd` fixture. This is an [Emulator](emu/emulator.py) object,
+which has some convenience methods to interact with the running emulator.
 
 You can add your tests in a new .py file that automatically will be discovered.
 See the [boottest](tests/test_boot.py) example below:
@@ -96,6 +90,10 @@ See the [boottest](tests/test_boot.py) example below:
 import pytest
 from google.protobuf import empty_pb2
 
+# Use a custom avd configuration, vs. the default
+avd_config = {"api": "33", "tag.id": "google_apis"}
+
+
 @pytest.mark.e2e
 def test_booted(emulator_controller):
     """Make sure the emulator status is set to booted."""
@@ -103,14 +101,24 @@ def test_booted(emulator_controller):
     assert response.booted
 ```
 
+If you wish to use your own avd configuration you can set the `avd_config` dictionary to contain
+the desired key = value pairs that should be used in the config.ini of the avd.
+
+A single [module](https://docs.python.org/3/tutorial/modules.html) will use the same avd configuration.
+
+**Note** The emulator will keep running for the duration of the test, so multiple emulators can (and likely)
+will be running concurrently.
+
 ### Test Fixtures
 
 Pytest encourages you to use [test fixtures](https://docs.pytest.org/en/6.2.x/fixture.html).
 We have a set of test fixtures defined in [tests/conftest.py](tests/conftest.py) that can
 be used to interact with the emulator. Here is a short list of fixtures:
 
+- avd: Gives access to the emulator running the default avd.
 - telnet: Gives access to the telnet console of the current emulator.
 - adb: Function that invokes the adb executable with the given parameters.
+- at_home: Rotate the emulator to portrait mode and move to the home screen.
 - emulator_log: Access to the emulator logs.
 - animation_app: Activates the animation app that displays a rotating triangle.
 - emulator_controller: A grpc stub to the emulator controller.
@@ -183,35 +191,22 @@ bazel build //...
 pip install .
 ```
 
-### I want to run the tests on an M1
-
-Right now the tests install a default AVD that requires X86 architecture. As a 
-workaround you can run the emulator manually and launch the tests to connect
-to your running emulator. 
-
-For example:
-
-```bash
-$ANDROID_SDK_ROOT/emulator @T -verbose -debug-events -debug-time  -no-snapshot | tee /tmp/emu.log
-pytest -k 'test_rotation_through_console_observable_through_screenshot' --debug_emulator_log=/tmp/emu.log --debug_emulator
-```
-
 ### Java exceptions on Pytest log
 
 If you see exceptions like the following when running pytest:
 
 ```java
 Exception in thread "main" java.lang.NoClassDefFoundError: javax/xml/bind/annotation/XmlSchema
-	at com.android.repository.api.SchemaModule$SchemaModuleVersion.<init>(SchemaModule.java:156)
-	at com.android.repository.api.SchemaModule.<init>(SchemaModule.java:75)
-	at com.android.sdklib.repository.AndroidSdkHandler.<clinit>(AndroidSdkHandler.java:81)
-	at com.android.sdklib.tool.sdkmanager.SdkManagerCli.main(SdkManagerCli.java:73)
-	at com.android.sdklib.tool.sdkmanager.SdkManagerCli.main(SdkManagerCli.java:48)
+  at com.android.repository.api.SchemaModule$SchemaModuleVersion.<init>(SchemaModule.java:156)
+  at com.android.repository.api.SchemaModule.<init>(SchemaModule.java:75)
+  at com.android.sdklib.repository.AndroidSdkHandler.<clinit>(AndroidSdkHandler.java:81)
+  at com.android.sdklib.tool.sdkmanager.SdkManagerCli.main(SdkManagerCli.java:73)
+  at com.android.sdklib.tool.sdkmanager.SdkManagerCli.main(SdkManagerCli.java:48)
 Caused by: java.lang.ClassNotFoundException: javax.xml.bind.annotation.XmlSchema
-	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:581)
-	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:178)
-	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:522)
-	... 5 more
+  at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:581)
+  at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:178)
+  at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:522)
+  ... 5 more
 ```
 
 You are likely not using the right java version for sdkmanager. The easiest solution

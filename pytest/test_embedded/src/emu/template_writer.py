@@ -15,6 +15,7 @@ import logging
 import os
 
 from jinja2 import Environment, PackageLoader
+import configparser
 
 
 class TemplateWriter(object):
@@ -37,6 +38,19 @@ class TemplateWriter(object):
         return self._write_template_to(
             template_file, os.path.join(self.dest, dest_name), template_dict
         )
+
+    def template_to_dict(self, template_file, template_dict):
+        """Loads the templatized ini file, fills it out and returns it as a dict."""
+        template = self.env.get_template(template_file)
+        ini = template.render(template_dict)
+        cfg = {}
+        for line in ini.splitlines():
+            line = line.strip()
+            if line.startswith("#"): 
+                continue
+            key, *value = line.split("=")
+            cfg[key] = next(iter(value), None)
+        return cfg
 
     def _write_template_to(self, tmpl_file, dest_file, template_dict):
         """Loads the the given template, writing it to the dest_file

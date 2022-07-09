@@ -81,7 +81,7 @@ def benchmark_stat(request):
 
 
 @pytest.fixture
-def adb_event_stream():
+def adb_event_stream(avd):
     """Streamed output of adb getevent -t.
 
        The stream will consume all initial events, and should be ready
@@ -89,7 +89,7 @@ def adb_event_stream():
 
        Note: Needs android-Q or higher.
     """
-    with pytest.emulator.adb_stream(["shell", "getevent", "-t"]) as events:
+    with avd.adb_stream(["shell", "getevent", "-t"]) as events:
         found_evt = False
         # Make sure we skip the initial diagnostics.
         while not found_evt:
@@ -104,7 +104,7 @@ def adb_event_stream():
 _android_start_time = None
 
 @pytest.fixture
-def android_start_time():
+def android_start_time(avd):
     """Returns the approx starting time of the linux kernel in seconds, it does so
        by averaging out a series of starting estimates.
 
@@ -122,7 +122,7 @@ def android_start_time():
             Epoch in seconds when the emulator started.
         """
         # Epoch realtime is tv.sec.tv_usec, /proc/uptime is tv.sec.msec
-        info = pytest.emulator.adb(["shell", "echo $EPOCHREALTIME $(cat /proc/uptime)"])
+        info = avd.adb(["shell", "echo $EPOCHREALTIME $(cat /proc/uptime)"])
         epoch_s, uptime_s, _ = info.split(" ")
         start_time = float(epoch_s) - float(uptime_s)
         logging.info("Kernel started at +/- %s", time_to_str(start_time))
@@ -170,6 +170,7 @@ class EventTimeTester(object):
         """
         self.width = emulator.width
         self.height = emulator.height
+        self.emulator = emulator
         self.send_fn = send_fn
         self.event_stream = event_stream
         self.start_time = start_time_seconds
@@ -272,7 +273,7 @@ class EventTimeTester(object):
         """
         look_for = self.expect_mouse_sequence(x, y, buttons)
         send_time = time.time()
-        self.send_fn(x, y, buttons)
+        self.send_fn(self.emulator, x, y, buttons)
 
         # Note you would expect delivery_at > send_time
         # however due to clock skew between guest and host

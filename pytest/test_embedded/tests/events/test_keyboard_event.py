@@ -86,31 +86,32 @@ def wait_for_keyboard(event_stream, ev_code, timeout=10):
     return 0
 
 
-def send_grpc_letter(letter):
+def send_grpc_letter(avd, letter):
     """Sends a letter using gRPC.
 
     Args:
        letter: The letter to send
     """
-    grpc = pytest.emulator.get_emulator_controller()
-    grpc.sendKey(KeyboardEvent(text=letter))
+    grpc = avd.get_emulator_controller()
+    emulator_controller.sendKey(KeyboardEvent(text=letter))
 
 
-def send_telnet_letter(letter):
+def send_telnet_letter(avd, letter):
     """Sends a mouse click using the telnet console.
 
     Args:
        letter: The letter to send
     """
-    telnet = pytest.emulator.get_telnet()
+    telnet = avd.get_telnet()
     telnet.send("event text {}".format(letter))
 
 
-def send_letter_over(send_fn, log):
+def send_letter_over(send_fn, avd, log):
     """Send and random letter and wait until the event was registered.
 
     Args:
         send_fn: function used to send the letter
+        avd: The emulator
         log: A queue to the emulator log.
 
     Returns:
@@ -121,7 +122,7 @@ def send_letter_over(send_fn, log):
         log.get(False)
     letter = random.choice(string.ascii_letters)
     send_time = time.time()
-    send_fn(letter)
+    send_fn(avd, letter)
     delivery_time = wait_for_keyboard(log, EV_DEV_LETTERS[letter.upper()])
     return delivery_time - send_time
 
@@ -152,7 +153,7 @@ def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
 @pytest.mark.skip(reason="-debug-events is not logging key events.")
-def test_letter_perf_host_host_telnet(emulator_log, at_home, benchmark_stat):
+def test_letter_perf_host_host_telnet(avd, emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over telnet.
 
     This measures timestamp before calling send - observed timestamp at receipt in
@@ -167,4 +168,4 @@ def test_letter_perf_host_host_telnet(emulator_log, at_home, benchmark_stat):
         pytest.skip("Likely running under debugger without logger")
 
     for i in range(0, 40):
-        benchmark_stat.update(send_letter_over(send_telnet_letter, emulator_log))
+        benchmark_stat.update(send_letter_over(send_telnet_letter, avd, emulator_log))

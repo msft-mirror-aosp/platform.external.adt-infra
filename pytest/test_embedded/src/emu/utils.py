@@ -23,23 +23,22 @@ import sh
 import six
 
 
-def run(cmd, local_env=None):
+def run(cmd, local_env={}):
     """Runs the command, logging the out put to the logger."""
     use_shell = platform.system() == "Windows"
-    if not local_env:
-        local_env = os.environ
+    env = os.environ
 
     # Make sure the local_env only contains strings.
     for key in local_env:
-        local_env[key] = str(local_env[key])
+        env[key] = str(local_env[key])
 
-    logging.info("Launching %s with: %s", cmd, local_env)
+    logging.info("Launching %s with: %s", cmd, env)
     proc = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         shell=use_shell,
-        env=local_env,
+        env=env,
     )
 
     q = _log_proc(proc)

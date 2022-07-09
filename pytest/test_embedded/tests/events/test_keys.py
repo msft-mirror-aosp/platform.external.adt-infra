@@ -68,7 +68,7 @@ def keypress_expects(emulator, log, jskey, expected_code):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=5, func_only=True)
 @pytest.mark.skip(reason="-debug-events is not logging key events.")
-def test_hardware_keys(at_home, emulator_log):
+def test_hardware_keys(avd, at_home, emulator_log):
     """Checks that the hardware key events that studio sends are working."""
     if not emulator_log:
         pytest.skip("Likely running under debugger without logger")
@@ -84,13 +84,13 @@ def test_hardware_keys(at_home, emulator_log):
     ]
 
     for key, expect in expected:
-        keypress_expects(pytest.emulator, emulator_log, key, expect)
+        keypress_expects(avd, emulator_log, key, expect)
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=5, func_only=True)
 @pytest.mark.skip(reason="-debug-events is not logging key events.")
-def test_whitespace_chrs(at_home, emulator_log):
+def test_whitespace_chrs(avd, at_home, emulator_log):
     """Checks that the whitespace characters that studio sends are working."""
     if not emulator_log:
         pytest.skip("Likely running under debugger without logger")
@@ -104,13 +104,11 @@ def test_whitespace_chrs(at_home, emulator_log):
     ]
 
     for key, expect in expected:
-        keypress_expects(pytest.emulator, emulator_log, key, expect)
+        keypress_expects(avd, emulator_log, key, expect)
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_unicode_no_deadlock(at_home):
+def test_unicode_no_deadlock(at_home, emulator_controller):
     """Tests that we properly handle unicode characters."""
-    pytest.emulator.get_emulator_controller().sendKey(
-        KeyboardEvent(text="\xc6\x80 <-- Used to deadlock")
-    )
+    emulator_controller.sendKey(KeyboardEvent(text="\xc6\x80 <-- Used to deadlock"))

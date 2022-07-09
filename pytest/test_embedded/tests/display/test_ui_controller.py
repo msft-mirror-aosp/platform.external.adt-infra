@@ -20,18 +20,18 @@ from aemu.proto.ui_controller_service_pb2 import WindowPosition, PaneEntry
 __EMPTY__ = empty_pb2.Empty()
 
 
-def get_user_config():
-    stub = pytest.emulator.get_ui_controller()
+def get_user_config(avd):
+    stub = avd.get_ui_controller()
     status = stub.getUserConfig(__EMPTY__)
     return dict([(x.key, x.value) for x in status.entries])
 
 @pytest.mark.dependency()
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_ui_controller_clean():
+def test_ui_controller_clean(avd):
     """Tests that the emulator has no extended control setting, this means
        the extended window was never shown before.
     """
-    userConfig = get_user_config()
+    userConfig = get_user_config(avd)
     logging.info(userConfig)
     assert (
         not "extended_controls.x" in userConfig
@@ -41,12 +41,12 @@ def test_ui_controller_clean():
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.dependency(depends=["test_ui_controller_clean"])
-def test_ui_controller_first_position_works():
+def test_ui_controller_first_position_works(avd):
     """Tests that setting the position for the first time will work.
 
     Note: This is really a best effort test.
     """
-    uiControl = pytest.emulator.get_ui_controller()
+    uiControl = avd.get_ui_controller()
     uiControl.closeExtendedControls(__EMPTY__)
     x = random.randrange(800, 1200)
     y = random.randrange(400, 500)
@@ -64,7 +64,7 @@ def test_ui_controller_first_position_works():
     # We became visible.
     assert controlStatus.visibilityChanged
 
-    userConfig = get_user_config()
+    userConfig = get_user_config(avd)
 
     # Check the window is left and above what we set it to.
     assert "extended_controls.x" in userConfig
@@ -85,14 +85,14 @@ def test_ui_controller_first_position_works():
 @pytest.mark.e2e
 @pytest.mark.dependency(depends=["test_ui_controller_first_position_works"])
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_ui_controller_position_does_not_change():
+def test_ui_controller_position_does_not_change(avd):
     """Tests that setting the position for the second time will work, but
        does not modify the location of the window.
 
     Note: This is really a best effort test.
     """
-    userConfig = get_user_config()
-    uiControl = pytest.emulator.get_ui_controller()
+    userConfig = get_user_config(avd)
+    uiControl = avd.get_ui_controller()
     controlStatus = uiControl.closeExtendedControls(__EMPTY__)
 
     controlStatus = uiControl.showExtendedControls(
@@ -110,7 +110,7 @@ def test_ui_controller_position_does_not_change():
     assert controlStatus.visibilityChanged
 
     # Similarly we SHOULD NOT update the window position, as it was already set.
-    latestConfig = get_user_config()
+    latestConfig = get_user_config(avd)
     assert userConfig["extended_controls.x"] == latestConfig["extended_controls.x"]
     assert userConfig["extended_controls.y"] == latestConfig["extended_controls.y"]
 
@@ -120,12 +120,12 @@ def test_ui_controller_position_does_not_change():
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_ui_controller_fast_switch_should_work():
+def test_ui_controller_fast_switch_should_work(avd):
     """Make sure we can open and close the window quickly.
 
     This exposes b/183641352
     """
-    uiControl = pytest.emulator.get_ui_controller()
+    uiControl = avd.get_ui_controller()
     controlStatus = uiControl.closeExtendedControls(__EMPTY__)
     controlStatus = uiControl.showExtendedControls(__EMPTY__)
     controlStatus = uiControl.closeExtendedControls(__EMPTY__)

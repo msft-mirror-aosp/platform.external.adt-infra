@@ -141,5 +141,5 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-
+src/emu/apk/app-debug.apk
 

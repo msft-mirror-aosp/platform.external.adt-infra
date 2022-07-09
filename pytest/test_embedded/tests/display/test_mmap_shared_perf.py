@@ -37,25 +37,23 @@ unittest.skip("b/203787882")
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
-def test_mmap_grpc_perf(animation_app, tmpdir, benchmark_stat, pytestconfig):
+def test_mmap_grpc_perf(avd, animation_app, emulator_controller, tmpdir, benchmark_stat, pytestconfig):
     """Test time it takes to detect a frame change event using the gRPC + mmap
 
 
     Change events are delivered via gRPC, whereas the image data is a mmap file.
     This uses the emulators notification + image scaling mechanism.
     """
-    emulator = pytest.emulator
     # This test can only run if we launched the emulator
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     tmp_file = os.path.join(path, "image_file.img")
     with open(tmp_file, "wb") as out:
-        out.truncate(emulator.width * emulator.height + 1024)
+        out.truncate(avd.width * avd.height + 1024)
 
-    emu = pytest.emulator.get_emulator_controller()
-    stream = emu.streamScreenshot(
+    stream = emulator_controller.streamScreenshot(
         ImageFormat(
-            width=emulator.width,
-            height=emulator.height,
+            width=avd.width,
+            height=avd.height,
             format=ImageFormat.RGBA8888,
             transport=ImageTransport(
                 channel=ImageTransport.MMAP, handle="file://" + tmp_file
@@ -92,7 +90,7 @@ unittest.skip("b/203787882")
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
 @pytest.mark.linux
-def test_mmap_webrtc_perf(animation_app, tmpdir, benchmark_stat, pytestconfig):
+def test_mmap_webrtc_perf(avd, telnet, animation_app, tmpdir, benchmark_stat, pytestconfig):
     """Test time it takes to detect a frame change event by polling the shared memory
     region setup by the webrtc screen recorder.
 
@@ -102,8 +100,7 @@ def test_mmap_webrtc_perf(animation_app, tmpdir, benchmark_stat, pytestconfig):
      - This only works on linux
      - Python seems to destroy the /dev/shm region.
     """
-    emulator = pytest.emulator
-    emulator.telnet.send("screenrecord webrtc start")
+    telnet.send("screenrecord webrtc start")
     # HACK: Give the emulator some time to create /dev/shm/videmulator####
     time.sleep(0.5)
 
@@ -112,8 +109,8 @@ def test_mmap_webrtc_perf(animation_app, tmpdir, benchmark_stat, pytestconfig):
     seq = None
     video_info_struct_size = 24
     mem = SharedMemory(
-        name="videmulator{}".format(emulator.telnet.port),
-        size=24 + (emulator.width * emulator.height * 4),
+        name="videmulator{}".format(avd.telnet.port),
+        size=24 + (avd.width * avd.height * 4),
     )
 
     # Mimics struct VideoInfo from
@@ -149,7 +146,7 @@ def test_mmap_webrtc_perf(animation_app, tmpdir, benchmark_stat, pytestconfig):
         count += 1
         start_time = receive_time
 
-    emulator.telnet.send("screenrecord webrtc stop")
+    telnet.send("screenrecord webrtc stop")
     mem.close()
     logging.warning("Received %d frames and dropped %d frames", count, dropped)
     assert True
