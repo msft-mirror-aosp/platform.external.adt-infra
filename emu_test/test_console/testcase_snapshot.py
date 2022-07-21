@@ -148,9 +148,9 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
     Test steps:
       1. Save a snapshot.
       2. Load the snapshot created above.
-      3. Launch an app from Home screen(Ex: Clock app.)
-      4. Verify AVD is up and running.
-      5. Delete the snapshot created in the test.
+      3. Delete the snapshot created in the test.
+      4. Launch an app from Home screen(Ex: Clock app.)
+      5. Verify AVD is up and running.
 
     Verify:
       1. Verify AVD is up and running.
@@ -164,9 +164,15 @@ class SnapshotTest(testcase_base.BaseConsoleTest):
       time.sleep(util.CMD_DELAY_VALUE)
       self._execute_console_command_and_verify(CMD_AVD_SNAPSHOT_LOAD+snapshot_string+ NEW_LINE_COMMAND, util.OK)
       time.sleep(util.CMD_DELAY_VALUE)
+      util.execute_console_command(self.telnet, CMD_AVD_SNAPSHOT_DEL + snapshot_string + NEW_LINE_COMMAND, util.OK)
+      time.sleep(util.CMD_DELAY_VALUE)
       util.launch_application(util.CLOCK_PACKAGE_NAME)
       time.sleep(util.CMD_DELAY_VALUE)
-      subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CLOCK_PACKAGE_NAME])
+      try:
+          adbOutput = subprocess.check_output([adb_binary, 'shell', 'am', 'force-stop', util.CLOCK_PACKAGE_NAME])
+      except subprocess.CalledProcessError as e:
+          print("Expected 0 but received non-zero error code: ", e.returncode, e.output)
+          pass
       time.sleep(util.CMD_DELAY_VALUE)
     self.assertTrue(util.check_if_avd_online())
 
