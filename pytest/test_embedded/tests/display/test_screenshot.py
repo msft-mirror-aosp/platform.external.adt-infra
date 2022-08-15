@@ -24,6 +24,7 @@ from aemu.proto.emulator_controller_pb2 import (
     PhysicalModelValue,
 )
 from google.protobuf import empty_pb2
+from grpc import RpcError, StatusCode
 from PIL import Image
 from tests.test_utils import wait_for_regex
 
@@ -70,7 +71,9 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
 @pytest.mark.timeout(timeout=20, func_only=True)
-def test_screenshot_all_formats_are_equal(avd, emulator_controller, animation_app, w, h):
+def test_screenshot_all_formats_are_equal(
+    avd, emulator_controller, animation_app, w, h
+):
     """Make sure that all the screenshots are exactly the same, regardless of format.
 
     This is done by launching the animation app, and pausing it. This should make sure
@@ -201,3 +204,20 @@ def test_screenshot_never_scales_up(
         fmt.height == default_display_config.height
         or fmt.height == default_display_config.width
     ), "The height should be equal to the device height (portrait), or device width (landscape)"
+
+
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_screenshot_should_fail_if_does_not_exist(
+    at_home, emulator_controller, default_display_config
+):
+    """Verifies b/206033509 streamScreenshot/getScreenshot should fail with INVALID_ARGUMENT if the display doesn't exist"""
+    _EMPTY_ = empty_pb2.Empty()
+    cfg = emulator_controller.getDisplayConfigurations(_EMPTY_)
+    non_existing_display = len(cfg.displays) + 1
+    with pytest.raises(RpcError) as e:
+        image = emulator_controller.getScreenshot(
+            ImageFormat(display=non_existing_display)
+        )
+
+    assert e.value.code() == StatusCode.INVALID_ARGUMENT
+    assert e.value.details() == "Invalid display: {}".format(non_existing_display)
