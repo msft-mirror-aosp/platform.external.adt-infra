@@ -18,7 +18,8 @@ import time
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat, ImageTransport
-
+from google.protobuf import empty_pb2
+from grpc import RpcError, StatusCode
 from tests.benchmark_event_fixtures import benchmark_stat
 from tests.test_utils import StreamingCall
 
@@ -191,3 +192,26 @@ def test_screenshot_bytes_size(emulator_controller, fmt):
     )
     pixelSize = 4 if fmt == ImageFormat.RGBA8888 else 3
     assert image.format.width * image.format.height * pixelSize == len(image.image)
+
+
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_stream_screenshot_should_fail_if_does_not_exist(
+    at_home,
+    emulator_controller,
+    animation_app,
+):
+    """Verifies b/206033509 streamScreenshot/getScreenshot should fail with INVALID_ARGUMENT if the display doesn't exist"""
+    _EMPTY_ = empty_pb2.Empty()
+    cfg = emulator_controller.getDisplayConfigurations(_EMPTY_)
+    non_existing_display = len(cfg.displays) + 1
+
+    with pytest.raises(RpcError) as e:
+        stream = emulator_controller.streamScreenshot(
+            ImageFormat(display=non_existing_display)
+        )
+        for img in stream:
+            pass
+
+    assert e.value.code() == StatusCode.INVALID_ARGUMENT
+    assert e.value.details() == "Invalid display: {}".format(non_existing_display)
+
