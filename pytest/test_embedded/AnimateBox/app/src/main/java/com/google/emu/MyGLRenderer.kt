@@ -51,8 +51,8 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, -3f, 0f, 0f, 0f, 0f, 2.0f, 0.0f)
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0)
-        // Draw square
-        mSquare!!.draw(mMVPMatrix, 0xDECEBE)
+        // Draw a red square
+        mSquare!!.draw(mMVPMatrix, 0xFF0000)
         // Create a rotation for the triangle
         // Use the following code to generate constant rotation.
         // Leave this code out when using TouchEvents.
