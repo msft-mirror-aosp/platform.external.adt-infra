@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+# Let's turn off the crazy logging.
+set +x
 
 # This is used to run AVD and console emulator tests.
 # This will be invoked by aosp-emu-master-dev.
@@ -93,6 +94,7 @@ fi
 
 # Run the android-studio embedded emulator tests
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
+export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 clean_avds
 run_test "Embedded tests" external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)
 if [[ $(is_presubmit $BID) == "true" ]]; then

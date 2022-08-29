@@ -14,10 +14,12 @@
 """A basic emulator launcher."""
 import logging
 import os
+import platform
 import re
-import subprocess
 import shutil
+import subprocess
 import tempfile
+
 from emu.template_writer import TemplateWriter
 
 
@@ -115,28 +117,27 @@ class AvdGenerator(object):
         name = "{}_{}_{}".format(api, tag, cpu)
 
         CPU_TO_ABI = {"arm64": "arm64-v8a", "x86_64": "x86_64", "i386": "x86"}
-        abi = CPU_TO_ABI.get(cpu,"x86_64")
+        abi = CPU_TO_ABI.get(cpu, "x86_64")
         avd_cfg = {
-            "AvdId" : name,
-            "tag.id" : tag,
-            "abi.type" : abi,
-            "hw.cpu.arch" : cpu,
+            "AvdId": name,
+            "tag.id": tag,
+            "abi.type": abi,
+            "hw.cpu.arch": cpu,
         }
         avd_cfg.update(config)
         self._create_avd(api, abi, tag, name, avd_cfg)
         return name
 
-
     def get_avd(self, api, cpu, tag, name="Pixel2", custom_cfg={}):
         """Returns the AVD name, creating it if needd."""
 
         CPU_TO_ABI = {"arm64": "arm64-v8a", "x86_64": "x86_64", "i386": "x86"}
-        abi = CPU_TO_ABI.get(cpu,"x86_64")
+        abi = CPU_TO_ABI.get(cpu, "x86_64")
         avd_cfg = {
-            "AvdId" : name,
-            "tag.id" : tag,
-            "abi.type" : abi,
-            "hw.cpu.arch" : cpu,
+            "AvdId": name,
+            "tag.id": tag,
+            "abi.type": abi,
+            "hw.cpu.arch": cpu,
         }
         avd_cfg.update(custom_cfg)
         self._create_avd(api, abi, tag, name, avd_cfg)
@@ -145,7 +146,12 @@ class AvdGenerator(object):
     def get_avd_home(self):
         """Returns the ANDROID_AVD_HOME, creating the avd if needed"""
         if not os.path.exists(os.path.join(self.avd_home, "Pixel2.ini")):
-            self._create_avd()
+            avd_config = {
+                "api": "31",
+                "tag.id": "google_apis",
+                "cpu": platform.machine(),
+            }
+            self.get_avd_by_config(avd_config)
 
         return self.avd_home
 
