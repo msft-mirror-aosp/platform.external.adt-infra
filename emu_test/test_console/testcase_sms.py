@@ -40,6 +40,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
   def tearDownClass(cls):
     util.unstall_apps(CONSOLE_TEST_PACKAGE_NAME)
 
+  @unittest.skip("b/244168150")
   def test_send_inbound_sms_text_message(self):
     """Test command for: sms send <phone number> <text message>.
 
@@ -58,6 +59,7 @@ class SmsTest(testcase_base.BaseConsoleTest):
     self._execute_command_and_verify(CMD_SMS_SEND.format(SENDER_PHONE_NUMBER, TEXT_MESSAGE), util.OK, ASSERT_MSG)
     self._poll_and_verify_sms(MSG_MATCHING_STRING.format(SENDER_PHONE_NUMBER, TEXT_MESSAGE))
 
+  @unittest.skip("b/244168150")
   def test_send_inbound_sms_pdu(self):
     """Test command for: sms send <phone number> <text message>.
 
