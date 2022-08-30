@@ -69,29 +69,6 @@ run unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-[0-9]*.zip -d $SESSION_DIR/emu-mas
 log "activate virtualenv"
 activate_virtualenv $TEST_DIR/utils
 
-clean_avds
-run_test "Boot_test" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Boot_test --file_pattern 'test_boot.*' --config_file $TEST_DIR/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori":"public"}' --generate_xml --headless
-
-if [[ $OSTYPE != *"darwin"* ]]; then
-    log "Generate Perf Data"
-    # 3.8888889 hours?
-    run_timeout 14000 $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Perf_test --file_pattern 'test_perf.*' --config_file $TEST_DIR/config/perf_cfg_byob.csv --buildername $BUILDERNAME --filter '{"ori":"public-perf"}' --generate_perf
-
-    run_test "Perf test api 28" $PYTHON -u $TEST_DIR/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 28
-    run_test "Perf test api 29" $PYTHON -u $TEST_DIR/utils/perf_stats.py --log_dir $SESSION_DIR/Perf_test --api 29 --metric_tag 29
-
-    log "Zip perf data"
-    sh -c "cd $SESSION_DIR && zip -rm $DISTRIB_DIR/perfgate_data.zip Perf_test/test.outputs/*.json"
-
-    if [[ ! -f $DISTRIB_DIR/perfgate_data.zip ]]; then
-        STATUS=1
-        warn "Perf zip fail"
-    fi
-
-    run_test "snapshot tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir snapshot_test --file_pattern 'test_snapshot.*' --config_file $TEST_DIR/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME --generate_xml --headless
-    run_test "grpc tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir grpc_test --file_pattern 'test_grpc.*' --config_file $TEST_DIR/config/snapshot_cfg_byob.csv --buildername $BUILDERNAME --generate_xml --headless
-fi
-
 # Run the android-studio embedded emulator tests
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
 export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
@@ -104,21 +81,9 @@ if [[ $(is_presubmit $BID) == "true" ]]; then
     echo "Ignoring potential errors due to  b/183949465"
 fi
 
-export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
-run_test "Running Crash tests" $PYTHON -u external/adt-infra/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --test_dir Crash_test --file_pattern 'test_crash.*' --config_file external/adt-infra/emu_test/config/crash_cfg_byob.csv --buildername $BUILDERNAME  --generate_xml --skip-adb-perf
-
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 clean_avds
 run_test "Console tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless
-
-clean_avds
-run_test "AVD tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir AVD_test --file_pattern '*launch_avd*.*' --config_file $TEST_DIR/config/avd_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml --headless
-
-clean_avds
-run_test "psq snapshot tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir psq_snapshot_test --file_pattern 'psq_test.*' --config_file $TEST_DIR/config/psq_cfg_byob.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml --headless
-
-clean_avds
-#run_test "Icebox tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Icebox_test --file_pattern 'test_icebox.*' --config_file $TEST_DIR/config/icebox_cfg.csv --buildername $BUILDERNAME --skip-adb-perf --generate_xml --headless
 
 log "deactivate virtualenv"
 deactivate_virtualenv
