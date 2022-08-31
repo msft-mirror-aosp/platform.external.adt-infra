@@ -227,6 +227,8 @@ class Emulator(object):
                 "300",
                 "-debug-events",  # Needed for some tests.
                 "-wipe-data",
+                "-gpu",
+                "swifrshader"
                 # "-verbose",
                 # Enabling the onese below will cause a huge amount of logging.
                 # "-show-kernel",
