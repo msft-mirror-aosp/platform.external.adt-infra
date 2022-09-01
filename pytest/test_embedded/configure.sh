@@ -29,17 +29,16 @@ if [ ! -f "./venv/bin/activate" ]; then
      echo "Using python 3"
      PYTHON=python3
      $PYTHON -m venv venv
-     [ -e ./venv/bin/pip ] && ./venv/bin/pip install --upgrade pip
-     [ -e ./venv/bin/pip ] && ./venv/bin/pip install --upgrade setuptools
   else
     echo "Python 2 ----<< Deprecated! See: https://python3statement.org/. Not supported."
     exit 1
   fi
 fi
 if [ -e ./venv/bin/activate ]; then
-   . ./venv/bin/activate
+   source ./venv/bin/activate
+   pip install --no-index --find-links=local_repo/dist -r requirements.txt
    make deps
    make -C ../../../qemu/android/android-grpc/python
-   pip install -e .\[test\]
+   pip install --no-index --find-links=local_repo/dist -e .\[test\]
    echo "Ready to run emu-embeded tests.!"
 fi

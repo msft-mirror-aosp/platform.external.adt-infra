@@ -40,7 +40,7 @@ $(SNAP): $(WHEEL)
 	make -C $(SNAP_ROOT) DIST=$(WHEEL_DIR)
 
 deps:  $(WHEEL) $(SNAP) src/emu/apk/app-debug.apk
-	$(PYTHON) -m pip install -q --upgrade -r$(CURRENT_DIR)/requirements.txt $(WHEEL) $(SNAP)
+	$(PYTHON) -m pip install -q  --no-index --find-links=$(CURRENT_DIR)/local_repo/dist  -r$(CURRENT_DIR)/requirements.txt $(WHEEL) $(SNAP)
 
 clean:
 	rm -rf $(WHEEL_DIR)

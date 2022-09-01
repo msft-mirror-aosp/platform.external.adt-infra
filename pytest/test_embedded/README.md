@@ -3,6 +3,8 @@
 This contains a series of embedded emulator tests.
 
 - You must have: `ANDROID_SDK_ROOT` set.
+- You must use a supported Python compiler:
+    - Linux
 - Make sure your DISPLAY environment variable in linux is set to an active
   display if it is not the default one. This is usually not needed, but
   is of importance if you are using chrome remoting or are running a "fake"
@@ -175,21 +177,13 @@ def test_timeout():
 
 Here's a list of known issues and workarounds. Most of these are related to Mac M1.
 
-### Tink is not (yet?) available on Mac M1
+## Missing wheels
 
-The python modules rely on TINK, for which there is no M1 release yet.
-This means you will have to build TINK yourself and install the library locally.
+If you are using an architecture that is not supported you might find that
+packages are missing. You have two options:
 
-You can follow the instructions [here](https://github.com/google/tink/blob/master/docs/PYTHON-HOWTO.md) to install tink locally.
-
-To quickly get started:
-
-```bash
-git clone https://github.com/google/tink.git
-cd tink/python
-bazel build //...
-pip install .
-```
+- Create the wheel and distribute it, see [instructions](local_repo/README.MD).
+- Install requirements.txt manually i.e. `pip3 install -r requirements.txt`
 
 ### Java exceptions on Pytest log
 
