@@ -20,10 +20,13 @@ SCRIPT_DIR=$(dirname "$0")
 PYTHON=python3
 TIMEOUT_CMD="timeout"
 WARN=false
+HOST_OS=$(get_build_os)
 alias python=python3
 
 PY_VER=$($PYTHON -c 'import sys; exit(1) if sys.version_info.major < 3 and sys.version_info.minor < 5 else exit(0)')
 $PY_VER || panic "No python3, not running these tests."
+
+log "Running test on ${HOST_OS} with ${PY_VER}"
 
 if ! command -v $TIMEOUT_CMD &>/dev/null; then
    TIMEOUT_CMD="gtimeout"
@@ -80,10 +83,21 @@ python3 -m venv /tmp/venv
 source /tmp/venv/bin/activate
 
 export PATH=$PATH:$HOME/.local/bin
+
+if [ "$HOST_OS" = "linux" ]; then
+  LIB_PATH=$(dirname $0)/local_repo/linux/lib
+  log "Setting up LD_LIBRARY_PATH include ${LIB_PATH} to bind to known good libs"
+  export LD_LIBRARY_PATH=${LIB_PATH}:${LD_LIBRARY_PATH}
+fi;
+
 # Now actually run the tests, note we have to redirect stderr to
 # stdout for the build bots, and we don't want to run longer than 5 mins.
-${TIMEOUT_CMD} 600 make -C ${SCRIPT_DIR} check EMULATOR=${EMULATOR} SESSION_DIR=${SESSION} 1>&2
-status=$?
+if ! command -v $TIMEOUT_CMD &>/dev/null; then
+  log "No timeout command, relying on pytest to terminate in a timely fashion"
+  make -C ${SCRIPT_DIR} check EMULATOR=${EMULATOR} SESSION_DIR=${SESSION} 1>&2
+else
+  ${TIMEOUT_CMD} 600 make -C ${SCRIPT_DIR} check EMULATOR=${EMULATOR} SESSION_DIR=${SESSION} 1>&2
+fi
 
 if [ $status -ne 0 ]; then
     echo "============ FAILURE LOG ==============="
