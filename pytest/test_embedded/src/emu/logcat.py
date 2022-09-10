@@ -15,7 +15,6 @@
 # limitations under the License.
 
 
-
 import logging
 import subprocess
 
@@ -24,7 +23,7 @@ from emu.utils import run
 
 
 class Logcat(object):
-    """ Retrieves all the logcat entries. """
+    """Retrieves all the logcat entries."""
 
     def __init__(self, emu_grpc_stub):
         self.grpc = emu_grpc_stub

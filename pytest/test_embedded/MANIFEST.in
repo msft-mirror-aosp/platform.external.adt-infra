@@ -1,0 +1,3 @@
+include src/emu/apk/*.apk
+include src/emu/templates/Pixel2.ini
+include src/emu/templates/Pixel2.avd/config.ini

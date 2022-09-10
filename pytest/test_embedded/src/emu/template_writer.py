@@ -46,7 +46,7 @@ class TemplateWriter(object):
         cfg = {}
         for line in ini.splitlines():
             line = line.strip()
-            if line.startswith("#"): 
+            if line.startswith("#"):
                 continue
             key, *value = line.split("=")
             cfg[key] = next(iter(value), None)

@@ -18,8 +18,6 @@
 """
 
 
-
-
 import socket
 import signal
 import time
@@ -31,8 +29,8 @@ from threading import Thread
 class EmulatorConnection(object):
     """Connects to the emulator telnet console.
 
-  It will authenticate immediately.
-  """
+    It will authenticate immediately.
+    """
 
     def __init__(self, transport, callback, port):
         self.callback = callback
@@ -106,18 +104,17 @@ class EmulatorConnection(object):
     def stop(self):
         self.transport.close()
 
-
     @staticmethod
     def connect(port, callback=None):
         """Connects to the telnet console on the given port and authenticates.
 
-    Args:
-      port:     The port to which to connect to the emulator.
-      callback: Function to be called when the telnet console has data
+        Args:
+          port:     The port to which to connect to the emulator.
+          callback: Function to be called when the telnet console has data
 
-    Returns:
-      Thread that is running the event loop
-    """
+        Returns:
+          Thread that is running the event loop
+        """
         sock = socket.create_connection(("localhost", port))
         connection = EmulatorConnection(sock, callback, port)
         t = Thread(target=connection.reader)
