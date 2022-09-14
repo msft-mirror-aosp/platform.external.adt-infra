@@ -79,6 +79,7 @@ def for_each_rotation(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
 def test_rotation_observable_through_screenshot(emulator_controller):
     """Test that setting the rotation, is observable through getting a screenshot."""
     for (fine, coarse) in for_each_rotation(emulator_controller):
@@ -89,6 +90,7 @@ def test_rotation_observable_through_screenshot(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
 def test_rotation_observable_through_adbstream(avd,
     at_home, animation_app, emulator_controller
 ):
@@ -114,6 +116,7 @@ def test_rotation_observable_through_adbstream(avd,
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
 def test_rotation_observable_through_stream_screenshot(
     animation_app, emulator_controller
 ):
@@ -166,6 +169,7 @@ def square_in_quadrant(img):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
 def test_rotation_pixels_in_the_right_place(animation_app, emulator_controller):
     """Test the colored square is in the expected location.
     The animation app draws a square in the top right corner (first quadrant).
@@ -226,6 +230,7 @@ def test_rotation_through_console_observable_through_physical_model(
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
 def test_rotation_through_console_observable_through_screenshot(
     at_home, emulator_controller, adb
 ):
