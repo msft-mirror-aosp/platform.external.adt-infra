@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 # Copyright 2020 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Let's turn off the crazy logging.
-set +x
 
 # This is used to run AVD and console emulator tests.
 # This will be invoked by aosp-emu-master-dev.
@@ -44,6 +41,9 @@ else
         log "Start VNC server"
         vncserver
     fi
+    AVAILABLE_DISPLAYS=$(cd /tmp/.X11-unix && for x in X*; do echo ":${x#X}"; done)
+    export DISPLAY=$(echo ${AVAILABLE_DISPLAYS} | cut -d ' ' -f 1)
+    log "We have the following displays available: ${AVAILABLE_DISPLAYS}, using ${DISPLAY}"
 fi
 
 # Let's log a lot.
@@ -74,12 +74,6 @@ export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
 export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 clean_avds
 run_test "Embedded tests" external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)
-if [[ $(is_presubmit $BID) == "true" ]]; then
-    # Ignore failures until the tests have stabilised.
-    # See b/183949465 for details.
-    # check_test_succeed embedded_test
-    echo "Ignoring potential errors due to  b/183949465"
-fi
 
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 clean_avds

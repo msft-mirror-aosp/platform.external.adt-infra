@@ -228,7 +228,7 @@ class Emulator(object):
                 "-debug-events",  # Needed for some tests.
                 "-wipe-data",
                 "-gpu",
-                "swiftshader"
+                "swiftshader_indirect"
                 # "-verbose",
                 # Enabling the onese below will cause a huge amount of logging.
                 # "-show-kernel",
@@ -288,7 +288,7 @@ class Emulator(object):
 
         if self.desc is None:
             logging.error("Discovered: %s", discovery.emulators())
-            raise Exception("Failed to launch {} - {}".format(self.emulator, avd))
+            raise Exception("Failed to launch {} - {}".format(self.emulator, self.avd))
 
         logging.info(
             "From available device: %s, connecting to: %s",
