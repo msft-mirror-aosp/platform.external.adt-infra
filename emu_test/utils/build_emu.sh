@@ -36,16 +36,6 @@ TEST_DIR=$(dirname "$0")/..
 
 # Get the absolute path to the AOSP ROOT
 AOSP_DIR=$(cd $TEST_DIR/../../..; pwd)
-
-set_verbosity 2
-
-# Make sure all the expected variables have been set.
-check_vars ANDROID_AVD_HOME SDK_EMULATOR  DISTRIB_DIR
-
-export ANDROID_HOME=$SDK_EMULATOR
-export ANDROID_SDK_ROOT=$SDK_EMULATOR
-export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
-
 # Use the hermetic python interpreter and launch the build
 PYTHON=$(aosp_find_python)
 $PYTHON $AOSP_DIR/tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"

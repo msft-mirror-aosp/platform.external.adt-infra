@@ -16,23 +16,31 @@
 # This is used to run AVD and console emulator tests.
 # This will be invoked by aosp-emu-master-dev.
 . $(dirname "$0")/common.sh
+# Let's log a lot.
+set_verbosity 2
 
 DISTRIB_DIR=$1
 TEST_DIR=$(dirname "$0")/..
-
-# Status code, a 0 indicates we had no timouts.
+AOSP_DIR=$(cd $TEST_DIR/../../..; pwd)
 STATUS=0
 SESSION_DIR=$DISTRIB_DIR/testlogs
 BUILD_DIR="out/prebuilt_cached/builds"
 EMULATOR_EXE=$SESSION_DIR/emu-master-dev/emulator/emulator
-
+SDK_EMULATOR=$AOSP_DIR/prebuilts/android-emulator-build/system-images/$(get_build_os)
 export ANDROID_HOME=$SDK_EMULATOR
 export ANDROID_SDK_ROOT=$SDK_EMULATOR
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
+export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+
+mkdir -p $ANDROID_AVD_HOME
+
+if [ -z "ANDROID_AVD_HOME" ]; then
+  export ANDROID_AVD_HOME=/tmp/android-test
+fi
 
 BUILDERNAME="Linux_gce"
-OS="linux"
-if [[ $OSTYPE == *"darwin"* ]]; then
+OS=$(get_build_os)
+if [[ $OS == *"darwin"* ]]; then
     BUILDERNAME="Mac"
     OS="darwin"
 else
@@ -46,39 +54,38 @@ else
     log "We have the following displays available: ${AVAILABLE_DISPLAYS}, using ${DISPLAY}"
 fi
 
-# Let's log a lot.
-set_verbosity 2
-
-# Make sure all the expected variables have been set.
-check_vars SDK_EMULATOR ANDROID_AVD_HOME ANDROID_SDK_ROOT ANDROID_HOME SESSION_DIR EMULATOR_EXE ANDROID_EMU_ENABLE_CRASH_REPORTING PYTHON
 
 # Make sure we remove adb when we are exiting.
 # Note that the value of "$?" after the trap action
 # completes shall be the value it had before trap was invoked.
 trap "terminate_adb" EXIT QUIT INT HUP
 
-log "Update emulator, not used, just for the purpose of sys img dependencies"
-run $ANDROID_HOME/tools/bin/sdkmanager --channel=3 --install emulator
+log "Using ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT with prepackaged SDK manager from $(which sdkmanager)"
 
+# accept all the licenses and install platform tools
+yes |  sdkmanager --licenses
+run sdkmanager "platform-tools" "platforms;android-33"
+
+
+log "Update emulator, not used, just for the purpose of sys img dependencies"
+run sdkmanager --channel=3 --install emulator
 
 log "Deploy emulator"
-run mkdir -p $SESSION_DIR
 run mkdir -p $SESSION_DIR/emu-master-dev
 run unzip -o $BUILD_DIR/sdk-repo-$OS-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
-
-log "activate virtualenv"
-activate_virtualenv $TEST_DIR/utils
 
 # Run the android-studio embedded emulator tests
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
 export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 clean_avds
-run_test "Embedded tests" external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)
+run_test "Embedded tests" $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)
 
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 clean_avds
-run_test "Console tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless
 
+log "activate virtualenv"
+activate_virtualenv $TEST_DIR/utils
+run_test "Console tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless
 log "deactivate virtualenv"
 deactivate_virtualenv
 

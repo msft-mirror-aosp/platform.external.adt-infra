@@ -57,6 +57,9 @@ def get_sdkmanager_binary():
     :return: filesystem location of the sdkmanager binary command.
     """
     sdkmanager_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'tools', 'bin')
+    if not os.path.exists(sdkmanager_binary):
+        sdkmanager_binary = os.path.join(os.environ['ANDROID_SDK_ROOT'], 'cmdline-tools', 'latest', 'bin')
+
     if os.name == 'nt':
         sdkmanager_binary = os.path.join(sdkmanager_binary, 'sdkmanager.bat')
     else:
