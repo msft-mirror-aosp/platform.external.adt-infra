@@ -1,7 +1,30 @@
 #!/bin/bash
+# Copyright 2022 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-# This is used to build and test emulator binaries.
-# This will be invoked by aosp-emu-master-dev.
+
+# This is the build launcher script that is invoked by the automated build system
+# The build system will provide the following parameters:
+#
+# $1 - The directory where the build should take place, this does not persist
+# $2 - The distribution directory, every file in this directory will persist and
+#      be available as an artifact for future download
+# $3 - The build id, with the format  BUILD_ID := P?(\d+), build ids with a P prefix
+#      are presubmit builds.
+# $4 - The number of CPU's to use for building, **DEPRECATED**
+# $5 - Whether or not to build the "qtwebengine". The presence of this flag indicates
+#      that this build should include features meant for public release
 . $(dirname "$0")/common.sh
 
 OUT_DIR=$1
@@ -9,10 +32,11 @@ DISTRIB_DIR=$2
 export BID=$3
 export CPU=$4
 USE_QTWEBENGINE=$5
-
 TEST_DIR=$(dirname "$0")/..
 
-# Let's log the commands.
+# Get the absolute path to the AOSP ROOT
+AOSP_DIR=$(cd $TEST_DIR/../../..; pwd)
+
 set_verbosity 2
 
 # Make sure all the expected variables have been set.
@@ -22,28 +46,7 @@ export ANDROID_HOME=$SDK_EMULATOR
 export ANDROID_SDK_ROOT=$SDK_EMULATOR
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 
-# Make sure we remove adb when we are exiting.
-# Note that the value of "$?" after the trap action
-# completes shall be the value it had before trap was invoked.
-trap "terminate_adb" EXIT QUIT INT HUP
-
-PYTHON=python
-
-# Prefer python3 if it is available.
-if command -v python3 &>/dev/null; then
-  log "Using python 3"
-  PYTHON=python3
-  $PYTHON -m venv $OUT_DIR/venv
-  [ -e $OUT_DIR/venv/bin/pip ] && $OUT_DIR/venv/bin/pip install --upgrade pip setuptools requests
-else
-  log "Using python 2.. This is no longer officially supported!"
-  log "https://python3statement.org/"
-fi
-
-QTWEBENGINE_ARG=
-if [[ $USE_QTWEBENGINE == "qtwebengine" ]]; then
-    QTWEBENGINE_ARG="--qtwebengine"
-fi
-
-$PYTHON tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
+# Use the hermetic python interpreter and launch the build
+PYTHON=$(aosp_find_python)
+$PYTHON $AOSP_DIR/tools/buildSrc/servers/build_tools.py --out_dir $OUT_DIR --dist_dir $DISTRIB_DIR --build-id $BID $QTWEBENGINE_ARG || panic "build failure"
 

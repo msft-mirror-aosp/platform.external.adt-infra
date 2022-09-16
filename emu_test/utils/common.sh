@@ -25,8 +25,6 @@
 export LANG=C
 export LC_ALL=C
 
-
-
 if [ -z "$_SHU_PROGDIR" ]; then
     _SHU_PROGDIR=$(dirname "$0")
 elif [ ! -f "$_SHU_PROGDIR"/common.shi ]; then
@@ -47,8 +45,6 @@ else
     _YELLOW=
     _RESET=
 fi
-
-
 
 log2err () {
     log "$@" >&2
@@ -83,7 +79,6 @@ decrement_verbosity () {
 set_verbosity () {
     _SHU_VERBOSE=$1
 }
-
 
 terminate_adb() {
   # Terminates any running instance of adb if one exists.
@@ -624,8 +619,10 @@ is_presubmit () {
   printf "$retval"
 }
 
-PYTHON="python"
-
-# Check that python is installed and working.
-PYVER=$($PYTHON --version)
-log "Using python version: $PYVER"
+aosp_find_python() {
+  local AOSP_PREBUILTS_DIR=$AOSP_DIR/prebuilts
+  local OS_NAME=$(get_build_os)
+  local PYTHON=$AOSP_PREBUILTS_DIR/python/$OS_NAME-x86/bin/python3
+  $PYTHON --version >/dev/null || panic "Unable to get python version from $PYTHON"
+  printf "$PYTHON"
+}
