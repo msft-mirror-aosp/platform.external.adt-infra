@@ -41,6 +41,7 @@ public class GoogleAppUtil {
 
     private static final int api = SystemUtil.getApiLevel();
     private static final String email = "demo.sysimg.user1@gmail.com";
+    private static final String password = "qcw4l34wqb";
 
     /**
      * Log a user into a Google application
@@ -186,7 +187,7 @@ public class GoogleAppUtil {
         }
 
         Log.i("Login", "enter password");
-        editInput.setText("2u0of9osen");
+        editInput.setText(password);
         clickNext(device);
 
         boolean isSignedIn =
@@ -223,12 +224,17 @@ public class GoogleAppUtil {
             backupSwitch.click();
         }
 
-        UiObject agreeButton = api >= 29 ?
-                device.findObject(new UiSelector().textMatches("(?i)agree(?-i)")) :
+        UiObject acceptButton = api >= 29 ?
+                device.findObject(new UiSelector().textMatches("(?i)accept(?-i)")) :
                 device.findObject(
                         new UiSelector().resourceId(Res.GOOGLE_SERVICES_ACCEPT_BUTTON_RES));
 
-        if (agreeButton.exists()){
+        UiObject agreeButton = device.findObject(
+                new UiSelector().textMatches("(?i)agree(?-i)"));
+
+        if (acceptButton.exists()) {
+            acceptButton.clickAndWaitForNewWindow();
+        } else if (agreeButton.exists()) {
             agreeButton.clickAndWaitForNewWindow();
         }
 
@@ -239,7 +245,9 @@ public class GoogleAppUtil {
 
         new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
 
-        if (agreeButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+        if (acceptButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            agreeButton.clickAndWaitForNewWindow();
+        } else if (agreeButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             agreeButton.clickAndWaitForNewWindow();
         }
 
