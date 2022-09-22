@@ -44,7 +44,6 @@ public class Res {
     public static final String CHROME_POSITIVE_BUTTON_RES = "com.android.chrome:id/positive_button";
     public static final String CHROME_ACCOUNT_SELECTION_MARK_RES = "com.android.chrome:id/account_selection_mark";
     public static final String CREATE_NEW_CONTACT = "com.android.contacts:id/create_contact_button";
-
     public static final String PERMISSION_RECYCLER_VIEW = "com.android.permissioncontroller:id/recycler_view";
     public static final String ALLOW_PERMISSION_BUTTON = "(com.android.permissioncontroller\\d*:id)"
             + "/(allow_radio_button|allow_always_radio_button)";
@@ -155,6 +154,7 @@ public class Res {
     public static final String ANDROID_ICON_RES = "android:id/icon";
     public static final String ANDROID_ERROR_CLOSE_RES = "android:id/aerr_close";
     public static final String ANDROID_BUTTON_ONE = "android:id/button1";
+    public static final String ANDROID_BUTTON_TWO = "android:id/button2";
     public static final String ANDROID_WIFI_SUMMARY_RES = "com.android.systemui:id/wifi_connected_summary";
 
     // Android TV Resources.

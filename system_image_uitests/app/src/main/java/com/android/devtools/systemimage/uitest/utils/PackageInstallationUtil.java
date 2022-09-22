@@ -222,6 +222,12 @@ public class PackageInstallationUtil {
             }
         }
 
+        final UiObject installBlockedAppButton = device.findObject(new UiSelector().
+                resourceId(Res.ANDROID_BUTTON_TWO).packageName(Res.GOOGLE_PLAY_VENDING_RES));
+        if (installBlockedAppButton.waitForExists(30000)) {
+            installBlockedAppButton.clickAndWaitForNewWindow();
+        }
+
         new watcher(device, Res.PKG_INSTALL_WATCHER_PATTERN).checkForCondition();
 
         final UiObject doneButtonText = device.findObject(new UiSelector().textMatches("(?i)done(?-i)").
