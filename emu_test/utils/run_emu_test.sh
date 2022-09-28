@@ -72,7 +72,7 @@ run sdkmanager --channel=3 --install emulator
 
 log "Deploy emulator"
 run mkdir -p $SESSION_DIR/emu-master-dev
-run unzip -o $BUILD_DIR/sdk-repo-$OS_aarch64-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
+run unzip -o $BUILD_DIR/sdk-repo-*-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
 
 # Run the android-studio embedded emulator tests
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
