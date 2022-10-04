@@ -50,22 +50,23 @@ class AvdGenerator(object):
             shutil.rmtree(self.tmpdir)
 
     def _find_images(self):
-        for x in self._recursive_iglob(self.sys_root, [self.IMAGE.match]):
+        logging.info("Looking for images in %s", self.sys_root)
+        for x in self._recursive_iglob(self.sys_root, [lambda x: True]):
+            logging.debug("Considering %s", x)
             m = self.IMAGE.match(x)
-            logging.debug("Found %s", x)
-            yield {
-                "api": m.group(1),
-                "tag": m.group(2),
-                "abi": m.group(3),
-                "cpu": m.group(3),
-                "image_dir": os.path.join(
-                    "system-images",
-                    "android-{}".format(m.group(1)),
-                    m.group(2),
-                    m.group(3),
-                ),
-                "avd_dir": os.path.join(self.avd_home, "Pixel2.avd"),
-            }
+            if m:
+              yield {
+                  "api": m.group(1),
+                  "tag": m.group(2),
+                  "abi": m.group(3),
+                  "cpu": m.group(3),
+                  "image_dir": os.path.join(
+                      "system-images",
+                      "android-{}".format(m.group(1)),
+                      m.group(2),
+                      m.group(3),
+                  ),
+              }
 
     def _find_avd(self, api, abi, tag):
         return [
@@ -110,6 +111,7 @@ class AvdGenerator(object):
             avds = self._find_avd(api, abi, tag)
         avd = avds[0]
         avd["name"] = name
+        avd["avd_home"] = self.avd_home
 
         self.writer.write_template("Pixel2.ini", avd, "{}.ini".format(name))
         self._write_config_ini(name, avd, custom_cfg)

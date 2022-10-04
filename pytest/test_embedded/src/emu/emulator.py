@@ -67,6 +67,13 @@ class Emulator(object):
             )
             self.emulator = os.path.join(self.sdk_root, "emulator", "emulator")
 
+        logging.info(
+            "Using sdk_root: %s, avd_home: %s, and emulator: %s",
+            self.sdk_root,
+            self.avd_home,
+            self.emulator,
+        )
+
     def get_emulator_controller(self):
         """Gets the emulator controller stub to this emulator."""
         return self.desc.get_emulator_controller()
