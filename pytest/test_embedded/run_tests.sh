@@ -159,14 +159,15 @@ HERE=$AOSP_DIR/external/adt-infra/pytest/test_embedded
 PY_VER=$($PYTHON --version)
 PATH=$HOME/.local/bin:$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
 VIRTUAL_ENV_DEST=$(mktemp -d -t e2e-tests-XXXXXXXX)
+ANDROID_AVD_HOME=$(mktemp -d -t avd-home-XXXXXXX)
 
 launch_devpi # Note devpi is running under the default interpreter
 
-silent_run $PYTHON -m venv $VIRTUAL_ENV_DEST
+run $PYTHON -m venv $VIRTUAL_ENV_DEST
 
 log "Using ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT with prepackaged SDK manager from $(which sdkmanager)"
 
-# accept all the licenses and install platform tools
+# accept all the licenses and install platform tools, the emulator needs these..
 yes |  sdkmanager --licenses
 silent_run sdkmanager "platform-tools" "platforms;android-33"
 
@@ -184,27 +185,20 @@ restart_adb() {
     $ANDROID_SDK_ROOT/platform-tools/adb start-server
 }
 
-make_wheel() {
-    mkdir -p $SESSION/dist
-    CFLAGS='-w' pip wheel $1 -w $SESSION/dist > /dev/null 2>&1
-    silent_run twine upload -r devpi-staging --config-file  $VIRTUAL_ENV/pypirc $SESSION/dist/*
-}
-
 rm -rf $SESSION/dist
-silent_run pip install twine tox tox-venv
-make_wheel $AEMU_GRPC
-make_wheel $SNAPTOOL
-silent_run pip install -e $HERE\[test\]
+silent_run pip install --upgrade --force-reinstall  $AEMU_GRPC $SNAPTOOL
+silent_run pip install --upgrade --force-reinstall  -e $HERE\[test\]
 
 if [ ! -z "$GENERATE" ]; then
     # Get all the dependencies..
     silent_run pip download devpi-server -d $SESSION/dist
 fi
 
+mkdir -p $SESSION/embedded_test
 restart_adb
 (
     cd $HERE
-    tox --workdir ${SESSION}/embedded_test -- -x --emulator=${EMULATOR}
+    pytest -vv  -m "not perf" --junitxml=$SESSION/embedded_test/test_embedded_test.xml --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log
 )
 
 STATUS=$?
@@ -215,7 +209,8 @@ if [ $STATUS -ne 0 ]; then
 fi
 
 # Clean up unused extra data
-rm -rf ${SESSION}/embedded_test/py3  ${SESSION}/embedded_test/dist
+run rm -rf ${SESSION}/embedded_test/py3  ${SESSION}/embedded_test/dist $VIRTUAL_ENV
+deactivate
 
 # Only propagate errors if --warn true has been requested.
 case "$WARN" in
