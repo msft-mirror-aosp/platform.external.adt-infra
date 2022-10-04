@@ -32,6 +32,7 @@ export ANDROID_SDK_ROOT=$SDK_EMULATOR
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
 
+PYTHON=$(aosp_find_python)
 mkdir -p $ANDROID_AVD_HOME
 
 if [ -z "ANDROID_AVD_HOME" ]; then
@@ -85,7 +86,7 @@ clean_avds
 
 log "activate virtualenv"
 activate_virtualenv $TEST_DIR/utils
-run_test "Console tests" $PYTHON -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless
+run_test "Console tests" python -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless
 log "deactivate virtualenv"
 deactivate_virtualenv
 
