@@ -84,14 +84,20 @@ set_verbosity () {
     _SHU_VERBOSE=$1
 }
 
+# Terminates a process by name
+# $1 should be the name of the proc
+terminate_proc_by_name() {
+    local name=$1
+    log "Terminating $name"
+    name_procs=$(ps -A | grep "$name" | grep -v grep | awk '{ print $1; }')
+    for name_proc in $name_procs; do
+        log "Killing: $(ps $name_proc | tail -n 1)"
+        silent_run kill -9 $name_proc
+    done
+}
 
 terminate_adb() {
-  # Terminates any running instance of adb if one exists.
-  log "Terminating adb"
-  adb_procs=$(ps -A | grep adb | awk '{ print $1; }')
-  for adb_proc in $adb_procs; do
-    run kill -9 $adb_proc
-  done
+  terminate_proc_by_name adb
 }
 
 # Return internal verbosity level, clamped to 0 as a minimum bound.
@@ -111,7 +117,7 @@ dump_n () {
     local LEVEL=$1
     shift
     if [ "$LEVEL" -lt "$_SHU_VERBOSE" ]; then
-        printf '%s %s\n' "$(date '+%H:%M:%S,%3N')" "$@";
+        printf '%s %s \n' "$(date '+%H:%M:%S,%3N')" "$@";
     fi
 }
 
