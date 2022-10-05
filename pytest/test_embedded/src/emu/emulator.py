@@ -191,6 +191,7 @@ class Emulator(object):
         if not self.proc:
             return
 
+        self.disconnect()
         logging.info("Sending SIGINT to emulator.")
         self.proc.send_signal(2)
 

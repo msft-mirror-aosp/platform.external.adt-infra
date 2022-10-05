@@ -105,21 +105,20 @@ terminate_devpi() {
     terminate_proc_by_name devpi
 }
 
-
 # Sets DISPLAY environment variable to the first working X server
-set_display_env () {
-  [ -d "/tmp/.X11-unix" ] && [ ! -L "/tmp/.X11-unix" ] || panic "No X server running!"
-  local CWD=$PWD
-  cd /tmp/.X11-unix
-  for x in X*; do
-    export DISPLAY=":${x#X}"
-    if xset q &>/dev/null; then
-      log "Found X server at \$DISPLAY [$DISPLAY]"
-      break
-    fi
-    log "No X server at \$DISPLAY [$DISPLAY]"
-  done
-  cd $CWD
+set_display_env() {
+    [ -d "/tmp/.X11-unix" ] && [ ! -L "/tmp/.X11-unix" ] || panic "No X server running!"
+    local CWD=$PWD
+    cd /tmp/.X11-unix
+    for x in X*; do
+        export DISPLAY=":${x#X}"
+        if xset q &>/dev/null; then
+            log "Found X server at \$DISPLAY [$DISPLAY]"
+            break
+        fi
+        log "No X server at \$DISPLAY [$DISPLAY]"
+    done
+    cd $CWD
 }
 
 # The emulator needs an X server to launch on linux
@@ -167,7 +166,7 @@ setup_virtual_env() {
     . $VIRTUAL_ENV_DEST/bin/activate
 
     # Fix up our pip to point to local file system
-    cat $HERE/cfg/pip.conf | sed "s,REPO_DIR,$WHEEL_DIR,g" > $VIRTUAL_ENV_DEST/pip.conf
+    cat $HERE/cfg/pip.conf | sed "s,REPO_DIR,$WHEEL_DIR,g" >$VIRTUAL_ENV_DEST/pip.conf
     cp $HERE/cfg/pypirc $VIRTUAL_ENV_DEST/pypirc
     silent_run pip install --upgrade pip wheel setuptools
 }
@@ -181,7 +180,7 @@ restart_adb() {
 
 # Parse the arguments, and get going..
 EMULATOR=$ANDROID_SDK_ROOT/emulator/emulator
-SESSION=session_dir
+SESSION=$PWD/session_dir
 while [[ $# -gt 0 ]]; do
     key="$1"
 
@@ -268,12 +267,17 @@ restart_adb
     cd $HERE
     pytest -vv -m "not perf" --junitxml=$SESSION/embedded_test/test_embedded_test.xml --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log
 )
-
 STATUS=$?
-if [ $STATUS -ne 0 ]; then
-    warn "============ PYTEST FAILURE LOG ==============="
+
+# If a junit report was created we will produce a readable html file, this can be used to diagnose a test failure
+if [ -f $SESSION/embedded_test/test_embedded_test.xml ]; then
+    python $HERE/src/xml/transform.py --xml $SESSION/embedded_test/test_embedded_test.xml --xsl $HERE/cfg/asHtml.xslt --out $SESSION/test_report.html
+    if [ $STATUS -ne 0 ]; then
+        warn "== TEST FAILURES! Check $SESSION/test_report.html for details on which test failed."
+    fi
+else
+    warn "============ PYTEST NO JUNIT TEST RESULT WAS PRODUCED ==============="
     cat ${SESSION}/embedded_test/log/pytest.log >&2
-    warn "============ PYTEST FAILURE LOG ==============="
 fi
 
 # Clean up unused extra data
