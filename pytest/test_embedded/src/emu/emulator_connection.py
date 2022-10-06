@@ -13,16 +13,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""A Connection to the emulator telnet console.
-"""
-
-
-import socket
-import signal
-import time
 import datetime
 import logging
+import signal
+import socket
+import time
 from threading import Thread
 
 
@@ -41,9 +36,19 @@ class EmulatorConnection(object):
         self.port = port
 
     def is_connected(self):
+        """True if connected
+
+        Returns:
+            Bool: True if connected
+        """
         return self.connected
 
     def auth(self, fname):
+        """Authenticates the user by sending the token in fname
+
+        Args:
+            fname (str): Path to the file containing the token.
+        """
         logging.info("Authenticating using %s", fname)
         with open(fname[1:-1], "r") as authfile:
             token = authfile.read()
@@ -51,7 +56,16 @@ class EmulatorConnection(object):
             self.connected = True
             self.send(msg)
 
-    def data_received(self, data):
+    def _data_received(self, data):
+        """Called whenever data has been read from the telnet console
+
+        It will:
+           - Authorize if needed.
+           - Invoke the callback with the received data.
+
+        Args:
+            data (bytes): Data received from the socket
+        """
         msg = data.decode()
         logging.info("Recv: %s", msg)
         # send the auth token if needed
@@ -71,6 +85,8 @@ class EmulatorConnection(object):
             self.callback(msg)
 
     def connection_lost(self):
+        """Called whenever the socket connection is dropped.
+        """
         total = time.time() - self.start
         logging.error(
             "The emulator is gone, we were alive for: %d seconds (%s)!",
@@ -80,16 +96,26 @@ class EmulatorConnection(object):
         self.connected = False
 
     def reader(self):
+        """Reader thread that received bytest from the emulator and passes it
+           on the receiver function.
+        """
         data = self.transport.recv(4096)
         try:
             while data:
-                self.data_received(data)
+                self._data_received(data)
                 data = self.transport.recv(4096)
         except:
             self.connection_lost()
 
     def send(self, msg):
-        """Sends plain text to the emulator"""
+        """Sends plain text to the emulator
+
+        Args:
+            msg (str): The ASCII msg to send over the telnet consle
+
+        Returns:
+            Bool: True if the connection is still open.
+        """
         if self.connected:
             logging.info("Sending %s", msg)
             try:
@@ -102,6 +128,7 @@ class EmulatorConnection(object):
         return self.connected
 
     def stop(self):
+        """Closes the transport, and stops the reader thread."""
         self.transport.close()
 
     @staticmethod
@@ -109,11 +136,11 @@ class EmulatorConnection(object):
         """Connects to the telnet console on the given port and authenticates.
 
         Args:
-          port:     The port to which to connect to the emulator.
-          callback: Function to be called when the telnet console has data
+            port (int): The port to which to connect to the emulator.
+            callback (_type_, optional): Function to be called when the telnet console has data. Defaults to None.
 
         Returns:
-          Thread that is running the event loop
+            Thread:  Thread that is running the event loop
         """
         sock = socket.create_connection(("localhost", port))
         connection = EmulatorConnection(sock, callback, port)

@@ -21,7 +21,10 @@ set_verbosity 2
 
 DISTRIB_DIR=$1
 TEST_DIR=$(dirname "$0")/..
-AOSP_DIR=$(cd $TEST_DIR/../../..; pwd)
+AOSP_DIR=$(
+    cd $TEST_DIR/../../..
+    pwd
+)
 STATUS=0
 SESSION_DIR=$DISTRIB_DIR/testlogs
 BUILD_DIR="out/prebuilt_cached/builds"
@@ -36,54 +39,75 @@ PYTHON=$(aosp_find_python)
 mkdir -p $ANDROID_AVD_HOME
 
 if [ -z "ANDROID_AVD_HOME" ]; then
-  export ANDROID_AVD_HOME=/tmp/android-test
+    export ANDROID_AVD_HOME=/tmp/android-test
 fi
 
 BUILDERNAME="Linux_gce"
 OS=$(get_build_os)
-if [[ $OS == *"darwin"* ]]; then
-    BUILDERNAME="Mac"
-    OS="darwin"
-else
-    ps cax | grep vnc >/dev/null
-    if [ $? -eq 1 ]; then
-        log "Start VNC server"
-        vncserver
-    fi
-    AVAILABLE_DISPLAYS=$(cd /tmp/.X11-unix && for x in X*; do echo ":${x#X}"; done)
-    export DISPLAY=$(echo ${AVAILABLE_DISPLAYS} | cut -d ' ' -f 1)
-    log "We have the following displays available: ${AVAILABLE_DISPLAYS}, using ${DISPLAY}"
-fi
-
 
 # Make sure we remove adb when we are exiting.
 # Note that the value of "$?" after the trap action
 # completes shall be the value it had before trap was invoked.
 trap "terminate_adb" EXIT QUIT INT HUP
 
-log "Using ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT with prepackaged SDK manager from $(which sdkmanager)"
 
-# accept all the licenses and install platform tools
-yes |  sdkmanager --licenses
-run sdkmanager "platform-tools" "platforms;android-33"
+# Sets DISPLAY environment variable to the first working X server
+set_display_env() {
+    [ -d "/tmp/.X11-unix" ] && [ ! -L "/tmp/.X11-unix" ] || panic "No X server running!"
+    local CWD=$PWD
+    cd /tmp/.X11-unix
+    for x in X*; do
+        export DISPLAY=":${x#X}"
+        if xset q &>/dev/null; then
+            log "Found X server at \$DISPLAY [$DISPLAY]"
+            break
+        fi
+        log "No X server at \$DISPLAY [$DISPLAY]"
+    done
+    cd $CWD
+}
 
+# The emulator needs an X server to launch on linux
+# setup screen tries to find an active X server, and sets the
+# display environment variable, so we can actually use it.
+# This will launch a vnc server if needed.
+setup_screen() {
+    local OS=$(get_build_os)
+    if [[ $OS == "linux" ]]; then
+        ps cax | grep vnc >/dev/null
+        if [ $? -eq 1 ]; then
+            log "Start VNC server"
+            silent_run vncserver
+        fi
+        set_display_env
+    fi
+}
 
-log "Update emulator, not used, just for the purpose of sys img dependencies"
-run sdkmanager --channel=3 --install emulator
+# Set up the sdk manager to point to the proper location.
+setup_sdk() {
+    log "Using ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT with prepackaged SDK manager"
+    # accept all the licenses and install platform tools, the emulator needs these..
+    # Since we don't care about the texts we /dev/null the output.
+    (yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses) >/dev/null
+    silent_run $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33"
+    silent_run sdkmanager --channel=3 --install emulator
+}
 
-log "Deploy emulator"
-run mkdir -p $SESSION_DIR/emu-master-dev
-run unzip -o $BUILD_DIR/sdk-repo-*-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
+deploy_emulator() {
+    log "Deploy emulator"
+    run mkdir -p $SESSION_DIR/emu-master-dev
+    run unzip -o $BUILD_DIR/sdk-repo-*-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
+}
+
+setup_sdk   # Make sure the sdk dependencies are there
+setup_screen # Configure the screen
 
 # Run the android-studio embedded emulator tests
-export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
-export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
-clean_avds
 run_test "Embedded tests" $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)
 
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
-clean_avds
 
+clean_avds
 log "activate virtualenv"
 activate_virtualenv $TEST_DIR/utils
 run_test "Console tests" python -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless

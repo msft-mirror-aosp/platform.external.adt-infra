@@ -74,6 +74,10 @@ class Emulator(object):
             self.emulator,
         )
 
+    def __del__(self):
+        self.disconnect()
+        self.stop()
+
     def get_emulator_controller(self):
         """Gets the emulator controller stub to this emulator."""
         return self.desc.get_emulator_controller()
@@ -116,7 +120,10 @@ class Emulator(object):
 
         to_remove = os.path.join(self.avd_home, "{}.avd".format(self.avd))
         logging.debug("Removing %s", to_remove)
-        shutil.rmtree(os.path.join(self.avd_home, "{}.avd".format(self.avd)))
+        try:
+            shutil.rmtree(to_remove)
+        except OSError: 
+            logging.warning("Failed to remove %s", to_remove)
 
     def check_adb(self):
         my_env = os.environ.copy()
@@ -176,14 +183,18 @@ class Emulator(object):
         )
 
         timeout = time.time() + max_wait
+        start_time = time.time()
         emu = self.get_emulator_controller()
         response = emu.getStatus(_EMPTY_)
 
+        logging.info("Waited for boot of %s", self.desc.name())
         while not response.booted and time.time() < timeout:
-            logging.info("Waiting for boot of %s", self.desc.name())
             time.sleep(1)
             response = emu.getStatus(_EMPTY_)
 
+        logging.info(
+            "Waited %d s for boot of %s", (time.time() - start_time), self.desc.name()
+        )
         return response.booted
 
     def stop(self, graceful_timeout=10):
@@ -236,7 +247,8 @@ class Emulator(object):
                 "-debug-events",  # Needed for some tests.
                 "-wipe-data",
                 "-gpu",
-                "swiftshader_indirect"
+                "swiftshader_indirect",
+                "-debug-grpc", # Let's log the gRPC interactions
                 # "-verbose",
                 # Enabling the onese below will cause a huge amount of logging.
                 # "-show-kernel",

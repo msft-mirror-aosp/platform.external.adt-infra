@@ -256,22 +256,32 @@ if [ ! -z "$GENERATE" ]; then
     run pip wheel --no-cache --wheel-dir=$SESSION/dist $AEMU_GRPC $SNAPTOOL $HERE
 fi
 
-silent_run pip install --upgrade --force-reinstall $AEMU_GRPC $SNAPTOOL
-silent_run pip install --upgrade --force-reinstall -e $HERE\[test\]
+run pip install --upgrade --force-reinstall $AEMU_GRPC $SNAPTOOL
+run pip install --upgrade --force-reinstall -e $HERE\[test\]
 
 mkdir -p $SESSION/embedded_test
 restart_adb
 
+
+# We are going to create a temporary report, that we will spruce up
+TMP_TEST_RESULT=$VIRTUAL_ENV/test_unit.xml
+FINAL_RESULT=$SESSION/embedded_test/test_embedded_test.xml
+
 # Now let's run pytests
 (
     cd $HERE
-    pytest -vv -m "not perf" --junitxml=$SESSION/embedded_test/test_embedded_test.xml --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log
+    pytest -vv -m "not perf" --junitxml=$TMP_TEST_RESULT --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log
 )
 STATUS=$?
 
-# If a junit report was created we will produce a readable html file, this can be used to diagnose a test failure
-if [ -f $SESSION/embedded_test/test_embedded_test.xml ]; then
-    python $HERE/src/xml/transform.py --xml $SESSION/embedded_test/test_embedded_test.xml --xsl $HERE/cfg/asHtml.xslt --out $SESSION/test_report.html
+# If a junit report was created we will:
+# - Produce a readable html file, this can be used to diagnose a test failure
+# - Make a sponge compatible report that only includes output for failures.
+if [ -f $TMP_TEST_RESULT ]; then
+    python $HERE/src/xml/transform.py --xml $TMP_TEST_RESULT --xsl $HERE/cfg/asHtml.xslt --out $SESSION/test_report.html
+
+    # Next we lift out the failure messages, this makes it WAAAYYY easier to debug things in sponge..
+    python $HERE/src/xml/transform.py --xml $TMP_TEST_RESULT --xsl $HERE/cfg/liftSystemOut.xslt --out $FINAL_RESULT
     if [ $STATUS -ne 0 ]; then
         warn "== TEST FAILURES! Check $SESSION/test_report.html for details on which test failed."
     fi
