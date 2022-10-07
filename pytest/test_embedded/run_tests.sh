@@ -247,6 +247,10 @@ setup_screen      # Make sure we have a working display environment
 setup_sdk         # Make sure android emulato dependencies are present
 setup_virtual_env # Start a virtual environment
 
+#clean out dangling pyc files.
+find $HERE -name '*.pyc' -delete
+find $VIRTUAL_ENV -name '*.pyc' -delete
+
 if [ ! -z "$GENERATE" ]; then
     # Get all the dependencies, compile them, and place them in the dist dir
     rm -rf $SESSION/dist
