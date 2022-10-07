@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 The Android Open Source Project
+ * Copyright (c) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class VpnTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(120);
+    public Timeout globalTimeout = Timeout.seconds(360);
 
     /**
      * Tests if VPN works as expected.
@@ -72,22 +72,11 @@ public class VpnTest {
     public void testVpn() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
-        String testPackageName = "com.test.vpn";
         String apk = "FredVPN.apk";
-        String result = "";
-
-        // Install TestVPN, if not already present.
-        boolean isTestVPNInstalled = PackageInstallationUtil.
-                isPackageInstalled(instrumentation, testPackageName);
-
-        if (!isTestVPNInstalled) {
-            result = PackageInstallationUtil.installApk(instrumentation, apk, false);
-            isTestVPNInstalled = PackageInstallationUtil.
-                    isPackageInstalled(instrumentation, testPackageName);
-        }
+        String result = PackageInstallationUtil.installApk(instrumentation, apk, true);
 
         assertTrue("Application " + apk + " is not installed. Result: " + result,
-                isTestVPNInstalled);
+                result.isEmpty());
 
         // Check if VPN is on. If true, skip.
         if (!VpnTestUtil.verifyVpnStatus_v2(device)) {
