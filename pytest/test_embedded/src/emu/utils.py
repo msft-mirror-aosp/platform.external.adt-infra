@@ -20,11 +20,18 @@ from queue import Queue
 from threading import Thread
 
 import sh
-import six
 
 
-def run(cmd, local_env={}):
-    """Runs the command, logging the out put to the logger."""
+def run(cmd: list[str], local_env: dict[str, str] = {}) -> tuple[subprocess.Popen, Queue]:
+    """Runs the given command, directing stderr & stdout to the python logger.
+
+    Args:
+        cmd (list[str]): Command to execute
+        local_env (dict[str, str], optional): Environment to merge into default environment. Defaults to {}.
+
+    Returns:
+        _type_: _description_
+    """
     use_shell = platform.system() == "Windows"
     env = os.environ
 

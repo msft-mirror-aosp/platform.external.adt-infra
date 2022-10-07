@@ -27,6 +27,7 @@ import logging
 import os
 import platform
 import sys
+from pathlib import Path
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
@@ -34,9 +35,12 @@ from aemu.proto.emulator_controller_pb2 import (
     ParameterValue,
     PhysicalModelValue,
 )
-from emu.emulator import Emulator
+from emu.apk import APP_DEBUG_APK
+from emu.emulator import BaseEmulator, Emulator, DebugEmulator
 
 from tests.test_utils import wait_for_regex
+
+# from emu.emulator import Emulator
 
 
 def pytest_addoption(parser):
@@ -103,9 +107,10 @@ def pytest_sessionfinish(session, exitstatus):
 
 # Session wide fixtures are below
 
+
 @pytest.fixture(scope="module")
 @pytest.mark.timeout(180)
-def avd(request, pytestconfig):
+def avd(request, pytestconfig) -> BaseEmulator:
     """Makes a booted emulator accessible and install the animation apk.
 
     Note: You usually don't need fixture, as it will be automatically provided
@@ -160,11 +165,12 @@ def avd(request, pytestconfig):
 
     if name not in pytest.emulators:
         logging.info("Launching %s", name)
-        emu = Emulator(pytestconfig.getoption("emulator"))
         if pytestconfig.getoption("debug_emulator"):
-            emu.first_running(pytestconfig.getoption("debug_emulator_log"))
+            emu = DebugEmulator(pytestconfig.getoption("debug_emulator_log"))
         else:
-            emu.launch_like_studio(avd_config)
+            emu = Emulator(
+                exe=Path(pytestconfig.getoption("emulator")), avd_config=avd_config
+            )
 
         pytest.emulators[name] = emu
 
@@ -174,12 +180,13 @@ def avd(request, pytestconfig):
 
     # Make sure the emulator is booted.
     assert emu.wait_for_boot()
-    emu.adb(["install", os.path.join(Emulator.here, "apk", "app-debug.apk")])
+
+    emu.adb.run(["install", str(APP_DEBUG_APK.absolute())])
     logging.info("Using %s for module", name)
     return emu
 
 
-def go_home(avd):
+def go_home(avd : BaseEmulator):
     """It does the following:
 
     1. Wakes up the emulator by sending a WAKEUP
@@ -191,8 +198,8 @@ def go_home(avd):
     def my_test(go_home):
         assert(...)
     """
-    stub = avd.get_emulator_controller()
-    avd.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
+    stub = avd.description.get_emulator_controller()
+    avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
     stub.setPhysicalModel(
         PhysicalModelValue(
@@ -203,7 +210,7 @@ def go_home(avd):
 
 
 @pytest.fixture
-def at_home(avd):
+def at_home(avd: BaseEmulator):
     """This calls the go_home fixture before running the test,
     and after running the test.
 
@@ -221,7 +228,7 @@ def at_home(avd):
 
 
 @pytest.fixture
-def emulator_log(avd):
+def emulator_log(avd: BaseEmulator):
     """Returns the emulator log as a Queue (https://docs.python.org/3/library/queue.html)
     This contains the output seen on the console when the emulator is launched.
 
@@ -253,11 +260,11 @@ def launch_animiation_app(avd):
 
     It will wait for at most 5 seconds before continuing.
     """
-    avd.adb(["logcat", "-c"])
-    avd.adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
-    avd.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
-    with avd.adb_stream(["logcat", "-s", "aemu"]) as stream:
-        avd.adb(
+    avd.adb.run(["logcat", "-c"])
+    avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
+    avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
+    with avd.adb.stream(["logcat", "-s", "aemu"]) as stream:
+        avd.adb.run(
             [
                 "shell",
                 "am",
@@ -279,7 +286,7 @@ def emulator_controller(avd):
         response = emulator_controller.getStatus(empty_pb2.Empty())
         assert response.booted
     """
-    ctrl = avd.get_emulator_controller()
+    ctrl = avd.description.get_emulator_controller()
     return ctrl
 
 
@@ -309,7 +316,7 @@ def animation_app(avd):
     assert tries >= 0, "Unable to successfully launch the animation app."
     yield
 
-    avd.adb(["shell", "am", "force-stop", "com.google.AnimateBox"])
+    avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
     go_home(avd)
 
 
@@ -322,7 +329,7 @@ def adb(avd):
     def test_sample(adb):
         adb(["emu", "rotate"])
     """
-    return avd.adb
+    return avd.adb.run
 
 
 @pytest.fixture
@@ -334,4 +341,4 @@ def telnet(avd):
     def test_sample(telnet):
         telnet.send("event text")
     """
-    return avd.get_telnet()
+    return avd.console()

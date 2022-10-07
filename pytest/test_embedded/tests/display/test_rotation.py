@@ -98,7 +98,7 @@ def test_rotation_observable_through_adbstream(avd,
     This makes sure that android itself reports the orientation we are expecting.
     """
     ROTATION_RE = re.compile(r".*Rotation: (\d+)")
-    with avd.adb_stream(["logcat", "-s", "aemu"]) as stream:
+    with avd.adb.stream(["logcat", "-s", "aemu"]) as stream:
         # Wait for the first rotation (should be set to 0).
         for line in iter(stream.get, None):
             m = ROTATION_RE.match(line)

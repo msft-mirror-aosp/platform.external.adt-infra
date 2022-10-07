@@ -1,25 +1,10 @@
 # Embedded Emulator E2E
 
-This contains a series of embedded emulator tests.
+This contains a series of integration tests that validate that the emulator works as expected
+from android studio's perspective.
 
-- You must have: `ANDROID_SDK_ROOT` set.
-- You must use a supported Python compiler:
-    - Linux
-- Make sure your DISPLAY environment variable in linux is set to an active
-  display if it is not the default one. This is usually not needed, but
-  is of importance if you are using chrome remoting or are running a "fake"
-  xserver.
-
-You can run the tests as follows:
-
-```sh
-make check
-```
-
-The tests are run using [tox](https://tox.readthedocs.io/en/latest/) which will
-isolate the tests and run them under Python 3.
-
-The tests make use of fixturess to spawn and access an emulator that runs an avd.
+The tests are written in pytest and are run as part of the build. The test are will run
+under the python3 interpreter that is in $AOSP/prebuilts/python/...
 
 ## Development
 
@@ -43,6 +28,16 @@ pytest --emulator=$HOME/src/emu/external/qemu/objs/emulator
 ```
 
 Where emulator points to your emulator of choice.
+
+The virtual environment is using the python interpreter in AOSP. This interpreter does
+not support TLS, and hence you will not be able to install external packages. To work
+around this you can run a local devpi server using a python interpreter that does support
+tls. devpi can be run by running a devpi server [../../devpi/](../../devpi).
+
+```sh
+cd ../../devpi
+./launch_devpi.sh
+```
 
 ### Running against an already running emulator
 
@@ -71,12 +66,9 @@ tests of interest:
 
 ## Making sure it will run successfully on the build bots
 
-The build bots are using python 3.6. If you wish
-to make sure the tests will succeed on the build bots you must have a python >3.6 interpreter
-installed on your system. One easy way to manage multiple python versions is to make use
-of [pyenv](https://github.com/pyenv/pyenv).
-
-*Note*: If you use run the tests using *tox* you will automatically use the python3 interpreter.
+If you are adding new packages you must make them available in our on disk
+repository. This means you will have to install the dependencies in our local repo.
+See [../../devpi/README.MD](../../devpi/README.MD) for more information.
 
 ## I would like to add some tests
 
@@ -180,10 +172,8 @@ Here's a list of known issues and workarounds. Most of these are related to Mac 
 ## Missing wheels
 
 If you are using an architecture that is not supported you might find that
-packages are missing. You have two options:
-
-- Create the wheel and distribute it, see [instructions](local_repo/README.MD).
-- Install requirements.txt manually i.e. `pip3 install -r requirements.txt`
+packages are missing. You must check in these packages in our local (on disk) 
+repository. See [README.MD](../../devpi/README.MD) for details on how to do this.
 
 ### Java exceptions on Pytest log
 

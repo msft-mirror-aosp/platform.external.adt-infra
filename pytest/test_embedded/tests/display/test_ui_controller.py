@@ -20,8 +20,13 @@ from aemu.proto.ui_controller_service_pb2 import WindowPosition, PaneEntry
 __EMPTY__ = empty_pb2.Empty()
 
 
+
+@pytest.fixture
+def ui_controller(avd):
+    yield avd.description.get_ui_controller_service()
+
 def get_user_config(avd):
-    stub = avd.get_ui_controller()
+    stub = avd.description.get_ui_controller_service()
     status = stub.getUserConfig(__EMPTY__)
     return dict([(x.key, x.value) for x in status.entries])
 
@@ -41,16 +46,15 @@ def test_ui_controller_clean(avd):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.dependency(depends=["test_ui_controller_clean"])
-def test_ui_controller_first_position_works(avd):
+def test_ui_controller_first_position_works(avd, ui_controller):
     """Tests that setting the position for the first time will work.
 
     Note: This is really a best effort test.
     """
-    uiControl = avd.get_ui_controller()
-    uiControl.closeExtendedControls(__EMPTY__)
+    ui_controller.closeExtendedControls(__EMPTY__)
     x = random.randrange(800, 1200)
     y = random.randrange(400, 500)
-    controlStatus = uiControl.showExtendedControls(
+    controlStatus = ui_controller.showExtendedControls(
         PaneEntry(
             position=WindowPosition(
                 x=x,
@@ -78,24 +82,23 @@ def test_ui_controller_first_position_works(avd):
     assert userConfig["extended_controls.vanchor"] == "2"
 
     # We become invisible.
-    controlStatus = uiControl.closeExtendedControls(__EMPTY__)
+    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
     assert controlStatus.visibilityChanged
 
 
 @pytest.mark.e2e
 @pytest.mark.dependency(depends=["test_ui_controller_first_position_works"])
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_ui_controller_position_does_not_change(avd):
+def test_ui_controller_position_does_not_change(avd, ui_controller):
     """Tests that setting the position for the second time will work, but
        does not modify the location of the window.
 
     Note: This is really a best effort test.
     """
     userConfig = get_user_config(avd)
-    uiControl = avd.get_ui_controller()
-    controlStatus = uiControl.closeExtendedControls(__EMPTY__)
+    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
 
-    controlStatus = uiControl.showExtendedControls(
+    controlStatus = ui_controller.showExtendedControls(
         PaneEntry(
             position=WindowPosition(
                 x=10,
@@ -115,18 +118,17 @@ def test_ui_controller_position_does_not_change(avd):
     assert userConfig["extended_controls.y"] == latestConfig["extended_controls.y"]
 
     # We become invisible.
-    controlStatus = uiControl.closeExtendedControls(__EMPTY__)
+    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
     assert controlStatus.visibilityChanged
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_ui_controller_fast_switch_should_work(avd):
+def test_ui_controller_fast_switch_should_work(ui_controller):
     """Make sure we can open and close the window quickly.
 
     This exposes b/183641352
     """
-    uiControl = avd.get_ui_controller()
-    controlStatus = uiControl.closeExtendedControls(__EMPTY__)
-    controlStatus = uiControl.showExtendedControls(__EMPTY__)
-    controlStatus = uiControl.closeExtendedControls(__EMPTY__)
+    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
+    controlStatus = ui_controller.showExtendedControls(__EMPTY__)
+    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
     assert controlStatus.visibilityChanged

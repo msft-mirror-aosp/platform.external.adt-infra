@@ -32,8 +32,9 @@ def send_grpc_click(avd, x, y, buttons):
         y: The y coordinate
         buttons: The number of buttons.
     """
-    avd.get_emulator_controller().sendMouse(MouseEvent(x=x, y=y, buttons=buttons))
-
+    avd.description.get_emulator_controller().sendMouse(
+        MouseEvent(x=x, y=y, buttons=buttons)
+    )
 
 
 def send_telnet_click(avd, x, y, buttons):
@@ -66,14 +67,16 @@ def send_mouse_over(tester):
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-wall")
-@pytest.mark.skip(reason="Wall time measurements with adb are flaky and not supported beyond P.")
+@pytest.mark.skip(
+    reason="Wall time measurements with adb are flaky and not supported beyond P."
+)
 def test_mouse_perf_wall_grpc(avd, android_start_time, adb_event_stream, benchmark):
     """Checks that we can send mouse events over gRPC.
 
-       This measures wall clock time of the send_mouse_over function.
-       It will:
-          send mouse click
-          wait until adb_event_stream in guest sees the event.
+    This measures wall clock time of the send_mouse_over function.
+    It will:
+       send mouse click
+       wait until adb_event_stream in guest sees the event.
     """
     tester = EventTimeTester(avd, send_grpc_click, adb_event_stream, android_start_time)
     benchmark(send_mouse_over, tester=tester)
@@ -82,38 +85,46 @@ def test_mouse_perf_wall_grpc(avd, android_start_time, adb_event_stream, benchma
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-wall")
-@pytest.mark.skip(reason="Wall time measurements with adb are flaky and not supported beyond P.")
+@pytest.mark.skip(
+    reason="Wall time measurements with adb are flaky and not supported beyond P."
+)
 def test_mouse_perf_wall_telnet(avd, android_start_time, adb_event_stream, benchmark):
     """Checks that we can send mouse events over telnet.
 
-       This measures wall clock time of the send_mouse_over function.
-       It will:
-          send mouse click
-          wait until adb_event_stream in guest sees the event.
+    This measures wall clock time of the send_mouse_over function.
+    It will:
+       send mouse click
+       wait until adb_event_stream in guest sees the event.
     """
-    tester = EventTimeTester(avd, send_telnet_click, adb_event_stream, android_start_time)
+    tester = EventTimeTester(
+        avd, send_telnet_click, adb_event_stream, android_start_time
+    )
     benchmark(send_mouse_over, tester=tester)
 
 
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-guest")
-@pytest.mark.skip(reason="Wall time measurements with adb are flaky and not supported beyond P.")
-def test_mouse_perf_host_guest_telnet(avd, 
-    android_start_time, adb_event_stream, benchmark_stat
+@pytest.mark.skip(
+    reason="Wall time measurements with adb are flaky and not supported beyond P."
+)
+def test_mouse_perf_host_guest_telnet(
+    avd, android_start_time, adb_event_stream, benchmark_stat
 ):
     """Checks that we can send mouse events over telnet.
 
-       This measures timestamp before calling send - observed timestamp at receipt in
-       guest. This is completely bogus due to clock skew between guest and host,
-       but the results *might* be comparable between telnet/grpc.
+    This measures timestamp before calling send - observed timestamp at receipt in
+    guest. This is completely bogus due to clock skew between guest and host,
+    but the results *might* be comparable between telnet/grpc.
 
 
-       It will:
-          send mouse click
-          wait until adb_event_stream in guest sees the event.
+    It will:
+       send mouse click
+       wait until adb_event_stream in guest sees the event.
     """
-    tester = EventTimeTester(avd, send_telnet_click, adb_event_stream, android_start_time)
+    tester = EventTimeTester(
+        avd, send_telnet_click, adb_event_stream, android_start_time
+    )
     for i in range(0, 40):
         benchmark_stat.update(send_mouse_over(tester))
 
@@ -121,20 +132,22 @@ def test_mouse_perf_host_guest_telnet(avd,
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-guest")
-@pytest.mark.skip(reason="Wall time measurements with adb are flaky and not supported beyond P.")
-def test_mouse_perf_host_guest_grpc(avd,
-    android_start_time, adb_event_stream, benchmark_stat
+@pytest.mark.skip(
+    reason="Wall time measurements with adb are flaky and not supported beyond P."
+)
+def test_mouse_perf_host_guest_grpc(
+    avd, android_start_time, adb_event_stream, benchmark_stat
 ):
     """Checks that we can send mouse events over grpc.
 
-       This measures timestamp before calling send - observed timestamp at receipt in
-       guest. This is completely bogus due to clock skew between guest and host,
-       but the results *might* be comparable between telnet/grpc.
+    This measures timestamp before calling send - observed timestamp at receipt in
+    guest. This is completely bogus due to clock skew between guest and host,
+    but the results *might* be comparable between telnet/grpc.
 
 
-       It will:
-          send mouse click
-          wait until adb_event_stream in guest sees the event.
+    It will:
+       send mouse click
+       wait until adb_event_stream in guest sees the event.
     """
     tester = EventTimeTester(avd, send_grpc_click, adb_event_stream, android_start_time)
     for i in range(0, 40):
@@ -148,12 +161,12 @@ def test_mouse_perf_host_guest_grpc(avd,
 def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over grpc.
 
-       This measures timestamp before calling send - observed timestamp at receipt in
-       host. This test will be skipped if you are using a debug emulator.
+    This measures timestamp before calling send - observed timestamp at receipt in
+    host. This test will be skipped if you are using a debug emulator.
 
-       It will:
-          send mouse click
-          wait until adb_event_stream in host log sees the event.
+    It will:
+       send mouse click
+       wait until adb_event_stream in host log sees the event.
     """
     # This test can only run if we launched the emulator
     if not emulator_log:
@@ -171,12 +184,12 @@ def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
 def test_mouse_perf_host_host_telnet(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over telnet.
 
-       This measures timestamp before calling send - observed timestamp at receipt in
-       host. This test will be skipped if you are using a debug emulator.
+    This measures timestamp before calling send - observed timestamp at receipt in
+    host. This test will be skipped if you are using a debug emulator.
 
-       It will:
-          send mouse click
-          wait until adb_event_stream in host log sees the event.
+    It will:
+       send mouse click
+       wait until adb_event_stream in host log sees the event.
     """
     # This test can only run if we launched the emulator
     if not emulator_log:

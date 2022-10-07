@@ -89,7 +89,7 @@ def adb_event_stream(avd):
 
        Note: Needs android-Q or higher.
     """
-    with avd.adb_stream(["shell", "getevent", "-t"]) as events:
+    with avd.adb.stream(["shell", "getevent", "-t"]) as events:
         found_evt = False
         # Make sure we skip the initial diagnostics.
         while not found_evt:

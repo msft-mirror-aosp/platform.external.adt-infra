@@ -44,8 +44,8 @@ def pause_animation_app(avd):
             if m:
                 return True
 
-    with avd.adb_stream(["logcat", "-s", "aemu"]) as stream:
-        avd.get_emulator_controller().sendKey(
+    with avd.adb.stream(["logcat", "-s", "aemu"]) as stream:
+        avd.description.get_emulator_controller().sendKey(
             KeyboardEvent(key="P", eventType=KeyboardEvent.keypress)
         )
         return wait_for_regex(stream, r".*Pausing animation.", 5)

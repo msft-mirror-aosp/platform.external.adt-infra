@@ -92,8 +92,8 @@ def send_grpc_letter(avd, letter):
     Args:
        letter: The letter to send
     """
-    grpc = avd.get_emulator_controller()
-    emulator_controller.sendKey(KeyboardEvent(text=letter))
+    grpc = avd.description.get_emulator_controller()
+    grpc.sendKey(KeyboardEvent(text=letter))
 
 
 def send_telnet_letter(avd, letter):

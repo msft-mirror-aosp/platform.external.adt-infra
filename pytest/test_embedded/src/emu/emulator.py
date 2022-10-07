@@ -11,279 +11,221 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A basic emulator launcher and discoverer."""
 import logging
 import os
 import platform
 import shutil
-import subprocess
+import signal
 import time
+from datetime import timedelta
 from pathlib import Path
+from timeit import default_timer as timer
+from typing import Optional
 
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
 from google.protobuf import empty_pb2
-from snaptool.snapshot import SnapshotService
 
-from emu.avd import AvdGenerator
-from emu.emulator_connection import EmulatorConnection
-from emu.logcat import AdbLogcatStream, AdbStream, Logcat
+from emu.adb.adb import Adb
+from emu.avd import AvdWriter
+from emu.console.emulator_connection import EmulatorConnection
 from emu.utils import LogObserver, run
 
-_EMPTY_ = empty_pb2.Empty()
+
+class FailedToLaunchException(Exception):
+    pass
 
 
-class Emulator(object):
-    """A launcher for the android emulator.
+class EmulatorNotFoundException(Exception):
+    pass
 
-    This launcher mimics how studio will launch the emulator.
-    """
 
-    here = os.path.abspath(os.path.dirname(__file__))
+class AndroidSdkRootNotSet(Exception):
+    pass
 
-    def __init__(self, emulator_exe, sdk_root=None, avd_home=None):
-        self.sdk_root = os.path.abspath(sdk_root or os.environ.get("ANDROID_SDK_ROOT"))
-        self.avd_home = (
-            avd_home
-            or os.environ.get("ANDROID_AVD_HOME")
-            or os.path.join(Path.home(), ".android", "avd")
-        )
-        self.adb_binary = os.path.join(self.sdk_root, "platform-tools", "adb")
-        self.avd_gen = None
-        self.avd = None
-        self.desc = None
-        self.proc = None
-        self.log = None
-        self.telnet = None
-        self.observer = None
-        self.height = 1920
-        self.width = 1080
-        if emulator_exe and os.path.exists(emulator_exe):
-            self.emulator = emulator_exe
-        else:
-            logging.warning(
-                "Falling back to ANDROID_SDK_ROOT: %s instead of %s",
-                self.sdk_root,
-                emulator_exe,
+
+class BaseEmulator(object):
+    def __init__(self) -> None:
+        """An Emulator represents a running emulator which you can interact with.
+
+        Usualy you want to either:
+
+        - Launch one (Using the Emulator class)
+        - Connect to one (Using DebugEmulator class)
+
+        Raises:
+            AndroidSdkRootNotSet: The ANDROID_SDK_ROOT environment variable is not set.
+        """
+        if not os.environ.get("ANDROID_SDK_ROOT"):
+            raise AndroidSdkRootNotSet(
+                "The environment variable ANDROID_SDK_ROOT is not set"
             )
-            self.emulator = os.path.join(self.sdk_root, "emulator", "emulator")
 
-        logging.info(
-            "Using sdk_root: %s, avd_home: %s, and emulator: %s",
-            self.sdk_root,
-            self.avd_home,
-            self.emulator,
-        )
+        self.telnet = None
+        self.description = None
+        self.sdk_root = Path(os.environ.get("ANDROID_SDK_ROOT")).absolute()
+        self.avd_home = Path(
+            os.environ.get("ANDROID_AVD_HOME") or Path.home() / ".android" / "avd"
+        ).absolute()
+
+        logging.info("Using sdk_root: %s, avd_home: %s", self.sdk_root, self.avd_home)
 
     def __del__(self):
-        self.disconnect()
-        self.stop()
+        if self.telnet:
+            self.telnet.stop()
 
-    def get_emulator_controller(self):
-        """Gets the emulator controller stub to this emulator."""
-        return self.desc.get_emulator_controller()
+    def _discover(self, pid: Optional[str]) -> None:
+        """Discovers the running emulator with the given pid, or the first
+        if no pid is given. This is not a public method, and should
+        be called after the object creation.
 
-    def get_ui_controller(self):
-        return self.desc.get_ui_controller_service()
+        Args:
+            pid (Optional[str]): Process id
 
-    def get_snapshot_service(self):
-        """Gets a snapshot service to interact with snaphsots."""
-        return SnapshotService(snapshot_service=self.desc.get_snapshot_service())
-
-    def name(self):
-        return self.desc.name()
-
-    def adb_stream(self, cmd):
-        return AdbStream(self.adb_binary, self.desc.name(), cmd)
-
-    def get_emu_logqueue(self):
-        """Gets access to the log queue."""
-        return self.log
-
-    def start_adb(self):
-        my_env = os.environ.copy()
-        my_env["ADB_TRACE"] = "all"
-        subprocess.run(
-            [self.adb_binary, "start-server"],
-            env=my_env,
-            timeout=10,
-        )
-
-    def delete(self):
-        """Deletes the created avd."""
-        if not self.avd:
-            logging.info("Not deleting avd that was not created.")
-            return
-
-        to_remove = os.path.join(self.avd_home, "{}.ini".format(self.avd))
-        logging.debug("Removing %s", to_remove)
-        os.remove(to_remove)
-
-        to_remove = os.path.join(self.avd_home, "{}.avd".format(self.avd))
-        logging.debug("Removing %s", to_remove)
-        try:
-            shutil.rmtree(to_remove)
-        except OSError: 
-            logging.warning("Failed to remove %s", to_remove)
-
-    def check_adb(self):
-        my_env = os.environ.copy()
-        my_env["ADB_TRACE"] = "all"
-        cmd = subprocess.run(
-            [self.adb_binary, "devices"],
-            env=my_env,
-            timeout=10,
-        )
-        cmd = subprocess.check_output(
-            [self.adb_binary, "-s", self.desc.name(), "shell", "true"],
-            env=my_env,
-            timeout=10,
-        )
-        return True
-
-    def adb(self, cmd):
-        """Executes the given adb command.
-
-        cmd should be an array of strings, adb will be configured
-        to talk to this emulator.
+        Raises:
+            EmulatorNotFoundException: No emulator matching the pid could be found.
         """
-        name = ["-s", self.desc.name()]
-        logging.info("adb %s", " ".join(name + cmd))
-        cmd = subprocess.check_output([self.adb_binary] + name + cmd, timeout=60)
-        logging.info("Result: %s", cmd)
-        return cmd
+        logging.info("Looking for emulator: %s", pid)
+        discovery = EmulatorDiscovery()
+        if pid:
+            self.description = discovery.find_by_pid(self.proc.pid)
+        else:
+            self.description = discovery.first()
 
-    def get_telnet(self):
-        return self.telnet
+        if self.description is None:
+            raise EmulatorNotFoundException(f"No emulator with pid: {pid} exists")
 
-    def disconnect(self):
-        self.telnet.stop()
-        self.desc = None
+        self.adb = Adb(
+            self.description.name(), self.sdk_root / "platform-tools" / "adb"
+        )
 
-    def _get_dimensions(self):
-        response = self.get_emulator_controller().getStatus(_EMPTY_)
-        cfg = response.hardwareConfig
-        for entry in cfg.entry:
-            if entry.key == "hw.lcd.width":
-                self.width = int(entry.value)
-            if entry.key == "hw.lcd.height":
-                self.height = int(entry.value)
-        logging.info("Dimensions: %d x %d", self.width, self.height)
+    def stop(self) -> None:
+        """Stops the emulator from running"""
+        pass
 
-    def wait_for_boot(self, max_wait=600):
-        """Wait at most max_wait seconds until the status of the device says it is booted.
+    def delete(self) -> None:
+        """Delete the given emulator, removing data from disk if applicable."""
+        pass
 
-        This is done by querying the gRPC endpoint.
+    def wait_for_boot(self, timeout: int = 180) -> bool:
+        """Wait at most timeout seconds for the emulator to be booted.
+
+        Args:
+            timeout (int, optional): Timeout in seconds. Defaults to 180 seconds.
+
+        Returns:
+            bool: True if the emulator has booted, False otherwise.
         """
-        subprocess.run(
-            [self.adb_binary, "wait-for-device"],
-            timeout=max_wait,
-        )
-        logging.info(
-            "%s", subprocess.check_output([self.adb_binary, "devices"]).decode("utf-8")
-        )
-
-        timeout = time.time() + max_wait
-        start_time = time.time()
-        emu = self.get_emulator_controller()
+        _EMPTY_ = empty_pb2.Empty()
+        timeout = time.time() + timeout
+        start = timer()
+        emu = self.description.get_emulator_controller()
         response = emu.getStatus(_EMPTY_)
 
-        logging.info("Waited for boot of %s", self.desc.name())
+        logging.info(
+            "Waiting at most %d second for %s to boot",
+            timeout,
+            self.description.name(),
+        )
         while not response.booted and time.time() < timeout:
             time.sleep(1)
             response = emu.getStatus(_EMPTY_)
 
+        end = timer()
         logging.info(
-            "Waited %d s for boot of %s", (time.time() - start_time), self.desc.name()
+            "Waited %s for boot of %s", timedelta(end - start), self.description.name()
         )
         return response.booted
 
-    def stop(self, graceful_timeout=10):
-        """Stops the emulator, first by sending sigint. If that fails, kill -9!."""
-        if not self.proc:
-            return
+    def console(self) -> EmulatorConnection:
+        """Returns a connection to the emulator console, authenticating if needed.
 
-        self.disconnect()
-        logging.info("Sending SIGINT to emulator.")
-        self.proc.send_signal(2)
+        Returns:
+            EmulatorConnection: A connection to the emulator.
+        """
+        if self.telnet is None:
+            self.telnet = EmulatorConnection.connect(
+                self.description.get("port.serial")
+            )
 
-        # Wait until the process ends.
-        while self.proc.poll() and graceful_timeout > 0:
-            time.sleep(1)
-            graceful_timeout = graceful_timeout - 1
+        return self.telnet
 
-        # Kill -9 and your process is mine!
-        if self.proc.poll():
-            logging.warning("Sending KILL to emulator.")
-            self.proc.send_signal(9)
+    def disconnect(self) -> None:
+        """Closes the connection to the emulator."""
+        if self.telnet:
+            self.telnet.stop()
 
-        logging.info("Bye bye!")
 
-    def first_running(self, logfile):
-        """Discover the first running emulator."""
-        discovery = EmulatorDiscovery()
-        self.desc = discovery.first()
-        self.connect()
-        self._get_dimensions()
+class DebugEmulator(BaseEmulator):
+    def __init__(self, logfile: Path) -> None:
+        """The first discovered running emulator.
+
+        Use this to connect to an already running emulator.
+
+        Args:
+            logfile (Path): File where the emulator is writing logs
+        """
+        BaseEmulator.__init__(self)
         if logfile:
             self.logobserver = LogObserver(logfile)
             self.log = self.logobserver.queue
+        self._discover(None)
 
-    def connect(self):
-        self.telnet = EmulatorConnection.connect(self.desc.get("port.serial"))
+    def stop(self) -> None:
+        self.disconnect()
 
-    def launch_like_studio(self, cfg):
-        """Launches the emulator similarly as how studio will invoke it."""
-        self.launch(
-            cfg,
-            [
-                "-netdelay",
-                "none",
-                "-netspeed",
-                "full",
-                "-qt-hide-window",
-                "-grpc-use-token",
-                "-idle-grpc-timeout",
-                "300",
-                "-debug-events",  # Needed for some tests.
-                "-wipe-data",
-                "-gpu",
-                "swiftshader_indirect",
-                "-debug-grpc", # Let's log the gRPC interactions
-                # "-verbose",
-                # Enabling the onese below will cause a huge amount of logging.
-                # "-show-kernel",
-                # "-logcat",
-                # "v:*",
-            ],
-        )
 
-    def launch(self, cfg, additional_args=None):
-        """Launches an emulator with a clean avd.
+class Emulator(BaseEmulator):
 
-        This will start the emulator with the configured avd, and will wait
-        until the discovery file has been written.
+    DEFAULT_ARGS = [
+        # "-qt-hide-window",
+        # "-grpc-use-token",
+        "-idle-grpc-timeout",
+        "300",
+        "-log-detailed",
+        "-gpu",
+        "swiftshader_indirect",
+        "-debug-events",
+        "-debug-grpc",
+    ]
+
+    DEFAULT_CONFIG = {
+        "api": "31",
+        "tag.id": "google_apis",
+        "cpu": platform.machine(),
+    }
+
+    def __init__(
+        self, exe: Path, avd_config: dict[str, str], params: list[str] = DEFAULT_ARGS
+    ) -> None:
+        """Create and launches the emulator
+
+        Args:
+            exe (Path): Path to the emulator executable
+            avd_config (dict[str, str]): Avd configuration used to create the emulator.
+            params (list[str], optional): Flags to pass to the emulato executable
         """
-        self.avd_gen = AvdGenerator(self.sdk_root, self.avd_home)
-        self.avd = self.avd_gen.get_avd_by_config(cfg)
-        cmd = [self.emulator, "-avd", self.avd]
+        BaseEmulator.__init__(self)        
+        if not shutil.which(exe):
+            raise EmulatorNotFoundException(f"The binary {exe} was not found")
 
-        if additional_args:
-            cmd += additional_args
-
-        self.start_adb()
+        avd_gen = AvdWriter(self.sdk_root, self.avd_home)
+        self.avd = avd_gen.create_from_config(avd_config)
 
         # Setup android sdk/avd etc.
         local_env = {
-            "ANDROID_AVD_HOME": self.avd_gen.get_avd_home(),
+            "ANDROID_AVD_HOME": self.avd_home,
             "ANDROID_SDK_ROOT": self.sdk_root,
             "DISPLAY": os.environ.get("DISPLAY", ":0"),
         }
 
-        self.proc, self.log = run(cmd, local_env)
-        logging.info("Emulator running as pid: %s", self.proc.pid)
+        self._launch([shutil.which(exe), "-avd", self.avd] + params, local_env)
 
-        # The emulator immediately writes a discovery file,
-        # so we should be up within a few seconds.
+    def __del__(self):
+        self.stop()
+
+    def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
+        self.proc, self.log = run(cmd, env)
+
         max_wait = 10
         logging.info("Waiting for an emulator to become available..")
         discovery = EmulatorDiscovery()
@@ -303,17 +245,37 @@ class Emulator(object):
             discovery.discover()
             logging.info("Have %s", discovery.emulators())
 
-        logging.info("Looking for pid: %s", self.proc.pid)
-        self.desc = discovery.find_by_pid(self.proc.pid)
+        self._discover(self.proc.pid)
 
-        if self.desc is None:
-            logging.error("Discovered: %s", discovery.emulators())
-            raise Exception("Failed to launch {} - {}".format(self.emulator, self.avd))
+    def stop(self, timeout: int = 10) -> None:
+        """Stops the emulator, terminating it does not exits gracefully within the given timeout
 
-        logging.info(
-            "From available device: %s, connecting to: %s",
-            self.adb(["devices"]),
-            self.desc.name(),
-        )
-        self._get_dimensions()
-        self.connect()
+        Args:
+            timeout (int, optional): Time in seconds before the emulator will be terminated. Defaults to 10.
+        """
+        self.disconnect()
+        if not self.proc:
+            return
+
+        logging.info("Sending SIGINT to emulator.")
+        self.proc.send_signal(signal.SIGINT)
+        # Wait until the process ends.
+        while self.proc.poll() and timeout > 0:
+            time.sleep(1)
+            timeout = timeout - 1
+
+        if self.proc.poll():
+            logging.warning("Terminating emulator.")
+            self.proc.terminate()
+
+    def delete(self) -> None:
+        """Deletes the created avd."""
+        to_remove = self.avd_home / f"{self.avd}.ini"
+        to_remove.unlink()
+
+        to_remove = self.avd_home / f"{self.avd}.avd"
+        logging.debug("Removing %s", to_remove)
+        try:
+            shutil.rmtree(to_remove.absolute())
+        except OSError:
+            logging.warning("Failed to remove %s", to_remove)

@@ -19,25 +19,36 @@ the stream_test_time propery
 """
 import collections
 import logging
-import mmap
 import os
 import struct
 import time
-import unittest
 from multiprocessing.shared_memory import SharedMemory
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat, ImageTransport
-
-from tests.benchmark_event_fixtures import benchmark_stat
+from google.protobuf import empty_pb2
 from tests.test_utils import StreamingCall
 
 
-unittest.skip("b/203787882")
+def dimenisions(emulator_controller):
+    response = emulator_controller.getStatus(empty_pb2.Empty())
+    cfg = response.hardwareConfig
+    width, height = 0
+    for entry in cfg.entry:
+        if entry.key == "hw.lcd.width":
+            width = int(entry.value)
+        if entry.key == "hw.lcd.height":
+            height = int(entry.value)
+    return width, height
+
+
+@pytest.mark.skip(reason="b/203787882")
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
-def test_mmap_grpc_perf(avd, animation_app, emulator_controller, tmpdir, benchmark_stat, pytestconfig):
+def test_mmap_grpc_perf(
+    animation_app, emulator_controller, tmpdir, benchmark_stat, pytestconfig
+):
     """Test time it takes to detect a frame change event using the gRPC + mmap
 
 
@@ -45,15 +56,16 @@ def test_mmap_grpc_perf(avd, animation_app, emulator_controller, tmpdir, benchma
     This uses the emulators notification + image scaling mechanism.
     """
     # This test can only run if we launched the emulator
+    width, height = dimenisions(emulator_controller)
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     tmp_file = os.path.join(path, "image_file.img")
     with open(tmp_file, "wb") as out:
-        out.truncate(avd.width * avd.height + 1024)
+        out.truncate(width * height + 1024)
 
     stream = emulator_controller.streamScreenshot(
         ImageFormat(
-            width=avd.width,
-            height=avd.height,
+            width=width,
+            height=height,
             format=ImageFormat.RGBA8888,
             transport=ImageTransport(
                 channel=ImageTransport.MMAP, handle="file://" + tmp_file
@@ -85,12 +97,14 @@ def test_mmap_grpc_perf(avd, animation_app, emulator_controller, tmpdir, benchma
     assert True
 
 
-unittest.skip("b/203787882")
+@pytest.mark.skip(reason="b/203787882")
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
 @pytest.mark.linux
-def test_mmap_webrtc_perf(avd, telnet, animation_app, tmpdir, benchmark_stat, pytestconfig):
+def test_mmap_webrtc_perf(
+    avd, telnet, animation_app, tmpdir, benchmark_stat, pytestconfig
+):
     """Test time it takes to detect a frame change event by polling the shared memory
     region setup by the webrtc screen recorder.
 
@@ -103,6 +117,7 @@ def test_mmap_webrtc_perf(avd, telnet, animation_app, tmpdir, benchmark_stat, py
     telnet.send("screenrecord webrtc start")
     # HACK: Give the emulator some time to create /dev/shm/videmulator####
     time.sleep(0.5)
+    width, height = dimenisions(emulator_controller)
 
     count = 0
     dropped = 0
@@ -110,7 +125,7 @@ def test_mmap_webrtc_perf(avd, telnet, animation_app, tmpdir, benchmark_stat, py
     video_info_struct_size = 24
     mem = SharedMemory(
         name="videmulator{}".format(avd.telnet.port),
-        size=24 + (avd.width * avd.height * 4),
+        size=24 + (width * height * 4),
     )
 
     # Mimics struct VideoInfo from

@@ -54,7 +54,7 @@ def wait_for_keyboard(event_stream, ev_code, timeout=10):
 
 def keypress_expects(emulator, log, jskey, expected_code):
     """Sends a key press through grpc, and expecting the event on the emulator log."""
-    stub = emulator.get_emulator_controller()
+    stub = emulator.description.get_emulator_controller()
 
     logging.info("Sending %s, expecting %d", jskey, expected_code)
     stub.sendKey(KeyboardEvent(key=jskey, eventType=KeyboardEvent.keypress))

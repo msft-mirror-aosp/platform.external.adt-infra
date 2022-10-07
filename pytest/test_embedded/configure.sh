@@ -63,6 +63,14 @@ aosp_find_python() {
   printf "$PYTHON"
 }
 
+aosp_find_python_include() {
+    local AOSP_PREBUILTS_DIR=$AOSP_DIR/prebuilts
+    local OS_NAME=$(get_build_os)
+    local PYTHON_H=$(find $AOSP_PREBUILTS_DIR/python/$OS_NAME-x86/include -name 'Python.h')
+    local PYTHON_INCLUDE=$(dirname $PYTHON_H)
+    printf "$PYTHON_INCLUDE"
+}
+
 write_local_pip_conf() {
   cp ./cfg/pip.conf $VIRTUAL_ENV/pip.conf
   cp ./cfg/pypirc $VIRTUAL_ENV/pypirc
@@ -72,18 +80,50 @@ AOSP_DIR=$(
   cd ../../../..
   pwd
 )
+
+HERE=$AOSP_DIR/external/adt-infra/pytest/test_embedded
 AEMU_GRPC=$AOSP_DIR/external/qemu/android/android-grpc/python/aemu-grpc/
 SNAPTOOL=$AOSP_DIR/external/qemu/android/android-grpc/python/snaptool/
 PYTHON=$(aosp_find_python)
 PY_VER=$($PYTHON --version)
 
-$PYTHON -m venv .venv
-write_local_pip_conf
+devpi_dir() {
+    DEVPI_DIR=$(
+        cd $AOSP_DIR/external/adt-infra/devpi
+        pwd
+    )
+    printf "$DEVPI_DIR"
+}
 
+setup_virtual_env() {
+    # We need a virtual environment, so we can set up the proper include directories
+    # as, well, it seem that our crippled python release does not report the proper include
+    # directory
+    local PYTHON=$(aosp_find_python)
+    local PYTHON_INCLUDE=$(aosp_find_python_include)
+    local WHEEL_DIR=$(devpi_dir)/repo/simple
+
+    $PYTHON -m venv $VIRTUAL_ENV_DEST
+    rm -r $VIRTUAL_ENV_DEST/include
+    ln -sf $PYTHON_INCLUDE $VIRTUAL_ENV_DEST/include
+
+    # Activate and setup a pip conf that points to our local devpi server
+    # This will make sure all our packages are from the local server.
+    . $VIRTUAL_ENV_DEST/bin/activate
+
+    # Fix up our pip to point to local file system
+    cat $HERE/cfg/pip.conf | sed "s,REPO_DIR,$WHEEL_DIR,g" >$VIRTUAL_ENV_DEST/pip.conf
+    cp $HERE/cfg/pypirc $VIRTUAL_ENV_DEST/pypirc
+    pip install --upgrade pip wheel setuptools
+    pip install wheel $AEMU_GRPC $SNAPTOOL
+}
 echo "Make sure you have the devpi server up and running!"
 
-if [ -e ./.venv/bin/activate ]; then
-  . ./.venv/bin/activate
-  pip install wheel $AEMU_GRPC $SNAPTOOL
+VIRTUAL_ENV_DEST=./.venv
+if [ -e $VIRTUAL_ENV_DEST/bin/activate ]; then
+  . $VIRTUAL_ENV_DEST/bin/activate
+  pip install -e .
+else
+  setup_virtual_env
   pip install -e .
 fi
