@@ -43,6 +43,7 @@ while [[ $# -gt 0 ]]; do
         echo "-f Install file"
         echo "-r Install directory"
         echo "-d Download and install package"
+        exit 1
         ;;
     esac
 done
