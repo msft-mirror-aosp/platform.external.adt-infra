@@ -40,6 +40,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -64,7 +65,7 @@ public class PackageInstallationUtil {
     @Rule
     public final static SystemImageTestFramework testFramework = new SystemImageTestFramework();
     /**
-     * Checks if a given package is installed on the android image
+     * Checks if a given package is installed on the android image, for builds < Android 11
      *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
@@ -73,6 +74,7 @@ public class PackageInstallationUtil {
     public static boolean isPackageInstalled(Instrumentation instrumentation, String packageName) {
         Context context = testFramework.getInstrumentation().getContext();
         final PackageManager pm = context.getPackageManager();
+        // As of Android 11, this method no longer returns information about all apps; see https://g.co/dev/packagevisibility for details
         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
         for (ApplicationInfo packageInfo : packages) {
@@ -172,12 +174,12 @@ public class PackageInstallationUtil {
         AssetManager assetManager = context.getAssets();
         InputStream in = assetManager.open(apkName);
         File apkFile = new File(context.getExternalFilesDir(null), apkName);
-        OutputStream out = new FileOutputStream(apkFile);
+        OutputStream out = Files.newOutputStream(apkFile.toPath());
         copyFile(in, out);
         in.close();
         out.close();
 
-        String result = "";
+        StringBuilder result = new StringBuilder(INSTALL_COMPLETE);
 
         if (isV2.length == 0) {
             context.startActivity(createIntent_v1(apkFile));
@@ -201,25 +203,31 @@ public class PackageInstallationUtil {
 
         if (hasSettings || !isV2[0]) {
             if (!allowInstallation(device)) {
-                result += "Could not allow installation from outside sources.";
+                result.append("Could not allow installation from outside sources.");
             }
         } else {
-            result += "Could not find settings icon. ";
+            result.append("Could not find settings icon. ");
         }
 
-        UiObject installButton = device.findObject(new UiSelector().textMatches("(?i)install(?-i)").
-                className("android.widget.Button"));
-        boolean hasInstallButton = installButton.waitForExists(TimeUnit.MILLISECONDS.convert(
-                INSTALL_WAIT*2, TimeUnit.SECONDS));
-        if (hasInstallButton) {
-            installButton.clickAndWaitForNewWindow();
-        } else {
-            installButton = device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_OK_RES));
-            if (installButton.exists()) {
+        UiObject[] installButtonObjects = {
+                device.findObject(new UiSelector().textMatches("(?i)install(?-i)").
+                        className("android.widget.Button")),
+                device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_OK_RES)),
+                device.findObject(new UiSelector().textMatches("(?i)update(?-i)").
+                        className("android.widget.Button")),
+        };
+
+        boolean hasInstallButton = false;
+        for (UiObject installButton : installButtonObjects) {
+            if (installButton.waitForExists(INSTALL_WAIT/4)) {
                 installButton.clickAndWaitForNewWindow();
-            } else {
-                result += "Could not find install button.";
+                hasInstallButton = true;
+                break;
             }
+        }
+
+        if (!hasInstallButton) {
+            result.append("Could not find install button.");
         }
 
         final UiObject installBlockedAppButton = device.findObject(new UiSelector().
@@ -238,15 +246,24 @@ public class PackageInstallationUtil {
         boolean installationSuccess = new Wait(INSTALL_WAIT * 12L).
                 until(() -> doneButtonText.exists() || doneButtonRes.exists() || doneLabel.exists());
 
-        result = installationSuccess ? INSTALL_COMPLETE : result + "Could not find done button. ";
-
-        if (!result.isEmpty()) {
-            Log.w(TAG, result);
+        if (installationSuccess) {
+            result = new StringBuilder(INSTALL_COMPLETE);
+        } else if (result.length() > 0) {
+            Log.w(TAG, result.toString());
             Assert.fail("Package installation was unsuccessful: " + result);
         }
 
+        UiObject[] doneButtonObjects = { doneButtonText, doneButtonRes };
+
+        for (UiObject doneButton : doneButtonObjects) {
+            if (doneButton.waitForExists(INSTALL_WAIT/2)) {
+                doneButton.clickAndWaitForNewWindow();
+                break;
+            }
+        }
+
         device.pressHome();
-        return result;
+        return result.toString();
     }
 
     private static Intent createIntent_v1(File apkFile) {
