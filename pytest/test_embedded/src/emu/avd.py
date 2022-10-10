@@ -165,6 +165,7 @@ class SystemImages(object):
 
 class AvdWriter(object):
 
+    # map from cpu --> abi.
     CPU_TO_ABI = {
         "arm64-v8a": "arm64-v8a",
         "arm64": "arm64-v8a",
@@ -172,6 +173,9 @@ class AvdWriter(object):
         "x86": "x86",
         "x86_64": "x86_64",
     }
+
+    # Set of ABI's that we have system images for
+    SUPPORTED_ABI = ["arm64-v8a", "x86", "x86_64"]
 
     def __init__(
         self,
@@ -241,7 +245,7 @@ class AvdWriter(object):
         The configuration should have the following entries:
 
             api (str): Api level, usually a number, or first letter of desert
-            cpu (str): Native cpu on which this should run (platform.machine())
+            abi (str): The abi of the machine. Note that qemu must support this abi!
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv
 
         Note, you will need to look at the actual templates (templates/Pixel2.avd/config.ini) to see
@@ -253,22 +257,20 @@ class AvdWriter(object):
         Returns:
             str: _description_
         """
-        cpu = config["cpu"]
+        abi = config["abi"]
         tag = config["tag.id"]
         api = config["api"]
 
-        name = "{}_{}_{}".format(api, tag, cpu)
-        if not cpu in self.CPU_TO_ABI:
+        if not abi in self.SUPPORTED_ABI:
             raise UnsupportedAbiOrCpu(
-                f"Cpu {cpu} is not supported, please use one of: {', '.join(self.CPU_TO_ABI.keys())}"
+                f"Abi {abi} is not supported, please use one of: {', '.join(self.SUPPORTED_ABI)}"
             )
-        abi = self.CPU_TO_ABI.get(cpu, "x86_64")
 
+        name = "{}_{}_{}".format(api, tag, abi)
         avd_cfg = {
             "AvdId": name,
             "tag.id": tag,
             "abi.type": abi,
-            "hw.cpu.arch": cpu,
         }
         avd_cfg.update(config)
 
@@ -288,4 +290,4 @@ class AvdWriter(object):
         Returns:
             str: The name of the avd that can be launched by the emulator.
         """
-        return self.create_from_config({"cpu": abi, "api": api, "tag.id": tag})
+        return self.create_from_config({"abi": abi, "api": api, "tag.id": tag})

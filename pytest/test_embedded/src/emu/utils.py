@@ -22,7 +22,9 @@ from threading import Thread
 import sh
 
 
-def run(cmd: list[str], local_env: dict[str, str] = {}) -> tuple[subprocess.Popen, Queue]:
+def run(
+    cmd: list[str], local_env: dict[str, str] = {}
+) -> tuple[subprocess.Popen, Queue]:
     """Runs the given command, directing stderr & stdout to the python logger.
 
     Args:

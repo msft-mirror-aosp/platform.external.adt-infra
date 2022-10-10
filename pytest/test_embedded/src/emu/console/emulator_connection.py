@@ -85,8 +85,7 @@ class EmulatorConnection(object):
             self.callback(msg)
 
     def connection_lost(self):
-        """Called whenever the socket connection is dropped.
-        """
+        """Called whenever the socket connection is dropped."""
         total = time.time() - self.start
         logging.error(
             "The emulator is gone, we were alive for: %d seconds (%s)!",
@@ -97,7 +96,7 @@ class EmulatorConnection(object):
 
     def reader(self):
         """Reader thread that received bytest from the emulator and passes it
-           on the receiver function.
+        on the receiver function.
         """
         data = self.transport.recv(4096)
         try:

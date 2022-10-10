@@ -191,7 +191,6 @@ class Emulator(BaseEmulator):
     DEFAULT_CONFIG = {
         "api": "31",
         "tag.id": "google_apis",
-        "cpu": platform.machine(),
     }
 
     def __init__(
@@ -204,11 +203,13 @@ class Emulator(BaseEmulator):
             avd_config (dict[str, str]): Avd configuration used to create the emulator.
             params (list[str], optional): Flags to pass to the emulato executable
         """
-        BaseEmulator.__init__(self)        
+        BaseEmulator.__init__(self)
         if not shutil.which(exe):
             raise EmulatorNotFoundException(f"The binary {exe} was not found")
 
         avd_gen = AvdWriter(self.sdk_root, self.avd_home)
+        if not "abi" in avd_config:
+            avd_config["abi"] = self._default_abi()
         self.avd = avd_gen.create_from_config(avd_config)
 
         # Setup android sdk/avd etc.
@@ -222,6 +223,19 @@ class Emulator(BaseEmulator):
 
     def __del__(self):
         self.stop()
+
+    def _default_abi(self) -> str:
+        """Returns the abi that is natively supported by this machine.
+
+        This will detect Arm M1 even when running Python under rosetta.
+
+        Returns:
+            str: The default ABI that does not require QEMU dynamic translation.
+        """
+        uname = platform.uname()
+        if "ARM64" in uname.version and uname.system == "Darwin":
+            return "arm64-v8a"
+        return "x86_64"
 
     def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
         self.proc, self.log = run(cmd, env)

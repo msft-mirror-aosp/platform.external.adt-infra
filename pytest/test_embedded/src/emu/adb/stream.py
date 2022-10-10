@@ -18,11 +18,12 @@ import subprocess
 
 from emu.utils import run
 
+
 class AdbStream(object):
     """Streaming adb command that can be observed"""
 
     def __init__(self, adb_binary: str, emulator_name: str, cmd: list[str]):
-        """Run an adb command, streaming the results as queue. 
+        """Run an adb command, streaming the results as queue.
         You usually want to use this like this:
 
 
