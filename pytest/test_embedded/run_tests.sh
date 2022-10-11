@@ -195,11 +195,7 @@ while [[ $# -gt 0 ]]; do
         shift # val
         ;;
     -s | --session_dir)
-        REALPATH=$(
-            cd $2
-            pwd
-        )
-        SESSION="$REALPATH"
+        SESSION="$2"
         shift # arg
         shift # val
         ;;
@@ -220,7 +216,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo "Session: ${SESSION} and Emulator: ${EMULATOR}, AOSP: $AOSP_DIR"
+echo "${_YELLOW}Session: ${SESSION} and Emulator: ${EMULATOR}, AOSP: $AOSP_DIR${_RESET}"
 SDK_EMULATOR=$AOSP_DIR/prebuilts/android-emulator-build/system-images/$(get_build_os)
 export ANDROID_HOME=$SDK_EMULATOR
 export ANDROID_SDK_ROOT=$SDK_EMULATOR
@@ -270,7 +266,7 @@ FINAL_RESULT=$SESSION/embedded_test/test_embedded_test.xml
 # Now let's run pytests
 (
     cd $HERE
-    pytest -vv -m "not perf" --junitxml=$TMP_TEST_RESULT --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log
+    pytest -vv -m "not perf" --junitxml=$TMP_TEST_RESULT --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log --emulator=$EMULATOR
 )
 STATUS=$?
 
