@@ -186,11 +186,7 @@ while [[ $# -gt 0 ]]; do
 
     case $key in
     -e | --emulator)
-        REALPATH=$(
-            cd $(dirname $2)
-            echo $PWD/$(basename $2)
-        )
-        EMULATOR="$REALPATH"
+        EMULATOR="$2"
         shift # arg
         shift # val
         ;;
@@ -257,7 +253,6 @@ run pip install --upgrade --force-reinstall -e $HERE\[test\]
 
 mkdir -p $SESSION/embedded_test
 restart_adb
-
 
 # We are going to create a temporary report, that we will spruce up
 TMP_TEST_RESULT=$VIRTUAL_ENV/test_unit.xml

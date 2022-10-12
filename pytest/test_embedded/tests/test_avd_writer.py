@@ -8,11 +8,6 @@ from emu.avd import (
 )
 
 
-def test_throw_on_unknown_sdk_root():
-    with pytest.raises(SystemImageDirectoryDoesNotExist):
-        AvdWriter(sdk_root="/bar/foo/guusku")
-
-
 def test_throw_on_unknown_avd_root():
     with pytest.raises(AndroidAvdHomeDoesNotExist):
         AvdWriter(avd_home="/bar/foo/guusku")

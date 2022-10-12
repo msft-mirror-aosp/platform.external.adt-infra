@@ -62,6 +62,7 @@ class BaseEmulator(object):
 
         self.telnet = None
         self.description = None
+        self.proc = None
         self.sdk_root = Path(os.environ.get("ANDROID_SDK_ROOT")).absolute()
         self.avd_home = Path(
             os.environ.get("ANDROID_AVD_HOME") or Path.home() / ".android" / "avd"
@@ -87,12 +88,14 @@ class BaseEmulator(object):
         logging.info("Looking for emulator: %s", pid)
         discovery = EmulatorDiscovery()
         if pid:
-            self.description = discovery.find_by_pid(self.proc.pid)
+            self.description = discovery.find_by_pid(pid)
         else:
             self.description = discovery.first()
 
         if self.description is None:
-            raise EmulatorNotFoundException(f"No emulator with pid: {pid} exists")
+            raise EmulatorNotFoundException(
+                f"No emulator with pid: {pid} exists, did the process terminate?"
+            )
 
         self.adb = Adb(
             self.description.name(), self.sdk_root / "platform-tools" / "adb"

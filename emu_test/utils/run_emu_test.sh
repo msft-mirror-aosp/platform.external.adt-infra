@@ -94,13 +94,14 @@ setup_sdk() {
 }
 
 deploy_emulator() {
-    log "Deploy emulator"
+    log "Deploying emulator to $SESSION_DIR/emu-master-dev"
     run mkdir -p $SESSION_DIR/emu-master-dev
     run unzip -o $BUILD_DIR/sdk-repo-*-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
 }
 
 setup_sdk   # Make sure the sdk dependencies are there
 setup_screen # Configure the screen
+deploy_emulator # Make sure the emulator is deployed.
 
 # Run the android-studio embedded emulator tests
 run_test "Embedded tests" $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --warn $(is_presubmit $BID)

@@ -56,15 +56,14 @@ class SystemImages(object):
             sdk_root (Path, optional): The sdk root to use. Defaults to "$ANDROID_SDK_ROOT" environment.
 
         Raises:
-            SystemImageDirectoryDoesNotExist: If no system-images directory was find under the root
             SdkManagerDoesNotExist: If the sdk manager executable was not found in the sdk root
         """
         abs_root = Path(sdk_root).absolute()
         self.sys_root = abs_root / "system-images"
 
         if not self.sys_root.exists():
-            raise SystemImageDirectoryDoesNotExist(
-                f"The directory {self.sys_root} does not exist. Is ANDROID_SDK_ROOT set properly?"
+            logging.warning(
+                f"The directory {self.sys_root} does not exist (yet?). Is ANDROID_SDK_ROOT set properly?"
             )
 
         self.sdk_manager = shutil.which(
@@ -80,7 +79,14 @@ class SystemImages(object):
 
         Yields:
             Iterator[dict[str, str]]: A dictionary with api, tag, abi, and cpu.
+
+        Raises:
+            SystemImageDirectoryDoesNotExist: If no system-images directory was find under the root
         """
+        if not self.sys_root.exists():
+            raise SystemImageDirectoryDoesNotExist(
+                f"The directory {self.sys_root} does not exist. Is ANDROID_SDK_ROOT set properly?"
+            )
         logging.info("Looking for images in %s", self.sys_root)
         for x in self._recursive_iglob(self.sys_root):
             logging.debug("Considering %s", x)
@@ -109,6 +115,9 @@ class SystemImages(object):
 
         Returns:
             Optional[dict[str, str]]:  A dictionary with api, tag, abi, and cpu.
+
+        Raises:
+            SystemImageDirectoryDoesNotExist: If no system-images directory was find under the root
         """
         return next(
             (
