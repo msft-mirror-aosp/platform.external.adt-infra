@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A basic emulator launcher."""
+import gzip
 import logging
 import os
 import re
@@ -46,7 +47,7 @@ class UnsupportedAbiOrCpu(Exception):
 class SystemImages(object):
 
     IMAGE = re.compile(
-        r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img$"
+        r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
     )
 
     def __init__(self, sdk_root: Path = Path(os.environ.get("ANDROID_SDK_ROOT", "."))):
@@ -60,6 +61,7 @@ class SystemImages(object):
         """
         abs_root = Path(sdk_root).absolute()
         self.sys_root = abs_root / "system-images"
+        self.sdk_root = abs_root
 
         if not self.sys_root.exists():
             logging.warning(
@@ -84,12 +86,12 @@ class SystemImages(object):
             SystemImageDirectoryDoesNotExist: If no system-images directory was find under the root
         """
         if not self.sys_root.exists():
-            raise SystemImageDirectoryDoesNotExist(
-                f"The directory {self.sys_root} does not exist. Is ANDROID_SDK_ROOT set properly?"
+            logging.warning(
+                f"The directory {self.sys_root} does not exist (yet?). Is ANDROID_SDK_ROOT set properly?"
             )
+            return
         logging.info("Looking for images in %s", self.sys_root)
         for x in self._recursive_iglob(self.sys_root):
-            logging.debug("Considering %s", x)
             m = self.IMAGE.match(str(x))
             if m:
                 yield {
@@ -127,6 +129,46 @@ class SystemImages(object):
             ),
             None,
         )
+
+    def find_and_unpack(self, api: str, abi: str, tag: str) -> Optional[dict[str, str]]:
+        """Finds the system image with the given api, abi and tag, and makes
+           sure the image is runnable by the emulator.
+
+           This is done by decompressing the compressed gzip files that might exist
+           in the discovered emulator directory (files with a .gz extension).
+
+           Files that already have been decompressed will be skipped. For example if
+           system.img exists then system.img.gz will not be decompressed.
+
+        Args:
+            api (str): Api level, usually a number, or first letter of desert
+            abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
+            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv
+
+        Returns:
+            Optional[dict[str, str]]:  A dictionary with api, tag, abi, and cpu.
+
+        Raises:
+            SystemImageDirectoryDoesNotExist: If no system-images directory was find under the root
+        """
+        image = self.find(api, abi, tag)
+        if image is None:
+            return None
+
+        image_dir: Path = self.sdk_root / image["image_dir"]
+        blocksize: int = 8192  # 8kb
+        for file_gz in image_dir.glob("*.gz"):
+            file: Path = file_gz.parent / file_gz.stem
+            if file.exists():
+                logging.warning(
+                    f"The {file} already exists, no extraction needed."
+                )
+            else:
+                logging.info(f"Be patient extracting {file_gz}...")
+                with gzip.open(file_gz, "rb") as file_gz_in:
+                    with open(file, "wb") as file_gz_out:
+                        shutil.copyfileobj(file_gz_in, file_gz_out, blocksize)
+        return image
 
     def install(self, api: str, abi: str, tag: str = "google_apis") -> dict[str, str]:
         """Installs the system image with the given api, abi and tag.
@@ -228,7 +270,7 @@ class AvdWriter(object):
 
         cfg_file = f"{name}.avd/config.ini"
         dest = self.avd_home / cfg_file
-        logging.info("Writing confing ini to %s", dest)
+        logging.info("Writing config.ini to %s", dest)
         if not dest.parent.exists():
             os.makedirs(dest.parent)
 
@@ -239,9 +281,13 @@ class AvdWriter(object):
     def _create_avd(
         self, api: str, abi: str, tag: str, name: str, custom_cfg: dict[str, str]
     ) -> None:
-        avd = self.sys_imgs.find(api, abi, tag)
+        avd = self.sys_imgs.find_and_unpack(api, abi, tag)
         if not avd:
+            logging.warning(
+                f"Installing api: {api}, abi: {abi}, tag: {tag}, this is a very expensive operation, and can easily take up 10 minutes!"
+            )
             avd = self.sys_imgs.install(api, abi, tag)
+
         avd["name"] = name
         avd["avd_home"] = self.avd_home
 
@@ -259,6 +305,10 @@ class AvdWriter(object):
 
         Note, you will need to look at the actual templates (templates/Pixel2.avd/config.ini) to see
         which values you can actually pass in as config.
+
+        Note: This can result in downloading the missing system image using sdkmanager. This can be a
+        costly operation (>4gb download for some images) and can be time consuming depending on your
+        network connection.
 
         Args:
             config (dict[str, str]): _description_
