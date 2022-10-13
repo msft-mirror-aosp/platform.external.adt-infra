@@ -38,6 +38,7 @@ public class AppWatcher implements UiWatcher {
         String NO_THANKS = "(?i)no,? thanks,?(?-i)";
         String OK = "(?i)ok(?-i)";
         String CONTINUE = "(?i)continue(?-i)";
+        String DONE = "(?i)done(?-i)";
 
         boolean condition = false;
         boolean isSuccess = mDevice.findObject(new UiSelector().textMatches((NO_THANKS)))
@@ -57,6 +58,12 @@ public class AppWatcher implements UiWatcher {
                     .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
             if (isSuccess) {
                 mDevice.findObject(new UiSelector().textMatches((OK))).click();
+                condition = true;
+            }
+            isSuccess = mDevice.findObject(new UiSelector().textMatches((DONE)))
+                    .waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
+            if (isSuccess) {
+                mDevice.findObject(new UiSelector().textMatches((DONE))).click();
                 condition = true;
             }
         }

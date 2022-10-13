@@ -77,26 +77,14 @@ public class AppTest {
     public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        String testPackageName = "com.example.android.basicrenderscript";
-        String apk = "BasicRenderScript.apk";
+        String apk = "Appication-debug.apk";
         String appName = "BasicRenderScript";
-        String result = "";
+        String result = PackageInstallationUtil.installApk(instrumentation, apk, true);
 
-        // Install BasicRenderScript, if not already present.
-        boolean isBasicRenderScriptInstalled = PackageInstallationUtil.
-                isPackageInstalled_V2(instrumentation, appName);
-
-
-        if (!isBasicRenderScriptInstalled) {
-            device.pressHome();
-            result = PackageInstallationUtil.installApk(instrumentation, apk, false);
-            new AppWatcher(device).checkForCondition();
-            isBasicRenderScriptInstalled = PackageInstallationUtil.
-                    isPackageInstalled(instrumentation, testPackageName);
-        }
+        new AppWatcher(device).checkForCondition();
 
         assertTrue("Application " + apk + " is not installed. Result: " + result,
-                isBasicRenderScriptInstalled);
+                result.isEmpty());
 
         AppLauncher.launch(instrumentation, appName);
         new AppWatcher(device).checkForCondition();
