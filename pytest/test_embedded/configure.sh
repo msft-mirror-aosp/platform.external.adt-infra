@@ -87,6 +87,11 @@ SNAPTOOL=$AOSP_DIR/external/qemu/android/android-grpc/python/snaptool/
 PYTHON=$(aosp_find_python)
 PY_VER=$($PYTHON --version)
 
+# Point ANDROID_SDK_ROOT to the one that we ship
+SDK_EMULATOR=$AOSP_DIR/prebuilts/android-emulator-build/system-images/$(get_build_os)
+export ANDROID_HOME=$SDK_EMULATOR
+export ANDROID_SDK_ROOT=$SDK_EMULATOR
+
 devpi_dir() {
     DEVPI_DIR=$(
         cd $AOSP_DIR/external/adt-infra/devpi
