@@ -211,7 +211,7 @@ public class DeveloperOptionsManager {
         new watcher(device, Res.SETTINGS_WATCHER_PATTERN).checkForCondition();
 
         try {
-            SettingsUtil.findItem_v2(instrumentation, "Developer options");
+            SettingsUtil.findItem_v2(instrumentation);
             return true;
         } catch (UiObjectNotFoundException e) {
             return false;

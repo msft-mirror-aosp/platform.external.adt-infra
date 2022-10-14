@@ -20,9 +20,9 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
@@ -73,7 +73,7 @@ public class SettingsUtil {
     /**
      * Launches Settings and find the item with the given name. Returns the item.
      */
-    static void findItem_v2(Instrumentation instrumentation, String name) throws Exception {
+    static void findItem_v2(Instrumentation instrumentation) throws Exception {
         UiScrollable itemList = launchAndGetItemList(instrumentation);
         UiObject systemListItem = UiDevice.getInstance(instrumentation).findObject(
                 new UiSelector().text("System"));
@@ -81,7 +81,7 @@ public class SettingsUtil {
             systemListItem.clickAndWaitForNewWindow();
         }
         UiObject item = itemList.getChildByText(
-                new UiSelector().className("android.widget.TextView"), name);
+                new UiSelector().className("android.widget.TextView"), "Developer options");
 
         assertTrue("Failed to find the item in Settings list.",
                 item.waitForExists(TimeUnit.SECONDS.toMillis(5)));
@@ -101,7 +101,7 @@ public class SettingsUtil {
      *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
-     * @param adminName admin policy name
+     * @param adminName       admin policy name
      * @throws Exception if it fails to find a UI widget.
      */
     public static void activate(Instrumentation instrumentation, String adminName,
@@ -116,7 +116,7 @@ public class SettingsUtil {
      *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
-     * @param adminName admin policy name
+     * @param adminName       admin policy name
      * @throws Exception if it fails to find a UI widget.
      */
     public static void deactivate(Instrumentation instrumentation, String adminName,
@@ -190,10 +190,11 @@ public class SettingsUtil {
     /**
      * Fetch permissions settings for a given application type.
      * For API <= 26
+     *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
-     * @param appType String describing the application type, as listed on the App permissions
-     *                screen.
+     * @param appType         String describing the application type, as listed on the App permissions
+     *                        screen.
      * @throws Exception if it fails to find a UI object.
      */
     public static boolean getAppPermissions_v1(
@@ -220,7 +221,7 @@ public class SettingsUtil {
 
         UiObject appPermissionsLabel = device.findObject(
                 new UiSelector()
-                        .textMatches("(?i)"+appType+"\\spermissions(?-i)")
+                        .textMatches("(?i)" + appType + "\\spermissions(?-i)")
         );
         boolean hasAppPermissionsLabel = appPermissionsLabel.waitForExists(5L);
         if (hasAppPermissionsLabel) {
@@ -236,8 +237,8 @@ public class SettingsUtil {
      *
      * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                        getInstrumentation}
-     * @param appType String describing the application type, as listed on the App permissions
-     *                screen.
+     * @param appType         String describing the application type, as listed on the App permissions
+     *                        screen.
      * @throws Exception if it fails to find a UI object.
      */
     public static UiObject getAppPermissions_v2(
@@ -250,11 +251,17 @@ public class SettingsUtil {
 
         SettingsUtil.clickAdvancedMenu(device);
 
-        UiObject seeAll = device.findObject(new UiSelector()
+        UiObject seeAllApps = device.findObject(new UiSelector()
                 .textContains("See all"));
 
-        if (seeAll.waitForExists(3L)){
-            seeAll.clickAndWaitForNewWindow();
+        if (seeAllApps.waitForExists(3L)) {
+            seeAllApps.clickAndWaitForNewWindow();
+        } else {
+            seeAllApps = device.findObject(new UiSelector()
+                    .textContains("All apps"));
+            if (seeAllApps.exists()) {
+                seeAllApps.clickAndWaitForNewWindow();
+            }
         }
 
         UiScrollable appPermissionsList = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
@@ -308,12 +315,12 @@ public class SettingsUtil {
      * Enable or disable permissions settings for a given application type
      * For API <= 25
      *
-     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
-     *                        getInstrumentation}
-     * @param appType String describing the application type, as listed on the App permissions
-     *                screen.
-     * @param appName String describing the application name, as listed on the {appType}
-     *                permissions screen.
+     * @param instrumentation   see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                          getInstrumentation}
+     * @param appType           String describing the application type, as listed on the App permissions
+     *                          screen.
+     * @param appName           String describing the application name, as listed on the {appType}
+     *                          permissions screen.
      * @param enablePermissions boolean indicating whether the permissions should be enabled
      *                          or disabled.
      * @throws Exception if it fails to find a UI object.
@@ -357,12 +364,12 @@ public class SettingsUtil {
      * Enable or disable permissions settings for a given application type
      * For API >= 26
      *
-     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
-     *                        getInstrumentation}
-     * @param appType String describing the application type, as listed on the App permissions
-     *                screen.
-     * @param appName String describing the application name, as listed on the {appType}
-     *                permissions screen.
+     * @param instrumentation   see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                          getInstrumentation}
+     * @param appType           String describing the application type, as listed on the App permissions
+     *                          screen.
+     * @param appName           String describing the application name, as listed on the {appType}
+     *                          permissions screen.
      * @param enablePermissions boolean indicating whether the permissions should be enabled
      *                          or disabled.
      * @throws Exception if it fails to find a UI object.
@@ -386,7 +393,7 @@ public class SettingsUtil {
         UiScrollable permissionList = new UiScrollable(new UiSelector().resourceIdMatches(Res.ANDROID_LIST_RES));
 
         UiObject permissionsBtn =
-                SettingsUtil.findObjectByRelative(permissionList,appName, LinearLayout.class.getName());
+                SettingsUtil.findObjectByRelative(permissionList, appName, LinearLayout.class.getName());
 
         if (!permissionsBtn.isChecked() && enablePermissions) {
             permissionsBtn.click();
@@ -409,12 +416,12 @@ public class SettingsUtil {
      * Enable or disable permissions settings for a given application type
      * For API >= 29
      *
-     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
-     *                        getInstrumentation}
-     * @param appType String describing the application type, as listed on the App permissions
-     *                screen.
-     * @param appName String describing the application name, as listed on the {appType}
-     *                permissions screen.
+     * @param instrumentation   see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                          getInstrumentation}
+     * @param appType           String describing the application type, as listed on the App permissions
+     *                          screen.
+     * @param appName           String describing the application name, as listed on the {appType}
+     *                          permissions screen.
      * @param enablePermissions boolean indicating whether the permissions should be enabled
      *                          or disabled.
      * @throws Exception if it fails to find a UI object.
@@ -536,8 +543,8 @@ public class SettingsUtil {
         return null;
     }
 
-    public static UiObject findObjectByRelative(UiScrollable verticalList, String childText, String classType) throws Exception{
-        UiObject uiObject = verticalList.getChildByText(new UiSelector().className(classType),childText);
+    public static UiObject findObjectByRelative(UiScrollable verticalList, String childText, String classType) throws Exception {
+        UiObject uiObject = verticalList.getChildByText(new UiSelector().className(classType), childText);
         return uiObject.getChild(new UiSelector().className(Switch.class.getName()));
     }
 
@@ -624,8 +631,8 @@ public class SettingsUtil {
     /**
      * Version 1 for api <= 23
      *
-     * @param instrumentation
-     * @param device
+     * @param instrumentation Instrumentation
+     * @param device          UiDevice
      * @throws Exception
      */
     public static void enableSampleDeviceAdmin_v1(Instrumentation instrumentation, final UiDevice device) throws Exception {
@@ -657,8 +664,8 @@ public class SettingsUtil {
     /**
      * Version 2 for api >= 24
      *
-     * @param instrumentation
-     * @param device
+     * @param instrumentation Instrumentation
+     * @param device          UiDevice
      * @throws Exception
      */
     public static void enableSampleDeviceAdmin_v2(Instrumentation instrumentation, final UiDevice device, String... location) throws Exception {
@@ -741,36 +748,23 @@ public class SettingsUtil {
         device.pressBack();
     }
 
-    // Copy test file to Downloads folder.
+    // Copy test file to Downloads folder, for APIs 26+.
     public static void copyTestFile(Instrumentation instrumentation, String testFileName) throws java.io.IOException {
-        Context context = instrumentation.getTargetContext();
-        AssetManager assetManager = context.getAssets();
-        InputStream in = assetManager.open(testFileName);
-        File testFile = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS), testFileName);
-        OutputStream out = new FileOutputStream(testFile);
-        byte[] buffer = new byte[1024];
-        int read;
-        while ((read = in.read(buffer)) != -1) {
-            out.write(buffer, 0, read);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            Context context = instrumentation.getTargetContext();
+            AssetManager assetManager = context.getAssets();
+            InputStream in = assetManager.open(testFileName);
+            File testFile = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS), testFileName);
+            OutputStream out;
+            out = Files.newOutputStream(testFile.toPath());
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+            in.close();
+            out.close();
         }
-        in.close();
-        out.close();
-    }
-
-    public static void copyTestFile_v2(Instrumentation instrumentation, String testFileName) throws java.io.IOException {
-        Context context = instrumentation.getTargetContext();
-        AssetManager assetManager = context.getAssets();
-        InputStream in = assetManager.open(testFileName);
-        File testFile = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS), testFileName);
-        OutputStream out = new FileOutputStream(testFile);
-        byte[] buffer = new byte[1024];
-        int read;
-        while ((read = in.read(buffer)) != -1) {
-            out.write(buffer, 0, read);
-        }
-        in.close();
-        out.close();
     }
 }

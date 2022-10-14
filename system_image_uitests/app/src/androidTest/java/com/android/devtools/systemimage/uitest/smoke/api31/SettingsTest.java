@@ -32,7 +32,6 @@ import com.android.devtools.systemimage.uitest.utils.ApiDemosInstaller;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
-import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
@@ -504,10 +503,7 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "T144630613")
     public void activateDeactivatePolicy() throws Exception {
-        boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
-                "com.example.android.apis");
-
-        if (isAPIDemoInstalled) {
+        try {
             SettingsUtil.launchDeviceAdminApps(instrumentation, "Security", "Device admin apps");
 
             if (SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.Switch", Res.ANDROID_SETTING_LIST_RES)) {
@@ -522,8 +518,9 @@ public class SettingsTest {
             // Deactivate "Sample Device Admin" policy
             SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security", "Device admin apps");
             assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.Switch", Res.ANDROID_SETTING_LIST_RES));
-        } else {
-            Log.w(TAG,"activateDeactivatePolicy: required APK is missing");
+        } catch(Exception e) {
+            Log.e(TAG,"activateDeactivatePolicy: required APK is missing");
+            Log.e(TAG,"error: " + e.getMessage());
         }
     }
 
