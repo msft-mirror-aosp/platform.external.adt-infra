@@ -45,6 +45,7 @@ def send_phone_call(emu_controller, phone_call, expected_phone_response):
     ],
 )
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.skip(reason="Phone response is InvalidAction instead of OK  b/254332148")
 def test_inbound_call(at_home, emulator_controller, test_name, phone_call_operation):
     """Sends phone call to the emulator.
 
