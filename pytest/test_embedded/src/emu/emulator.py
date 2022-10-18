@@ -100,6 +100,11 @@ class BaseEmulator(object):
         self.adb = Adb(
             self.description.name(), self.sdk_root / "platform-tools" / "adb"
         )
+        logging.info(
+            "Discovered emulator pid: %s, named: %s",
+            self.description.pid(),
+            self.description.name(),
+        )
 
     def stop(self) -> None:
         """Stops the emulator from running"""
@@ -135,7 +140,9 @@ class BaseEmulator(object):
 
         end = timer()
         logging.info(
-            "Waited %s for boot of %s", timedelta(end - start), self.description.name()
+            "Waited %s for boot of %s",
+            timedelta(seconds=end - start),
+            self.description.name(),
         )
         return response.booted
 
@@ -156,6 +163,40 @@ class BaseEmulator(object):
         """Closes the connection to the emulator."""
         if self.telnet:
             self.telnet.stop()
+
+    def _check_pid(self, pid: int) -> bool:
+        """Checks to see if the given pid exists.
+
+        Args:
+            pid (int): The process id we are looking for
+
+        Returns:
+            bool: True if the process is running
+        """
+        if platform.system() == "Windows":
+            raise NotImplementedError("This does not work on windows.")
+
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            return False
+        else:
+            return True
+
+    def is_alive(self) -> bool:
+        """Returns true if we believe the emulator is still alive."""
+
+        # We must have killed the emulator..
+        if self.description is None:
+            return False
+
+        if platform.system() == "Windows":
+            # We will just check if we can find the pid in the discovery set.
+            # We can't use os.kill as that does not work on windows.
+            discovery = EmulatorDiscovery()
+            return discovery.find_by_pid(self.description.pid()) is not None
+        else:
+            return self._check_pid(self.description.pid())
 
 
 class DebugEmulator(BaseEmulator):
@@ -222,7 +263,16 @@ class Emulator(BaseEmulator):
             "DISPLAY": os.environ.get("DISPLAY", ":0"),
         }
 
-        self._launch([shutil.which(exe), "-avd", self.avd] + params, local_env)
+        self._launch(
+            [
+                shutil.which(exe),
+                "-avd",
+                self.avd,
+                "-metrics-collection",  # Make sure we always send crash reports.
+            ]
+            + params,
+            local_env,
+        )
 
     def __del__(self):
         self.stop()
