@@ -9,5 +9,8 @@
 		{
 			"path": "../../devpi"
 		}
-	]
+	],
+	"settings": {
+		"workbench.colorTheme": "Monokai",
+	}
 }

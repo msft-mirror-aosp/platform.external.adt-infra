@@ -216,7 +216,7 @@ echo "${_YELLOW}Session: ${SESSION} and Emulator: ${EMULATOR}, AOSP: $AOSP_DIR${
 SDK_EMULATOR=$AOSP_DIR/prebuilts/android-emulator-build/system-images/$(get_build_os)
 export ANDROID_HOME=$SDK_EMULATOR
 export ANDROID_SDK_ROOT=$SDK_EMULATOR
-export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
+export ANDROID_EMU_ENABLE_CRASH_REPORTING="YES"
 
 AEMU_GRPC=$AOSP_DIR/external/qemu/android/android-grpc/python/aemu-grpc/
 SNAPTOOL=$AOSP_DIR/external/qemu/android/android-grpc/python/snaptool/

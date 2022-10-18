@@ -186,7 +186,7 @@ def avd(request, pytestconfig) -> BaseEmulator:
     return emu
 
 
-def go_home(avd : BaseEmulator):
+def go_home(avd: BaseEmulator):
     """It does the following:
 
     1. Wakes up the emulator by sending a WAKEUP
@@ -198,6 +198,8 @@ def go_home(avd : BaseEmulator):
     def my_test(go_home):
         assert(...)
     """
+    assert avd.is_alive()
+
     stub = avd.description.get_emulator_controller()
     avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
@@ -222,6 +224,8 @@ def at_home(avd: BaseEmulator):
     def test_goes_home(go_home):
         assert(...)
     """
+    assert avd.is_alive()
+
     go_home(avd)
     yield
     go_home(avd)
@@ -240,13 +244,15 @@ def emulator_log(avd: BaseEmulator):
         line = emulator_log.get(block=True, timeout=1.5)
         assert line == 'INFO    | Started GRPC server at 127.0.0.1:8554, security: Local, auth: none'
     """
+    assert avd.is_alive()
+
     if avd.log:
         while not avd.log.empty():
             avd.log.get(False)
     return avd.log
 
 
-def launch_animiation_app(avd):
+def launch_animiation_app(avd: BaseEmulator):
     """Launches the debug animation app.
 
     This launches the animation app that ships with this library and
@@ -260,6 +266,8 @@ def launch_animiation_app(avd):
 
     It will wait for at most 5 seconds before continuing.
     """
+    assert avd.is_alive()
+
     avd.adb.run(["logcat", "-c"])
     avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
@@ -277,7 +285,7 @@ def launch_animiation_app(avd):
 
 
 @pytest.fixture
-def emulator_controller(avd):
+def emulator_controller(avd: BaseEmulator):
     """A grpc stub to the emulator controller.
 
     Usage:
@@ -286,12 +294,14 @@ def emulator_controller(avd):
         response = emulator_controller.getStatus(empty_pb2.Empty())
         assert response.booted
     """
+    assert avd.is_alive()
+
     ctrl = avd.description.get_emulator_controller()
     return ctrl
 
 
 @pytest.fixture
-def animation_app(avd):
+def animation_app(avd: BaseEmulator):
     """Activates the animation app that displays a rotating triangle.
 
      The app does the following things:
@@ -309,6 +319,8 @@ def animation_app(avd):
         emulator_controller.getScreenshot(ImageFormat(format=ImageFormat.PNG, width=180, height=180))
 
     """
+    assert avd.is_alive()
+
     tries = 3
     while not launch_animiation_app(avd) and tries > 0:
         tries = tries - 1
@@ -321,7 +333,7 @@ def animation_app(avd):
 
 
 @pytest.fixture
-def adb(avd):
+def adb(avd: BaseEmulator):
     """Function that invokes the adb executable with the given parameters.
 
     Usage:
@@ -329,11 +341,13 @@ def adb(avd):
     def test_sample(adb):
         adb(["emu", "rotate"])
     """
+    assert avd.is_alive()
+
     return avd.adb.run
 
 
 @pytest.fixture
-def telnet(avd):
+def telnet(avd: BaseEmulator):
     """Access to the telnet console of the current emulator.
 
     Usage:
@@ -341,4 +355,6 @@ def telnet(avd):
     def test_sample(telnet):
         telnet.send("event text")
     """
+    assert avd.is_alive()
+
     return avd.console()

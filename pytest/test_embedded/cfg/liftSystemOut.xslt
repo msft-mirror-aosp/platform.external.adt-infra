@@ -17,8 +17,16 @@
                 <xsl:value-of select="../system-out"/>
             </xsl:attribute>
         </failure>
-    </xsl:template>   
-
+    </xsl:template>
+    <xsl:template match="error">
+        <error>
+            <xsl:attribute name="message">
+                <xsl:value-of select="."/>
+                <xsl:text>&#10;</xsl:text>
+                <xsl:value-of select="../system-out"/>
+            </xsl:attribute>
+        </error>
+    </xsl:template>
     <!-- drop output -->
     <xsl:template match="system-out" />
 </xsl:stylesheet>
