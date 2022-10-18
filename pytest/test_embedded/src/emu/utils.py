@@ -22,6 +22,23 @@ from threading import Thread
 import sh
 
 
+def system_cpu() -> str:
+    """Returns the native system cpu
+
+    Returns:
+        str: The native system cpu, either x86_64|arm64
+    """
+    aarch = platform.machine()
+    if aarch == "x86_64":
+        # Ok maybe python is running under rosetta, if so the uname.version
+        # will have have something along RELEASE_ARM64_T6000 in it
+        uname = platform.uname()
+        if "ARM64" in uname.version and uname.system == "Darwin":
+            return "arm64"
+
+    return aarch
+
+
 def run(
     cmd: list[str], local_env: dict[str, str] = {}
 ) -> tuple[subprocess.Popen, Queue]:
@@ -32,7 +49,7 @@ def run(
         local_env (dict[str, str], optional): Environment to merge into default environment. Defaults to {}.
 
     Returns:
-        _type_: _description_
+        tuple[subprocess.Popen, Queue]: Handle to the process, queue with system output
     """
     use_shell = platform.system() == "Windows"
     env = os.environ
@@ -54,14 +71,14 @@ def run(
     return proc, q
 
 
-def log_to_queue(q, line):
+def log_to_queue(logging_queue, line):
     """Logs the output of the given process."""
-    if q.full():
-        q.get()
+    if logging_queue.full():
+        logging_queue.get()
 
     strip = line.strip()
     logging.info(strip)
-    q.put(strip)
+    logging_queue.put(strip)
 
 
 def _reader(pipe, logfn):
@@ -75,13 +92,13 @@ def _reader(pipe, logfn):
 
 def _log_proc(proc):
     """Logs the output of the given process."""
-    q = Queue()
-    log_with_queue = partial(log_to_queue, q)
+    log_queue = Queue()
+    log_with_queue = partial(log_to_queue, log_queue)
     for args in [[proc.stdout, log_with_queue], [proc.stderr, logging.error]]:
-        t = Thread(target=_reader, args=args)
-        t.start()
+        thread = Thread(target=_reader, args=args)
+        thread.start()
 
-    return q
+    return log_queue
 
 
 class LogObserver(object):

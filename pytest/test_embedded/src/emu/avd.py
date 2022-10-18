@@ -20,6 +20,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from typing import Iterator, Optional
+from emu.utils import system_cpu
 
 from emu.template_writer import TemplateWriter
 
@@ -44,7 +45,7 @@ class UnsupportedAbiOrCpu(Exception):
     pass
 
 
-class SystemImages(object):
+class SystemImages:
 
     IMAGE = re.compile(
         r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
@@ -87,7 +88,8 @@ class SystemImages(object):
         """
         if not self.sys_root.exists():
             logging.warning(
-                f"The directory {self.sys_root} does not exist (yet?). Is ANDROID_SDK_ROOT set properly?"
+                "The directory %s does not exist (yet?). Is ANDROID_SDK_ROOT set properly?",
+                self.sys_root,
             )
             return
         logging.info("Looking for images in %s", self.sys_root)
@@ -98,7 +100,6 @@ class SystemImages(object):
                     "api": m.group(1),
                     "tag": m.group(2),
                     "abi": m.group(3),
-                    "cpu": m.group(3),
                     "image_dir": os.path.join(
                         "system-images",
                         "android-{}".format(m.group(1)),
@@ -160,11 +161,9 @@ class SystemImages(object):
         for file_gz in image_dir.glob("*.gz"):
             file: Path = file_gz.parent / file_gz.stem
             if file.exists():
-                logging.warning(
-                    f"The {file} already exists, no extraction needed."
-                )
+                logging.warning("The %s already exists, no extraction needed.", file)
             else:
-                logging.info(f"Be patient extracting {file_gz}...")
+                logging.info("Be patient extracting %s...", file_gz)
                 with gzip.open(file_gz, "rb") as file_gz_in:
                     with open(file, "wb") as file_gz_out:
                         shutil.copyfileobj(file_gz_in, file_gz_out, blocksize)
@@ -184,13 +183,14 @@ class SystemImages(object):
         Returns:
             dict[str, str]:  A dictionary with api, tag, abi, and cpu.
         """
-        logging.info("Installing system-images;android-{};{};{}".format(api, tag, abi))
+        logging.info("Installing system-images;android-%s;%s;%s", api, tag, abi)
         donwload = subprocess.run(
             [
                 self.sdk_manager,
-                "system-images;android-{};{};{}".format(api, tag, abi),
+                f"system-images;android-{api};{tag};{abi}",
             ],
             stderr=subprocess.PIPE,
+            check=False,
         )
         if donwload.returncode != 0:
             logging.error("sdkmanager: %s", donwload.stderr.decode("UTF-8"))
@@ -214,7 +214,15 @@ class SystemImages(object):
                 yield fname
 
 
-class AvdWriter(object):
+class AvdWriter:
+    """An AvdWriter is able write an avd configuration.
+
+    Attributes:
+
+        avd_home (Path): The avd home directory where the config will be written to.
+        imgs (SystemImages): The system images that can be used.
+        writer (TemplateWriter): Template writer used to write out configurations
+    """
 
     # map from cpu --> abi.
     CPU_TO_ABI = {
@@ -262,7 +270,7 @@ class AvdWriter(object):
         self.writer = TemplateWriter(self.avd_home)
 
     def _write_config_ini(
-        self, name: str, avd: str, custom_cfg: dict[str, str]
+        self, name: str, avd: dict[str, str], custom_cfg: dict[str, str]
     ) -> None:
         """Writes the custom config ini to the avd_home directory"""
         cfg = self.writer.template_to_dict("Pixel2.avd/config.ini", avd)
@@ -274,9 +282,9 @@ class AvdWriter(object):
         if not dest.parent.exists():
             os.makedirs(dest.parent)
 
-        with open(dest, "w") as f:
-            for k, v in cfg.items():
-                f.write(f"{k} = {v}\n")
+        with open(dest, "w", encoding='utf-8') as avd_cfg_file:
+            for key, value in cfg.items():
+                avd_cfg_file.write(f"{key} = {value}\n")
 
     def _create_avd(
         self, api: str, abi: str, tag: str, name: str, custom_cfg: dict[str, str]
@@ -284,12 +292,16 @@ class AvdWriter(object):
         avd = self.sys_imgs.find_and_unpack(api, abi, tag)
         if not avd:
             logging.warning(
-                f"Installing api: {api}, abi: {abi}, tag: {tag}, this is a very expensive operation, and can easily take up 10 minutes!"
+                "Installing api: %s, abi: %s, tag: %s, this is a very expensive operation, and can easily take up 10 minutes!",
+                api,
+                abi,
+                tag,
             )
             avd = self.sys_imgs.install(api, abi, tag)
 
         avd["name"] = name
         avd["avd_home"] = self.avd_home
+        avd["host_cpu"] = system_cpu()
 
         self.writer.write_template("Pixel2.ini", avd, f"{name}.ini")
         self._write_config_ini(name, avd, custom_cfg)
