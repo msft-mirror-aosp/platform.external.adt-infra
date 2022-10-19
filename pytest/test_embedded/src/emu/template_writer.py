@@ -13,35 +13,64 @@
 # limitations under the License.
 import logging
 import os
+from pathlib import Path
 
 from jinja2 import Environment, PackageLoader
-import configparser
 
 
-class TemplateWriter(object):
-    """A Template writer uses jinja to fill in templates.
+class TemplateWriter:
+    """A Template writer uses jinja to render templates to an
+       output directory.
 
-    All the templates should live in the src/emu/templates directory.
+       The templates are in the emu.templates package.
+
+
+    Attributes:
+        out_dir (Path): The destination when we write out a template.
     """
 
-    def __init__(self, out_dir):
-        """Creates a template writer that writes templates to the out_dir
+    def __init__(self, out_dir: str):
+        """Creates a template writer that renders templates to the out_dir
 
-        The out directory will be created if needed.
+        The out_dir directory will be created if it does not exist.
+
+        Args:
+            out_dir (str): The output directory where the template
+                           writer will render the results.
         """
         self.env = Environment(loader=PackageLoader("emu", "templates"))
-        self.dest = out_dir
+        self.dest = Path(out_dir)
 
-    def write_template(self, template_file, template_dict, rename_as=None):
-        """Fill out the given template, writing it to the destination directory."""
+    def write_template(
+        self, template_file: str, template_dict: dict[str, str], rename_as=None
+    ) -> None:
+        """Renders the given template to the destination directory.
+
+        Args:
+            template_file (str): The template from the package emu.templates
+                                 directory to use
+            template_dict (dict[str, str]): Map used to render the template.
+            rename_as (_type_, optional): Rename the template_file to this name when writing
+                                to the out_dir. Defaults to None, meaning no rename.
+        """
         dest_name = rename_as if rename_as else template_file
         return self._write_template_to(
             template_file, os.path.join(self.dest, dest_name), template_dict
         )
 
-    def template_to_dict(self, template_file, template_dict):
-        """Loads the templatized ini file, fills it out and returns it as a dict."""
-        template = self.env.get_template(template_file)
+    def template_to_dict(
+        self, template_ini_file: str, template_dict: dict[str, str]
+    ) -> dict[str, str]:
+        """Renders the given template ini file, returning it as a dictionary.
+
+        Args:
+            template_ini_file (str): The template file to render
+            template_dict (dict[str, str]): The dictionary used to render the template.
+
+        Returns:
+            dict[str, str]: The parsed ini file, after rendering.
+        """
+        template = self.env.get_template(template_ini_file)
         ini = template.render(template_dict)
         cfg = {}
         for line in ini.splitlines():
@@ -65,5 +94,5 @@ class TemplateWriter(object):
             os.makedirs(dest_dir)
 
         logging.info("Writing: %s -> %s with %s", tmpl_file, dest_file, template_dict)
-        with open(dest_file, "w") as dfile:
+        with open(dest_file, "w", encoding="utf-8") as dfile:
             dfile.write(template.render(template_dict))

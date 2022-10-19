@@ -25,7 +25,6 @@ provide access to parts of the emulator.
 """
 import logging
 import os
-import platform
 import sys
 from pathlib import Path
 
@@ -37,7 +36,7 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from emu.apk import APP_DEBUG_APK
 from emu.emulator import BaseEmulator, Emulator, DebugEmulator
-
+from emu.utils import system_cpu
 from tests.test_utils import wait_for_regex
 
 # from emu.emulator import Emulator
@@ -120,7 +119,7 @@ def avd(request, pytestconfig) -> BaseEmulator:
     {
         "api": "31",
         "tag.id": "google_apis",
-        "cpu": platform.machine()
+        "cpu": system_cpu()
     }
 
     You can provide your own avd configuration, by defining the variable
@@ -157,7 +156,7 @@ def avd(request, pytestconfig) -> BaseEmulator:
     avd_config = {
         "api": "31",
         "tag.id": "google_apis",
-        "cpu": platform.machine(),
+        "cpu": system_cpu(),
     }
     avd_user_config = getattr(request.module, "avd_config", {})
     avd_config.update(avd_user_config)
