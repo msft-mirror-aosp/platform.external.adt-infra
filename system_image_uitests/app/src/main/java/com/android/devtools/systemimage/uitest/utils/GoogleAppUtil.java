@@ -29,6 +29,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Static utility method pertaining to Google Apps
@@ -42,6 +43,10 @@ public class GoogleAppUtil {
     private static final int api = SystemUtil.getApiLevel();
     private static final String email = "demo.sysimg.user1@gmail.com";
     private static final String password = "qcw4l34wqb";
+
+    public String getTestUserEmail() {
+        return email;
+    }
 
     /**
      * Log a user into a Google application
@@ -193,7 +198,7 @@ public class GoogleAppUtil {
         boolean isSignedIn =
                 new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
-        if ((api >= 24 && api <= 29) || api == 32) {
+        if ((api >= 24 && api <= 29) || api >= 31) {
             UiObject signInConsentButton = api == 32 ?
                     device.findObject(
                             new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES)) :
@@ -205,12 +210,15 @@ public class GoogleAppUtil {
             }
         }
 
-        assertTrue("Login failed", firstAttempt || isSignedIn);
-        if ( !isSignedIn ) {
-            Log.i("Login", "Retry google login");
-            device.pressHome();
-            TimeUnit.SECONDS.sleep(5);
-            return loginGoogleApp(instrumentation, false);
+        if (!isSignedIn) {
+            if (firstAttempt) {
+                Log.i("Login", "Retry google login");
+                device.pressHome();
+                TimeUnit.SECONDS.sleep(5);
+                return loginGoogleApp(instrumentation, false);
+            } else {
+                fail("Google Services account login attempt failed");
+            }
         }
 
         final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
