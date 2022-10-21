@@ -26,6 +26,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
+import com.android.devtools.systemimage.uitest.utils.YouTubeUtil;
 
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -54,7 +55,7 @@ public class YouTubeTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(1500);
+    public Timeout globalTimeout = Timeout.seconds(7200);
 
     /**
      * Verify YouTube has the latest version or not.
@@ -75,7 +76,8 @@ public class YouTubeTest {
     public void checkYouTubeVersion() throws Exception{
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
-        AppLauncher.launch(instrumentation, "YouTube");
+
+        YouTubeUtil.launchYouTube(instrumentation);
         UiObject updateLaterButton = device.findObject(new UiSelector().resourceId(Res.YOUTUBE_UPDATE_LATER_BUTTON_RES));
         assertFalse("Device has older version of YouTube installed", updateLaterButton.waitForExists(5L));
     }
@@ -87,52 +89,46 @@ public class YouTubeTest {
      * <p>
      *   <pre>
      *   Test Steps:
-     *   1. Start an emulator and launch home screen.
-     *   2. Open Apps.
-     *   3. Launch Chrome app. and signIn to Chrome
+     *   1. Start an emulator and launch home screen
+     *   2. Sign out of YouTube if already logged in
+     *   3. Launch Chrome app and sign in to Chrome
      *   4. Launch YouTube and check for user account
-     *   5. Sign out of Chrome
+     *   5. Sign out of You Tube
      *   Verify:
      *      1. Verify that Chrome login synced with YouTube login
-     *      2. Verify that Chrome logout did not remove YouTube user
+     *      2. Verify that Google Account Services logout removed YouTube user
      *   </pre>
      */
     @Test
     @TestInfo(id = "XXXX")
     public void loginYouTube() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
-        GoogleAppUtil.logoutGoogleChrome(instrumentation);
-        boolean logInSuccess = GoogleAppUtil.loginGoogleApp(instrumentation, true);
-        assertTrue("Google log in was unsuccessful", logInSuccess);
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        if (YouTubeUtil.isTestUserLoggedIn(instrumentation)) {
+            YouTubeUtil.logoutYouTubeAccount(instrumentation);
+
+            assertFalse("YouTube log out was unsuccessful",
+                    YouTubeUtil.isTestUserLoggedIn(instrumentation));
+        }
+
+        UiObject doneButton = device.findObject(
+                new UiSelector().packageName("com.google.android.youtube")
+                        .className("android.widget.ImageButton")
+                        .description("Close"));
+
+        if (doneButton.waitForExists(5000L)) {
+            doneButton.clickAndWaitForNewWindow();
+        }
+
+        assertTrue("Google log in was unsuccessful",
+                GoogleAppUtil.loginGoogleApp(instrumentation, true));
 
         assertTrue("YouTube log in was unsuccessful",
-                isTestUserLoggedIn(instrumentation));
+                YouTubeUtil.isTestUserLoggedIn(instrumentation));
 
-        GoogleAppUtil.logoutGoogleChrome(instrumentation);
-
-        assertTrue("Chrome logout removed YouTube account",
-                isTestUserLoggedIn(instrumentation));
-    }
-
-    private boolean isTestUserLoggedIn(Instrumentation instrumentation) throws Exception {
-        final UiDevice device = UiDevice.getInstance(instrumentation);
-        AppLauncher.launch(instrumentation, "YouTube");
-
-        UiObject mobileAvatar = device.findObject(
-                new UiSelector().resourceId(Res.YOUTUBE_TOPBAR_AVATAR_RES)
-                        .packageName(Res.YOUTUBE_PACKAGE));
-        if (mobileAvatar.waitForExists(5L)) {
-            mobileAvatar.clickAndWaitForNewWindow();
-        }
-
-        if (mobileAvatar.waitForExists(30000L)) {
-            mobileAvatar.clickAndWaitForNewWindow();
-        }
-
-        UiObject testUserLoggedIn = device.findObject(
-                new UiSelector().resourceId(Res.YOUTUBE_EMAIL_ACCOUNT_RES)
-                        .text(GoogleAppUtil.getUserEmail()));
-
-        return testUserLoggedIn.waitForExists(1000L);
+        YouTubeUtil.logoutYouTubeAccount(instrumentation);
+        assertFalse("YouTube log out was unsuccessful",
+                YouTubeUtil.isTestUserLoggedIn(instrumentation));
     }
 }

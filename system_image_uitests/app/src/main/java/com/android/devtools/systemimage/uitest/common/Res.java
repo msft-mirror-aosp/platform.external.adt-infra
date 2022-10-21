@@ -67,7 +67,7 @@ public class Res {
     public static final String CANCEL_SETUP_WIZARD_RES = "com.google.android.setupwizard:id/welcome_cancel_button";
     public static final String DEFERRED_SNOOZE_ITEM_RES = "com.google.android.setupwizard:id/deferred_snooze_item";
     public static final String ANDROID_PHONE_RES = "com.android.phone";
-    public static final String ANDROID_SETTINGS_RES = "com.android.settings";
+    public static final String ANDROID_BUTTON = "com.android.settings:id/button";
     public static final String ANDROID_SWITCH_TEXT_RES = "com.android.settings:id/switch_text";
     public static final String ANDROID_SWITCH_WIDGET_RES = "com.android.settings:id/switch_widget";
     public static final String ABOUT_PHONE_LIST_CONTAINER_RES =
@@ -122,13 +122,21 @@ public class Res {
             "com.android.chrome:id/next_button";
     public static final String GOOGLE_SERVICES_ACCEPT_BUTTON_RES =
             "com.google.android.gms:id/next_button";
+
+    public static final String GOOGLE_SERVICES_SKIP_BUTTON_RES =
+            "com.google.android.gms:id/skip_button";
+
+    public static final String GOOGLE_SERVICES_ACCOUNT_BUTTON_RES =
+            "com.google.android.gms:id/account";
+    public static final String GOOGLE_SERVICES_ACCOUNTS_CHIP_RES =
+            "com.google.android.gms:id/manage_accounts_chip_title";
     public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
     public static final String GOOGLE_BACKUP_SWITCH_RES =
             "com.google.android.gms:id/sud_items_switch";
 
     public static final String SEARCH_TEXT_BOX =
-        "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)/(search_omnibox_text_box|search_omnibox_edit_text|textbox|edit_textbox)";
+            "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)/(search_omnibox_text_box|search_omnibox_edit_text|textbox|edit_textbox)";
     public static final String SEARCH_TEXT_CLEAR = "com.google.android.apps.gmm:id/search_omnibox_text_clear";
     public static final String GOOGLE_ACCEPT_BUTTON = "com.google.android.apps.gmm:id/accept_button";
     public static final String GOOGLE_AR_SNACKBAR_RES =
@@ -185,6 +193,8 @@ public class Res {
     public static final String YOUTUBE_TITLE_RES = "com.google.android.youtube:id/title";
     public static final String YOUTUBE_TOPBAR_AVATAR_RES = "com.google.android.youtube:id/mobile_topbar_avatar";
     public static final String YOUTUBE_INSTALL_BUTTON_RES = "com.google.android.youtube:id/install_button";
+    public static final String MANAGE_ACCOUNT_BUTTON_RES = "com.google.android.youtube:id/manage_account";
+
     public static final String YOUTUBE_PACKAGE = "com.google.android.youtube";
 
     public static final String ADD_GOOGLE_ACC_WATCHER_PATTERN = "(?i)(not|accept|ok|cancel)(?-i)";
