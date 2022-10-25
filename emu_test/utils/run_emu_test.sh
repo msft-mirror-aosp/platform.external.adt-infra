@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This is used to run AVD and console emulator tests.
+# This is used to run AVD and embedded tests.
 # This will be invoked by aosp-emu-master-dev.
 . $(dirname "$0")/common.sh
 # Let's log a lot.
@@ -111,7 +111,6 @@ export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 clean_avds
 log "activate virtualenv"
 activate_virtualenv $TEST_DIR/utils
-run_test "Console tests" python -u $TEST_DIR/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $EMULATOR_EXE --test_dir Console_test --file_pattern 'test_console.*' --config_file $TEST_DIR/config/console_cfg_byob.csv --buildername $BUILDERNAME --headless
 log "deactivate virtualenv"
 deactivate_virtualenv
 
