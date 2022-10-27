@@ -45,6 +45,8 @@ public class Res {
     public static final String CHROME_ACCOUNT_SELECTION_MARK_RES = "com.android.chrome:id/account_selection_mark";
     public static final String CREATE_NEW_CONTACT = "com.android.contacts:id/create_contact_button";
     public static final String PERMISSION_RECYCLER_VIEW = "com.android.permissioncontroller:id/recycler_view";
+
+    public static final String PERMISSION_CONTENT_FRAME = "com.android.permissioncontroller:id/content_frame";
     public static final String ALLOW_PERMISSION_BUTTON = "(com.android.permissioncontroller\\d*:id)"
             + "/(allow_radio_button|allow_always_radio_button)";
     public static final String ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON = "com.android.permissioncontroller:id/allow_foreground_only_radio_button";
@@ -79,6 +81,8 @@ public class Res {
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container|list_container|content_parent)";
     public static final String SETTINGS_ACTION_BAR_RES = "com.android.settings:id/action_bar";
+
+    public static final String SETTINGS_ACTION_BUTTON_RES = "com.android.settings:id/action_button";
     public static final String SETTINGS_COLLAPSING_TOOLBAR_RES = "com.android.settings:id/collapsing_toolbar";
 
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";

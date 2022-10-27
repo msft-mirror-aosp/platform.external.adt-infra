@@ -98,10 +98,14 @@ public class SettingsTest {
                 );
         itemList.setAsVerticalList();
 
-        UiObject location =
-                itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                        "Location");
-        location.clickAndWaitForNewWindow();
+        UiObject locationSetting = device.findObject(
+                new UiSelector()
+                        .className("android.widget.TextView")
+                        .text("Location"));
+
+        assertTrue("Location not found in Settings List",
+                itemList.scrollIntoView(locationSetting));
+        locationSetting.clickAndWaitForNewWindow();
 
         boolean recentAccessText = new Wait().until(
                 () -> device.findObject(new UiSelector()
@@ -283,11 +287,10 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
-            assertTrue("Failed to enable Developer options.",
-                    DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
-        }
+        DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+        assertTrue("Failed to enable Developer options.",
+                AppLauncher.launchPath(
+                        instrumentation, true, "Settings", "System", "Developer options"));
     }
 
     /**
@@ -312,9 +315,9 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
         try {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text("Date & time"))
-                    .clickAndWaitForNewWindow();
+            AppLauncher.launchPath(
+                    instrumentation, true, "Settings", "System", "Date & time");
+
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
@@ -372,9 +375,8 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
         try {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text("Date & time"))
-                    .clickAndWaitForNewWindow();
+            AppLauncher.launchPath(
+                    instrumentation, true, "Settings", "System", "Date & time");
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
@@ -434,9 +436,8 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
         try {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text("Date & time"))
-                    .clickAndWaitForNewWindow();
+            AppLauncher.launchPath(
+                    instrumentation, true, "Settings", "System", "Date & time");
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
@@ -734,14 +735,14 @@ public class SettingsTest {
      */
     @Test
     public void revokeDebugAuth() throws Exception {
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
+        if (!AppLauncher.launchPath(
+                instrumentation, true, "Settings", "System", "Developer options")) {
             DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+            Assert.assertTrue("Could not enable developer options",
+                    AppLauncher.launchPath(
+                            instrumentation, true, "Settings", "System", "Developer options"));
         }
 
-        Assert.assertTrue("Could not enable developer options",
-                DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
-
-        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Developer options");
 
         UiScrollable itemList =
                 new UiScrollable(
@@ -749,12 +750,8 @@ public class SettingsTest {
                 );
         itemList.setAsVerticalList();
 
-        UiSelector usbDebuggingSelector = new UiSelector().text("USB debugging");
-        itemList.scrollIntoView(usbDebuggingSelector);
-
-        UiObject usbDebugging = device.findObject(usbDebuggingSelector);
-
-        assertTrue("USB debugging controls not found", usbDebugging.waitForExists(5L));
+        UiObject usbDebugging = device.findObject(new UiSelector().text("USB debugging"));
+        assertTrue("USB debugging controls not found", itemList.scrollIntoView(usbDebugging));
     }
 
     /**
@@ -775,7 +772,8 @@ public class SettingsTest {
     @Test
     public void listConnectedDevices() throws Exception {
         try {
-            SettingsUtil.openItem(instrumentation, "Connected devices");
+            AppLauncher.launchPath(
+                    instrumentation, true, "Settings", "Connected devices");
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
