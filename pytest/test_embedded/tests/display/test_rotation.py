@@ -49,7 +49,7 @@ from tests.test_utils import StreamingCall, fmt_proto
 # - Calling rotate on the telnet interface.
 
 
-# This contains the mapping of the Z-axis towars the symbolic name.
+# This contains the mapping of the Z-axis towards the symbolic name.
 ROTATION_MAPPING = [
     (-90, Rotation.REVERSE_LANDSCAPE),
     (-180, Rotation.REVERSE_PORTRAIT),
@@ -79,7 +79,6 @@ def for_each_rotation(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
 def test_rotation_observable_through_screenshot(emulator_controller):
     """Test that setting the rotation, is observable through getting a screenshot."""
     for (fine, coarse) in for_each_rotation(emulator_controller):
@@ -206,6 +205,7 @@ def test_rotation_pixels_in_the_right_place(animation_app, emulator_controller):
 
 
 @pytest.mark.e2e
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_rotation_through_console_observable_through_physical_model(
     emulator_controller, adb
 ):
@@ -230,7 +230,6 @@ def test_rotation_through_console_observable_through_physical_model(
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
 def test_rotation_through_console_observable_through_screenshot(
     at_home, emulator_controller, adb
 ):
@@ -238,8 +237,9 @@ def test_rotation_through_console_observable_through_screenshot(
     bug: b/159635109
     """
     for (_, coarse) in ROTATION_MAPPING:
-        sleep(0.5)
+        sleep(0.2)
         adb(["emu", "rotate"])
+        sleep(0.2)
         img = emulator_controller.getScreenshot(ImageFormat())
         assert img.format.rotation.rotation == coarse
 
