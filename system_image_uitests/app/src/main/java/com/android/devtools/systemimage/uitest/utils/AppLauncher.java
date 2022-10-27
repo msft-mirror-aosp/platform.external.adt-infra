@@ -180,9 +180,7 @@ public class AppLauncher {
                 appByRegex.clickAndWaitForNewWindow();
                 status = true;
                 continue;
-            }
-
-            if (appByText.waitForExists(5L)) {
+            } else if (appByText.waitForExists(5L)) {
                 appByText.clickAndWaitForNewWindow();
                 status = true;
                 continue;
@@ -190,18 +188,14 @@ public class AppLauncher {
 
             try {
                 UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+                scrollable.setSwipeDeadZonePercentage(0);
                 if (!scrollable.waitForExists(5L)) {
-                    status = false;
                     continue;
-                }
-
-                if (scrollable.scrollIntoView(regexSelector)) {
+                } else if (scrollable.scrollIntoView(regexSelector)) {
                     appByRegex.clickAndWaitForNewWindow();
                     status = true;
                     continue;
-                }
-
-                if (scrollable.scrollIntoView(textSelector)) {
+                } else if (scrollable.scrollIntoView(textSelector)) {
                     appByText.clickAndWaitForNewWindow();
                     status = true;
                     continue;

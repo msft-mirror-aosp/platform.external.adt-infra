@@ -165,7 +165,7 @@ public class SettingsUtil {
 
 
         UiObject actionButton = device.findObject(
-                new UiSelector().resourceId("com.android.settings:id/action_button"));
+                new UiSelector().resourceId(Res.SETTINGS_ACTION_BUTTON_RES));
 
         actionButton.waitForExists(TimeUnit.SECONDS.toMillis(3L));
 
@@ -441,7 +441,7 @@ public class SettingsUtil {
         device.findObject(new UiSelector().text(targetApp)).click();
 
         if (SystemUtil.getApiLevel() <= 30) {
-            UiScrollable permissionList = new UiScrollable(new UiSelector().resourceId("com.android.permissioncontroller:id/recycler_view"));
+            UiScrollable permissionList = new UiScrollable(new UiSelector().resourceId(Res.PERMISSION_RECYCLER_VIEW));
 
             UiObject appButton = SystemUtil.getApiLevel() == 30 ?
                     permissionList.getChildByText(new UiSelector().className("android.widget.TextView").index(0), appName) :
@@ -474,24 +474,25 @@ public class SettingsUtil {
             }
         } else {
             UiObject permissions = device.findObject(
-                    new UiSelector().text("Permissions"));
-            if (permissions.waitForExists(3L)) {
+                    new UiSelector().resourceId(Res.ANDROID_TITLE_RES).text("Permissions"));
+            if (permissions.waitForExists(3000L)) {
                 permissions.clickAndWaitForNewWindow();
             }
             UiScrollable permissionList = new UiScrollable(new UiSelector().
-                    resourceId("com.android.permissioncontroller:id/content_frame"));
+                    resourceId(Res.PERMISSION_CONTENT_FRAME));
 
             UiObject location = device.findObject(
                     new UiSelector().text("Location"));
-            permissionList.scrollIntoView(location);
-            if (location.waitForExists(5L)) {
-                location.clickAndWaitForNewWindow();
-            }
-            UiObject permissionsButton = device.findObject(
-                    new UiSelector().text(enablePermissions
-                            ? "Allow only while using the app" : "Don't allow"));
+            assertTrue("Could not find location in permissions list",
+                    permissionList.scrollIntoView(location));
+            location.clickAndWaitForNewWindow();
 
-            if (permissionsButton.waitForExists(3L)) {
+            UiObject permissionsButton = device.findObject(
+                    new UiSelector().resourceId(enablePermissions
+                            ? Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON :
+                            Res.DENY_PERMISSION_BUTTON));
+
+            if (permissionsButton.waitForExists(3000L)) {
                 permissionsButton.clickAndWaitForNewWindow();
             }
 
