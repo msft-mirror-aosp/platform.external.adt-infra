@@ -114,12 +114,6 @@ activate_virtualenv $TEST_DIR/utils
 log "deactivate virtualenv"
 deactivate_virtualenv
 
-log "Remove deployed emulator"
-run rm -rf $SESSION_DIR/emu-master-dev
-
-log "Cleanup prebuilts"
-run rm -rf /buildbot/prebuilt/*
-
 log "Remove any empty file"
 find $SESSION_DIR -size 0 -delete || log "No empty files were deleted."
 
