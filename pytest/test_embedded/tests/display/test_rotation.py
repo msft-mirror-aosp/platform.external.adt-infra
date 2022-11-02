@@ -89,7 +89,6 @@ def test_rotation_observable_through_screenshot(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
 def test_rotation_observable_through_adbstream(avd,
     at_home, animation_app, emulator_controller
 ):
@@ -115,16 +114,14 @@ def test_rotation_observable_through_adbstream(avd,
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
-@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
 def test_rotation_observable_through_stream_screenshot(
     animation_app, emulator_controller
 ):
     """Test that setting the rotation, is observable through streaming screenshot."""
-    imgStream = emulator_controller.streamScreenshot(
-        ImageFormat(width=320, height=200), timeout=5
-    )
-    with StreamingCall(imgStream) as stream:
-        for (angle, coarse) in for_each_rotation(emulator_controller):
+    for (angle, coarse) in for_each_rotation(emulator_controller):
+        sleep(0.2)
+        imgStream = emulator_controller.streamScreenshot(ImageFormat())
+        with StreamingCall(imgStream) as stream:
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
             seen_rotation = False
@@ -246,7 +243,6 @@ def test_rotation_through_console_observable_through_screenshot(
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.skip(reason="Appears to crash emulator")
 def test_rotation_through_console_observable_through_stream_screenshot(
     at_home, animation_app, emulator_controller, adb
 ):
@@ -254,14 +250,13 @@ def test_rotation_through_console_observable_through_stream_screenshot(
 
     bug: b/159635109, b/160171559
     """
-    imgStream = emulator_controller.streamScreenshot(
-        ImageFormat(width=320, height=200), timeout=5
-    )
-    with StreamingCall(imgStream) as stream:
-        for (angle, coarse) in ROTATION_MAPPING:
-            sleep(0.5)
-            adb(["emu", "rotate"])
-            seen_rotation = False
+    for (angle, coarse) in ROTATION_MAPPING:
+        sleep(0.5)
+        adb(["emu", "rotate"])
+        imgStream = emulator_controller.streamScreenshot(
+            ImageFormat(width=320, height=200), timeout=5
+        )
+        with StreamingCall(imgStream) as stream:
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
             for img in stream:
