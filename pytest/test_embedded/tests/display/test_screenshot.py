@@ -71,6 +71,7 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.skip(reason="Test is flaky. b/257344595")
 def test_screenshot_all_formats_are_equal(
     avd, emulator_controller, animation_app, w, h
 ):
