@@ -433,7 +433,7 @@ public class SettingsUtil {
             String permissionText)
             throws Exception {
 
-        String targetApp = SystemUtil.getApiLevel() == 31 ? appName : appType;
+        String targetApp = SystemUtil.getApiLevel() >= 31 ? appName : appType;
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         getAppPermissions_v2(instrumentation, targetApp, appText, permissionText);
