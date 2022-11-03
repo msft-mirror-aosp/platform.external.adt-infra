@@ -108,6 +108,11 @@ public class AppLauncher {
                 }
             }
         } catch (UiObjectNotFoundException e) {
+            UiObject clearAllButton = device.findObject(
+                    new UiSelector().resourceId("com.android.systemui:id/dismiss_text"));
+            if (clearAllButton.waitForExists(3L)) {
+                clearAllButton.clickAndWaitForNewWindow();
+            }
             device.pressHome();
             device.drag(
                     0,
@@ -188,17 +193,22 @@ public class AppLauncher {
 
             try {
                 UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-                scrollable.setSwipeDeadZonePercentage(0);
                 if (!scrollable.waitForExists(5L)) {
                     continue;
-                } else if (scrollable.scrollIntoView(regexSelector)) {
-                    appByRegex.clickAndWaitForNewWindow();
-                    status = true;
-                    continue;
-                } else if (scrollable.scrollIntoView(textSelector)) {
-                    appByText.clickAndWaitForNewWindow();
-                    status = true;
-                    continue;
+                }
+                else {
+                    if (api == 31) {
+                        scrollable.setSwipeDeadZonePercentage(0);
+                    }
+                    if (scrollable.scrollIntoView(regexSelector)) {
+                        appByRegex.clickAndWaitForNewWindow();
+                        status = true;
+                        continue;
+                    } else if (scrollable.scrollIntoView(textSelector)) {
+                        appByText.clickAndWaitForNewWindow();
+                        status = true;
+                        continue;
+                    }
                 }
 
                 return false;

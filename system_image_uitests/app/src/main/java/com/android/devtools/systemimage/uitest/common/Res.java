@@ -59,6 +59,7 @@ public class Res {
                     + "/cling_dismiss_longpress_info";
     public static final String ANDROID_MY_LOCATION = "com.google.android.apps.maps:id/qu_mylocation_container";
     public static final String ANDROID_PERMISSIONS_MESSAGE = "com.android.permissioncontroller:id/permission_message";
+    public static final String ANDROID_PERMISSIONS_BUTTON = "com.android.permissioncontroller:id/permission_allow_button";
     public static final String ANDROID_NOTIFICATION_DRAWER =
             "(com.google.android.apps.nexuslauncher\\d*:id|com.android.launcher3\\d*:id)/(scrim_view|launcher)";
     public static final String LAUNCHER_LIST_CONTAINER_RES =

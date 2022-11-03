@@ -16,10 +16,6 @@
 
 package com.android.devtools.systemimage.uitest.smoke.api32;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
@@ -36,7 +32,6 @@ import com.android.devtools.systemimage.uitest.utils.ApiDemosInstaller;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
-import com.android.devtools.systemimage.uitest.utils.PackageInstallationUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
@@ -47,6 +42,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test class for Android Settings page on Google API images.
@@ -99,10 +98,14 @@ public class SettingsTest {
                 );
         itemList.setAsVerticalList();
 
-        UiObject location =
-                itemList.getChildByText(new UiSelector().className("android.widget.TextView"),
-                        "Location");
-        location.clickAndWaitForNewWindow();
+        UiObject locationSetting = device.findObject(
+                new UiSelector()
+                        .className("android.widget.TextView")
+                        .text("Location"));
+
+        assertTrue("Location not found in Settings List",
+                itemList.scrollIntoView(locationSetting));
+        locationSetting.clickAndWaitForNewWindow();
 
         boolean recentAccessText = new Wait().until(
                 () -> device.findObject(new UiSelector()
@@ -169,7 +172,7 @@ public class SettingsTest {
 
         assertTrue("Did not prompt for lack of Phone permission.",
                 new Wait().until(() -> !(device.findObject(
-                        new UiSelector().resourceIdMatches("com.google.android.dialer:id/incall_end_call")).
+                        new UiSelector().resourceIdMatches(Res.DIALER_IN_CALL_RES)).
                         exists()))
         );
 
@@ -226,11 +229,15 @@ public class SettingsTest {
         gotItButton = device.findObject(new UiSelector().textMatches("(?i)got\\sit"));
         if (gotItButton.exists())
             gotItButton.clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION))
-                .clickAndWaitForNewWindow();
+
+        final UiObject myLocation;
+        myLocation =  device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION));
+        if (myLocation.exists())
+            myLocation.clickAndWaitForNewWindow();
+
         assertTrue("Did not prompt for lack of Maps permission.",
                 new Wait().until(() -> device.findObject(new UiSelector()
-                        .resourceId(Res.ANDROID_PERMISSIONS_MESSAGE)).exists())
+                        .resourceId(Res.ANDROID_PERMISSIONS_BUTTON)).exists())
         );
 
         SettingsUtil.setAppPermissions_v3(instrumentation, appName, appName, true,
@@ -284,11 +291,10 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
-            assertTrue("Failed to enable Developer options.",
-                    DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
-        }
+        DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+        assertTrue("Failed to enable Developer options.",
+                AppLauncher.launchPath(
+                        instrumentation, true, "Settings", "System", "Developer options"));
     }
 
     /**
@@ -313,9 +319,9 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
         try {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text("Date & time"))
-                    .clickAndWaitForNewWindow();
+            AppLauncher.launchPath(
+                    instrumentation, true, "Settings", "System", "Date & time");
+
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
@@ -373,9 +379,8 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
         try {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text("Date & time"))
-                    .clickAndWaitForNewWindow();
+            AppLauncher.launchPath(
+                    instrumentation, true, "Settings", "System", "Date & time");
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
@@ -435,9 +440,8 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
         try {
-            SettingsUtil.openItem(instrumentation, "System");
-            device.findObject(new UiSelector().text("Date & time"))
-                    .clickAndWaitForNewWindow();
+            AppLauncher.launchPath(
+                    instrumentation, true, "Settings", "System", "Date & time");
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
@@ -504,10 +508,7 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "T144630613")
     public void activateDeactivatePolicy() throws Exception {
-        boolean isAPIDemoInstalled = PackageInstallationUtil.isPackageInstalled(instrumentation,
-                "com.example.android.apis");
-
-        if (isAPIDemoInstalled) {
+        try {
             SettingsUtil.launchDeviceAdminApps(instrumentation, "Security", "Device admin apps");
 
             if (SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.Switch", Res.ANDROID_SETTING_LIST_RES)) {
@@ -522,8 +523,9 @@ public class SettingsTest {
             // Deactivate "Sample Device Admin" policy
             SettingsUtil.deactivate(instrumentation, "Sample Device Admin", "Security", "Device admin apps");
             assertFalse(SettingsUtil.checkStatusOfPolicy(device, instrumentation, "android.widget.Switch", Res.ANDROID_SETTING_LIST_RES));
-        } else {
-            Log.w(TAG,"activateDeactivatePolicy: required APK is missing");
+        } catch(Exception e) {
+            Log.e(TAG,"activateDeactivatePolicy: required APK is missing");
+            Log.e(TAG,"error: " + e.getMessage());
         }
     }
 
@@ -737,14 +739,14 @@ public class SettingsTest {
      */
     @Test
     public void revokeDebugAuth() throws Exception {
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
+        if (!AppLauncher.launchPath(
+                instrumentation, true, "Settings", "System", "Developer options")) {
             DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+            Assert.assertTrue("Could not enable developer options",
+                    AppLauncher.launchPath(
+                            instrumentation, true, "Settings", "System", "Developer options"));
         }
 
-        Assert.assertTrue("Could not enable developer options",
-                DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework));
-
-        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Developer options");
 
         UiScrollable itemList =
                 new UiScrollable(
@@ -752,12 +754,8 @@ public class SettingsTest {
                 );
         itemList.setAsVerticalList();
 
-        UiSelector usbDebuggingSelector = new UiSelector().text("USB debugging");
-        itemList.scrollIntoView(usbDebuggingSelector);
-
-        UiObject usbDebugging = device.findObject(usbDebuggingSelector);
-
-        assertTrue("USB debugging controls not found", usbDebugging.waitForExists(5L));
+        UiObject usbDebugging = device.findObject(new UiSelector().text("USB debugging"));
+        assertTrue("USB debugging controls not found", itemList.scrollIntoView(usbDebugging));
     }
 
     /**
@@ -778,10 +776,24 @@ public class SettingsTest {
     @Test
     public void listConnectedDevices() throws Exception {
         try {
-            SettingsUtil.openItem(instrumentation, "Connected devices");
+            AppLauncher.launchPath(
+                    instrumentation, true, "Settings", "Connected devices");
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
+
+        UiObject seeAll = device.findObject(new UiSelector()
+                .text("See all"));
+
+        if (new Wait().until(seeAll::exists)) {
+            seeAll.clickAndWaitForNewWindow();
+        }
+
+        UiObject savedDevices = device.findObject(new UiSelector()
+                .description("Saved devices")
+                .resourceId("com.android.settings:id/collapsing_toolbar"));
+
+        boolean hasSavedDevices = new Wait().until(savedDevices::exists);
 
         UiObject androidErrorClose = device.findObject(
                 new UiSelector().resourceId(Res.ANDROID_ERROR_CLOSE_RES));
@@ -792,7 +804,8 @@ public class SettingsTest {
         UiObject connectedDevices = device.findObject(
                 new UiSelector().text("Previously connected devices").className("android.widget.TextView"));
         Assert.assertTrue("Connected devices were not listed",
-                actionBar.waitForExists(5L) && connectedDevices.waitForExists(5L));
+                hasSavedDevices ||
+                        (actionBar.waitForExists(5L) && connectedDevices.waitForExists(5L)));
     }
 
     /**
