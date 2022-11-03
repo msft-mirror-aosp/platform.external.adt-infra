@@ -561,11 +561,6 @@ run_test() {
     run_timeout 2700 ${test_cmd}
 }
 
-clean_avds() {
-    log "Remove any existing AVDs"
-    run rm -rf $ANDROID_AVD_HOME/*
-}
-
 check_vars()  {
     for ITEM in $@; do
         log "Using $ITEM = $(var_value $ITEM)"

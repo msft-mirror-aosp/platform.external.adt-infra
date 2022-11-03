@@ -39,7 +39,7 @@ PYTHON=$(aosp_find_python)
 mkdir -p $ANDROID_AVD_HOME
 
 if [ -z "ANDROID_AVD_HOME" ]; then
-    export ANDROID_AVD_HOME=/tmp/android-test
+    export ANDROID_AVD_HOME=$TMPDIR/avd
 fi
 
 BUILDERNAME="Linux_gce"
@@ -108,7 +108,6 @@ run_test "Embedded tests" $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_
 
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 
-clean_avds
 log "activate virtualenv"
 activate_virtualenv $TEST_DIR/utils
 log "deactivate virtualenv"
