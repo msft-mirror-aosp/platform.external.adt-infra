@@ -109,7 +109,7 @@ public class AppLauncher {
             }
         } catch (UiObjectNotFoundException e) {
             UiObject clearAllButton = device.findObject(
-                    new UiSelector().resourceId("com.android.systemui:id/dismiss_text"));
+                    new UiSelector().resourceId(Res.DISMISS_TEST_RES));
             if (clearAllButton.waitForExists(3L)) {
                 clearAllButton.clickAndWaitForNewWindow();
             }

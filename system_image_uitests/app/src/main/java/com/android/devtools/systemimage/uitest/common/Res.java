@@ -91,6 +91,7 @@ public class Res {
     public static final String CAMERA_FILE_THUMBNAIL_RES = "com.android.camera2:id/rounded_thumbnail_view";
     public static final String PACKAGE_INSTALL_DONE_RES = "com.android.packageinstaller:id/done_button";
     public static final String PACKAGE_INSTALL_OK_RES = "com.android.packageinstaller:id/ok_button";
+    public static final String DISMISS_TEST_RES = "com.android.systemui:id/dismiss_text";
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
     public static final String NOTIFICATIONS_TILE_PAGE = "com.android.systemui:id/tile_page";
     public static final String NOTIFICATIONS_TILE_LABEL = "com.android.systemui:id/tile_label";

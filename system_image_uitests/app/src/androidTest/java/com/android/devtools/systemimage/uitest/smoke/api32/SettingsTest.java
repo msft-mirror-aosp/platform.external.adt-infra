@@ -791,7 +791,7 @@ public class SettingsTest {
 
         UiObject savedDevices = device.findObject(new UiSelector()
                 .description("Saved devices")
-                .resourceId("com.android.settings:id/collapsing_toolbar"));
+                .resourceId(Res.SETTINGS_COLLAPSING_TOOLBAR_RES));
 
         boolean hasSavedDevices = new Wait().until(savedDevices::exists);
 
