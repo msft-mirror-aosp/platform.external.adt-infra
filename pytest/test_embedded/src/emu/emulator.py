@@ -268,6 +268,8 @@ class Emulator(BaseEmulator):
                 shutil.which(exe),
                 "-avd",
                 self.avd,
+                "-verbose",
+                "-show-kernel",
                 "-metrics-collection",  # Make sure we always send crash reports.
             ]
             + params,
