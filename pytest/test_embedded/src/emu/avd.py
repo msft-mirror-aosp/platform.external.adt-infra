@@ -15,14 +15,15 @@
 import gzip
 import logging
 import os
+import platform
 import re
 import shutil
 import subprocess
 from pathlib import Path
 from typing import Iterator, Optional
-from emu.utils import system_cpu
 
 from emu.template_writer import TemplateWriter
+from emu.utils import system_cpu
 
 
 class AndroidAvdHomeDoesNotExist(Exception):
@@ -69,12 +70,14 @@ class SystemImages:
                 f"The directory {self.sys_root} does not exist (yet?). Is ANDROID_SDK_ROOT set properly?"
             )
 
-        self.sdk_manager = shutil.which(
-            abs_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
-        )
-        if not self.sdk_manager:
+        self.sdk_manager = abs_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
+
+        if platform.system() == "Windows":
+            self.sdk_manager = self.sdk_manager.with_suffix(".bat")
+
+        if not self.sdk_manager.exists():
             raise SdkManagerDoesNotExist(
-                f"The sdk manager was not found in {self.sys_root}. Is ANDROID_SDK_ROOT set properly?"
+                f"The sdk manager {self.sdk_manager} was not found in {self.sys_root}. Is ANDROID_SDK_ROOT set properly?"
             )
 
     def available(self) -> Iterator[dict[str, str]]:
@@ -282,7 +285,7 @@ class AvdWriter:
         if not dest.parent.exists():
             os.makedirs(dest.parent)
 
-        with open(dest, "w", encoding='utf-8') as avd_cfg_file:
+        with open(dest, "w", encoding="utf-8") as avd_cfg_file:
             for key, value in cfg.items():
                 avd_cfg_file.write(f"{key} = {value}\n")
 

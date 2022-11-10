@@ -84,7 +84,7 @@ upload_file() {
     twine upload -r devpi-staging --config-file $HERE/cfg/pypirc $path
     wheel=$(basename $path)
     find $HERE/server -name $wheel -exec cp {} $HERE/repo/$WHEEL \; -exec rm {} \; -exec ln -sf $HERE/repo/$wheel {} \;
-    find $HERE -name $wheel -exec git add {} \;
+    find $HERE -name $wheel -exec git add -f {} \;
 }
 
 download_package() {
@@ -107,8 +107,8 @@ download_package() {
 register_packages() {
     dir2pi $HERE/repo
     symlinks -cr $HERE
-    find $HERE/repo -print0 | xargs -0 git add
-    find $HERE/server -print0 | xargs -0 git add
+    find $HERE/repo -print0 | xargs -0 git add -f
+    find $HERE/server -print0 | xargs -0 git add -f
 }
 
 setup_twine
@@ -117,8 +117,9 @@ if [ ! -z ${file} ]; then
     # Upload stuff
     upload_file $file
 elif [ ! -z ${dir} ]; then
-    for fname in $(ls -1 $dir); do
-        upload_file ${dir}/${fname}
+    for fname in $(find $dir -name '*whl'); do
+        echo "Processing ${fname}"
+        upload_file ${fname}
     done
 elif [ ! -z ${down} ]; then
     download_package ${down}

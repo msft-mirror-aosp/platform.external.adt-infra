@@ -15,6 +15,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
+import platform
 from shutil import which
 
 from emu.adb.stream import AdbStream
@@ -29,6 +30,10 @@ class Adb(object):
             adb (Path): path to the adb executable.
         """
         self.name = emulator
+
+        if not adb.exists() and platform.system() == "Windows":
+            adb = adb.with_suffix(".exe")
+
         self.adb_binary = which(adb)
 
     def start_server(self) -> None:

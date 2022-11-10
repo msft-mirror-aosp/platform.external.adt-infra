@@ -13,6 +13,7 @@
 # limitations under the License.
 import logging
 import os
+
 import platform
 import shutil
 import signal
@@ -24,10 +25,12 @@ from typing import Optional
 
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
 from google.protobuf import empty_pb2
+from grpc import RpcError
 
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
+from aemu.discovery.emulator_description import EmulatorDescription
 from emu.utils import LogObserver, run
 
 
@@ -62,7 +65,6 @@ class BaseEmulator(object):
 
         self.telnet = None
         self.description = None
-        self.proc = None
         self.sdk_root = Path(os.environ.get("ANDROID_SDK_ROOT")).absolute()
         self.avd_home = Path(
             os.environ.get("ANDROID_AVD_HOME") or Path.home() / ".android" / "avd"
@@ -74,9 +76,19 @@ class BaseEmulator(object):
         if self.telnet:
             self.telnet.stop()
 
-    def _discover(self, pid: Optional[str]) -> None:
-        """Discovers the running emulator with the given pid, or the first
-        if no pid is given. This is not a public method, and should
+    def _initialize_with_description(self, description: Optional[EmulatorDescription]):
+        """Setup the emulator given the description
+
+        Args:
+            description (EmulatorDescription): A description of the emulator, or none.
+
+        Raises:
+            EmulatorNotFoundException:  No emulator matching with the description could be found.
+        """
+
+    def _discover(self, avd_id: Optional[str]) -> None:
+        """Discovers the running emulator with the given abvd id , or the first
+        if no id is given. This is not a public method, and should
         be called after the object creation.
 
         Args:
@@ -85,16 +97,16 @@ class BaseEmulator(object):
         Raises:
             EmulatorNotFoundException: No emulator matching the pid could be found.
         """
-        logging.info("Looking for emulator: %s", pid)
+        logging.info("Looking for emulator: %s", avd_id)
         discovery = EmulatorDiscovery()
-        if pid:
-            self.description = discovery.find_by_pid(pid)
+        if avd_id:
+            self.description = discovery.find_emulator("avd.id", avd_id)
         else:
             self.description = discovery.first()
 
         if self.description is None:
             raise EmulatorNotFoundException(
-                f"No emulator with pid: {pid} exists, did the process terminate?"
+                f"No emulator with id: {avd_id} found, did the process terminate?"
             )
 
         self.adb = Adb(
@@ -114,6 +126,21 @@ class BaseEmulator(object):
         """Delete the given emulator, removing data from disk if applicable."""
         pass
 
+    def has_booted(self) -> bool:
+        """Makes a gRPC call to check if the emulator has booted.
+
+        Returns:
+            bool: False, the emulator has not booted, or is not accessible.
+        """
+        try:
+            _EMPTY_ = empty_pb2.Empty()
+            emu = self.description.get_emulator_controller()
+            return emu.getStatus(_EMPTY_).booted
+        except RpcError as err:
+            logging.warning("Unable to determine boot state due to %s", err)
+
+        return False
+
     def wait_for_boot(self, timeout: int = 180) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
 
@@ -123,20 +150,16 @@ class BaseEmulator(object):
         Returns:
             bool: True if the emulator has booted, False otherwise.
         """
-        _EMPTY_ = empty_pb2.Empty()
         timeout = time.time() + timeout
         start = timer()
-        emu = self.description.get_emulator_controller()
-        response = emu.getStatus(_EMPTY_)
 
         logging.info(
             "Waiting at most %d second for %s to boot",
             timeout,
             self.description.name(),
         )
-        while not response.booted and time.time() < timeout:
+        while not self.has_booted() and time.time() < timeout:
             time.sleep(1)
-            response = emu.getStatus(_EMPTY_)
 
         end = timer()
         logging.info(
@@ -144,7 +167,7 @@ class BaseEmulator(object):
             timedelta(seconds=end - start),
             self.description.name(),
         )
-        return response.booted
+        return self.has_booted()
 
     def console(self) -> EmulatorConnection:
         """Returns a connection to the emulator console, authenticating if needed.
@@ -188,6 +211,7 @@ class BaseEmulator(object):
 
         # We must have killed the emulator..
         if self.description is None:
+            logging.error("No description!")
             return False
 
         if platform.system() == "Windows":
@@ -248,7 +272,7 @@ class Emulator(BaseEmulator):
             params (list[str], optional): Flags to pass to the emulato executable
         """
         BaseEmulator.__init__(self)
-        if not shutil.which(exe):
+        if not shutil.which(str(exe)):
             raise EmulatorNotFoundException(f"The binary {exe} was not found")
 
         avd_gen = AvdWriter(self.sdk_root, self.avd_home)
@@ -271,9 +295,10 @@ class Emulator(BaseEmulator):
                 "-verbose",
                 "-show-kernel",
                 "-metrics-collection",  # Make sure we always send crash reports.
-                "-no-window",
+                # "-no-window",
                 "-no-audio",
-                "-debug", "console,snapshot",
+                "-debug",
+                "console,snapshot",
             ]
             + params,
             local_env,
@@ -296,17 +321,13 @@ class Emulator(BaseEmulator):
         return "x86_64"
 
     def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
-        self.proc, self.log = run(cmd, env)
+        proc, self.log = run(cmd, env)
 
         max_wait = 10
         logging.info("Waiting for an emulator to become available..")
         discovery = EmulatorDiscovery()
 
-        while (
-            self.proc.poll() is None  # Process is still running.
-            and max_wait > 0
-            and discovery.find_by_pid(self.proc.pid) is None
-        ):
+        while max_wait > 0 and discovery.find_emulator("avd.id", self.avd) is None:
             max_wait = max_wait - 1
             logging.info(
                 "Waiting %d more seconds, found %d emulators so far.",
@@ -315,9 +336,8 @@ class Emulator(BaseEmulator):
             )
             time.sleep(1)
             discovery.discover()
-            logging.info("Have %s", discovery.emulators())
 
-        self._discover(self.proc.pid)
+        self._discover(self.avd)
 
     def stop(self, timeout: int = 10) -> None:
         """Stops the emulator, terminating it does not exits gracefully within the given timeout
@@ -326,19 +346,25 @@ class Emulator(BaseEmulator):
             timeout (int, optional): Time in seconds before the emulator will be terminated. Defaults to 10.
         """
         self.disconnect()
-        if not self.proc:
+
+        if not self.is_alive():
             return
 
-        logging.info("Sending SIGINT to emulator.")
-        self.proc.send_signal(signal.SIGINT)
+        if platform.system() == "Windows":
+            logging.info("Sending CTRL_C_EVENT to emulator.")
+            os.kill(self.description.pid(), signal.CTRL_C_EVENT)
+        else:
+            logging.info("Sending SIGINT to emulator.")
+            os.kill(self.description.pid(), signal.SIGINT)
+
         # Wait until the process ends.
-        while self.proc.poll() and timeout > 0:
+        while self.is_alive() and timeout > 0:
             time.sleep(1)
             timeout = timeout - 1
 
-        if self.proc.poll():
+        if self.is_alive():
             logging.warning("Terminating emulator.")
-            self.proc.terminate()
+            os.kill(self.description.pid(), signal.SIGKILL)
 
     def delete(self) -> None:
         """Deletes the created avd."""

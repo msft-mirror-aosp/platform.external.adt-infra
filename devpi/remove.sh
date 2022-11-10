@@ -40,7 +40,7 @@ devpi remove -y $1
 # And register it with git.
 dir2pi $HERE/repo
 symlinks -cr $HERE
-find $HERE/repo -exec git add {} \;
-find $HERE/server -exec git add {} \;
+find $HERE/repo -exec git add -f {} \;
+find $HERE/server -exec git add -f {} \;
 
 
