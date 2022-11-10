@@ -18,8 +18,7 @@ import subprocess
 from functools import partial
 from queue import Queue
 from threading import Thread
-
-import sh
+import time
 
 
 def system_cpu() -> str:
@@ -101,12 +100,35 @@ def _log_proc(proc):
     return log_queue
 
 
-class LogObserver(object):
-    def __init__(self, logfile):
+class LogObserver:
+    """A LogObserver allows you to observe an active log file."""
+
+    def __init__(self, logfile: str):
         """Attaches a log queue to a file."""
         self.queue = Queue()
-        log_with_queue = partial(log_to_queue, self.queue)
-        self.tail = sh.tail("-f", logfile, _out=log_with_queue, _bg=True)
+        self.tail = open(logfile, "rb")
+        self.thread = Thread(target=self.__tail_reader__)
+        self.thread.start()
+
+    def __tail_reader__(self):
+        while not self.tail.closed:
+            curr_position = self.tail.tell()
+            line = self.tail.readline()
+            if not line:
+                self.tail.seek(curr_position)
+                time.sleep(0.1)
+            else:
+                log_to_queue(self.queue, line.decode("utf-8"))
+
+    def __enter__(self):
+        return self.queue
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # We left scope, cancel from the client side.
+        if self.tail:
+            self.tail.close()
 
     def __del__(self):
-        self.tail.kill()
+        if self.tail:
+            self.tail.close()
+        self.thread.join()
