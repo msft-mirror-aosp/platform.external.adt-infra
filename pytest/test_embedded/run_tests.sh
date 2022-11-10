@@ -286,6 +286,15 @@ run rm -rf ${SESSION}/embedded_test/py3 ${SESSION}/embedded_test/dist $VIRTUAL_E
 
 # Only propagate errors if --warn true has been requested.
 case "$WARN" in
-*true*) exit $STATUS ;;
-*) exit 0 ;;
+*true*)
+    if [ $STATUS -eq 1 ]; then
+        # Test failure, but not build error.
+        exit 0
+    else
+        exit $STATUS
+    fi
+    ;;
+*)
+    exit 0
+    ;;
 esac
