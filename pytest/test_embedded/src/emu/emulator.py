@@ -271,6 +271,9 @@ class Emulator(BaseEmulator):
                 "-verbose",
                 "-show-kernel",
                 "-metrics-collection",  # Make sure we always send crash reports.
+                "-no-window",
+                "-no-audio",
+                "-debug", "console,snapshot",
             ]
             + params,
             local_env,
