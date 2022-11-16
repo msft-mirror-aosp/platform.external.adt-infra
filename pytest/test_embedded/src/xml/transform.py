@@ -31,12 +31,16 @@ def transform(xml, xsl, out):
 
 
 def launch():
-    parser = argparse.ArgumentParser(description="Transform an xml file by applying an xsl stylesheet.")
+    parser = argparse.ArgumentParser(
+        description="Transform an xml file by applying an xsl stylesheet."
+    )
     parser.add_argument(
         "--xsl",
         help="The xsl stylesheet that is to be applied",
     )
-    parser.add_argument("--out", help="The (optional) output file where the result will be written to")
+    parser.add_argument(
+        "--out", help="The (optional) output file where the result will be written to"
+    )
     parser.add_argument("--xml", help="The input xml file that is to be transformed")
 
     args = parser.parse_args()

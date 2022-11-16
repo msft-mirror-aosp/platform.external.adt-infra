@@ -15,10 +15,11 @@ import logging
 import os
 import platform
 import subprocess
-from functools import partial
-from queue import Queue
-from threading import Thread
 import time
+from functools import partial
+from pathlib import Path
+from queue import Queue
+from threading import Thread, current_thread
 
 
 def system_cpu() -> str:
@@ -34,6 +35,10 @@ def system_cpu() -> str:
         uname = platform.uname()
         if "ARM64" in uname.version and uname.system == "Darwin":
             return "arm64"
+
+    # We consider AMD64 to be compatible with x86_64
+    if aarch == "AMD64":
+        aarch = "x86_64"
 
     return aarch
 
@@ -103,7 +108,7 @@ def _log_proc(proc):
 class LogObserver:
     """A LogObserver allows you to observe an active log file."""
 
-    def __init__(self, logfile: str):
+    def __init__(self, logfile: Path):
         """Attaches a log queue to a file."""
         self.queue = Queue()
         self.tail = open(logfile, "rb")
@@ -111,14 +116,19 @@ class LogObserver:
         self.thread.start()
 
     def __tail_reader__(self):
-        while not self.tail.closed:
-            curr_position = self.tail.tell()
-            line = self.tail.readline()
-            if not line:
-                self.tail.seek(curr_position)
-                time.sleep(0.1)
-            else:
-                log_to_queue(self.queue, line.decode("utf-8"))
+        try:
+            while not self.tail.closed:
+                curr_position = self.tail.tell()
+                line = self.tail.readline()
+                if not line:
+                    self.tail.seek(curr_position)
+                    time.sleep(0.1)
+                else:
+                    log_to_queue(self.queue, line.decode("utf-8"))
+        except Exception as err:
+            logging.warning(
+                "Encountered error while accessing file %s", err, exc_info=err
+            )
 
     def __enter__(self):
         return self.queue
@@ -131,4 +141,5 @@ class LogObserver:
     def __del__(self):
         if self.tail:
             self.tail.close()
-        self.thread.join()
+        if self.thread and self.thread.native_id != current_thread().native_id:
+            self.thread.join()
