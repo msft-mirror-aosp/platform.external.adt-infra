@@ -37,8 +37,6 @@ deploy_emulator() {
     # Thas was unzipped.
     local BUILD_DIR="out/prebuilt_cached/builds"
 
-    ls "$BUILD_DIR/sdk-repo-*-emulator-[0-9]*.zip" || panic "No emulator found in $BUILD_DIR"
-
     log "Deploying emulator to $SESSION_DIR/emu-master-dev"
     run mkdir -p $SESSION_DIR/emu-master-dev
     run unzip -o $BUILD_DIR/sdk-repo-*-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
