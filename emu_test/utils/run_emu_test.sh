@@ -60,5 +60,4 @@ deploy_emulator
 run_test "Embedded tests" $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator
 
 cleanup_emulator
-
-exit $STATUS
+exit 0
