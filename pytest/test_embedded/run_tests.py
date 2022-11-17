@@ -11,18 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 import argparse
+import logging
 import os
 import platform
-from queue import Queue
 import subprocess
-import tempfile
 import sys
-from threading import Thread
-
+import tempfile
 from pathlib import Path
-
+from queue import Queue
+from threading import Thread
 
 OS_NAME = platform.system().lower()
 EMU_TEST_DIR = Path(os.path.dirname(__file__)).absolute()
@@ -114,6 +112,22 @@ def restart_adb():
     run([ADB, "start-server"])
 
 
+def resolve_emulator(emulator: str) -> Path:
+    """Tries to resolve the emulator path."""
+    emu = Path(emulator)
+    if emu.exists():
+        return emu
+
+    # Ok, maybe we are missing an extension?
+    emu = emu.with_suffix(".exe")
+    if emu.exists():
+        return emu
+
+    assert (
+        False
+    ), "f{emulator} poinst to a non existent path (are you passing the right path to the --emulator flag?)"
+
+
 def run_under_windows(args):
     if args.generate:
         repo = "http://localhost:3141/packages/stable"
@@ -121,10 +135,8 @@ def run_under_windows(args):
         repo = AOSP_ROOT / "external" / "adt-infra" / "devpi" / "repo" / "simple"
 
     # sanity checks
-    assert Path(
-        args.emulator
-    ).exists(), "The --emulator flag points to a non existent path"
-  
+    emulator = resolve_emulator(args.emulator)
+
     # Install pip, because of course we don't have it in windows
     run(
         [
@@ -181,14 +193,14 @@ def run_under_windows(args):
                     f"--junitxml={tmp_test_result}",
                     "--timeout=600",
                     f"--log-file={args.session}/embedded_test/log/pytest.log",
-                    f"--emulator={args.emulator}",
+                    f"--emulator={emulator}",
                 ],
                 cwd=HERE,
                 extra_env={
                     "ANDROID_SDK_ROOT": str(ANDROID_SDK_ROOT),
                     "ANDROID_HOME": str(ANDROID_SDK_ROOT),
                     "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
-                    "ANDROID_AVD_HOME" : tmpdirname,
+                    "ANDROID_AVD_HOME": tmpdirname,
                 },
             )
         finally:

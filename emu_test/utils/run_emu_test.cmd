@@ -23,7 +23,7 @@ echo "Run tar -xf %BUILD_DIR%\sdk-repo-windows-emulator-%BUILD_NUMBER%.zip -C %S
 tar -xf %BUILD_DIR%\sdk-repo-windows-emulator-%BUILD_NUMBER%.zip -C %SESSION_DIR%\emu-master-dev\
 
 echo "Run prebuilts\python\windows-x86\python.exe external\adt-infra\pytest\test_embedded\run_tests.py --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --session_dir %SESSION_DIR%"
-prebuilts\python\windows-x86\python.exe external\adt-infra\pytest\test_embedded\run_tests.py --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --session_dir %SESSION_DIR%
+prebuilts\python\windows-x86\python.exe external\adt-infra\pytest\test_embedded\run_tests.py --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator.exe --session_dir %SESSION_DIR%
 
 echo "Remove deployed emulator"
 echo "Run rmdir /s /q %SESSION_DIR%\emu-master-dev"
