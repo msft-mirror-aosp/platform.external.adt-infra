@@ -178,7 +178,7 @@ def avd(request, pytestconfig) -> BaseEmulator:
     assert emu != None
 
     # Make sure the emulator is booted.
-    assert emu.wait_for_boot()
+    assert emu.wait_for_boot(180)
 
     emu.adb.run(["install", str(APP_DEBUG_APK.absolute())])
     logging.info("Using %s for module", name)

@@ -45,7 +45,7 @@ deploy_emulator() {
 
 cleanup_emulator() {
     [ -z "$SESSION_DIR" ] && panic "SESSION_DIR variable not set, refusing to clean."
-    [ ! -d "$SESSION_DR" ] && panic "Refusing to delete non-existent directory."
+    [ ! -d "$SESSION_DIR" ] && panic "Refusing to delete non-existent directory."
 
     log "Removing $SESSION_DIR/emu-master-dev"
     rm -rf $SESSION_DIR/emu-master-dev

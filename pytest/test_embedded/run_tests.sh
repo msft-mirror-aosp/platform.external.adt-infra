@@ -261,7 +261,7 @@ FINAL_RESULT=$SESSION/embedded_test/test_embedded_test.xml
 # Now let's run pytests
 (
     cd $HERE
-    pytest -vv -x -m "not perf" --junitxml=$TMP_TEST_RESULT --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log --emulator=$EMULATOR
+    pytest -vv -m "not perf" --junitxml=$TMP_TEST_RESULT --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log --emulator=$EMULATOR
 )
 STATUS=$?
 
