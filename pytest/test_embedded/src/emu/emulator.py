@@ -154,7 +154,7 @@ class BaseEmulator(object):
         start = timer()
 
         logging.info(
-            "Waiting at most %d second for %s to boot",
+            "Waiting at most %d seconds for %s to boot",
             timeout,
             self.description.name(),
         )
@@ -162,12 +162,14 @@ class BaseEmulator(object):
             time.sleep(1)
 
         end = timer()
+        booted = self.has_booted()
         logging.info(
-            "Waited %s for boot of %s",
+            "Waited %s for boot of %s, boot status: %s",
             timedelta(seconds=end - start),
             self.description.name(),
+            "succeeded" if booted else "failure"
         )
-        return self.has_booted()
+        return booted
 
     def console(self) -> EmulatorConnection:
         """Returns a connection to the emulator console, authenticating if needed.
