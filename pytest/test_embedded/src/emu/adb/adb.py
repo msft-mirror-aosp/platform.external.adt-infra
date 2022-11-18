@@ -36,29 +36,42 @@ class Adb(object):
 
         self.adb_binary = which(adb)
 
+    def _enable_tracing(self) -> dict[str, str]:
+        """Returns a copy of the default environment with ADB_TRACE
+        set to all if it not yet set
+
+        Returns:
+            dict[str, str]: The environment that can be passed to subprocess
+        """
+        my_env = os.environ.copy()
+        if "ADB_TRACE" not in my_env:
+            my_env["ADB_TRACE"] = "all"
+        return my_env
+
     def start_server(self) -> None:
         """Starts the adb server."""
-        my_env = os.environ.copy()
-        my_env["ADB_TRACE"] = "all"
         subprocess.run(
             [self.adb_binary, "start-server"],
-            env=my_env,
+            env=self._enable_tracing(),
             timeout=10,
+            check=False,
         )
 
-    def run(self, cmd: list[str], timeout: int = 10) -> str:
+    def run(self, cmd: list[str], timeout: int = 30) -> str:
         """Runs the given command on the emulator
 
         Args:
             cmd (list[str]): Command to execute
-            timeout (int, optional): Timeout. Defaults to 10s.
+            timeout (int, optional): Timeout. Defaults to 30s.
 
         Returns:
             str: Result of the adb invocation.
         """
         logging.info("adb -s %s %s", self.name, " ".join(cmd))
         cmd = subprocess.check_output(
-            [self.adb_binary, "-s", self.name] + cmd, timeout=timeout
+            [self.adb_binary, "-s", self.name] + cmd,
+            env=self._enable_tracing(),
+            timeout=timeout,
         )
         logging.debug("result: %s", cmd)
         return cmd
