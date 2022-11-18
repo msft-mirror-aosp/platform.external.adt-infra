@@ -25,6 +25,7 @@ provide access to parts of the emulator.
 """
 import logging
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -34,12 +35,11 @@ from aemu.proto.emulator_controller_pb2 import (
     ParameterValue,
     PhysicalModelValue,
 )
+
 from emu.apk import APP_DEBUG_APK
-from emu.emulator import BaseEmulator, Emulator, DebugEmulator
+from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.utils import system_cpu
 from tests.test_utils import wait_for_regex
-
-# from emu.emulator import Emulator
 
 
 def pytest_addoption(parser):
@@ -47,25 +47,41 @@ def pytest_addoption(parser):
     parser.addoption(
         "--emulator",
         action="store",
-        default=os.path.join(
-            os.environ.get("ANDROID_SDK_ROOT", "."), "emulator", "emulator"
+        default=shutil.which(
+            "emulator",
+            Path(os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"] or ".")
+            / "emulator"
+            / "emulator",
         ),
-        help="Launch the emulator using the given path.",
+        help="The emulator used to run the integration tests against.",
     )
     parser.addoption(
-        "--test_dir",
+        "--android_avd_home",
         action="store",
-        default=os.path.join(os.path.dirname(__file__), "..", "event_logger_apk"),
+        default=str(Path.home() / ".android" / "avd"),
+        help="The the path to the directory that contains all AVD-specific files,"
+        "which mostly consist of very large disk images."
+        "The default location is ~/.android/avd "
+        "The tests will create and delete a set of avds needed to run the tests in this directory.",
+    )
+    parser.addoption(
+        "--android_home",
+        action="store",
+        default=os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"],
+        help="The path to the SDK installation directory. This should contain system-images and adb.",
     )
     parser.addoption(
         "--debug_emulator",
         action="store_true",
-        help="Connect to the first available emulator for debugging.",
+        help="Connect to the first available emulator for debugging. "
+        "Use this if you have launched you own emulator and want to run the tests against that instance.",
     )
     parser.addoption(
         "--debug_emulator_log",
         action="store",
-        help="A file that contains the emulator stdout/stderr",
+        help="A file that contains the emulator stdout/stderr."
+        "This should point to a file containing the logs produced by the running emulator."
+        "For example launching the emulator like <path-to-emulator>/emulator @31 | tee /tmp/log_file",
     )
     parser.addoption(
         "--stream_test_time",
@@ -104,7 +120,9 @@ def pytest_sessionfinish(session, exitstatus):
         emu.delete()
 
 
+# -------------------------------
 # Session wide fixtures are below
+# -------------------------------
 
 
 @pytest.fixture(scope="module")
@@ -165,10 +183,17 @@ def avd(request, pytestconfig) -> BaseEmulator:
     if name not in pytest.emulators:
         logging.info("Launching %s", name)
         if pytestconfig.getoption("debug_emulator"):
-            emu = DebugEmulator(pytestconfig.getoption("debug_emulator_log"))
+            emu = DebugEmulator(
+                android_home=Path(pytestconfig.getoption("android_home")),
+                android_avd_home=Path(pytestconfig.getoption("android_avd_home")),
+                logfile=pytestconfig.getoption("debug_emulator_log"),
+            )
         else:
             emu = Emulator(
-                exe=Path(pytestconfig.getoption("emulator")), avd_config=avd_config
+                android_home=Path(pytestconfig.getoption("android_home")),
+                android_avd_home=Path(pytestconfig.getoption("android_avd_home")),
+                exe=Path(pytestconfig.getoption("emulator")),
+                avd_config=avd_config,
             )
 
         pytest.emulators[name] = emu

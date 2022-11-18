@@ -222,7 +222,7 @@ AEMU_GRPC=$AOSP_DIR/external/qemu/android/android-grpc/python/aemu-grpc/
 SNAPTOOL=$AOSP_DIR/external/qemu/android/android-grpc/python/snaptool/
 HERE=$AOSP_DIR/external/adt-infra/pytest/test_embedded
 PATH=$HOME/.local/bin:$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-ANDROID_AVD_HOME=$(mktemp -d -t avd-home-XXXXXXX)
+export ANDROID_AVD_HOME=$(mktemp -d -t avd-home-XXXXXXX)
 
 # When generating files we need a local devpi server
 if [ ! -z "$GENERATE" ]; then
@@ -261,7 +261,7 @@ FINAL_RESULT=$SESSION/embedded_test/test_embedded_test.xml
 # Now let's run pytests
 (
     cd $HERE
-    pytest -vv -m "not perf" --junitxml=$TMP_TEST_RESULT --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log --emulator=$EMULATOR
+    pytest -vv -m "not perf" --junitxml=$TMP_TEST_RESULT --timeout=600 --log-file=$SESSION/embedded_test/log/pytest.log --emulator=$EMULATOR --android_avd_home=$ANDROID_AVD_HOME --android_home=$ANDROID_SDK_ROOT
 )
 STATUS=$?
 

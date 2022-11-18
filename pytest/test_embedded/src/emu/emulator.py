@@ -48,7 +48,7 @@ class AndroidSdkRootNotSet(Exception):
 
 
 class BaseEmulator(object):
-    def __init__(self) -> None:
+    def __init__(self, android_home: Path, android_avd_home: Path) -> None:
         """An Emulator represents a running emulator which you can interact with.
 
         Usualy you want to either:
@@ -66,12 +66,9 @@ class BaseEmulator(object):
 
         self.telnet = None
         self.description = None
-        self.sdk_root = Path(os.environ.get("ANDROID_SDK_ROOT")).absolute()
-        self.avd_home = Path(
-            os.environ.get("ANDROID_AVD_HOME") or Path.home() / ".android" / "avd"
-        ).absolute()
-
-        logging.info("Using sdk_root: %s, avd_home: %s", self.sdk_root, self.avd_home)
+        self.android_home = android_home.absolute()
+        self.android_avd_home = android_avd_home.absolute()
+        logging.info("Using android_home: %s, android_avd_home: %s", self.android_home, self.android_avd_home)
 
     def __del__(self):
         if self.telnet:
@@ -111,7 +108,7 @@ class BaseEmulator(object):
             )
 
         self.adb = Adb(
-            self.description.name(), self.sdk_root / "platform-tools" / "adb"
+            self.description.name(), self.android_home / "platform-tools" / "adb"
         )
         logging.info(
             "Discovered emulator pid: %s, named: %s",
@@ -227,7 +224,7 @@ class BaseEmulator(object):
 
 
 class DebugEmulator(BaseEmulator):
-    def __init__(self, logfile: Path) -> None:
+    def __init__(self, android_home: Path, android_avd_home: Path, logfile: Path) -> None:
         """The first discovered running emulator.
 
         Use this to connect to an already running emulator.
@@ -235,7 +232,7 @@ class DebugEmulator(BaseEmulator):
         Args:
             logfile (Path): File where the emulator is writing logs
         """
-        BaseEmulator.__init__(self)
+        BaseEmulator.__init__(self, android_home, android_avd_home)
         if logfile:
             self.logobserver = LogObserver(logfile)
             self.log = self.logobserver.queue
@@ -265,7 +262,12 @@ class Emulator(BaseEmulator):
     }
 
     def __init__(
-        self, exe: Path, avd_config: dict[str, str], params: list[str] = DEFAULT_ARGS
+        self,
+        android_home: Path,
+        android_avd_home: Path,
+        exe: Path,
+        avd_config: dict[str, str],
+        params: list[str] = DEFAULT_ARGS,
     ) -> None:
         """Create and launches the emulator
 
@@ -274,19 +276,19 @@ class Emulator(BaseEmulator):
             avd_config (dict[str, str]): Avd configuration used to create the emulator.
             params (list[str], optional): Flags to pass to the emulato executable
         """
-        BaseEmulator.__init__(self)
+        BaseEmulator.__init__(self, android_home, android_avd_home)
         if not shutil.which(str(exe)):
             raise EmulatorNotFoundException(f"The binary {exe} was not found")
 
-        avd_gen = AvdWriter(self.sdk_root, self.avd_home)
+        avd_gen = AvdWriter(self.android_home, self.android_avd_home)
         if not "abi" in avd_config:
             avd_config["abi"] = self._default_abi()
         self.avd = avd_gen.create_from_config(avd_config)
 
         # Setup android sdk/avd etc.
         local_env = {
-            "ANDROID_AVD_HOME": self.avd_home,
-            "ANDROID_SDK_ROOT": self.sdk_root,
+            "ANDROID_AVD_HOME": self.android_avd_home,
+            "ANDROID_SDK_ROOT": self.android_home,
             "DISPLAY": os.environ.get("DISPLAY", ":0"),
         }
 
@@ -384,10 +386,10 @@ class Emulator(BaseEmulator):
 
     def delete(self) -> None:
         """Deletes the created avd."""
-        to_remove = self.avd_home / f"{self.avd}.ini"
+        to_remove = self.android_avd_home / f"{self.avd}.ini"
         to_remove.unlink()
 
-        to_remove = self.avd_home / f"{self.avd}.avd"
+        to_remove = self.android_avd_home / f"{self.avd}.avd"
         logging.debug("Removing %s", to_remove)
         try:
             shutil.rmtree(to_remove.absolute())

@@ -214,6 +214,8 @@ def run_under_windows(args):
                     "--timeout=1200",
                     f"--log-file={args.session}/embedded_test/log/pytest.log",
                     f"--emulator={emulator}",
+                    f"--android_avd_home={tmpdirname}",
+                    f"--android_home={ANDROID_SDK_ROOT}",
                 ],
                 cwd=HERE,
                 extra_env={
