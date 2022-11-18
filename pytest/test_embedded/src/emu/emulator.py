@@ -13,24 +13,25 @@
 # limitations under the License.
 import logging
 import os
-
 import platform
 import shutil
 import signal
+import sys
 import time
 from datetime import timedelta
 from pathlib import Path
 from timeit import default_timer as timer
 from typing import Optional
 
+from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
+from aemu.proto.emulator_controller_pb2 import VmRunState
 from google.protobuf import empty_pb2
 from grpc import RpcError
 
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
-from aemu.discovery.emulator_description import EmulatorDescription
 from emu.utils import LogObserver, run
 
 
@@ -141,11 +142,11 @@ class BaseEmulator(object):
 
         return False
 
-    def wait_for_boot(self, timeout: int = 180) -> bool:
+    def wait_for_boot(self, timeout: int = 600) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
 
         Args:
-            timeout (int, optional): Timeout in seconds. Defaults to 180 seconds.
+            timeout (int, optional): Timeout in seconds. Defaults to 600 seconds.
 
         Returns:
             bool: True if the emulator has booted, False otherwise.
@@ -154,7 +155,7 @@ class BaseEmulator(object):
         start = timer()
 
         logging.info(
-            "Waiting at most %d seconds for %s to boot",
+            "Waiting at most %s seconds for %s to boot",
             timeout,
             self.description.name(),
         )
@@ -167,7 +168,7 @@ class BaseEmulator(object):
             "Waited %s for boot of %s, boot status: %s",
             timedelta(seconds=end - start),
             self.description.name(),
-            "succeeded" if booted else "failure"
+            "succeeded" if booted else "failure",
         )
         return booted
 
@@ -198,15 +199,15 @@ class BaseEmulator(object):
         Returns:
             bool: True if the process is running
         """
-        if platform.system() == "Windows":
+        if sys.platform == "win32":
             raise NotImplementedError("This does not work on windows.")
 
         try:
             os.kill(pid, 0)
         except OSError:
             return False
-        else:
-            return True
+
+        return True
 
     def is_alive(self) -> bool:
         """Returns true if we believe the emulator is still alive."""
@@ -216,7 +217,7 @@ class BaseEmulator(object):
             logging.error("No description!")
             return False
 
-        if platform.system() == "Windows":
+        if sys.platform == "win32":
             # We will just check if we can find the pid in the discovery set.
             # We can't use os.kill as that does not work on windows.
             discovery = EmulatorDiscovery()
@@ -323,7 +324,7 @@ class Emulator(BaseEmulator):
         return "x86_64"
 
     def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
-        proc, self.log = run(cmd, env)
+        _, self.log = run(cmd, env)
 
         max_wait = 10
         logging.info("Waiting for an emulator to become available..")
@@ -341,32 +342,45 @@ class Emulator(BaseEmulator):
 
         self._discover(self.avd)
 
-    def stop(self, timeout: int = 10) -> None:
+    def _terminate_emulator(self, gracefully) -> None:
+        emu = self.description.get_emulator_controller()
+        mode = VmRunState.SHUTDOWN if gracefully else VmRunState.TERMINATE
+        with_signal = 0
+        if sys.platform == "win32":
+            with_signal = signal.CTRL_C_EVENT if gracefully else signal.SIGILL
+        else:
+            with_signal = signal.SIGINT if gracefully else signal.SIGKILL
+
+        try:
+            logging.info("Make gRPC call to stop emulator")
+            emu.setVmState(VmRunState(state=mode))
+        except RpcError as err:
+            logging.error(
+                "Failed to shutdown using gRPC (%s), using signal %s.", err, with_signal
+            )
+            os.kill(self.description.pid(), with_signal)
+
+    def stop(self, timeout: int = 30) -> None:
         """Stops the emulator, terminating it does not exits gracefully within the given timeout
 
         Args:
-            timeout (int, optional): Time in seconds before the emulator will be terminated. Defaults to 10.
+            timeout (int, optional): Time in seconds before the emulator will be terminated.
+            Defaults to 30.
         """
         self.disconnect()
 
         if not self.is_alive():
             return
 
-        if platform.system() == "Windows":
-            logging.info("Sending CTRL_C_EVENT to emulator.")
-            os.kill(self.description.pid(), signal.CTRL_C_EVENT)
-        else:
-            logging.info("Sending SIGINT to emulator.")
-            os.kill(self.description.pid(), signal.SIGINT)
-
-        # Wait until the process ends.
+        self._terminate_emulator(gracefully=True)
+        # Wait until the process ends. Note that the emulator will kill itself
+        # after 20 seconds.
         while self.is_alive() and timeout > 0:
             time.sleep(1)
             timeout = timeout - 1
 
         if self.is_alive():
-            logging.warning("Terminating emulator.")
-            os.kill(self.description.pid(), signal.SIGKILL)
+            self._terminate_emulator(gracefully=False)
 
     def delete(self) -> None:
         """Deletes the created avd."""

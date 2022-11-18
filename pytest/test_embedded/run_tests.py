@@ -128,6 +128,24 @@ def resolve_emulator(emulator: str) -> Path:
     ), "f{emulator} poinst to a non existent path (are you passing the right path to the --emulator flag?)"
 
 
+def apply_xslt(source: Path, xslt: Path, dest: Path):
+    try:
+        run(
+            [
+                PYTHON,
+                f"{HERE}/src/xml/transform.py",
+                "--xml",
+                source,
+                "--xsl",
+                xslt,
+                "--out",
+                dest,
+            ]
+        )
+    except:
+        logging.error("Failed to apply xslt: %s to %s")
+
+
 def run_under_windows(args):
     if args.generate:
         repo = "http://localhost:3141/packages/stable"
@@ -180,7 +198,7 @@ def run_under_windows(args):
     session_dir = Path(args.session) / "embedded_test" / "log"
     session_dir.mkdir(exist_ok=True, parents=True)
     with tempfile.TemporaryDirectory() as tmpdirname:
-        tmp_test_result = Path(tmpdirname) / "test_unit.xml"
+        junit_test_results = Path(tmpdirname) / "test_unit.xml"
         try:
             run(
                 [
@@ -190,8 +208,10 @@ def run_under_windows(args):
                     "-vv",
                     "-m",
                     "not perf",
-                    f"--junitxml={tmp_test_result}",
-                    "--timeout=600",
+                    f"--junitxml={junit_test_results}",
+                    # Boot times in windows can be 6 mins, so lets give us 20 minutes
+                    # of testing time before we give up.
+                    "--timeout=1200",
                     f"--log-file={args.session}/embedded_test/log/pytest.log",
                     f"--emulator={emulator}",
                 ],
@@ -204,18 +224,18 @@ def run_under_windows(args):
                 },
             )
         finally:
-            if tmp_test_result.exists():
-                run(
-                    [
-                        PYTHON,
-                        f"{HERE}/src/xml/transform.py",
-                        "--xml",
-                        f"{str(tmp_test_result)}",
-                        "--xsl",
-                        f"{HERE}/cfg/liftSystemOut.xslt",
-                        "--out",
-                        f"{args.session}/embedded_test/test_embedded_test.html",
-                    ]
+            if junit_test_results.exists():
+                apply_xslt(
+                    source=junit_test_results,
+                    xslt=HERE / "cfg" / "liftSystemOut.xslt",
+                    dest=Path(args.session)
+                    / "embedded_test"
+                    / "test_embedded_test.xml",
+                )
+                apply_xslt(
+                    source=junit_test_results,
+                    xslt=HERE / "cfg" / "asHtml.xslt",
+                    dest=Path(args.session) / "test_report.html",
                 )
 
 
