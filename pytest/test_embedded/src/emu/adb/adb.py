@@ -66,6 +66,9 @@ class Adb(object):
 
         Returns:
             str: Result of the adb invocation.
+
+        Raises:
+            subprocess.CalledProcessError
         """
         logging.info("adb -s %s %s", self.name, " ".join(cmd))
         cmd = subprocess.check_output(

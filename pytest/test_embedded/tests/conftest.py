@@ -206,7 +206,7 @@ def avd(request, pytestconfig) -> BaseEmulator:
     # (Note, boot times can be *REALLY* slow on windows gce..)
     assert emu.wait_for_boot(600)
 
-    emu.adb.run(["install", str(APP_DEBUG_APK.absolute())])
+    emu.install_apk(APP_DEBUG_APK.absolute())
     logging.info("Using %s for module", name)
     return emu
 

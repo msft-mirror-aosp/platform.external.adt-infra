@@ -16,6 +16,7 @@ import os
 import platform
 import shutil
 import signal
+import subprocess
 import sys
 import time
 from datetime import timedelta
@@ -47,6 +48,10 @@ class AndroidSdkRootNotSet(Exception):
     pass
 
 
+class FailedToInstallApk(Exception):
+    pass
+
+
 class BaseEmulator(object):
     def __init__(self, android_home: Path, android_avd_home: Path) -> None:
         """An Emulator represents a running emulator which you can interact with.
@@ -68,7 +73,12 @@ class BaseEmulator(object):
         self.description = None
         self.android_home = android_home.absolute()
         self.android_avd_home = android_avd_home.absolute()
-        logging.info("Using android_home: %s, android_avd_home: %s", self.android_home, self.android_avd_home)
+        self.apk_installed = set()
+        logging.info(
+            "Using android_home: %s, android_avd_home: %s",
+            self.android_home,
+            self.android_avd_home,
+        )
 
     def __del__(self):
         if self.telnet:
@@ -139,21 +149,21 @@ class BaseEmulator(object):
 
         return False
 
-    def wait_for_boot(self, timeout: int = 600) -> bool:
+    def wait_for_boot(self, timeout_sec: int = 600) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
 
         Args:
-            timeout (int, optional): Timeout in seconds. Defaults to 600 seconds.
+            timeout_sec (int, optional): Timeout in seconds. Defaults to 600 seconds.
 
         Returns:
             bool: True if the emulator has booted, False otherwise.
         """
-        timeout = time.time() + timeout
+        timeout = time.time() + timeout_sec
         start = timer()
 
         logging.info(
             "Waiting at most %s seconds for %s to boot",
-            timeout,
+            timeout_sec,
             self.description.name(),
         )
         while not self.has_booted() and time.time() < timeout:
@@ -214,17 +224,43 @@ class BaseEmulator(object):
             logging.error("No description!")
             return False
 
+        pid = self.description.pid()
         if sys.platform == "win32":
             # We will just check if we can find the pid in the discovery set.
             # We can't use os.kill as that does not work on windows.
             discovery = EmulatorDiscovery()
-            return discovery.find_by_pid(self.description.pid()) is not None
+            alive = discovery.find_by_pid(pid) is not None
         else:
-            return self._check_pid(self.description.pid())
+            alive = self._check_pid(pid)
+
+        return alive
+
+    def install_apk(self, apk: Path, force: bool = False) -> None:
+        """Installs an apk in the emulator.
+
+        Note: An apk will be installed only once unless force has been set to
+        true.
+
+        Args:
+            apk (Path): Path to the apk that should be installed.
+            force (bool, optional): True if we should re-install over the existing apk
+
+        Raises:
+            FailedToInstallApk: Failed to install the given apk.
+        """
+        if force or not apk.absolute() in self.apk_installed:
+            try:
+                logging.info("Installing %s", apk.absolute())
+                self.adb.run(["install", str(apk.absolute())])
+                self.apk_installed.add(apk.absolute())
+            except subprocess.CalledProcessError as err:
+                raise FailedToInstallApk(err) from err
 
 
 class DebugEmulator(BaseEmulator):
-    def __init__(self, android_home: Path, android_avd_home: Path, logfile: Path) -> None:
+    def __init__(
+        self, android_home: Path, android_avd_home: Path, logfile: Path
+    ) -> None:
         """The first discovered running emulator.
 
         Use this to connect to an already running emulator.
@@ -345,8 +381,6 @@ class Emulator(BaseEmulator):
         self._discover(self.avd)
 
     def _terminate_emulator(self, gracefully) -> None:
-        emu = self.description.get_emulator_controller()
-        mode = VmRunState.SHUTDOWN if gracefully else VmRunState.TERMINATE
         with_signal = 0
         if sys.platform == "win32":
             with_signal = signal.CTRL_C_EVENT if gracefully else signal.SIGILL
@@ -355,8 +389,10 @@ class Emulator(BaseEmulator):
 
         try:
             logging.info("Make gRPC call to stop emulator")
+            emu = self.description.get_emulator_controller()
+            mode = VmRunState.SHUTDOWN if gracefully else VmRunState.TERMINATE
             emu.setVmState(VmRunState(state=mode))
-        except RpcError as err:
+        except Exception as err:
             logging.error(
                 "Failed to shutdown using gRPC (%s), using signal %s.", err, with_signal
             )
