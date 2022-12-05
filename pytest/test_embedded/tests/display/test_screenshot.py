@@ -71,7 +71,7 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.skip(reason="Test is flaky. b/257344595")
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_screenshot_all_formats_are_equal(
     avd, emulator_controller, animation_app, w, h
 ):
@@ -100,6 +100,7 @@ def test_screenshot_all_formats_are_equal(
         # a == b, b == c --> a == c, so we can just compare the last known image
         # to the current one.
         pixels = list(pillow_image.convert("RGB").getdata())
+        assert len(set(pixels)) > 1, "Pixels should not all be the same!"
         assert last_pixels == None or last_pixels == pixels
         last_pixels == pixels
 
