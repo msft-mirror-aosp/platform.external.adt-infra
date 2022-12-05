@@ -233,6 +233,7 @@ class BaseEmulator(object):
         else:
             alive = self._check_pid(pid)
 
+        logging.info("Checking if %s is alive: %s", pid, alive)
         return alive
 
     def install_apk(self, apk: Path, force: bool = False) -> None:

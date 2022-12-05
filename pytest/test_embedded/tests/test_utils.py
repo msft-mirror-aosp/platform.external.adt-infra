@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import io
 import logging
 import re
 import time
@@ -19,6 +20,32 @@ from threading import Thread
 
 import google.protobuf.text_format
 import grpc
+from PIL import Image as PillowImage
+from aemu.proto.emulator_controller_pb2 import Image, ImageFormat
+
+
+def proto_to_pillow(image: Image) -> PillowImage:
+    """Converts an emulator protobuf image to a Pillow Image
+
+    Args:
+        image (Image): An image obtained from the screenShot api.
+
+    Returns:
+        PillowImage: A Pillow Image
+    """
+    EMU_TO_PIL_IMAGE_FORMATS = {
+        ImageFormat.RGB888: "RGB",
+        ImageFormat.RGBA8888: "RGBA",
+        ImageFormat.PNG: "PNG",
+    }
+
+    if image.format.format == ImageFormat.PNG:
+        return PillowImage.open(io.BytesIO(image.image))
+    return PillowImage.frombytes(
+        EMU_TO_PIL_IMAGE_FORMATS[image.format.format],
+        (image.format.width, image.format.height),
+        image.image,
+    )
 
 
 def fmt_proto(msg):

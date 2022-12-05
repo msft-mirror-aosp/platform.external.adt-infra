@@ -23,8 +23,8 @@ from aemu.proto.emulator_controller_pb2 import (
     PhysicalModelValue,
     Rotation,
 )
-
-from tests.test_utils import StreamingCall, fmt_proto
+from PIL import Image
+from tests.test_utils import StreamingCall, fmt_proto, proto_to_pillow
 
 # This test validates the behavior of rotating the device.
 # The android device derives its orientation from the physical model.
@@ -89,8 +89,8 @@ def test_rotation_observable_through_screenshot(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_rotation_observable_through_adbstream(avd,
-    at_home, animation_app, emulator_controller
+def test_rotation_observable_through_adbstream(
+    avd, at_home, animation_app, emulator_controller
 ):
     """Test that setting the rotation, is observable the adb logstream.
     This makes sure that android itself reports the orientation we are expecting.
@@ -132,27 +132,68 @@ def test_rotation_observable_through_stream_screenshot(
             assert seen_rotation, "Did not observe rotation to {} in time".format(angle)
 
 
-# Pixel color of the square.
-BLOCK_PIXEL = bytes([0xDE, 0xCE, 0xBE])
+RED_PIXEL = (255, 0, 0)
 
 
-def get_first_block_pixel(img):
-    """Gets the relative position of the first pixel with the color BLOCK_PIXEL"""
-    idx = int(img.image.find(BLOCK_PIXEL) / 3)
+def get_first_red_pixel(img: Image) -> (int, int):
+    """Finds the relative coordinate of the first red pixel.
 
-    y = int(idx / img.format.width)
-    x = idx % img.format.width
-    return x / img.format.width, y / img.format.height
+    A relative coordinate is normalized between [0, 1].
+
+    Args:
+        img (Image): A PIL image we are inspecting
+
+    Returns:
+        (int, int): A tuple with the relative x,y coordinate, or (-1, -1) if there is no red pixel.
+    """
+    # Get the bounding box, this makes sure the image data structures are
+    # properly initalized.
+    box = img.getbbox()
+    logging.info("Inspecting %s, %sx%s", box, img.width, img.height)
+    for x in range(img.width):
+        for y in range(img.height):
+            co = (x, y)
+            pixel = img.getpixel(co)
+            if pixel == RED_PIXEL:
+                return (x / img.width, y / img.height)
+
+    return (-1, -1)
 
 
-def square_is_visible(img):
-    """True if BLOCK_PIXEL is in the image."""
-    return img.image.find(BLOCK_PIXEL) >= 0
+def square_is_visible(img: Image) -> bool:
+    """True if a red square is visible.
+
+    It basically checks to see if we have a red pixel visible.
+
+    Args:
+        img (Image): The PIL image used to check for colors
+
+    Returns:
+        bool: True if a red pixel is visible.
+    """
+    colors = img.getcolors()
+    if colors:
+        for count, color in colors:
+            if color == RED_PIXEL and count > 0:
+                logging.info("Found %s red pixels", count)
+                return True
+
+    return False
 
 
-def square_in_quadrant(img):
-    """The quadrant where the square is rendered."""
-    x, y = get_first_block_pixel(img)
+def square_in_quadrant(img: Image) -> int:
+    """Finds the quadrant containing the first red pixel.
+
+    Args:
+        img (Image): The pillow image we are inspecting
+
+    Returns:
+        int: The number of the quadrant, on of {1, 2, 3, 4} or 0 when not found
+    """
+    if not square_is_visible(img):
+        return 0
+
+    x, y = get_first_red_pixel(img)
     if x >= 0.5 and y <= 0.5:
         return 1
     if x < 0.5 and y <= 0.5:
@@ -165,8 +206,13 @@ def square_in_quadrant(img):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
-@pytest.mark.skip(reason="Rotation is currently failing b/246780175")
-def test_rotation_pixels_in_the_right_place(animation_app, emulator_controller):
+@pytest.mark.parametrize(
+    "rotation, quadrant",
+    [(0, 1), (90, 2), (-180, 3), (-90, 4)],
+)
+def test_rotation_pixels_in_the_right_place(
+    animation_app, emulator_controller, rotation, quadrant
+):
     """Test the colored square is in the expected location.
     The animation app draws a square in the top right corner (first quadrant).
     During rotation we expect the square to end-up in the quadrant corresponding
@@ -175,30 +221,33 @@ def test_rotation_pixels_in_the_right_place(animation_app, emulator_controller):
     This tests make sure that we are rendering the screenshot properly.
     b/179172837, b/176886063
     """
-    QUADRANT_MAP = {0: 1, 90: 2, -180: 3, -90: 4}
+    emulator_controller.setPhysicalModel(
+        PhysicalModelValue(
+            target=PhysicalModelValue.ROTATION,
+            value=ParameterValue(data=[0, 0, rotation]),
+        )
+    )
     imgStream = emulator_controller.streamScreenshot(
         ImageFormat(format=ImageFormat.RGB888), timeout=5
     )
     with StreamingCall(imgStream) as stream:
-        for (angle, coarse) in for_each_rotation(emulator_controller):
-            # Keep looking at the queue until we see what we need.
-            # if we never see it we will timeout.
-            seen_rotation = False
-            for img in stream:
-                if (
-                    square_is_visible(img)
-                    and square_in_quadrant(img) == QUADRANT_MAP[angle]
-                ):
-                    logging.info(
-                        "Observered rotation to %s, found pixel in quadrant: %d",
-                        fmt_proto(img.format.rotation),
-                        square_in_quadrant(img),
-                    )
-                    seen_rotation = True
-                    break
-            assert seen_rotation, "Did not see the rotation to {} in time.".format(
-                angle
-            )
+        # Keep looking at the queue until we see what we need.
+        # if we never see it we will timeout.
+        seen_rotation = False
+        count = 0
+        for img in stream:
+            pillow_img = proto_to_pillow(img)
+            count = count + 1
+            if square_in_quadrant(pillow_img) == quadrant:
+                logging.info(
+                    "Observered rotation to %s after %s images, found pixel in quadrant: %d",
+                    fmt_proto(img.format.rotation),
+                    count,
+                    quadrant,
+                )
+                seen_rotation = True
+                break
+        assert seen_rotation, "Did not see the rotation to {} in time.".format(rotation)
 
 
 @pytest.mark.e2e
@@ -216,9 +265,10 @@ def test_rotation_through_console_observable_through_physical_model(
             value=ParameterValue(data=[0, 0, 0]),
         )
     )
-    for (angle, coarse) in ROTATION_MAPPING:
-        sleep(0.5)
+    for (angle, _) in ROTATION_MAPPING:
+        sleep(0.2)
         adb(["emu", "rotate"])
+        sleep(0.2)
         rotate = emulator_controller.getPhysicalModel(
             PhysicalModelValue(target=PhysicalModelValue.ROTATION)
         )
@@ -234,7 +284,6 @@ def test_rotation_through_console_observable_through_screenshot(
     bug: b/159635109
     """
     for (_, coarse) in ROTATION_MAPPING:
-        sleep(0.2)
         adb(["emu", "rotate"])
         sleep(0.2)
         img = emulator_controller.getScreenshot(ImageFormat())
@@ -251,8 +300,8 @@ def test_rotation_through_console_observable_through_stream_screenshot(
     bug: b/159635109, b/160171559
     """
     for (angle, coarse) in ROTATION_MAPPING:
-        sleep(0.5)
         adb(["emu", "rotate"])
+        sleep(0.2)
         imgStream = emulator_controller.streamScreenshot(
             ImageFormat(width=320, height=200), timeout=5
         )

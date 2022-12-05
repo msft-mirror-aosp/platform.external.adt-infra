@@ -13,7 +13,6 @@
 # limitations under the License.
 import re
 import time
-from io import BytesIO
 from time import sleep
 
 import pytest
@@ -25,8 +24,8 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
-from PIL import Image
-from tests.test_utils import wait_for_regex
+
+from tests.test_utils import proto_to_pillow, wait_for_regex
 
 
 def pause_animation_app(avd):
@@ -88,14 +87,7 @@ def test_screenshot_all_formats_are_equal(
         )
 
         # Load and convert the image using pillow
-        if image.format.format == ImageFormat.PNG:
-            pillow_image = Image.open(BytesIO(image.image))
-        else:
-            pillow_image = Image.frombytes(
-                EMU_TO_PIL_IMAGE_FORMATS[image_format],
-                (image.format.width, image.format.height),
-                image.image,
-            )
+        pillow_image = proto_to_pillow(image)
 
         # a == b, b == c --> a == c, so we can just compare the last known image
         # to the current one.
