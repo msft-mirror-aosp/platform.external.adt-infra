@@ -159,7 +159,7 @@ def run_under_windows(args):
     run(
         [
             PYTHON,
-            AOSP_ROOT / "external" / "adt-infra" / "devpi" / "repo" / "get-pip.py",
+            AOSP_ROOT / "external" / "adt-infra" / "devpi" / "get-pip.py",
             "--no-wheel",
             "--no-setuptools",
             "--index-url",

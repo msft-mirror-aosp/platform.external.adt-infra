@@ -197,24 +197,6 @@ class BaseEmulator(object):
         if self.telnet:
             self.telnet.stop()
 
-    def _check_pid(self, pid: int) -> bool:
-        """Checks to see if the given pid exists.
-
-        Args:
-            pid (int): The process id we are looking for
-
-        Returns:
-            bool: True if the process is running
-        """
-        if sys.platform == "win32":
-            raise NotImplementedError("This does not work on windows.")
-
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            return False
-
-        return True
 
     def is_alive(self) -> bool:
         """Returns true if we believe the emulator is still alive."""
@@ -224,17 +206,7 @@ class BaseEmulator(object):
             logging.error("No description!")
             return False
 
-        pid = self.description.pid()
-        if sys.platform == "win32":
-            # We will just check if we can find the pid in the discovery set.
-            # We can't use os.kill as that does not work on windows.
-            discovery = EmulatorDiscovery()
-            alive = discovery.find_by_pid(pid) is not None
-        else:
-            alive = self._check_pid(pid)
-
-        logging.info("Checking if %s is alive: %s", pid, alive)
-        return alive
+        return self.description.is_alive()
 
     def install_apk(self, apk: Path, force: bool = False) -> None:
         """Installs an apk in the emulator.
@@ -377,49 +349,19 @@ class Emulator(BaseEmulator):
                 discovery.available(),
             )
             time.sleep(1)
-            discovery.discover()
 
         self._discover(self.avd)
 
-    def _terminate_emulator(self, gracefully) -> None:
-        with_signal = 0
-        if sys.platform == "win32":
-            with_signal = signal.CTRL_C_EVENT if gracefully else signal.SIGILL
-        else:
-            with_signal = signal.SIGINT if gracefully else signal.SIGKILL
 
-        try:
-            logging.info("Make gRPC call to stop emulator")
-            emu = self.description.get_emulator_controller()
-            mode = VmRunState.SHUTDOWN if gracefully else VmRunState.TERMINATE
-            emu.setVmState(VmRunState(state=mode))
-        except Exception as err:
-            logging.error(
-                "Failed to shutdown using gRPC (%s), using signal %s.", err, with_signal
-            )
-            os.kill(self.description.pid(), with_signal)
-
-    def stop(self, timeout: int = 30) -> None:
+    def stop(self, timeout: int = 10) -> None:
         """Stops the emulator, terminating it does not exits gracefully within the given timeout
 
         Args:
             timeout (int, optional): Time in seconds before the emulator will be terminated.
-            Defaults to 30.
+            Defaults to 10.
         """
         self.disconnect()
-
-        if not self.is_alive():
-            return
-
-        self._terminate_emulator(gracefully=True)
-        # Wait until the process ends. Note that the emulator will kill itself
-        # after 20 seconds.
-        while self.is_alive() and timeout > 0:
-            time.sleep(1)
-            timeout = timeout - 1
-
-        if self.is_alive():
-            self._terminate_emulator(gracefully=False)
+        self.description.shutdown(timeout)
 
     def delete(self) -> None:
         """Deletes the created avd."""
