@@ -186,6 +186,7 @@ def run_under_windows(args):
             "-m",
             "pip",
             "install",
+            "--verbose",
             "--upgrade",
             "--index-url",
             f"{repo}",
