@@ -524,30 +524,47 @@ run_timeout() {
     #
     # $1 Timeout in seconds after which a kill -9 signal will be sent.
     # $@ Command to be executed.
-    # Sets the STATUS variable to 1 in case of timeout.
+
     local time=$1
     shift
-    local cmd=$@
+    declare -i interval=1  # Interval between checks if the process is still alive.
+    declare -i delay=10  # Delay between the signals SIGTERM and SIGKILL.
 
-    log2err "${_GREEN}COMMAND: ${time} seconds for  ${cmd}${_RESET}"
-    # The idea is to launch a command in a subshell, record the pid
-    # of the subshell, and send it the kill signal after x seconds
-    #
-    # To determine the PID of the subshell we execute:
-    # (cmdpid=$(exec sh -c 'echo $PPID');)
-    # This is posix compliant way of getting the proper pid (we get the parent
-    # pid of a sub sub shell). Next we use this to observe the running process.
-    #
-    # The subshell will produce the standard exit code or 137 in case the kill
-    # -9 arrived at itself.
-    (cmdpid=$(exec sh -c 'echo $PPID'); (sleep $time; kill -9 $cmdpid >/dev/null 2>&1) & exec ${cmd})
+    log2err "${_GREEN}COMMAND: ${time} seconds for  $@${_RESET}"
 
-    # see https://tldp.org/LDP/abs/html/exitcodes.html
-    # kill -9 results in 137 (128+9)
-    if  [[ $? -eq 137 ]]; then
-        STATUS=1
-        warn "Command timed out!"
+    (
+        pid=$(exec sh -c 'echo $PPID')  # PID of the subshell.
+        (
+            ((t = timeout))
+
+            # Wait timeout (t) seconds before posting the signals.
+            while ((t > 0)); do
+                sleep $interval
+                # Check every $interval secs for the existance of the process.
+                # If $pid doesn't exist, 'exit 0' quits the function.
+                kill -0 $pid || exit 0
+                ((t -= interval))
+            done
+
+            # SIGTERM (15) is called first, then SIGKILL (9).
+            # 'kill -0 $pid' checks if it is possible to kill the process.
+            # 'exit 0' is executed if previous commands fail.
+            kill SIGTERM $pid && kill -0 $pid || exit 0
+            sleep $delay
+            kill -s SIGKILL $pid
+        ) &
+
+        exec "$@"
+
+    ) 2> /dev/null &
+
+    # kill -9 (SIGKILL) results in 137 (128+9).
+    # kill -15 (SIGTERM) results in 143 (128+15).
+    if [[ $? -eq 137 || $? -eq 143 ]]; then
+       STATUS=1
+       warn "Command timed out!"
     fi
+
 }
 
 run_test() {
