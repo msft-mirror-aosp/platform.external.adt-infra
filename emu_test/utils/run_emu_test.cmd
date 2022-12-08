@@ -6,11 +6,24 @@ REM This will be invoked by aosp-emu-master-dev.
 
 set DISTRIB_DIR=%1
 
-setx ANDROID_HOME %SDK_EMULATOR% /M
-setx ANDROID_SDK_ROOT %SDK_EMULATOR% /M
+setx ANDROID_HOME "%SDK_EMULATOR%" /M
+setx ANDROID_SDK_ROOT "%SDK_EMULATOR%" /M
 setx ANDROID_EMU_ENABLE_CRASH_REPORTING "YES" /M
+REM If JAVA_HOME was set in the local environment, we want that to make it through the refreshenv
+setx JAVA_HOME "%JAVA_HOME%" /M
 
 call refreshenv
+IF "%JAVA_HOME%"=="" (
+    REM Building the test apk needed for the tests will silently fail somewhere in python without JAVA_HOME
+    ECHO JAVA_HOME must be set in order for the test apk to get built
+    exit 255
+)
+
+IF "%ANDROID_SDK_ROOT%"=="" (
+    REM Building the test apk needed for the tests will silently fail somewhere in python without JAVA_HOME
+    ECHO "SDK_EMULATOR must be set in order for the test apk to get built (typically prebuilts/android-emulator-build/system-images/windows)"
+    exit 255
+)
 
 echo "Run mkdir %SESSION_DIR%\emu-master-dev"
 set SESSION_DIR=%DISTRIB_DIR%\testlogs
