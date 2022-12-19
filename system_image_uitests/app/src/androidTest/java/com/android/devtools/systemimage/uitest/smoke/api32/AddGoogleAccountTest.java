@@ -16,8 +16,6 @@
 
 package com.android.devtools.systemimage.uitest.smoke.api32;
 
-import static org.junit.Assert.assertTrue;
-
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
@@ -35,6 +33,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for adding a Google account.
@@ -79,7 +78,7 @@ public class AddGoogleAccountTest {
         AppLauncher.launch(instrumentation, "Contacts");
 
         UiObject addAccount = mDevice.findObject(
-                new UiSelector().textMatches(("(?i)add account(?-i)")));
+                new UiSelector().resourceId((Res.ADD_NEW_CONTACT)));
 
         boolean isFound = addAccount.waitForExists(5L);
         if (isFound) {
@@ -88,13 +87,19 @@ public class AddGoogleAccountTest {
 
         UiObject signInHeader = mDevice.findObject(
                 new UiSelector().textMatches(("(?i)sign in(?-i)")).resourceId("headingText"));
-        boolean isSignInPage = new Wait(10000L).until(signInHeader::exists);
+        boolean isSignInPage = signInHeader.waitForExists(1000);
+
+        UiObject createNewContact = mDevice.findObject(
+                new UiSelector().text("Create new contact"));
+
+        boolean isNewContactsPage = false;
 
         if (!isSignInPage) {
             new watcher(mDevice, Res.ADD_GOOGLE_ACC_WATCHER_PATTERN).checkForCondition();
+            isNewContactsPage = createNewContact.waitForExists(1000);
         }
 
         assertTrue("Add Google account page not found",
-                new Wait(10000L).until(signInHeader::exists));
+                isSignInPage || isNewContactsPage);
     }
 }
