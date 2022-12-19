@@ -15,9 +15,6 @@
  */
 package com.android.devtools.systemimage.uitest.smoke.api32;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import android.app.Instrumentation;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.uiautomator.UiDevice;
@@ -41,6 +38,9 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 /**
  * Test to verify that Google services are available on Google API images
  */
@@ -50,7 +50,7 @@ public class PlayStoreTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
     @Rule
     public Timeout globalTimeout = Timeout.seconds(600);
-    private String testApplication = "The Weather Channel";
+    private final String testApplication = "The Weather Channel";
     @Before
     public void verifyPlayStore() throws Exception {
         if (testFramework.isGoogleApiAndPlayImage()) {
@@ -117,8 +117,9 @@ public class PlayStoreTest {
             final UiDevice device = UiDevice.getInstance(instrumentation);
             PlayStoreUtil.selectApplication(instrumentation, testApplication);
             new GoogleAppConfirmationWatcher(device).checkForCondition();
+            boolean isApplicationInstalled = PlayStoreUtil.installApplication(instrumentation);
             assertTrue("Unable to install the application from Google Play",
-                    PlayStoreUtil.installApplication(instrumentation));
+                    isApplicationInstalled);
             AppLauncher.launch(instrumentation, "Play Store");
             assertTrue("Unable to uninstall the application from Google Play",
                     PlayStoreUtil.uninstallApplication(instrumentation));
@@ -157,45 +158,21 @@ public class PlayStoreTest {
             final UiDevice device = UiDevice.getInstance(instrumentation);
             PlayStoreUtil.selectApplication(instrumentation, testApplication);
             new GoogleAppConfirmationWatcher(device).checkForCondition();
+            boolean isApplicationInstalled = PlayStoreUtil.installApplication(instrumentation);
             assertTrue("Unable to install the application from Google Play",
-                    PlayStoreUtil.installApplication(instrumentation));
-            UiObject installedLabel = device.findObject(new UiSelector()
-                    .textMatches("(?i)installed(?-i)"));
-            boolean hasInstalledLabel = new Wait(
-                    TimeUnit.MILLISECONDS.convert(40L, TimeUnit.SECONDS))
-                    .until(installedLabel::exists);
+                    isApplicationInstalled);
 
-            UiObject installedDescription = device.findObject(new UiSelector()
-                    .descriptionContains("Installed"));
-            boolean hasInstalledDescription = new Wait(
-                    TimeUnit.MILLISECONDS.convert(5L, TimeUnit.SECONDS))
-                    .until(installedDescription::exists);
-            if (hasInstalledDescription) {
-                installedDescription.clickAndWaitForNewWindow();
-            }
-            assertTrue("Unable to install the application from Google Play",
-                    hasInstalledLabel || hasInstalledDescription);
-
-            device.findObject(new UiSelector().textMatches("(?i)open(?-i)"))
-                    .clickAndWaitForNewWindow();
+            UiObject openButton = device.findObject(new UiSelector()
+                    .className("android.view.View")
+                    .packageName("com.android.vending")
+                    .description("Open"));
+            openButton.clickAndWaitForNewWindow();
             assertTrue("App could not be opened",
                     new Wait(TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
                             .until(() -> device.findObject(new UiSelector()
                                     .packageName("com.weather.Weather")).exists()));
-            AppLauncher.launch(instrumentation, "Play Store");
-            hasInstalledDescription = new Wait(
-                    TimeUnit.MILLISECONDS.convert(40L, TimeUnit.SECONDS))
-                    .until(installedDescription::exists);
-            if (hasInstalledDescription) {
-                installedDescription.clickAndWaitForNewWindow();
-            }
 
-            hasInstalledLabel = new Wait(
-                    TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS))
-                    .until(installedLabel::exists);
-            if (hasInstalledLabel) {
-                installedLabel.clickAndWaitForNewWindow();
-            }
+            AppLauncher.launch(instrumentation, "Play Store");
             assertTrue("Unable to uninstall the application from Google Play",
                     PlayStoreUtil.uninstallApplication(instrumentation));
             PlayStoreUtil.resetPlayStore(instrumentation);
@@ -228,9 +205,9 @@ public class PlayStoreTest {
             new GoogleAppConfirmationWatcher(device).checkForCondition();
             assertTrue("Target application is not a pay app",
                     device.findObject(new UiSelector()
-                            .className("android.widget.Button")
+                            .className("android.view.View")
                             .packageName(Res.GOOGLE_PLAY_VENDING_RES)
-                            .textContains("$")).waitForExists(10L));
+                            .descriptionContains("$")).waitForExists(10L));
             PlayStoreUtil.resetPlayStore(instrumentation);
             device.pressHome();
         }

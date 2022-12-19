@@ -100,11 +100,11 @@ public class PlayStoreUtil {
             throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         AppLauncher.launch(instrumentation, "Play Store");
-        new GoogleAppConfirmationWatcher(device).checkForCondition();
-
-        resetPlayStore(instrumentation);
-        AppLauncher.launch(instrumentation, "Play Store");
-
+        boolean watcherConditionFound = new GoogleAppConfirmationWatcher(device).checkForCondition();
+        if (watcherConditionFound) {
+            resetPlayStore(instrumentation);
+            AppLauncher.launch(instrumentation, "Play Store");
+        }
         boolean idleTextFieldExists = new Wait().until(() -> device.findObject(
                 new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_IDLE_RES)).exists());
 
@@ -121,20 +121,19 @@ public class PlayStoreUtil {
         }
 
         UiObject inputTextField = device.findObject(
-                new UiSelector().resourceIdMatches(Res.GOOGLE_PLAY_INPUT_RES));
-
-        UiObject finalInputTextField = inputTextField;
-        boolean inputTextFieldExists = new Wait().until(finalInputTextField::exists);
-
-        if (!inputTextFieldExists) {
-            inputTextField = device.findObject(
-                    new UiSelector().text("Search for apps & games"));
-        }
+                new UiSelector()
+                        .className("android.widget.TextView")
+                        .textContains("Search for"));
 
         assertTrue("Input text field not found", inputTextField.exists());
         inputTextField.clearTextField();
         inputTextField.click();
-        inputTextField.setText(application);
+
+        UiObject editTextField = device.findObject(
+                new UiSelector()
+                        .className("android.widget.EditText")
+                        .textContains("Search for"));
+        editTextField.setText(application);
         device.pressEnter();
     }
 
@@ -193,6 +192,16 @@ public class PlayStoreUtil {
             onboardButton.clickAndWaitForNewWindow();
         }
 
+        final UiObject freePlayPassButton = device.findObject(
+                new UiSelector().packageName(Res.GOOGLE_PLAY_VENDING_RES).text("Not now"));
+
+        boolean hasFreePlayPassButton = new Wait(TimeUnit.SECONDS.toMillis(5)).
+                until(onboardButton::exists);
+
+        if (hasFreePlayPassButton) {
+            freePlayPassButton.clickAndWaitForNewWindow();
+        }
+
         new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
         return loggedIn;
@@ -205,24 +214,33 @@ public class PlayStoreUtil {
     public static boolean installApplication(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        boolean isInstallable = new Wait(TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS)).until(new Wait.ExpectedCondition() {
-            @Override
-            public boolean isTrue() {
-                return device.findObject(new UiSelector().textMatches("(?i)install(?-i)")).exists();
-            }
-        });
+        UiObject installButton = api >= 31 ? device.findObject(
+                new UiSelector().descriptionMatches("(?i)install(?-i)")) :
+                device.findObject(
+                        new UiSelector().textMatches("(?i)install(?-i)"));
+        boolean isInstallable = new Wait(TimeUnit.MILLISECONDS.convert(
+                10L, TimeUnit.SECONDS)).until(installButton::exists);
 
         if (!isInstallable) {
-            return new Wait().until(() -> device.findObject(new UiSelector().textMatches("(?i)uninstall(?-i)")).exists());
+            UiSelector uninstallButtonSelector = api >= 31 ? new UiSelector().
+                    descriptionMatches("(?i)uninstall(?-i)") :
+                    new UiSelector().
+                            textMatches("(?i)uninstall(?-i)");
+            return new Wait().until(() -> device.findObject(uninstallButtonSelector).exists());
         }
 
-        device.findObject(new UiSelector().textMatches("(?i)install(?-i)")).clickAndWaitForNewWindow();
+        installButton.clickAndWaitForNewWindow();
         new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
-        UiObject openButton = device.findObject(new UiSelector().textMatches("(?i)open(?-i)"));
+        UiObject openButton = api >= 31 ? device.findObject(
+                new UiSelector().descriptionMatches("(?i)open(?-i)")) :
+                device.findObject(
+                        new UiSelector().textMatches("(?i)open(?-i)"));
 
-        return openButton.waitForExists(TimeUnit.SECONDS.toMillis(180));
+        boolean hasOpenButton = openButton.waitForExists(TimeUnit.SECONDS.toMillis(180));
+        return hasOpenButton;
     }
+
 
     /**
      * Attempts to uninstall an application from Google Play Store, if it is already installed.
@@ -231,35 +249,81 @@ public class PlayStoreUtil {
     public static boolean uninstallApplication(Instrumentation instrumentation) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
+        UiSelector uninstallSelector = api >= 31 ? new UiSelector()
+                .descriptionMatches("(?i)uninstall(?-i)") : new UiSelector()
+                .textMatches("(?i)uninstall(?-i)");
         boolean hasUninstall = new Wait(
                 TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
-                .until(() -> device.findObject(new UiSelector()
-                        .textMatches("(?i)uninstall(?-i)")).exists());
+                .until(() -> device.findObject(uninstallSelector).exists());
 
         if (!hasUninstall) {
             UiObject installedLabel = device.findObject(new UiSelector()
-                    .textMatches("(?i)installed(?-i)"));
+                    .textMatches("(?i)installed(?-i)")
+                    .packageName(Res.GOOGLE_PLAY_VENDING_RES)
+                    .className("android.widget.TextView"));
+
             boolean hasInstalledLabel = new Wait(
                     TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
                     .until(installedLabel::exists);
+
             if (hasInstalledLabel) {
                 installedLabel.clickAndWaitForNewWindow();
             } else {
-                UiObject installedDescription = device.findObject(new UiSelector()
-                        .descriptionContains("Installed"));
-                boolean hasInstalledDescription = new Wait(
-                        TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
-                        .until(installedDescription::exists);
-                if (hasInstalledDescription) {
-                    installedDescription.clickAndWaitForNewWindow();
-                } else {
-                    return new Wait().until(() -> device.findObject(new UiSelector()
-                            .textMatches("(?i)install(?-i)")).exists());
-                }
+                UiSelector installSelector = api >= 31 ? new UiSelector()
+                        .descriptionMatches("(?i)install(?-i)") :
+                        new UiSelector()
+                                .textMatches("(?i)install(?-i)");
+                return new Wait().until(() -> device.findObject(installSelector).exists());
             }
         }
 
-        UiObject uninstallButton = device.findObject(new UiSelector().textMatches("(?i)uninstall(?-i)"));
+        UiObject uninstallButton = api >= 31 ?
+                device.findObject(
+                        new UiSelector().descriptionMatches("(?i)uninstall(?-i)")) :
+                device.findObject(
+                        new UiSelector().textMatches("(?i)uninstall(?-i)"));
+        if (uninstallButton.waitForExists(TimeUnit.SECONDS.toMillis(10))) {
+            uninstallButton.clickAndWaitForNewWindow();
+        }
+        UiObject okButton = device.findObject(new UiSelector().textMatches("(?i)ok(?-i)"));
+        if (okButton.waitForExists(3)) {
+            okButton.clickAndWaitForNewWindow();
+        }
+        if (uninstallButton.waitForExists(3)) {
+            uninstallButton.clickAndWaitForNewWindow();
+        }
+
+        UiObject installButton = api >= 31 ? device.findObject(new UiSelector()
+                .descriptionMatches("(?i)install(?-i)")) :
+                device.findObject(new UiSelector()
+                        .textMatches("(?i)install(?-i)"));
+
+        return installButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
+    }
+
+    /**
+     * Attempts to uninstall an application from Google Play Store by name.
+     * Returns true if the application has been uninstalled, false if not.
+     */
+    public static boolean uninstallApplicationByName(Instrumentation instrumentation, String testApplication) throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        PlayStoreUtil.selectApplication(instrumentation, testApplication);
+
+        UiObject appLabel = device.findObject(new UiSelector()
+                .textContains(testApplication).packageName("com.android.vending").index(1));
+        if (new Wait(
+                TimeUnit.MILLISECONDS.convert(20L, TimeUnit.SECONDS))
+                .until(appLabel::exists)) {
+            appLabel.clickAndWaitForNewWindow();
+        } else {
+            return false;
+        }
+
+        UiObject uninstallButton = api >= 31 ?
+                device.findObject(
+                        new UiSelector().descriptionMatches("(?i)uninstall(?-i)")) :
+                device.findObject(
+                        new UiSelector().textMatches("(?i)uninstall(?-i)"));
         if (uninstallButton.waitForExists(10)) {
             uninstallButton.clickAndWaitForNewWindow();
         }
@@ -271,8 +335,10 @@ public class PlayStoreUtil {
             uninstallButton.clickAndWaitForNewWindow();
         }
 
-        UiObject installButton = device.findObject(new UiSelector()
-                .textMatches("(?i)install(?-i)"));
+        UiObject installButton = api >= 31 ? device.findObject(new UiSelector()
+                .descriptionMatches("(?i)install(?-i)")) :
+                device.findObject(new UiSelector()
+                        .textMatches("(?i)install(?-i)"));
 
         return installButton.waitForExists(TimeUnit.SECONDS.toMillis(60));
     }
@@ -320,7 +386,10 @@ public class PlayStoreUtil {
             tryGooglePlay.clickAndWaitForNewWindow(10L);
         }
 
-        return device.findObject(new UiSelector().textMatches(("(?i)install(?-i)")))
+        return device.findObject(new UiSelector()
+                        .className("android.view.View")
+                        .packageName("com.android.vending")
+                        .description(("Install")))
                 .waitForExists(10L);
     }
 
@@ -328,7 +397,7 @@ public class PlayStoreUtil {
      * Opens the Parental Controls menu
      */
     private static void openParentalControls(UiDevice testDevice) throws Exception {
-        String playStoreUser = "demo.sysimg.user1@gmail.com";
+        String playStoreUser = GoogleAppUtil.getUserEmail();
 
         if (api >= 30) {
             UiObject signedInAs = testDevice.findObject(
@@ -352,20 +421,26 @@ public class PlayStoreUtil {
         final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
         final UiSelector settingsSelector = api == 30 ?
                 new UiSelector().description("Settings") : new UiSelector().text("Settings");
-        final UiObject settingsLink = scrollable.getChild(settingsSelector);
-        settingsLink.waitForExists(3L);
-        if (!settingsLink.exists()) {
+        final UiObject settingsScrollableLink = scrollable.getChild(settingsSelector);
+        settingsScrollableLink.waitForExists(3L);
+        if (scrollable.exists() && !settingsScrollableLink.exists()) {
             new Wait().until(() -> {
                 int swipes = 0;
-                while (!settingsLink.exists() && swipes < 20) {
+                while (!settingsScrollableLink.exists() && swipes < 20) {
                     scrollable.flingForward();
                     swipes++;
                 }
-                return settingsLink.exists();
+                return settingsScrollableLink.exists();
             });
         }
-        if (settingsLink.exists()) {
-            settingsLink.clickAndWaitForNewWindow();
+
+        if (settingsScrollableLink.exists()) {
+            settingsScrollableLink.clickAndWaitForNewWindow();
+        } else {
+            UiObject settingsLink = testDevice.findObject(settingsSelector);
+            if (settingsLink.exists()) {
+                settingsLink.clickAndWaitForNewWindow();
+            }
         }
 
         UiObject parentalControlsButton = api >= 30 ?
