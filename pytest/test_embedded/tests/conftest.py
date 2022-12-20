@@ -47,12 +47,14 @@ def pytest_addoption(parser):
     parser.addoption(
         "--emulator",
         action="store",
-        default=shutil.which(
-            "emulator",
-            Path(os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"] or ".")
-            / "emulator"
-            / "emulator",
-        ),
+        default="/Users/jansene/src/emu/external/qemu/objs/emulator",
+        # DO NOT SUBMIT
+        # shutil.which(
+        #     "emulator",
+        #     Path(os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"] or ".")
+        #     / "emulator"
+        #     / "emulator",
+        # ),
         help="The emulator used to run the integration tests against.",
     )
     parser.addoption(
@@ -123,15 +125,15 @@ def pytest_sessionfinish(session, exitstatus):
 # -------------------------------
 # Session wide fixtures are below
 # -------------------------------
-
-
 @pytest.fixture(scope="module")
-@pytest.mark.timeout(600)
-def avd(request, pytestconfig) -> BaseEmulator:
-    """Makes a booted emulator accessible and install the animation apk.
+def emulator(request, pytestconfig) -> BaseEmulator:
+    """Makes a configured emulator available
 
     Note: You usually don't need fixture, as it will be automatically provided
     if you use any of the dependent fixtures.
+
+    See tests/snapshot/test_snaphshot_downloads.py for an example of how
+    you could use this fixture to have fine-grained control of the emulator.
 
     This makes an emulator available with the following default configuration:
     {
@@ -198,17 +200,36 @@ def avd(request, pytestconfig) -> BaseEmulator:
 
         pytest.emulators[name] = emu
 
-    emu = pytest.emulators[name]
+    logging.info("Got the emu object: %s!", pytest.emulators[name])
+    return pytest.emulators[name]
 
-    assert emu != None
+
+@pytest.mark.timeout(600)
+@pytest.fixture
+def avd(emulator: BaseEmulator) -> BaseEmulator:
+    """Makes a booted emulator accessible and with the animation apk installed.
+
+    An emulator gets 600 seconds to boot up.
+
+
+    Args:
+        emulator (BaseEmulator): Test fixture that provides the configured emulator.
+
+    Returns:
+        BaseEmulator: A successfully booted emulator.
+    """
+
+    assert emulator
+    if not emulator.is_alive():
+        emulator.launch(flags=[])
 
     # Make sure the emulator is booted in at least 10 minutes.
     # (Note, boot times can be *REALLY* slow on windows gce..)
-    assert emu.wait_for_boot(600)
+    assert emulator.wait_for_boot(600)
 
-    emu.install_apk(APP_DEBUG_APK.absolute())
-    logging.info("Using %s for module", name)
-    return emu
+    emulator.install_apk(APP_DEBUG_APK.absolute())
+    logging.info("Using %s for module", emulator.configuration.name)
+    return emulator
 
 
 def go_home(avd: BaseEmulator):

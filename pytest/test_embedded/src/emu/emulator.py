@@ -15,9 +15,7 @@ import logging
 import os
 import platform
 import shutil
-import signal
 import subprocess
-import sys
 import time
 from datetime import timedelta
 from pathlib import Path
@@ -26,7 +24,6 @@ from typing import Optional
 
 from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
-from aemu.proto.emulator_controller_pb2 import VmRunState
 from google.protobuf import empty_pb2
 from grpc import RpcError
 
@@ -74,6 +71,7 @@ class BaseEmulator(object):
         self.android_home = android_home.absolute()
         self.android_avd_home = android_avd_home.absolute()
         self.apk_installed = set()
+        self.proc = None
         logging.info(
             "Using android_home: %s, android_avd_home: %s",
             self.android_home,
@@ -113,8 +111,9 @@ class BaseEmulator(object):
             self.description = discovery.first()
 
         if self.description is None:
+            found = ", ".join([f"{x.name()}" for x in discovery.emulators()])
             raise EmulatorNotFoundException(
-                f"No emulator with id: {avd_id} found, did the process terminate?"
+                f"No emulator with id: {avd_id} in [{found}], did the process terminate?"
             )
 
         self.adb = Adb(
@@ -125,6 +124,18 @@ class BaseEmulator(object):
             self.description.pid(),
             self.description.name(),
         )
+
+    def launch(self, flags: [str]) -> bool:
+        """Launches the emulator
+
+        Args:
+            flags (str]): Additional set of flags that should be passed to the launcher
+
+        Returns:
+            bool: True if the emulator was launched and the corresponding discovery
+                  file was written
+        """
+        return True
 
     def stop(self) -> None:
         """Stops the emulator from running"""
@@ -149,21 +160,21 @@ class BaseEmulator(object):
 
         return False
 
-    def wait_for_boot(self, timeout_sec: int = 600) -> bool:
+    def wait_for_boot(self, timeout: int = 600) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
 
         Args:
-            timeout_sec (int, optional): Timeout in seconds. Defaults to 600 seconds.
+            timeout (int, optional): Timeout in seconds. Defaults to 600 seconds.
 
         Returns:
             bool: True if the emulator has booted, False otherwise.
         """
-        timeout = time.time() + timeout_sec
+        timeout = time.time() + timeout
         start = timer()
 
         logging.info(
             "Waiting at most %s seconds for %s to boot",
-            timeout_sec,
+            timeout,
             self.description.name(),
         )
         while not self.has_booted() and time.time() < timeout:
@@ -197,13 +208,12 @@ class BaseEmulator(object):
         if self.telnet:
             self.telnet.stop()
 
-
     def is_alive(self) -> bool:
         """Returns true if we believe the emulator is still alive."""
 
         # We must have killed the emulator..
         if self.description is None:
-            logging.error("No description!")
+            logging.error("No description (not launched yet?)!")
             return False
 
         return self.description.is_alive()
@@ -247,23 +257,15 @@ class DebugEmulator(BaseEmulator):
             self.log = self.logobserver.queue
         self._discover(None)
 
+    def launch(self, flags: [str] = []) -> bool:
+        logging.info("Debug emulators cannot be launched.")
+        return True
+
     def stop(self) -> None:
         self.disconnect()
 
 
 class Emulator(BaseEmulator):
-
-    DEFAULT_ARGS = [
-        # "-qt-hide-window",
-        # "-grpc-use-token",
-        "-idle-grpc-timeout",
-        "300",
-        "-log-detailed",
-        "-gpu",
-        "swiftshader_indirect",
-        "-debug-events",
-        "-debug-grpc",
-    ]
 
     DEFAULT_CONFIG = {
         "api": "31",
@@ -276,7 +278,6 @@ class Emulator(BaseEmulator):
         android_avd_home: Path,
         exe: Path,
         avd_config: dict[str, str],
-        params: list[str] = DEFAULT_ARGS,
     ) -> None:
         """Create and launches the emulator
 
@@ -292,31 +293,9 @@ class Emulator(BaseEmulator):
         avd_gen = AvdWriter(self.android_home, self.android_avd_home)
         if not "abi" in avd_config:
             avd_config["abi"] = self._default_abi()
-        self.avd = avd_gen.create_from_config(avd_config)
-
-        # Setup android sdk/avd etc.
-        local_env = {
-            "ANDROID_AVD_HOME": self.android_avd_home,
-            "ANDROID_SDK_ROOT": self.android_home,
-            "DISPLAY": os.environ.get("DISPLAY", ":0"),
-        }
-
-        self._launch(
-            [
-                shutil.which(exe),
-                "-avd",
-                self.avd,
-                "-verbose",
-                "-show-kernel",
-                "-metrics-collection",  # Make sure we always send crash reports.
-                # "-no-window",
-                "-no-audio",
-                "-debug",
-                "console,snapshot",
-            ]
-            + params,
-            local_env,
-        )
+        self.configuration = avd_gen.create_from_config(avd_config)
+        self.exe = exe
+        self.proc
 
     def __del__(self):
         self.stop()
@@ -335,13 +314,16 @@ class Emulator(BaseEmulator):
         return "x86_64"
 
     def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
-        _, self.log = run(cmd, env)
+        self.proc, self.log = run(cmd, env)
 
         max_wait = 10
         logging.info("Waiting for an emulator to become available..")
         discovery = EmulatorDiscovery()
 
-        while max_wait > 0 and discovery.find_emulator("avd.id", self.avd) is None:
+        while (
+            max_wait > 0
+            and discovery.find_emulator("avd.id", self.configuration) is None
+        ):
             max_wait = max_wait - 1
             logging.info(
                 "Waiting %d more seconds, found %d emulators so far.",
@@ -350,10 +332,50 @@ class Emulator(BaseEmulator):
             )
             time.sleep(1)
 
-        self._discover(self.avd)
+        self._discover(self.configuration.name)
+        return self.is_alive()
 
+    def launch(self, flags: [str] = []) -> bool:
+        """Launches the emulator
 
-    def stop(self, timeout: int = 10) -> None:
+        Args:
+            flags (str]): Additional set of flags that should be passed to the launcher
+
+        Returns:
+            bool: True if the emulator was launched and the corresponding discovery
+                  file was written
+        """
+        # Setup android sdk/avd etc.
+        local_env = {
+            "ANDROID_AVD_HOME": self.android_avd_home,
+            "ANDROID_SDK_ROOT": self.android_home,
+            "DISPLAY": os.environ.get("DISPLAY", ":0"),
+        }
+
+        return self._launch(
+            [
+                shutil.which(self.exe),
+                "-avd",
+                self.configuration.name,
+                "-verbose",
+                "-show-kernel",
+                "-metrics-collection",
+                "-no-audio",
+                "-idle-grpc-timeout",
+                "300",
+                "-log-detailed",
+                "-gpu",
+                "swiftshader_indirect",
+                "-debug-events",
+                "-debug-grpc",
+                "-debug",
+                "console,snapshot",
+            ]
+            + flags,
+            local_env,
+        )
+
+    def stop(self, timeout: int = 30) -> None:
         """Stops the emulator, terminating it does not exits gracefully within the given timeout
 
         Args:
@@ -361,16 +383,15 @@ class Emulator(BaseEmulator):
             Defaults to 10.
         """
         self.disconnect()
-        self.description.shutdown(timeout)
+        if self.description is not None:
+            self.description.shutdown(timeout)
+            # prevent double termination..
+            self.description = None
+
+        # Only needed for the case where we were partially launched
+        # self.description is likely None, and we failed to stop cleanly.
+        if self.proc is not None:
+            self.proc.terminate()
 
     def delete(self) -> None:
-        """Deletes the created avd."""
-        to_remove = self.android_avd_home / f"{self.avd}.ini"
-        to_remove.unlink()
-
-        to_remove = self.android_avd_home / f"{self.avd}.avd"
-        logging.debug("Removing %s", to_remove)
-        try:
-            shutil.rmtree(to_remove.absolute())
-        except OSError:
-            logging.warning("Failed to remove %s", to_remove)
+        self.configuration.delete()

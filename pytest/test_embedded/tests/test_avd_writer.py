@@ -27,8 +27,8 @@ def test_throw_on_unknown_tag(tmp_path):
 
 def test_can_write_avd(tmp_path):
     writer = AvdWriter(avd_home=tmp_path)
-    name = writer.create(abi="arm64-v8a", api="33", tag="google_apis")
+    cfg = writer.create(abi="arm64-v8a", api="33", tag="google_apis")
 
-    assert name == "33_google_apis_arm64-v8a"
-    assert (tmp_path / f"{name}.ini").exists()
-    assert (tmp_path / f"{name}.avd" / "config.ini").exists()
+    assert cfg.name == "33_google_apis_arm64-v8a"
+    assert cfg.avd_ini.exists()
+    assert (cfg.directory / "config.ini").exists()

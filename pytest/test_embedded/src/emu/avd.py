@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A basic emulator launcher."""
+import configparser
 import gzip
 import logging
 import os
@@ -19,6 +20,7 @@ import platform
 import re
 import shutil
 import subprocess
+from itertools import chain
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -217,6 +219,48 @@ class SystemImages:
                 yield fname
 
 
+class AvdConfig:
+    """A simple class that represents a created AVD configuration."""
+
+    def __init__(self, avd_id_ini: Path):
+        """Access to an avd configuration.
+
+        The avd_id_ini file should point to the .ini file in the root
+        for example:
+
+            ~/.android/avd/33.ini
+
+        Args:
+            avd_id_ini (Path): The path to the root ini file.
+        """
+        self.name = avd_id_ini.with_suffix("").name
+        self.avd = self._parse_ini(avd_id_ini)
+        self.avd_ini = avd_id_ini
+        if "path" in self.avd:
+            self.directory = Path(self.avd["path"])
+        else:
+            self.directory = avd_id_ini.parent / self.avd["path.rel"]
+        self.hardware = self._parse_ini(self.directory / "config.ini")
+
+    def _parse_ini(self, simple_ini_file: Path) -> configparser.SectionProxy:
+        config_parser = configparser.ConfigParser()
+        with open(simple_ini_file, "r") as ini_file:
+            lines = chain(("[emu]\n",), ini_file)  # This line does the trick.
+            config_parser.read_file(lines)
+
+        return config_parser["emu"]
+
+    def delete(self) -> None:
+        """Deletes the created avd."""
+        self.avd_ini.unlink()
+
+        logging.debug("Removing %s", self.directory)
+        try:
+            shutil.rmtree(self.directory.absolute())
+        except OSError:
+            logging.warning("Failed to remove %s", self.directory)
+
+
 class AvdWriter:
     """An AvdWriter is able write an avd configuration.
 
@@ -291,7 +335,7 @@ class AvdWriter:
 
     def _create_avd(
         self, api: str, abi: str, tag: str, name: str, custom_cfg: dict[str, str]
-    ) -> None:
+    ) -> AvdConfig:
         avd = self.sys_imgs.find_and_unpack(api, abi, tag)
         if not avd:
             logging.warning(
@@ -308,8 +352,9 @@ class AvdWriter:
 
         self.writer.write_template("Pixel2.ini", avd, f"{name}.ini")
         self._write_config_ini(name, avd, custom_cfg)
+        return AvdConfig(self.avd_home / f"{name}.ini")
 
-    def create_from_config(self, config: dict[str, str]) -> str:
+    def create_from_config(self, config: dict[str, str]) -> AvdConfig:
         """Create a basic avd using the given configuration
 
         The configuration should have the following entries:
@@ -329,7 +374,7 @@ class AvdWriter:
             config (dict[str, str]): _description_
 
         Returns:
-            str: _description_
+            AvdConfig: The avd configuration
         """
         abi = config["abi"]
         tag = config["tag.id"]
@@ -348,8 +393,7 @@ class AvdWriter:
         }
         avd_cfg.update(config)
 
-        self._create_avd(api, abi, tag, name, avd_cfg)
-        return name
+        return self._create_avd(api, abi, tag, name, avd_cfg)
 
     def create(self, api: str, abi: str, tag: str = "google_apis") -> str:
         """Create a basic avd using the given api, abi and tag.
@@ -362,6 +406,6 @@ class AvdWriter:
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv
 
         Returns:
-            str: The name of the avd that can be launched by the emulator.
+            AvdConfig: The avd configuration that can be used to launch the emulator
         """
         return self.create_from_config({"abi": abi, "api": api, "tag.id": tag})
