@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2022 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -177,6 +178,7 @@ def emulator(request, pytestconfig) -> BaseEmulator:
         "api": "31",
         "tag.id": "google_apis",
         "cpu": system_cpu(),
+        "avd.ini.displayname": "°º¤ø,¸¸,ø¤º°`°º¤ø, UTF-8 ¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸"
     }
     avd_user_config = getattr(request.module, "avd_config", {})
     avd_config.update(avd_user_config)
