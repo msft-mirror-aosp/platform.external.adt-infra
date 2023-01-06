@@ -24,6 +24,11 @@
 # Sanitize environment
 export LANG=C
 export LC_ALL=C
+TIMEOUT=5400  # overrides the default 2700 seconds timeout. If empty, defaults to 2700.
+
+if [ -z "${SHOW_LOGD}" ]; then
+    SHOW_LOGD="true"  # Print additional debug messages.
+fi
 
 if [ -z "$_SHU_PROGDIR" ]; then
     _SHU_PROGDIR=$(dirname "$0")
@@ -45,6 +50,13 @@ else
     _YELLOW=
     _RESET=
 fi
+
+# Print a debug message to the standard error if $SHOW_LOGD is 'true'
+logd() {
+    if [ "$SHOW_LOGD" = "true" ]; then
+        dump_n -10 "@0" >&2
+    fi
+}
 
 log2err () {
     log "$@" >&2
@@ -105,8 +117,9 @@ get_verbosity () {
 dump_n () {
     local LEVEL=$1
     shift
+    local cmd="$@"
     if [ "$LEVEL" -lt "$_SHU_VERBOSE" ]; then
-        printf '%s %s\n' "$(date '+%H:%M:%S,%3N')" "$@";
+        printf '%s %s\n' "$(date '+%H:%M:%S,%3N')" "${cmd}";
     fi
 }
 
@@ -509,34 +522,92 @@ log_invocation() {
 
 run_timeout() {
     # Runs the given command with the given timeout, logging all output to
-    # stderr
+    # stderr.
+    #
+    # Within the given timeout, checks for the existence of the process at
+    # regular intervals.
     #
     # $1 Timeout in seconds after which a kill -9 signal will be sent.
-    # $@ Command to be executed.
-    # Sets the STATUS variable to 1 in case of timeout.
-    local time=$1
-    shift
-    local cmd=$@
-
-    log2err "${_GREEN}COMMAND: ${time} seconds for  ${cmd}${_RESET}"
-    # The idea is to launch a command in a subshell, record the pid
-    # of the subshell, and send it the kill signal after x seconds
-    #
-    # To determine the PID of the subshell we execute:
-    # (cmdpid=$(exec sh -c 'echo $PPID');)
-    # This is posix compliant way of getting the proper pid (we get the parent
-    # pid of a sub sub shell). Next we use this to observe the running process.
-    #
-    # The subshell will produce the standard exit code or 137 in case the kill
-    # -9 arrived at itself.
-    (cmdpid=$(exec sh -c 'echo $PPID'); (sleep $time; kill -9 $cmdpid >/dev/null 2>&1) & exec ${cmd})
-
-    # see https://tldp.org/LDP/abs/html/exitcodes.html
-    # kill -9 results in 137 (128+9)
-    if  [[ $? -eq 137 ]]; then
-        STATUS=1
-        warn "Command timed out!"
+    # $@ Command to be executed.    
+    local timeout
+    if [ -n "${TIMEOUT}" ]; then
+        timeout="${TIMEOUT}"
+    else
+        timeout=$1
     fi
+    
+    shift
+    declare -i interval=1  # Interval between checks if the process is still alive.
+    declare -i delay=1  # Delay between the posting of the signals SIGTERM and SIGKILL.
+
+    log2err "${_GREEN}COMMAND: ${timeout} seconds for  $@${_RESET}"
+    logd "${_GREEN}run_timeout: ${timeout} seconds for executing '"$@"${_RESET}'"
+    logd "run_timeout: called run_timeout from parent PID $PPID"
+
+        (
+            pid=$(exec sh -c 'echo $PPID')  # PID of the subshell
+            logd "run_timeout: entered subshell (PID $pid) on which the command will run."
+
+            (
+                pid_subsubshell="$(exec sh -c 'echo $PPID')"
+                logd "run_timeout: entered detached subshell (PID "${pid_subsubshell}") for the sleep function."
+                ((t = timeout))
+
+                # Wait timeout (t) seconds before posting the SIGTERM and SIGKILL signals.
+                logd "run_timeout: waiting the ${timeout}s timeout has started ..."
+                while ((t > 1)); do
+                    sleep $interval
+                    # Check every $interval seconds for the existence of the process with PID $pid.
+                    # If $pid doesn't exist, (e.g. process terminated), 'exit 0' quits the subshell.
+                    kill -0 $pid > /dev/null 2>&1
+                    if [ $? -eq 1 ]; then
+                        logd "run_timeout: killing PID $pid no more possible. Exiting subshell "${pid_subsubshell}"."
+                        exit 0
+                    fi
+                    ((t -= interval))
+                done
+
+                # SIGTERM (15) is called first. Then SIGKILL (9).
+                # `kill -0 $pid` checks if it is possible to kill the process.
+                # `exit 0` will be executed if any of the previous commands fail.
+                logd "run_timeout: reached timeout of ${timeout}s. Killing process $pid."
+                logd "run_timeout: sending SIGTERM to process $pid"
+
+                kill -15 $pid > /dev/null 2>&1
+                kill -0 $pid > /dev/null 2>&1
+
+                if [ $? -eq 1 ]; then
+                    exit 0  # Exiting subshell
+                fi
+                sleep $delay
+
+                logd "run_timeout: sending SIGKILL to process $pid"
+                kill -9 $pid > /dev/null 2>&1
+            ) &
+
+            exec $(eval "$@")
+        )
+
+        # kill -9 (SIGKILL) results in 137 (128+9).
+        # kill -15 (SIGTERM) results in 143 (128+15).
+        if [[ $? -eq 137 || $? -eq 143 ]]; then
+            STATUS=1
+            warn "Command timed out after $timeout seconds!"
+            logd "run_timeout: command "$@" timed out after $timeout seconds!"
+        fi
+
+        while { kill -0 $pid > /dev/null 2>&1; } do
+            sleep 1;
+        done
+        logd "run_timeout: command terminated successfully!"
+
+        # Double check if there is a sleep process with timeout $timeout_seconds.
+        local pid_sleep="$(pgrep sleep -a | grep -w "sleep "$timeout"" | cut -d' ' -f1)"
+        if [ -z "${pid_sleep}" ]; then
+            logd "run_timeout: no sleep processes with timeout ${timeout}s detected."
+        else
+            logd "run_timeout: there is still a sleep process alive (PID "${pid_sleep}")"
+        fi
 }
 
 run_test() {
