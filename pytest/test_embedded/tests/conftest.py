@@ -228,7 +228,6 @@ def avd(emulator: BaseEmulator) -> BaseEmulator:
     assert emulator.wait_for_boot(600)
 
     emulator.install_apk(APP_DEBUG_APK.absolute())
-    logging.info("Using %s for module", emulator.configuration.name)
     return emulator
 
 
