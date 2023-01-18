@@ -15,12 +15,12 @@
 
 # We do our own error handling
 set +e
+VERBOSE=3
 . $(dirname "$0")/shell/utils/common.sh
 
 # Make sure we stop adb, and exit our virtual env.
 trap "terminate_adb" EXIT QUIT INT HUP
 
-_SHU_VERBOSE=3
 AOSP_DIR=$(
     cd $(dirname $0)/../../../..
     pwd

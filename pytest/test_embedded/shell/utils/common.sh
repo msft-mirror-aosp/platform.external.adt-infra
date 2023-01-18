@@ -594,7 +594,7 @@ run_timeout() {
                 kill -9 $pid > /dev/null 2>&1
             ) &
 
-            exec $(eval "$@")
+            eval "$@"
         )
 
         # kill -9 (SIGKILL) results in 137 (128+9).
