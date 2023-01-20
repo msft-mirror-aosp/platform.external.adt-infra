@@ -55,7 +55,7 @@ fi
 # Print a debug message to the standard error if $SHOW_LOGD is 'true'
 logd() {
     if [ "$SHOW_LOGD" = "true" ]; then
-        dump_n -10 "@0" >&2
+        dump_n -10 "$@" >&2
     fi
 }
 
