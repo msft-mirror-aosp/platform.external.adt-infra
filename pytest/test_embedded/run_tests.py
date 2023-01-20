@@ -16,7 +16,6 @@ import logging
 import os
 import platform
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 from queue import Queue
@@ -71,7 +70,24 @@ def _log_proc(proc):
     return q
 
 
-def run(cmd, cwd=None, extra_env=None):
+def run(cmd, cwd=None, extra_env=None, timeout=1200):
+    """Runs a command in the shell. It takes in a command to execute,
+    a working directory where the command will be executed,
+    environment variables and a timeout value.
+
+    Args:
+        cmd (_type_): A list of strings representing the command and its arguments
+                that will be executed in the shell.
+        cwd (_type_, optional):  The working directory where the command will be
+                executed. If not provided, the current working directory will be used.
+        extra_env (_type_, optional): A dictionary of extra environment variables that
+                will be added to the environment before running the command.
+        timeout (int, optional): The maximum time (in seconds) to wait for the command
+                to finish before it is terminated. Defaults to 1200.
+
+    Raises:
+        Exception: Raises an exception if the command fails to execute.
+    """
     if not cwd:
         cwd = os.getcwd()
     cwd = os.path.abspath(cwd)
@@ -81,35 +97,49 @@ def run(cmd, cwd=None, extra_env=None):
     # We need to use a shell under windows, to set environment parameters.
     # otherwise we don't, since we will experience cmake invocation errors.
     use_shell = platform.system() == "Windows"
-    local_env = os.environ
+    local_env = os.environ.copy()
     if extra_env:
         local_env.update(extra_env)
 
-    logging.info("Running: %s in %s", " ".join(cmd), cwd)
+    logging.info(
+        "Running: %s in %s for at most %s seconds with %s",
+        " ".join(cmd),
+        cwd,
+        timeout,
+        extra_env,
+    )
     proc = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         cwd=cwd,
-        shell=use_shell,  # Needed on windows, otherwise the environment won't propagate.
+        shell=use_shell,  # Needed on windows
         env=local_env,
     )
 
     _log_proc(proc)
-    proc.wait()
-    if proc.returncode != 0:
-        raise Exception("Failed to run %s - %s" % (" ".join(cmd), proc.returncode))
+    try:
+        proc.wait(timeout=timeout)
+        if proc.returncode != 0:
+            raise Exception("Failed to run %s - %s" % (" ".join(cmd), proc.returncode))
+    except subprocess.TimeoutExpired as te:
+        logging.error(
+            "The command %s timed out after %s seconds, terminating",
+            " ".join(cmd),
+            te.timeout,
+        )
+        proc.terminate()
 
 
 def stop_adb():
     """Stops adb by calling kill-server"""
-    run([ADB, "kill-server"])
+    run([ADB, "kill-server"], timeout=60)
 
 
 def restart_adb():
     """Restarts adb, by stopping the server and restarting it."""
     stop_adb()
-    run([ADB, "start-server"])
+    run([ADB, "start-server"], timeout=60)
 
 
 def resolve_emulator(emulator: str) -> Path:
@@ -123,16 +153,114 @@ def resolve_emulator(emulator: str) -> Path:
     if emu.exists():
         return emu
 
-    assert (
-        False
-    ), "f{emulator} poinst to a non existent path (are you passing the right path to the --emulator flag?)"
+    assert False, (
+        "f{emulator} poinst to a non existent path (are you passing the right path to"
+        + " the --emulator flag?"
+    )
 
 
-def apply_xslt(source: Path, xslt: Path, dest: Path):
-    try:
+class PyRunner:
+    """A utility class that helps to run Python commands and install packages within
+    a specified repository."""
+
+    def __init__(self, repo):
+        self.repo = repo
+        self.env = {
+            "ANDROID_SDK_ROOT": str(ANDROID_SDK_ROOT),
+            "ANDROID_HOME": str(ANDROID_SDK_ROOT),
+        }
+        if platform.system() == "Windows":
+            run(
+                [
+                    PYTHON,
+                    AOSP_ROOT / "external" / "adt-infra" / "devpi" / "get-pip.py",
+                    "--no-wheel",
+                    "--no-setuptools",
+                    "--index-url",
+                    f"{repo}",
+                ],
+            )
+            self.py_exe = PYTHON
+
+        else:
+            self.tmp = tempfile.TemporaryDirectory()
+            tmpdir = Path(self.tmp.name)
+            run(
+                [
+                    PYTHON,
+                    "-m",
+                    "venv",
+                    tmpdir / ".venv",
+                ],
+            )
+
+            self.py_exe = tmpdir / ".venv" / "bin" / "python"
+            self.pip_exe = tmpdir / ".venv" / "bin" / "pip3"
+            self.env["VIRTUAL_ENV"] = str(tmpdir / ".venv")
+
+        self.run(
+            ["-m", "pip", "install", "--upgrade", "pip", "--index-url", f"{self.repo}"]
+        )
+
+    def run(
+        self, args: [str], env: dict[str, str] = {}, timeout: int = 300, cwd=os.getcwd()
+    ):
+        """This method runs a Python command with the specified arguments, environment variables, and timeout.
+
+        Args:
+            args (str]): Set of arguments to give to python interpreter
+            env (dict[str, str]): Optional environment to use
+            timeout (int): Optional timeout in seconds to use.
+        """
+        emu_env = self.env.copy()
+        emu_env.update(env)
+        logging.info("Using %s from %s", emu_env, self.env)
         run(
+            [self.py_exe] + args,
+            timeout=timeout,
+            extra_env=emu_env,
+            cwd=cwd,
+        )
+
+    def pip_install(self, packages: [str]):
+        """installs the specified packages using pip"
+
+        Args:
+            packages (str]): The set of packages to install
+        """
+        if platform.system() == "Windows":
+            self.run(
+                ["-m", "pip", "install", "--upgrade", "--index-url", f"{self.repo}"]
+                + packages,
+                timeout=300,
+            )
+        else:
+            run(
+                [self.pip_exe, "install", "--upgrade", "--index-url", f"{self.repo}"]
+                + packages,
+                timeout=300,
+                extra_env=self.env,
+            )
+
+
+def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
+    """Applies a specified XSLT file to an XML file and saves the result to a specified
+    destination.
+
+
+    Args:
+        python_exe (PyRunner): The path to the Python executable that will be used
+                to run the transform script.
+        source (Path): The path to the Python executable that will be used to run
+                the transform script.
+        xslt (Path): The path to the XSLT file that will be used to transform
+                the XML file.
+        dest (Path): The path to the destination file where the result of the
+                transformation will be saved.
+    """
+    try:
+        python_exe.run(
             [
-                PYTHON,
                 f"{HERE}/src/xml/transform.py",
                 "--xml",
                 source,
@@ -140,70 +268,43 @@ def apply_xslt(source: Path, xslt: Path, dest: Path):
                 xslt,
                 "--out",
                 dest,
-            ]
+            ],
+            timeout=10,
         )
-    except:
-        logging.error("Failed to apply xslt: %s to %s")
+    except Exception as err:
+        logging.error("Failed to apply xslt: %s to %s due to (%s)", xslt, source, err)
 
 
-def run_under_windows(args):
-    if args.generate:
-        repo = "http://localhost:3141/packages/stable"
-    else:
-        repo = AOSP_ROOT / "external" / "adt-infra" / "devpi" / "repo" / "simple"
+def run_tests(
+    args,
+    pyrun: PyRunner,
+):
+    """runs tests on an emulator. It installs necessary packages, restarts adb,
+    runs pytest and converts the results to a junit xml and HTML files.
 
+    Args:
+        args (_type_): The arguments passed to the script. It is expected that it has a
+            field emulator which is used to resolve the emulator.
+        python_executable (Path):  The path to the Python executable that will be
+            used to run the test and packages.
+        pip_repository (Path):  The URL of the pip repository that will be used to
+            install packages.
+        tmpdir (Path): The path to the temporary directory where intermediate files will be stored.
+        env: The additional envirornment
+    """
     # sanity checks
-    emulator = resolve_emulator(args.emulator)
+    emulator = str(resolve_emulator(args.emulator))
 
-    # Install pip, because of course we don't have it in windows
-    run(
-        [
-            PYTHON,
-            AOSP_ROOT / "external" / "adt-infra" / "devpi" / "get-pip.py",
-            "--no-wheel",
-            "--no-setuptools",
-            "--index-url",
-            f"{repo}",
-        ],
-    )
-
-    run(
-        [
-            PYTHON,
-            "-m",
-            "pip",
-            "install",
-            "--upgrade",
-            "--index-url",
-            f"{repo}",
-            AEMU_GRPC,
-            SNAPTOOL,
-        ],
-    )
-    run(
-        [
-            PYTHON,
-            "-m",
-            "pip",
-            "install",
-            "--verbose",
-            "--upgrade",
-            "--index-url",
-            f"{repo}",
-            "-e",
-            HERE,
-        ],
-    )
+    pyrun.pip_install([AEMU_GRPC, SNAPTOOL, HERE])
     restart_adb()
 
-    session_dir = Path(args.session) / "embedded_test" / "log"
-    session_dir.mkdir(exist_ok=True, parents=True)
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        junit_test_results = Path(tmpdirname) / "test_unit.xml"
+    logdir = Path(args.logdir) / "embedded_test" / "log"
+    logdir.mkdir(exist_ok=True, parents=True)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        junit_test_results = Path(tmpdir) / "test_unit.xml"
         try:
-            run(
+            pyrun.run(
                 [
-                    PYTHON,
                     "-m",
                     "pytest",
                     "-vv",
@@ -213,56 +314,60 @@ def run_under_windows(args):
                     # Boot times in windows can be 6 mins, so lets give us 20 minutes
                     # of testing time before we give up.
                     "--timeout=1200",
-                    f"--log-file={args.session}/embedded_test/log/pytest.log",
+                    f"--log-file={args.logdir}/embedded_test/log/pytest.log",
                     f"--emulator={emulator}",
-                    f"--android_avd_home={tmpdirname}",
+                    f"--android_avd_home={tmpdir}",
                     f"--android_home={ANDROID_SDK_ROOT}",
                 ],
                 cwd=HERE,
-                extra_env={
-                    "ANDROID_SDK_ROOT": str(ANDROID_SDK_ROOT),
-                    "ANDROID_HOME": str(ANDROID_SDK_ROOT),
+                env={
                     "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
-                    "ANDROID_AVD_HOME": tmpdirname,
+                    "ANDROID_AVD_HOME": str(tmpdir),
                 },
+                timeout=1210,  # Give pytest a chance to "nicely" terminate everything.
             )
         finally:
             if junit_test_results.exists():
                 apply_xslt(
+                    python_exe=pyrun,
                     source=junit_test_results,
                     xslt=HERE / "cfg" / "liftSystemOut.xslt",
-                    dest=Path(args.session)
-                    / "embedded_test"
-                    / "test_embedded_test.xml",
+                    dest=Path(args.logdir) / "embedded_test" / "test_embedded_test.xml",
                 )
                 apply_xslt(
+                    python_exe=pyrun,
                     source=junit_test_results,
                     xslt=HERE / "cfg" / "asHtml.xslt",
-                    dest=Path(args.session) / "test_report.html",
+                    dest=Path(args.logdir) / "test_report.html",
                 )
-
-
-def run_under_posix():
-    """Runs the run_tests.sh"""
-    run([Path(HERE) / "run_tests.sh"] + sys.argv[1:], HERE)
 
 
 def main():
     parser = argparse.ArgumentParser(
         usage="A simple test launcher for the emulator e2e tests."
     )
+
     parser.add_argument(
         "-e",
         "--emulator",
         dest="emulator",
         help="Path to the emulator binary that is used for running the tests.",
     )
+
     parser.add_argument(
         "-s",
         "--session_dir",
         default=os.getcwd(),
         dest="session",
         help="Session directory used by the build bot, this is were all the .zip files can be found.",
+    )
+
+    parser.add_argument(
+        "-l",
+        "--logdir",
+        default=Path(os.getcwd()),
+        dest="logdir",
+        help="The directory where the logs should be placed, defaults .",
     )
 
     parser.add_argument(
@@ -286,10 +391,14 @@ def main():
     lvl = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=lvl)
 
-    if platform.system() == "Windows":
-        run_under_windows(args)
+    if args.generate:
+        repo = "http://localhost:3141/packages/stable"
     else:
-        run_under_posix()
+        repo = AOSP_ROOT / "external" / "adt-infra" / "devpi" / "repo" / "simple"
+        repo = f"file://{repo}"
+
+    py_exe = PyRunner(repo)
+    run_tests(args, pyrun=py_exe)
 
 
 if __name__ == "__main__":
