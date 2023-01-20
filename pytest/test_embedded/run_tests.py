@@ -170,6 +170,7 @@ class PyRunner:
             "ANDROID_HOME": str(ANDROID_SDK_ROOT),
         }
         if platform.system() == "Windows":
+            self._fixup_windows_py3_dll()
             run(
                 [
                     PYTHON,
@@ -221,6 +222,18 @@ class PyRunner:
             extra_env=emu_env,
             cwd=cwd,
         )
+
+    def _fixup_windows_py3_dll(self):
+        # Fixup incorrect dll in windows see b/265843618.
+        py310dll = PYTHON_DIR / "python310.dll"
+        py3dll = PYTHON_DIR / "Python3.dll"
+        assert (
+            py310dll
+        ).exists(), (
+            "python310.dll does not exist, did you upgrade the python interpreter?"
+        )
+        if not py3dll.exists():
+            py3dll.symlink_to(py310dll)
 
     def pip_install(self, packages: [str]):
         """installs the specified packages using pip"
