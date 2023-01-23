@@ -37,6 +37,7 @@ tar -xf %BUILD_DIR%\sdk-repo-windows-emulator-%BUILD_NUMBER%.zip -C %SESSION_DIR
 
 echo "Run prebuilts\python\windows-x86\python.exe external\adt-infra\pytest\test_embedded\run_tests.py --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --session_dir %SESSION_DIR%"
 prebuilts\python\windows-x86\python.exe external\adt-infra\pytest\test_embedded\run_tests.py --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator.exe --session_dir %SESSION_DIR%  --logdir $SESSION_DIR/testlogs
+set TEST_EXIT=%error_level%  --logdir $SESSION_DIR/testlogs
 
 echo "Remove deployed emulator"
 echo "Run rmdir /s /q %SESSION_DIR%\emu-master-dev"
@@ -48,4 +49,4 @@ for /f %%d in ('dir /b C:\buildbot\prebuilt') do (rmdir /s /q C:\buildbot\prebui
 echo "Cleanup empty files"
 for /f %%d in ('dir /s /b /A:-D %SESSION_DIR%') do (if %%~zd==0 del %%d)
 
-exit 0
+exit /b %TEST_EXIT%
