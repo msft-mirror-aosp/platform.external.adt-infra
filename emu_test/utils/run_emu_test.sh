@@ -57,7 +57,7 @@ cleanup_emulator() {
 deploy_emulator
 
 # Run the tests, that STATUS variable will contain success/failure.
-run_test "Embedded tests" $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator
+$AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --logdir $SESSION_DIR/testlogs
 
 cleanup_emulator
 exit 0
