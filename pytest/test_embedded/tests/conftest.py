@@ -48,14 +48,12 @@ def pytest_addoption(parser):
     parser.addoption(
         "--emulator",
         action="store",
-        default="/Users/jansene/src/emu/external/qemu/objs/emulator",
-        # DO NOT SUBMIT
-        # shutil.which(
-        #     "emulator",
-        #     Path(os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"] or ".")
-        #     / "emulator"
-        #     / "emulator",
-        # ),
+        default=shutil.which(
+            "emulator",
+            Path(os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"] or ".")
+            / "emulator"
+            / "emulator",
+        ),
         help="The emulator used to run the integration tests against.",
     )
     parser.addoption(
