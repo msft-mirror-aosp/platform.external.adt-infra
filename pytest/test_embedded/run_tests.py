@@ -52,6 +52,10 @@ else:
     ADB = ADB.with_suffix(".exe")
 
 
+class NoXServer(Exception):
+    pass
+
+
 def _reader(pipe, logfn):
     try:
         with pipe:
@@ -182,7 +186,6 @@ class PyRunner:
                 ],
             )
             self.py_exe = PYTHON
-
         else:
             self.tmp = tempfile.TemporaryDirectory()
             tmpdir = Path(self.tmp.name)
@@ -199,9 +202,62 @@ class PyRunner:
             self.pip_exe = tmpdir / ".venv" / "bin" / "pip3"
             self.env["VIRTUAL_ENV"] = str(tmpdir / ".venv")
 
+        if platform.system() == "Linux":
+            try:
+                display = self._get_X_Display()
+            except NoXServer as xerr:
+                logging.warning(
+                    "No X server available (%s), attemtping to launch a vnc server",
+                    xerr,
+                )
+                subprocess.check_call("vncserver")
+                display = self._get_X_Display()
+
+            self.env["DISPLAY"] = display
+
         self.run(
             ["-m", "pip", "install", "--upgrade", "pip", "--index-url", f"{self.repo}"]
         )
+
+    def _is_x_running(self, display: str) -> bool:
+        """Checks if X server is running on specific display
+
+        Args:
+          display (str): the display name
+
+        Return:
+          bool: True if X is running, False otherwise
+        """
+        return (
+            subprocess.run(
+                ["xset", "-display", display, "-q"],
+            ).returncode
+            == 0
+        )
+
+    def _get_X_Display(self) -> str:
+        """Finds a working DISPLAY environment variable that is backed by a working
+        X Server. This can launch a VNCServer if needed.
+
+        Raises:
+            NoXServer: If no working X server can be found.
+
+        Returns:
+            str: Value for the DISPLAY environment variable (i.e. ":XDISPLAY")
+        """
+        xdir = Path("/tmp/.X11-unix")
+        if not xdir.exists():
+            raise NoXServer(
+                f"The directory {xdir} does not exist, no X server available."
+            )
+
+        for xdisplay in xdir.glob("X*"):
+            display = f":{xdisplay.name[1:]}"
+            logging.info("Checking to see if X11 is available at DISPLAY=%s", display)
+            if self._is_x_running(display):
+                return display
+
+        raise NoXServer("Unable to find a working XServer")
 
     def run(
         self, args: [str], env: dict[str, str] = {}, timeout: int = 300, cwd=os.getcwd()
@@ -209,7 +265,7 @@ class PyRunner:
         """This method runs a Python command with the specified arguments, environment variables, and timeout.
 
         Args:
-            args (str]): Set of arguments to give to python interpreter
+            args ([str]): Set of arguments to give to python interpreter
             env (dict[str, str]): Optional environment to use
             timeout (int): Optional timeout in seconds to use.
         """
@@ -239,7 +295,7 @@ class PyRunner:
         """installs the specified packages using pip"
 
         Args:
-            packages (str]): The set of packages to install
+            packages ([str]): The set of packages to install
         """
         if platform.system() == "Windows":
             self.run(
