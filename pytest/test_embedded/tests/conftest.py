@@ -48,12 +48,6 @@ def pytest_addoption(parser):
     parser.addoption(
         "--emulator",
         action="store",
-        default=shutil.which(
-            "emulator",
-            Path(os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"] or ".")
-            / "emulator"
-            / "emulator",
-        ),
         help="The emulator used to run the integration tests against.",
     )
     parser.addoption(
@@ -176,7 +170,7 @@ def emulator(request, pytestconfig) -> BaseEmulator:
         "api": "31",
         "tag.id": "google_apis",
         "cpu": system_cpu(),
-        "avd.ini.displayname": "°º¤ø,¸¸,ø¤º°`°º¤ø, UTF-8 ¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸"
+        "avd.ini.displayname": "°º¤ø,¸¸,ø¤º°`°º¤ø, UTF-8 ¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸",
     }
     avd_user_config = getattr(request.module, "avd_config", {})
     avd_config.update(avd_user_config)
@@ -191,10 +185,20 @@ def emulator(request, pytestconfig) -> BaseEmulator:
                 logfile=pytestconfig.getoption("debug_emulator_log"),
             )
         else:
+            exe = pytestconfig.getoption("emulator")
+            if exe is None:
+                logging.warning(
+                    "--emulator not flag present, trying default build directory."
+                )
+                AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
+                exe = shutil.which(
+                    "emulator", path=AOSP_ROOT / "external" / "qemu" / "objs"
+                )
+
             emu = Emulator(
                 android_home=Path(pytestconfig.getoption("android_home")),
                 android_avd_home=Path(pytestconfig.getoption("android_avd_home")),
-                exe=Path(pytestconfig.getoption("emulator")),
+                exe=exe,
                 avd_config=avd_config,
             )
 
