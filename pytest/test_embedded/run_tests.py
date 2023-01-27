@@ -16,8 +16,10 @@ import logging
 import os
 import platform
 import subprocess
+import shutil
 import sys
 import tempfile
+from zipfile import ZipFile, ZipInfo
 from pathlib import Path
 from queue import Queue
 from threading import Thread
@@ -55,6 +57,29 @@ else:
 
 class NoXServer(Exception):
     pass
+
+
+class BuildDirectoryNotFound(Exception):
+    pass
+
+
+class JavaNotFound(Exception):
+    pass
+
+
+class ZipFileWithAttr(ZipFile):
+    """Python does not set the file attributes properly."""
+
+    def _extract_member(self, member, targetpath, pwd):
+        if not isinstance(member, ZipInfo):
+            member = self.getinfo(member)
+
+        targetpath = super()._extract_member(member, targetpath, pwd)
+
+        attr = member.external_attr >> 16
+        if attr != 0:
+            os.chmod(targetpath, attr)
+        return targetpath
 
 
 def _reader(pipe, logfn):
@@ -164,6 +189,43 @@ def resolve_emulator(emulator: str) -> Path:
     )
 
 
+class TemporaryEmulatorDeploy:
+    """Deploys the emulator from the build directory, cleaning it up after usage."""
+
+    def __init__(self, build_dir):
+        self.build_dir = Path(build_dir)
+        self.tmp = tempfile.TemporaryDirectory()
+
+        if not self.build_dir.exists():
+            raise BuildDirectoryNotFound(
+                f"{self.build_dir} does not exist, are you launching the scripts from {AOSP_ROOT}?"
+            )
+
+    def _find_dist_zip(self):
+        valid_targets = {
+            "linux": ["linux", "linux_aarch64"],
+            "darwin": [
+                "darwin_aarch64",
+                "darwin",
+            ],
+            "windows": ["windows"],
+        }
+        for target in valid_targets[OS_NAME]:
+            for option in self.build_dir.glob(f"sdk-repo-{target}-emulator-*.zip"):
+                return option
+
+    def __enter__(self):
+        emu_master_dev = Path(self.tmp.__enter__()) / "emu-master-dev"
+        emu_master_dev.mkdir(parents=True, exist_ok=True)
+        sdk_repo = ZipFileWithAttr(self._find_dist_zip())
+        logging.info("Extracting %s to %s", sdk_repo.filename, emu_master_dev)
+        sdk_repo.extractall(path=emu_master_dev)
+        return shutil.which("emulator", path=emu_master_dev / "emulator")
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self.tmp.__exit__(exc_type, exc_value, tb)
+
+
 class PyRunner:
     """A utility class that helps to run Python commands and install packages within
     a specified repository."""
@@ -173,6 +235,7 @@ class PyRunner:
         self.env = {
             "ANDROID_SDK_ROOT": str(ANDROID_SDK_ROOT),
             "ANDROID_HOME": str(ANDROID_SDK_ROOT),
+            "JAVA_HOME": self._get_java_home(),
         }
         if platform.system() == "Windows":
             self._fixup_windows_py3_dll()
@@ -219,6 +282,28 @@ class PyRunner:
         self.run(
             ["-m", "pip", "install", "--upgrade", "pip", "--index-url", f"{self.repo}"]
         )
+
+    def _get_java_home(self):
+        """Retrieves java home from the active java interpreter."""
+        if not shutil.which("java"):
+            raise JavaNotFound(
+                "No `java` interpreter on the path. Java is required for "
+                + "creating the APK's used by the test."
+            )
+
+        is_windows = platform.system() == "Windows"
+        status = subprocess.run(
+            ["java", "-XshowSettings:properties", "-version"],
+            encoding="utf-8",
+            capture_output=True,
+            shell=is_windows,
+            check=True,
+        )
+        java_home = [
+            line.strip() for line in status.stderr.splitlines() if "java.home" in line
+        ][0]
+
+        return java_home.split("=")[1].strip()
 
     def _is_x_running(self, display: str) -> bool:
         """Checks if X server is running on specific display
@@ -354,25 +439,27 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
 
 
 def run_tests(
-    args,
+    emulator: str,
+    logdir: Path,
     pyrun: PyRunner,
 ):
     """runs tests on an emulator. It installs necessary packages, restarts adb,
     runs pytest and converts the results to a junit xml and HTML files.
 
     Args:
-        args (_type_): The arguments passed to the script. It is expected that it has a
-            field emulator which is used to resolve the emulator.
+
+        emulator (str):    Path to the emulator binary
+        logdir (Path):     The directory where all the logs will be written to
         pyrun (PyRunner):  The python runner used to run python.
     """
     # sanity checks
-    emulator = str(resolve_emulator(args.emulator))
+    emulator = str(resolve_emulator(emulator))
 
     pyrun.pip_install([AEMU_GRPC, SNAPTOOL])
     pyrun.pip_install(["-e", HERE])
     restart_adb()
 
-    logdir = Path(args.logdir) / "embedded_test" / "log"
+    logdir = Path(logdir) / "embedded_test" / "log"
     logdir.mkdir(exist_ok=True, parents=True)
     with tempfile.TemporaryDirectory() as tmpdir:
         junit_test_results = Path(tmpdir) / "test_unit.xml"
@@ -389,7 +476,7 @@ def run_tests(
                     # Boot times in windows can be 6 mins, so lets give us 20 minutes
                     # of testing time before we give up.
                     "--timeout=1200",
-                    f"--log-file={args.logdir}/embedded_test/log/pytest.log",
+                    f"--log-file={logdir}/embedded_test/log/pytest.log",
                     f"--emulator={emulator}",
                     f"--android_avd_home={tmpdir}",
                     f"--android_home={ANDROID_SDK_ROOT}",
@@ -407,13 +494,13 @@ def run_tests(
                     python_exe=pyrun,
                     source=junit_test_results,
                     xslt=HERE / "cfg" / "liftSystemOut.xslt",
-                    dest=Path(args.logdir) / "embedded_test" / "test_embedded_test.xml",
+                    dest=Path(logdir) / "embedded_test" / "test_embedded_test.xml",
                 )
                 apply_xslt(
                     python_exe=pyrun,
                     source=junit_test_results,
                     xslt=HERE / "cfg" / "asHtml.xslt",
-                    dest=Path(args.logdir) / "test_report.html",
+                    dest=Path(logdir) / "test_report.html",
                 )
 
 
@@ -426,15 +513,25 @@ def main():
         "-e",
         "--emulator",
         dest="emulator",
-        help="Path to the emulator binary that is used for running the tests.",
+        help="Path to the emulator binary that is used for running the tests."
+        + "Cannot be used in combination with the --build_dir flag",
+    )
+
+    parser.add_argument(
+        "-b",
+        "--build_dir",
+        dest="build_dir",
+        help="The directory where the emulator distributions can be found. "
+        + "On the buildbots this is usually out/prebuilt_cached/builds. "
+        + "Cannot be used in combination with the --emulator flag",
     )
 
     parser.add_argument(
         "-s",
         "--session_dir",
-        default=os.getcwd(),
-        dest="session",
-        help="Session directory used by the build bot, this is were all the .zip files can be found.",
+        dest="unused",
+        help="** DEPRECATED **. Use --build_dir or --emulator in combination "
+        + "with --logdir. This parameter will be removed soon.",
     )
 
     parser.add_argument(
@@ -442,7 +539,9 @@ def main():
         "--logdir",
         default=Path(os.getcwd()),
         dest="logdir",
-        help="The directory where the logs should be placed, defaults .",
+        help="The directory where the logs should be placed. "
+        + "On the build bots this should be dist_dir/testlogs. "
+        + "Defaults to the current working directory.",
     )
 
     parser.add_argument(
@@ -451,20 +550,25 @@ def main():
         default=False,
         action="store_true",
         dest="generate",
-        help="Use the devpi server to obtain all required packages.",
+        help="Use the devpi server to obtain all required packages. "
+        + "This requires you to launch the devpi server found in "
+        + f"{AOSP_ROOT / 'external' / 'adt_infra' / 'devpi'}",
     )
     parser.add_argument(
         "--verbose",
         dest="verbose",
         default=False,
         action="store_true",
-        help="Verbose logging",
+        help="Enable verbose logging",
     )
 
     args = parser.parse_args()
 
     lvl = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=lvl)
+
+    if args.build_dir and args.emulator:
+        raise Exception("Use either --build_dir or --emulator not both.")
 
     if args.generate:
         repo = "http://localhost:3141/packages/stable"
@@ -477,7 +581,12 @@ def main():
             repo = f"file://{repo}"
 
     py_exe = PyRunner(repo)
-    run_tests(args, pyrun=py_exe)
+
+    if args.build_dir:
+        with TemporaryEmulatorDeploy(args.build_dir) as emulator:
+            run_tests(emulator, args.logdir, pyrun=py_exe)
+    else:
+        run_tests(args.emulator, args.logdir, pyrun=py_exe)
 
 
 if __name__ == "__main__":
