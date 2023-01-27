@@ -16,6 +16,7 @@ import logging
 import os
 import platform
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from queue import Queue
@@ -299,7 +300,15 @@ class PyRunner:
         """
         if platform.system() == "Windows":
             self.run(
-                ["-m", "pip", "install", "--upgrade", "--index-url", f"{self.repo}"]
+                [
+                    "-m",
+                    "pip",
+                    "install",
+                    "--user",
+                    "--upgrade",
+                    "--index-url",
+                    f"{self.repo}",
+                ]
                 + packages,
                 timeout=300,
             )
@@ -341,7 +350,7 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
             timeout=10,
         )
     except Exception as err:
-        logging.error("Failed to apply xslt: %s to %s due to (%s)", xslt, source, err)
+        logging.warning("Failed to apply xslt: %s to %s due to (%s)", xslt, source, err)
 
 
 def run_tests(
@@ -354,17 +363,13 @@ def run_tests(
     Args:
         args (_type_): The arguments passed to the script. It is expected that it has a
             field emulator which is used to resolve the emulator.
-        python_executable (Path):  The path to the Python executable that will be
-            used to run the test and packages.
-        pip_repository (Path):  The URL of the pip repository that will be used to
-            install packages.
-        tmpdir (Path): The path to the temporary directory where intermediate files will be stored.
-        env: The additional envirornment
+        pyrun (PyRunner):  The python runner used to run python.
     """
     # sanity checks
     emulator = str(resolve_emulator(args.emulator))
 
-    pyrun.pip_install([AEMU_GRPC, SNAPTOOL, HERE])
+    pyrun.pip_install([AEMU_GRPC, SNAPTOOL])
+    pyrun.pip_install(["-e", HERE])
     restart_adb()
 
     logdir = Path(args.logdir) / "embedded_test" / "log"
@@ -465,7 +470,11 @@ def main():
         repo = "http://localhost:3141/packages/stable"
     else:
         repo = AOSP_ROOT / "external" / "adt-infra" / "devpi" / "repo" / "simple"
-        repo = f"file://{repo}"
+
+        # Windows cannot handle the file:// url prefix properly (Due to C:\), so
+        # we omit it
+        if platform.system() != "Windows":
+            repo = f"file://{repo}"
 
     py_exe = PyRunner(repo)
     run_tests(args, pyrun=py_exe)
@@ -474,5 +483,11 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    except KeyboardInterrupt:
+        logging.critical("Terminated by user")
+        sys.exit(1)
+    except Exception as exc:
+        logging.critical("Failure during execution", exc_info=exc)
+        sys.exit(1)
     finally:
         stop_adb()

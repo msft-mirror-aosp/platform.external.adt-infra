@@ -29,16 +29,23 @@ echo "Run mkdir %SESSION_DIR%\emu-master-dev"
 set SESSION_DIR=%DISTRIB_DIR%\testlogs
 mkdir %SESSION_DIR%
 mkdir %SESSION_DIR%\emu-master-dev
-
 set BUILD_DIR=out\prebuilt_cached\builds
 
-echo "Run tar -xf %BUILD_DIR%\sdk-repo-windows-emulator-%BUILD_NUMBER%.zip -C %SESSION_DIR%\emu-master-dev\"
-tar -xf %BUILD_DIR%\sdk-repo-windows-emulator-%BUILD_NUMBER%.zip -C %SESSION_DIR%\emu-master-dev\
+call :deploy
 
 echo "Run prebuilts\python\windows-x86\python.exe external\adt-infra\pytest\test_embedded\run_tests.py --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator --session_dir %SESSION_DIR%"
-prebuilts\python\windows-x86\python.exe external\adt-infra\pytest\test_embedded\run_tests.py --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator.exe --session_dir %SESSION_DIR%  --logdir $SESSION_DIR
-set TEST_EXIT=%error_level%  --logdir $SESSION_DIR/testlogs
+prebuilts\python\windows-x86\python.exe external\adt-infra\pytest\test_embedded\run_tests.py --emulator %SESSION_DIR%\emu-master-dev\emulator\emulator.exe --session_dir %SESSION_DIR% --logdir %SESSION_DIR%
+if errorlevel 1 (
+    echo "Failures during test execution!"
+    call :cleanup
+    exit /b 1
+)
 
+call :cleanup
+exit /b 0
+
+:: Function that cleans up any left overs.
+:cleanup
 echo "Remove deployed emulator"
 echo "Run rmdir /s /q %SESSION_DIR%\emu-master-dev"
 rmdir /s /q %SESSION_DIR%\emu-master-dev
@@ -48,5 +55,12 @@ for /f %%d in ('dir /b C:\buildbot\prebuilt') do (rmdir /s /q C:\buildbot\prebui
 
 echo "Cleanup empty files"
 for /f %%d in ('dir /s /b /A:-D %SESSION_DIR%') do (if %%~zd==0 del %%d)
+exit /b 0
 
-exit /b %TEST_EXIT%
+
+:: Function that deploys the actual emulator
+:deploy
+echo "Run tar -xf %BUILD_DIR%\sdk-repo-windows-emulator-%BUILD_NUMBER%.zip -C %SESSION_DIR%\emu-master-dev\"
+tar -xf %BUILD_DIR%\sdk-repo-windows-emulator-%BUILD_NUMBER%.zip -C %SESSION_DIR%\emu-master-dev\
+exit /b 0
+
