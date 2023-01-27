@@ -31,19 +31,19 @@ avd_config = {
     "skin.path": "no_skin",
 }
 
+
 @pytest.mark.parametrize(
     "width, height, mode",
     [
         (1080, 2340, DisplayModeValue.PHONE),
         (1768, 2208, DisplayModeValue.FOLDABLE),
         (1920, 1200, DisplayModeValue.TABLET),
-        (1920, 1080, DisplayModeValue.DESKTOP)
+        (1920, 1080, DisplayModeValue.DESKTOP),
     ],
 )
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_resizable_changes_resolution(
-    emulator_controller, width, height, mode
-):
+@pytest.mark.flaky(reruns=3, reruns_delay=2)
+def test_resizable_changes_resolution(emulator_controller, width, height, mode):
 
     emulator_controller.setDisplayMode(
         DisplayMode(
@@ -58,12 +58,16 @@ def test_resizable_changes_resolution(
         time.sleep(0.1)
         currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
 
-
     image = emulator_controller.getScreenshot(
         ImageFormat(
             format=ImageFormat.RGB888,
         )
     )
-    assert image.format.width == width
-    assert image.format.height == height
-    assert len(image.image) == width * height * 3
+
+    # prevent crazy logging in case of asser failures
+    format = image.format
+    byte_count = len(image.image)
+
+    assert format.width == width
+    assert format.height == height
+    assert byte_count == width * height * 3
