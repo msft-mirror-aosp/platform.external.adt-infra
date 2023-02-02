@@ -314,3 +314,37 @@ def test_rotation_through_console_observable_through_stream_screenshot(
                     break
 
             assert seen_rotation, "Did not observe rotation to {} in time".format(angle)
+
+
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=180, func_only=True)
+def test_rotation_observable_through_screenshot_embedded_mode(
+    at_home, emulator_controller, adb, emulator
+):
+    logging.info("Using %s", emulator)
+
+    emulator.stop()
+    # The emulator is not running
+    assert not emulator.is_alive()
+
+    # We now actually launch the emulator in an embedded mode.
+    assert emulator.launch(flags=["-qt-hide-window"])
+
+    # The emulator kicks of its boot process, this should succeed
+    assert emulator.wait_for_boot(timeout=180)
+
+    for (_, coarse) in ROTATION_MAPPING:
+        adb(["emu", "rotate"])
+        sleep(0.4)
+        img = emulator_controller.getScreenshot(ImageFormat())
+        assert img.format.rotation.rotation == coarse
+
+    # Stops the emulator.
+    emulator.stop()
+
+    # We now launch the emulator, without running in embedded mode
+    assert emulator.launch()
+
+    # The emulator kicks of its boot process, this should succeed
+    assert emulator.wait_for_boot(timeout=180)
+
