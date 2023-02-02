@@ -84,9 +84,11 @@ class ZipFileWithAttr(ZipFile):
 
 def _reader(pipe, logfn):
     try:
-        with pipe:
-            for line in iter(pipe.readline, b""):
-                logfn(line[:-1].decode("utf-8").strip())
+        for line in iter(pipe.readline, ""):
+            try:
+                logfn(line[:-1].strip())
+            except Exception as err:
+                logfn("Unable to log line due to: %s", err)
     finally:
         pass
 
@@ -145,6 +147,7 @@ def run(cmd, cwd=None, extra_env=None, timeout=1200):
         cwd=cwd,
         shell=use_shell,  # Needed on windows
         env=local_env,
+        encoding="utf-8",
     )
 
     _log_proc(proc)
