@@ -18,16 +18,28 @@ import logging
 import signal
 import socket
 import time
-from threading import Thread
+from threading import Thread, Condition
 
 
 class EmulatorConnection(object):
-    """Connects to the emulator telnet console.
+    """
+    Connects to the emulator telnet console and authenticates.
 
-    It will authenticate immediately.
+    The class is designed to handle the telnet connection to an emulator, it
+    has methods for reading and writing to the connection.
     """
 
-    def __init__(self, transport, callback, port):
+    def __init__(self, cv, transport, callback, port):
+        """Initializes the EmulatorConnection object.
+
+        Args:
+            cv (Condition): Condition variable to synchronize access to the connection.
+            transport (socket.socket): The transport to be used for communication.
+            callback (callable): A callable object to be called whenever data is
+                    received from the telnet console.
+            port (int): The port to connect to the emulator.
+        """
+        self.cv = cv
         self.callback = callback
         self.start = time.time()
         self.transport = transport
@@ -44,41 +56,53 @@ class EmulatorConnection(object):
         return self.connected
 
     def auth(self, fname):
-        """Authenticates the user by sending the token in fname
+        """Authenticates to the emulator.
+
+        Sends the authentication token to the emulator.
 
         Args:
-            fname (str): Path to the file containing the token.
+            fname (str): The file path to the file
+                containing the authentication token.
         """
         logging.info("Authenticating using %s", fname)
         with open(fname[1:-1], "r") as authfile:
             token = authfile.read()
             msg = "auth {}".format(token).strip()
-            self.connected = True
+            self._set_connected(True)
             self.send(msg)
 
-    def _data_received(self, data):
-        """Called whenever data has been read from the telnet console
-
-        It will:
-           - Authorize if needed.
-           - Invoke the callback with the received data.
+    def _set_connected(self, connected):
+        """Sets the connection status to the emulator.
 
         Args:
-            data (bytes): Data received from the socket
+            connected (bool): True if connected, False otherwise.
+        """
+        with self.cv:
+            self.connected = connected
+            self.cv.notify()
+
+    def _data_received(self, data):
+        """Handles the data received from the emulator.
+
+        Sends the authentication token if required and invokes
+        the callback with the received data.
+
+        Args:
+            data (bytes): Data received from the emulator.
         """
         msg = data.decode()
         logging.info("Recv: %s", msg)
         # send the auth token if needed
         if self.fstmsg is not None:
             self.fstmsg += msg
-            if (
-                "OK" in self.fstmsg
-                and "Android Console: you can find your <auth_token> in" in self.fstmsg
-            ):
-                lines = [x.strip() for x in self.fstmsg.split("\n")]
-                fname = lines[lines.index("OK") - 1]
+            if "OK" in self.fstmsg:
+                if "Android Console: you can find your <auth_token> in" in self.fstmsg:
+                    lines = [x.strip() for x in self.fstmsg.split("\n")]
+                    fname = lines[lines.index("OK") - 1]
+                    self.auth(fname)
+                else:
+                    self._set_connected(True)
                 self.fstmsg = None
-                self.auth(fname)
 
         # do something with the received data
         if self.callback:
@@ -92,7 +116,7 @@ class EmulatorConnection(object):
             total,
             str(datetime.timedelta(seconds=total)),
         )
-        self.connected = False
+        self._set_connected(False)
 
     def reader(self):
         """Reader thread that received bytest from the emulator and passes it
@@ -142,8 +166,10 @@ class EmulatorConnection(object):
             Thread:  Thread that is running the event loop
         """
         sock = socket.create_connection(("localhost", port))
-        connection = EmulatorConnection(sock, callback, port)
-        t = Thread(target=connection.reader)
-        t.start()
+        connection = EmulatorConnection(Condition(), sock, callback, port)
         signal.signal(signal.SIGINT, lambda: connection.stop())
+
+        with connection.cv:
+            Thread(target=connection.reader).start()
+            connection.cv.wait(1.0)
         return connection
