@@ -29,7 +29,6 @@ import os
 import shutil
 import sys
 from pathlib import Path
-
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
     KeyboardEvent,
@@ -204,7 +203,6 @@ def emulator(request, pytestconfig) -> BaseEmulator:
 
         pytest.emulators[name] = emu
 
-    logging.info("Got the emu object: %s!", pytest.emulators[name])
     return pytest.emulators[name]
 
 
