@@ -204,7 +204,7 @@ class TemporaryEmulatorDeploy:
                 f"{self.build_dir} does not exist, are you launching the scripts from {AOSP_ROOT}?"
             )
 
-    def _find_dist_zip(self):
+    def _find_dist_zip(self, type: str):
         valid_targets = {
             "linux": ["linux", "linux_aarch64"],
             "darwin": [
@@ -214,16 +214,25 @@ class TemporaryEmulatorDeploy:
             "windows": ["windows"],
         }
         for target in valid_targets[OS_NAME]:
-            for option in self.build_dir.glob(f"sdk-repo-{target}-emulator-*.zip"):
+            for option in self.build_dir.glob(f"sdk-repo-{target}-{type}-*.zip"):
                 return option
 
     def __enter__(self):
-        emu_master_dev = Path(self.tmp.__enter__()) / "emu-master-dev"
+        # Extract the emulator
+        emu_master_dev = Path(self.tmp.name) / "emu-master-dev"
         emu_master_dev.mkdir(parents=True, exist_ok=True)
-        sdk_repo = ZipFileWithAttr(self._find_dist_zip())
+        sdk_repo = ZipFileWithAttr(self._find_dist_zip("emulator"))
         logging.info("Extracting %s to %s", sdk_repo.filename, emu_master_dev)
         sdk_repo.extractall(path=emu_master_dev)
-        return shutil.which("emulator", path=emu_master_dev / "emulator")
+
+        # Extract symbols.
+        symbol_path = Path(self.tmp.name) / "symbols"
+        symzip = self._find_dist_zip("breakpad-symbols")
+        if symzip:
+            symbols = ZipFileWithAttr(symzip)
+            symbols.extractall(path=symbol_path)
+
+        return shutil.which("emulator", path=emu_master_dev / "emulator"), symbol_path
 
     def __exit__(self, exc_type, exc_value, tb):
         self.tmp.__exit__(exc_type, exc_value, tb)
@@ -445,6 +454,7 @@ def run_tests(
     emulator: str,
     logdir: Path,
     verbose: bool,
+    symbol_path: Path,
     pyrun: PyRunner,
 ):
     """runs tests on an emulator. It installs necessary packages, restarts adb,
@@ -453,6 +463,7 @@ def run_tests(
     Args:
 
         emulator (str):    Path to the emulator binary
+        symbol_path(Path): Optional path to the symbols that belong with this emulator.
         logdir (Path):     The directory where all the logs will be written to
         verbose: (bool):   True if we should be (very) verbose.
         pyrun (PyRunner):  The python runner used to run python.
@@ -484,7 +495,7 @@ def run_tests(
                     "--timeout=1200",
                     f"--log-file={logdir}/pytest.log",
                     f"--emulator={emulator}",
-                    f"--android_avd_home={tmpdir}",
+                    f"--symbols={symbol_path}" f"--android_avd_home={tmpdir}",
                     f"--android_home={ANDROID_SDK_ROOT}",
                 ],
                 cwd=HERE,
@@ -513,7 +524,7 @@ def run_tests(
 def main():
     parser = argparse.ArgumentParser(
         usage="A simple test launcher for the emulator e2e tests.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.add_argument(
@@ -552,6 +563,12 @@ def main():
     )
 
     parser.add_argument(
+        "--symbols",
+        dest="symbols",
+        help="Path to the directory or zipfile with breakpad symbols",
+    )
+
+    parser.add_argument(
         "-g",
         "--generate",
         default=False,
@@ -561,6 +578,7 @@ def main():
         + "This requires you to launch the devpi server found in "
         + f"{AOSP_ROOT / 'external' / 'adt_infra' / 'devpi'}",
     )
+
     parser.add_argument(
         "--verbose",
         dest="verbose",
@@ -592,10 +610,10 @@ def main():
     py_exe = PyRunner(repo)
 
     if args.build_dir:
-        with TemporaryEmulatorDeploy(args.build_dir) as emulator:
-            run_tests(emulator, args.logdir, args.verbose, pyrun=py_exe)
+        with TemporaryEmulatorDeploy(args.build_dir) as (emulator, symbols):
+            run_tests(emulator, args.logdir, args.verbose, symbols, pyrun=py_exe)
     else:
-        run_tests(args.emulator, args.logdir, args.verbose, pyrun=py_exe)
+        run_tests(args.emulator, args.logdir, args.verbose, args.symbols, pyrun=py_exe)
 
 
 if __name__ == "__main__":
