@@ -479,7 +479,7 @@ def run_tests(
                     # Boot times in windows can be 6 mins, so lets give us 20 minutes
                     # of testing time before we give up.
                     "--timeout=1200",
-                    f"--log-file={logdir}/embedded_test/log/pytest.log",
+                    f"--log-file={logdir}/pytest.log",
                     f"--emulator={emulator}",
                     f"--android_avd_home={tmpdir}",
                     f"--android_home={ANDROID_SDK_ROOT}",
