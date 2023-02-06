@@ -444,6 +444,7 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
 def run_tests(
     emulator: str,
     logdir: Path,
+    verbose: bool,
     pyrun: PyRunner,
 ):
     """runs tests on an emulator. It installs necessary packages, restarts adb,
@@ -453,13 +454,15 @@ def run_tests(
 
         emulator (str):    Path to the emulator binary
         logdir (Path):     The directory where all the logs will be written to
+        verbose: (bool):   True if we should be (very) verbose.
         pyrun (PyRunner):  The python runner used to run python.
     """
     # sanity checks
+    verbose = ["-vvv"] if verbose else []
     emulator = str(resolve_emulator(emulator))
 
-    pyrun.pip_install([AEMU_GRPC, SNAPTOOL])
-    pyrun.pip_install(["-e", HERE])
+    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL])
+    pyrun.pip_install(verbose + ["-e", HERE])
     restart_adb()
 
     logdir = Path(logdir) / "embedded_test" / "log"
@@ -497,7 +500,7 @@ def run_tests(
                     python_exe=pyrun,
                     source=junit_test_results,
                     xslt=HERE / "cfg" / "liftSystemOut.xslt",
-                    dest=Path(logdir) / "embedded_test" / "test_embedded_test.xml",
+                    dest=Path(logdir) / "test_embedded_test.xml",
                 )
                 apply_xslt(
                     python_exe=pyrun,
@@ -509,14 +512,15 @@ def run_tests(
 
 def main():
     parser = argparse.ArgumentParser(
-        usage="A simple test launcher for the emulator e2e tests."
+        usage="A simple test launcher for the emulator e2e tests.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
     parser.add_argument(
         "-e",
         "--emulator",
         dest="emulator",
-        help="Path to the emulator binary that is used for running the tests."
+        help="Path to the emulator binary that is used for running the tests. "
         + "Cannot be used in combination with the --build_dir flag",
     )
 
@@ -560,7 +564,9 @@ def main():
     parser.add_argument(
         "--verbose",
         dest="verbose",
-        default=False,
+        # b/261042155 we are trying to understand why we are hitting timeout
+        # and install issues on mac.
+        default=OS_NAME == "darwin",
         action="store_true",
         help="Enable verbose logging",
     )
@@ -587,9 +593,9 @@ def main():
 
     if args.build_dir:
         with TemporaryEmulatorDeploy(args.build_dir) as emulator:
-            run_tests(emulator, args.logdir, pyrun=py_exe)
+            run_tests(emulator, args.logdir, args.verbose, pyrun=py_exe)
     else:
-        run_tests(args.emulator, args.logdir, pyrun=py_exe)
+        run_tests(args.emulator, args.logdir, args.verbose, pyrun=py_exe)
 
 
 if __name__ == "__main__":
