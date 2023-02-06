@@ -568,7 +568,7 @@ def main():
     args = parser.parse_args()
 
     lvl = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=lvl)
+    logging.basicConfig(format="%(message)s", level=lvl)
 
     if args.build_dir and args.emulator:
         raise Exception("Use either --build_dir or --emulator not both.")
