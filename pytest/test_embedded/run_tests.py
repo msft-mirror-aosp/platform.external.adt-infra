@@ -230,45 +230,36 @@ class TemporaryEmulatorDeploy:
 
 
 class PyRunner:
-    """A utility class that helps to run Python commands and install packages within
-    a specified repository."""
+    """PyRunner
 
-    def __init__(self, repo):
-        self.repo = repo
+    A class that provides a convenient way to run python commands.
+    It sets up the environment with the required variables,
+    installs packages using pip, and runs the specified command
+    with the given arguments and environment variables.
+
+    Attributes:
+        env (dict[str, str]): Environment variables for the command.
+        This includes ANDROID_SDK_ROOT, ANDROID_HOME, and
+        JAVA_HOME. If the platform is Linux, DISPLAY will also be included.
+
+        py_exe (str): The path to the python interpreter.
+    """
+
+    def __init__(self):
+        """Initialize PyRunner with the environment variables required
+        for running the Python command.
+
+        The environment variables include `ANDROID_SDK_ROOT`, `ANDROID_HOME` and `JAVA_HOME`.
+        If the platform is Linux,  an attempt will be made to find or
+        launch a vnc server and set its display as the value for the `DISPLAY`
+        environment variable.
+        """
         self.env = {
             "ANDROID_SDK_ROOT": str(ANDROID_SDK_ROOT),
             "ANDROID_HOME": str(ANDROID_SDK_ROOT),
             "JAVA_HOME": self._get_java_home(),
         }
-        if platform.system() == "Windows":
-            self._fixup_windows_py3_dll()
-            run(
-                [
-                    PYTHON,
-                    AOSP_ROOT / "external" / "adt-infra" / "devpi" / "get-pip.py",
-                    "--no-wheel",
-                    "--no-setuptools",
-                    "--index-url",
-                    f"{repo}",
-                ],
-            )
-            self.py_exe = PYTHON
-        else:
-            self.tmp = tempfile.TemporaryDirectory()
-            tmpdir = Path(self.tmp.name)
-            run(
-                [
-                    PYTHON,
-                    "-m",
-                    "venv",
-                    tmpdir / ".venv",
-                ],
-            )
-
-            self.py_exe = tmpdir / ".venv" / "bin" / "python"
-            self.pip_exe = tmpdir / ".venv" / "bin" / "pip3"
-            self.env["VIRTUAL_ENV"] = str(tmpdir / ".venv")
-
+        self.py_exe = shutil.which("python")
         if platform.system() == "Linux":
             try:
                 display = self._get_X_Display()
@@ -282,12 +273,15 @@ class PyRunner:
 
             self.env["DISPLAY"] = display
 
-        self.run(
-            ["-m", "pip", "install", "--upgrade", "pip", "--index-url", f"{self.repo}"]
-        )
-
     def _get_java_home(self):
-        """Retrieves java home from the active java interpreter."""
+        """Retrieves the path to the Java home directory from the active Java interpreter.
+
+        Returns:
+            str: Path to the Java home directory
+
+        Raises:
+            JavaNotFound: If no `java` interpreter is found on the system path.
+        """
         if not shutil.which("java"):
             raise JavaNotFound(
                 "No `java` interpreter on the path. Java is required for "
@@ -348,6 +342,14 @@ class PyRunner:
 
         raise NoXServer("Unable to find a working XServer")
 
+    def pip_install(self, packages: [str]):
+        """installs the specified packages using pip"
+
+        Args:
+            packages ([str]): The set of packages to install
+        """
+        self.run(["-m", "pip", "install", "--upgrade"] + packages)
+
     def run(
         self, args: [str], env: dict[str, str] = {}, timeout: int = 300, cwd=os.getcwd()
     ):
@@ -366,6 +368,52 @@ class PyRunner:
             timeout=timeout,
             extra_env=emu_env,
             cwd=cwd,
+        )
+
+
+class AospPyRunner(PyRunner):
+    """AospPyRunner is a PyRunner that uses the Python interpreter that is in AOSP
+
+    This python interpreter does not have SSL and hence has a series of limitations.
+    This runner tries to minimize the impact of these limitations, by:
+
+    - Creating a virtual environment in posix
+    - Patch the windows interpreter to work with the pytests.
+    """
+
+    def __init__(self, repo):
+        super().__init__()
+        self.repo = repo
+        if platform.system() == "Windows":
+            self._fixup_windows_py3_dll()
+            run(
+                [
+                    PYTHON,
+                    AOSP_ROOT / "external" / "adt-infra" / "devpi" / "get-pip.py",
+                    "--no-wheel",
+                    "--no-setuptools",
+                    "--index-url",
+                    f"{repo}",
+                ],
+            )
+            self.py_exe = PYTHON
+        else:
+            self.tmp = tempfile.TemporaryDirectory()
+            tmpdir = Path(self.tmp.name)
+            run(
+                [
+                    PYTHON,
+                    "-m",
+                    "venv",
+                    tmpdir / ".venv",
+                ],
+            )
+
+            self.py_exe = tmpdir / ".venv" / "bin" / "python"
+            self.env["VIRTUAL_ENV"] = str(tmpdir / ".venv")
+
+        self.run(
+            ["-m", "pip", "install", "--upgrade", "pip", "--index-url", f"{self.repo}"]
         )
 
     def _fixup_windows_py3_dll(self):
@@ -387,25 +435,18 @@ class PyRunner:
             packages ([str]): The set of packages to install
         """
         if platform.system() == "Windows":
-            self.run(
+            super().pip_install(
                 [
-                    "-m",
-                    "pip",
-                    "install",
                     "--user",
                     "--upgrade",
                     "--index-url",
                     f"{self.repo}",
                 ]
-                + packages,
-                timeout=300,
+                + packages
             )
         else:
-            run(
-                [self.pip_exe, "install", "--upgrade", "--index-url", f"{self.repo}"]
-                + packages,
-                timeout=300,
-                extra_env=self.env,
+            super().pip_install(
+                ["--index-url", f"{self.repo}"] + packages,
             )
 
 
@@ -513,7 +554,7 @@ def run_tests(
 def main():
     parser = argparse.ArgumentParser(
         usage="A simple test launcher for the emulator e2e tests.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.add_argument(
@@ -570,6 +611,13 @@ def main():
         action="store_true",
         help="Enable verbose logging",
     )
+    parser.add_argument(
+        "--no-aosp",
+        action="store_true",
+        dest="local_python",
+        default=False,
+        help="Use the current python interpreter v.s. the one in AOSP. You should only use this for debugging.",
+    )
 
     args = parser.parse_args()
 
@@ -589,7 +637,7 @@ def main():
         if platform.system() != "Windows":
             repo = f"file://{repo}"
 
-    py_exe = PyRunner(repo)
+    py_exe = PyRunner() if args.local_python else AospPyRunner(repo)
 
     if args.build_dir:
         with TemporaryEmulatorDeploy(args.build_dir) as emulator:
