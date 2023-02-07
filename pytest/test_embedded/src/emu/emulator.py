@@ -16,6 +16,7 @@ import os
 import platform
 import shutil
 import subprocess
+import sys
 import time
 from datetime import timedelta
 from pathlib import Path
@@ -46,11 +47,6 @@ class EmulatorNotFoundException(Exception):
 class EmulatorDiedException(Exception):
     pass
 
-
-class AndroidSdkRootNotSet(Exception):
-    pass
-
-
 class FailedToInstallApk(Exception):
     pass
 
@@ -67,11 +63,6 @@ class BaseEmulator(object):
         Raises:
             AndroidSdkRootNotSet: The ANDROID_SDK_ROOT environment variable is not set.
         """
-        if not os.environ.get("ANDROID_SDK_ROOT"):
-            raise AndroidSdkRootNotSet(
-                "The environment variable ANDROID_SDK_ROOT is not set"
-            )
-
         self.telnet = None
         self.description = None
         self.android_home = android_home.absolute()
@@ -314,11 +305,8 @@ class Emulator(BaseEmulator):
         if "abi" not in avd_config:
             avd_config["abi"] = self._default_abi()
         self.configuration = avd_gen.create_from_config(avd_config)
-        self.exe = exe
+        self.exe = Path(exe)
         self.proc
-
-    def __del__(self):
-        self.stop()
 
     def _default_abi(self) -> str:
         """Returns the abi that is natively supported by this machine.
@@ -336,7 +324,12 @@ class Emulator(BaseEmulator):
     def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
         self.logger = logging.getLogger(self.configuration.name)
         handler = QueueLogHandler(logging.getLogger(f"{self.configuration.name}-exe"))
-        self.proc = Command(cmd).with_environment(env).with_log_handler(handler).run()
+
+        cmd = Command(cmd).with_environment(env).with_log_handler(handler)
+        if sys.platform == "win32":
+            cmd.in_directory(self.exe.parent)
+
+        self.proc = cmd.run()
         self.log = handler.queue
 
         max_wait = 10

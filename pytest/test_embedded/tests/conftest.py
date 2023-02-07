@@ -26,6 +26,7 @@ provide access to parts of the emulator.
 """
 import logging
 import os
+import platform
 import shutil
 import sys
 from pathlib import Path
@@ -41,6 +42,13 @@ from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.crashreporter import CrashReporter
 from emu.utils import system_cpu
 from tests.test_utils import wait_for_regex
+
+
+OS_NAME = platform.system().lower()
+AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
+SDK_EMULATOR = (
+    AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
+)
 
 
 def pytest_addoption(parser):
@@ -67,7 +75,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "--android_home",
         action="store",
-        default=os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"],
+        default=os.environ.get("ANDROID_HOME")
+        or os.environ.get("ANDROID_SDK_ROOT")
+        or SDK_EMULATOR,
         help="The path to the SDK installation directory. This should contain system-images and adb.",
     )
     parser.addoption(
@@ -89,6 +99,7 @@ def pytest_addoption(parser):
         default=30,
         help="Number of seconds the frame perf test should last.",
     )
+
 
 
 ALL_PLATFORMS = set("darwin linux win32".split())
@@ -234,7 +245,6 @@ def emulator(request, pytestconfig, crash_reporter) -> BaseEmulator:
                 logging.warning(
                     "--emulator not flag present, trying default build directory."
                 )
-                AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
                 exe = shutil.which(
                     "emulator", path=AOSP_ROOT / "external" / "qemu" / "objs"
                 )
@@ -364,7 +374,7 @@ def launch_animiation_app(avd: BaseEmulator):
     avd.adb.run(["logcat", "-c"])
     avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
-    with avd.adb.stream(["logcat", "-s", "aemu"]) as stream:
+    with avd.adb.stream(["logcat", "-s", "aemu"], timeout=2) as stream:
         avd.adb.run(
             [
                 "shell",
