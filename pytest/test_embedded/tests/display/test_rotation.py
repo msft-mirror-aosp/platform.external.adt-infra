@@ -98,13 +98,13 @@ def test_rotation_observable_through_adbstream(
     ROTATION_RE = re.compile(r".*Rotation: (\d+)")
     with avd.adb.stream(["logcat", "-s", "aemu"]) as stream:
         # Wait for the first rotation (should be set to 0).
-        for line in iter(stream.get, None):
+        for line in stream:
             m = ROTATION_RE.match(line)
             if m and int(m.group(1)) == 0:
                 break
 
         for (fine, coarse) in for_each_rotation(emulator_controller):
-            for line in iter(stream.get, None):
+            for line in stream:
                 m = ROTATION_RE.match(line)
                 if m:
                     assert int(m.group(1)) == counter_clockwise_to_clockwise(fine)

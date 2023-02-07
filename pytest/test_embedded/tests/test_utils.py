@@ -68,7 +68,7 @@ def wait_for_regex(stream, regex, max_wait):
     """
     compiled = re.compile(regex)
     timeout_after = time.time() + max_wait
-    for line in iter(stream.get, None):
+    for line in stream:
 
         if timeout_after < time.time():
             logging.warning("Timed out while waiting for %s", regex)

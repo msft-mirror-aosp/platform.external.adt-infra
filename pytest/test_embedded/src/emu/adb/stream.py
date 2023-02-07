@@ -28,6 +28,7 @@ class AdbStream(object):
         adb_binary: str,
         emulator_name: str,
         cmd: list[str],
+        timeout: int = 60,
     ):
         """Run an adb command, streaming the results as queue.
         You usually want to use this like this:
@@ -42,11 +43,12 @@ class AdbStream(object):
             adb_binary (str): Adb executable.
             emulator_name (str): Name of the emulator, passed as -s to adb
             cmd (list[str]): Command to execute.
+            timeout (int): Timeout for the queue iterator (defaults to 60 seconds)
         """
         self.proc = None
         self.logger = logger
         self.cmd = [adb_binary, "-s", emulator_name] + cmd
-        self.handler = QueueLogHandler(self.logger)
+        self.handler = QueueLogHandler(self.logger, timeout)
 
     def start(self):
         self.proc = Command(self.cmd).with_log_handler(self.handler).run()
@@ -56,7 +58,8 @@ class AdbStream(object):
             self.proc.terminate()
 
     def __enter__(self):
-        return self.handler.queue
+        self.start()
+        return self.handler
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # We left scope, cancel from the client side.
@@ -71,6 +74,7 @@ class AdbLogcatStream(AdbStream):
         logger: logging.Logger,
         adb_binary: str,
         emulator_name: str,
+        timeout:int,
         tag: str,
         clear: bool,
     ):
@@ -83,7 +87,7 @@ class AdbLogcatStream(AdbStream):
             tag (str): Tag to filter by
             clear (bool): true if logcat should be flushed first
         """
-        super().__init__(logger, adb_binary, emulator_name, ["logcat"])
+        super().__init__(logger, adb_binary, emulator_name, ["logcat"], timeout)
         if clear:
             self.clear()
 

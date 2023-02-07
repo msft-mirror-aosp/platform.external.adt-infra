@@ -14,65 +14,133 @@
 import logging
 import subprocess
 import threading
-from queue import Queue, Full
+from queue import Queue, Empty
 from functools import partial
+
 
 class LogHandler:
     """A handler that logs lines from a process."""
 
-    def __init__(self, logger=logging, std_out_logger=None, std_err_logger=None):
+    def __init__(
+        self,
+        logger=logging,
+        std_out_logger=None,
+        std_err_logger=None,
+        on_exit=None,
+        name=None,
+    ):
+        """Initializes the LogHandler instance.
+
+        Args:
+            logger (logging.Logger, optional): The logger instance to use for logging. Defaults to the root logger.
+            std_out_logger (function, optional): The function to use for logging the standard output of the subprocess. Defaults to `logger.info`.
+            std_err_logger (function, optional): The function to use for logging the standard error of the subprocess. Defaults to `logger.error`.
+            on_exit (function, optional): The function to be called when the subprocess exits.
+            name (str, optional): The name to be used for the logging threads.
+        """
         self.logger = logger
         self.std_out_log = std_out_logger or self.logger.info
         self.std_err_log = std_err_logger or self.logger.error
+        self.on_exit = on_exit
+        self.name = name
 
     def with_std_out_logger(self, log_transform):
+        """Changes the function used for logging the standard output.
+
+        Args:
+            log_transform (function): The new function to use for logging the standard output.
+
+        Returns:
+            LogHandler: The updated LogHandler instance.
+        """
         self.std_out_log = log_transform
         return self
 
     def with_std_err_logger(self, log_transform):
+        """Changes the function used for logging the standard error.
+
+        Args:
+            log_transform (function): The new function to use for logging the standard error.
+
+        Returns:
+            LogHandler: The updated LogHandler instance.
+        """
         self.std_err_log = log_transform
         return self
 
     def _reader(self, pipe, logfn):
-        """Log every line from the pipe, by calling
-        logn for every line,
+        """Log every line from the pipe, by calling the log function for every line.
 
         Args:
-            pipe (_type_): Pipe with lines in utf-8
-            logfn (_type_): Function used to log a line
+            pipe (file-like object): Pipe with lines in utf-8 encoding.
+            logfn (callable): Function used to log a line.
         """
         try:
             for line in iter(pipe.readline, ""):
                 logfn(line[:-1].strip())
         finally:
-            pass
+            if self.on_exit:
+                self.on_exit()
 
     def start_log_proc(self, proc: subprocess.Popen):
-        """Logs the output of the process in the background.
+        """Start logging the output of the subprocess in the background.
 
-        stdout will be logged to info level.
-        stderr will be logged to error level.
+        The stdout will be logged to the `info` level and the stderr will be logged to the `error` level.
 
         Args:
-            proc (subprocess.Popen): The process to observe.
+            proc (subprocess.Popen): The subprocess to observe.
         """
 
-        for args in [[proc.stdout, self.std_out_log], [proc.stderr, self.std_err_log]]:
-            threading.Thread(target=self._reader, args=args).start()
+        for args in [
+            ["stdout", proc.stdout, self.std_out_log],
+            ["stderr", proc.stderr, self.std_err_log],
+        ]:
+            logthread = threading.Thread(target=self._reader, args=args[1:])
+            if self.name:
+                logthread.name = f"{self.name}-{args[0]}"
+            logthread.start()
 
 
 class QueueLogHandler(LogHandler):
-    """A LogHandler that will log info and error to a queue that can be observed."""
+    """A LogHandler that logs info and error messages to a queue.
+
+    This handler can be used to log output from a subprocess to a queue,
+    which can then be observed and processed as needed.
+
+    Attributes:
+        queue (Queue): A queue for storing log messages.
+        lock (threading.Lock): A lock for synchronizing access to the queue.
+        timeout (int): The time in seconds to wait for a log message from the queue.
+    """
 
     MAX_LINES_TO_LOG = 512
+    __FINISHED_SENTINEL__ = {"Finished": True}
 
-    def __init__(self, logger=logging):
+    def __init__(self, logger=logging, timeout=60, thread_name=None):
         self.queue = Queue(QueueLogHandler.MAX_LINES_TO_LOG)
         self.lock = threading.Lock()
+        self.timeout = timeout
         log_to_info = partial(self.log_to_queue, logger.info)
         log_to_err = partial(self.log_to_queue, logger.error)
 
-        super().__init__(logger, log_to_info, log_to_err)
+        if not thread_name:
+            thread_name = logger.name
+
+        super().__init__(
+            logger, log_to_info, log_to_err, on_exit=self.finished, name=thread_name
+        )
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            result = self.queue.get(timeout=self.timeout)
+            if result == self.__FINISHED_SENTINEL__:
+                raise StopIteration
+            return result
+        except Empty:
+            raise StopIteration
 
     def log_to_queue(self, logfn, line):
         """Logs the output of the given process."""
@@ -83,3 +151,10 @@ class QueueLogHandler(LogHandler):
             strip = line.strip()
             logfn(strip)
             self.queue.put_nowait(strip)
+
+    def finished(self):
+        with self.lock:
+            if self.queue.full():
+                self.queue.get_nowait()
+
+            self.queue.put_nowait(QueueLogHandler.__FINISHED_SENTINEL__)

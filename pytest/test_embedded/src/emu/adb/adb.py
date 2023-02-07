@@ -81,17 +81,20 @@ class Adb(object):
         self.logger.debug("result: %s", cmd)
         return cmd
 
-    def stream(self, cmd: list[str]) -> AdbStream:
+    def stream(self, cmd: list[str], timeout:int = 2) -> AdbStream:
         """Runs the given command on the emulator
 
         You usually want to use this like this:
 
         with adb.stream(["logcat", "-s", "aemu"]) as stream:
-            for line in iter(stream.get, None):
+            for line in stream
                 print(line)
 
         Args:
             cmd (list[str]): Command to execute
+            timeout (int): Timeout in seconds for the iterator. The
+                 iterator will exit if adb does not produce output in
+                 the given time.
 
         Returns:
             AdbStream: An observable stream with results from adb
