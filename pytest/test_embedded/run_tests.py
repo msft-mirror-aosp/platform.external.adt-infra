@@ -493,6 +493,7 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
 
 def run_tests(
     emulator: str,
+    use_exceptions: bool,
     logdir: Path,
     verbose: bool,
     symbol_path: Path,
@@ -504,6 +505,7 @@ def run_tests(
     Args:
 
         emulator (str):    Path to the emulator binary
+        use_exceptions(bool): True if an excpetion should be raised on pytest failures.
         symbol_path(Path): Optional path to the symbols that belong with this emulator.
         logdir (Path):     The directory where all the logs will be written to
         verbose: (bool):   True if we should be (very) verbose.
@@ -546,6 +548,9 @@ def run_tests(
                 },
                 timeout=1210,  # Give pytest a chance to "nicely" terminate everything.
             )
+        except:
+            if use_exceptions:
+                raise
         finally:
             if junit_test_results.exists():
                 apply_xslt(
@@ -599,8 +604,7 @@ def main():
         default=Path(os.getcwd()),
         dest="logdir",
         help="The directory where the logs should be placed. "
-        + "On the build bots this should be dist_dir/testlogs. "
-        + "Defaults to the current working directory.",
+        + "On the build bots this should be dist_dir/testlogs.",
     )
 
     parser.add_argument(
@@ -637,6 +641,15 @@ def main():
         help="Use the current python interpreter v.s. the one in AOSP. You should only use this for debugging.",
     )
 
+    parser.add_argument(
+        "--failures_as_errors",
+        dest="use_exceptions",
+        default=False,
+        action="store_true",
+        help="Treat test failures as errors. Test failures will raise an "
+        "exception when this flag is present.",
+    )
+
     args = parser.parse_args()
 
     lvl = logging.DEBUG if args.verbose else logging.INFO
@@ -659,9 +672,23 @@ def main():
 
     if args.build_dir:
         with TemporaryEmulatorDeploy(args.build_dir) as (emulator, symbols):
-            run_tests(emulator, args.logdir, args.verbose, symbols, pyrun=py_exe)
+            run_tests(
+                emulator=emulator,
+                use_exceptions=args.use_exceptions,
+                logdir=args.logdir,
+                verbose=args.verbose,
+                symbol_path=symbols,
+                pyrun=py_exe,
+            )
     else:
-        run_tests(args.emulator, args.logdir, args.verbose, args.symbols, pyrun=py_exe)
+        run_tests(
+            emulator=args.emulator,
+            use_exceptions=args.use_exceptions,
+            logdir=args.logdir,
+            verbose=args.verbose,
+            symbol_path=args.symbols,
+            pyrun=py_exe,
+        )
 
 
 if __name__ == "__main__":
