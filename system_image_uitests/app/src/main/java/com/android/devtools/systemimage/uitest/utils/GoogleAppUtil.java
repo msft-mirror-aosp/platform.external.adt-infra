@@ -42,7 +42,7 @@ public class GoogleAppUtil {
 
     private static final int api = SystemUtil.getApiLevel();
     private static final String email = "demo.sysimg.user1@gmail.com";
-    private static final String password = "qcw4l34wqb";
+    private static final String password = "00iw9dttff";
 
     public String getTestUserEmail() {
         return email;

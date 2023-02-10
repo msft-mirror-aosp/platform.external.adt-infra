@@ -244,7 +244,7 @@ class AvdConfig:
 
     def _parse_ini(self, simple_ini_file: Path) -> configparser.SectionProxy:
         config_parser = configparser.ConfigParser()
-        with open(simple_ini_file, "r") as ini_file:
+        with open(simple_ini_file, "r", encoding="utf-8") as ini_file:
             lines = chain(("[emu]\n",), ini_file)  # This line does the trick.
             config_parser.read_file(lines)
 

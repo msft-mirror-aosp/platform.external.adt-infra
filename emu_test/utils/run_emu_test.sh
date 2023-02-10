@@ -18,11 +18,8 @@
 . $(dirname "$0")/common.sh
 # Let's log a lot.
 set_verbosity 2
-
 DISTRIB_DIR=$1
 [ ! -d "$DISTRIB_DIR" ] && panic "The variable DISTRIB_DIR points to [$DISTRIB_DIR], which does not exist"
-
-SESSION_DIR=$DISTRIB_DIR/testlogs
 
 TEST_DIR=$(dirname "$0")/..
 AOSP_DIR=$(
@@ -30,34 +27,13 @@ AOSP_DIR=$(
     pwd
 )
 
-deploy_emulator() {
-    [ -z "$SESSION_DIR" ] && panic "SESSION_DIR variable not set, refusing to deploy."
-
-    # Deploys the emulator and sets the EMULATOR_EXE variable to point to the emulator binary
-    # Thas was unzipped.
-    local BUILD_DIR="out/prebuilt_cached/builds"
-
-    log "Deploying emulator to $SESSION_DIR/emu-master-dev"
-    run mkdir -p $SESSION_DIR/emu-master-dev
-    run unzip -o $BUILD_DIR/sdk-repo-*-emulator-[0-9]*.zip -d $SESSION_DIR/emu-master-dev || panic "Unable to unzip required files."
-    EMULATOR_EXE=$SESSION_DIR/emu-master-dev/emulator/emulator
+aosp_find_python() {
+    local AOSP_PREBUILTS_DIR=$AOSP_DIR/prebuilts
+    local OS_NAME=$(get_build_os)
+    local PYTHON=$AOSP_PREBUILTS_DIR/python/$OS_NAME-x86/bin/python3
+    $PYTHON --version >/dev/null || panic "Unable to get python version from $PYTHON"
+    printf "$PYTHON"
 }
 
-cleanup_emulator() {
-    [ -z "$SESSION_DIR" ] && panic "SESSION_DIR variable not set, refusing to clean."
-    [ ! -d "$SESSION_DIR" ] && panic "Refusing to delete non-existent directory."
-
-    log "Removing $SESSION_DIR/emu-master-dev"
-    rm -rf $SESSION_DIR/emu-master-dev
-
-    log "Remove any empty file under $SESSION_DIR"
-    find $SESSION_DIR -size 0 -delete || log "No empty files were deleted."
-}
-
-deploy_emulator
-
-# Run the tests, that STATUS variable will contain success/failure.
-$AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.sh --session_dir $SESSION_DIR --emulator $SESSION_DIR/emu-master-dev/emulator/emulator --logdir $SESSION_DIR
-
-cleanup_emulator
-exit 0
+PYTHON=$(aosp_find_python)
+run $PYTHON $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.py --build_dir out/prebuilt_cached/builds --logdir $DISTRIB_DIR/testlogs

@@ -26,10 +26,10 @@ provide access to parts of the emulator.
 """
 import logging
 import os
+import platform
 import shutil
 import sys
 from pathlib import Path
-
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
     KeyboardEvent,
@@ -39,8 +39,16 @@ from aemu.proto.emulator_controller_pb2 import (
 
 from emu.apk import APP_DEBUG_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
+from emu.crashreporter import CrashReporter
 from emu.utils import system_cpu
 from tests.test_utils import wait_for_regex
+
+
+OS_NAME = platform.system().lower()
+AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
+SDK_EMULATOR = (
+    AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
+)
 
 
 def pytest_addoption(parser):
@@ -48,13 +56,12 @@ def pytest_addoption(parser):
     parser.addoption(
         "--emulator",
         action="store",
-        default=shutil.which(
-            "emulator",
-            Path(os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"] or ".")
-            / "emulator"
-            / "emulator",
-        ),
         help="The emulator used to run the integration tests against.",
+    )
+    parser.addoption(
+        "--symbols",
+        action="store",
+        help="Location where the breakpad symbols that belong to this emulator can be found.",
     )
     parser.addoption(
         "--android_avd_home",
@@ -68,7 +75,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "--android_home",
         action="store",
-        default=os.environ["ANDROID_HOME"] or os.environ["ANDROID_SDK_ROOT"],
+        default=os.environ.get("ANDROID_HOME")
+        or os.environ.get("ANDROID_SDK_ROOT")
+        or SDK_EMULATOR,
         help="The path to the SDK installation directory. This should contain system-images and adb.",
     )
     parser.addoption(
@@ -92,6 +101,7 @@ def pytest_addoption(parser):
     )
 
 
+
 ALL_PLATFORMS = set("darwin linux win32".split())
 
 
@@ -107,12 +117,16 @@ def pytest_runtest_setup(item):
 
 # Workaround for
 # https://docs.pytest.org/en/latest/deprecations.html#pytest-namespace
-def pytest_configure():
+def pytest_configure(config):
+    """Configure pytest, this method is run before any tests is run."""
     pytest.emulator = None
     pytest.emulators = {}
 
 
-def pytest_sessionfinish(session, exitstatus):
+def pytest_sessionfinish(
+    session,
+    exitstatus,
+):
     """Stops and remove all running emulators at the end of all tests."""
     for name, emu in pytest.emulators.items():
         logging.info("Shutting down and removing %s", name)
@@ -121,11 +135,46 @@ def pytest_sessionfinish(session, exitstatus):
         emu.delete()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def crash_reporter(pytestconfig):
+    """A fixture to handle crash reports in the emulator.
+
+    This fixture returns the crash reporter associated with the emulator,
+    which can be used to list, print, upload, and delete crash reports.
+    The scope of the fixture is session and it is
+    automatically used in all test functions.
+
+    The fixture also writes the crash reports to disk if the `log_file` option is
+    provided. If not, it lists all the crashes instead.
+
+    Args:
+        pytestconfig (object): Pytest configuration object
+
+    Yields:
+        CrashReporter: An instance of the CrashReporter class
+    """
+    exe = pytestconfig.getoption("emulator")
+    emulator_directory = Path(exe).parent if exe else None
+    crash_report = CrashReporter(emulator_directory, pytestconfig.getoption("symbols"))
+    crash_report.clear()
+
+    yield crash_report
+
+    # Report any crashes that might have happened.
+    logfile = pytestconfig.getoption("log_file")
+    if logfile:
+        crash_report.write_reports_to_disk(Path(logfile).parent)
+    else:
+        crash_report.list_crashes()
+
+    crash_report.report_crashes()
+
+
 # -------------------------------
 # Session wide fixtures are below
 # -------------------------------
 @pytest.fixture(scope="module")
-def emulator(request, pytestconfig) -> BaseEmulator:
+def emulator(request, pytestconfig, crash_reporter) -> BaseEmulator:
     """Makes a configured emulator available
 
     Note: You usually don't need fixture, as it will be automatically provided
@@ -176,7 +225,7 @@ def emulator(request, pytestconfig) -> BaseEmulator:
         "api": "31",
         "tag.id": "google_apis",
         "cpu": system_cpu(),
-        "avd.ini.displayname": "°º¤ø,¸¸,ø¤º°`°º¤ø, UTF-8 ¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸"
+        "avd.ini.displayname": "°º¤ø,¸¸,ø¤º°`°º¤ø, UTF-8 ¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸",
     }
     avd_user_config = getattr(request.module, "avd_config", {})
     avd_config.update(avd_user_config)
@@ -191,16 +240,25 @@ def emulator(request, pytestconfig) -> BaseEmulator:
                 logfile=pytestconfig.getoption("debug_emulator_log"),
             )
         else:
+            exe = pytestconfig.getoption("emulator")
+            if exe is None:
+                logging.warning(
+                    "--emulator not flag present, trying default build directory."
+                )
+                exe = shutil.which(
+                    "emulator", path=AOSP_ROOT / "external" / "qemu" / "objs"
+                )
+
             emu = Emulator(
                 android_home=Path(pytestconfig.getoption("android_home")),
                 android_avd_home=Path(pytestconfig.getoption("android_avd_home")),
-                exe=Path(pytestconfig.getoption("emulator")),
+                exe=exe,
                 avd_config=avd_config,
             )
 
+        emu.symbols = pytestconfig.getoption("symbols")
         pytest.emulators[name] = emu
 
-    logging.info("Got the emu object: %s!", pytest.emulators[name])
     return pytest.emulators[name]
 
 
@@ -316,7 +374,7 @@ def launch_animiation_app(avd: BaseEmulator):
     avd.adb.run(["logcat", "-c"])
     avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
-    with avd.adb.stream(["logcat", "-s", "aemu"]) as stream:
+    with avd.adb.stream(["logcat", "-s", "aemu"], timeout=2) as stream:
         avd.adb.run(
             [
                 "shell",

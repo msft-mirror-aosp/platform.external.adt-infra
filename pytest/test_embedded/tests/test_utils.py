@@ -14,14 +14,14 @@
 import io
 import logging
 import re
+import threading
 import time
 from queue import Queue
-from threading import Thread
 
 import google.protobuf.text_format
 import grpc
-from PIL import Image as PillowImage
 from aemu.proto.emulator_controller_pb2 import Image, ImageFormat
+from PIL import Image as PillowImage
 
 
 def proto_to_pillow(image: Image) -> PillowImage:
@@ -68,7 +68,7 @@ def wait_for_regex(stream, regex, max_wait):
     """
     compiled = re.compile(regex)
     timeout_after = time.time() + max_wait
-    for line in iter(stream.get, None):
+    for line in stream:
 
         if timeout_after < time.time():
             logging.warning("Timed out while waiting for %s", regex)
@@ -125,7 +125,7 @@ class StreamingCall(object):
             raise StopIteration
 
     def __enter__(self):
-        Thread(target=self._observe_call).start()
+        threading.Thread(target=self._observe_call).start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

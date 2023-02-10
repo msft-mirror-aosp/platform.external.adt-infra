@@ -18,11 +18,11 @@ from pathlib import Path
 import platform
 from shutil import which
 
-from emu.adb.stream import AdbStream
+from emu.adb.stream import AdbStream, AdbLogcatStream
 
 
 class Adb(object):
-    def __init__(self, emulator: str, adb: Path) -> None:
+    def __init__(self, avd_id: str, emulator: str, adb: Path) -> None:
         """Create an adb object that runs against the given emulator
 
         Args:
@@ -30,6 +30,8 @@ class Adb(object):
             adb (Path): path to the adb executable.
         """
         self.name = emulator
+        self.avd_id = avd_id
+        self.logger = logging.getLogger(f"{avd_id}-adb")
 
         if not adb.exists() and platform.system() == "Windows":
             adb = adb.with_suffix(".exe")
@@ -70,29 +72,50 @@ class Adb(object):
         Raises:
             subprocess.CalledProcessError
         """
-        logging.info("adb -s %s %s", self.name, " ".join(cmd))
+        self.logger.info("adb -s %s %s", self.name, " ".join(cmd))
         cmd = subprocess.check_output(
             [self.adb_binary, "-s", self.name] + cmd,
             env=self._enable_tracing(),
             timeout=timeout,
         )
-        logging.debug("result: %s", cmd)
+        self.logger.debug("result: %s", cmd)
         return cmd
 
-    def stream(self, cmd: list[str]) -> AdbStream:
+    def stream(self, cmd: list[str], timeout:int = 2) -> AdbStream:
         """Runs the given command on the emulator
 
         You usually want to use this like this:
 
         with adb.stream(["logcat", "-s", "aemu"]) as stream:
-            for line in iter(stream.get, None):
+            for line in stream
                 print(line)
 
         Args:
             cmd (list[str]): Command to execute
+            timeout (int): Timeout in seconds for the iterator. The
+                 iterator will exit if adb does not produce output in
+                 the given time.
 
         Returns:
             AdbStream: An observable stream with results from adb
         """
-        logging.info("adb -s %s %s", self.name, " ".join(cmd))
-        return AdbStream(self.adb_binary, self.name, cmd)
+        self.logger.info("adb -s %s %s", self.name, " ".join(cmd))
+        return AdbStream(self.logger, self.adb_binary, self.name, cmd)
+
+    def logcat(self, clear: bool = True, tag: str = None) -> AdbLogcatStream:
+        """Obtains the current logcat stream
+
+        Args:
+            tag (str): Tag to filter by
+            clear (bool, optional): Clear the logcat buffer. Defaults to True.
+
+        Returns:
+            AdbLogcatStream: _description_
+        """
+        return AdbLogcatStream(
+            logging.getLogger(f"{self.avd_id}-cat"),
+            self.adb_binary,
+            self.name,
+            tag,
+            clear,
+        )
