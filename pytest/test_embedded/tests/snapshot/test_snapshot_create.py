@@ -27,9 +27,14 @@ def test_snapshot_create(emulator):
         # Emulator is now in a ready to go state with a default avd_config, but it is not yet
         # running
         config = emulator.configuration
+        dist_out = os.environ["DIST_DIR"]
+        sdkroot = os.environ["ANDROID_SDK_ROOT"]
+        localpath = Path(sdkroot, config.hardware["image.sysdir.1"]).absolute();
+        if os.path.exists(localpath / "snapshots"):
+            shutil.rmtree(Path(localpath,"snapshots").absolute())
 
         logging.info("Enabling DownloadableSnapshot feature");
-        assert emulator.launch(flags=["-feature", "DownloadableSnapshot"]);
+        assert emulator.launch(flags=["-feature", "DownloadableSnapshot", "-no-snapshot-load"]);
 
         logging.info("Booting up emualtor ...");
         assert emulator.wait_for_boot(timeout=180);
@@ -40,9 +45,8 @@ def test_snapshot_create(emulator):
         logging.info("Stopping emualtor");
         emulator.stop();
 
-        dist_out = os.environ["DIST_DIR"]
-        sdkroot = os.environ["ANDROID_SDK_ROOT"]
-        localpath = Path(sdkroot, config.hardware["image.sysdir.1"]).absolute();
+        time.sleep(10)
+
         logging.info("saving snapshot to %s", dist_out)
         # create zip file
         filelist = []
