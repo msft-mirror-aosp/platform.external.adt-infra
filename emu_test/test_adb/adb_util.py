@@ -102,7 +102,7 @@ def get_connected_devices(adb_binary):
     # Note that since Windows includes a carriage return, we
     # do it in a seperate loop.
     if platform.system() is not 'Windows':
-      for emulator_entry in output.split('\n')[1:]:
+      for emulator_entry in output.decode('utf8').split('\n')[1:]:
         if emulator_entry != '':
           connected.append(emulator_entry.split('\t')[0])
     else:
@@ -345,7 +345,7 @@ def spit(filename, text):
 
     # Write the file.
     out_file = open(filename, 'w+')
-    out_file.write(text)
+    out_file.write(text.decode('utf-8'))
     out_file.close()
 
 def shell(cmd):

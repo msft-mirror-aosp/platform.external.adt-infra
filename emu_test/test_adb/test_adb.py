@@ -112,7 +112,7 @@ class AdbTestCase(emu_testcase.EmuBaseTestCase):
 
         xml_string_result = ET.tostring(result)
         # Saves each avd testing result to global variable: g_xml_string_result
-        g_xml_string_result += xml_string_result
+        g_xml_string_result += xml_string_result.decode('utf-8')
 
         # Refresh the current whole test result page.
         with open(dst_path, 'w+') as modified:
