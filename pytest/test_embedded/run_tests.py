@@ -513,8 +513,7 @@ def run_tests(
     verbose = ["-vvv"] if verbose else []
     emulator = str(resolve_emulator(emulator))
 
-    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL])
-    pyrun.pip_install(verbose + ["-e", HERE])
+    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, HERE])
     restart_adb()
 
     logdir = Path(logdir) / "embedded_test" / "log"
