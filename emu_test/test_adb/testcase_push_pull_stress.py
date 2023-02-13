@@ -65,7 +65,7 @@ class PushPullTest(testcase_base.BaseAdbTest):
         process = subprocess.Popen(arg.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         success = True
-        for line in output.decode('utf8').split('\n'):
+        for line in output.split('\n'):
             if line.startswith('adb: error'):
                 success = False
                 print(('\nERROR:\nEPush FAILED for: ' + str(dut)))
@@ -85,7 +85,7 @@ class PushPullTest(testcase_base.BaseAdbTest):
         process = subprocess.Popen(arg.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         success = True
-        for line in output.decode('utf8').split('\n'):
+        for line in output.split('\n'):
             if line.startswith('adb: error'):
                 print(('\nERROR:\nEPush FAILED for: ' + str(dut)))
                 print(output)
