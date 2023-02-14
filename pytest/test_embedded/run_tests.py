@@ -229,6 +229,7 @@ class TemporaryEmulatorDeploy:
         symbol_path = Path(self.tmp.name) / "symbols"
         symzip = self._find_dist_zip("breakpad-symbols")
         if symzip:
+            logging.info("Extracting %s to %s", symzip, emu_master_dev)
             symbols = ZipFileWithAttr(symzip)
             symbols.extractall(path=symbol_path)
 
@@ -537,7 +538,8 @@ def run_tests(
                     "--timeout=1200",
                     f"--log-file={logdir}/pytest.log",
                     f"--emulator={emulator}",
-                    f"--symbols={symbol_path}" f"--android_avd_home={tmpdir}",
+                    f"--symbols={symbol_path}",
+                    f"--android_avd_home={tmpdir}",
                     f"--android_home={ANDROID_SDK_ROOT}",
                 ],
                 cwd=HERE,
