@@ -264,7 +264,7 @@ def emulator(request, pytestconfig, crash_reporter) -> BaseEmulator:
 
 @pytest.mark.timeout(600)
 @pytest.fixture
-def avd(emulator: BaseEmulator) -> BaseEmulator:
+def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
     An emulator gets 600 seconds to boot up.
@@ -272,14 +272,23 @@ def avd(emulator: BaseEmulator) -> BaseEmulator:
 
     Args:
         emulator (BaseEmulator): Test fixture that provides the configured emulator.
+        request: Provide information on the executing test function.
 
     Returns:
         BaseEmulator: A successfully booted emulator.
     """
 
     assert emulator
+    emu_flags = []
+    if hasattr(request, "param"):
+        emu_flags = [request.param]
+        # Stop the running emulator, this makes sure the emulator can be launched with correct flags.
+        if emulator.is_alive():
+            emulator.stop()
+            assert not emulator.is_alive()
+
     if not emulator.is_alive():
-        emulator.launch(flags=[])
+        emulator.launch(flags=emu_flags)
 
     # Make sure the emulator is booted in at least 10 minutes.
     # (Note, boot times can be *REALLY* slow on windows gce..)
