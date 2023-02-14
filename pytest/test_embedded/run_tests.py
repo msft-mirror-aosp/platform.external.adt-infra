@@ -531,7 +531,6 @@ def run_tests(
                     "-vv",
                     "-m",
                     "not perf",
-                    "-x",
                     f"--junitxml={junit_test_results}",
                     # Boot times in windows can be 6 mins, so lets give us 20 minutes
                     # of testing time before we give up.
