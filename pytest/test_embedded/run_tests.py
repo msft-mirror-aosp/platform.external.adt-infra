@@ -197,7 +197,7 @@ class TemporaryEmulatorDeploy:
 
     def __init__(self, build_dir):
         self.build_dir = Path(build_dir)
-        self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.tmp = tempfile.TemporaryDirectory()
 
         if not self.build_dir.exists():
             raise BuildDirectoryNotFound(
@@ -407,7 +407,7 @@ class AospPyRunner(PyRunner):
             )
             self.py_exe = PYTHON
         else:
-            self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+            self.tmp = tempfile.TemporaryDirectory()
             tmpdir = Path(self.tmp.name)
             run(
                 [
@@ -520,7 +520,7 @@ def run_tests(
 
     logdir = Path(logdir) / "embedded_test" / "log"
     logdir.mkdir(exist_ok=True, parents=True)
-    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+    with tempfile.TemporaryDirectory() as tmpdir:
         junit_test_results = Path(tmpdir) / "test_unit.xml"
         try:
             pyrun.run(
