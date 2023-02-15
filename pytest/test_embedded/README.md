@@ -132,6 +132,7 @@ tests.
 - linux: marks test as linux only, will only run if you are on linux.
 - darwin: marks test as darwin only, will only run if you are on darwin.
 - win32: marks test as windows only, will only run on a windows machine.
+- embedded: marks test as embedded only, will only run on an embedded emulator.
 
 For example the test below will only run on linux:
 
