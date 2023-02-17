@@ -10,6 +10,9 @@ from zipfile import ZipFile
 # This will run the boot test with DownloadableSnapshot feature turned on
 # when it completes, it should save a snapshot to dist_out
 
+def dumpAvdConent(mypath):
+    for f in mypath.glob("**/*"):
+        logging.info("Found: %s", f)
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=180, func_only=True)
@@ -33,8 +36,11 @@ def test_snapshot_create(emulator):
         if os.path.exists(localpath / "snapshots"):
             shutil.rmtree(Path(localpath,"snapshots").absolute())
 
+        # dump out avd folder content
+        dumpAvdConent(config.directory)
+
         logging.info("Enabling DownloadableSnapshot feature");
-        assert emulator.launch(flags=["-feature", "DownloadableSnapshot", "-no-snapshot-load"]);
+        assert emulator.launch(flags=["-wipe-data", "-feature", "DownloadableSnapshot", "-no-snapshot-load"]);
 
         logging.info("Booting up emualtor ...");
         assert emulator.wait_for_boot(timeout=180);
@@ -46,6 +52,8 @@ def test_snapshot_create(emulator):
         emulator.stop();
 
         time.sleep(10)
+
+        dumpAvdConent(config.directory)
 
         logging.info("saving snapshot to %s", dist_out)
         # create zip file
