@@ -532,9 +532,9 @@ def run_tests(
                     "-m",
                     "not perf",
                     f"--junitxml={junit_test_results}",
-                    # Boot times in windows can be 6 mins, so lets give us 20 minutes
-                    # of testing time before we give up.
-                    "--timeout=1200",
+                    # Boot times in windows can be >6 mins, and we are booting several times!
+                    # We will give us at most 45 minutes.
+                    "--timeout=2700",
                     f"--log-file={logdir}/pytest.log",
                     f"--emulator={emulator}",
                     f"--symbols={symbol_path}",
@@ -546,7 +546,7 @@ def run_tests(
                     "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
                     "ANDROID_AVD_HOME": str(tmpdir),
                 },
-                timeout=1210,  # Give pytest a chance to "nicely" terminate everything.
+                timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
             )
         except:
             if use_exceptions:
@@ -627,9 +627,7 @@ def main():
     parser.add_argument(
         "--verbose",
         dest="verbose",
-        # b/261042155 we are trying to understand why we are hitting timeout
-        # and install issues on mac.
-        default=OS_NAME == "darwin",
+        default=False,
         action="store_true",
         help="Enable verbose logging",
     )
@@ -653,7 +651,7 @@ def main():
     args = parser.parse_args()
 
     lvl = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(format="%(message)s", level=lvl)
+    logging.basicConfig(format="%(asctime)s %(message)s", datefmt="%H:%M:%S", level=lvl)
 
     if args.build_dir and args.emulator:
         raise Exception("Use either --build_dir or --emulator not both.")

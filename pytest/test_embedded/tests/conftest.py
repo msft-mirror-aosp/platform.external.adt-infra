@@ -101,7 +101,6 @@ def pytest_addoption(parser):
     )
 
 
-
 ALL_PLATFORMS = set("darwin linux win32".split())
 
 
@@ -134,6 +133,23 @@ def pytest_sessionfinish(
         emu.stop()
         emu.delete()
 
+    crash_report = get_crash_reporter(session.config)
+    # Report any crashes that might have happened.
+    logging.info("Running crash reporter finalizer")
+    logfile = session.config.getoption("log_file")
+    if logfile:
+        crash_report.write_reports_to_disk(Path(logfile).parent)
+    else:
+        crash_report.list_crashes()
+
+    crash_report.report_crashes()
+
+
+def get_crash_reporter(pytestconfig):
+    exe = pytestconfig.getoption("emulator")
+    emulator_directory = Path(exe).parent if exe else None
+    return CrashReporter(emulator_directory, pytestconfig.getoption("symbols"))
+
 
 @pytest.fixture(scope="session", autouse=True)
 def crash_reporter(pytestconfig):
@@ -153,21 +169,9 @@ def crash_reporter(pytestconfig):
     Yields:
         CrashReporter: An instance of the CrashReporter class
     """
-    exe = pytestconfig.getoption("emulator")
-    emulator_directory = Path(exe).parent if exe else None
-    crash_report = CrashReporter(emulator_directory, pytestconfig.getoption("symbols"))
+    crash_report = get_crash_reporter(pytestconfig)
     crash_report.clear()
-
-    yield crash_report
-
-    # Report any crashes that might have happened.
-    logfile = pytestconfig.getoption("log_file")
-    if logfile:
-        crash_report.write_reports_to_disk(Path(logfile).parent)
-    else:
-        crash_report.list_crashes()
-
-    crash_report.report_crashes()
+    return crash_report
 
 
 # -------------------------------
