@@ -1,5 +1,7 @@
 import logging
 import pytest
+import platform
+import subprocess
 import os
 import time
 import shutil
@@ -9,6 +11,14 @@ from zipfile import ZipFile
 
 # This will run the boot test with DownloadableSnapshot feature turned on
 # when it completes, it should save a snapshot to dist_out
+
+def removeDirRecursively(mypath):
+    if os.path.exists(mypath):
+        if platform.system() == "Windows":
+            mycmd = f"rmdir {mypath} /s /q"
+            subprocess.check_output(mycmd, shell=True)
+        else:
+            shutil.rmtree(mypath)
 
 def dumpAvdConent(mypath):
     for f in mypath.glob("**/*"):
@@ -33,8 +43,9 @@ def test_snapshot_create(emulator):
         dist_out = os.environ["DIST_DIR"]
         sdkroot = os.environ["ANDROID_SDK_ROOT"]
         localpath = Path(sdkroot, config.hardware["image.sysdir.1"]).absolute();
-        if os.path.exists(localpath / "snapshots"):
-            shutil.rmtree(Path(localpath,"snapshots").absolute())
+        removeDirRecursively(Path(localpath, "snapshots"))
+#        if os.path.exists(localpath / "snapshots"):
+#            shutil.rmtree(Path(localpath,"snapshots").absolute())
 
         # dump out avd folder content
         dumpAvdConent(config.directory)
@@ -75,5 +86,5 @@ def test_snapshot_create(emulator):
         logging.warning("The test failed, need investigation");
     finally:
         if localpath:
-            shutil.rmtree(Path(localpath,"snapshots").absolute())
+            removeDirRecursively(Path(localpath, "snapshots"))
 
