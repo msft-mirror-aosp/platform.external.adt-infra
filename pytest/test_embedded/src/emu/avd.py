@@ -256,7 +256,11 @@ class AvdConfig:
 
         logging.debug("Removing %s", self.directory)
         try:
-            shutil.rmtree(self.directory.absolute())
+            if platform.system() == "Windows":
+                mycmd = "rmdir {} /s /q".format(self.directory.absolute())
+                subprocess.check_output(mycmd, shell=True)
+            else:
+                shutil.rmtree(self.directory.absolute())
         except OSError:
             logging.warning("Failed to remove %s", self.directory)
 
