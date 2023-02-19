@@ -225,6 +225,7 @@ def rotation_through_console_observable_through_stream_screenshot(emulator_contr
         with StreamingCall(imgStream) as stream:
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
+            seen_rotation = False
             for img in stream:
                 if img.format.rotation.rotation == coarse:
                     seen_rotation = True
