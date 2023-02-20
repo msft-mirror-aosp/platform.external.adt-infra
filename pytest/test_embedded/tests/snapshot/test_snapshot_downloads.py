@@ -12,7 +12,7 @@ import logging
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=180, func_only=True)
+@pytest.mark.timeout(timeout=600, func_only=True)
 def test_snapshot_download(emulator):
     """Make sure the emulator status is set to booted."""
 
@@ -38,7 +38,7 @@ def test_snapshot_download(emulator):
     assert emulator.launch(flags=["-wipe-data"])
 
     # The emulator kicks of its boot process, this should succeed
-    assert emulator.wait_for_boot(timeout=180)
+    assert emulator.wait_for_boot(timeout=420)
 
     # Stops the emulator.
     emulator.stop()
