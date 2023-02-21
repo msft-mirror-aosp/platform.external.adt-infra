@@ -11,6 +11,18 @@ from zipfile import ZipFile
 
 # This will run the boot test with DownloadableSnapshot feature turned on
 # when it completes, it should save a snapshot to dist_out
+mysdkpath = os.environ["ANDROID_SDK_ROOT"]
+myskin_path = Path(mysdkpath, "skins", "pixel_2").absolute()
+avd_config = {
+        "api": "34",
+        "tag.id": "google_apis",
+        "avd.ini.displayname": "pixel_2",
+        "hw.lcd.density" : "420",
+        "hw.lcd.height" : "1920",
+        "hw.lcd.width" : "1080",
+        "skin.name" : "pixel_2",
+        "skin.path" : f'{myskin_path}',
+	}
 
 def removeDirRecursively(mypath):
     if os.path.exists(mypath):
