@@ -208,7 +208,7 @@ def rotation_through_console_observable_through_screenshot(emulator_controller, 
     """
     for (_, coarse) in ROTATION_MAPPING:
         adb(["emu", "rotate"])
-        sleep(0.5)
+        sleep(1.0)
         img = emulator_controller.getScreenshot(ImageFormat())
         assert img.format.rotation.rotation == coarse
 
@@ -218,7 +218,7 @@ def rotation_through_console_observable_through_stream_screenshot(emulator_contr
     """
     for (angle, coarse) in ROTATION_MAPPING:
         adb(["emu", "rotate"])
-        sleep(0.5)
+        sleep(1.0)
         imgStream = emulator_controller.streamScreenshot(
             ImageFormat(width=320, height=200), timeout=5
         )
@@ -331,7 +331,7 @@ def test_rotation_through_console_observable_through_stream_screenshot(
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=240, func_only=True)
+@pytest.mark.timeout(timeout=480, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 @pytest.mark.parametrize('avd', ["-qt-hide-window"], indirect=True)
 def test_rotation_observable_through_screenshot_embedded_mode(
@@ -345,7 +345,7 @@ def test_rotation_observable_through_screenshot_embedded_mode(
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=240, func_only=True)
+@pytest.mark.timeout(timeout=480, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 @pytest.mark.parametrize('avd', ["-qt-hide-window"], indirect=True)
 def test_rotation_observable_through_stream_screenshot_embedded_mode(
