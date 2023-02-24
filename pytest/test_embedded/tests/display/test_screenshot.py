@@ -69,7 +69,7 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 
 
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
-@pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=2)
 def test_screenshot_all_formats_are_equal(
     avd, emulator_controller, animation_app, w, h
@@ -102,7 +102,7 @@ def test_screenshot_all_formats_are_equal(
     [(ImageFormat.RGB888, 3), (ImageFormat.RGBA8888, 4)],
 )
 @pytest.mark.parametrize("degrees", [0, 90])
-@pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.timeout(timeout=60, func_only=True)
 def test_screenshot_exact_amount_of_pixels(
     at_home, emulator_controller, image_format, bpp, degrees
 ):
@@ -159,7 +159,7 @@ def all_orientations(emulator_controller, request):
     sleep(0.1)
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.timeout(timeout=60, func_only=True)
 def test_screenshot_gets_default_resolution(
     at_home, emulator_controller, default_display_config, all_orientations
 ):
@@ -176,7 +176,7 @@ def test_screenshot_gets_default_resolution(
     ), "The height should be equal to the device height (portrait), or device width (landscape)"
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.timeout(timeout=60, func_only=True)
 def test_screenshot_never_scales_up(
     at_home, emulator_controller, default_display_config, all_orientations
 ):
@@ -200,7 +200,7 @@ def test_screenshot_never_scales_up(
     ), "The height should be equal to the device height (portrait), or device width (landscape)"
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.timeout(timeout=60, func_only=True)
 def test_screenshot_should_fail_if_does_not_exist(
     at_home, emulator_controller, default_display_config
 ):

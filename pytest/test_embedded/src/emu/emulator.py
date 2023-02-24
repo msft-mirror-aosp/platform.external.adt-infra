@@ -175,7 +175,7 @@ class BaseEmulator(object):
         Returns:
             bool: True if the emulator has booted, False otherwise.
         """
-        timeout = time.time() + timeout
+        until = time.time() + timeout
         start = timer()
 
         self.logger.info(
@@ -183,7 +183,7 @@ class BaseEmulator(object):
             timeout,
             self.description.name(),
         )
-        while self.is_alive() and not self.has_booted() and time.time() < timeout:
+        while self.is_alive() and not self.has_booted() and time.time() < until:
             time.sleep(1)
 
         if not self.is_alive():
@@ -332,13 +332,13 @@ class Emulator(BaseEmulator):
         self.proc = cmd.run()
         self.log = handler.queue
 
-        max_wait = 10
+        max_wait = 20
         self.logger.info("Waiting for an emulator to become available.")
         discovery = EmulatorDiscovery()
 
         while (
             max_wait > 0
-            and discovery.find_emulator("avd.id", self.configuration) is None
+            and discovery.find_emulator("avd.id", self.configuration.name) is None
         ):
             max_wait = max_wait - 1
             self.logger.info(

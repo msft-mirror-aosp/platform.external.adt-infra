@@ -101,7 +101,6 @@ def pytest_addoption(parser):
     )
 
 
-
 ALL_PLATFORMS = set("darwin linux win32".split())
 
 
@@ -134,6 +133,23 @@ def pytest_sessionfinish(
         emu.stop()
         emu.delete()
 
+    crash_report = get_crash_reporter(session.config)
+    # Report any crashes that might have happened.
+    logging.info("Running crash reporter finalizer")
+    logfile = session.config.getoption("log_file")
+    if logfile:
+        crash_report.write_reports_to_disk(Path(logfile).parent)
+    else:
+        crash_report.list_crashes()
+
+    crash_report.report_crashes()
+
+
+def get_crash_reporter(pytestconfig):
+    exe = pytestconfig.getoption("emulator")
+    emulator_directory = Path(exe).parent if exe else None
+    return CrashReporter(emulator_directory, pytestconfig.getoption("symbols"))
+
 
 @pytest.fixture(scope="session", autouse=True)
 def crash_reporter(pytestconfig):
@@ -153,21 +169,9 @@ def crash_reporter(pytestconfig):
     Yields:
         CrashReporter: An instance of the CrashReporter class
     """
-    exe = pytestconfig.getoption("emulator")
-    emulator_directory = Path(exe).parent if exe else None
-    crash_report = CrashReporter(emulator_directory, pytestconfig.getoption("symbols"))
+    crash_report = get_crash_reporter(pytestconfig)
     crash_report.clear()
-
-    yield crash_report
-
-    # Report any crashes that might have happened.
-    logfile = pytestconfig.getoption("log_file")
-    if logfile:
-        crash_report.write_reports_to_disk(Path(logfile).parent)
-    else:
-        crash_report.list_crashes()
-
-    crash_report.report_crashes()
+    return crash_report
 
 
 # -------------------------------
@@ -264,7 +268,7 @@ def emulator(request, pytestconfig, crash_reporter) -> BaseEmulator:
 
 @pytest.mark.timeout(600)
 @pytest.fixture
-def avd(emulator: BaseEmulator) -> BaseEmulator:
+def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
     An emulator gets 600 seconds to boot up.
@@ -272,14 +276,23 @@ def avd(emulator: BaseEmulator) -> BaseEmulator:
 
     Args:
         emulator (BaseEmulator): Test fixture that provides the configured emulator.
+        request: Provide information on the executing test function.
 
     Returns:
         BaseEmulator: A successfully booted emulator.
     """
 
     assert emulator
+    emu_flags = []
+    if hasattr(request, "param"):
+        emu_flags = [request.param]
+        # Stop the running emulator, this makes sure the emulator can be launched with correct flags.
+        if emulator.is_alive():
+            emulator.stop()
+            assert not emulator.is_alive()
+
     if not emulator.is_alive():
-        emulator.launch(flags=[])
+        emulator.launch(flags=emu_flags)
 
     # Make sure the emulator is booted in at least 10 minutes.
     # (Note, boot times can be *REALLY* slow on windows gce..)

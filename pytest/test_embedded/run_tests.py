@@ -67,6 +67,10 @@ class JavaNotFound(Exception):
     pass
 
 
+class NoTestResultsProduced(Exception):
+    pass
+
+
 class ZipFileWithAttr(ZipFile):
     """Python does not set the file attributes properly."""
 
@@ -229,6 +233,7 @@ class TemporaryEmulatorDeploy:
         symbol_path = Path(self.tmp.name) / "symbols"
         symzip = self._find_dist_zip("breakpad-symbols")
         if symzip:
+            logging.info("Extracting %s to %s", symzip, emu_master_dev)
             symbols = ZipFileWithAttr(symzip)
             symbols.extractall(path=symbol_path)
 
@@ -493,6 +498,7 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
 
 def run_tests(
     emulator: str,
+    use_exceptions: bool,
     logdir: Path,
     verbose: bool,
     symbol_path: Path,
@@ -504,6 +510,7 @@ def run_tests(
     Args:
 
         emulator (str):    Path to the emulator binary
+        use_exceptions(bool): True if an excpetion should be raised on pytest failures.
         symbol_path(Path): Optional path to the symbols that belong with this emulator.
         logdir (Path):     The directory where all the logs will be written to
         verbose: (bool):   True if we should be (very) verbose.
@@ -513,8 +520,7 @@ def run_tests(
     verbose = ["-vvv"] if verbose else []
     emulator = str(resolve_emulator(emulator))
 
-    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL])
-    pyrun.pip_install(verbose + ["-e", HERE])
+    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, HERE])
     restart_adb()
 
     logdir = Path(logdir) / "embedded_test" / "log"
@@ -529,14 +535,14 @@ def run_tests(
                     "-vv",
                     "-m",
                     "not perf",
-                    "-x",
                     f"--junitxml={junit_test_results}",
-                    # Boot times in windows can be 6 mins, so lets give us 20 minutes
-                    # of testing time before we give up.
-                    "--timeout=1200",
+                    # Boot times in windows can be >6 mins, and we are booting several times!
+                    # We will give us at most 45 minutes.
+                    "--timeout=2700",
                     f"--log-file={logdir}/pytest.log",
                     f"--emulator={emulator}",
-                    f"--symbols={symbol_path}" f"--android_avd_home={tmpdir}",
+                    f"--symbols={symbol_path}",
+                    f"--android_avd_home={tmpdir}",
                     f"--android_home={ANDROID_SDK_ROOT}",
                 ],
                 cwd=HERE,
@@ -544,10 +550,17 @@ def run_tests(
                     "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
                     "ANDROID_AVD_HOME": str(tmpdir),
                 },
-                timeout=1210,  # Give pytest a chance to "nicely" terminate everything.
+                timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
             )
+        except:
+            # Forward any exceptions in case we did not produce an
+            # junit result.
+            if use_exceptions or not junit_test_results.exists():
+                raise
         finally:
-            if junit_test_results.exists():
+            if not junit_test_results.exists():
+                raise NoTestResultsProduced(f"We expected a junit report in {junit_test_results}.")
+            else:
                 apply_xslt(
                     python_exe=pyrun,
                     source=junit_test_results,
@@ -599,8 +612,7 @@ def main():
         default=Path(os.getcwd()),
         dest="logdir",
         help="The directory where the logs should be placed. "
-        + "On the build bots this should be dist_dir/testlogs. "
-        + "Defaults to the current working directory.",
+        + "On the build bots this should be dist_dir/testlogs.",
     )
 
     parser.add_argument(
@@ -623,9 +635,7 @@ def main():
     parser.add_argument(
         "--verbose",
         dest="verbose",
-        # b/261042155 we are trying to understand why we are hitting timeout
-        # and install issues on mac.
-        default=OS_NAME == "darwin",
+        default=False,
         action="store_true",
         help="Enable verbose logging",
     )
@@ -637,10 +647,19 @@ def main():
         help="Use the current python interpreter v.s. the one in AOSP. You should only use this for debugging.",
     )
 
+    parser.add_argument(
+        "--failures_as_errors",
+        dest="use_exceptions",
+        default=False,
+        action="store_true",
+        help="Treat test failures as errors. Test failures will raise an "
+        "exception when this flag is present.",
+    )
+
     args = parser.parse_args()
 
     lvl = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(format="%(message)s", level=lvl)
+    logging.basicConfig(format="%(asctime)s %(message)s", datefmt="%H:%M:%S", level=lvl)
 
     if args.build_dir and args.emulator:
         raise Exception("Use either --build_dir or --emulator not both.")
@@ -659,9 +678,23 @@ def main():
 
     if args.build_dir:
         with TemporaryEmulatorDeploy(args.build_dir) as (emulator, symbols):
-            run_tests(emulator, args.logdir, args.verbose, symbols, pyrun=py_exe)
+            run_tests(
+                emulator=emulator,
+                use_exceptions=args.use_exceptions,
+                logdir=args.logdir,
+                verbose=args.verbose,
+                symbol_path=symbols,
+                pyrun=py_exe,
+            )
     else:
-        run_tests(args.emulator, args.logdir, args.verbose, args.symbols, pyrun=py_exe)
+        run_tests(
+            emulator=args.emulator,
+            use_exceptions=args.use_exceptions,
+            logdir=args.logdir,
+            verbose=args.verbose,
+            symbol_path=args.symbols,
+            pyrun=py_exe,
+        )
 
 
 if __name__ == "__main__":
