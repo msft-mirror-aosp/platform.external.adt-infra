@@ -152,18 +152,16 @@ class BaseEmulator(object):
         pass
 
     def has_booted(self) -> bool:
-        """Makes a gRPC call to check if the emulator has booted.
+        """Makes a check of bootcoompleted.ini to check if the emulator has booted.
 
         Returns:
             bool: False, the emulator has not booted, or is not accessible.
         """
-        try:
-            _EMPTY_ = empty_pb2.Empty()
-            emu = self.description.get_emulator_controller()
-            return emu.getStatus(_EMPTY_).booted
-        except RpcError as err:
-            self.logger.warning("Unable to determine boot state due to %s", err)
 
+        path = Path(self.android_avd_home,f'{self.configuration.name}.avd', "bootcompleted.ini")
+        self.logger.info("checking boot ini at %s", f'{path}')
+        if (path.is_file()):
+            return True
         return False
 
     def wait_for_boot(self, timeout: int = 600) -> bool:
