@@ -67,6 +67,10 @@ class JavaNotFound(Exception):
     pass
 
 
+class NoTestResultsProduced(Exception):
+    pass
+
+
 class ZipFileWithAttr(ZipFile):
     """Python does not set the file attributes properly."""
 
@@ -549,10 +553,14 @@ def run_tests(
                 timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
             )
         except:
-            if use_exceptions:
+            # Forward any exceptions in case we did not produce an
+            # junit result.
+            if use_exceptions or not junit_test_results.exists():
                 raise
         finally:
-            if junit_test_results.exists():
+            if not junit_test_results.exists():
+                raise NoTestResultsProduced(f"We expected a junit report in {junit_test_results}.")
+            else:
                 apply_xslt(
                     python_exe=pyrun,
                     source=junit_test_results,
