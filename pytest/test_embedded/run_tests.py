@@ -24,6 +24,11 @@ from pathlib import Path
 from queue import Queue
 from threading import Thread
 
+# Note we are not part of the package!
+from src.emu.crashreporter import CrashReporter
+
+
+
 OS_NAME = platform.system().lower()
 EMU_TEST_DIR = Path(os.path.dirname(__file__)).absolute()
 AOSP_ROOT = EMU_TEST_DIR.parents[3]
@@ -496,6 +501,24 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
         logging.warning("Failed to apply xslt: %s to %s due to (%s)", xslt, source, err)
 
 
+def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path):
+    emulator_directory = Path(emulator).parent if emulator else None
+    crash_report = CrashReporter(emulator_directory, symbol_path)
+
+    # Make sure they end up on the log
+    crash_report.list_crashes()
+
+    # Write them to disk
+    crash_report.write_reports_to_disk(logdir)
+
+    # And report them..
+    crash_report.report_crashes()
+
+    # After reporting them we will have ids, lets print them and remove them.
+    crash_report.report_crashes()
+    crash_report.clear()
+
+
 def run_tests(
     emulator: str,
     use_exceptions: bool,
@@ -558,6 +581,9 @@ def run_tests(
             if use_exceptions or not junit_test_results.exists():
                 raise
         finally:
+            # Let's see if we can collect crash reports..
+            collect_crash_reports(emulator, symbol_path, logdir)
+
             if not junit_test_results.exists():
                 raise NoTestResultsProduced(f"We expected a junit report in {junit_test_results}.")
             else:

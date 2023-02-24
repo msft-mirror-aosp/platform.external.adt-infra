@@ -133,52 +133,12 @@ def pytest_sessionfinish(
         emu.stop()
         emu.delete()
 
-    crash_report = get_crash_reporter(session.config)
-    # Report any crashes that might have happened.
-    logging.info("Running crash reporter finalizer")
-    logfile = session.config.getoption("log_file")
-    if logfile:
-        crash_report.write_reports_to_disk(Path(logfile).parent)
-    else:
-        crash_report.list_crashes()
-
-    crash_report.report_crashes()
-
-
-def get_crash_reporter(pytestconfig):
-    exe = pytestconfig.getoption("emulator")
-    emulator_directory = Path(exe).parent if exe else None
-    return CrashReporter(emulator_directory, pytestconfig.getoption("symbols"))
-
-
-@pytest.fixture(scope="session", autouse=True)
-def crash_reporter(pytestconfig):
-    """A fixture to handle crash reports in the emulator.
-
-    This fixture returns the crash reporter associated with the emulator,
-    which can be used to list, print, upload, and delete crash reports.
-    The scope of the fixture is session and it is
-    automatically used in all test functions.
-
-    The fixture also writes the crash reports to disk if the `log_file` option is
-    provided. If not, it lists all the crashes instead.
-
-    Args:
-        pytestconfig (object): Pytest configuration object
-
-    Yields:
-        CrashReporter: An instance of the CrashReporter class
-    """
-    crash_report = get_crash_reporter(pytestconfig)
-    crash_report.clear()
-    return crash_report
-
 
 # -------------------------------
 # Session wide fixtures are below
 # -------------------------------
 @pytest.fixture(scope="module")
-def emulator(request, pytestconfig, crash_reporter) -> BaseEmulator:
+def emulator(request, pytestconfig) -> BaseEmulator:
     """Makes a configured emulator available
 
     Note: You usually don't need fixture, as it will be automatically provided
