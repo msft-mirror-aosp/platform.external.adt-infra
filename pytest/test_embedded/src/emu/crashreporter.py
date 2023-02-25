@@ -48,8 +48,14 @@ class CrashReporter:
         """True if the crash reporter binary is available."""
         return self.crashreporter is not None
 
+    def has_symbols(self) -> bool:
+        return self.symbol_path is not None
+
     def crashes(self) -> [str]:
         return self.report(["-l"]).splitlines()
+
+    def dump_crash(self, report_id: str) -> str:
+        return self.report(["-d", report_id, self.symbol_path])
 
     def list_crashes(self):
         """This lists and reports any crashes that we encountered during the running of tests."""
