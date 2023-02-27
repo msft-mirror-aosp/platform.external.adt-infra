@@ -11,46 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 import re
-import time
-from pathlib import Path
+from typing import List
 
 import pytest
-import logging
-from typing import List
 
 from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator
-
-
-def get_crash_reporter(pytestconfig):
-    exe = pytestconfig.getoption("emulator")
-    emulator_directory = Path(exe).parent if exe else None
-    return CrashReporter(emulator_directory, pytestconfig.getoption("symbols"))
-
-
-@pytest.fixture
-def crash_reporter(pytestconfig):
-    """A fixture to handle crash reports in the emulator.
-
-    This fixture returns the crash reporter associated with the emulator,
-    which can be used to list, print, upload, and delete crash reports.
-    The scope of the fixture is session and it is
-    automatically used in all test functions.
-
-    The fixture also writes the crash reports to disk if the `log_file` option is
-    provided. If not, it lists all the crashes instead.
-
-    Args:
-        pytestconfig (object): Pytest configuration object
-
-    Yields:
-        CrashReporter: An instance of the CrashReporter class
-    """
-    crash_report = get_crash_reporter(pytestconfig)
-    crash_report.clear()
-    yield crash_report
-    crash_report.clear()
+from emu.utils import wait_until
 
 
 def is_sublist(minidump: List[str], compiled_regexes: List[re.Pattern]) -> bool:
@@ -105,11 +74,16 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 
     assert emulator.is_alive()
 
-    emulator.console().send("crash")
+    crash_count = len(crash_reporter.crashes())
+    assert emulator.console().send("crash")
 
-    # Give the reporter a chance to collect a report.
-    while emulator.is_alive():
-        time.sleep(1)
+    # Wait until the emulator is alive
+    assert wait_until(emulator.is_alive)
+
+    def crash_detected():
+        return crash_count < len(crash_reporter.crashes())
+
+    assert wait_until(crash_detected)
 
     return crash_reporter.crashes()
 

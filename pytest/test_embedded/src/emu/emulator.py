@@ -47,6 +47,7 @@ class EmulatorNotFoundException(Exception):
 class EmulatorDiedException(Exception):
     pass
 
+
 class FailedToInstallApk(Exception):
     pass
 
@@ -128,7 +129,7 @@ class BaseEmulator(object):
             "Discovered emulator pid: %s (%s), named: %s",
             self.description.pid(),
             self.description.name(),
-            self.description.get("avd.id")
+            self.description.get("avd.id"),
         )
 
     def launch(self, flags: [str]) -> bool:
@@ -158,9 +159,11 @@ class BaseEmulator(object):
             bool: False, the emulator has not booted, or is not accessible.
         """
 
-        path = Path(self.android_avd_home,f'{self.configuration.name}.avd', "bootcompleted.ini")
-        self.logger.info("checking boot ini at %s", f'{path}')
-        if (path.is_file()):
+        path = Path(
+            self.android_avd_home, f"{self.configuration.name}.avd", "bootcompleted.ini"
+        )
+        self.logger.info("checking boot ini at %s", f"{path}")
+        if path.is_file():
             return True
         return False
 
@@ -203,7 +206,7 @@ class BaseEmulator(object):
         Returns:
             EmulatorConnection: A connection to the emulator.
         """
-        if self.telnet is None:
+        if self.telnet is None or not self.telnet.is_connected():
             self.logger.info("Connecting to console")
             self.telnet = EmulatorConnection.connect(
                 self.description.get("port.serial"), self.description.get("avd.id")

@@ -159,6 +159,8 @@ class EmulatorConnection:
                 return False
         else:
             self.logger.info("Dropping %s", msg)
+            return False
+
         return self.connected
 
     def stop(self):
