@@ -37,6 +37,7 @@ class CrashReporter:
         if not self.crashreporter:
             return ""
 
+        params = [str(x) for x in params]
         logging.info(
             "Running crashreporter: %s %s", self.crashreporter, " ".join(params)
         )
