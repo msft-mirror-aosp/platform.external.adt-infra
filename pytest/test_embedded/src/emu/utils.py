@@ -19,7 +19,7 @@ from queue import Queue
 import threading
 
 
-def wait_until(predicate, timeout=10):
+def wait_until(predicate, timeout=10, hz=2):
     """
     Wait until the given predicate function returns True, or until the timeout
     expires.
@@ -33,6 +33,7 @@ def wait_until(predicate, timeout=10):
             timeout expires.
         timeout (int): The maximum number of seconds to wait for the predicate
             function to return True. Defaults to 10 seconds.
+        hz (int): Frequency of how often we want to execute the predicate.
 
     Returns:
         bool: True if the predicate function returns True before the timeout
@@ -40,7 +41,7 @@ def wait_until(predicate, timeout=10):
     """
     end = time.time() + timeout
     while not predicate() and time.time() < end:
-        time.sleep(1)
+        time.sleep(1 / hz)
 
     return predicate()
 
