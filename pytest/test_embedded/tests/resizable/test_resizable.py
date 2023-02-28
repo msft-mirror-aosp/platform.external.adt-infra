@@ -55,7 +55,7 @@ def test_resizable_changes_resolution(emulator_controller, width, height, mode):
     # If this is broken the test will timeout
     currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
     while currentMode != mode:
-        time.sleep(0.1)
+        time.sleep(1.0)
         currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
 
     image = emulator_controller.getScreenshot(

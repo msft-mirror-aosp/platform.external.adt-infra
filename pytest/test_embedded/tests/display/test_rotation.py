@@ -73,7 +73,7 @@ def for_each_rotation(emulator_controller):
         )
         # Make sure we are not slamming this endpoint, and give the emulator
         # a chance to respond.
-        time.sleep(0.2)
+        time.sleep(1.0)
         yield fine, coarse
 
 
@@ -119,7 +119,7 @@ def test_rotation_observable_through_stream_screenshot(
 ):
     """Test that setting the rotation, is observable through streaming screenshot."""
     for (angle, coarse) in for_each_rotation(emulator_controller):
-        sleep(0.2)
+        sleep(1.0)
         imgStream = emulator_controller.streamScreenshot(ImageFormat())
         with StreamingCall(imgStream) as stream:
             # Keep looking at the queue until we see what we need.
@@ -297,9 +297,9 @@ def test_rotation_through_console_observable_through_physical_model(
         )
     )
     for (angle, _) in ROTATION_MAPPING:
-        sleep(0.2)
+        sleep(1.0)
         adb(["emu", "rotate"])
-        sleep(0.2)
+        sleep(1.0)
         rotate = emulator_controller.getPhysicalModel(
             PhysicalModelValue(target=PhysicalModelValue.ROTATION)
         )
