@@ -375,8 +375,8 @@ class Emulator(BaseEmulator):
                 "-show-kernel",
                 "-metrics-collection",
                 "-no-audio",
-                "-idle-grpc-timeout",
-                "300",
+                # "-idle-grpc-timeout", # We will explicitly shutdown the device.
+                # "300",
                 "-log-detailed",
                 "-gpu",
                 "swiftshader_indirect",
