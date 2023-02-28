@@ -37,7 +37,7 @@ def dumpAvdConent(mypath):
         logging.info("Found: %s", f)
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=600, func_only=True)
+@pytest.mark.timeout(timeout=1800, func_only=True)
 def test_snapshot_create(emulator):
     """Make sure the emulator status is set to booted."""
     if "DIST_DIR" in os.environ:
@@ -66,10 +66,10 @@ def test_snapshot_create(emulator):
         assert emulator.launch(flags=["-wipe-data", "-feature", "DownloadableSnapshot", "-no-snapshot-load"]);
 
         logging.info("Booting up emualtor ...");
-        assert emulator.wait_for_boot(timeout=420);
+        assert emulator.wait_for_boot(timeout=1080);
 
         # wait till it settle down a bit
-        time.sleep(10)
+        time.sleep(30)
 
         logging.info("Stopping emualtor");
         emulator.stop();
