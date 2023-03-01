@@ -48,19 +48,19 @@ def is_sublist(minidump: List[str], compiled_regexes: List[re.Pattern]) -> bool:
 
 
 def check_minidump(minidump):
-    # 1. Immediate. Note that our symbols might have mangled C++
+    # Note that our symbols might have mangled C++
     # functions, which can be mangled differently from compiler
-    # to compiler, so we just look for some readable names.
+    # to compiler. Furthermore some platforms are optimizing better than others
+    # making functions disappear.
     IMMEDIATE_CRASH = [
         re.compile(reg, re.M)
         for reg in [
-            r".*0.*!.*GenerateDumpAndDie.*",
-            r".*1*!.*GenerateDumpAndDie.*",
-            r".*2.*!.*crashhandler_die.*",
-            r".*3.*!.*crash\(\).*",
-            r".*4.*!.*do_crash.*",
-            r".*5.*!.*control_client_do_command.*",
-            r".*6.*!.*control_client_read.*",
+            r".*.*!.*GenerateDumpAndDie.*",
+            r".*.*!.*crashhandler_die.*",
+            r".*.*!.*crash\(\).*",
+            r".*.*!.*do_crash.*",
+            r".*.*!.*control_client_do_command.*",
+            r".*.*!.*control_client_read.*",
         ]
     ]
 
