@@ -376,6 +376,7 @@ class Emulator(BaseEmulator):
                 self.configuration.name,
                 "-verbose",
                 "-show-kernel",
+                "-no-location-ui",
                 "-metrics-collection",
                 "-no-audio",
                 # "-idle-grpc-timeout", # We will explicitly shutdown the device.
