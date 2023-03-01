@@ -15,18 +15,19 @@ import argparse
 import logging
 import os
 import platform
-import re
-import shutil
 import subprocess
+import shutil
 import sys
 import tempfile
+from zipfile import ZipFile, ZipInfo
 from pathlib import Path
 from queue import Queue
 from threading import Thread
-from zipfile import ZipFile, ZipInfo
 
 # Note we are not part of the package!
 from src.emu.crashreporter import CrashReporter
+
+
 
 OS_NAME = platform.system().lower()
 EMU_TEST_DIR = Path(os.path.dirname(__file__)).absolute()
@@ -213,13 +214,16 @@ class TemporaryEmulatorDeploy:
             )
 
     def _find_dist_zip(self, type: str):
-        valid_target = re.compile(
-            "sdk-repo-(linux|linux_aarch64|darwin|darwin_aarch64|windows)-"
-            f"{type}-(P?\d+).zip"
-        )
-        for option in self.build_dir.glob("*.zip"):
-            logging.info("Considering %s", option)
-            if valid_target.match(option):
+        valid_targets = {
+            "linux": ["linux", "linux_aarch64"],
+            "darwin": [
+                "darwin_aarch64",
+                "darwin",
+            ],
+            "windows": ["windows"],
+        }
+        for target in valid_targets[OS_NAME]:
+            for option in self.build_dir.glob(f"sdk-repo-{target}-{type}-*.zip"):
                 return option
 
     def __enter__(self):
@@ -232,7 +236,7 @@ class TemporaryEmulatorDeploy:
 
         # Extract symbols.
         symbol_path = Path(self.tmp.name) / "symbols"
-        symzip = self._find_dist_zip("emulator-symbols")
+        symzip = self._find_dist_zip("breakpad-symbols")
         if symzip:
             logging.info("Extracting %s to %s", symzip, emu_master_dev)
             symbols = ZipFileWithAttr(symzip)
@@ -581,9 +585,7 @@ def run_tests(
             collect_crash_reports(emulator, symbol_path, logdir)
 
             if not junit_test_results.exists():
-                raise NoTestResultsProduced(
-                    f"We expected a junit report in {junit_test_results}."
-                )
+                raise NoTestResultsProduced(f"We expected a junit report in {junit_test_results}.")
             else:
                 apply_xslt(
                     python_exe=pyrun,
