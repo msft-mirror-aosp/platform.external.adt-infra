@@ -267,7 +267,7 @@ def emulator(request, pytestconfig) -> BaseEmulator:
     return pytest.emulators[name]
 
 
-@pytest.mark.timeout(900)
+@pytest.mark.timeout(600)
 @pytest.fixture
 def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
@@ -295,9 +295,9 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     if not emulator.is_alive():
         emulator.launch(flags=emu_flags)
 
-    # Make sure the emulator is booted in at least 15 minutes.
+    # Make sure the emulator is booted in at least 10 minutes.
     # (Note, boot times can be *REALLY* slow on windows gce..)
-    assert emulator.wait_for_boot(900)
+    assert emulator.wait_for_boot(600)
 
     emulator.install_apk(APP_DEBUG_APK.absolute())
     return emulator

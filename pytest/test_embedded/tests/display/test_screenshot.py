@@ -58,7 +58,7 @@ def rotate_device(emu, angle):
             value=ParameterValue(data=[0, 0, angle]),
         )
     )
-    time.sleep(1.0)
+    time.sleep(0.2)
 
 
 EMU_TO_PIL_IMAGE_FORMATS = {
@@ -156,7 +156,7 @@ def all_orientations(emulator_controller, request):
         )
     )
     # Give the emulator a chance to actually rotate around.
-    sleep(1.0)
+    sleep(0.1)
 
 
 @pytest.mark.timeout(timeout=60, func_only=True)
