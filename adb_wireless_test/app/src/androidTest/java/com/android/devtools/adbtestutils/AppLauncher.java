@@ -50,7 +50,7 @@ class AppLauncher {
         device.pressKeyCode(KeyEvent.KEYCODE_A, KeyEvent.META_CTRL_ON);
 
         final UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true)).setAsVerticalList();
-        scrollable.scrollToEnd(5);
+        scrollable.waitForExists(5L);
 
         final UiSelector appSelector = new UiSelector().text(appName);
         final UiObject appObject = device.findObject(appSelector);
@@ -88,7 +88,7 @@ class AppLauncher {
             UiObject target = device.findObject(regexSelector);
             try {
                 UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-                boolean isFound = scrollable.scrollIntoView(regexSelector);
+                boolean isFound = new Wait().until(() -> scrollable.scrollIntoView(regexSelector));
                 if (!isFound) {
                     target = device.findObject(textSelector);
                     scrollable.scrollIntoView(textSelector);
