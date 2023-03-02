@@ -294,6 +294,8 @@ class PyRunner:
 
             self.env["DISPLAY"] = display
 
+        logging.info("Using environment: %s", self.env)
+
     def _get_java_home(self):
         """Retrieves the path to the Java home directory from the active Java interpreter.
 
@@ -383,7 +385,8 @@ class PyRunner:
         """
         emu_env = self.env.copy()
         emu_env.update(env)
-        logging.info("Using %s from %s", emu_env, self.env)
+        if env:
+            logging.info("Using %s from %s", emu_env, self.env)
         run(
             [self.py_exe] + args,
             timeout=timeout,
@@ -585,6 +588,9 @@ def run_tests(
         finally:
             # Let's see if we can collect crash reports..
             collect_crash_reports(emulator, symbol_path, logdir)
+
+            # Forcefully terminate all emulator processess
+            pyrun.run(["-m", "emu.process.kill_emulator"])
 
             if not junit_test_results.exists():
                 raise NoTestResultsProduced(
