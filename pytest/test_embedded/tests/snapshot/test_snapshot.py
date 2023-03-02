@@ -79,7 +79,7 @@ def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
 
 @pytest.mark.perf
 @pytest.mark.benchmark(group="snapshot")
-def test_snapshot_list_perf(benchmark, snapshot_service, animation_app):
+def test_snapshot_list_perf(benchmark, snapshot_service, coldboot_animation_app):
     # create a 10 snapshots while we are running the animation app.
     for i in range(0, 10):
         # Make sure the animation state is changing the state a bit.
