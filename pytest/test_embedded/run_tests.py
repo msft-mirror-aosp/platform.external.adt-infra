@@ -195,7 +195,7 @@ def resolve_emulator(emulator: str) -> Path:
         return emu
 
     assert False, (
-        "f{emulator} poinst to a non existent path (are you passing the right path to"
+        f"{emulator} points to a non existent path (are you passing the right path to"
         + " the --emulator flag?"
     )
 

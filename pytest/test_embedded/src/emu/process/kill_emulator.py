@@ -44,9 +44,11 @@ def safe_kill(process: psutil.Process) -> bool:
 
             # wait for the parent to reap the zombie process
             parent.wait(timeout=1)
-        except psutil.NoSuchProcess:
+        except Exception as err:
             # well, well, well.. Someone just disappeared on us..
-            pass
+            # or we failed to wait out the reaping. It will get
+            # cleaned up later on
+            logging.info("Failed to reap zombie, ignoring %s", e)
 
         if not psutil.pid_exists(process.pid):
             logging.info("Process %s has been reaped.", process)
