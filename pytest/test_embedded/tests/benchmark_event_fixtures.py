@@ -56,7 +56,7 @@ def benchmark_stat(request):
     fixture = Fixture(
         name=node.name,
         fullname=node._nodeid,
-        group=options.get('group', None),
+        group=options.get("group", None),
         param=param,
         params=params,
         extra_info={},
@@ -84,10 +84,10 @@ def benchmark_stat(request):
 def adb_event_stream(avd):
     """Streamed output of adb getevent -t.
 
-       The stream will consume all initial events, and should be ready
-       for all incoming events when it returns.
+    The stream will consume all initial events, and should be ready
+    for all incoming events when it returns.
 
-       Note: Needs android-Q or higher.
+    Note: Needs android-Q or higher.
     """
     with avd.adb.stream(["shell", "getevent", "-t"]) as events:
         found_evt = False
@@ -101,7 +101,9 @@ def adb_event_stream(avd):
 
         yield events
 
+
 _android_start_time = None
+
 
 @pytest.fixture
 def android_start_time(avd):
@@ -137,15 +139,14 @@ def android_start_time(avd):
     return _android_start_time
 
 
-
 class EventTimeTester(object):
     """Tests how long it takes to deliver an event.
 
-       Measurements are done by:
+    Measurements are done by:
 
-       - Checking timestamps on getevent stream from guest
-       - Checking timestamps on the emulator log (host) (need -debug-events flag)
-       - Checking time to read event from getevent stream
+    - Checking timestamps on getevent stream from guest
+    - Checking timestamps on the emulator log (host) (need -debug-events flag)
+    - Checking time to read event from getevent stream
     """
 
     # Parse getevent -t output
@@ -159,7 +160,7 @@ class EventTimeTester(object):
     )
 
     def __init__(self, emulator, send_fn, event_stream, start_time_seconds):
-        """ Creates an EventTimeTester object.
+        """Creates an EventTimeTester object.
 
         Args:
             send_fn: Function used to send an (x, y, buttons) mouse click to
@@ -174,7 +175,6 @@ class EventTimeTester(object):
         self.send_fn = send_fn
         self.event_stream = event_stream
         self.start_time = start_time_seconds
-
 
     def parse_event_time(self, event_line):
         """Parse an ev dev event logline.
@@ -227,7 +227,7 @@ class EventTimeTester(object):
         return int((value - min_in) * range_out / range_in + min_out)
 
     def sequence_contains_sequence(self, haystack_seq, needle_seq):
-        """"True if the needle_sequence occurs in the haystack."""
+        """ "True if the needle_sequence occurs in the haystack."""
         for i in range(0, len(haystack_seq) - len(needle_seq) + 1):
             if needle_seq == haystack_seq[i : i + len(needle_seq)]:
                 return i

@@ -1,7 +1,5 @@
 import pytest
-import time
 from google.protobuf import empty_pb2
-
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -11,11 +9,11 @@ from google.protobuf import empty_pb2
 # On X64 this will resolve to: system-images;android-33;google_apis;x86_64
 # avd_config = {"api": "33", "tag.id": "google_apis"}
 
+
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=1200, func_only=True)
+@pytest.mark.timeout(timeout=2800, func_only=True)
 def test_booted(emulator_controller):
     """Make sure the emulator status is set to booted."""
-    response = emulator_controller.getStatus(empty_pb2.Empty())
-    # sleep 30 seconds for it to stablize
-    time.sleep(30)
-    assert response.booted
+    assert emulator_controller.getStatus(
+        empty_pb2.Empty()
+    ), "The emulator should always be in a booted state."

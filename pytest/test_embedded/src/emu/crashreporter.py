@@ -14,7 +14,24 @@
 import logging
 import shutil
 from pathlib import Path
-import subprocess
+
+
+# Hack attack..
+try:
+    from emu.process.command import Command
+
+    def check_run(params):
+        cmd = Command(params)
+        status, result = cmd.run_until_finished(timeout=5)
+        return "\n".join(result)
+
+except:
+    import subprocess
+
+    def check_run(params):
+        return subprocess.run(
+            params, capture_output=True, encoding="utf-8", timeout=5
+        ).stdout.strip()
 
 
 class CrashReporter:
@@ -41,9 +58,8 @@ class CrashReporter:
         logging.info(
             "Running crashreporter: %s %s", self.crashreporter, " ".join(params)
         )
-        return subprocess.run(
-            [self.crashreporter] + params, capture_output=True, encoding="utf-8"
-        ).stdout.strip()
+
+        return check_run([self.crashreporter] + params)
 
     def available(self) -> bool:
         """True if the crash reporter binary is available."""

@@ -333,7 +333,7 @@ def go_home(avd: BaseEmulator):
     stub = avd.description.get_emulator_controller()
     avd.adb.run(["disconnect"])
     avd.adb.run(["wait-for-device"])
-    avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
+    stub.sendKey(KeyboardEvent(key="WakeUp", eventType=KeyboardEvent.keypress))
     stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
     stub.setPhysicalModel(
         PhysicalModelValue(
@@ -403,8 +403,6 @@ def launch_animiation_app(avd: BaseEmulator):
     avd.adb.run(["disconnect"])
     avd.adb.run(["wait-for-device"])
     avd.adb.run(["logcat", "-c"])
-    avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
-    avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
     with avd.adb.stream(["logcat", "-s", "aemu"], timeout=2) as stream:
         avd.adb.run(
             [
@@ -413,7 +411,8 @@ def launch_animiation_app(avd: BaseEmulator):
                 "start",
                 "-n",
                 "com.google.AnimateBox/com.google.emu.MainActivity",
-            ]
+            ],
+            timeout=5,
         )
         return wait_for_regex(stream, r".*Timing: (\d+), (\d+)", 5)
 

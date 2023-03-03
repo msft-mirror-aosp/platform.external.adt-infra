@@ -21,7 +21,7 @@ from snaptool.snapshot import SnapshotService
 
 @pytest.fixture
 def snapshot_service(avd):
-    """Fixture to make sure the emulator has no snapshots. """
+    """Fixture to make sure the emulator has no snapshots."""
     snap = SnapshotService(snapshot_service=avd.description.get_snapshot_service())
     for entry in snap.lists():
         snap.delete(entry.snapshot_id)
@@ -52,6 +52,7 @@ def test_snapshot_delete_removes(snapshot_service):
     assert snapshot_service.delete("foo")
     assert "foo" not in [x.snapshot_id for x in snapshot_service.lists()]
 
+
 @pytest.mark.skip
 @pytest.mark.e2e
 def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
@@ -62,6 +63,7 @@ def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     # Let's make sure the tarfile is valid..
     tar = tarfile.open(os.path.join(path, "foo.tar"))
     assert tar.getmembers()
+
 
 @pytest.mark.skip
 @pytest.mark.e2e
@@ -88,4 +90,3 @@ def test_snapshot_list_perf(benchmark, snapshot_service, coldboot_animation_app)
 
     # And measure the lists service.
     benchmark(snapshot_service.lists)
-

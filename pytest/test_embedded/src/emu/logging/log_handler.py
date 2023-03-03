@@ -142,6 +142,22 @@ class QueueLogHandler(LogHandler):
         except Empty:
             raise StopIteration
 
+    def available(self) -> int:
+        return self.queue.qsize()
+
+    def readlines(self) -> [str]:
+        """Read all lines, in non blocking fashion."""
+        lines = []
+        while not self.queue.empty():
+            elem = self.queue.get()
+            if elem != self.__FINISHED_SENTINEL__:
+                lines.append(elem)
+
+        return lines
+
+    def set_timeout(self, timeout: int):
+        self.timeout = timeout
+
     def log_to_queue(self, logfn, line):
         """Logs the output of the given process."""
         with self.lock:

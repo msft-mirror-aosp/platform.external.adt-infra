@@ -14,21 +14,22 @@
 
 import pytest
 
-from aemu.proto.emulator_controller_pb2 import (
-    ClipData
-)
+from aemu.proto.emulator_controller_pb2 import ClipData
+from emu.timing import eventually
 
 from google.protobuf import empty_pb2
 
 _EMPTY_ = empty_pb2.Empty()
 
+
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.parametrize("clipboard_data",
-                         [
-                             'Hello There!',
-                             'How is Weather?',
-                         ]
+@pytest.mark.parametrize(
+    "clipboard_data",
+    [
+        "Hello There!",
+        "How is Weather?",
+    ],
 )
 def test_clipboard_data(emulator_controller, clipboard_data):
     """Send clipboard data to the emulator.
@@ -38,10 +39,8 @@ def test_clipboard_data(emulator_controller, clipboard_data):
     Args:
       clipboard_data: clipboard data to be set.
     """
-    set_clip_data = ClipData(
-        text = clipboard_data
-    )
+    set_clip_data = ClipData(text=clipboard_data)
     emulator_controller.setClipboard(set_clip_data)
-
-    get_clip_data = emulator_controller.getClipboard(_EMPTY_)
-    assert set_clip_data.text == get_clip_data.text, "Clipboard data doesn't match"
+    assert eventually(
+        lambda: emulator_controller.getClipboard(_EMPTY_).text == clipboard_data
+    ), "Clipboard data doesn't match"

@@ -19,8 +19,8 @@ def test_reads_all_lines_immediately(tmp_path):
     log_file = tmp_path / "hello.txt"
     log_file.write_text("Hello\nWorld\n")
     with LogObserver(log_file) as observer:
-        assert "Hello" ==  observer.get(block=True, timeout=0.5)
-        assert "World" ==  observer.get(block=True, timeout=0.5)
+        assert "Hello" == observer.get(block=True, timeout=0.5)
+        assert "World" == observer.get(block=True, timeout=0.5)
 
 
 def test_no_lines_times_out(tmp_path):

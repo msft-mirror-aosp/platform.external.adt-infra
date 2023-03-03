@@ -14,8 +14,8 @@
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import SensorValue, ParameterValue
-from emu.utils import wait_until
-import logging
+from emu.timing import wait_until
+
 
 def set_and_get_sensor(emu_controller, sensor_value):
     """Executes set and get sensor Rpc call
@@ -50,6 +50,7 @@ def set_and_get_sensor(emu_controller, sensor_value):
     assert wait_until(
         get_sensor_equals_set_sensor, timeout=3
     ), f"Data for sensor doesn't match {sensor_value} != {retrieved}"
+
 
 @pytest.mark.e2e
 @pytest.mark.parametrize(
