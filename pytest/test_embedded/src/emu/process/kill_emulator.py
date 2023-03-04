@@ -48,7 +48,7 @@ def safe_kill(process: psutil.Process) -> bool:
             # well, well, well.. Someone just disappeared on us..
             # or we failed to wait out the reaping. It will get
             # cleaned up later on
-            logging.info("Failed to reap zombie, ignoring %s", e)
+            logging.info("Failed to reap zombie, ignoring %s", err)
 
         if not psutil.pid_exists(process.pid):
             logging.info("Process %s has been reaped.", process)
