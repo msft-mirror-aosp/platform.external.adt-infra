@@ -10,6 +10,7 @@ from subprocess import PIPE
 from . import testcase_base
 from emu_test.utils import emu_argparser
 
+
 class AdbWirelessTest(testcase_base.BaseAdbTest):
     """This class aims to run adb wireless tests."""
 
@@ -32,7 +33,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
                          cwd='.', stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         (out, err) = p.communicate()
 
-        for line in out.split('\n'):
+        for line in out.decode('utf8').split('\n'):
             if line.endswith('device'):
                self.serial = line.split()[0]
                break
@@ -78,10 +79,10 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
                                        emu_argparser.emu_args.test_dir,
                                        'adb_util_logcat.err')
         f = open(logcat_file, 'w')
-        f.write(out)
+        f.write(out.decode('utf-8'))
         f.close()
         f = open(logcat_err_file, 'w')
-        f.write(err)
+        f.write(err.decode('utf-8'))
         f.close()
 
         dst_path = os.path.join(emu_argparser.emu_args.session_dir,
@@ -95,7 +96,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         pair_ip = ''
         pair_code = ''
         # Extract ip, pair code and ports
-        for line in out.split('\n'):
+        for line in out.decode('utf8').split('\n'):
             print(line)
             if 'connect ip' in line:
                 connect_ip = line.split()[-1]
@@ -114,7 +115,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
 
         p = psutil.Popen([self.adb_binary, 'pair', pair_ip],
                          cwd='.', stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
-        (out, err) = p.communicate(pair_code)
+        (out, err) = p.communicate(pair_code.encode() if pair_code else None)
 
         p = psutil.Popen([self.adb_binary, 'connect', connect_ip],
                          cwd='.', stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
@@ -133,7 +134,7 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         (out, err) = p.communicate()
         print(out)
 
-        for line in out.split('\n'):
+        for line in out.decode('utf8').split('\n'):
             if device in line:
                 if 'device' in line:
                     return True
@@ -157,6 +158,8 @@ class AdbWirelessTest(testcase_base.BaseAdbTest):
         p = psutil.Popen([self.adb_binary, 'disconnect'],
                          cwd='.', stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=self.use_shell)
         (out, err) = p.communicate()
+
+        time.sleep(5)
 
         self._adb_wireless_connect()
 

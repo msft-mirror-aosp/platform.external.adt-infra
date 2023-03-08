@@ -47,6 +47,7 @@ class EmulatorNotFoundException(Exception):
 class EmulatorDiedException(Exception):
     pass
 
+
 class FailedToInstallApk(Exception):
     pass
 
@@ -128,7 +129,7 @@ class BaseEmulator(object):
             "Discovered emulator pid: %s (%s), named: %s",
             self.description.pid(),
             self.description.name(),
-            self.description.get("avd.id")
+            self.description.get("avd.id"),
         )
 
     def launch(self, flags: [str]) -> bool:
@@ -152,18 +153,18 @@ class BaseEmulator(object):
         pass
 
     def has_booted(self) -> bool:
-        """Makes a gRPC call to check if the emulator has booted.
+        """Makes a check of bootcoompleted.ini to check if the emulator has booted.
 
         Returns:
             bool: False, the emulator has not booted, or is not accessible.
         """
-        try:
-            _EMPTY_ = empty_pb2.Empty()
-            emu = self.description.get_emulator_controller()
-            return emu.getStatus(_EMPTY_).booted
-        except RpcError as err:
-            self.logger.warning("Unable to determine boot state due to %s", err)
 
+        path = Path(
+            self.android_avd_home, f"{self.configuration.name}.avd", "bootcompleted.ini"
+        )
+        self.logger.info("checking boot ini at %s", f"{path}")
+        if path.is_file():
+            return True
         return False
 
     def wait_for_boot(self, timeout: int = 600) -> bool:
@@ -205,7 +206,7 @@ class BaseEmulator(object):
         Returns:
             EmulatorConnection: A connection to the emulator.
         """
-        if self.telnet is None:
+        if self.telnet is None or not self.telnet.is_connected():
             self.logger.info("Connecting to console")
             self.telnet = EmulatorConnection.connect(
                 self.description.get("port.serial"), self.description.get("avd.id")
@@ -375,10 +376,12 @@ class Emulator(BaseEmulator):
                 self.configuration.name,
                 "-verbose",
                 "-show-kernel",
+                "-no-location-ui",
+                "-no-boot-anim",
                 "-metrics-collection",
                 "-no-audio",
-                "-idle-grpc-timeout",
-                "300",
+                # "-idle-grpc-timeout", # We will explicitly shutdown the device.
+                # "300",
                 "-log-detailed",
                 "-gpu",
                 "swiftshader_indirect",

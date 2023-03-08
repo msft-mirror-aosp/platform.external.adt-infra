@@ -14,6 +14,12 @@ def compile_apk():
     here = Path(__file__).parent.absolute()
     source = here / "AnimateBox"
     apk_dest = here / "src" / "emu" / "apk" / "app-debug.apk"
+
+    if apk_dest.exists():
+            sys.stderr.write(f">>>>>--- {apk_dest} exists, no need to build. "
+                             f"Remove {apk_dest} if you wish to rebuild it.\n")
+            return
+
     bin = (
         source / "gradlew" if platform.system() != "Windows" else source / "gradlew.bat"
     )

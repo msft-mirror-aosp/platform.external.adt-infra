@@ -15,14 +15,18 @@ import argparse
 import logging
 import os
 import platform
-import subprocess
+import re
 import shutil
+import subprocess
 import sys
 import tempfile
-from zipfile import ZipFile, ZipInfo
 from pathlib import Path
 from queue import Queue
 from threading import Thread
+from zipfile import ZipFile, ZipInfo
+
+# Note we are not part of the package!
+from src.emu.crashreporter import CrashReporter
 
 OS_NAME = platform.system().lower()
 EMU_TEST_DIR = Path(os.path.dirname(__file__)).absolute()
@@ -191,7 +195,7 @@ def resolve_emulator(emulator: str) -> Path:
         return emu
 
     assert False, (
-        "f{emulator} poinst to a non existent path (are you passing the right path to"
+        f"{emulator} points to a non existent path (are you passing the right path to"
         + " the --emulator flag?"
     )
 
@@ -208,18 +212,21 @@ class TemporaryEmulatorDeploy:
                 f"{self.build_dir} does not exist, are you launching the scripts from {AOSP_ROOT}?"
             )
 
-    def _find_dist_zip(self, type: str):
-        valid_targets = {
-            "linux": ["linux", "linux_aarch64"],
-            "darwin": [
-                "darwin_aarch64",
-                "darwin",
-            ],
-            "windows": ["windows"],
-        }
-        for target in valid_targets[OS_NAME]:
-            for option in self.build_dir.glob(f"sdk-repo-{target}-{type}-*.zip"):
+    def _find_dist_zip(self, type: str) -> Path:
+        dist_regex = (
+            r"sdk-repo-(linux|linux_aarch64|darwin|darwin_aarch64|windows)-"
+            f"{type}"
+            r"-((standalone-|P?)\d+).zip"
+        )
+        logging.info("Looking for %s", dist_regex)
+        valid_target = re.compile(dist_regex)
+        for option in self.build_dir.glob("*.zip"):
+            groups = valid_target.findall(str(option))
+            logging.info("Considering %s: (%s)", option, groups)
+            if groups:
                 return option
+
+        raise FileNotFoundError(f"No file matching {type} was found.")
 
     def __enter__(self):
         # Extract the emulator
@@ -231,7 +238,7 @@ class TemporaryEmulatorDeploy:
 
         # Extract symbols.
         symbol_path = Path(self.tmp.name) / "symbols"
-        symzip = self._find_dist_zip("breakpad-symbols")
+        symzip = self._find_dist_zip("emulator-symbols")
         if symzip:
             logging.info("Extracting %s to %s", symzip, emu_master_dev)
             symbols = ZipFileWithAttr(symzip)
@@ -286,6 +293,8 @@ class PyRunner:
                 display = self._get_X_Display()
 
             self.env["DISPLAY"] = display
+
+        logging.info("Using environment: %s", self.env)
 
     def _get_java_home(self):
         """Retrieves the path to the Java home directory from the active Java interpreter.
@@ -376,7 +385,8 @@ class PyRunner:
         """
         emu_env = self.env.copy()
         emu_env.update(env)
-        logging.info("Using %s from %s", emu_env, self.env)
+        if env:
+            logging.info("Using %s from %s", emu_env, self.env)
         run(
             [self.py_exe] + args,
             timeout=timeout,
@@ -496,6 +506,24 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
         logging.warning("Failed to apply xslt: %s to %s due to (%s)", xslt, source, err)
 
 
+def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path):
+    emulator_directory = Path(emulator).parent if emulator else None
+    crash_report = CrashReporter(emulator_directory, symbol_path)
+
+    # Make sure they end up on the log
+    crash_report.list_crashes()
+
+    # Write them to disk
+    crash_report.write_reports_to_disk(logdir)
+
+    # And report them..
+    crash_report.report_crashes()
+
+    # After reporting them we will have ids, lets print them and remove them.
+    crash_report.report_crashes()
+    crash_report.clear()
+
+
 def run_tests(
     emulator: str,
     use_exceptions: bool,
@@ -558,8 +586,16 @@ def run_tests(
             if use_exceptions or not junit_test_results.exists():
                 raise
         finally:
+            # Let's see if we can collect crash reports..
+            collect_crash_reports(emulator, symbol_path, logdir)
+
+            # Forcefully terminate all emulator processess
+            pyrun.run(["-m", "emu.process.kill_emulator"])
+
             if not junit_test_results.exists():
-                raise NoTestResultsProduced(f"We expected a junit report in {junit_test_results}.")
+                raise NoTestResultsProduced(
+                    f"We expected a junit report in {junit_test_results}."
+                )
             else:
                 apply_xslt(
                     python_exe=pyrun,

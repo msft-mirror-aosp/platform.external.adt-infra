@@ -19,6 +19,33 @@ from queue import Queue
 import threading
 
 
+def wait_until(predicate, timeout=10, hz=2):
+    """
+    Wait until the given predicate function returns True, or until the timeout
+    expires.
+
+    The predicate function is called repeatedly until it returns True
+    or the timeout expires.
+
+    Args:
+        predicate (function): A function that returns a boolean value. This
+            function will be called repeatedly until it returns True or the
+            timeout expires.
+        timeout (int): The maximum number of seconds to wait for the predicate
+            function to return True. Defaults to 10 seconds.
+        hz (int): Frequency of how often we want to execute the predicate.
+
+    Returns:
+        bool: True if the predicate function returns True before the timeout
+            expires, otherwise False.
+    """
+    end = time.time() + timeout
+    while not predicate() and time.time() < end:
+        time.sleep(1 / hz)
+
+    return predicate()
+
+
 def system_cpu() -> str:
     """Returns the native system cpu
 
@@ -86,5 +113,8 @@ class LogObserver:
     def __del__(self):
         if self.tail:
             self.tail.close()
-        if self.thread and self.thread.native_id != threading.current_thread().native_id:
+        if (
+            self.thread
+            and self.thread.native_id != threading.current_thread().native_id
+        ):
             self.thread.join()

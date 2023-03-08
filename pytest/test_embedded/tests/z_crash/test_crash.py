@@ -11,9 +11,81 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
+import re
+from typing import List
+
 import pytest
+
+from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator
-import time
+from emu.utils import wait_until
+
+
+def is_sublist(minidump: List[str], compiled_regexes: List[re.Pattern]) -> bool:
+    """
+    Returns True if the list of compiled regular expressions in `compiled_regexes` matches
+    substrings in the list `minidump` in the same order they appear in
+    `compiled_regexes`.
+
+    Args:
+        minidump (List[str]): The list of strings to search for matches.
+        compiled_regexes (List[re.Pattern]): The list of compiled regular expression patterns
+            to search for in `minidump`.
+
+    Returns:
+        bool: True if all regular expressions in `compiled_regexes` match substrings in
+            `minidump` in the same order they appear in `compiled_regexes`.
+    """
+    i, j = 0, 0  # i: index in minidump, j: index in compiled_regexes
+    while i < len(minidump) and j < len(compiled_regexes):
+        if compiled_regexes[j].match(minidump[i]):
+            logging.info("Found %s", minidump[i].strip())
+            j += 1
+        i += 1
+
+    return j == len(compiled_regexes)
+
+
+def check_minidump(minidump):
+    # Note that our symbols might have mangled C++
+    # functions, which can be mangled differently from compiler
+    # to compiler. Furthermore some platforms are optimizing better than others
+    # making functions disappear.
+    IMMEDIATE_CRASH = [
+        re.compile(reg, re.M)
+        for reg in [
+            r".*.*!.*GenerateDumpAndDie.*",
+            r".*.*!.*crashhandler_die.*",
+            r".*.*!.*crash\(\).*",
+            r".*.*!.*do_crash.*",
+            r".*.*!.*control_client_do_command.*",
+            r".*.*!.*control_client_read.*",
+        ]
+    ]
+
+    assert is_sublist(minidump.splitlines(), IMMEDIATE_CRASH)
+
+
+def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
+    # Launch the emulator if needed.
+    if not emulator.is_alive():
+        emulator.launch()
+
+    assert emulator.is_alive()
+
+    crash_count = len(crash_reporter.crashes())
+    assert emulator.console().send("crash")
+
+    # Wait until the emulator is alive
+    assert wait_until(emulator.is_alive)
+
+    def crash_detected():
+        return crash_count < len(crash_reporter.crashes())
+
+    assert wait_until(crash_detected)
+
+    return crash_reporter.crashes()
 
 
 @pytest.mark.e2e
@@ -26,20 +98,25 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     if not crash_reporter.available():
         pytest.skip("No crash reporter available, let's not crash the emulator")
 
-    # Launch the emulator if needed.
-    if not emulator.is_alive():
-        emulator.launch()
+    # Do not run if we have existing crashes!
+    # This likely means the emulator went down in another test.
+    assert len(crash_reporter.crashes()) == 0, "We have existing crash data!"
 
-    assert emulator.is_alive()
+    crashes = crash(emulator, crash_reporter)
 
-    old_crashes = crash_reporter.crashes()
+    # We should have one new crash.
+    assert len(crashes) == 1
 
-    emulator.console().send("crash")
 
-    # Give the reporter a chance to collect a report.
-    while emulator.is_alive():
-        time.sleep(1)
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=60, func_only=True)
+def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
+    if not crash_reporter.available():
+        pytest.skip("No crash reporter available, let's not crash the emulator")
 
-    # We should have new crashes..
-    new_crashes = crash_reporter.crashes()
-    assert len(old_crashes) < len(new_crashes)
+    if not crash_reporter.has_symbols():
+        pytest.skip("No symbols available, let's not crash the emulator")
+
+    crashes = crash(emulator, crash_reporter)
+    dump = crash_reporter.dump_crash(crashes[0])
+    check_minidump(dump)
