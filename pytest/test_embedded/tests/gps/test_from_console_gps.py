@@ -16,17 +16,17 @@ import pytest
 
 from google.protobuf.empty_pb2 import Empty
 
-from aemu.proto.emulator_controller_pb2 import (
-    GpsState
-)
+from aemu.proto.emulator_controller_pb2 import GpsState
+
 
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "latitude,longitude,speed,bearing,altitude,satellites",
-    [(37.0, -122.0, 0.0, 0.0, 0.0, 1),
-     (100.0, 200.0, 0.0, 0.0, 100.0, 1)]
+    [(37.0, -122.0, 0.0, 0.0, 0.0, 1), (100.0, 200.0, 0.0, 0.0, 100.0, 1)],
 )
-def test_gps(emulator_controller, latitude, longitude, speed, bearing, altitude, satellites):
+def test_gps(
+    emulator_controller, latitude, longitude, speed, bearing, altitude, satellites
+):
     """Set emulator gps state to specified parameters
 
     Verifies gps state is set as expected
@@ -40,12 +40,12 @@ def test_gps(emulator_controller, latitude, longitude, speed, bearing, altitude,
       satellites: specifies number of satellites from which coordinated are "derived"
     """
     expected_gps_state = GpsState(
-        latitude = latitude,
-        longitude = longitude,
-        speed = speed,
-        bearing = bearing,
-        altitude = altitude,
-        satellites = satellites
+        latitude=latitude,
+        longitude=longitude,
+        speed=speed,
+        bearing=bearing,
+        altitude=altitude,
+        satellites=satellites,
     )
 
     emulator_controller.setGps(expected_gps_state)

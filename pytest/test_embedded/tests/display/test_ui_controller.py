@@ -20,21 +20,22 @@ from aemu.proto.ui_controller_service_pb2 import WindowPosition, PaneEntry
 __EMPTY__ = empty_pb2.Empty()
 
 
-
 @pytest.fixture
 def ui_controller(avd):
     yield avd.description.get_ui_controller_service()
+
 
 def get_user_config(avd):
     stub = avd.description.get_ui_controller_service()
     status = stub.getUserConfig(__EMPTY__)
     return dict([(x.key, x.value) for x in status.entries])
 
+
 @pytest.mark.dependency()
 @pytest.mark.timeout(timeout=10, func_only=True)
 def test_ui_controller_clean(avd):
     """Tests that the emulator has no extended control setting, this means
-       the extended window was never shown before.
+    the extended window was never shown before.
     """
     userConfig = get_user_config(avd)
     logging.info(userConfig)
@@ -76,7 +77,7 @@ def test_ui_controller_first_position_works(avd, ui_controller):
     assert "extended_controls.vanchor" in userConfig
     assert "extended_controls.hanchor" in userConfig
 
-    assert int(userConfig["extended_controls.x"]) ==  x
+    assert int(userConfig["extended_controls.x"]) == x
     assert int(userConfig["extended_controls.y"]) == y
     assert userConfig["extended_controls.hanchor"] == "1"
     assert userConfig["extended_controls.vanchor"] == "2"
@@ -120,6 +121,7 @@ def test_ui_controller_position_does_not_change(avd, ui_controller):
     # We become invisible.
     controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
     assert controlStatus.visibilityChanged
+
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)

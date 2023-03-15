@@ -19,7 +19,7 @@ import pytest
 
 from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator
-from emu.utils import wait_until
+from emu.timing import wait_until
 
 
 def is_sublist(minidump: List[str], compiled_regexes: List[re.Pattern]) -> bool:

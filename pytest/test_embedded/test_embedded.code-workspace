@@ -4,9 +4,6 @@
 			"path": "."
 		},
 		{
-			"path": "../../emu_test"
-		},
-		{
 			"path": "../../devpi"
 		}
 	],

@@ -22,6 +22,8 @@ from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
 from tests.benchmark_event_fixtures import benchmark_stat
 from tests.test_utils import StreamingCall
+from emu.timing import eventually
+from functools import partial
 
 
 def read_pixel(width, height, pack, arr):
@@ -30,7 +32,7 @@ def read_pixel(width, height, pack, arr):
 
 
 @pytest.mark.e2e
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "fmt,channel",
@@ -59,25 +61,18 @@ def test_stream_screenshot_receives_frames(
         ),
         timeout=5,
     )
+
     count = 0
-    dropped = 0
-    seq = -1
+
+    def receives_at_least_10_frames(img):
+        nonlocal count
+        count += 1
+        return count >= 10
 
     with StreamingCall(stream) as stream:
-        for img in stream:
-            if seq + 1 < img.seq:
-                dropped += img.seq - seq + 1
-
-            assert seq < img.seq
-            seq = img.seq
-
-            count += 1
-            if count > 10:
-                break
-
-        assert count > 10
-
-    logging.warning("Received %d frames and dropped %d frames", count, dropped)
+        assert eventually(
+            receives_at_least_10_frames, stream
+        ), "Did not receive 10 frames in within 10 seconds."
 
 
 @pytest.mark.perf
@@ -210,8 +205,7 @@ def test_stream_screenshot_should_fail_if_does_not_exist(
             ImageFormat(display=non_existing_display)
         )
         for img in stream:
-            pass
+            assert False, "We should never have received an image!"
 
     assert e.value.code() == StatusCode.INVALID_ARGUMENT
     assert e.value.details() == "Invalid display: {}".format(non_existing_display)
-

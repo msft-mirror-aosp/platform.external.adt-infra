@@ -74,7 +74,7 @@ class AdbLogcatStream(AdbStream):
         logger: logging.Logger,
         adb_binary: str,
         emulator_name: str,
-        timeout:int,
+        timeout: int,
         tag: str,
         clear: bool,
     ):

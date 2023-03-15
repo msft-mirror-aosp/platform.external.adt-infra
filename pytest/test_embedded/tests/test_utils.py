@@ -17,6 +17,8 @@ import re
 import threading
 import time
 from queue import Queue
+from emu.timing import eventually
+
 
 import google.protobuf.text_format
 import grpc
@@ -62,21 +64,13 @@ def time_to_str(epoch_in_seconds):
 
 
 def wait_for_regex(stream, regex, max_wait):
-    """Waits for the given regex to appear on the logcat stream, or until max_wait time has passed.
+    """Waits for the given regex to appear on the logcat stream,
+    or until max_wait time has passed.
 
     Returns the match, or None in case of timeout.
     """
     compiled = re.compile(regex)
-    timeout_after = time.time() + max_wait
-    for line in stream:
-
-        if timeout_after < time.time():
-            logging.warning("Timed out while waiting for %s", regex)
-            return None
-
-        m = compiled.match(line)
-        if m:
-            return m
+    return eventually(compiled.match, stream, timeout=max_wait)
 
 
 class StreamingCall(object):

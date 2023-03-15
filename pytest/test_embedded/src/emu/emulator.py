@@ -17,6 +17,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import re
 import time
 from datetime import timedelta
 from pathlib import Path
@@ -34,6 +35,7 @@ from emu.console.emulator_connection import EmulatorConnection
 from emu.logging.log_handler import QueueLogHandler
 from emu.process.command import Command
 from emu.utils import LogObserver
+from emu.timing import wait_until, wait_for_event
 
 
 class FailedToLaunchException(Exception):
@@ -158,14 +160,12 @@ class BaseEmulator(object):
         Returns:
             bool: False, the emulator has not booted, or is not accessible.
         """
-
-        path = Path(
-            self.android_avd_home, f"{self.configuration.name}.avd", "bootcompleted.ini"
-        )
-        self.logger.info("checking boot ini at %s", f"{path}")
-        if path.is_file():
-            return True
-        return False
+        try:
+            _EMPTY_ = empty_pb2.Empty()
+            emu = self.description.get_emulator_controller()
+            return emu.getStatus(_EMPTY_).booted
+        except RpcError as err:
+            self.logger.warning("Unable to determine boot state due to %s", err)
 
     def wait_for_boot(self, timeout: int = 600) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
@@ -176,7 +176,6 @@ class BaseEmulator(object):
         Returns:
             bool: True if the emulator has booted, False otherwise.
         """
-        until = time.time() + timeout
         start = timer()
 
         self.logger.info(
@@ -184,14 +183,14 @@ class BaseEmulator(object):
             timeout,
             self.description.name(),
         )
-        while self.is_alive() and not self.has_booted() and time.time() < until:
-            time.sleep(1)
 
+        booted = wait_until(
+            self.has_booted, timeout=timeout, pre_requisite=self.is_alive
+        )
         if not self.is_alive():
             raise EmulatorDiedException("Emulator died while waiting for boot.")
 
         end = timer()
-        booted = self.has_booted()
         self.logger.info(
             "Waited %s for boot of %s, boot status: %s",
             timedelta(seconds=end - start),
@@ -264,8 +263,7 @@ class DebugEmulator(BaseEmulator):
         """
         BaseEmulator.__init__(self, android_home, android_avd_home)
         if logfile:
-            self.logobserver = LogObserver(logfile)
-            self.log = self.logobserver.queue
+            self.log = LogObserver(logfile)
         self._discover(None)
         self.logger = logging.getLogger(self.description.get("avd.id"))
 
@@ -307,7 +305,8 @@ class Emulator(BaseEmulator):
             avd_config["abi"] = self._default_abi()
         self.configuration = avd_gen.create_from_config(avd_config)
         self.exe = Path(exe)
-        self.proc
+        self.proc = None
+        self.kernel_start = 0
 
     def _default_abi(self) -> str:
         """Returns the abi that is natively supported by this machine.
@@ -324,14 +323,13 @@ class Emulator(BaseEmulator):
 
     def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
         self.logger = logging.getLogger(self.configuration.name)
-        handler = QueueLogHandler(logging.getLogger(f"{self.configuration.name}-exe"))
+        self.log = QueueLogHandler(logging.getLogger(f"{self.configuration.name}-exe"))
 
-        cmd = Command(cmd).with_environment(env).with_log_handler(handler)
+        cmd = Command(cmd).with_environment(env).with_log_handler(self.log)
         if sys.platform == "win32":
             cmd.in_directory(self.exe.parent)
 
         self.proc = cmd.run()
-        self.log = handler.queue
 
         max_wait = 20
         self.logger.info("Waiting for an emulator to become available.")
@@ -411,6 +409,41 @@ class Emulator(BaseEmulator):
         # self.description is likely None, and we failed to stop cleanly.
         if self.proc is not None:
             self.proc.terminate()
+
+    def has_booted(self) -> bool:
+        """Makes a check of bootcoompleted.ini to check if the emulator has booted.
+
+        This method will also observe the emulator kernel log to see if it sees
+        a kernel start message.
+
+        i.e. something like (Mac M1):
+
+        [    0.000000][    T0] Linux version 5.15.41-android13-8-00055-g4f5025129fe8-ab8949913 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7
+
+        or (Linux X64):
+
+        [    0.000000] Linux version 5.15.41-android13-8-00055-g4f5025129fe8-ab8949913 (build-user@build-host) (Android (8508608, based on r450784e)
+
+        If we see 5 or more we will hit an assert and assume that we are bootlooping.
+
+        Returns:
+            bool: False, the emulator has not booted, or is not accessible.
+        """
+
+        kernel_start = re.compile(r"\[\s+0.0+\].* Linux version .* \((Android \(.*\))")
+        for line in self.log.readlines():
+            if kernel_start.match(line):
+                self.kernel_start += 1
+                logging.warning("Detected a kernel restart!")
+
+        assert (
+            self.kernel_start < 5
+        ), f"Detected {self.kernel_start} kernel restarts.. This is likely a problem."
+
+        path = Path(
+            self.android_avd_home, f"{self.configuration.name}.avd", "bootcompleted.ini"
+        )
+        return path.is_file()
 
     def delete(self) -> None:
         self.configuration.delete()

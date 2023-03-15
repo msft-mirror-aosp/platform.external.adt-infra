@@ -13,12 +13,12 @@
 # limitations under the License.
 import logging
 import os
-import subprocess
 from pathlib import Path
 import platform
 from shutil import which
 
 from emu.adb.stream import AdbStream, AdbLogcatStream
+from emu.process.command import Command
 
 
 class Adb(object):
@@ -46,25 +46,26 @@ class Adb(object):
             dict[str, str]: The environment that can be passed to subprocess
         """
         my_env = os.environ.copy()
-        if "ADB_TRACE" not in my_env:
+        if (
+            logging.getLogger().isEnabledFor(logging.DEBUG)
+            and "ADB_TRACE" not in my_env
+        ):
             my_env["ADB_TRACE"] = "all"
         return my_env
 
     def start_server(self) -> None:
         """Starts the adb server."""
-        subprocess.run(
-            [self.adb_binary, "start-server"],
-            env=self._enable_tracing(),
-            timeout=10,
-            check=False,
+        cmd = Command([self.adb_binary, "start-server"]).with_environment(
+            self._enable_tracing()
         )
+        cmd.run_until_finished(timeout=10)
 
-    def run(self, cmd: list[str], timeout: int = 30) -> str:
+    def run(self, cmd: list[str], timeout: int = 10) -> str:
         """Runs the given command on the emulator
 
         Args:
             cmd (list[str]): Command to execute
-            timeout (int, optional): Timeout. Defaults to 30s.
+            timeout (int, optional): Timeout. Defaults to 10s.
 
         Returns:
             str: Result of the adb invocation.
@@ -73,15 +74,13 @@ class Adb(object):
             subprocess.CalledProcessError
         """
         self.logger.info("adb -s %s %s", self.name, " ".join(cmd))
-        cmd = subprocess.check_output(
-            [self.adb_binary, "-s", self.name] + cmd,
-            env=self._enable_tracing(),
-            timeout=timeout,
+        command = Command([self.adb_binary, "-s", self.name] + cmd).with_environment(
+            self._enable_tracing()
         )
-        self.logger.debug("result: %s", cmd)
-        return cmd
+        _, result = command.run_until_finished(timeout)
+        return "\n".join(result)
 
-    def stream(self, cmd: list[str], timeout:int = 2) -> AdbStream:
+    def stream(self, cmd: list[str], timeout: int = 2) -> AdbStream:
         """Runs the given command on the emulator
 
         You usually want to use this like this:

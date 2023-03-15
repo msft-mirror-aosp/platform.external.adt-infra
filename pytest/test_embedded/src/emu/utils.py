@@ -13,37 +13,10 @@
 # limitations under the License.
 import logging
 import platform
+import threading
 import time
 from pathlib import Path
-from queue import Queue
-import threading
-
-
-def wait_until(predicate, timeout=10, hz=2):
-    """
-    Wait until the given predicate function returns True, or until the timeout
-    expires.
-
-    The predicate function is called repeatedly until it returns True
-    or the timeout expires.
-
-    Args:
-        predicate (function): A function that returns a boolean value. This
-            function will be called repeatedly until it returns True or the
-            timeout expires.
-        timeout (int): The maximum number of seconds to wait for the predicate
-            function to return True. Defaults to 10 seconds.
-        hz (int): Frequency of how often we want to execute the predicate.
-
-    Returns:
-        bool: True if the predicate function returns True before the timeout
-            expires, otherwise False.
-    """
-    end = time.time() + timeout
-    while not predicate() and time.time() < end:
-        time.sleep(1 / hz)
-
-    return predicate()
+from queue import Queue, Empty
 
 
 def system_cpu() -> str:
@@ -92,6 +65,18 @@ class LogObserver:
             logging.warning(
                 "Encountered error while accessing file %s", err, exc_info=err
             )
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        try:
+            result = self.queue.get(timeout=self.timeout)
+            if result == self.__FINISHED_SENTINEL__:
+                raise StopIteration
+            return result
+        except Empty:
+            raise StopIteration
 
     def log_to_queue(self, line):
         """Logs the output of the given process."""

@@ -30,7 +30,7 @@ def safe_kill(process: psutil.Process) -> bool:
     status = psutil.STATUS_DEAD
     try:
         status = process.status()
-        process.name() # Retrieve name if possible.
+        process.name()  # Retrieve name if possible.
     except Exception as e:
         # Process has left, or we might have been unable to get additional info.
         logging.debug("Unable to get status, process dead? %s", e)
@@ -106,7 +106,9 @@ def kill_process_set(process_set) -> None:
                 logging.info("Terminating %s", process)
                 kill_process_tree(process)
             except Exception as e:
-                logging.warning("Failed to terminate %s due to %s", process, e, exc_info=e)
+                logging.warning(
+                    "Failed to terminate %s due to %s", process, e, exc_info=e
+                )
 
 
 def kill_all_emulators():
