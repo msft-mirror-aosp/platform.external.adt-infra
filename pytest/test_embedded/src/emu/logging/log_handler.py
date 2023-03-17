@@ -32,10 +32,14 @@ class LogHandler:
         """Initializes the LogHandler instance.
 
         Args:
-            logger (logging.Logger, optional): The logger instance to use for logging. Defaults to the root logger.
-            std_out_logger (function, optional): The function to use for logging the standard output of the subprocess. Defaults to `logger.info`.
-            std_err_logger (function, optional): The function to use for logging the standard error of the subprocess. Defaults to `logger.error`.
-            on_exit (function, optional): The function to be called when the subprocess exits.
+            logger (logging.Logger, optional): The logger instance to use for logging.
+                Defaults to the root logger.
+            std_out_logger (function, optional): The function to use for logging the
+                standard output of the subprocess. Defaults to `logger.info`.
+            std_err_logger (function, optional): The function to use for logging the
+                standard error of the subprocess. Defaults to `logger.error`.
+            on_exit (function, optional): The function to be called when the
+                subprocess exits.
             name (str, optional): The name to be used for the logging threads.
         """
         self.logger = logger
@@ -48,7 +52,8 @@ class LogHandler:
         """Changes the function used for logging the standard output.
 
         Args:
-            log_transform (function): The new function to use for logging the standard output.
+            log_transform (function): The new function to use for logging the
+                standard output.
 
         Returns:
             LogHandler: The updated LogHandler instance.
@@ -60,7 +65,8 @@ class LogHandler:
         """Changes the function used for logging the standard error.
 
         Args:
-            log_transform (function): The new function to use for logging the standard error.
+            log_transform (function): The new function to use for logging the
+                standard error.
 
         Returns:
             LogHandler: The updated LogHandler instance.
@@ -85,7 +91,8 @@ class LogHandler:
     def start_log_proc(self, proc: subprocess.Popen):
         """Start logging the output of the subprocess in the background.
 
-        The stdout will be logged to the `info` level and the stderr will be logged to the `error` level.
+        The stdout will be logged to the `info` level and the stderr will be logged
+        to the `error` level.
 
         Args:
             proc (subprocess.Popen): The subprocess to observe.
@@ -113,11 +120,28 @@ class QueueLogHandler(LogHandler):
         timeout (int): The time in seconds to wait for a log message from the queue.
     """
 
-    MAX_LINES_TO_LOG = 512
     __FINISHED_SENTINEL__ = {"Finished": True}
 
-    def __init__(self, logger=logging, timeout=60, thread_name=None):
-        self.queue = Queue(QueueLogHandler.MAX_LINES_TO_LOG)
+    def __init__(
+        self, logger=logging, timeout=60, thread_name=None, max_lines_to_log=512
+    ):
+        """
+        Initializes a new `QueueLogHandler` object.
+
+        Args:
+            logger (logging.Logger, optional): A logger object from the `logging`
+                module. Defaults to `logging`, which is the root logger.
+            timeout (int, optional): A timeout in seconds for how long the logging
+                thread should wait before attempting to log messages from the queue
+                again. Defaults to 60 seconds.
+            thread_name (str, optional): A string that will be used as the name of the
+                logging thread. If not provided, it will default to the name of the
+                `logger`.
+            max_lines_to_log (int, optional): An integer that specifies the maximum
+                number of log lines that can be stored in the queue. If max_lines_to_log
+                is <= 0, the queue size is infinite. Defaults to 512.
+        """
+        self.queue = Queue(max_lines_to_log)
         self.lock = threading.Lock()
         self.timeout = timeout
         log_to_info = partial(self.log_to_queue, logger.info)
@@ -143,10 +167,21 @@ class QueueLogHandler(LogHandler):
             raise StopIteration
 
     def available(self) -> int:
+        """
+        Returns the number of log messages that are currently in the queue.
+
+        Returns:
+            int: The number of log messages in the queue.
+        """
         return self.queue.qsize()
 
     def readlines(self) -> [str]:
-        """Read all lines, in non blocking fashion."""
+        """
+        Reads all log messages from the queue without blocking.
+
+        Returns:
+            [str]: A list of log messages from the queue.
+        """
         lines = []
         while not self.queue.empty():
             elem = self.queue.get()
@@ -156,6 +191,12 @@ class QueueLogHandler(LogHandler):
         return lines
 
     def set_timeout(self, timeout: int):
+        """
+        Sets the timeout for reading log messages from the queue.
+
+        Args:
+            timeout (int): The timeout in seconds.
+        """
         self.timeout = timeout
 
     def log_to_queue(self, logfn, line):
@@ -169,6 +210,7 @@ class QueueLogHandler(LogHandler):
             self.queue.put_nowait(strip)
 
     def finished(self):
+        """Adds a "finished" sentinel message to the end, exiting the iterator."""
         with self.lock:
             if self.queue.full():
                 self.queue.get_nowait()

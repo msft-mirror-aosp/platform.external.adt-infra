@@ -84,7 +84,9 @@ class Command:
 
     def run_until_finished(self, timeout: int = 10):
         """Runs the command until it is finished, returning the exit code."""
-        q = QueueLogHandler(logging.getLogger(f"{self.cmd[0]}"))
+
+        # Create an infinte queue, so we capture all the output.
+        q = QueueLogHandler(logging.getLogger(f"{self.cmd[0]}"), max_lines_to_log=0)
         self.with_log_handler(q)
         proc = self.run()
         with TimeoutKillProcessTrigger(proc.pid, timeout=timeout):
