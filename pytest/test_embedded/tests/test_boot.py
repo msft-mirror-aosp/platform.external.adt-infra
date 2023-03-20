@@ -1,4 +1,7 @@
+import logging
 import pytest
+import time
+from pathlib import Path
 from google.protobuf import empty_pb2
 
 # This will run the tests in this module using this
@@ -9,11 +12,81 @@ from google.protobuf import empty_pb2
 # On X64 this will resolve to: system-images;android-33;google_apis;x86_64
 # avd_config = {"api": "33", "tag.id": "google_apis"}
 
+def has_network(adb):
+    """ check whether it has network or not
+        adb shell ifconfig, it shouls have both eth0 and wlan0
+    """
+    radio_wifi = False
+    result = adb.run(["shell", "ifconfig"])
+    if "eth0" in result and "wlan0" in result:
+        logging.info("success result %s", result)
+        radio_wifi = True
+    return radio_wifi
 
+@pytest.mark.boot
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=2800, func_only=True)
-def test_booted(emulator_controller):
+def test_first_time_booted(emulator):
     """Make sure the emulator status is set to booted."""
-    assert emulator_controller.getStatus(
-        empty_pb2.Empty()
-    ), "The emulator should always be in a booted state."
+
+    emulator.stop()
+    logging.info("Launching emualtor ...")
+    assert emulator.launch(
+        flags=[
+            "-wipe-data",
+            "-no-snapshot-load",
+        ]
+    )
+
+    logging.info("Wating for it to boot up ...")
+    assert emulator.wait_for_boot(timeout=1080)
+    logging.info("Wating for it to stablize ...")
+    # make sure it has both radio and wifi
+    count = 0
+    while count < 30:
+        time.sleep(1)
+        count += 1
+        if has_network(emulator.adb):
+            logging.info("found radio and wifi")
+            break
+        logging.info("radio or wifi not ready yet")
+
+
+    logging.info("Shutting it down ...")
+    emulator.stop()
+
+def check_boot_from_snapshot(avdpath)->bool :
+  mypath = Path(avdpath, "snapshot.trace")
+  with open(mypath) as fp:
+      for line in fp:
+          line.rstrip()
+          logging.info("reading line '%s'", line)
+          if "load_succeeded" in line:
+              return True
+
+  return False
+
+@pytest.mark.boot
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=60, func_only=True)
+def test_snapshot_booted(emulator):
+    """Make sure the emulator status is able to boot from snapshot.
+
+    It is important to boot fast from snapshot, that is why it
+    is set to timeout in 60 seconds
+    """
+
+    emulator.stop()
+    logging.info("Launching emualtor ...")
+    assert emulator.launch(
+        flags=[
+            "-no-snapshot-save",
+        ]
+    )
+
+    logging.info("Wating for it to boot up from snapshot ...")
+    assert emulator.wait_for_boot(timeout=45)
+    logging.info("Wating for it to stablize ...")
+    assert check_boot_from_snapshot(emulator.configuration.directory)
+    logging.info("Shutting it down ...")
+    emulator.stop()
