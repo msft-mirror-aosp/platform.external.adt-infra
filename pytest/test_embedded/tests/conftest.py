@@ -105,14 +105,45 @@ def pytest_addoption(parser):
 ALL_PLATFORMS = set("darwin linux win32".split())
 
 
-def pytest_runtest_setup(item):
-    """Only run the test if it is supported on the platform."""
+def pytest_runtest_setup(item: pytest.Item) -> None:
+    """
+    Check whether the test is supported on the platform and log the setup information
+    for the test.
+
+    Args:
+        item (pytest.Item): The test item.
+    """
     supported_platforms = ALL_PLATFORMS.intersection(
         mark.name for mark in item.iter_markers()
     )
     plat = sys.platform
     if supported_platforms and plat not in supported_platforms:
-        pytest.skip("cannot run on platform {}".format(plat))
+        pytest.skip(f"cannot run {item.name} on platform {plat}")
+
+    logging.info("=============== Setup: %s ===============", item.name)
+
+
+def pytest_runtest_teardown(item: pytest.Item) -> None:
+    """
+    Log the teardown information for the test.
+
+    Args:
+        item (pytest.Item): The test item.
+    """
+    logging.info("=============== Teardown: %s ===============", item.name)
+
+
+def pytest_runtest_logreport(report: pytest.TestReport) -> None:
+    """
+    Log the result of the test.
+
+    Args:
+        report (pytest.TestReport): The test report.
+    """
+    if report.when == "call":
+        logging.info(
+            "-----------> %s completed: %s <-----------", report.nodeid, report.outcome
+        )
 
 
 # Workaround for
@@ -294,7 +325,9 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     if emulator.is_alive():
         emulator.stop()
         assert not emulator.is_alive()
-    mysnapshottexture = Path(emulator.configuration.directory, "snapshots", "default_boot", "textures.bin")
+    mysnapshottexture = Path(
+        emulator.configuration.directory, "snapshots", "default_boot", "textures.bin"
+    )
     if os.path.exists(mysnapshottexture):
         emu_flags.append("-no-snapshot-save")
 
@@ -469,12 +502,10 @@ def animation_app(avd: BaseEmulator):
 
 @pytest.fixture
 def coldboot_animation_app(avd: BaseEmulator):
-    """ Similar to animation_app, but do it with cold boot
-
-    """
+    """Similar to animation_app, but do it with cold boot"""
     avd.stop()
-    assert avd.launch(flags=["-no-snapshot-load"]);
-    assert avd.wait_for_boot(timeout=600);
+    assert avd.launch(flags=["-no-snapshot-load"])
+    assert avd.wait_for_boot(timeout=600)
 
     assert avd.is_alive()
 
