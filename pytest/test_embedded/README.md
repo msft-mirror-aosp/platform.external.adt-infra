@@ -3,41 +3,68 @@
 This contains a series of integration tests that validate that the emulator works as expected
 from android studio's perspective.
 
-The tests are written in pytest and are run as part of the build. The test are will run
-under the python3 interpreter that is in $AOSP/prebuilts/python/...
+We write the integration tests in pytest and run them as part of the automated build process. The tests are launched using the run_tests.py script. The script roughly does the following:
+
+Creates a temporary directory with a virtual environment
+Installs all the dependencies
+Sets up ANDROID_SDK_ROOT to point to $AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
+Launches pytest to run all the tests.
+
+## Running the tests on your local machine
+
+To run the tests on your local machine, you can run `run_tests.sh` on Posix or `run_tests.cmd` on Windows. You will need to provide the path to the emulator binary using the `-e` flag.
+
+If you have a local build you could launch it with the symbols flag to use the symbols produced during build:
+
+   run_tests.sh -e ~/src/emu-master-dev/external/qemu/objs/emulator --symbols ~/src/emu-master-dev/external/qemu/objs/build/symbols
+
+Note that we are using the AOSP python interpreter, which has limitations. For example, we have no symbols and TLS.
+
+You can work around this by using your own python install. For example, you could use pyenv:
+
+- Install PyEnv (`brew install pyenv`)
+- Install Python 3.10.6 (`pyenv install 3.10.6`)
+- Create a new virtual environment (`python -m venv tests`)
+- Activate the virtual environment (`source tests/bin/activate`)
+- Run run_tests.sh with the `--no-aosp` flag and the path to the emulator binary
+
+For example:
+
+    run_tests.sh -e ~/src/emu-master-dev/external/qemu/objs/emulator --symbols ~/src/emu-master-dev/external/qemu/objs/build/symbols --no-aosp
+
+
+Now you can use your own python tools to inspect issues.
 
 ## Development
 
-If you wish to do development you can create a virtual
-environment by running:
+To create a virtual environment, run `. ./configure.sh` This will install a virtual environment in the .venv directory and install all the dependencies required to run the tests.
 
-```sh
-. ./configure
-```
+To run the tests, execute pytest with the `-e` flag and the path to the emulator binary. For example, if your emulator binary is located at `~/src/emu/external/qemu/objs/emulator`, you would run the following command:
 
-You can now run the tests by executing
-
-```sh
-pytest
-```
-
-You can run the test against a development emulator by:
-
-```sh
-pytest --emulator=$HOME/src/emu/external/qemu/objs/emulator
-```
-
-Where emulator points to your emulator of choice.
+    pytest -e ~/src/emu/external/qemu/objs/emulator
 
 The virtual environment is using the python interpreter in AOSP. This interpreter does
 not support TLS, and hence you will not be able to install external packages. To work
 around this you can run a local devpi server using a python interpreter that does support
-tls. devpi can be run by running a devpi server [../../devpi/](../../devpi).
+tls.
 
-```sh
-cd ../../devpi
-./launch_devpi.sh
-```
+Devpi can be run by running a devpi server that is found here: [../../devpi/](../../devpi).
+
+  - Change to the `../../devpi` directory.
+  - Run the `./launch_devpi.sh` script.
+
+ie:
+
+    cd ../../devpi
+    ./launch_devpi.sh
+
+Once the devpi server is running, you can install packages from the devpi repository by running the following command:
+
+    pip install <package_name>
+
+For example, to install the py-spy package, you would run the following command:
+
+  pip install py-spy
 
 ### Running against an already running emulator
 
@@ -45,16 +72,12 @@ Some test require access to the emulator logs, this means you must have run the 
 such that it produces logs. You must have *at least* specified the following flags
 and redirected the output. For example
 
-```sh
-./objs/emulator @R -verbose -debug-events -debug-time  | tee /tmp/emu.log
-```
+    ./objs/emulator @R -verbose -debug-events -debug-time  | tee /tmp/emu.log
 
 This will launch  the emulator and output the logs to /tmp/emu.log. Next you can run the
 pytests as follows:
 
-```sh
-pytest  --debug_emulator_log=/tmp/emu.log --debug_emulator  -k 'test_mouse_perf_host_host_grpc'
-```
+    pytest  --debug_emulator_log=/tmp/emu.log --debug_emulator  -k 'test_mouse_perf_host_host_grpc'
 
 This will run the test: `test_mouse_perf_host_host_grpc` against the emulator you started earlier.
 
@@ -136,11 +159,11 @@ tests.
 
 For example the test below will only run on linux:
 
-```python
-@pytest.mark.linux
-def test_linux_only():
-    assert sys.platform == 'linux'
-```
+  ```python
+  @pytest.mark.linux
+  def test_linux_only():
+      assert sys.platform == 'linux'
+  ```
 
 ### Dealing with flaky tests and timeouts
 
@@ -150,21 +173,21 @@ plugin. This plugin allows you to mark individual tests as flaky, and have them
 automatically re-run when they fail, add the flaky mark with the maximum number
 of times you'd like the test to run and re-run delay time in the marker:
 
-```python
-@pytest.mark.flaky(reruns=5, reruns_delay=2)
-def test_example():
-    import random
-        assert random.choice([True, False])
-```
+  ```python
+  @pytest.mark.flaky(reruns=5, reruns_delay=2)
+  def test_example():
+      import random
+          assert random.choice([True, False])
+  ```
 
 For timeouts we make use of the [pytest-timeout](https://pypi.org/project/pytest-timeout/)
 plugin. This plugin will time each test and terminate it when it takes too long.
 
-```python
-@pytest.mark.timeout(timeout=1, func_only=True)
-def test_timeout():
-    sleep(20)
-```
+  ```python
+  @pytest.mark.timeout(timeout=1, func_only=True)
+  def test_timeout():
+      sleep(20)
+  ```
 
 ## Known Issuess
 
@@ -173,7 +196,7 @@ Here's a list of known issues and workarounds. Most of these are related to Mac 
 ## Missing wheels
 
 If you are using an architecture that is not supported you might find that
-packages are missing. You must check in these packages in our local (on disk) 
+packages are missing. You must check in these packages in our local (on disk)
 repository. See [README.MD](../../devpi/README.MD) for details on how to do this.
 
 ### Java exceptions on Pytest log
@@ -199,10 +222,8 @@ is to install a java 8 runtime using [sdkman](https://sdkman.io/)
 
 For example:
 
-```bash
-curl -s "https://get.sdkman.io" | bash
-sdk install java 8.332.08.1-amzn
-sdk use java 8.332.08.1-amzn
-```
+    curl -s "https://get.sdkman.io" | bash
+    sdk install java 8.332.08.1-amzn
+    sdk use java 8.332.08.1-amzn
 
 This should set your default Java version to 8, after which you should be able to run the tests.
