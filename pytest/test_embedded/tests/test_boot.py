@@ -87,6 +87,13 @@ def test_snapshot_booted(emulator):
     logging.info("Wating for it to boot up from snapshot ...")
     assert emulator.wait_for_boot(timeout=45)
     logging.info("Wating for it to stablize ...")
+    count = 0
+    while count < 10:
+        time.sleep(1)
+        count += 1
+        if check_boot_from_snapshot(emulator.configuration.directory):
+            break
+
     assert check_boot_from_snapshot(emulator.configuration.directory)
     logging.info("Shutting it down ...")
     emulator.stop()
