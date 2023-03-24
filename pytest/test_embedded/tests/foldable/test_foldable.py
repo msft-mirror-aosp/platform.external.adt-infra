@@ -14,12 +14,16 @@
 import time
 
 import pytest
-from aemu.proto.emulator_controller_pb2 import (ImageFormat, ParameterValue,
-                                                PhysicalModelValue)
+from aemu.proto.emulator_controller_pb2 import (
+    ImageFormat,
+    ParameterValue,
+    PhysicalModelValue,
+)
 from PIL import Image
 
 
 avd_config = {"api": "33", "tag.id": "google_apis"}
+
 
 def set_device_hinge_angle(emu, angle):
     """Change the device's hinge angle"""
@@ -31,9 +35,8 @@ def set_device_hinge_angle(emu, angle):
     )
     time.sleep(5)
 
-@pytest.mark.skip(
-    reason="This test needst to be updated"
-)
+
+@pytest.mark.skip(reason="This test needst to be updated")
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )

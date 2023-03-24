@@ -1,6 +1,7 @@
 Device Config,,,,,,,Linux,,,,,Windows,,,,Mac,
 API*,TAG*,ABI*,DEVICE,RAM,GPU,ORI,Linux_gce,Windows_gce,Mac,Linux
 API 29,google_apis_playstore,x86,Nexus 6P,4096,swiftshader,qt,P,P,P,P
+API 29,android-tv,x86,Android TV (1080p),4096,swiftshader,qt,P,P,P,P
 API 28,android-tv,x86,Android TV (1080p),4096,swiftshader,pi,P,P,P,P
 API 28,google_apis_playstore,x86,Nexus 6P,4096,swiftshader,pi,P,P,P,P
 API 28,android-wear,x86,Android Wear Round,4096,swiftshader,pi,P,P,P,P
@@ -11,7 +12,9 @@ API 26,android-tv,x86,Android TV (1080p),4096,swiftshader,oc,P,P,P,P
 API 26,google_apis_playstore,x86,Nexus 6P,4096,swiftshader,oc,P,P,P,P
 API 26,android-wear,x86,Android Wear Round,4096,swiftshader,oc,P,P,P,P
 API 25,google_apis_playstore,x86,Nexus 6P,4096,swiftshader,nyc-mr1,P,P,P,P
+API 25,android-tv,x86,Android TV (1080p),4096,swiftshader,nyc-mr1,P,P,P,P
 API 24,google_apis_playstore,x86,Nexus 6P,4096,swiftshader,nyc,P,P,P,P
+API 24,android-tv,x86,Android TV (1080p),4096,swiftshader,nyc,P,P,P,P
 API 23,google_apis,x86,Nexus 6P,4096,swiftshader,mnc,P,P,P,P
 API 22,google_apis,x86,Nexus 6P,4096,swiftshader,lmp-mr1,P,P,P,P
 API 21,google_apis,x86,Nexus 6P,4096,swiftshader,lmp,P,P,P,P

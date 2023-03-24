@@ -17,11 +17,10 @@ import platform
 import subprocess
 from pathlib import Path
 
-from emu.logging.log_handler import LogHandler
-
-
-class CommandFailedException(Exception):
-    pass
+from emu.logging.log_handler import LogHandler, QueueLogHandler
+from emu.timing import TimeoutTrigger
+from emu.process.kill_emulator import kill_process_tree
+import psutil
 
 
 class Command:
@@ -65,16 +64,8 @@ class Command:
         self.working_directory = Path(directory)
         return self
 
-    def ignore_failures(self):
-        self.ignore_errors = True
-        return self
-
     def run(self):
-        """Runs the given command.
-
-        Raises:
-            CommandFailedException: Raised if the status code is non zero
-        """
+        """Runs the given command."""
         cmdstr = " ".join(self.cmd)
         logging.info("Run: %s", cmdstr)
 
@@ -90,3 +81,26 @@ class Command:
 
         self.log_handler.start_log_proc(proc)
         return proc
+
+    def run_until_finished(self, timeout: int = 10):
+        """Runs the command until it is finished, returning the exit code."""
+
+        # Create an infinte queue, so we capture all the output.
+        q = QueueLogHandler(logging.getLogger(f"{self.cmd[0]}"), max_lines_to_log=0)
+        self.with_log_handler(q)
+        proc = self.run()
+        with TimeoutKillProcessTrigger(proc.pid, timeout=timeout):
+            status = proc.wait(timeout=timeout)
+
+        return status, q.readlines()
+
+
+class TimeoutKillProcessTrigger(TimeoutTrigger):
+    def __init__(self, pid, timeout: int = 60):
+        super().__init__(self._handler, timeout)
+        self.proc = psutil.Process(pid)
+
+    def _handler(self):
+        if self.proc.is_running():
+            logging.debug("Killing %s", self.proc)
+            kill_process_tree(self.proc)

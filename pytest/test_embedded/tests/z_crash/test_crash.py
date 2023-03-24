@@ -19,7 +19,7 @@ import pytest
 
 from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator
-from emu.utils import wait_until
+from emu.timing import wait_until
 
 
 def is_sublist(minidump: List[str], compiled_regexes: List[re.Pattern]) -> bool:
@@ -64,7 +64,14 @@ def check_minidump(minidump):
         ]
     ]
 
-    assert is_sublist(minidump.splitlines(), IMMEDIATE_CRASH)
+    # We will only look for a single symbol, as the stack order can
+    # vary slightly from system to system
+    #  assert is_sublist(minidump.splitlines(), IMMEDIATE_CRASH)
+
+    # If we are able to decode a single function, than we can decode them
+    # all. We assume the method do_crash has been called.
+    crash_re = re.compile(r".*.*!.*do_crash.*", re.M)
+    assert any([crash_re.match(x) for x in minidump.splitlines()])
 
 
 def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):

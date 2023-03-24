@@ -14,15 +14,12 @@
 
 import pytest
 
-from aemu.proto.emulator_controller_pb2 import (
-    SmsMessage
-)
+from aemu.proto.emulator_controller_pb2 import SmsMessage
+
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.parametrize(
-    "phone_number,text_message", [('987654321', 'Hello There')]
-)
+@pytest.mark.parametrize("phone_number,text_message", [("987654321", "Hello There")])
 def test_send_inbound_sms_text_message(emulator_controller, phone_number, text_message):
     """Send inbound phone number and text message.
 
@@ -33,9 +30,6 @@ def test_send_inbound_sms_text_message(emulator_controller, phone_number, text_m
       text_message: contents of text message.
     """
 
-    message = SmsMessage(
-        srcAddress = phone_number,
-        text = text_message
-    )
+    message = SmsMessage(srcAddress=phone_number, text=text_message)
     response = emulator_controller.sendSms(message)
     assert response.response == response.OK

@@ -421,20 +421,40 @@ class AospPyRunner(PyRunner):
                 ],
             )
             self.py_exe = PYTHON
-        else:
-            self.tmp = tempfile.TemporaryDirectory()
-            tmpdir = Path(self.tmp.name)
-            run(
+            self.run(
                 [
-                    PYTHON,
                     "-m",
-                    "venv",
-                    tmpdir / ".venv",
-                ],
+                    "pip",
+                    "install",
+                    "--upgrade",
+                    "virtualenv",
+                    "--index-url",
+                    f"{self.repo}",
+                ]
             )
+            self.env["PYTHONPATH"] = str(HERE / "src" / "hacks")
+            virtualenv = "virtualenv"
+        else:
+            virtualenv = "venv"
 
+        self.tmp = tempfile.TemporaryDirectory()
+        tmpdir = Path(self.tmp.name)
+        run(
+            [
+                PYTHON,
+                "-m",
+                virtualenv,
+                tmpdir / ".venv",
+            ],
+            extra_env=self.env,
+        )
+
+        if platform.system() == "Windows":
+            self.py_exe = tmpdir / ".venv" / "Scripts" / "python"
+        else:
             self.py_exe = tmpdir / ".venv" / "bin" / "python"
-            self.env["VIRTUAL_ENV"] = str(tmpdir / ".venv")
+
+        self.env["VIRTUAL_ENV"] = str(tmpdir / ".venv")
 
         self.run(
             ["-m", "pip", "install", "--upgrade", "pip", "--index-url", f"{self.repo}"]
@@ -458,20 +478,7 @@ class AospPyRunner(PyRunner):
         Args:
             packages ([str]): The set of packages to install
         """
-        if platform.system() == "Windows":
-            super().pip_install(
-                [
-                    "--user",
-                    "--upgrade",
-                    "--index-url",
-                    f"{self.repo}",
-                ]
-                + packages
-            )
-        else:
-            super().pip_install(
-                ["--index-url", f"{self.repo}"] + packages,
-            )
+        super().pip_install(["--index-url", f"{self.repo}"] + packages)
 
 
 def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):

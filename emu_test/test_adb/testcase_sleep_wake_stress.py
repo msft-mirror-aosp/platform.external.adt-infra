@@ -41,7 +41,7 @@ class SleepWakeTest(testcase_base.BaseAdbTest):
         process = subprocess.Popen(arg.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         success = True
-        for line in output.split('\n'):
+        for line in output.decode('utf8').split('\n'):
             if line.startswith('adb: error'):
                 success = False
                 print(('\nERROR:\nFAILED to put device to sleep: ' + str(dut)))
@@ -62,7 +62,7 @@ class SleepWakeTest(testcase_base.BaseAdbTest):
         process = subprocess.Popen(arg.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
         success = True
-        for line in output.split('\n'):
+        for line in output.decode('utf8').split('\n'):
             if line.startswith('adb: error'):
                 print(('\nERROR:\nFAILED to wake device: ' + str(dut)))
                 print(output)

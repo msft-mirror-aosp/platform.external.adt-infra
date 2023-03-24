@@ -27,6 +27,7 @@ provide access to parts of the emulator.
 import logging
 import os
 import platform
+import time
 import shutil
 import sys
 from pathlib import Path
@@ -104,14 +105,45 @@ def pytest_addoption(parser):
 ALL_PLATFORMS = set("darwin linux win32".split())
 
 
-def pytest_runtest_setup(item):
-    """Only run the test if it is supported on the platform."""
+def pytest_runtest_setup(item: pytest.Item) -> None:
+    """
+    Check whether the test is supported on the platform and log the setup information
+    for the test.
+
+    Args:
+        item (pytest.Item): The test item.
+    """
     supported_platforms = ALL_PLATFORMS.intersection(
         mark.name for mark in item.iter_markers()
     )
     plat = sys.platform
     if supported_platforms and plat not in supported_platforms:
-        pytest.skip("cannot run on platform {}".format(plat))
+        pytest.skip(f"cannot run {item.name} on platform {plat}")
+
+    logging.info("=============== Setup: %s ===============", item.name)
+
+
+def pytest_runtest_teardown(item: pytest.Item) -> None:
+    """
+    Log the teardown information for the test.
+
+    Args:
+        item (pytest.Item): The test item.
+    """
+    logging.info("=============== Teardown: %s ===============", item.name)
+
+
+def pytest_runtest_logreport(report: pytest.TestReport) -> None:
+    """
+    Log the result of the test.
+
+    Args:
+        report (pytest.TestReport): The test report.
+    """
+    if report.when == "call":
+        logging.info(
+            "-----------> %s completed: %s <-----------", report.nodeid, report.outcome
+        )
 
 
 # Workaround for
@@ -268,11 +300,12 @@ def emulator(request, pytestconfig) -> BaseEmulator:
 
 
 @pytest.mark.timeout(600)
-@pytest.fixture
+@pytest.fixture(scope="module")
 def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
-    An emulator gets 600 seconds to boot up.
+    An emulator gets 600 seconds to boot up, and has the module scope. Once all tests
+    in the module have completed the emulator will stop.
 
 
     Args:
@@ -288,9 +321,15 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     if hasattr(request, "param"):
         emu_flags = [request.param]
         # Stop the running emulator, this makes sure the emulator can be launched with correct flags.
-        if emulator.is_alive():
-            emulator.stop()
-            assert not emulator.is_alive()
+        #
+    if emulator.is_alive():
+        emulator.stop()
+        assert not emulator.is_alive()
+    mysnapshottexture = Path(
+        emulator.configuration.directory, "snapshots", "default_boot", "textures.bin"
+    )
+    if os.path.exists(mysnapshottexture):
+        emu_flags.append("-no-snapshot-save")
 
     if not emulator.is_alive():
         emulator.launch(flags=emu_flags)
@@ -299,8 +338,15 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     # (Note, boot times can be *REALLY* slow on windows gce..)
     assert emulator.wait_for_boot(600)
 
+    emulator.adb.run(["disconnect"])
+    emulator.adb.run(["wait-for-device"])
+    emulator.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
     emulator.install_apk(APP_DEBUG_APK.absolute())
-    return emulator
+
+    yield emulator
+
+    # Stop the emulator.
+    emulator.stop()
 
 
 def go_home(avd: BaseEmulator):
@@ -318,7 +364,9 @@ def go_home(avd: BaseEmulator):
     assert avd.is_alive()
 
     stub = avd.description.get_emulator_controller()
-    avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
+    avd.adb.run(["disconnect"])
+    avd.adb.run(["wait-for-device"])
+    stub.sendKey(KeyboardEvent(key="WakeUp", eventType=KeyboardEvent.keypress))
     stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
     stub.setPhysicalModel(
         PhysicalModelValue(
@@ -385,9 +433,9 @@ def launch_animiation_app(avd: BaseEmulator):
     """
     assert avd.is_alive()
 
+    avd.adb.run(["disconnect"])
+    avd.adb.run(["wait-for-device"])
     avd.adb.run(["logcat", "-c"])
-    avd.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
-    avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
     with avd.adb.stream(["logcat", "-s", "aemu"], timeout=2) as stream:
         avd.adb.run(
             [
@@ -396,7 +444,8 @@ def launch_animiation_app(avd: BaseEmulator):
                 "start",
                 "-n",
                 "com.google.AnimateBox/com.google.emu.MainActivity",
-            ]
+            ],
+            timeout=5,
         )
         return wait_for_regex(stream, r".*Timing: (\d+), (\d+)", 5)
 
@@ -438,8 +487,37 @@ def animation_app(avd: BaseEmulator):
     """
     assert avd.is_alive()
 
+    avd.adb.run(["disconnect"])
     tries = 3
     while not launch_animiation_app(avd) and tries > 0:
+        time.sleep(1)
+        tries = tries - 1
+
+    assert tries >= 0, "Unable to successfully launch the animation app."
+    yield
+
+    avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
+    go_home(avd)
+
+
+@pytest.fixture
+def coldboot_animation_app(avd: BaseEmulator):
+    """Similar to animation_app, but do it with cold boot"""
+    avd.stop()
+    assert avd.launch(flags=["-no-snapshot-load"])
+    assert avd.wait_for_boot(timeout=600)
+
+    assert avd.is_alive()
+
+    # sleep a few seconds so that system ui have updated
+    # time, lte signal and so on; we are doing a cold boot
+    # and this extra seconds seems reasonable
+    time.sleep(10)
+
+    avd.adb.run(["disconnect"])
+    tries = 3
+    while not launch_animiation_app(avd) and tries > 0:
+        time.sleep(1)
         tries = tries - 1
 
     assert tries >= 0, "Unable to successfully launch the animation app."

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import re
+import logging
 import time
 from time import sleep
 
@@ -31,22 +31,11 @@ from tests.test_utils import proto_to_pillow, wait_for_regex
 def pause_animation_app(avd):
     """Pauses the animation app."""
 
-    def _wait_for_pause(stream, max_wait):
-        """Waits until the timing entry has been written by our app."""
-        PAUSE_RE = re.compile(r".*Pausing animation.")
-        timeout = time.time() + max_wait
-        for line in iter(stream.get, None):
-            m = PAUSE_RE.match(line)
-            if timeout < time.time():
-                return False
-
-            if m:
-                return True
-
     with avd.adb.stream(["logcat", "-s", "aemu"]) as stream:
         avd.description.get_emulator_controller().sendKey(
             KeyboardEvent(key="P", eventType=KeyboardEvent.keypress)
         )
+        logging.info("Waiting for regex.")
         return wait_for_regex(stream, r".*Pausing animation.", 5)
 
 
@@ -70,7 +59,7 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 def test_screenshot_all_formats_are_equal(
     avd, emulator_controller, animation_app, w, h
 ):

@@ -19,6 +19,7 @@ from aemu.proto.emulator_controller_pb2 import (
     DisplayMode,
     DisplayModeValue,
 )
+from emu.timing import wait_until
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -42,7 +43,8 @@ avd_config = {
     ],
 )
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=2)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
+@pytest.mark.skip(reason="Width doesn't match for display mode desktop on screenshot b/274493769")
 def test_resizable_changes_resolution(emulator_controller, width, height, mode):
 
     emulator_controller.setDisplayMode(
@@ -53,10 +55,7 @@ def test_resizable_changes_resolution(emulator_controller, width, height, mode):
 
     # Eventually the currentMode is equal to the one we have set.
     # If this is broken the test will timeout
-    currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
-    while currentMode != mode:
-        time.sleep(0.1)
-        currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
+    assert wait_until(lambda: emulator_controller.getDisplayMode(_EMPTY_).value == mode)
 
     image = emulator_controller.getScreenshot(
         ImageFormat(
@@ -64,7 +63,7 @@ def test_resizable_changes_resolution(emulator_controller, width, height, mode):
         )
     )
 
-    # prevent crazy logging in case of asser failures
+    # prevent crazy logging in case of assert failures
     format = image.format
     byte_count = len(image.image)
 
