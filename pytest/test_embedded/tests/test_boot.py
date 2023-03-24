@@ -3,6 +3,7 @@ import pytest
 import time
 from pathlib import Path
 from google.protobuf import empty_pb2
+from emu.apk import APP_DEBUG_APK
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -51,6 +52,16 @@ def test_first_time_booted(emulator):
             break
         logging.info("radio or wifi not ready yet")
 
+    count = 0;
+    while count < 30:
+        time.sleep(1);
+        count += 1
+        emulator.install_apk(APP_DEBUG_APK.absolute())
+        allapks = emulator.adb.run(["shell", "pm", "list", "packages"])
+        logging.info("all apks %s", allapks)
+        if "com.google.AnimateBox" in allapks:
+            logging.info("installed animation app")
+            break
 
     logging.info("Shutting it down ...")
     emulator.stop()
