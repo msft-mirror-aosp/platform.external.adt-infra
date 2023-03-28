@@ -13,6 +13,7 @@
 # limitations under the License.
 import logging
 import re
+import sys
 from typing import List
 
 import pytest
@@ -117,6 +118,7 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
+@pytest.mark.skipif(sys.platform == "win32", reasom="b/275577019")
 def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     if not crash_reporter.available():
         pytest.skip("No crash reporter available, let's not crash the emulator")
