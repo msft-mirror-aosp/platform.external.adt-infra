@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import platform
 import re
 from emu.timing import eventually, wait_until
 from functools import partial
@@ -329,6 +330,7 @@ def test_rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.timeout(timeout=480, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.parametrize("avd", ["-qt-hide-window"], indirect=True)
+@pytest.mark.skipif(platform.processor() == "arm", reason="b/275593138")
 def test_rotation_observable_through_screenshot_embedded_mode(
     emulator_controller, adb, emulator
 ):
