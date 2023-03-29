@@ -369,7 +369,7 @@ class Emulator(BaseEmulator):
 
         return self._launch(
             [
-                shutil.which(self.exe),
+                self.exe,
                 "-avd",
                 self.configuration.name,
                 "-verbose",
