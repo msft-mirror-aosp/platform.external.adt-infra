@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import platform
 import re
 import sys
 from typing import List
@@ -98,6 +99,7 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
+@pytest.mark.skipif(platform.processor() == "i386", reason="b/275642912")
 def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     """Make sure the emulator can crash, and produces a report.
 
