@@ -1,4 +1,5 @@
 import logging
+import platform
 import pytest
 import time
 from pathlib import Path
@@ -32,12 +33,11 @@ def test_first_time_booted(emulator):
 
     emulator.stop()
     logging.info("Launching emualtor ...")
-    assert emulator.launch(
-        flags=[
-            "-wipe-data",
-            "-no-snapshot-load",
-        ]
-    )
+    myflags=["-wipe-data", "-no-snapshot-load"]
+    if platform.processor() == "i386" and platform.system() == "Darwin":
+        myflags.append("-no-window")
+
+    assert emulator.launch(flags = myflags)
 
     logging.info("Wating for it to boot up ...")
     assert emulator.wait_for_boot(timeout=1080)
@@ -95,8 +95,11 @@ def test_snapshot_booted(emulator):
         ]
     )
 
+    mytimeout = 45
+    if platform.processor() == "i386" and platform.system() == "Darwin":
+        mytimeout = 360
     logging.info("Wating for it to boot up from snapshot ...")
-    assert emulator.wait_for_boot(timeout=45)
+    assert emulator.wait_for_boot(timeout = mytimeout)
     logging.info("Wating for it to stablize ...")
     count = 0
     while count < 10:
