@@ -383,6 +383,9 @@ class Emulator(BaseEmulator):
                 "-log-detailed",
                 "-gpu",
                 "swiftshader_indirect",
+                # Vulkan will cause snapshot saving failure, disable it for now
+                "-feature",
+                "-Vulkan",
                 "-debug-events",
                 "-debug-grpc",
                 "-debug",
