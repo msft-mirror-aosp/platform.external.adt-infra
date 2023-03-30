@@ -111,8 +111,7 @@ def check_boot_from_snapshot(avdpath)->bool :
   return False
 
 @pytest.mark.e2e
-@pytest.mark.skipif(platform.system() == "Windows" or platform.system() == "Darwin" and
-        platform.processor() == "i386" , reason="other platforms come later")
+@pytest.mark.skipif(platform.system() == "Darwin" and platform.processor() == "i386" , reason="other platforms come later")
 def test_can_load_oldsnapshot(emulator):
     """ test that current emulator can load the snapshot created by old emulator
 
@@ -134,6 +133,9 @@ def test_can_load_oldsnapshot(emulator):
     # there is no reliable way to detect it has reach home screen
     # so just wait enough long
     time.sleep(10)
+    # windows need extra time  :(
+    if platform.system() == "Windows":
+        time.sleep(20)
     emulator.stop()
     # there is no reliable way to detect it has done saving
     # so just wait enough long
