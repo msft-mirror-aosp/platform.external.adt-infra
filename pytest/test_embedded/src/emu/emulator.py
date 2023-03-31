@@ -23,13 +23,24 @@ from datetime import timedelta
 from pathlib import Path
 from timeit import default_timer as timer
 from typing import Optional
+from PIL import Image, ImageChops
 
 from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
 from google.protobuf import empty_pb2
 from grpc import RpcError
+from tests.test_utils import proto_to_pillow
+
+
+from aemu.proto.emulator_controller_pb2 import (
+    ImageFormat,
+    ParameterValue,
+    PhysicalModelValue,
+    Rotation,
+)
 
 from emu.adb.adb import Adb
+from emu.apk import PIXEL2_HOMESCREEN_PNG
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
 from emu.logging.log_handler import QueueLogHandler
@@ -166,6 +177,34 @@ class BaseEmulator(object):
             return emu.getStatus(_EMPTY_).booted
         except RpcError as err:
             self.logger.warning("Unable to determine boot state due to %s", err)
+
+    def is_similar(self, imga, imgb) -> bool:
+        mytotalpixels = len(set(imga.getdata()))
+        tolerance = 0.1
+        mymaxdiff = mytotalpixels * tolerance
+        diffimg = ImageChops.difference(imga, imgb)
+        mycurrdiff = len(set(diffimg.getdata()))
+        if mycurrdiff <= mymaxdiff:
+            return True
+        else:
+            return False
+
+    def wait_for_homescreen(self, timeout: int = 300) -> bool:
+        """ Wait until the homescreen comes up
+
+        """
+        myhomepng = Image.open(PIXEL2_HOMESCREEN_PNG)
+        assert myhomepng
+        controller = self.description.get_emulator_controller()
+        count = 0
+        while count < timeout/5 :
+            myimg = controller.getScreenshot(ImageFormat())
+            if self.is_similar(myhomepng, proto_to_pillow(myimg)):
+                return True
+            time.sleep(5)
+            count += 5
+
+        return False
 
     def wait_for_boot(self, timeout: int = 600) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
