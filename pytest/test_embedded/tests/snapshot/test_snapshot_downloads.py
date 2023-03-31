@@ -111,7 +111,6 @@ def check_boot_from_snapshot(avdpath)->bool :
   return False
 
 @pytest.mark.e2e
-@pytest.mark.skipif(platform.system() == "Darwin" and platform.processor() == "i386" , reason="other platforms come later")
 def test_can_load_oldsnapshot(emulator):
     """ test that current emulator can load the snapshot created by old emulator
 
