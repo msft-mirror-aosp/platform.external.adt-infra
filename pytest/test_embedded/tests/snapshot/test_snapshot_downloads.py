@@ -127,7 +127,10 @@ def test_can_load_oldsnapshot(emulator):
     oldexe = download_emulator_zip("9847722")
     logging.info("old emu: %s", oldexe)
     emulator.exe = oldexe;
-    assert emulator.launch(flags=["-no-snapshot-load"])
+    myflags=["-no-snapshot-load"]
+    if platform.processor() == "i386" and platform.system() == "Darwin":
+        myflags.append("-no-window")
+    assert emulator.launch(flags=myflags)
     assert emulator.wait_for_boot(timeout=420)
     # there is no reliable way to detect it has reach home screen
     # so just wait enough long
