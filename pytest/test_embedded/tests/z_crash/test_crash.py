@@ -100,7 +100,6 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.skipif(platform.processor() == "i386", reason="b/275642912")
-@pytest.mark.skipif(playform.processor() == "Darwin", reason="276501004")
 def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     """Make sure the emulator can crash, and produces a report.
 
