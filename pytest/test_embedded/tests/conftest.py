@@ -486,6 +486,24 @@ def emulator_controller(avd: BaseEmulator):
 
 
 @pytest.fixture
+def service(avd: BaseEmulator):
+    """A grpc stub to the emulator of the given type
+
+    Usage:
+
+    def test_sample(service):
+        stub = service(SensorServiceStub)
+        stub.method_call
+    """
+
+    def service(klazz):
+        channel = avd.description.get_grpc_channel()
+        return klazz(channel)
+
+    return service
+
+
+@pytest.fixture
 def animation_app(avd: BaseEmulator):
     """Activates the animation app that displays a rotating triangle.
 
