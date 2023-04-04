@@ -132,7 +132,6 @@ def test_can_load_oldsnapshot(emulator):
         myflags.append("-no-window")
     assert emulator.launch(flags=myflags)
     assert emulator.wait_for_boot(timeout=420)
-    assert emulator.wait_for_homescreen()
     # there is no reliable way to detect it has reach home screen
     # so just wait enough long
     time.sleep(10)

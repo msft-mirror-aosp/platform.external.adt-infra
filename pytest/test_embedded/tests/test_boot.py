@@ -41,7 +41,6 @@ def test_first_time_booted(emulator):
 
     logging.info("Wating for it to boot up ...")
     assert emulator.wait_for_boot(timeout=1080)
-    assert emulator.wait_for_homescreen()
     logging.info("Wating for it to stablize ...")
     # make sure it has both radio and wifi
     count = 0
