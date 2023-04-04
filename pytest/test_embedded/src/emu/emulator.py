@@ -23,6 +23,7 @@ from datetime import timedelta
 from pathlib import Path
 from timeit import default_timer as timer
 from typing import Optional
+from PIL import Image, ImageChops
 
 from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
@@ -30,6 +31,7 @@ from google.protobuf import empty_pb2
 from grpc import RpcError
 
 from emu.adb.adb import Adb
+from emu.apk import PIXEL2_HOMESCREEN_PNG
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
 from emu.logging.log_handler import QueueLogHandler
@@ -166,6 +168,49 @@ class BaseEmulator(object):
             return emu.getStatus(_EMPTY_).booted
         except RpcError as err:
             self.logger.warning("Unable to determine boot state due to %s", err)
+
+    def is_similar(self, imga, imgb) -> bool:
+        mytotalpixelsa = len(set(imga.getdata()))
+        mytotalpixelsb = len(set(imgb.getdata()))
+        tolerance = 0.5
+        mymaxdiff = mytotalpixelsa * tolerance
+        diffimg = ImageChops.difference(imga, imgb)
+        mycurrdiff = len(set(diffimg.getdata()))
+        logging.info("different: total pixel a  %s total pixel b %s difference %s allowed %s",
+                     mytotalpixelsa, mytotalpixelsb, mycurrdiff, mymaxdiff);
+        if mycurrdiff <= mymaxdiff:
+            logging.info("image comparison passed");
+            return True
+        else:
+            logging.warning("image comparison failed: too much difference");
+            return False
+
+    def take_screenshot(self)->str:
+        """ Call adb emu screenrecord screenshot /path/to/avd/folder/screenshotnow.png
+
+            Returns path to the png file
+        """
+        path = Path(
+            self.android_avd_home, f"{self.configuration.name}.avd", "screenshotnow.png")
+        strpath = f"{path.absolute()}"
+        self.adb.run(["emu", "screenrecord", "screenshot", strpath])
+        return strpath
+
+    def wait_for_homescreen(self, timeout: int = 300) -> bool:
+        """ Wait until the homescreen comes up
+
+        """
+        myhomepng = Image.open(PIXEL2_HOMESCREEN_PNG)
+        assert myhomepng
+        count = 0
+        while count < timeout/5 :
+            myimg = Image.open(self.take_screenshot())
+            if self.is_similar(myhomepng, myimg):
+                return True
+            time.sleep(5)
+            count += 5
+
+        return False
 
     def wait_for_boot(self, timeout: int = 600) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
