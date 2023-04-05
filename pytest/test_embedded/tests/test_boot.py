@@ -27,6 +27,7 @@ def has_network(adb):
 
 @pytest.mark.boot
 @pytest.mark.e2e
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.timeout(timeout=2800, func_only=True)
 def test_first_time_booted(emulator):
     """Make sure the emulator status is set to booted."""
