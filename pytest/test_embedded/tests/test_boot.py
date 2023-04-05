@@ -1,12 +1,10 @@
 import logging
 import platform
 import pytest
-import os
 import time
 from pathlib import Path
 from google.protobuf import empty_pb2
 from emu.apk import APP_DEBUG_APK
-from shutil import copyfile
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -43,11 +41,6 @@ def test_first_time_booted(emulator):
 
     logging.info("Wating for it to boot up ...")
     assert emulator.wait_for_boot(timeout=1080)
-    assert emulator.wait_for_homescreen()
-    if "DIST_DIR" in os.environ:
-        srcpath = Path(emulator.android_avd_home, f"{emulator.configuration.name}.avd", "screenshotnow.png")
-        destpath = Path(os.environ["DIST_DIR"], "first_time_boot.png")
-        copyfile(srcpath, destpath)
     logging.info("Wating for it to stablize ...")
     # make sure it has both radio and wifi
     count = 0
