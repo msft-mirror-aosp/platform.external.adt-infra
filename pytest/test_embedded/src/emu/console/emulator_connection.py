@@ -89,7 +89,7 @@ class EmulatorConnection:
         self.logger.debug("_set_connected: %s", connected)
         with self.cv:
             self.connected = connected
-            self.logger.debug("_set_connected: notify listeners")
+            self.logger.info("_set_connected: %s notify listeners", connected)
             self.cv.notify()
 
     def _data_received(self, data: bytes):
@@ -174,7 +174,7 @@ class EmulatorConnection:
         port: int,
         emulator_name: Optional[str] = None,
         callback: Optional[Callable] = None,
-    ) -> Thread:
+    ):
         """Connects to the telnet console on the given port and authenticates.
 
         Args:
@@ -183,7 +183,7 @@ class EmulatorConnection:
             callback (callable, optional): Function to be called when the telnet console has data. Defaults to None.
 
         Returns:
-            Thread: A thread that is running the event loop.
+            EmulatorConnection: The actual connection to the emulator
         """
 
         if not emulator_name:
@@ -196,7 +196,9 @@ class EmulatorConnection:
         logger.debug("Connecting to console..")
         with connection.cv:
             Thread(target=connection.reader).start()
-            connection.cv.wait(1.0)
+            connection.cv.wait(5.0)
 
-        logging.info("Connceted to emulator on port: %s", port)
+        logging.info(
+            "Connected: %s to emulator on port: %s", connection.is_connected(), port
+        )
         return connection
