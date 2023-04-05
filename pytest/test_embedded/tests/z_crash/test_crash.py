@@ -86,8 +86,11 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
     crash_count = len(crash_reporter.crashes())
     assert emulator.console().send("crash")
 
-    # Wait until the emulator is alive
-    assert wait_until(emulator.is_alive)
+    # Wait until the emulator is gone
+    def emulator_dead():
+        return not emulator.is_alive()
+
+    assert wait_until(emulator_dead)
 
     def crash_detected():
         return crash_count < len(crash_reporter.crashes())

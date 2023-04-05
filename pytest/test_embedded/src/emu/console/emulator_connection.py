@@ -138,6 +138,9 @@ class EmulatorConnection:
             while data:
                 self._data_received(data)
                 data = self.transport.recv(4096)
+        except:
+            # Likely got disconnected.
+            pass
         finally:
             self.connection_lost()
 
@@ -170,6 +173,16 @@ class EmulatorConnection:
             self.transport.close()
 
     @staticmethod
+    def open_socket(port: int, max_tries: int = 5):
+        for x in range(max_tries):
+            sock = socket.create_connection(("localhost", port))
+            if sock.fileno() != -1:
+                return sock
+            time.sleep(0.5)
+
+        raise IOError(f"Unable to connect to port {port}")
+
+    @staticmethod
     def connect(
         port: int,
         emulator_name: Optional[str] = None,
@@ -190,7 +203,7 @@ class EmulatorConnection:
             emulator_name = f"port-{port}"
         logger = logging.getLogger(f"{emulator_name}-con")
 
-        sock = socket.create_connection(("localhost", port))
+        sock = EmulatorConnection.open_socket(port)
         connection = EmulatorConnection(logger, Condition(), sock, callback, port)
 
         logger.debug("Connecting to console..")

@@ -14,10 +14,12 @@
 import logging
 import os
 import platform
+import random
+import re
 import shutil
+import socket
 import subprocess
 import sys
-import re
 import time
 from datetime import timedelta
 from pathlib import Path
@@ -34,8 +36,8 @@ from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
 from emu.logging.log_handler import QueueLogHandler
 from emu.process.command import Command
+from emu.timing import wait_for_event, wait_until
 from emu.utils import LogObserver
-from emu.timing import wait_until, wait_for_event
 
 
 class FailedToLaunchException(Exception):
@@ -350,6 +352,44 @@ class Emulator(BaseEmulator):
         self._discover(self.configuration.name)
         return self.is_alive()
 
+    """
+    Finds the first 2 available ports next to each other. This can be used to find
+    two adjecent ports that can be used by the emulator to act as a console and adb
+    port.
+
+    For example, if the function is called with the arguments `port=5554` and
+    `max_port=30`, it will first check if port 5554 and 5555 are available. If they are,
+    it will return 5554. If it is not, it will check if port 5556 and 5557 is available.
+    If it is, it will return 5556. This process will continue until the function finds
+    two available ports or it reaches the `max_port` number.
+
+    Args:
+        port (int, optional): The starting port number to check. Defaults to 5554.
+        max_port (int, optional): The maximum number of ports to check. Defaults to 30.
+
+    Raises:
+        IOError: If no free ports are found.
+
+    Returns:
+        int: The first free port number found.
+    """
+
+    def _get_free_port(self, port=5554, max_port=30):
+        max_attempt = port + max_port
+        while port <= max_attempt:
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.bind(("", port))
+                sock.close()
+
+                sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock2.bind(("", port + 1))
+                sock2.close()
+                return port
+            except OSError:
+                port += 2
+        raise IOError("no free ports")
+
     def launch(self, flags: [str] = []) -> bool:
         """Launches the emulator
 
@@ -367,6 +407,14 @@ class Emulator(BaseEmulator):
             "DISPLAY": os.environ.get("DISPLAY", ":0"),
         }
 
+        # Pick a random "adb" supported port.
+        port = random.randint(5554, 5584)
+        port = self._get_free_port(port, 4096)
+
+        # grpc port by default binds to console + 3000, let's try
+        # to keep that.
+        grpc_port = self._get_free_port(port + 3000, 4096)
+
         return self._launch(
             [
                 self.exe,
@@ -380,6 +428,10 @@ class Emulator(BaseEmulator):
                 "-no-audio",
                 # "-idle-grpc-timeout", # We will explicitly shutdown the device.
                 # "300",
+                "-port",  # Bind to a known open port..
+                str(port),
+                "-grpc",
+                str(grpc_port),
                 "-log-detailed",
                 "-gpu",
                 "swiftshader_indirect",
