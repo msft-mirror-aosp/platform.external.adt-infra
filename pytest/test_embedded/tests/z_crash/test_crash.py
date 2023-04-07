@@ -73,18 +73,19 @@ def check_minidump(minidump):
     # If we are able to decode a single function, than we can decode them
     # all. We assume the method do_crash has been called.
     crash_re = re.compile(r".*.*!.*do_crash.*", re.M)
-    assert any([crash_re.match(x) for x in minidump.splitlines()])
+    return any([crash_re.match(x) for x in minidump.splitlines()])
 
 
 def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
     # Launch the emulator if needed.
     if not emulator.is_alive():
-        emulator.launch()
+        emulator.launch(["-no-snapshot"])
 
     assert emulator.is_alive()
+    assert emulator.wait_for_boot()
 
     crash_count = len(crash_reporter.crashes())
-    assert emulator.console().send("crash")
+    assert emulator.adb.run(["emu", "crash"])
 
     # Wait until the emulator is gone
     def emulator_dead():
@@ -117,8 +118,8 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 
     crashes = crash(emulator, crash_reporter)
 
-    # We should have one new crash.
-    assert len(crashes) == 1
+    # We should have at least one new crash (betosim can crash along with us)
+    assert len(crashes) > 1
 
 
 @pytest.mark.e2e
@@ -134,5 +135,7 @@ def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
         pytest.skip("No symbols available, let's not crash the emulator")
 
     crashes = crash(emulator, crash_reporter)
-    dump = crash_reporter.dump_crash(crashes[0])
-    check_minidump(dump)
+
+    # We might have multiple crashes (betosim, emulator)
+    # At least one of these crashes should include the symbols we expect.
+    assert any([check_minidump(crash_reporter.dump_crash(crash)) for crash in crashes])

@@ -14,7 +14,7 @@
 import logging
 import shutil
 from pathlib import Path
-
+from emu.timing import wait_until
 
 # Hack attack..
 try:
@@ -59,6 +59,10 @@ class CrashReporter:
             "Running crashreporter: %s %s", self.crashreporter, " ".join(params)
         )
 
+        def no_crash_lock():
+            return "open lock" not in check_run([self.crashreporter] + params)
+
+        wait_until(no_crash_lock, 20)
         return check_run([self.crashreporter] + params)
 
     def available(self) -> bool:
