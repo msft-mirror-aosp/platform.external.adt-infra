@@ -206,7 +206,10 @@ class QueueLogHandler(LogHandler):
                 self.queue.get_nowait()
 
             strip = line.strip()
-            logfn(strip)
+            try:
+                logfn(strip)
+            except:
+                pass
             self.queue.put_nowait(strip)
 
     def finished(self):

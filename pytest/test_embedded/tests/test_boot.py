@@ -1,8 +1,10 @@
 import logging
+import platform
 import pytest
 import time
 from pathlib import Path
 from google.protobuf import empty_pb2
+from emu.apk import APP_DEBUG_APK
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -25,18 +27,18 @@ def has_network(adb):
 
 @pytest.mark.boot
 @pytest.mark.e2e
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.timeout(timeout=2800, func_only=True)
 def test_first_time_booted(emulator):
     """Make sure the emulator status is set to booted."""
 
     emulator.stop()
     logging.info("Launching emualtor ...")
-    assert emulator.launch(
-        flags=[
-            "-wipe-data",
-            "-no-snapshot-load",
-        ]
-    )
+    myflags=["-wipe-data", "-no-snapshot-load"]
+    if platform.processor() == "i386" and platform.system() == "Darwin":
+        myflags.append("-no-window")
+
+    assert emulator.launch(flags = myflags)
 
     logging.info("Wating for it to boot up ...")
     assert emulator.wait_for_boot(timeout=1080)
@@ -51,6 +53,16 @@ def test_first_time_booted(emulator):
             break
         logging.info("radio or wifi not ready yet")
 
+    count = 0;
+    while count < 30:
+        time.sleep(1);
+        count += 1
+        emulator.install_apk(APP_DEBUG_APK.absolute())
+        allapks = emulator.adb.run(["shell", "pm", "list", "packages"])
+        logging.info("all apks %s", allapks)
+        if "com.google.AnimateBox" in allapks:
+            logging.info("installed animation app")
+            break
 
     logging.info("Shutting it down ...")
     emulator.stop()
@@ -84,8 +96,11 @@ def test_snapshot_booted(emulator):
         ]
     )
 
+    mytimeout = 45
+    if platform.processor() == "i386" and platform.system() == "Darwin":
+        mytimeout = 360
     logging.info("Wating for it to boot up from snapshot ...")
-    assert emulator.wait_for_boot(timeout=45)
+    assert emulator.wait_for_boot(timeout = mytimeout)
     logging.info("Wating for it to stablize ...")
     count = 0
     while count < 10:

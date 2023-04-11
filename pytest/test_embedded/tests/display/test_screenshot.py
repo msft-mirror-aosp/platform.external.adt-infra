@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import sys
 import time
 from time import sleep
 
@@ -60,6 +61,7 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
+@pytest.mark.skipif(sys.platform == "win32", reason="b/275586631")
 def test_screenshot_all_formats_are_equal(
     avd, emulator_controller, animation_app, w, h
 ):

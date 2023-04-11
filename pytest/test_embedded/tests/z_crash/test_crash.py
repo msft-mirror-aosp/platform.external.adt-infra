@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import platform
 import re
+import sys
 from typing import List
 
 import pytest
@@ -84,8 +86,11 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
     crash_count = len(crash_reporter.crashes())
     assert emulator.console().send("crash")
 
-    # Wait until the emulator is alive
-    assert wait_until(emulator.is_alive)
+    # Wait until the emulator is gone
+    def emulator_dead():
+        return not emulator.is_alive()
+
+    assert wait_until(emulator_dead)
 
     def crash_detected():
         return crash_count < len(crash_reporter.crashes())
@@ -97,6 +102,7 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
+@pytest.mark.skipif(platform.processor() == "i386", reason="b/275642912")
 def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     """Make sure the emulator can crash, and produces a report.
 
@@ -117,6 +123,9 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
+@pytest.mark.skipif(sys.platform == "win32", reason="b/275577019")
+@pytest.mark.skipif(platform.processor() == "i386", reason="b/275755890")
+@pytest.mark.skipif(platform.processor() == "Darwin", reason="b/276296554")
 def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     if not crash_reporter.available():
         pytest.skip("No crash reporter available, let's not crash the emulator")

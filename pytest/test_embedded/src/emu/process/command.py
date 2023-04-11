@@ -104,3 +104,8 @@ class TimeoutKillProcessTrigger(TimeoutTrigger):
         if self.proc.is_running():
             logging.debug("Killing %s", self.proc)
             kill_process_tree(self.proc)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exits the context and terminates the process."""
+        self._handler()
+        self.cancel()

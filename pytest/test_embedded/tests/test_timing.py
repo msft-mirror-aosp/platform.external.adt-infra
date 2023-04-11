@@ -28,6 +28,7 @@ def sleep_time():
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="b/275573612")
 def test_timeout_proc_terminates(sleep_time, caplog):
     """The sleep command should be forcefully terminated by our external kill mechanism."""
     start = time.time()

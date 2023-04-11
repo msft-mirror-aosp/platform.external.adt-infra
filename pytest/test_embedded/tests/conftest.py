@@ -339,10 +339,21 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     assert emulator.wait_for_boot(600)
 
     emulator.adb.run(["disconnect"])
-    emulator.adb.run(["wait-for-device"])
+    emulator.adb.run(["wait-for-device"], timeout=30)
     emulator.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
-    emulator.install_apk(APP_DEBUG_APK.absolute())
+    count = 0;
+    app_install_success = False
+    while count < 30:
+        time.sleep(1);
+        count += 1
+        allapks = emulator.adb.run(["shell", "pm", "list", "packages"])
+        logging.info("all apks %s", allapks)
+        if "com.google.AnimateBox" in allapks:
+            app_install_success = True
+            break
+        emulator.install_apk(APP_DEBUG_APK.absolute())
 
+    assert app_install_success
     yield emulator
 
     # Stop the emulator.
@@ -435,8 +446,11 @@ def launch_animiation_app(avd: BaseEmulator):
 
     avd.adb.run(["disconnect"])
     avd.adb.run(["wait-for-device"])
-    avd.adb.run(["logcat", "-c"])
-    with avd.adb.stream(["logcat", "-s", "aemu"], timeout=2) as stream:
+    count = 0;
+    app_launch_success = False
+    while count < 30:
+        time.sleep(1);
+        count += 1
         avd.adb.run(
             [
                 "shell",
@@ -447,7 +461,12 @@ def launch_animiation_app(avd: BaseEmulator):
             ],
             timeout=5,
         )
-        return wait_for_regex(stream, r".*Timing: (\d+), (\d+)", 5)
+        result = avd.adb.run(["shell", "dumpsys", "activity", "activities"])
+        if "com.google.AnimateBox/com.google.emu.MainActivity" in result:
+            app_launch_success = True
+            return True
+    logging.warning("animation app not launched")
+    return False
 
 
 @pytest.fixture
@@ -464,6 +483,24 @@ def emulator_controller(avd: BaseEmulator):
 
     ctrl = avd.description.get_emulator_controller()
     return ctrl
+
+
+@pytest.fixture
+def service(avd: BaseEmulator):
+    """A grpc stub to the emulator of the given type
+
+    Usage:
+
+    def test_sample(service):
+        stub = service(SensorServiceStub)
+        stub.method_call
+    """
+
+    def service(klazz):
+        channel = avd.description.get_grpc_channel()
+        return klazz(channel)
+
+    return service
 
 
 @pytest.fixture
