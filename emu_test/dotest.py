@@ -122,6 +122,48 @@ def printResult(result):
         print_xml(result)
 
 
+def printTestBreakdown(emu_args):
+    """
+    Print out detailed testcase information for each class.
+    """
+    logger = logging.getLogger()
+    gradle_report_path = os.path.join(emu_args.session_dir, emu_args.test_dir)
+
+    if not os.path.exists(gradle_report_path):
+        logger.info('Failed to find gradle report path.')
+        return
+
+    # Parse XML report
+    xml_file = ''
+    logger.info('\nTestsuite breakdown:\n')
+
+    for filename in os.listdir(gradle_report_path):
+        if filename.endswith('.xml'):
+            xml_file = os.path.join(gradle_report_path, filename)
+            tree = ET.parse(xml_file)
+            testsuite = tree.getroot()
+            classname = testsuite.get('name')
+
+            logger.info('-'*27)
+            logger.info('Class "{}"'.format(classname))
+            logger.info('{} tests, {} failures, {} errors, {} skipped, duration {}s\n'\
+                        .format(
+                                testsuite.get('tests'),
+                                testsuite.get('failures'),
+                                testsuite.get('errors'),
+                                testsuite.get('skipped'),
+                                testsuite.get('time')
+                            )
+                    )
+            for testcase in testsuite.findall('./testcase'):
+                status = 'failed' if testcase.findall('./failure') else 'PASSED'
+                logger.info('{} {} ({}s)'.format(testcase.get('name'), status, testcase.get('time')))
+            logger.info('')
+
+    if not xml_file:
+        logger.info('No gradle XML reports found.')
+
+
 def setupLogger():
     """
     Create logging.getLogger() that will be used by test driver
@@ -199,6 +241,7 @@ if __name__ == '__main__':
         emuRunner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
         emuResult = emuRunner.run(emuSuite)
         printResult(emuResult)
+        printTestBreakdown(emu_argparser.emu_args)
     except Exception:
         logging.exception("Error in dotest.py")
 
