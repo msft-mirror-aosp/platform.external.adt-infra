@@ -102,6 +102,7 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/278266218 flaky on linux_x64-gfxstream.
 @pytest.mark.skipif(platform.processor() == "i386", reason="b/275642912")
 def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     """Make sure the emulator can crash, and produces a report.
