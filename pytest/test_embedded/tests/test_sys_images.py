@@ -15,10 +15,12 @@ def default_image():
     return s.install(abi="arm64-v8a", api="33", tag="google_apis")
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/278294760 flaky on mac_aarch64.
 def test_at_least_one_available(default_image):
     assert SystemImages().available() is not None
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/278294760 flaky on mac_aarch64.
 def test_can_find_default(default_image):
     image = SystemImages().find(
         abi=default_image["abi"], api=default_image["api"], tag=default_image["tag"]
@@ -26,6 +28,7 @@ def test_can_find_default(default_image):
     assert image == default_image
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/278294760 flaky on mac_aarch64.
 def test_can_install_default(default_image):
     image = SystemImages().install(
         abi=default_image["abi"], api=default_image["api"], tag=default_image["tag"]
