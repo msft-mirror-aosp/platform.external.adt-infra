@@ -40,6 +40,7 @@ API 25,google_apis_playstore,x86,Nexus 6P,2048,swiftshader,nyc-mr1,P,P,P,P
 API 25,google_apis,x86_64,Nexus 6P,2048,swiftshader,nyc-mr1,P,P,P,P
 API 25,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P,P
 API 24,google_apis,x86,Nexus 5,2048,swiftshader,public,P,P,P,P
+API 24,google_apis_playstore,x86,Nexus 5,2048,swiftshader,public,P,P,P,P
 API 24,google_apis,x86_64,Nexus 6P,2048,swiftshader,nyc,P,P,P,P
 API 24,google_apis,x86,Nexus 6P,2048,swiftshader,nyc,P,P,P,P
 API 24,android-tv,x86,Android TV (1080p),2048,swiftshader,nyc,P,P,P,P
