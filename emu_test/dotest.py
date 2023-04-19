@@ -133,35 +133,42 @@ def printTestBreakdown(emu_args):
         logger.info('Failed to find gradle report path.')
         return
 
-    # Parse XML report
-    xml_file = ''
-    logger.info('\nTestsuite breakdown:\n')
-
+    xml_files = []
     for filename in os.listdir(gradle_report_path):
         if filename.endswith('.xml'):
-            xml_file = os.path.join(gradle_report_path, filename)
-            tree = ET.parse(xml_file)
-            testsuite = tree.getroot()
-            classname = testsuite.get('name')
-
-            logger.info('-'*27)
-            logger.info('Class "{}"'.format(classname))
-            logger.info('{} tests, {} failures, {} errors, {} skipped, duration {}s\n'\
-                        .format(
-                                testsuite.get('tests'),
-                                testsuite.get('failures'),
-                                testsuite.get('errors'),
-                                testsuite.get('skipped'),
-                                testsuite.get('time')
+            xml_files += [os.path.join(gradle_report_path, filename)]
++   if not xml_files:
++       logger.info('No gradle XML reports found.')
++       return
++
++   logger.info('\nTestsuite breakdown:\n')
++
++   # Parse XML reports
++
++   for xml_file in sorted(xml_files):
++
++       tree = ET.parse(xml_file)
++       testsuite = tree.getroot()
++       classname = testsuite.get('name')
++       logger.info('---------------------------')
++       logger.info('Class "{}"'.format(classname))
++       logger.info('{} tests, {} failures, {} errors, {} skipped, duration {}s\n'\
++                   .format(
++                           testsuite.get('tests') or 0,
++                           testsuite.get('failures') or 0,
++                           testsuite.get('errors') or 0,
++                           testsuite.get('skipped') or 0,
++                           testsuite.get('time') or 0
                             )
                     )
-            for testcase in testsuite.findall('./testcase'):
-                status = 'failed' if testcase.findall('./failure') else 'PASSED'
-                logger.info('{} {} ({}s)'.format(testcase.get('name'), status, testcase.get('time')))
-            logger.info('')
-
-    if not xml_file:
-        logger.info('No gradle XML reports found.')
+        testcases = sorted(testsuite.findall('./testcase'),
++                           key=lambda child: child.get('name'))
++
++       for testcase in testcases:
++           status = 'FAILED' if testcase.findall('./failure') else 'PASSED'
++           logger.info('{}: {}, duration: {}s'.format(status, testcase.get('name'),
++                                                       testcase.get('time')))
++       logger.info('')
 
 
 def setupLogger():
