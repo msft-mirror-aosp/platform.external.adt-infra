@@ -65,7 +65,18 @@ def test_first_time_booted(emulator):
             break
 
     logging.info("Shutting it down ...")
-    emulator.stop()
+    # kill is the way to ask it to save snapshot if applicable and quit
+    emulator.adb.run(["emu", "kill"])
+    count = 0;
+    while count < 60:
+        time.sleep(1)
+        count += 1
+        if not emulator.is_alive():
+            break
+    if emulator.is_alive():
+        emulator.stop(timeout=60)
+    assert not emulator.is_alive()
+    logging.info("emualtor is shut down successfully")
 
 def check_boot_from_snapshot(avdpath)->bool :
   mypath = Path(avdpath, "snapshot.trace")
@@ -111,4 +122,6 @@ def test_snapshot_booted(emulator):
 
     assert check_boot_from_snapshot(emulator.configuration.directory)
     logging.info("Shutting it down ...")
-    emulator.stop()
+    emulator.stop(timeout=60)
+    assert not emulator.is_alive()
+    logging.info("emualtor is shut down successfully")
