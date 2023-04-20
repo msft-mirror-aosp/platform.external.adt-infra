@@ -137,38 +137,38 @@ def printTestBreakdown(emu_args):
     for filename in os.listdir(gradle_report_path):
         if filename.endswith('.xml'):
             xml_files += [os.path.join(gradle_report_path, filename)]
-+   if not xml_files:
-+       logger.info('No gradle XML reports found.')
-+       return
-+
-+   logger.info('\nTestsuite breakdown:\n')
-+
-+   # Parse XML reports
-+
-+   for xml_file in sorted(xml_files):
-+
-+       tree = ET.parse(xml_file)
-+       testsuite = tree.getroot()
-+       classname = testsuite.get('name')
-+       logger.info('---------------------------')
-+       logger.info('Class "{}"'.format(classname))
-+       logger.info('{} tests, {} failures, {} errors, {} skipped, duration {}s\n'\
-+                   .format(
-+                           testsuite.get('tests') or 0,
-+                           testsuite.get('failures') or 0,
-+                           testsuite.get('errors') or 0,
-+                           testsuite.get('skipped') or 0,
-+                           testsuite.get('time') or 0
+    if not xml_files:
+        logger.info('No gradle XML reports found.')
+        return
+
+    logger.info('\nTestsuite breakdown:\n')
+
+    # Parse XML reports
+
+    for xml_file in sorted(xml_files):
+
+        tree = ET.parse(xml_file)
+        testsuite = tree.getroot()
+        classname = testsuite.get('name')
+        logger.info('---------------------------')
+        logger.info('Class "{}"'.format(classname))
+        logger.info('{} tests, {} failures, {} errors, {} skipped, duration {}s\n'\
+                    .format(
+                            testsuite.get('tests') or 0,
+                            testsuite.get('failures') or 0,
+                            testsuite.get('errors') or 0,
+                            testsuite.get('skipped') or 0,
+                            testsuite.get('time') or 0
                             )
                     )
         testcases = sorted(testsuite.findall('./testcase'),
-+                           key=lambda child: child.get('name'))
-+
-+       for testcase in testcases:
-+           status = 'FAILED' if testcase.findall('./failure') else 'PASSED'
-+           logger.info('{}: {}, duration: {}s'.format(status, testcase.get('name'),
-+                                                       testcase.get('time')))
-+       logger.info('')
+                           key=lambda child: child.get('name'))
+
+        for testcase in testcases:
+            status = 'FAILED' if testcase.findall('./failure') else 'PASSED'
+            logger.info('{}: {}, duration: {}s'.format(status, testcase.get('name'),
+                                                        testcase.get('time')))
+        logger.info('')
 
 
 def setupLogger():
