@@ -25,6 +25,18 @@ def has_network(adb):
         radio_wifi = True
     return radio_wifi
 
+def check_multiinstance_lock_deleted(avdpath)->bool:
+  mypath = Path(avdpath, "multiinstance.lock").absolute()
+  if mypath.exists():
+      logging.info("%s still exists, remove it", mypath)
+      mypath.unlink()
+  if mypath.exists():
+      logging.info("%s still exists", mypath)
+      return False
+  else:
+      return True
+
+
 @pytest.mark.boot
 @pytest.mark.e2e
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
@@ -76,6 +88,13 @@ def test_first_time_booted(emulator):
     if emulator.is_alive():
         emulator.stop(timeout=60)
     assert not emulator.is_alive()
+    count = 0;
+    while count < 60:
+        time.sleep(1)
+        count += 1
+        if check_multiinstance_lock_deleted(emulator.configuration.directory):
+            break
+    assert check_multiinstance_lock_deleted(emulator.configuration.directory)
     logging.info("emualtor is shut down successfully")
 
 def check_boot_from_snapshot(avdpath)->bool :
@@ -100,6 +119,7 @@ def test_snapshot_booted(emulator):
     """
 
     emulator.stop()
+    assert check_multiinstance_lock_deleted(emulator.configuration.directory)
     logging.info("Launching emualtor ...")
     assert emulator.launch(
         flags=[
