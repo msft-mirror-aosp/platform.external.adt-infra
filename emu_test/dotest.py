@@ -122,6 +122,55 @@ def printResult(result):
         print_xml(result)
 
 
+def printTestBreakdown(emu_args):
+    """
+    Print out detailed testcase information for each class.
+    """
+    logger = logging.getLogger()
+    gradle_report_path = os.path.join(emu_args.session_dir, emu_args.test_dir)
+
+    if not os.path.exists(gradle_report_path):
+        logger.info('Failed to find gradle report path.')
+        return
+
+    xml_files = []
+    for filename in os.listdir(gradle_report_path):
+        if filename.endswith('.xml'):
+            xml_files += [os.path.join(gradle_report_path, filename)]
+    if not xml_files:
+        logger.info('No gradle XML reports found.')
+        return
+
+    logger.info('\nTestsuite breakdown:\n')
+
+    # Parse XML reports
+
+    for xml_file in sorted(xml_files):
+
+        tree = ET.parse(xml_file)
+        testsuite = tree.getroot()
+        classname = testsuite.get('name')
+        logger.info('---------------------------')
+        logger.info('Class "{}"'.format(classname))
+        logger.info('{} tests, {} failures, {} errors, {} skipped, duration {}s\n'\
+                    .format(
+                            testsuite.get('tests') or 0,
+                            testsuite.get('failures') or 0,
+                            testsuite.get('errors') or 0,
+                            testsuite.get('skipped') or 0,
+                            testsuite.get('time') or 0
+                            )
+                    )
+        testcases = sorted(testsuite.findall('./testcase'),
+                           key=lambda child: child.get('name'))
+
+        for testcase in testcases:
+            status = 'FAILED' if testcase.findall('./failure') else 'PASSED'
+            logger.info('{}: {}, duration: {}s'.format(status, testcase.get('name'),
+                                                        testcase.get('time')))
+        logger.info('')
+
+
 def setupLogger():
     """
     Create logging.getLogger() that will be used by test driver
@@ -199,6 +248,7 @@ if __name__ == '__main__':
         emuRunner = emu_unittest.EmuTextTestRunner(stream=sys.stdout)
         emuResult = emuRunner.run(emuSuite)
         printResult(emuResult)
+        printTestBreakdown(emu_argparser.emu_args)
     except Exception:
         logging.exception("Error in dotest.py")
 

@@ -91,6 +91,7 @@ def test_rotation_observable_through_screenshot(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/277819419 flaky on windows.
 def test_rotation_observable_through_adbstream(
     avd, at_home, animation_app, emulator_controller
 ):

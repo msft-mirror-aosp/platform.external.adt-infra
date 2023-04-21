@@ -49,7 +49,7 @@ def is_sublist(minidump: List[str], compiled_regexes: List[re.Pattern]) -> bool:
     return j == len(compiled_regexes)
 
 
-def check_minidump(minidump):
+def minidump_has_symbols(minidump):
     # Note that our symbols might have mangled C++
     # functions, which can be mangled differently from compiler
     # to compiler. Furthermore some platforms are optimizing better than others
@@ -73,7 +73,7 @@ def check_minidump(minidump):
     # If we are able to decode a single function, than we can decode them
     # all. We assume the method do_crash has been called.
     crash_re = re.compile(r".*.*!.*do_crash.*", re.M)
-    assert any([crash_re.match(x) for x in minidump.splitlines()])
+    return any([crash_re.match(x) for x in minidump.splitlines()])
 
 
 def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
@@ -84,7 +84,7 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
     assert emulator.is_alive()
 
     crash_count = len(crash_reporter.crashes())
-    assert emulator.console().send("crash")
+    assert emulator.adb.run(["emu", "crash"])
 
     # Wait until the emulator is gone
     def emulator_dead():
@@ -102,6 +102,9 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
+@pytest.mark.flaky(
+    reruns=3, reruns_delay=5
+)  # b/278266218 flaky on linux_x64-gfxstream.
 @pytest.mark.skipif(platform.processor() == "i386", reason="b/275642912")
 def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     """Make sure the emulator can crash, and produces a report.
@@ -123,9 +126,6 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.skipif(sys.platform == "win32", reason="b/275577019")
-@pytest.mark.skipif(platform.processor() == "i386", reason="b/275755890")
-@pytest.mark.skipif(platform.processor() == "Darwin", reason="b/276296554")
 def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     if not crash_reporter.available():
         pytest.skip("No crash reporter available, let's not crash the emulator")
@@ -134,5 +134,6 @@ def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
         pytest.skip("No symbols available, let's not crash the emulator")
 
     crashes = crash(emulator, crash_reporter)
-    dump = crash_reporter.dump_crash(crashes[0])
-    check_minidump(dump)
+    assert any(
+        [minidump_has_symbols(crash_reporter.dump_crash(c)) for c in crashes]
+    ), "None of the crash reports have decoded symbols"
