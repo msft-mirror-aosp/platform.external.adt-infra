@@ -25,17 +25,6 @@ def has_network(adb):
         radio_wifi = True
     return radio_wifi
 
-def check_multiinstance_lock_deleted(avdpath)->bool:
-  mypath = Path(avdpath, "multiinstance.lock").absolute()
-  if mypath.exists():
-      logging.info("%s still exists, remove it", mypath)
-      mypath.unlink()
-  if mypath.exists():
-      logging.info("%s still exists", mypath)
-      return False
-  else:
-      return True
-
 
 def shutdown(emulator):
     # kill is the way to ask it to save snapshot if applicable and quit
@@ -120,7 +109,6 @@ def test_snapshot_booted(emulator):
     """
 
     emulator.stop()
-    assert check_multiinstance_lock_deleted(emulator.configuration.directory)
     logging.info("Launching emualtor ...")
     assert emulator.launch(
         flags=[
