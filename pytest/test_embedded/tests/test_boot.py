@@ -110,11 +110,11 @@ def test_snapshot_booted(emulator):
 
     emulator.stop()
     logging.info("Launching emualtor ...")
-    assert emulator.launch(
-        flags=[
-            "-no-snapshot-save",
-        ]
-    )
+    myflags=["-no-snapshot-save"]
+    if platform.system() == "Windows":
+        myflags.append("-read-only")
+
+    assert emulator.launch(flags = myflags)
 
     mytimeout = 45
     if platform.processor() == "i386" and platform.system() == "Darwin":
