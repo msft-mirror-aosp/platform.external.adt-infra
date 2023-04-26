@@ -87,15 +87,15 @@ def printResult(result):
     def getTestName(id):
         return id.rsplit('.', 1)[-1]
     logging.getLogger().info("Test Summary")
-    logging.getLogger().info("Run %d tests (%d fail, %d pass, %d xfail, %d xpass)",
-                     result.testsRun, len(result.failures)+len(result.errors), len(result.passes),
+    logging.getLogger().info("Run %d tests (%d pass, %d fail, %d error, %d xfail, %d xpass)",
+                     result.testsRun, len(result.passes), len(result.failures), len(result.errors),
            len(result.expectedFailures), len(result.unexpectedSuccesses))
     if len(result.errors) > 0 or len(result.failures) > 0:
         for x in result.errors:
             if x[1].splitlines()[-1] == "TimeoutError":
                 logging.getLogger().info("TIMEOUT: %s", getTestName(x[0].id()))
             else:
-                logging.getLogger().info("FAIL: %s", getTestName(x[0].id()))
+                logging.getLogger().info("ERROR: %s", getTestName(x[0].id()))
         for x in result.failures:
             logging.getLogger().info("FAIL: %s", getTestName(x[0].id()))
 
@@ -144,32 +144,59 @@ def printTestBreakdown(emu_args):
     logger.info('\nTestsuite breakdown:\n')
 
     # Parse XML reports
+    tests, passes, failures, errors, skips, times = [], [], [], [], [], []
 
     for xml_file in sorted(xml_files):
-
         tree = ET.parse(xml_file)
         testsuite = tree.getroot()
         classname = testsuite.get('name')
+        test = int(testsuite.get('tests', 0))
+        failure = int(testsuite.get('failures', 0))
+        error = int(testsuite.get('errors', 0))
+        skip = int(testsuite.get('skipped', 0))
+        pass_ = test - sum([error, failure, skip])
+        time_class = ''
+        if testsuite.get('time'):
+            time_class = ', duration {}s'.format(testsuite.get('time'))
+
         logger.info('---------------------------')
         logger.info('Class "{}"'.format(classname))
-        logger.info('{} tests, {} failures, {} errors, {} skipped, duration {}s\n'\
-                    .format(
-                            testsuite.get('tests') or 0,
-                            testsuite.get('failures') or 0,
-                            testsuite.get('errors') or 0,
-                            testsuite.get('skipped') or 0,
-                            testsuite.get('time') or 0
-                            )
-                    )
+        logger.info('Run {} tests ({} pass, {} failures, {} errors, {} skipped{})\n'\
+                        .format(test, pass_, failure, error, skip, time_class))
+
         testcases = sorted(testsuite.findall('./testcase'),
                            key=lambda child: child.get('name'))
 
         for testcase in testcases:
-            status = 'FAILED' if testcase.findall('./failure') else 'PASSED'
-            logger.info('{}: {}, duration: {}s'.format(status, testcase.get('name'),
-                                                        testcase.get('time')))
-        logger.info('')
+            if testcase.findall('./failure'):
+                status = 'FAILED'
+            elif testcase.findall('./error'):
+                status = 'ERROR'
+            elif testcase.findall('./skipped'):
+                status = 'SKIPPED'
+            else:
+                status = 'PASSED'
 
+            time_case = ''
+            if testcase.get('time'):
+                time_case = ', duration {}s'.format(testcase.get('time'))
+
+            logger.info('{}: {}{}'.format(status, testcase.get('name'), time_case))
+
+            logger.info('')
+            tests.append(test)
+            passes.append(pass_)
+            failures.append(failure)
+            errors.append(error)
+            skips.append(skip)
+            times.append(float(testcase.get('time')) if testcase.get('time') else 0)
+
+    logger.info('-------------')
+    logger.info('Testsuite summary\n')
+    total_time = ', duration {}s'.format(sum(times)) if sum(times) > 0. else ''
+    logger.info('Run {} tests ({} pass, {} failures, {} errors, {} skipped{})\n'\
+                    .format(sum(tests), sum(passes), sum(failures),
+                            sum(errors), sum(skips), total_time))
 
 def setupLogger():
     """
