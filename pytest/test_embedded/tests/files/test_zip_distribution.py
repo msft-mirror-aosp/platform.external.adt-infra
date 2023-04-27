@@ -153,7 +153,7 @@ def get_exp_sub_dirs():
         "bin64": [
             "e2fsck.exe",
             "resize2fs.exe",
-            "tune2fs.exe"
+            "tune2fs.exe",
             "cygblkid-1.dll",
             "cygcom_err-2.dll",
             "cyge2p-2.dll",
