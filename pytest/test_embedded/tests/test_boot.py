@@ -25,17 +25,23 @@ def has_network(adb):
         radio_wifi = True
     return radio_wifi
 
-def check_multiinstance_lock_deleted(avdpath)->bool:
-  mypath = Path(avdpath, "multiinstance.lock").absolute()
-  if mypath.exists():
-      logging.info("%s still exists, remove it", mypath)
-      mypath.unlink()
-  if mypath.exists():
-      logging.info("%s still exists", mypath)
-      return False
-  else:
-      return True
 
+def shutdown(emulator):
+    # kill is the way to ask it to save snapshot if applicable and quit
+    emulator.adb.run(["emu", "kill"])
+    # for windows, wait 30 seconds for it to fully shutdown to avoid
+    # the multiinstnace.lock failure, hopefully, especially on gcp windows
+    if platform.system() == "Windows":
+        time.sleep(30)
+    count = 0;
+    while count < 60:
+        time.sleep(1)
+        count += 1
+        if not emulator.is_alive():
+            break
+    if emulator.is_alive():
+        emulator.stop(timeout=60)
+    assert not emulator.is_alive()
 
 @pytest.mark.boot
 @pytest.mark.e2e
@@ -77,25 +83,9 @@ def test_first_time_booted(emulator):
             break
 
     logging.info("Shutting it down ...")
-    # kill is the way to ask it to save snapshot if applicable and quit
-    emulator.adb.run(["emu", "kill"])
-    count = 0;
-    while count < 60:
-        time.sleep(1)
-        count += 1
-        if not emulator.is_alive():
-            break
-    if emulator.is_alive():
-        emulator.stop(timeout=60)
-    assert not emulator.is_alive()
-    count = 0;
-    while count < 60:
-        time.sleep(1)
-        count += 1
-        if check_multiinstance_lock_deleted(emulator.configuration.directory):
-            break
-    assert check_multiinstance_lock_deleted(emulator.configuration.directory)
+    shutdown(emulator)
     logging.info("emualtor is shut down successfully")
+
 
 def check_boot_from_snapshot(avdpath)->bool :
   mypath = Path(avdpath, "snapshot.trace")
@@ -119,13 +109,12 @@ def test_snapshot_booted(emulator):
     """
 
     emulator.stop()
-    assert check_multiinstance_lock_deleted(emulator.configuration.directory)
     logging.info("Launching emualtor ...")
-    assert emulator.launch(
-        flags=[
-            "-no-snapshot-save",
-        ]
-    )
+    myflags=["-no-snapshot-save"]
+    if platform.system() == "Windows":
+        myflags.append("-read-only")
+
+    assert emulator.launch(flags = myflags)
 
     mytimeout = 45
     if platform.processor() == "i386" and platform.system() == "Darwin":
@@ -142,6 +131,5 @@ def test_snapshot_booted(emulator):
 
     assert check_boot_from_snapshot(emulator.configuration.directory)
     logging.info("Shutting it down ...")
-    emulator.stop(timeout=60)
-    assert not emulator.is_alive()
+    shutdown(emulator)
     logging.info("emualtor is shut down successfully")

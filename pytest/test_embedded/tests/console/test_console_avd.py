@@ -17,8 +17,6 @@ def test_avd_canonical_path(emulator, avd):
 
     result = avd.adb.run(["emu","avd", "path"]).rstrip()
     got_path = result[:-2].rstrip() # get rid of "\nOK"
-    got_path = got_path.rstrip("'") # get rid of enclosing single quote on windows
-    got_path = got_path.lstrip("'")
 
     logging.info("adb avd path returned '%s'", got_path)
     assert got_path == expected_path

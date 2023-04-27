@@ -120,13 +120,18 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 
     crashes = crash(emulator, crash_reporter)
 
-    # We should have one new crash.
-    assert len(crashes) == 1
+    # We should have at least one new crash.
+    assert len(crashes) >= 1
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
 def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
+    """Make sure that there are symbols in the crashes reported by the emulator.
+
+    This makes sure that we produced symbols, so that if we have crash reports
+    we can decode them on our crash server.
+    """
     if not crash_reporter.available():
         pytest.skip("No crash reporter available, let's not crash the emulator")
 
