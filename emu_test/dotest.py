@@ -183,13 +183,12 @@ def printTestBreakdown(emu_args):
 
             logger.info('{}: {}{}'.format(status, testcase.get('name'), time_case))
 
-            logger.info('')
-            tests.append(test)
-            passes.append(pass_)
-            failures.append(failure)
-            errors.append(error)
-            skips.append(skip)
-            times.append(float(testcase.get('time')) if testcase.get('time') else 0)
+        tests.append(test)
+        passes.append(pass_)
+        failures.append(failure)
+        errors.append(error)
+        skips.append(skip)
+        times.append(float(testcase.get('time')) if testcase.get('time') else 0)
 
     logger.info('-------------')
     logger.info('Testsuite summary\n')
