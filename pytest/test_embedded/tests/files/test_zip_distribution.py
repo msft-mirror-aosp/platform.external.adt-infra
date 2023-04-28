@@ -184,9 +184,7 @@ def get_exp_sub_dirs():
             "cmake",
             "hostapd.conf",
             "ui_controller_service.proto",
-            "control_socket.proto",
             "emulator_access.json",
-            "waterfall.proto",
             "flatbuffers.lib"
         ],
         "lib64": [
