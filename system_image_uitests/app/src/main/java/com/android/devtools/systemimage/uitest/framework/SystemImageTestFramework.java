@@ -158,13 +158,18 @@ public class SystemImageTestFramework implements TestRule {
                                                             description.getMethodName());
 
                             // Capture the window UI hierarchy when a test fails.
-                            mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy_1.xml"));
+                            mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy_primary.xml"));
 
                             // Snap the screenshot when a test fails.
-                            mDevice.takeScreenshot(new File(loggingDir, "screenshot_1.png"));
+                            mDevice.takeScreenshot(new File(loggingDir, "screenshot_primary.png"));
 
                             // wait for 30 seconds
                             TimeUnit.SECONDS.sleep(30);
+
+                            // Take a second set of the window UI hierarchy and screenshot in case
+                            // the first set of screenshot is not taken.
+                            mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy_backup.xml"));
+                            mDevice.takeScreenshot(new File(loggingDir, "screenshot_backup.png"));
 
                             // Log the error message
                             PrintWriter error =
