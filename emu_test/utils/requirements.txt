@@ -1,4 +1,5 @@
 psutil
+lxml
 pytest
 requests
 sh

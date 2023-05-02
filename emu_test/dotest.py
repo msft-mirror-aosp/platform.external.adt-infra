@@ -20,6 +20,7 @@ import psutil
 import traceback
 from subprocess import PIPE, check_call, CalledProcessError
 import xml.etree.ElementTree as ET
+import lxml.etree as LET
 
 
 # Add parent directory to current module. Then, emu_test module is recognized.
@@ -85,7 +86,9 @@ def printResult(result):
     :param result: class python2.7.unittest.TextTestResult.
     """
     def getTestName(id):
-        return id.rsplit('.', 1)[-1]
+        testname = re.sub('_google_apis.*','', id.rsplit('.', 1)[-1])
+        return re.sub('_android-(wear|tv|car).*', '', testname)
+
     logging.getLogger().info("Test Summary")
     logging.getLogger().info("Run %d tests (%d pass, %d fail, %d error, %d xfail, %d xpass)",
                      result.testsRun, len(result.passes), len(result.failures), len(result.errors),
@@ -147,9 +150,13 @@ def printTestBreakdown(emu_args):
     tests, passes, failures, errors, skips, times = [], [], [], [], [], []
 
     for xml_file in sorted(xml_files):
-        tree = ET.parse(xml_file)
+      try:
+          tree = ET.parse(xml_file)
+      except ET.ParseError as err:
+          logger.warning("{} in file '{}'".format(err.msg, xml_file))
+          continue
         testsuite = tree.getroot()
-        classname = testsuite.get('name')
+        classname = testsuite.get('name', '')
         test = int(testsuite.get('tests', 0))
         failure = int(testsuite.get('failures', 0))
         error = int(testsuite.get('errors', 0))
@@ -157,10 +164,10 @@ def printTestBreakdown(emu_args):
         pass_ = test - sum([error, failure, skip])
         time_class = ''
         if testsuite.get('time'):
-            time_class = ', duration {}s'.format(testsuite.get('time'))
+            time_class = ', duration {:.2f}s'.format(float(testsuite.get('time')))
 
         logger.info('---------------------------')
-        logger.info('Class "{}"'.format(classname))
+        logger.info('Class "{}"'.format(classname.replace('com.android.devtools.','')))
         logger.info('Run {} tests ({} pass, {} failures, {} errors, {} skipped{})\n'\
                         .format(test, pass_, failure, error, skip, time_class))
 
@@ -176,10 +183,9 @@ def printTestBreakdown(emu_args):
                 status = 'SKIPPED'
             else:
                 status = 'PASSED'
-
             time_case = ''
             if testcase.get('time'):
-                time_case = ', duration {}s'.format(testcase.get('time'))
+                time_case = ', duration {:.2f}s'.format(float(testcase.get('time')))
 
             logger.info('{}: {}{}'.format(status, testcase.get('name'), time_case))
 
@@ -192,10 +198,87 @@ def printTestBreakdown(emu_args):
 
     logger.info('-------------')
     logger.info('Testsuite summary\n')
-    total_time = ', duration {}s'.format(sum(times)) if sum(times) > 0. else ''
+    total_time = ', duration {:.2f}s'.format(sum(times)) if sum(times) > 0. else ''
     logger.info('Run {} tests ({} pass, {} failures, {} errors, {} skipped{})\n'\
                     .format(sum(tests), sum(passes), sum(failures),
                             sum(errors), sum(skips), total_time))
+
+def printHtml(emu_args):
+    """Generate a HTML report for all testcases
+    """
+    logger = logging.getLogger()
+    logger.info("Write HTML report")
+    gradle_report_path = os.path.join(emu_args.session_dir, emu_args.test_dir)
+
+    if not os.path.exists(gradle_report_path):
+        logger.info('Failed to find gradle report path.')
+        return
+    xml_files = []
+    for filename in os.listdir(gradle_report_path):
+        if filename.endswith('.xml'):
+            xml_files += [os.path.join(gradle_report_path, filename)]
+    if not xml_files:
+        logger.info('No gradle XML reports found.')
+        return
+
+    xml_report_filepath = os.path.join(gradle_report_path, 'test_report.xml')
+    html_report_filepath = os.path.join(gradle_report_path, 'test_report.html')
+    xslt_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                                'utils', 'asHtml.xslt' )
+    xml_report_name = ''.join(emu_args.session_dir.split('/')[3:4]).\
+                                                replace('git_devtools-','')
+
+    # Create the xml tree and append individual testcases
+    xml_report = ET.Element('testsuites')
+    xml_report_testsuite = ET.SubElement(xml_report, 'testsuite')
+    xml_report_testsuite.set('name', xml_report_name)
+    errors = tests = failures = skipped = times = 0
+    for xml_file in sorted(xml_files):
+        try:
+            tree = ET.parse(xml_file)
+        except ET.ParseError as err:
+            logger.info('Xml parser ' + err.msg + ' (' + os.path.basename(xml_file) + ')')
+            continue
+        testsuite = tree.getroot()
+        tests += int(testsuite.get('tests', 0))
+        errors += int(testsuite.get('errors', 0))
+        failures += int(testsuite.get('failures', 0))
+        skipped += int(testsuite.get('skipped', 0))
+        times += float(testsuite.get('time', 0.))
+
+        testcases = sorted(tree.getroot().findall('./testcase'),
+                            key=lambda child: child.get('name'))
+        for testcase in testcases:
+            testcase.set('classname', testcase.get('classname').\
+                                                replace('com.android.devtools.', ''))
+            xml_report_testsuite.append(testcase)
+
+    xml_report_testsuite.set('tests', str(tests))
+    xml_report_testsuite.set('passed', str(tests - errors - failures - skipped))
+    xml_report_testsuite.set('failures', str(failures))
+    xml_report_testsuite.set('errors', str(errors))
+    xml_report_testsuite.set('skipped', str(skipped))
+    xml_report_testsuite.set('time', '{:.2f}'.format(times))
+
+    # Write test_report.xml
+    xml_tree = ET.ElementTree(xml_report)
+    ET.indent(xml_tree)
+    xml_tree.write(xml_report_filepath, xml_declaration=True, encoding='UTF-8')
+
+    # Generate the HTML file
+    lxml_tree = LET.parse(xml_report_filepath)
+    xslt = LET.parse(xslt_filepath)
+    try:
+        transform = LET.XSLT(xslt)
+        html_result = transform(lxml_tree)
+    except Exception as err:
+        logging.warning("Failed to generate file '%s' from '%s' due to error '%s'.",
+                            os.path.basename(xml_report_filepath),
+                            os.path.basename(xslt_filepath), err)
+    else:
+        html_result.write(html_report_filepath)
+        logger.info("Created file '%s'", html_report_filepath)
+
 
 def setupLogger():
     """
@@ -275,6 +358,8 @@ if __name__ == '__main__':
         emuResult = emuRunner.run(emuSuite)
         printResult(emuResult)
         printTestBreakdown(emu_argparser.emu_args)
+        if emu_argparser.emu_args.generate_html:
+            printHtml(emu_argparser.emu_args)
     except Exception:
         logging.exception("Error in dotest.py")
 

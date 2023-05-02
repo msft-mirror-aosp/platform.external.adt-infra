@@ -69,6 +69,8 @@ def get_parser():
                         help='The run target of the TreeHugger invocation.')
     parser.add_argument('--generate_xml', action='store_true',
                         help='when defined, generate xml summary for tests')
+    parser.add_argument('--generate_html', action='store_true',
+                        help='when defined, generate html summary for all tests')
     parser.add_argument('--generate_perf', action='store_true',
                         help='when defined, generate perf data for tests')
     parser.add_argument('--save_snapshot', action='store_true',
