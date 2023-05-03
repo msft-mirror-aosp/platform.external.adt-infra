@@ -150,11 +150,11 @@ def printTestBreakdown(emu_args):
     tests, passes, failures, errors, skips, times = [], [], [], [], [], []
 
     for xml_file in sorted(xml_files):
-      try:
-          tree = ET.parse(xml_file)
-      except ET.ParseError as err:
-          logger.warning("{} in file '{}'".format(err.msg, xml_file))
-          continue
+        try:
+            tree = ET.parse(xml_file)
+        except ET.ParseError as err:
+            logger.warning("{} in file '{}'".format(err.msg, xml_file))
+            continue
         testsuite = tree.getroot()
         classname = testsuite.get('name', '')
         test = int(testsuite.get('tests', 0))
