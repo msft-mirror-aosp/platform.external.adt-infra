@@ -11,9 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sys
-import lxml.etree as ET
 import argparse
+import sys
+
+import lxml.etree as ET
 
 
 def transform(xml, xsl, out):
@@ -24,13 +25,15 @@ def transform(xml, xsl, out):
         xsl (str): A path to a valid XSL file
         out (file): A file like object where to write the transformed xml to
     """
-    dom = ET.parse(xml)
-    xslt = ET.parse(xsl)
-    transform = ET.XSLT(xslt)
-    out.write(transform(dom))
+    parser = ET.XMLParser(huge_tree=True)
+    dom = ET.parse(xml, parser=parser)
+    xslt = ET.parse(xsl, parser=parser)
+    transformer = ET.XSLT(xslt)
+    out.write(transformer(dom))
 
 
 def launch():
+    """Parse the command line arguments and launch the transformation."""
     parser = argparse.ArgumentParser(
         description="Transform an xml file by applying an xsl stylesheet."
     )
