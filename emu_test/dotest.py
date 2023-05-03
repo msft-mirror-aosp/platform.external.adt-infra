@@ -262,7 +262,6 @@ def printHtml(emu_args):
 
     # Write test_report.xml
     xml_tree = ET.ElementTree(xml_report)
-    ET.indent(xml_tree)
     xml_tree.write(xml_report_filepath, xml_declaration=True, encoding='UTF-8')
 
     # Generate the HTML file
