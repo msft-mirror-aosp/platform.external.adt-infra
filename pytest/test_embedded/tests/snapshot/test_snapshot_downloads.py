@@ -3,6 +3,7 @@ import requests
 import logging
 import platform
 import os
+import sys
 import time
 from pathlib import Path
 from emu.process.command import Command
@@ -111,6 +112,7 @@ def check_boot_from_snapshot(avdpath)->bool :
   return False
 
 @pytest.mark.e2e
+@pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
 def test_can_load_oldsnapshot(emulator):
     """ test that current emulator can load the snapshot created by old emulator
 

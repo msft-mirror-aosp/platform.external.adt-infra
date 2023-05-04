@@ -241,7 +241,7 @@ def rotation_through_console_observable_through_stream_screenshot(
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.flaky(reruns=2, reruns_delay=2)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)  # b/280512023 flaky on windows_x64.
 @pytest.mark.parametrize(
     "rotation, quadrant",
     [(0, 1), (90, 2), (-180, 3), (-90, 4)],
