@@ -30,7 +30,7 @@ pre {
         white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
         white-space: -pre-wrap;      /* Opera 4-6 */
         white-space: -o-pre-wrap;    /* Opera 7 */
-        word-wrap: break-word;       /* Internet Explorer 5.5 */
+        word-wrap: break-word;       /* Internet Explorer 5.5+ */
         background-color: #ffffd0;
         padding-left: 10px;
         padding-right: 10px;
@@ -82,7 +82,8 @@ span.closed { color: #808080; }
 .kwc    { color:#00a000; }
 
 .pass {background-color: #ffffff; color: #008900;}
-.fail {background-color: #ffffff; color: #b50000;}
+.fail {background-color: #ffffff; color: #bd2121;}
+.error {background-color: #ffffff; color: #720808;}
 
 li.passed {color: #002000;}
 li.failed {color: #200000;}
@@ -99,16 +100,25 @@ span.crc {
 span.buttonskip {
             font-family: monospace;
             margin-top: 10px;
+            border: 1px;
 }
 span.buttonpassed {
             font-family: monospace;
             margin-top: 10px;
             background-color: #aaffaa;
+            border: 1px;
 }
 span.buttonfailed {
         font-family: monospace;
         margin-top: 10px;
         background-color: #ffaaaa;
+        border: 1px;
+}
+span.buttonerror {
+        font-family: monospace;
+        margin-top: 10px;
+        background-color: #dd5d5d;
+        border: 1px;
 }
                 </style>
                 <script language="JavaScript">
@@ -119,14 +129,14 @@ function make_hidden(elt) { elt.style.visibility='hidden'; elt.style.position='a
 }
 
 function hide(id) {
-    make_hidden(document.getElementById(id'-'))
-    make_visible(document.getElementById(id''))
+    make_hidden(document.getElementById(id+'-'))
+    make_visible(document.getElementById(id+'+'))
     make_hidden(document.getElementById(id))
 }
 
 function show(id) {
-    make_visible(document.getElementById(id'-'))
-    make_hidden(document.getElementById(id''))
+    make_visible(document.getElementById(id+'-'))
+    make_hidden(document.getElementById(id+'+'))
     make_visible(document.getElementById(id))
 }
 
@@ -145,14 +155,14 @@ function goto_id(id) {
                     <xsl:value-of select="@tests - @failures - @errors - @skipped"/>
 , <font class="fail"> FAILED </font>=
                     <xsl:value-of select="@failures"/>
-, <font class="fail"> ERRORS </font>=
+, <font class="error"> ERRORS </font>=
                     <xsl:value-of select="@errors"/>
 , SKIPPED=
                     <xsl:value-of select="@skipped"/>
                 </p>
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
-                    <xsl:variable name="fid" select=" format-number($id, '0000')"/>
+                    <xsl:variable name="fid" select=" format-number($id, '000')"/>
                     <xsl:choose>
                         <xsl:when test="failure">
                             <span class="buttonfailed" onClick="goto_id('tst{$id}l')">
@@ -160,7 +170,7 @@ function goto_id(id) {
                             </span>&#160;
                         </xsl:when>
                         <xsl:when test="error">
-                            <span class="buttonfailed" onClick="goto_id('tst{$id}l')">
+                            <span class="buttonerror" onClick="goto_id('tst{$id}l')">
                                 <xsl:value-of select="$fid"/>
                             </span>&#160;
                         </xsl:when>
@@ -179,14 +189,14 @@ function goto_id(id) {
                 <h2>tests</h2>
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
-                    <xsl:variable name="fid" select="format-number($id, '0000')"/>
+                    <xsl:variable name="fid" select="format-number($id, '000')"/>
                     <xsl:choose>
                         <xsl:when test="failure">
                             <li class="failed" id="tst{$id}l">
-                                <span id="tst{$id}" class="buttonfailed" onClick="show('tst{$id}')">
-                                
+                                <span id="tst{$id}+" class="buttonfailed" onClick="show('tst{$id}')">
+                                +
                                     <xsl:value-of select="$fid"/>
-                                </span>
+                                +</span>
                                 <span id="tst{$id}-" class="buttonfailed" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
                                 -
                                     <xsl:value-of select="$fid"/>
@@ -220,10 +230,10 @@ function goto_id(id) {
                         </xsl:when>
                         <xsl:when test="error">
                             <li class="error" id="tst{$id}l">
-                                <span id="tst{$id}" class="buttonerror" onClick="show('tst{$id}')">
-                                
+                                <span id="tst{$id}+" class="buttonerror" onClick="show('tst{$id}')">
+                                +
                                     <xsl:value-of select="$fid"/>
-                                </span>
+                                +</span>
                                 <span id="tst{$id}-" class="buttonerror" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
                                 -
                                     <xsl:value-of select="$fid"/>
@@ -241,7 +251,7 @@ function goto_id(id) {
                         </xsl:when>
                         <xsl:otherwise>
                             <li class="passed" id="tst{$id}l">
-                                <span id="tst{$id}" class="buttonpassed">&#160;
+                                <span id="tst{$id}+" class="buttonpassed">&#160;
                                     <xsl:value-of select="$fid"/>&#160;
                                 </span>&#160;&#160;
                                 <xsl:value-of select="@classname"/>
