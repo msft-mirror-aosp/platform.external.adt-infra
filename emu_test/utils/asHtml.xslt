@@ -100,25 +100,25 @@ span.crc {
 span.buttonskip {
             font-family: monospace;
             margin-top: 10px;
-            border: 1px;
+            border: 1px solid black;
 }
 span.buttonpassed {
             font-family: monospace;
             margin-top: 10px;
             background-color: #aaffaa;
-            border: 1px;
+            border: 1px solid black;
 }
 span.buttonfailed {
         font-family: monospace;
         margin-top: 10px;
         background-color: #ffaaaa;
-        border: 1px;
+        border: 1px solid black;
 }
 span.buttonerror {
         font-family: monospace;
         margin-top: 10px;
         background-color: #dd5d5d;
-        border: 1px;
+        border: 1px solid black;
 }
                 </style>
                 <script language="JavaScript">
