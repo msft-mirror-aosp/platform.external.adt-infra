@@ -25,7 +25,7 @@ android {
     }
 
     adbOptions {
-        installOptions `-g`
+        installOptions '-g'
     }
 }
 
