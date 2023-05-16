@@ -320,7 +320,7 @@ def setupLogger():
     if not os.path.exists(test_path):
         os.makedirs(test_path)
 
-    file_handler = logging.FileHandler(os.path.join(test_path, file_name)
+    file_handler = logging.FileHandler(os.path.join(test_path, file_name))
 
     file_handler.setFormatter(log_formatter)
     # Test summary goes to standard error, since we rely on stderr to parse test results in buildbot
