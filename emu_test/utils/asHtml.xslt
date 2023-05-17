@@ -8,6 +8,7 @@
                 <title> Test Results For
                     <xsl:value-of select="@name"/>
                 </title>
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
                 <style>
 body {
         background: #ffffff;
@@ -101,27 +102,125 @@ span.buttonskip {
             font-family: monospace;
             margin-top: 10px;
             border: 1px solid black;
+            padding: 0 2px;
+            margin-right: 2px;
 }
 span.buttonpassed {
             font-family: monospace;
             margin-top: 10px;
             background-color: #aaffaa;
             border: 1px solid black;
+            padding: 0 2px;
+            margin-right: 2px;
 }
 span.buttonfailed {
         font-family: monospace;
         margin-top: 10px;
         background-color: #ffaaaa;
         border: 1px solid black;
+        padding: 0 2px;
+        margin-right: 2px;
+        cursor: pointer;
 }
 span.buttonerror {
         font-family: monospace;
         margin-top: 10px;
         background-color: #dd5d5d;
         border: 1px solid black;
+        padding: 0 2px;
+        margin-right: 2px;
+        cursor: pointer;
 }
+
+/* New properties used in the containers that display the attachments */
+
+.embedding {
+    background-color: #fff;
+    overflow: auto;
+    margin-left: 17px;
+    margin-bottom: 10px;
+    border: solid 1px #ccc;
+    display: inline-block;
+    float: left;
+}
+
+.text-box {
+    text-align: left;
+    margin: 0 1px;
+    font-size: 13px;
+    overflow-x: auto;
+    line-height: 1.42857143;
+    color: #bd0a2b;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #fff0f0;
+    border: 0px solid #ccc;
+    display: inline-block;
+}
+
+ul.attachments {
+    list-style-type: none; /* Remove bullets */
+    padding: 0; /* Remove padding */
+    margin: 0; /* Remove margins */
+    margin-top: 3px;
+}
+
+li.attachment {
+    margin-left: 25px;
+    padding: 1px;
+    font-size: 13px;
+    line-height: 1.42857143;
+    color: #333;
+}
+
+li.attachment::marker {
+    content: "\f0c6   ";
+    font-family: FontAwesome;
+}
+
+a.header {
+    margin-left: 5px;
+    color: #004a6a;
+    font-size: 13px;
+    line-height: 1.42857143;
+}
+
+li.collapsable {
+    margin-left: 10px;
+    padding: 1px;
+    font-size: 13px;
+    line-height: 1.42857143;
+    color: #333;
+    cursor: pointer;
+}
+
+.image-box {
+    height:600px;
+}
+
+.img {
+    max-height: 600px;
+    display: inline-block;
+    visibility: visible;
+}
+
                 </style>
                 <script language="JavaScript">
+
+function toggle(container) {
+    var icon = container.getElementsByClassName("icon")[0];
+    var contents = container.getElementsByClassName("contents")[0];
+    // toggling icon
+    icon.classList.toggle('fa-angle-right');
+    icon.classList.toggle('fa-angle-down');
+    // toggling contents
+    if (contents.style.display === "none") {
+        contents.style.display = "block";
+    } else {
+        contents.style.display = "none";
+    }
+}
+
 function make_visible(elt) { elt.style.visibility='visible'; elt.style.position='relative';
 }
 
@@ -143,6 +242,7 @@ function show(id) {
 function goto_id(id) {
     document.body.scrollTop = document.getElementById(id).offsetTop;
 }
+
                 </script>
             </head>
             <body>
@@ -160,56 +260,74 @@ function goto_id(id) {
 , SKIPPED=
                     <xsl:value-of select="@skipped"/>
                 </p>
+                <!-- SUMMARY SQUARES SECTION -->
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
                     <xsl:variable name="fid" select=" format-number($id, '000')"/>
-                    <xsl:choose>
-                        <xsl:when test="failure">
-                            <span class="buttonfailed" onClick="goto_id('tst{$id}l')">
-                                <xsl:value-of select="$fid"/>
-                            </span>&#160;
-                        </xsl:when>
-                        <xsl:when test="error">
-                            <span class="buttonerror" onClick="goto_id('tst{$id}l')">
-                                <xsl:value-of select="$fid"/>
-                            </span>&#160;
-                        </xsl:when>
-                        <xsl:when test="skipped">
-                            <span class="buttonskip" onClick="goto_id('tst{$id}l')">
-                                <xsl:value-of select="$fid"/>
-                            </span>&#160;
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <span class="buttonpassed" onClick="goto_id('tst{$id}l')">
-                                <xsl:value-of select="$fid"/>
-                            </span>&#160;
-                        </xsl:otherwise>
-                    </xsl:choose>
+                    <xsl:variable name="buttonclass">
+                        <xsl:choose>
+                            <xsl:when test="failure">buttonfailed</xsl:when>
+                            <xsl:when test="error">buttonerror</xsl:when>
+                            <xsl:when test="skipped">buttonskip</xsl:when>
+                            <xsl:otherwise>buttonpassed</xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+                    <span class="{$buttonclass}" onClick="goto_id('tst{$id}l')">
+                        <xsl:value-of select="$fid"/>
+                    </span>
                 </xsl:for-each>
+                <!-- TESTS SECTION -->
                 <h2>tests</h2>
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
                     <xsl:variable name="fid" select="format-number($id, '000')"/>
                     <xsl:choose>
-                        <xsl:when test="failure">
+                        <xsl:when test="failure or error">
+                            <xsl:variable name="buttonclass">
+                                <xsl:if test="failure">buttonfailed</xsl:if>
+                                <xsl:if test="error">buttonerror</xsl:if>
+                            </xsl:variable>
                             <li class="failed" id="tst{$id}l">
-                                <span id="tst{$id}+" class="buttonfailed" onClick="show('tst{$id}')">
+                                <span id="tst{$id}+" class="{$buttonclass}" onClick="show('tst{$id}')">
                                 +
                                     <xsl:value-of select="$fid"/>
                                 +</span>
-                                <span id="tst{$id}-" class="buttonfailed" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span id="tst{$id}-" class="{$buttonclass}" onClick="hide('tst{$id}')" style="position: absolute; visibility: hidden;">
                                 -
                                     <xsl:value-of select="$fid"/>
-                                -</span>
-                                        &#160;
+                                -</span>&#160;
                                 <xsl:value-of select="@classname"/>
 .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment failed" id="tst{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
-                                    <pre>
-                                        <xsl:value-of select="."/>
-                                    </pre>
+                                <div style="clear: both;"></div>
+                                <span id="tst{$id}" style="position: absolute; visibility: hidden;">
+                                    <div class="embedding">
+                                        <pre class="text-box">
+                                            <xsl:value-of select="."/>
+                                        </pre>
+                                        <ul class="attachments">
+                                            <xsl:for-each select="hierarchies/*">
+                                                <xsl:variable name="path" select="@path"/>
+                                                <li class="attachment">
+                                                    <a href="{$path}" target="_blank"><xsl:value-of select="@name"/></a>
+                                                </li>
+                                            </xsl:for-each>
+                                            <xsl:for-each select="screenshots/*">
+                                                <xsl:variable name="path" select="@path"/>
+                                                <li class="collapsable" onclick="toggle(this)">
+                                                    <i class="fa fa-sharp fa-angle-right icon">&#160;</i>
+                                                    <a class="header"><xsl:value-of select="@name"/></a>
+                                                    <div class="contents" style="display:none">
+                                                        <div class="image-box">
+                                                            <img class="img" src="{$path}" target="_blank"></img>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            </xsl:for-each>
+                                        </ul>
+                                    </div>
                                 </span>
+                                <div style="clear: both;"></div>
                             </li>
                         </xsl:when>
                         <xsl:when test="skipped">
@@ -217,32 +335,11 @@ function goto_id(id) {
                                 <span id="tst{$id}" class="buttonskip" >&#160;
                                     <xsl:value-of select="$fid"/>&#160;
                                 </span>
-                                        &#160;&#160;
-                                <xsl:value-of select="@classname"/>
-.
-                                <xsl:value-of select="@name"/>
-                                <span class="comment skipped" id="tst{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
-                                    <pre>
-                                        <xsl:value-of select="."/>
-                                    </pre>
-                                </span>
-                            </li>
-                        </xsl:when>
-                        <xsl:when test="error">
-                            <li class="error" id="tst{$id}l">
-                                <span id="tst{$id}+" class="buttonerror" onClick="show('tst{$id}')">
-                                +
-                                    <xsl:value-of select="$fid"/>
-                                +</span>
-                                <span id="tst{$id}-" class="buttonerror" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
-                                -
-                                    <xsl:value-of select="$fid"/>
-                                -</span>
                                         &#160;
                                 <xsl:value-of select="@classname"/>
 .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment error" id="tst{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span class="comment skipped" id="tst{$id}" style="position: absolute; visibility: hidden;">
                                     <pre>
                                         <xsl:value-of select="."/>
                                     </pre>
@@ -253,11 +350,11 @@ function goto_id(id) {
                             <li class="passed" id="tst{$id}l">
                                 <span id="tst{$id}+" class="buttonpassed">&#160;
                                     <xsl:value-of select="$fid"/>&#160;
-                                </span>&#160;&#160;
+                                </span>&#160;
                                 <xsl:value-of select="@classname"/>
 .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment passed" id="tst{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span class="comment passed" id="tst{$id}" style="position: absolute; visibility: hidden;">
                                     <pre>
                                         <xsl:value-of select="."/>
                                     </pre>
