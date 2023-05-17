@@ -44,6 +44,7 @@ def adb_verify_sleep_awake_state(avd, state):
         raise Exception("Unexpected output: %s", status)
 
 
+@pytest.mark.adb
 def test_adb_sleep_wake(avd):
     """Test ADB sleep/wake commands"""
 
