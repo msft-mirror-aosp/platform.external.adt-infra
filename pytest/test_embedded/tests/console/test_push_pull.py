@@ -44,6 +44,7 @@ def adb_test_pull(avd, temp_file):
     return not "adb: error" in avd.adb.run(["pull /sdcard/", temp_file])
 
 
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/282855106 flaky on mac_aarch64.
 def test_adb_push_pull(avd, tmp_path):
     """Test adb push/pull operation.
 
