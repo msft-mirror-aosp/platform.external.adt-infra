@@ -21,3 +21,30 @@ def test_avd_canonical_path(emulator, avd):
     logging.info("adb avd path returned '%s'", got_path)
     assert got_path == expected_path
 
+@pytest.mark.boot
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=300, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
+def test_avd_dir_is_canonical_in_pid_xxx_ini(emulator, avd):
+    """ Test pid_xxx.ini contains canonical path for avd.dir
+
+        example:
+        avd.dir=/Users/me/.android/avd/x.avd
+    """
+
+    path = Path(emulator.android_avd_home, f"{emulator.configuration.name}.avd")
+    expected_path = f"{path.absolute()}"
+
+    result = avd.adb.run(["emu","avd", "discoverypath"]).rstrip()
+    logging.info("adb avd discoverypath returned '%s'", result)
+    pid_path = result[:-2].rstrip() # get rid of "\nOK"
+    avd_dir = ""
+    with open(pid_path) as f:
+        for line in f:
+            if "avd.dir" in line:
+                avd_dir= line.split("=", 2)[1].rstrip()
+                logging.info("found avd_dir as %s", avd_dir)
+                break
+
+    assert avd_dir == expected_path
+

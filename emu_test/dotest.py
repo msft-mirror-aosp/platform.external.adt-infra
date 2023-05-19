@@ -246,11 +246,35 @@ def printHtml(emu_args):
         skipped += int(testsuite.get('skipped', 0))
         times += float(testsuite.get('time', 0.))
 
-        testcases = sorted(tree.getroot().findall('./testcase'),
+        classname = testsuite.get('name').split('.')[-1]
+        available_report_folders = next(os.walk(gradle_report_path))[1]
+        detailed_report_folder = [folder for folder in available_report_folders \
+                                        if classname in folder and '_details' in folder]
+        testcases = sorted(testsuite.findall('./testcase'),
                             key=lambda child: child.get('name'))
         for testcase in testcases:
             testcase.set('classname', testcase.get('classname').\
                                                 replace('com.android.devtools.', ''))
+            # Add 'xml' and 'png' files that may exist in the '_detais' folder.
+            if detailed_report_folder:
+                testcase_report_path = os.path.join(gradle_report_path,
+                                                    detailed_report_folder[0],
+                                                    classname, testcase.get('name'))
+                if os.path.exists(testcase_report_path):
+                    testcase_hierarchies = ET.SubElement(testcase, 'hierarchies')
+                    testcase_screenshots = ET.SubElement(testcase, 'screenshots')
+                    testcase_report_subpath = os.path.join(detailed_report_folder[0],
+                                                           classname, testcase.get('name'))
+                    for filename in os.listdir(testcase_report_path):
+                        if filename.endswith('.xml'):
+                            hierachy = ET.SubElement(testcase_hierarchies, 'hierarchy')
+                            hierachy.set('name', filename);
+                            hierachy.set('path', os.path.join(testcase_report_subpath, filename));
+                        elif filename.endswith('.png'):
+                            screenshot = ET.SubElement(testcase_screenshots, 'screenshot')
+                            screenshot.set('name', filename);
+                            screenshot.set('path', os.path.join(testcase_report_subpath, filename));
+
             xml_report_testsuite.append(testcase)
 
     xml_report_testsuite.set('tests', str(tests))
@@ -291,13 +315,13 @@ def setupLogger():
         os.makedirs(emu_argparser.emu_args.session_dir)
     if emu_argparser.emu_args.test_dir is None:
         emu_argparser.emu_args.test_dir = 'testcase_%s' % time.strftime("%Y%m%d-%H%M%S")
-    if not os.path.exists(emu_argparser.emu_args.test_dir):
-        os.makedirs(os.path.join(emu_argparser.emu_args.session_dir,
-                                 emu_argparser.emu_args.test_dir))
+    test_path = os.path.join(emu_argparser.emu_args.session_dir,
+                             emu_argparser.emu_args.test_dir)
+    if not os.path.exists(test_path):
+        os.makedirs(test_path)
 
-    file_handler = logging.FileHandler(os.path.join(emu_argparser.emu_args.session_dir,
-                                                    emu_argparser.emu_args.test_dir,
-                                                    file_name))
+    file_handler = logging.FileHandler(os.path.join(test_path, file_name))
+
     file_handler.setFormatter(log_formatter)
     # Test summary goes to standard error, since we rely on stderr to parse test results in buildbot
     console_handler = logging.StreamHandler(sys.stderr)

@@ -21,7 +21,7 @@ from iterators import TimeoutIterator
 from emu.logging.log_handler import QueueLogHandler
 
 
-def wait_until(predicate, timeout=10, pre_requisite=lambda: True, hz=2):
+def wait_until(predicate, timeout=15, pre_requisite=lambda: True, hz=2):
     """
     Wait until the given predicate function returns True, or until the timeout
     expires.

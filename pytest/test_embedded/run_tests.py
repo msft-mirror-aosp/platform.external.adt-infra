@@ -568,8 +568,6 @@ def run_tests(
                     "-m",
                     "pytest",
                     "-vv",
-                    "-m",
-                    "not perf",
                     f"--junitxml={junit_test_results}",
                     # Boot times in windows can be >6 mins, and we are booting several times!
                     # We will give us at most 45 minutes.
@@ -584,6 +582,8 @@ def run_tests(
                 env={
                     "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
                     "ANDROID_AVD_HOME": str(tmpdir),
+                    "PYTEST_ADDOPTS" : os.getenv('PYTEST_ADDOPTS')
+                                          if os.getenv('PYTEST_ADDOPTS') else " -m 'not perf'"
                 },
                 timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
             )
