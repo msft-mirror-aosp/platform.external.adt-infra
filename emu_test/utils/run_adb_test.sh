@@ -29,9 +29,6 @@ DISTRIB_DIR=$1
 VERBOSE=3
 . $(dirname "$0")/common.sh
 
-# Make sure we stop adb, and exit our virtual env.
-trap "terminate_adb" EXIT QUIT INT HUP
-
 set_verbosity 3
 [ ! -d "$DISTRIB_DIR" ] && panic "The variable DISTRIB_DIR points to [$DISTRIB_DIR], which does not exist"
 
@@ -50,5 +47,5 @@ aosp_find_python() {
 }
 
 PYTHON=$(aosp_find_python)
-export PYTEST_ADDOPTS="-m 'adb and not perf'"
+export PYTEST_ADDOPTS="-m 'adb'"
 run $PYTHON "$AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.py" --build_dir out/prebuilt_cached/builds --logdir "$DISTRIB_DIR/testlogs"
