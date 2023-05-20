@@ -210,13 +210,19 @@ li.collapsable {
 function toggle(container) {
     var icon = container.getElementsByClassName("icon")[0];
     var contents = container.getElementsByClassName("contents")[0];
+    var image = container.getElementsByClassName("img")[0];
+    var base64 = container.getElementsByClassName("base64enc")[0];
     // toggling icon
     icon.classList.toggle('fa-angle-right');
     icon.classList.toggle('fa-angle-down');
     // toggling contents
     if (contents.style.display === "none") {
+        image.setAttribute('src', base64.innerHTML);
+        image.style.display = "block";
         contents.style.display = "block";
     } else {
+        image.removeAttribute('src');
+        image.style.display = "none";
         contents.style.display = "none";
     }
 }
@@ -306,20 +312,20 @@ function goto_id(id) {
                                             <xsl:value-of select="."/>
                                         </pre>
                                         <ul class="attachments">
-                                            <xsl:for-each select="hierarchies/*">
+                                            <!--xsl:for-each select="hierarchies/*">
                                                 <xsl:variable name="path" select="@path"/>
                                                 <li class="attachment">
                                                     <a href="{$path}" target="_blank"><xsl:value-of select="@name"/></a>
                                                 </li>
-                                            </xsl:for-each>
+                                            </xsl:for-each-->
                                             <xsl:for-each select="screenshots/*">
-                                                <xsl:variable name="path" select="@path"/>
-                                                <li class="collapsable" onclick="toggle(this)">
+                                                <li class="collapsable" onclick="toggle(this);">
                                                     <i class="fa fa-sharp fa-angle-right icon">&#160;</i>
                                                     <a class="header"><xsl:value-of select="@name"/></a>
                                                     <div class="contents" style="display:none">
+                                                        <div class="base64enc" hidden="hidden" style="display:none">data:image/png;base64,<xsl:value-of select="@base64"/></div>
                                                         <div class="image-box">
-                                                            <img class="img" src="{$path}" target="_blank"></img>
+                                                            <img class="img" style="display:none"></img>
                                                         </div>
                                                     </div>
                                                 </li>
