@@ -166,11 +166,6 @@ public class SystemImageTestFramework implements TestRule {
                             // wait for 30 seconds
                             TimeUnit.SECONDS.sleep(30);
 
-                            // Take a second set of the window UI hierarchy and screenshot in case
-                            // the first set of screenshot is not taken.
-                            mDevice.dumpWindowHierarchy(new File(loggingDir, "hierarchy_backup.xml"));
-                            mDevice.takeScreenshot(new File(loggingDir, "screenshot_backup.png"));
-
                             // Log the error message
                             PrintWriter error =
                                     new PrintWriter(new File(loggingDir, "error.txt").getPath(), "UTF-8");
