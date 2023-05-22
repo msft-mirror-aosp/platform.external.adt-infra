@@ -210,19 +210,16 @@ li.collapsable {
 function toggle(container) {
     var icon = container.getElementsByClassName("icon")[0];
     var contents = container.getElementsByClassName("contents")[0];
-    var image = container.getElementsByClassName("img")[0];
-    var base64 = container.getElementsByClassName("base64enc")[0];
+    var img = container.getElementsByClassName("img")[0];
     // toggling icon
     icon.classList.toggle('fa-angle-right');
     icon.classList.toggle('fa-angle-down');
     // toggling contents
     if (contents.style.display === "none") {
-        image.setAttribute('src', base64.innerHTML);
-        image.style.display = "block";
+        img.style.display = "block"
         contents.style.display = "block";
     } else {
-        image.removeAttribute('src');
-        image.style.display = "none";
+        img.style.display = "none";
         contents.style.display = "none";
     }
 }
@@ -251,7 +248,7 @@ function goto_id(id) {
 
                 </script>
             </head>
-            <body>
+            <body onload="add_base64_attachments()">
                 <h1>Test Results for:
                     <xsl:value-of select="@name"/>
                 </h1>
@@ -319,13 +316,13 @@ function goto_id(id) {
                                                 </li>
                                             </xsl:for-each-->
                                             <xsl:for-each select="screenshots/*">
+                                                <xsl:variable name="ids" select="position()"/>
                                                 <li class="collapsable" onclick="toggle(this);">
                                                     <i class="fa fa-sharp fa-angle-right icon">&#160;</i>
                                                     <a class="header"><xsl:value-of select="@name"/></a>
                                                     <div class="contents" style="display:none">
-                                                        <div class="base64enc" hidden="hidden" style="display:none">data:image/png;base64,<xsl:value-of select="@base64"/></div>
                                                         <div class="image-box">
-                                                            <img class="img" style="display:none"></img>
+                                                          <img class="img" id="screenshot{$id}.{$ids}" style="display:none"></img>
                                                         </div>
                                                     </div>
                                                 </li>
@@ -368,7 +365,26 @@ function goto_id(id) {
                             </li>
                         </xsl:otherwise>
                     </xsl:choose>
-                </xsl:for-each>
+                  </xsl:for-each>
+            <script>
+                function add_base64_attachments() {
+                    <xsl:for-each select="testcase">
+                        <xsl:variable name="id" select="position()"/>
+                        <xsl:choose>
+                            <xsl:when test="failure or error">
+                            <xsl:for-each select="screenshots/*">
+                                <xsl:variable name="ids" select="position()"/>
+                                var base64enc = "<xsl:value-of select="@base64"/>";
+                                var id = <xsl:value-of select="$id"/>;
+                                var ids = <xsl:value-of select="$ids"/>;
+                                var img = document.getElementById("screenshot-" + id + '.' + ids);
+                                img.setAttribute('src', "data:image/png;base64," + base64enc);
+                            </xsl:for-each>
+                            </xsl:when>
+                        </xsl:choose>
+                    </xsl:for-each>
+                }
+            </script
             </body>
         </html>
     </xsl:template>
