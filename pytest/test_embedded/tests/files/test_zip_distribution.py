@@ -1,14 +1,12 @@
 import os
 import platform
 import pytest
-import sys
 
 from pathlib import Path
 from emu.emulator import BaseEmulator
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.skipif(sys.platform == "win32", reason="b/280506885")
 def test_zip_file_contains_all_expected_files(emulator: BaseEmulator):
     emu_root = Path(emulator.exe).parent
     assert emu_root.exists(), "Emulator folder does not exist."
@@ -194,7 +192,6 @@ def get_exp_sub_dirs():
             "libandroid-emu-protos.dll",
             "libprotobuf.dll",
             "libandroid-emu-agents.dll",
-            "libandroid-emu-shared.dll",
             "libimage_converter.dll",
             "libshadertranslator.dll",
             "libandroid-emu-curl.dll",
