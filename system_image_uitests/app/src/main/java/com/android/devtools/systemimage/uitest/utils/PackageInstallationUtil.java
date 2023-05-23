@@ -210,6 +210,7 @@ public class PackageInstallationUtil {
         }
 
         UiObject[] installButtonObjects = {
+                device.findObject(new UiSelector().resourceId(Res.ANDROID_BUTTON_ONE).text("Install")),
                 device.findObject(new UiSelector().textMatches("(?i)install(?-i)").
                         className("android.widget.Button")),
                 device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_OK_RES)),
@@ -224,6 +225,18 @@ public class PackageInstallationUtil {
                 hasInstallButton = true;
                 break;
             }
+        }
+
+                final UiObject unsafeAppDetailsButton = device.findObject(new UiSelector().
+                text("More details").packageName(Res.GOOGLE_PLAY_VENDING_RES));
+        if (unsafeAppDetailsButton.waitForExists(10000)) {
+            unsafeAppDetailsButton.clickAndWaitForNewWindow();
+        }
+
+        final UiObject installAnywayButton = device.findObject(new UiSelector().
+                text("Install anyway").packageName(Res.GOOGLE_PLAY_VENDING_RES));
+        if (installAnywayButton.waitForExists(5L)) {
+            installAnywayButton.clickAndWaitForNewWindow();
         }
 
         if (!hasInstallButton) {
@@ -295,7 +308,7 @@ public class PackageInstallationUtil {
         intent.setDataAndType(apkURI, "application/vnd.android.package-archive");
 
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        if (api == 31) {
+        if (api >= 24) {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
         return intent;
