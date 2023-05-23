@@ -216,13 +216,14 @@ function toggle(container) {
     icon.classList.toggle('fa-angle-down');
     // toggling contents
     if (contents.style.display === "none") {
-        img.style.display = "block"
+        img.style.display = "block";
         contents.style.display = "block";
     } else {
         img.style.display = "none";
         contents.style.display = "none";
     }
 }
+
 
 function make_visible(elt) { elt.style.visibility='visible'; elt.style.position='relative';
 }
@@ -322,7 +323,7 @@ function goto_id(id) {
                                                     <a class="header"><xsl:value-of select="@name"/></a>
                                                     <div class="contents" style="display:none">
                                                         <div class="image-box">
-                                                          <img class="img" id="screenshot{$id}.{$ids}" style="display:none"></img>
+                                                            <img class="img" id="screenshot-{$id}.{$ids}" style="display:none"></img>
                                                         </div>
                                                     </div>
                                                 </li>
@@ -365,7 +366,7 @@ function goto_id(id) {
                             </li>
                         </xsl:otherwise>
                     </xsl:choose>
-                  </xsl:for-each>
+                </xsl:for-each>
             <script>
                 function add_base64_attachments() {
                     <xsl:for-each select="testcase">
@@ -384,7 +385,7 @@ function goto_id(id) {
                         </xsl:choose>
                     </xsl:for-each>
                 }
-            </script
+            </script>
             </body>
         </html>
     </xsl:template>
