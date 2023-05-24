@@ -267,18 +267,21 @@ def printHtml(emu_args):
                     testcase_screenshots = ET.SubElement(testcase, 'screenshots')
 
                     for filename in os.listdir(testcase_reports_path):
-                        report_relpath = os.path.join(testcase_reports_relpath, filename)
+                        attachment_path = os.path.join(testcase_reports_path,
+                                                        filename)
                         if filename.endswith('.xml'):
-                            hierachy = ET.SubElement(testcase_hierarchies, 'hierarchy')
-                            hierachy.set('name', filename)
-                            hierachy.set('path', report_relpath)
+                            hierarchy = ET.SubElement(testcase_hierarchies, 'hierarchy')
+                            hierarchy.set('name', filename)
+                            # Include hierarchy file contents
+                            with open(attachment_path, "r") as hierarchy_file:
+                                contents = hierarchy_file.read()
+                                # hierachy.set('xml-content', contents)
+                                hierarchy.text = contents
                         elif filename.endswith('.png'):
                             screenshot = ET.SubElement(testcase_screenshots, 'screenshot')
                             screenshot.set('name', filename)
-                            screenshot.set('path', report_relpath)
-                            # Add base64 encode
-                            imgpath = os.path.join(testcase_reports_path, filename)
-                            with open(imgpath, "rb") as img:
+                            # Add base64 encoding of the image
+                            with open(attachment_path, "rb") as img:
                                 base64enc = base64.b64encode(img.read())
                                 screenshot.set('base64', base64enc.decode('utf-8'))
 
