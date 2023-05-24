@@ -14,9 +14,13 @@
 
 import pytest
 import time
+from aemu.proto.emulator_controller_pb2 import ImageFormat
+
+from PIL import Image
+from tests.test_utils import proto_to_pillow
 
 
-def adb_test_sleep_wake(avd):
+def adb_test_sleep_awake(avd):
     """Verify that the device can be put to sleep and waked up successfully.
 
     Args:
@@ -29,33 +33,34 @@ def adb_test_sleep_wake(avd):
     return not "adb: error" in avd.adb.run(["shell", "input", "keyevent", "POWER"])
 
 
-def adb_verify_sleep_awake_state(avd, state):
-    """Verify the screen state of the emulator.
+def adb_verify_sleep_awake_state(img: Image):
+    """Verify the black screen on  the emulator.
 
     Args:
-      avd: The emulator
-      state: The screen state of emulator
+        img (Image): A PIL image we are inspecting
     """
-    status = avd.adb.run(["shell", "dumpsys display | grep mScreenState"])
-    output_items = status.split("=")
-    if output_items:
-        assert output_items[1] == state
-    else:
-        raise Exception("Unexpected output: %s", status)
+    for x in range(img.width):
+        for y in range(img.height):
+            co = (x, y)
+            pixel = img.getpixel(co)
+            if pixel != (0, 0, 0, 255):
+                # The screen is not black.
+                pytest.fail("Screen is not black.")
 
 
 @pytest.mark.adb
-def test_adb_sleep_wake(avd):
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
+def test_adb_sleep_awake(emulator_controller, avd):
     """Test ADB sleep/wake commands"""
 
-    success = adb_test_sleep_wake(avd)
-    time.sleep(1)
+    success = adb_test_sleep_awake(avd)
+    time.sleep(2)
     assert success, "ADB Sleep failed"
-    # Check fails on build bots b/282025124
-    # adb_verify_sleep_awake_state(avd, "OFF")
 
-    success = adb_test_sleep_wake(avd)
+    image = emulator_controller.getScreenshot(ImageFormat())
+    pillow_img = proto_to_pillow(image)
+    adb_verify_sleep_awake_state(pillow_img)
+
+    success = adb_test_sleep_awake(avd)
     time.sleep(1)
     assert success, "ADB Wake up failed"
-    # Check fails on build bots b/282025124
-    # adb_verify_sleep_awake_state(avd, "ON")
