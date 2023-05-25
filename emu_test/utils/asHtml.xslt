@@ -134,30 +134,6 @@ span.buttonerror {
 
 /* New properties used in the containers that display the attachments */
 
-.embedding {
-    background-color: #fff;
-    overflow: auto;
-    margin-left: 17px;
-    margin-bottom: 10px;
-    border: solid 1px #ccc;
-    display: inline-block;
-    float: left;
-}
-
-.text-box {
-    text-align: left;
-    margin: 0 1px;
-    font-size: 13px;
-    overflow-x: auto;
-    line-height: 1.42857143;
-    color: #bd0a2b;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    background-color: #fff0f0;
-    border: 0px solid #ccc;
-    display: inline-block;
-}
-
 ul.attachments {
     list-style-type: none; /* Remove bullets */
     padding: 0; /* Remove padding */
@@ -194,6 +170,32 @@ li.collapsable {
     cursor: pointer;
 }
 
+.embedding {
+    background-color: #fff;
+    overflow: auto;
+    margin-left: 17px;
+    margin-bottom: 10px;
+    border: solid 1px #ccc;
+    display: inline-block;
+    float: left;
+    resize: both;
+    width: min-content;
+}
+
+.text-box {
+    text-align: left;
+    margin: 0 1px;
+    font-size: 13px;
+    overflow-x: auto;
+    line-height: 1.42857143;
+    color: #bd0a2b;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #fff0f0;
+    border: 0px solid #ccc;
+    min-width: max-content;
+}
+
 .image-box {
     height:600px;
 }
@@ -204,20 +206,40 @@ li.collapsable {
     visibility: visible;
 }
 
+
+.xml-txt {
+    display: none;
+    overflow: auto;
+    border: 1px solid #DDDDDD;
+    border-radius: 4px 0 4px 0;
+    white-space: pre;
+    height: 40em;
+    padding: 15 10px;
+    max-width: max-content;
+    resize: both;
+    width: unset;
+}
+
+
                 </style>
                 <script language="JavaScript">
 
-function toggle(container) {
+function toggle(container, inner_type) {
     var icon = container.getElementsByClassName("icon")[0];
-    var contents = container.getElementsByClassName("contents")[0];
+    var outer = container.getElementsByClassName("contents")[0];
+    var inner = container.getElementsByClassName(inner_type)[0];
+
     // toggling icon
     icon.classList.toggle('fa-angle-right');
     icon.classList.toggle('fa-angle-down');
+
     // toggling contents
-    if (contents.style.display === "none") {
-        contents.style.display = "block";
+    if (outer.style.display === "none") {
+        outer.style.display = "block";
+        inner.style.display = "block";
     } else {
-        contents.style.display = "none";
+        outer.style.display = "none";
+        inner.style.display = "none";
     }
 }
 
@@ -245,7 +267,7 @@ function goto_id(id) {
 
                 </script>
             </head>
-            <body>
+            <body onload="embed_attachments()">
                 <h1>Test Results for:
                     <xsl:value-of select="@name"/>
                 </h1>
@@ -302,24 +324,30 @@ function goto_id(id) {
                                 <div style="clear: both;"></div>
                                 <span id="tst{$id}" style="position: absolute; visibility: hidden;">
                                     <div class="embedding">
-                                        <pre class="text-box">
-                                            <xsl:value-of select="."/>
+                                        <pre class="text-box" id="text-{$id}">
+                                            <xsl:value-of select="./*"/>
                                         </pre>
                                         <ul class="attachments">
                                             <xsl:for-each select="hierarchies/*">
-                                                <xsl:variable name="path" select="@path"/>
-                                                <li class="attachment">
-                                                    <a href="{$path}" target="_blank"><xsl:value-of select="@name"/></a>
+                                                <xsl:variable name="idh" select="position()"/>
+                                                <li class="collapsable" onclick="toggle(this, 'xml-txt');">
+                                                    <i class="fa fa-sharp fa-angle-right icon">&#160;</i>
+                                                    <a class="header"><xsl:value-of select="@name"/></a>
+                                                    <div class="contents" style="display:none">
+                                                        <div class="xml-box">
+                                                            <div class="xml-txt" id="hierarchy-{$id}.{$idh}" style="display:none"></div>
+                                                        </div>
+                                                    </div>
                                                 </li>
                                             </xsl:for-each>
                                             <xsl:for-each select="screenshots/*">
-                                                <xsl:variable name="path" select="@path"/>
-                                                <li class="collapsable" onclick="toggle(this)">
+                                                <xsl:variable name="ids" select="position()"/>
+                                                <li class="collapsable" onclick="toggle(this, 'img');">
                                                     <i class="fa fa-sharp fa-angle-right icon">&#160;</i>
                                                     <a class="header"><xsl:value-of select="@name"/></a>
                                                     <div class="contents" style="display:none">
                                                         <div class="image-box">
-                                                            <img class="img" src="{$path}" target="_blank"></img>
+                                                            <img class="img" id="screenshot-{$id}.{$ids}" style="display:none"></img>
                                                         </div>
                                                     </div>
                                                 </li>
@@ -363,6 +391,34 @@ function goto_id(id) {
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:for-each>
+            <script charset="utf-8">
+                function embed_attachments() {
+                    <xsl:for-each select="testcase">
+                        <xsl:variable name="id" select="position()"/>
+                        <xsl:choose>
+                            <xsl:when test="failure or error">
+                                <xsl:for-each select="screenshots/*">
+                                    <xsl:variable name="ids" select="position()"/>
+                                    var img = document.getElementById("screenshot-" +
+                                        "<xsl:value-of select="$id"/>" + '.' + "<xsl:value-of select="$ids"/>");
+                                    img.setAttribute('src', "data:image/png;base64," + "<xsl:value-of select="@base64"/>");
+                                </xsl:for-each>
+                                <xsl:for-each select="hierarchies/*">
+                                    <xsl:variable name="idh" select="position()"/>
+                                    var hierarchy = document.getElementById("hierarchy-" +
+                                        "<xsl:value-of select="$id"/>" + '.' + "<xsl:value-of select="$idh"/>");
+                                    hierarchy.innerHTML = `<xsl:value-of select="./text()"/>`;
+                                    var text_box = document.getElementById("text-" + "<xsl:value-of select="$id"/>");
+                                    hierarchy.style.width = text_box.clientWidth - 40;
+                                    <xsl:text disable-output-escaping="yes">
+                                    hierarchy.addEventListener("click", e => {e.stopPropagation()});
+                                    </xsl:text>
+                                </xsl:for-each>
+                            </xsl:when>
+                        </xsl:choose>
+                    </xsl:for-each>
+                }
+            </script>
             </body>
         </html>
     </xsl:template>

@@ -21,6 +21,7 @@ import traceback
 from subprocess import PIPE, check_call, CalledProcessError
 import xml.etree.ElementTree as ET
 import lxml.etree as LET
+import base64
 
 
 # Add parent directory to current module. Then, emu_test module is recognized.
@@ -257,23 +258,32 @@ def printHtml(emu_args):
                                                 replace('com.android.devtools.', ''))
             # Add 'xml' and 'png' files that may exist in the '_detais' folder.
             if detailed_report_folder:
-                testcase_report_path = os.path.join(gradle_report_path,
-                                                    detailed_report_folder[0],
-                                                    classname, testcase.get('name'))
-                if os.path.exists(testcase_report_path):
+                testcase_reports_relpath = os.path.join(detailed_report_folder[0],
+                                                        classname, testcase.get('name'))
+                testcase_reports_path = os.path.join(gradle_report_path,
+                                                     testcase_reports_relpath)
+                if os.path.exists(testcase_reports_path):
                     testcase_hierarchies = ET.SubElement(testcase, 'hierarchies')
                     testcase_screenshots = ET.SubElement(testcase, 'screenshots')
-                    testcase_report_subpath = os.path.join(detailed_report_folder[0],
-                                                           classname, testcase.get('name'))
-                    for filename in os.listdir(testcase_report_path):
+
+                    for filename in os.listdir(testcase_reports_path):
+                        attachment_path = os.path.join(testcase_reports_path,
+                                                        filename)
                         if filename.endswith('.xml'):
-                            hierachy = ET.SubElement(testcase_hierarchies, 'hierarchy')
-                            hierachy.set('name', filename);
-                            hierachy.set('path', os.path.join(testcase_report_subpath, filename));
+                            hierarchy = ET.SubElement(testcase_hierarchies, 'hierarchy')
+                            hierarchy.set('name', filename)
+                            # Include hierarchy file contents
+                            with open(attachment_path, "r") as hierarchy_file:
+                                contents = hierarchy_file.read()
+                                # hierachy.set('xml-content', contents)
+                                hierarchy.text = contents
                         elif filename.endswith('.png'):
                             screenshot = ET.SubElement(testcase_screenshots, 'screenshot')
-                            screenshot.set('name', filename);
-                            screenshot.set('path', os.path.join(testcase_report_subpath, filename));
+                            screenshot.set('name', filename)
+                            # Add base64 encoding of the image
+                            with open(attachment_path, "rb") as img:
+                                base64enc = base64.b64encode(img.read())
+                                screenshot.set('base64', base64enc.decode('utf-8'))
 
             xml_report_testsuite.append(testcase)
 
