@@ -273,7 +273,7 @@ def printHtml(emu_args):
                             hierarchy = ET.SubElement(testcase_hierarchies, 'hierarchy')
                             hierarchy.set('name', filename)
                             # Include hierarchy file contents
-                            with open(attachment_path, "r") as hierarchy_file:
+                            with open(attachment_path, "r", encoding="utf-8") as hierarchy_file:
                                 contents = hierarchy_file.read()
                                 # hierachy.set('xml-content', contents)
                                 hierarchy.text = contents
