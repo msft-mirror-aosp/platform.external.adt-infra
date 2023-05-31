@@ -83,6 +83,7 @@ span.closed { color: #808080; }
 
 li.passed {color: #002000;}
 li.failed {color: #200000;}
+li.skipped {color: #202000 }
 span.comment { color:#000000; font-style: italic;}
 
 span.crc {
@@ -97,6 +98,11 @@ span.buttonpassed {
             font-family: monospace;
             margin-top: 10px;
             background-color: #aaffaa;
+}
+span.buttonskipped {
+    font-family: monospace;
+    margin-top: 10px;
+    background-color: #ffffaa;
 }
 span.buttonfailed {
         font-family: monospace;
@@ -158,7 +164,7 @@ function goto_id(id) {
                             </span>&#160;
                         </xsl:when>
                         <xsl:when test="skipped">
-                            <span class="buttonpassed" onClick="goto_id('tst{$id}l')">
+                            <span class="buttonskipped" onClick="goto_id('tst{$id}l')">
                                 <xsl:value-of select="$fid"/>
                             </span>&#160;
                         </xsl:when>
