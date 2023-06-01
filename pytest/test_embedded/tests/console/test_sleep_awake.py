@@ -85,6 +85,7 @@ def off(adb):
 
 
 @pytest.mark.e2e
+@pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_power_down_sleeps_the_device(adb, on):
     """Test case to verify that sending the power-down command to an awake device will put the device to sleep."""
@@ -99,9 +100,10 @@ def test_power_down_sleeps_the_device(adb, on):
 
 
 @pytest.mark.e2e
+@pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_wake_up_wakes_the_device(adb, off):
-    """Test case to verify that sending the wake-up command to an sleeping device will wake the device."""
+    """Test case to verify that sending the wake-up command to a sleeping device will wake the device."""
 
     def is_awake():
         return "Awake" in adb(
@@ -113,9 +115,14 @@ def test_wake_up_wakes_the_device(adb, off):
 
 
 @pytest.mark.e2e
+@pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
-def test_power_down_turns_of_the_screen(emulator_controller, off):
-    """Test case to verify that a powered-down device has a black screen."""
+def test_power_down_turns_off_the_screen(emulator_controller, off):
+    """Test case to verify that a powered-down device has a black screen.
+
+    An e2e adb test where emulator is turned off using adb command and then check is made to verify if there is a
+    black screen on the emulator.
+    """
 
     def is_a_black_image(image: Image):
         """Verify if the emulator screen is black.
