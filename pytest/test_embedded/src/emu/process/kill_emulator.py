@@ -89,7 +89,17 @@ def kill_process_tree(process: psutil.Process) -> None:
 
 
 def is_emulator_process(process: psutil.Process) -> bool:
-    emulator_process_names = ["emulator", "qemu-system"]
+    """Checks if the given process is an emulator (or related) process
+
+    This includes: emulator, qemu-system.*, netsim, netsimd
+
+    Args:
+        process (psutil.Process): The process to check
+
+    Returns:
+        bool: True if this is an emulator related process
+    """
+    emulator_process_names = ["emulator", "qemu-system", "netsim", "netsimd"]
     try:
         name = process.name()
         return any(p in name for p in emulator_process_names)

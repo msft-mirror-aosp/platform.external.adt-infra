@@ -13,54 +13,137 @@
 # limitations under the License.
 
 import pytest
-import time
-from aemu.proto.emulator_controller_pb2 import ImageFormat
+from aemu.proto.emulator_controller_pb2 import Image, ImageFormat
 
-from PIL import Image
-from tests.test_utils import proto_to_pillow
+from emu.timing import eventually
+from tests.test_utils import StreamingCall, proto_to_pillow
 
 
-def adb_test_sleep_awake(avd):
-    """Verify that the device can be put to sleep and waked up successfully.
+def wake_up(adb):
+    """
+    Sends a wake-up command to the connected Android device using ADB. The device is woken
+    up by sending the KEYCODE_WAKEUP (https://developer.android.com/reference/android/view/KeyEvent#KEYCODE_WAKEUP)
 
     Args:
-      avd: The emulator
+        adb (callable): A function or method that executes ADB commands.
+
+    Raises:
+        AssertionError: If the ADB command output contains the error message "adb: error".
 
     Returns:
-      True if the device was successfully put to sleep and waked up, else False.
+        None
     """
+    assert not "adb: error" in adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
 
-    return not "adb: error" in avd.adb.run(["shell", "input", "keyevent", "POWER"])
 
-
-def adb_verify_sleep_awake_state(img: Image):
-    """Verify the black screen on  the emulator.
+def power_down(adb):
+    """
+    Sends a power-down command to the connected Android device using ADB. The device is powered
+    down by sending the POWER key event (https://developer.android.com/reference/android/view/KeyEvent#KEYCODE_POWER).
 
     Args:
-        img (Image): A PIL image we are inspecting
+        adb (callable): A function or method that executes ADB commands.
+
+    Raises:
+        AssertionError: If the ADB command output contains the error message "adb: error".
+
+    Returns:
+        None
     """
-    for x in range(img.width):
-        for y in range(img.height):
-            co = (x, y)
-            pixel = img.getpixel(co)
-            if pixel != (0, 0, 0, 255):
-                # The screen is not black.
-                pytest.fail("Screen is not black.")
+    assert not "adb: error" in adb(["shell", "input", "keyevent", "POWER"])
 
 
+import pytest
+
+
+@pytest.fixture
+def on(adb):
+    """
+    Fixture that ensures the connected Android device is powered on before running tests.
+
+    Args:
+        adb (callable): The adb fixture that executes ADB commands.
+
+    Returns:
+        None
+    """
+    wake_up(adb)
+
+
+@pytest.fixture
+def off(adb):
+    """
+    Fixture that ensures the connected Android device is powered off before running tests.
+
+    Args:
+        adb (callable): The adb fixture that executes ADB commands.
+
+    Returns:
+        None
+    """
+    power_down(adb)
+
+
+@pytest.mark.e2e
 @pytest.mark.adb
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
-def test_adb_sleep_awake(emulator_controller, avd):
-    """Test ADB sleep/wake commands"""
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_power_down_sleeps_the_device(adb, on):
+    """Test case to verify that sending the power-down command to an awake device will put the device to sleep."""
 
-    success = adb_test_sleep_awake(avd)
-    time.sleep(2)
-    assert success, "ADB Sleep failed"
+    def is_asleep():
+        return "Asleep" in adb(
+            ["shell", "dumpsys", "power", "|", "grep", "mWakefulness"]
+        )
 
-    image = emulator_controller.getScreenshot(ImageFormat())
-    pillow_img = proto_to_pillow(image)
-    adb_verify_sleep_awake_state(pillow_img)
+    power_down(adb)
+    assert eventually(is_asleep)
 
-    success = adb_test_sleep_awake(avd)
-    time.sleep(1)
-    assert success, "ADB Wake up failed"
+
+@pytest.mark.e2e
+@pytest.mark.adb
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_wake_up_wakes_the_device(adb, off):
+    """Test case to verify that sending the wake-up command to a sleeping device will wake the device."""
+
+    def is_awake():
+        return "Awake" in adb(
+            ["shell", "dumpsys", "power", "|", "grep", "mWakefulness"]
+        )
+
+    wake_up(adb)
+    assert eventually(is_awake)
+
+
+@pytest.mark.e2e
+@pytest.mark.adb
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_power_down_turns_off_the_screen(emulator_controller, off):
+    """Test case to verify that a powered-down device has a black screen.
+
+    An e2e adb test where emulator is turned off using adb command and then check is made to verify if there is a
+    black screen on the emulator.
+    """
+
+    def is_a_black_image(image: Image):
+        """Verify if the emulator screen is black.
+
+        Args:
+            img (Image): An image received from the emulator.
+
+        Returns:
+            bool: True if the screen is black, False otherwise.
+        """
+        img = proto_to_pillow(image)
+        for x in range(img.width):
+            for y in range(img.height):
+                co = (x, y)
+                pixel = img.getpixel(co)
+                if pixel != (0, 0, 0, 255):
+                    # The screen is not black.
+                    return False
+        return True
+
+    # We eventually should see a black screen..
+    images = emulator_controller.streamScreenshot(ImageFormat())
+    with StreamingCall(images) as stream:
+        assert eventually(is_a_black_image, stream), "The screen did not become black!"
