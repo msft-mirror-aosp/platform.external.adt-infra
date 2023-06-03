@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-import sys
 from aemu.proto.emulator_controller_pb2 import Image, ImageFormat
 
 from emu.timing import eventually
@@ -87,7 +86,7 @@ def off(adb):
 
 @pytest.mark.e2e
 @pytest.mark.adb
-@pytest.mark.skipif(sys.platform == "win32" reason="b/284499129")
+@pytest.mark.skipif(sys.platform == "win32")
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_power_down_sleeps_the_device(adb, on):
     """Test case to verify that sending the power-down command to an awake device will put the device to sleep."""
@@ -103,7 +102,7 @@ def test_power_down_sleeps_the_device(adb, on):
 
 @pytest.mark.e2e
 @pytest.mark.adb
-@pytest.mark.skipif(sys.platform == "win32" reason="b/284499129")
+@pytest.mark.skipif(sys.platform == "win32")
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_wake_up_wakes_the_device(adb, off):
     """Test case to verify that sending the wake-up command to a sleeping device will wake the device."""
