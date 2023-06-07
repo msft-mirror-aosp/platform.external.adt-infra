@@ -1,6 +1,8 @@
 import logging
 import platform
+import psutil
 import pytest
+import sys
 import time
 from pathlib import Path
 from google.protobuf import empty_pb2
@@ -24,6 +26,14 @@ def has_network(adb):
         logging.info("success result %s", result)
         radio_wifi = True
     return radio_wifi
+
+def check_cpu_usage_less_than_threshold(emulator):
+    proc_emu = psutil.Process(emulator.description.pid())
+    cpu_usage = proc_emu.cpu_percent(interval = 2)
+    logging.info("emulator usage is %d", cpu_usage)
+    if (cpu_usage <= 25):
+        return True
+    return False
 
 
 def shutdown(emulator):
@@ -51,7 +61,7 @@ def test_first_time_booted(emulator):
     """Make sure the emulator status is set to booted."""
 
     emulator.stop()
-    logging.info("Launching emualtor ...")
+    logging.info("Launching emulator ...")
     myflags=["-wipe-data", "-no-snapshot-load"]
     if platform.processor() == "i386" and platform.system() == "Darwin":
         myflags.append("-no-window")
@@ -84,7 +94,7 @@ def test_first_time_booted(emulator):
 
     logging.info("Shutting it down ...")
     shutdown(emulator)
-    logging.info("emualtor is shut down successfully")
+    logging.info("emulator is shut down successfully")
 
 
 def check_boot_from_snapshot(avdpath)->bool :
@@ -109,7 +119,7 @@ def test_snapshot_booted(emulator):
     """
 
     emulator.stop()
-    logging.info("Launching emualtor ...")
+    logging.info("Launching emulator ...")
     myflags=["-no-snapshot-save"]
     if platform.system() == "Windows":
         myflags.append("-read-only")
@@ -132,4 +142,42 @@ def test_snapshot_booted(emulator):
     assert check_boot_from_snapshot(emulator.configuration.directory)
     logging.info("Shutting it down ...")
     shutdown(emulator)
-    logging.info("emualtor is shut down successfully")
+    logging.info("emulator is shut down successfully")
+
+@pytest.mark.boot
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=600, func_only=True)
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="will turn on later"
+)
+def test_emulator_should_idle(emulator):
+    """check emulator use less than 25% single cpu when idle."""
+
+
+    emulator.stop()
+    logging.info("Launching emulator ...")
+    myflags=["-no-snapshot-save"]
+    if platform.system() == "Windows":
+        myflags.append("-read-only")
+
+    assert emulator.launch(flags = myflags)
+
+    mytimeout = 45
+    if platform.processor() == "i386" and platform.system() == "Darwin":
+        mytimeout = 360
+    logging.info("Wating for it to boot up from snapshot ...")
+    assert emulator.wait_for_boot(timeout = mytimeout)
+    logging.info("Wating for it to stablize ...")
+    count = 0
+    while count < 100:
+        time.sleep(1)
+        count += 1
+        if check_cpu_usage_less_than_threshold(emulator):
+            break
+
+    # cannot keep cpu spinning
+    assert count < 100
+    logging.info("Shutting it down ...")
+    if emulator.is_alive():
+        emulator.stop(timeout=60)
+    logging.info("emulator is shut down successfully")

@@ -144,6 +144,7 @@ class QueueLogHandler(LogHandler):
         self.queue = Queue(max_lines_to_log)
         self.lock = threading.Lock()
         self.timeout = timeout
+        self.open_loggers = 2
         log_to_info = partial(self.log_to_queue, logger.info)
         log_to_err = partial(self.log_to_queue, logger.error)
 
@@ -215,7 +216,11 @@ class QueueLogHandler(LogHandler):
     def finished(self):
         """Adds a "finished" sentinel message to the end, exiting the iterator."""
         with self.lock:
-            if self.queue.full():
-                self.queue.get_nowait()
+            # We are observing two streams: stderr, stdout.. We should write out a
+            # close marker once both are finished!
+            self.open_loggers = self.open_loggers - 1
+            if self.open_loggers == 0:
+                if self.queue.full():
+                    self.queue.get_nowait()
 
-            self.queue.put_nowait(QueueLogHandler.__FINISHED_SENTINEL__)
+                self.queue.put_nowait(QueueLogHandler.__FINISHED_SENTINEL__)
