@@ -48,6 +48,9 @@ AEMU_GRPC = (
 SNAPTOOL = (
     AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc" / "python" / "snaptool"
 )
+NETSIM_GRPC = (
+    AOSP_ROOT / "tools" / "netsim" / "testing" / "netsim-grpc"
+)
 HERE = AOSP_ROOT / "external" / "adt-infra" / "pytest" / "test_embedded"
 ADB = ANDROID_SDK_ROOT / "platform-tools" / "adb"
 
@@ -555,7 +558,7 @@ def run_tests(
     verbose = ["-vvv"] if verbose else []
     emulator = str(resolve_emulator(emulator))
 
-    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, HERE])
+    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
     restart_adb()
 
     logdir = Path(logdir) / "embedded_test" / "log"
