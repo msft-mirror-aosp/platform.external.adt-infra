@@ -92,7 +92,7 @@ def test_power_down_sleeps_the_device(adb, on):
 
     def is_asleep():
         return "Asleep" in adb(
-            ["shell", "dumpsys", "power", "|", "grep", "mWakefulness"]
+            ["shell", "dumpsys power | grep mWakefulness"]
         )
 
     power_down(adb)
@@ -107,7 +107,7 @@ def test_wake_up_wakes_the_device(adb, off):
 
     def is_awake():
         return "Awake" in adb(
-            ["shell", "dumpsys", "power", "|", "grep", "mWakefulness"]
+            ["shell", "dumpsys power | grep mWakefulness"]
         )
 
     wake_up(adb)
