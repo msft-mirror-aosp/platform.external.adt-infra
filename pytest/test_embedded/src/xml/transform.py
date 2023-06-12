@@ -30,6 +30,7 @@ def transform(xml, xsl, out):
     xslt = ET.parse(xsl, parser=parser)
     transformer = ET.XSLT(xslt)
     out.write(transformer(dom))
+    out.flush()
 
 
 def launch():

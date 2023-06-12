@@ -98,6 +98,11 @@ def pytest_addoption(parser):
         default=30,
         help="Number of seconds the frame perf test should last.",
     )
+    parser.addoption(
+        "--avd_keep",
+        action="store_true",
+        help="Do not delete the created avds. Useful if you need to debug snapshot related issues.",
+    )
 
 
 ALL_PLATFORMS = set("darwin linux win32".split())
@@ -161,7 +166,8 @@ def pytest_sessionfinish(
         logging.info("Shutting down and removing %s", name)
         emu.disconnect()
         emu.stop()
-        emu.delete()
+        if not session.config.getoption("avd_keep"):
+            emu.delete()
 
 
 def get_crash_reporter(pytestconfig):
