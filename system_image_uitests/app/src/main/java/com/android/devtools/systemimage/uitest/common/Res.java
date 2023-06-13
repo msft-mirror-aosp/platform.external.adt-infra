@@ -59,6 +59,7 @@ public class Res {
             "(com.android.launcher\\d*:id|com.google.android.googlequicksearchbox\\d*:id)"
                     + "/cling_dismiss_longpress_info";
     public static final String ANDROID_MY_LOCATION = "com.google.android.apps.maps:id/qu_mylocation_container";
+    public static final String ANDROID_MY_LOCATION_BUTTON_RES = "com.google.android.apps.maps:id/mylocation_button";
     public static final String ANDROID_PERMISSIONS_MESSAGE = "com.android.permissioncontroller:id/permission_message";
     public static final String ANDROID_PERMISSIONS_BUTTON = "com.android.permissioncontroller:id/permission_allow_button";
     public static final String ANDROID_NOTIFICATION_DRAWER =
@@ -90,8 +91,11 @@ public class Res {
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";
     public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";
     public static final String CAMERA_FILE_THUMBNAIL_RES = "com.android.camera2:id/rounded_thumbnail_view";
+    public static final String PACKAGE_INSTALLER_RES = "com.google.android.packageinstaller";
     public static final String PACKAGE_INSTALL_DONE_RES = "com.android.packageinstaller:id/done_button";
     public static final String PACKAGE_INSTALL_OK_RES = "com.android.packageinstaller:id/ok_button";
+    public static final String PACKAGE_INSTALL_ALLOW_RES = "com.android.packageinstaller:id/permission_allow_button";
+    public static final String PACKAGE_INSTALL_PERMISSION_RES = "com.android.packageinstaller:id/permission_message";
     public static final String DISMISS_TEST_RES = "com.android.systemui:id/dismiss_text";
     public static final String LOCK_SCREEN_ICON_RES = "com.android.systemui:id/lock_icon";
     public static final String NOTIFICATIONS_TILE_PAGE = "com.android.systemui:id/tile_page";
@@ -121,7 +125,6 @@ public class Res {
     public static final String DIALER_PHONE_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/(floating_action_button|fab)";
     public static final String DIALER_PAD_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/dialpad_floating_action_button";
     public static final String DIALER_DIGITS_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/digits";
-
     public static final String DIALER_IN_CALL_RES = "com.google.android.dialer:id/incall_end_call";
     public static final String DIALER_CONTACT_GRID_RES = "com.google.android.dialer:id/contactgrid_contact_name";
     public static final String GOOGLE_SIGN_IN_CONSENT_NEXT_RES = "signinconsentNext";
