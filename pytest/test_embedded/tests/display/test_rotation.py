@@ -78,7 +78,7 @@ def for_each_rotation(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_rotation_observable_through_screenshot(emulator_controller):
+def test_rotation_observable_through_screenshot(emulator_controller, animation_app):
     """Test that setting the rotation, is observable through getting a screenshot."""
 
     def image_rotated_correctly(coarse) -> bool:
@@ -91,7 +91,7 @@ def test_rotation_observable_through_screenshot(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/277819419 flaky on windows.
+# @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/277819419 flaky on windows.
 def test_rotation_observable_through_adbstream(
     avd, at_home, animation_app, emulator_controller
 ):
@@ -102,10 +102,11 @@ def test_rotation_observable_through_adbstream(
 
     def rotation_from_logcat(angle: int, line: str) -> bool:
         """True if we observe the message `Rotation: angle` on the line."""
+        logging.info("Received %s", line)
         m = ROTATION_RE.match(line)
         return m and int(m.group(1)) == angle
 
-    with avd.adb.stream(["logcat", "-s", "aemu"]) as stream:
+    with avd.adb.logcat(tag="aemu") as stream:
         # Wait for the first rotation (should be set to 0).
         assert eventually(
             partial(rotation_from_logcat, 0), stream
@@ -205,12 +206,12 @@ def square_in_quadrant(img: Image) -> int:
     return 4
 
 
-def rotation_through_console_observable_through_screenshot(emulator_controller, adb):
+def rotation_through_console_observable_through_screenshot(emulator_controller, telnet):
     """Verify that rotation through console is observable through screenshot."""
     default = ImageFormat()
     for (_, coarse) in ROTATION_MAPPING:
 
-        adb(["emu", "rotate"])
+        telnet.send("rotate")
         assert eventually(
             lambda: emulator_controller.getScreenshot(default).format.rotation.rotation
             == coarse
@@ -281,7 +282,7 @@ def test_rotation_pixels_in_the_right_place(
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.skip(reason="real bug with adb emu rotate, need to fix it first")
 def test_rotation_through_console_observable_through_physical_model(
-    emulator_controller, adb, at_home
+    emulator_controller, telnet, at_home
 ):
     """Test that rotate through console, is observable through screenshot.
     bug: b/159635109
@@ -294,7 +295,7 @@ def test_rotation_through_console_observable_through_physical_model(
         return rotate.value.data[2] == expected_angle
 
     for (angle, _) in ROTATION_MAPPING:
-        adb(["emu", "rotate"])
+        telnet.send("rotate")
 
         assert eventually(partial(emulator_is_rotated_to, angle))
 
@@ -303,26 +304,26 @@ def test_rotation_through_console_observable_through_physical_model(
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.skip(reason="real bug with adb emu rotate, need to fix it first")
 def test_rotation_through_console_observable_through_screenshot(
-    at_home, emulator_controller, adb
+    at_home, emulator_controller, telnet
 ):
     """Test that rotate through console, is observable through screenshot.
     bug: b/159635109
     """
-    rotation_through_console_observable_through_screenshot(emulator_controller, adb)
+    rotation_through_console_observable_through_screenshot(emulator_controller, telnet)
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.skip(reason="real bug with adb emu rotate, need to fix it first")
 def test_rotation_through_console_observable_through_stream_screenshot(
-    at_home, animation_app, emulator_controller, adb
+    at_home, animation_app, emulator_controller, telnet
 ):
     """Test that rotate through console, is observable through stream screenshot.
 
     bug: b/159635109, b/160171559
     """
     rotation_through_console_observable_through_stream_screenshot(
-        emulator_controller, adb
+        emulator_controller, telnet
     )
 
 
@@ -333,9 +334,9 @@ def test_rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.parametrize("avd", ["-qt-hide-window"], indirect=True)
 @pytest.mark.skipif(platform.processor() == "arm", reason="b/275593138")
 def test_rotation_observable_through_screenshot_embedded_mode(
-    emulator_controller, adb, emulator
+    emulator_controller, telnet, emulator
 ):
-    rotation_through_console_observable_through_screenshot(emulator_controller, adb)
+    rotation_through_console_observable_through_screenshot(emulator_controller, telnet)
     # Stop the emulator, this makes sure emulator ends up in a known state after the test.
     emulator.stop()
     assert not emulator.is_alive()
@@ -348,10 +349,10 @@ def test_rotation_observable_through_screenshot_embedded_mode(
 @pytest.mark.skip(reason="real bug with adb emu rotate, need to fix it first")
 @pytest.mark.parametrize("avd", ["-qt-hide-window"], indirect=True)
 def test_rotation_observable_through_stream_screenshot_embedded_mode(
-    emulator_controller, adb, emulator
+    emulator_controller, telnet, emulator
 ):
     rotation_through_console_observable_through_stream_screenshot(
-        emulator_controller, adb
+        emulator_controller, telnet
     )
     # Stop the emulator, this makes sure emulator ends up in a known state after the test.
     emulator.stop()
