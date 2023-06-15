@@ -24,7 +24,7 @@ import time
 from datetime import timedelta
 from pathlib import Path
 from timeit import default_timer as timer
-from typing import Optional
+from typing import Optional, List
 
 from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
@@ -36,7 +36,7 @@ from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
 from emu.logging.log_handler import QueueLogHandler
 from emu.process.command import Command
-from emu.timing import wait_for_event, wait_until
+from emu.timing import wait_until
 from emu.utils import LogObserver
 
 
@@ -269,16 +269,18 @@ class DebugEmulator(BaseEmulator):
         self._discover(None)
         self.logger = logging.getLogger(self.description.get("avd.id"))
 
-    def launch(self, flags: [str] = []) -> bool:
+    def launch(self, flags: List[str] = []) -> bool:
         self.logger.info("Debug emulators cannot be launched.")
         return True
+
+    def restart(self, emu_flags: List[str]) -> bool:
+        return self.launch(emu_flags)
 
     def stop(self) -> None:
         self.disconnect()
 
 
 class Emulator(BaseEmulator):
-
     DEFAULT_CONFIG = {
         "api": "31",
         "tag.id": "google_apis",
@@ -309,6 +311,29 @@ class Emulator(BaseEmulator):
         self.exe = Path(exe)
         self.proc = None
         self.kernel_start = 0
+
+    def restart(self, emu_flags: List[str]) -> bool:
+        """Restarts the emulator, disabling snapshot save if a default snapshot exists.
+
+        Args:
+            emu_flags: The emulator flags to use, if any.
+
+        Returns:
+            True if the emulator has launched.
+        """
+        if self.is_alive():
+            self.stop()
+
+        assert not self.is_alive()
+
+        mysnapshottexture = Path(
+            self.configuration.directory, "snapshots", "default_boot", "textures.bin"
+        )
+
+        if mysnapshottexture.exists():
+            emu_flags.append("-no-snapshot-save")
+
+        return self.launch(flags=emu_flags)
 
     def _default_abi(self) -> str:
         """Returns the abi that is natively supported by this machine.
@@ -352,29 +377,29 @@ class Emulator(BaseEmulator):
         self._discover(self.configuration.name)
         return self.is_alive()
 
-    """
-    Finds the first 2 available ports next to each other. This can be used to find
-    two adjecent ports that can be used by the emulator to act as a console and adb
-    port.
-
-    For example, if the function is called with the arguments `port=5554` and
-    `max_port=30`, it will first check if port 5554 and 5555 are available. If they are,
-    it will return 5554. If it is not, it will check if port 5556 and 5557 is available.
-    If it is, it will return 5556. This process will continue until the function finds
-    two available ports or it reaches the `max_port` number.
-
-    Args:
-        port (int, optional): The starting port number to check. Defaults to 5554.
-        max_port (int, optional): The maximum number of ports to check. Defaults to 30.
-
-    Raises:
-        IOError: If no free ports are found.
-
-    Returns:
-        int: The first free port number found.
-    """
 
     def _get_free_port(self, port=5554, max_port=30):
+        """
+        Finds the first 2 available ports next to each other. This can be used to find
+        two adjecent ports that can be used by the emulator to act as a console and adb
+        port.
+
+        For example, if the function is called with the arguments `port=5554` and
+        `max_port=30`, it will first check if port 5554 and 5555 are available. If they are,
+        it will return 5554. If it is not, it will check if port 5556 and 5557 is available.
+        If it is, it will return 5556. This process will continue until the function finds
+        two available ports or it reaches the `max_port` number.
+
+        Args:
+            port (int, optional): The starting port number to check. Defaults to 5554.
+            max_port (int, optional): The maximum number of ports to check. Defaults to 30.
+
+        Raises:
+            IOError: If no free ports are found.
+
+        Returns:
+            int: The first free port number found.
+        """
         max_attempt = port + max_port
         while port <= max_attempt:
             try:

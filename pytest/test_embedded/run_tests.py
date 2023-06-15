@@ -23,10 +23,12 @@ import tempfile
 from pathlib import Path
 from queue import Queue
 from threading import Thread
+from typing import Dict, List
 from zipfile import ZipFile, ZipInfo
 
 # Note we are not part of the package!
 from src.emu.crashreporter import CrashReporter
+from src.emu.logging.log_handler import configure_logging
 
 OS_NAME = platform.system().lower()
 EMU_TEST_DIR = Path(os.path.dirname(__file__)).absolute()
@@ -48,6 +50,7 @@ AEMU_GRPC = (
 SNAPTOOL = (
     AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc" / "python" / "snaptool"
 )
+NETSIM_GRPC = AOSP_ROOT / "tools" / "netsim" / "testing" / "netsim-grpc"
 HERE = AOSP_ROOT / "external" / "adt-infra" / "pytest" / "test_embedded"
 ADB = ANDROID_SDK_ROOT / "platform-tools" / "adb"
 
@@ -75,6 +78,14 @@ class NoTestResultsProduced(Exception):
     pass
 
 
+class CommandFailure(Exception):
+    pass
+
+
+class UnitTestFailure(Exception):
+    pass
+
+
 class ZipFileWithAttr(ZipFile):
     """Python does not set the file attributes properly."""
 
@@ -88,6 +99,14 @@ class ZipFileWithAttr(ZipFile):
         if attr != 0:
             os.chmod(targetpath, attr)
         return targetpath
+
+
+class AdbServer:
+    def __enter__(self):
+        run([ADB, "start-server"], timeout=60)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        run([ADB, "kill-server"], timeout=60)
 
 
 def _reader(pipe, logfn):
@@ -107,10 +126,8 @@ def _log_proc(proc):
     for args in [[proc.stdout, logging.info], [proc.stderr, logging.error]]:
         Thread(target=_reader, args=args).start()
 
-    return q
 
-
-def run(cmd, cwd=None, extra_env=None, timeout=1200):
+def run(cmd, cwd=None, extra_env=None, timeout=1200, check_output=True):
     """Runs a command in the shell. It takes in a command to execute,
     a working directory where the command will be executed,
     environment variables and a timeout value.
@@ -124,6 +141,10 @@ def run(cmd, cwd=None, extra_env=None, timeout=1200):
                 will be added to the environment before running the command.
         timeout (int, optional): The maximum time (in seconds) to wait for the command
                 to finish before it is terminated. Defaults to 1200.
+        check_output (bool): True if an exception should be raised of the return code != 0
+
+    Returns:
+        exitcode
 
     Raises:
         Exception: Raises an exception if the command fails to execute.
@@ -161,26 +182,20 @@ def run(cmd, cwd=None, extra_env=None, timeout=1200):
     _log_proc(proc)
     try:
         proc.wait(timeout=timeout)
-        if proc.returncode != 0:
-            raise Exception("Failed to run %s - %s" % (" ".join(cmd), proc.returncode))
-    except subprocess.TimeoutExpired as te:
+        if proc.returncode != 0 and check_output:
+            raise CommandFailure(
+                f"Failed to run {' '.join(cmd)}, exit code: {proc.returncode}"
+            )
+        else:
+            return proc.returncode
+    except subprocess.TimeoutExpired as timeout_exception:
         logging.error(
             "The command %s timed out after %s seconds, terminating",
             " ".join(cmd),
-            te.timeout,
+            timeout_exception.timeout,
         )
         proc.terminate()
-
-
-def stop_adb():
-    """Stops adb by calling kill-server"""
-    run([ADB, "kill-server"], timeout=60)
-
-
-def restart_adb():
-    """Restarts adb, by stopping the server and restarting it."""
-    stop_adb()
-    run([ADB, "start-server"], timeout=60)
+        raise timeout_exception
 
 
 def resolve_emulator(emulator: str) -> Path:
@@ -374,24 +389,35 @@ class PyRunner:
         self.run(["-m", "pip", "install", "--upgrade"] + packages)
 
     def run(
-        self, args: [str], env: dict[str, str] = {}, timeout: int = 300, cwd=os.getcwd()
-    ):
-        """This method runs a Python command with the specified arguments, environment variables, and timeout.
+        self,
+        args: List[str],
+        env: Dict[str, str] = {},
+        timeout: int = 300,
+        cwd: str = os.getcwd(),
+        check_output: bool = True,
+    ) -> int:
+        """Runs a Python command with the specified arguments, environment variables, and timeout.
 
         Args:
-            args ([str]): Set of arguments to give to python interpreter
-            env (dict[str, str]): Optional environment to use
-            timeout (int): Optional timeout in seconds to use.
+            args (List[str]): Set of arguments to give to the Python interpreter.
+            env (Dict[str, str]): Optional environment variables to use.
+            timeout (int): Optional timeout in seconds to apply to the command execution.
+            cwd (str): The working directory to use for the command execution.
+            check_output (bool): Set to True if a non-zero exit code should raise an exception.
+
+        Returns:
+            int: The exit code of the process.
         """
         emu_env = self.env.copy()
         emu_env.update(env)
         if env:
             logging.info("Using %s from %s", emu_env, self.env)
-        run(
+        return run(
             [self.py_exe] + args,
             timeout=timeout,
             extra_env=emu_env,
             cwd=cwd,
+            check_output=check_output,
         )
 
 
@@ -555,70 +581,83 @@ def run_tests(
     verbose = ["-vvv"] if verbose else []
     emulator = str(resolve_emulator(emulator))
 
-    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, HERE])
-    restart_adb()
+    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
 
     logdir = Path(logdir) / "embedded_test" / "log"
     logdir.mkdir(exist_ok=True, parents=True)
     with tempfile.TemporaryDirectory() as tmpdir:
         junit_test_results = Path(tmpdir) / "test_unit.xml"
-        try:
-            pyrun.run(
-                [
-                    "-m",
-                    "pytest",
-                    "-vv",
-                    f"--junitxml={junit_test_results}",
-                    # Boot times in windows can be >6 mins, and we are booting several times!
-                    # We will give us at most 45 minutes.
-                    "--timeout=2700",
-                    f"--log-file={logdir}/pytest.log",
-                    f"--emulator={emulator}",
-                    f"--symbols={symbol_path}",
-                    f"--android_avd_home={tmpdir}",
-                    f"--android_home={ANDROID_SDK_ROOT}",
-                ],
-                cwd=HERE,
-                env={
-                    "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
-                    "ANDROID_AVD_HOME": str(tmpdir),
-                    "PYTEST_ADDOPTS" : os.getenv('PYTEST_ADDOPTS')
-                                          if os.getenv('PYTEST_ADDOPTS') else " -m 'not perf'"
-                },
-                timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
+
+        exit_code = pyrun.run(
+            [
+                "-m",
+                "pytest",
+                "-vv",
+                "-x" if use_exceptions else "",
+                f"--junitxml={junit_test_results}",
+                # Boot times in windows can be >6 mins, and we are booting several times!
+                # We will give us at most 45 minutes.
+                "--timeout=2700",
+                f"--log-file={logdir}/pytest.log",
+                f"--emulator={emulator}",
+                f"--symbols={symbol_path}",
+                f"--android_avd_home={tmpdir}",
+                f"--android_home={ANDROID_SDK_ROOT}",
+            ],
+            cwd=HERE,
+            env={
+                "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
+                "ANDROID_AVD_HOME": str(tmpdir),
+                "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS")
+                if os.getenv("PYTEST_ADDOPTS")
+                else " -m 'not perf'",
+            },
+            timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
+            check_output=False,
+        )
+
+        # Let's see if we can collect crash reports..
+        collect_crash_reports(emulator, symbol_path, logdir)
+
+        # Forcefully terminate all emulator processess
+        pyrun.run(["-m", "emu.process.kill_emulator"], check_output=False)
+
+        if not junit_test_results.exists():
+            raise NoTestResultsProduced(
+                f"We expected a junit report in {junit_test_results}."
             )
-        except:
-            # Forward any exceptions in case we did not produce an
-            # junit result.
-            if use_exceptions or not junit_test_results.exists():
-                raise
-        finally:
-            # Let's see if we can collect crash reports..
-            collect_crash_reports(emulator, symbol_path, logdir)
 
-            # Forcefully terminate all emulator processess
-            pyrun.run(["-m", "emu.process.kill_emulator"])
+        apply_xslt(
+            python_exe=pyrun,
+            source=junit_test_results,
+            xslt=HERE / "cfg" / "liftSystemOut.xslt",
+            dest=Path(logdir) / "test_embedded_test.xml",
+        )
+        apply_xslt(
+            python_exe=pyrun,
+            source=junit_test_results,
+            xslt=HERE / "cfg" / "asHtml.xslt",
+            dest=Path(logdir) / "test_report.html",
+        )
 
-            if not junit_test_results.exists():
-                raise NoTestResultsProduced(
-                    f"We expected a junit report in {junit_test_results}."
-                )
-            else:
-                apply_xslt(
-                    python_exe=pyrun,
-                    source=junit_test_results,
-                    xslt=HERE / "cfg" / "liftSystemOut.xslt",
-                    dest=Path(logdir) / "test_embedded_test.xml",
-                )
-                apply_xslt(
-                    python_exe=pyrun,
-                    source=junit_test_results,
-                    xslt=HERE / "cfg" / "asHtml.xslt",
-                    dest=Path(logdir) / "test_report.html",
-                )
+        # Let's exit with a message that contains the first failure
+        # This way we can have it show up as part of the snippet we display
+        # on our build bots
+        # See https://docs.pytest.org/en/7.1.x/reference/exit-codes.html for
+        # the status codes.
+        if exit_code == 1:
+            failure_file = Path(logdir) / "fail.txt"
+            apply_xslt(
+                python_exe=pyrun,
+                source=junit_test_results,
+                xslt=HERE / "cfg" / "asFirstFailureText.xslt",
+                dest=failure_file,
+            )
+            with open(failure_file, "r", encoding="utf-8") as failure:
+                raise UnitTestFailure(failure.read())
 
 
-def main():
+def parse_arguments():
     parser = argparse.ArgumentParser(
         usage="A simple test launcher for the emulator e2e tests.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -639,14 +678,6 @@ def main():
         help="The directory where the emulator distributions can be found. "
         + "On the buildbots this is usually out/prebuilt_cached/builds. "
         + "Cannot be used in combination with the --emulator flag",
-    )
-
-    parser.add_argument(
-        "-s",
-        "--session_dir",
-        dest="unused",
-        help="** DEPRECATED **. Use --build_dir or --emulator in combination "
-        + "with --logdir. This parameter will be removed soon.",
     )
 
     parser.add_argument(
@@ -700,13 +731,14 @@ def main():
     )
 
     args = parser.parse_args()
-
-    lvl = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(format="%(asctime)s %(message)s", datefmt="%H:%M:%S", level=lvl)
-
+    configure_logging(logging.DEBUG if args.verbose else logging.INFO)
     if args.build_dir and args.emulator:
-        raise Exception("Use either --build_dir or --emulator not both.")
+        raise ValueError("Use either --build_dir or --emulator not both.")
 
+    return args
+
+
+def main(args):
     if args.generate:
         repo = "http://localhost:3141/packages/stable"
     else:
@@ -741,13 +773,16 @@ def main():
 
 
 if __name__ == "__main__":
+    args = parse_arguments()
     try:
-        main()
+        with AdbServer():
+            main(args)
     except KeyboardInterrupt:
         logging.critical("Terminated by user")
         sys.exit(1)
     except Exception as exc:
-        logging.critical("Failure during execution", exc_info=exc)
+        if args.verbose:
+            logging.error("Failure during execution", exc_info=exc)
+        else:
+            logging.error("Failure during execution: %s", str(exc))
         sys.exit(1)
-    finally:
-        stop_adb()

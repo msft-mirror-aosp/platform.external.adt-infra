@@ -28,7 +28,6 @@ import logging
 import os
 import platform
 import time
-import shutil
 import sys
 from pathlib import Path
 import pytest
@@ -42,7 +41,6 @@ from emu.apk import APP_DEBUG_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.crashreporter import CrashReporter
 from emu.utils import system_cpu
-from tests.test_utils import wait_for_regex
 
 
 OS_NAME = platform.system().lower()
@@ -99,6 +97,11 @@ def pytest_addoption(parser):
         type=int,
         default=30,
         help="Number of seconds the frame perf test should last.",
+    )
+    parser.addoption(
+        "--avd_keep",
+        action="store_true",
+        help="Do not delete the created avds. Useful if you need to debug snapshot related issues.",
     )
 
 
@@ -163,7 +166,8 @@ def pytest_sessionfinish(
         logging.info("Shutting down and removing %s", name)
         emu.disconnect()
         emu.stop()
-        emu.delete()
+        if not session.config.getoption("avd_keep"):
+            emu.delete()
 
 
 def get_crash_reporter(pytestconfig):
@@ -266,26 +270,20 @@ def emulator(request, pytestconfig) -> BaseEmulator:
     }
     avd_user_config = getattr(request.module, "avd_config", {})
     avd_config.update(avd_user_config)
-    name = "{}_{}_{}".format(avd_config["api"], avd_config["tag.id"], avd_config["cpu"])
+    name = f"{avd_config['api']}_{avd_config['tag.id']}_{avd_config['cpu']}"
 
     if name not in pytest.emulators:
-        logging.info("Launching %s", name)
-        if pytestconfig.getoption("debug_emulator"):
+        if pytestconfig.getoption("debug_emulator") or not pytestconfig.getoption(
+            "emulator"
+        ):
             emu = DebugEmulator(
                 android_home=Path(pytestconfig.getoption("android_home")),
                 android_avd_home=Path(pytestconfig.getoption("android_avd_home")),
                 logfile=pytestconfig.getoption("debug_emulator_log"),
             )
         else:
-            exe = pytestconfig.getoption("emulator")
-            if exe is None:
-                logging.warning(
-                    "--emulator not flag present, trying default build directory."
-                )
-                exe = shutil.which(
-                    "emulator", path=AOSP_ROOT / "external" / "qemu" / "objs"
-                )
-
+            logging.info("Launching %s", name)
+            exe = Path(pytestconfig.getoption("emulator"))
             emu = Emulator(
                 android_home=Path(pytestconfig.getoption("android_home")),
                 android_avd_home=Path(pytestconfig.getoption("android_avd_home")),
@@ -304,35 +302,27 @@ def emulator(request, pytestconfig) -> BaseEmulator:
 def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
-    An emulator gets 600 seconds to boot up, and has the module scope. Once all tests
-    in the module have completed the emulator will stop.
+    Note that the following holds:
 
+    - This fixture has module scope, meaning an emulator will be launched only once
+      per package
+
+    - The emulator will be (re-)started if needed.
+
+    - You can provide the "param" property on the request to provide additional
+      flags to the emulator during re-start.
 
     Args:
         emulator (BaseEmulator): Test fixture that provides the configured emulator.
         request: Provide information on the executing test function.
 
     Returns:
-        BaseEmulator: A successfully booted emulator.
+        BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
-
-    assert emulator
-    emu_flags = []
     if hasattr(request, "param"):
-        emu_flags = [request.param]
-        # Stop the running emulator, this makes sure the emulator can be launched with correct flags.
-        #
-    if emulator.is_alive():
-        emulator.stop()
-        assert not emulator.is_alive()
-    mysnapshottexture = Path(
-        emulator.configuration.directory, "snapshots", "default_boot", "textures.bin"
-    )
-    if os.path.exists(mysnapshottexture):
-        emu_flags.append("-no-snapshot-save")
-
-    if not emulator.is_alive():
-        emulator.launch(flags=emu_flags)
+        emulator.restart([request.param])
+    else:
+        emulator.restart([])
 
     # Make sure the emulator is booted in at least 10 minutes.
     # (Note, boot times can be *REALLY* slow on windows gce..)
@@ -341,10 +331,10 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     emulator.adb.run(["disconnect"])
     emulator.adb.run(["wait-for-device"], timeout=30)
     emulator.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
-    count = 0;
+    count = 0
     app_install_success = False
     while count < 30:
-        time.sleep(1);
+        time.sleep(1)
         count += 1
         allapks = emulator.adb.run(["shell", "pm", "list", "packages"])
         logging.info("all apks %s", allapks)
@@ -373,10 +363,9 @@ def go_home(avd: BaseEmulator):
         assert(...)
     """
     assert avd.is_alive()
-
-    stub = avd.description.get_emulator_controller()
     avd.adb.run(["disconnect"])
     avd.adb.run(["wait-for-device"])
+    stub = avd.description.get_emulator_controller()
     stub.sendKey(KeyboardEvent(key="WakeUp", eventType=KeyboardEvent.keypress))
     stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
     stub.setPhysicalModel(
@@ -446,10 +435,10 @@ def launch_animiation_app(avd: BaseEmulator):
 
     avd.adb.run(["disconnect"])
     avd.adb.run(["wait-for-device"])
-    count = 0;
+    count = 0
     app_launch_success = False
     while count < 30:
-        time.sleep(1);
+        time.sleep(1)
         count += 1
         avd.adb.run(
             [
@@ -524,7 +513,6 @@ def animation_app(avd: BaseEmulator):
     """
     assert avd.is_alive()
 
-    avd.adb.run(["disconnect"])
     tries = 3
     while not launch_animiation_app(avd) and tries > 0:
         time.sleep(1)
@@ -551,7 +539,6 @@ def coldboot_animation_app(avd: BaseEmulator):
     # and this extra seconds seems reasonable
     time.sleep(10)
 
-    avd.adb.run(["disconnect"])
     tries = 3
     while not launch_animiation_app(avd) and tries > 0:
         time.sleep(1)

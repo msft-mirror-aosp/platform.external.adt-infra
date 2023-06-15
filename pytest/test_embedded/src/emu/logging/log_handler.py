@@ -13,9 +13,40 @@
 # limitations under the License.
 import logging
 import subprocess
+import sys
 import threading
-from queue import Queue, Empty
 from functools import partial
+from queue import Empty, Queue
+
+
+class LogBelowLevel(logging.Filter):
+    """A logging filter that only logs a line if it is below the given level."""
+
+    def __init__(self, exclusive_maximum, name=""):
+        super(LogBelowLevel, self).__init__(name)
+        self.max_level = exclusive_maximum
+
+    def filter(self, record):
+        return True if record.levelno < self.max_level else False
+
+
+def configure_logging(logging_level):
+    """Configures the logging system to log at the given level
+
+    Args:
+        logging_level (_type_): A logging level, or number.
+    """
+    logging_handler_out = logging.StreamHandler(sys.stdout)
+    logging_handler_out.setLevel(logging.DEBUG)
+    logging_handler_out.addFilter(LogBelowLevel(logging.WARNING))
+
+    logging_handler_err = logging.StreamHandler(sys.stderr)
+    logging_handler_err.setLevel(logging.WARNING)
+
+    logging.root = logging.getLogger("root")
+    logging.root.setLevel(logging_level)
+    logging.root.addHandler(logging_handler_out)
+    logging.root.addHandler(logging_handler_err)
 
 
 class LogHandler:

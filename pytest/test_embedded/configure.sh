@@ -84,6 +84,7 @@ AOSP_DIR=$(
 HERE=$AOSP_DIR/external/adt-infra/pytest/test_embedded
 AEMU_GRPC=$AOSP_DIR/external/qemu/android/android-grpc/python/aemu-grpc/
 SNAPTOOL=$AOSP_DIR/external/qemu/android/android-grpc/python/snaptool/
+NETSIM_GRPC=$AOSP_DIR/tools/netsim/testing/netsim-grpc/
 PYTHON=$(aosp_find_python)
 PY_VER=$($PYTHON --version)
 
@@ -120,7 +121,7 @@ setup_virtual_env() {
     cat $HERE/cfg/pip.conf | sed "s,REPO_DIR,$WHEEL_DIR,g" >$VIRTUAL_ENV_DEST/pip.conf
     cp $HERE/cfg/pypirc $VIRTUAL_ENV_DEST/pypirc
     pip install --upgrade pip wheel setuptools
-    pip install wheel $AEMU_GRPC $SNAPTOOL
+    pip install wheel $AEMU_GRPC $SNAPTOOL $NETSIM_GRPC
 }
 echo "Make sure you have the devpi server up and running!"
 

@@ -362,7 +362,7 @@ public class SettingsUtil {
 
     /**
      * Enable or disable permissions settings for a given application type
-     * For API >= 26
+     * For API >= 28
      *
      * @param instrumentation   see {@link android.test.InstrumentationTestCase#getInstrumentation()
      *                          getInstrumentation}
@@ -370,45 +370,49 @@ public class SettingsUtil {
      *                          screen.
      * @param appName           String describing the application name, as listed on the {appType}
      *                          permissions screen.
-     * @param enablePermissions boolean indicating whether the permissions should be enabled
-     *                          or disabled.
+     * @param denyButtonLabel   String describing the text label on the deny permissions button.
+     *
+     * @param appsLocation      String describing the location of Settings -> Apps & notifications.
+     *
+     * @param permissionText
+     *
      * @throws Exception if it fails to find a UI object.
      */
     public static void setAppPermissions_v2(
-            Instrumentation instrumentation, String appType,
-            String appName, boolean enablePermissions,
-            String denyButtonText, String appText,
+            Instrumentation instrumentation, String appType, String appName,
+            String denyButtonLabel, String appsLocation,
             String permissionText)
             throws Exception {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        getAppPermissions_v2(instrumentation, appType, appText, permissionText);
+        getAppPermissions_v2(instrumentation, appType, appsLocation, permissionText);
 
         device.findObject(new UiSelector().text(appType)).click();
 
-        UiScrollable locationPermissions = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_CONTENT_RES));
-        locationPermissions.getChildByText(new UiSelector().className("android.widget.TextView"), appName);
+        UiObject permissions = device.findObject(
+                new UiSelector().resourceId(Res.ANDROID_TITLE_RES).text("Permissions"));
 
-        UiScrollable permissionList = new UiScrollable(new UiSelector().resourceIdMatches(Res.ANDROID_LIST_RES));
+        if (permissions.waitForExists(3000L)) {
+            permissions.clickAndWaitForNewWindow();
+        }
+        UiScrollable permissionList = new UiScrollable(new UiSelector().
+                resourceId(Res.ANDROID_LIST_RES).
+                packageName(Res.PACKAGE_INSTALLER_RES));
 
-        UiObject permissionsBtn =
-                SettingsUtil.findObjectByRelative(permissionList, appName, LinearLayout.class.getName());
+        UiObject appPermission = device.findObject(
+                new UiSelector().text(appName).resourceId(Res.ANDROID_TITLE_RES));
+        if (permissionList.waitForExists(3000L)) {
+            assertTrue("Could not find " + appPermission + " in permissions list",
+                    permissionList.scrollIntoView(appPermission));
+        }
+        appPermission.clickAndWaitForNewWindow();
 
-        if (!permissionsBtn.isChecked() && enablePermissions) {
-            permissionsBtn.click();
-        } else if ((permissionsBtn.isChecked() && !enablePermissions)) {
-            permissionsBtn.click();
-            final UiObject denyButton = device.findObject(new UiSelector().text(denyButtonText));
+        UiObject permissionsButton = device.findObject(
+                new UiSelector().text(denyButtonLabel));
 
-            try {
-                boolean dialogLaunched = new Wait().until(denyButton::exists);
-                if (dialogLaunched) {
-                    denyButton.click();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (permissionsButton.waitForExists(3000L)) {
+            permissionsButton.clickAndWaitForNewWindow();
         }
     }
 
@@ -472,30 +476,6 @@ public class SettingsUtil {
                     e.printStackTrace();
                 }
             }
-        } else {
-            UiObject permissions = device.findObject(
-                    new UiSelector().resourceId(Res.ANDROID_TITLE_RES).text("Permissions"));
-            if (permissions.waitForExists(3000L)) {
-                permissions.clickAndWaitForNewWindow();
-            }
-            UiScrollable permissionList = new UiScrollable(new UiSelector().
-                    resourceId(Res.PERMISSION_CONTENT_FRAME));
-
-            UiObject location = device.findObject(
-                    new UiSelector().text("Location"));
-            assertTrue("Could not find location in permissions list",
-                    permissionList.scrollIntoView(location));
-            location.clickAndWaitForNewWindow();
-
-            UiObject permissionsButton = device.findObject(
-                    new UiSelector().resourceId(enablePermissions
-                            ? Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON :
-                            Res.DENY_PERMISSION_BUTTON));
-
-            if (permissionsButton.waitForExists(3000L)) {
-                permissionsButton.clickAndWaitForNewWindow();
-            }
-
         }
     }
 

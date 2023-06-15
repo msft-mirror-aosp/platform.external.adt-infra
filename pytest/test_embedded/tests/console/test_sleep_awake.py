@@ -84,30 +84,30 @@ def off(adb):
     power_down(adb)
 
 
-@pytest.mark.e2e
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 def test_power_down_sleeps_the_device(adb, on):
     """Test case to verify that sending the power-down command to an awake device will put the device to sleep."""
 
     def is_asleep():
         return "Asleep" in adb(
-            ["shell", "dumpsys", "power", "|", "grep", "mWakefulness"]
+            ["shell", "dumpsys power | grep mWakefulness"]
         )
 
     power_down(adb)
     assert eventually(is_asleep)
 
 
-@pytest.mark.e2e
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 def test_wake_up_wakes_the_device(adb, off):
     """Test case to verify that sending the wake-up command to a sleeping device will wake the device."""
 
     def is_awake():
         return "Awake" in adb(
-            ["shell", "dumpsys", "power", "|", "grep", "mWakefulness"]
+            ["shell", "dumpsys power | grep mWakefulness"]
         )
 
     wake_up(adb)
@@ -117,6 +117,7 @@ def test_wake_up_wakes_the_device(adb, off):
 @pytest.mark.e2e
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 def test_power_down_turns_off_the_screen(emulator_controller, off):
     """Test case to verify that a powered-down device has a black screen.
 
