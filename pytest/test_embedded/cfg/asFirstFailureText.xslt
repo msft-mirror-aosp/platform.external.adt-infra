@@ -6,11 +6,13 @@
 <xsl:apply-templates select="(//error)[1]"/>
 </xsl:template>
 <xsl:template match="//failure">
-TEST FAILED:  <xsl:value-of select="../@classname"/><xsl:value-of select="../@name"/>
+-- TEST FAILED:  <xsl:value-of select="../@classname"/><xsl:value-of select="../@name"/> --
+<xsl:text>&#10;</xsl:text>
 <xsl:value-of select="."  disable-output-escaping="yes" />
 </xsl:template>
  <xsl:template match="//error">
-TEST ERROR: <xsl:value-of select="../@classname"/><xsl:value-of select="../@name"/>
+-- TEST ERROR: <xsl:value-of select="../@classname"/><xsl:value-of select="../@name"/> --
+<xsl:text>&#10;</xsl:text>
 <xsl:value-of select="."  disable-output-escaping="yes" />
 </xsl:template>
 </xsl:stylesheet>
