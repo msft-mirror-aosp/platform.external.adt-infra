@@ -16,22 +16,24 @@ from emu.apk import APP_DEBUG_APK
 # On X64 this will resolve to: system-images;android-33;google_apis;x86_64
 # avd_config = {"api": "33", "tag.id": "google_apis"}
 
+
 def has_network(adb):
-    """ check whether it has network or not
-        adb shell ifconfig, it shouls have both eth0 and wlan0
+    """check whether it has network or not
+    adb shell ifconfig, it shouls have both eth0 and wlan0
     """
     radio_wifi = False
-    result = adb.run(["shell", "ifconfig"])
+    result = adb.shell("ifconfig")
     if "eth0" in result and "wlan0" in result:
         logging.info("success result %s", result)
         radio_wifi = True
     return radio_wifi
 
+
 def check_cpu_usage_less_than_threshold(emulator):
     proc_emu = psutil.Process(emulator.description.pid())
-    cpu_usage = proc_emu.cpu_percent(interval = 2)
+    cpu_usage = proc_emu.cpu_percent(interval=2)
     logging.info("emulator usage is %d", cpu_usage)
-    if (cpu_usage <= 25):
+    if cpu_usage <= 25:
         return True
     return False
 
@@ -43,7 +45,7 @@ def shutdown(emulator):
     # the multiinstnace.lock failure, hopefully, especially on gcp windows
     if platform.system() == "Windows":
         time.sleep(30)
-    count = 0;
+    count = 0
     while count < 60:
         time.sleep(1)
         count += 1
@@ -52,6 +54,7 @@ def shutdown(emulator):
     if emulator.is_alive():
         emulator.stop(timeout=60)
     assert not emulator.is_alive()
+
 
 @pytest.mark.boot
 @pytest.mark.e2e
@@ -62,11 +65,11 @@ def test_first_time_booted(emulator):
 
     emulator.stop()
     logging.info("Launching emulator ...")
-    myflags=["-wipe-data", "-no-snapshot-load"]
+    myflags = ["-wipe-data", "-no-snapshot-load"]
     if platform.processor() == "i386" and platform.system() == "Darwin":
         myflags.append("-no-window")
 
-    assert emulator.launch(flags = myflags)
+    assert emulator.launch(flags=myflags)
 
     logging.info("Wating for it to boot up ...")
     assert emulator.wait_for_boot(timeout=1080)
@@ -81,32 +84,24 @@ def test_first_time_booted(emulator):
             break
         logging.info("radio or wifi not ready yet")
 
-    count = 0;
-    while count < 30:
-        time.sleep(1);
-        count += 1
-        emulator.install_apk(APP_DEBUG_APK.absolute())
-        allapks = emulator.adb.run(["shell", "pm", "list", "packages"])
-        logging.info("all apks %s", allapks)
-        if "com.google.AnimateBox" in allapks:
-            logging.info("installed animation app")
-            break
+    assert emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
 
     logging.info("Shutting it down ...")
     shutdown(emulator)
     logging.info("emulator is shut down successfully")
 
 
-def check_boot_from_snapshot(avdpath)->bool :
-  mypath = Path(avdpath, "snapshot.trace")
-  with open(mypath) as fp:
-      for line in fp:
-          line.rstrip()
-          logging.info("reading line '%s'", line)
-          if "load_succeeded" in line:
-              return True
+def check_boot_from_snapshot(avdpath) -> bool:
+    mypath = Path(avdpath, "snapshot.trace")
+    with open(mypath) as fp:
+        for line in fp:
+            line.rstrip()
+            logging.info("reading line '%s'", line)
+            if "load_succeeded" in line:
+                return True
 
-  return False
+    return False
+
 
 @pytest.mark.boot
 @pytest.mark.e2e
@@ -120,17 +115,17 @@ def test_snapshot_booted(emulator):
 
     emulator.stop()
     logging.info("Launching emulator ...")
-    myflags=["-no-snapshot-save"]
+    myflags = ["-no-snapshot-save"]
     if platform.system() == "Windows":
         myflags.append("-read-only")
 
-    assert emulator.launch(flags = myflags)
+    assert emulator.launch(flags=myflags)
 
     mytimeout = 45
     if platform.processor() == "i386" and platform.system() == "Darwin":
         mytimeout = 360
     logging.info("Wating for it to boot up from snapshot ...")
-    assert emulator.wait_for_boot(timeout = mytimeout)
+    assert emulator.wait_for_boot(timeout=mytimeout)
     logging.info("Wating for it to stablize ...")
     count = 0
     while count < 10:
@@ -144,29 +139,27 @@ def test_snapshot_booted(emulator):
     shutdown(emulator)
     logging.info("emulator is shut down successfully")
 
+
 @pytest.mark.boot
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=600, func_only=True)
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="will turn on later"
-)
+@pytest.mark.skipif(sys.platform == "win32", reason="will turn on later")
 def test_emulator_should_idle(emulator):
     """check emulator use less than 25% single cpu when idle."""
 
-
     emulator.stop()
     logging.info("Launching emulator ...")
-    myflags=["-no-snapshot-save"]
+    myflags = ["-no-snapshot-save"]
     if platform.system() == "Windows":
         myflags.append("-read-only")
 
-    assert emulator.launch(flags = myflags)
+    assert emulator.launch(flags=myflags)
 
     mytimeout = 45
     if platform.processor() == "i386" and platform.system() == "Darwin":
         mytimeout = 360
     logging.info("Wating for it to boot up from snapshot ...")
-    assert emulator.wait_for_boot(timeout = mytimeout)
+    assert emulator.wait_for_boot(timeout=mytimeout)
     logging.info("Wating for it to stablize ...")
     count = 0
     while count < 100:

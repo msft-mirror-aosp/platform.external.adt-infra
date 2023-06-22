@@ -23,12 +23,12 @@ _EMPTY_ = empty_pb2.Empty()
 
 
 @pytest.fixture
-def no_displays(emulator_controller, adb):
+def no_displays(emulator_controller, adb_shell):
     """Fixture to make sure the emulator has no multi displays configured.
 
     Use this if you want to make sure the emulator has no secondary displays
     """
-    adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
+    adb_shell("input keyevent KEYCODE_WAKEUP")
     emulator_controller.setDisplayConfigurations(DisplayConfigurations(displays=[]))
     yield
     emulator_controller.setDisplayConfigurations(DisplayConfigurations(displays=[]))

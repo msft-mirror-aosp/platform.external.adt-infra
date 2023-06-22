@@ -18,25 +18,29 @@ import random
 import re
 import shutil
 import socket
-import subprocess
 import sys
 import time
-from datetime import timedelta
+import subprocess
 from pathlib import Path
-from timeit import default_timer as timer
 from typing import Optional, List
+
 
 from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
+from aemu.proto.emulator_controller_pb2 import (
+    KeyboardEvent,
+    ParameterValue,
+    PhysicalModelValue,
+)
 from google.protobuf import empty_pb2
 from grpc import RpcError
+from ppadb.client import Client as AdbClient
 
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
 from emu.logging.log_handler import QueueLogHandler
 from emu.process.command import Command
-from emu.timing import wait_until
 from emu.utils import LogObserver
 
 
@@ -69,7 +73,7 @@ class BaseEmulator(object):
             AndroidSdkRootNotSet: The ANDROID_SDK_ROOT environment variable is not set.
         """
         self.telnet = None
-        self.description = None
+        self.description: EmulatorDescription = None
         self.android_home = android_home.absolute()
         self.android_avd_home = android_avd_home.absolute()
         self.apk_installed = set()
@@ -81,6 +85,9 @@ class BaseEmulator(object):
             self.android_home,
             self.android_avd_home,
         )
+        self.adb: Adb = None
+        adb = shutil.which("adb", path=self.android_home / "platform-tools")
+        subprocess.check_call([adb, "start-server"])
 
     def __del__(self):
         if self.telnet:
@@ -120,14 +127,13 @@ class BaseEmulator(object):
                 f"No emulator with id: {avd_id} in [{found}], did the process terminate?"
             )
 
+        # Log spam!
+        # logging.getLogger("ppadb").setLevel(logging.DEBUG)
         self.adb = Adb(
             self.description.get("avd.id"),
             self.description.name(),
             self.android_home / "platform-tools" / "adb",
         )
-        # This will sprinkle in logcat, which, well is excessive.
-        # self.logcat = self.adb.logcat()
-        # self.logcat.start()
 
         self.logger.info(
             "Discovered emulator pid: %s (%s), named: %s",
@@ -178,28 +184,7 @@ class BaseEmulator(object):
         Returns:
             bool: True if the emulator has booted, False otherwise.
         """
-        start = timer()
-
-        self.logger.info(
-            "Waiting at most %s seconds for %s to boot",
-            timeout,
-            self.description.name(),
-        )
-
-        booted = wait_until(
-            self.has_booted, timeout=timeout, pre_requisite=self.is_alive
-        )
-        if not self.is_alive():
-            raise EmulatorDiedException("Emulator died while waiting for boot.")
-
-        end = timer()
-        self.logger.info(
-            "Waited %s for boot of %s, boot status: %s",
-            timedelta(seconds=end - start),
-            self.description.name(),
-            "succeeded" if booted else "failure",
-        )
-        return booted
+        return self.adb.device.wait_boot_complete(timeout=timeout)
 
     def console(self) -> EmulatorConnection:
         """Returns a connection to the emulator console, authenticating if needed.
@@ -230,7 +215,7 @@ class BaseEmulator(object):
 
         return self.description.is_alive()
 
-    def install_apk(self, apk: Path, force: bool = False) -> None:
+    def install_apk(self, apk: Path, package_name: str) -> bool:
         """Installs an apk in the emulator.
 
         Note: An apk will be installed only once unless force has been set to
@@ -238,18 +223,101 @@ class BaseEmulator(object):
 
         Args:
             apk (Path): Path to the apk that should be installed.
-            force (bool, optional): True if we should re-install over the existing apk
-
-        Raises:
-            FailedToInstallApk: Failed to install the given apk.
+            package (str): The name of the package.
+xx
+        Returns;
+            True if the package name is in `pm list packages`
         """
-        if force or not apk.absolute() in self.apk_installed:
-            try:
-                self.logger.info("Installing %s", apk.absolute())
-                self.adb.run(["install", str(apk.absolute())])
-                self.apk_installed.add(apk.absolute())
-            except subprocess.CalledProcessError as err:
-                raise FailedToInstallApk(err) from err
+        count = 0
+        while not self.adb.is_installed(package_name) and count < 10:
+            self.adb.install(apk.absolute())
+            time.sleep(1)
+            count += 1
+
+        return self.adb.device.is_installed(package_name)
+
+    def start_activity(self, activity: str) -> bool:
+        """Attempts to start the given activity.
+
+        An activity is considered to be running when the activity is in the list returned
+        by running `shell dumpsys activity activities`
+
+        If the acitivity has failed to launch within 15 seconds, it will
+        be considered a failure.
+
+        Args:
+            activity: The name of the activity to start.
+
+        Returns:
+            True if the activity was started successfully, False otherwise.
+        """
+
+        def activity_is_running():
+            """Returns true if the given activity is running."""
+            in_focus = self.adb.shell(
+                "dumpsys activity activities | grep mFocusedWindow"
+            )
+            return activity in in_focus
+
+        self.adb.shell(f"am start -n {activity}")
+
+        count = 0
+        while not activity_is_running() and count < 10:
+            self.adb.shell(f"am start -n {activity}")
+            time.sleep(1)
+            count += 1
+
+        return activity_is_running()
+
+    def stop_activity(self, activity: str) -> bool:
+        """Attempts to stop the given activity.
+
+        An activity is considered to be running when the activity is in the list returned
+        by running `shell dumpsys activity activities`
+
+        We will try to force-stop the activity for at most 15 seconds.
+
+        Args:
+            activity: The name of the package to stop.
+
+        Returns:
+            True if the activity is not running, False otherwise.
+        """
+
+        def activity_is_running():
+            """Returns true if the given activity is running."""
+            in_focus = self.adb.shell(
+                "dumpsys activity activities | grep mFocusedWindow"
+            )
+            return activity in in_focus
+
+        self.adb.shell(f"am force-stop {activity}")
+        count = 0
+        while activity_is_running() and count < 10:
+            self.adb.shell(f"am force-stop {activity}")
+            time.sleep(1)
+            count += 1
+
+        return not activity_is_running()
+
+    def reset_state(self):
+        """Resets this emulator to a well known state.
+
+        This is a best effort operation that will:
+
+        - Bring up the home screen. (i.e. press the home button)
+        - Move the device upright
+        - Wake up the device. (send the wake up event)
+        """
+        stub = self.description.get_emulator_controller()
+        stub.sendKey(KeyboardEvent(key="WakeUp", eventType=KeyboardEvent.keypress))
+        stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
+        stub.setPhysicalModel(
+            PhysicalModelValue(
+                target=PhysicalModelValue.ROTATION,
+                value=ParameterValue(data=[0, 0, 0]),
+            )
+        )
 
 
 class DebugEmulator(BaseEmulator):
@@ -376,7 +444,6 @@ class Emulator(BaseEmulator):
 
         self._discover(self.configuration.name)
         return self.is_alive()
-
 
     def _get_free_port(self, port=5554, max_port=30):
         """

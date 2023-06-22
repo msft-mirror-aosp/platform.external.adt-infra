@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import os
-from pathlib import Path
 import platform
-from shutil import which
+import subprocess
+from pathlib import Path
 
-from emu.adb.stream import AdbStream, AdbLogcatStream
-from emu.process.command import Command
+from ppadb.client import Client as AdbClient
+from ppadb.device import Device
+
+from emu.adb.stream import AdbStream
 
 
-class Adb(object):
+class Adb:
     def __init__(self, avd_id: str, emulator: str, adb: Path) -> None:
         """Create an adb object that runs against the given emulator
 
@@ -32,36 +33,54 @@ class Adb(object):
         self.name = emulator
         self.avd_id = avd_id
         self.logger = logging.getLogger(f"{avd_id}-adb")
+        self.client: AdbClient = AdbClient()
+        self.device: Device = self.client.device(emulator)
 
         if not adb.exists() and platform.system() == "Windows":
             adb = adb.with_suffix(".exe")
 
-        self.adb_binary = which(adb)
+        self.adb_binary = adb.absolute()
 
-    def _enable_tracing(self) -> dict[str, str]:
-        """Returns a copy of the default environment with ADB_TRACE
-        set to all if it not yet set
-
-        Returns:
-            dict[str, str]: The environment that can be passed to subprocess
-        """
-        my_env = os.environ.copy()
-        if (
-            logging.getLogger().isEnabledFor(logging.DEBUG)
-            and "ADB_TRACE" not in my_env
-        ):
-            my_env["ADB_TRACE"] = "all"
-        return my_env
 
     def start_server(self) -> None:
         """Starts the adb server."""
-        cmd = Command([self.adb_binary, "start-server"]).with_environment(
-            self._enable_tracing()
-        )
-        cmd.run_until_finished(timeout=10)
+        subprocess.check_call([self.adb_binary, "start-server"])
+
+    def is_installed(self, package: str) -> bool:
+        """True if the given package is installed."""
+        return self.device.is_installed(package)
+
+    def install(self, apk: Path) -> None:
+        """Install the given apk on the device."""
+        self.device.install(apk)
+
+    def pull(self, src: str, dest: str) -> None:
+        """Pull the src of the device to the dest."""
+        self.device.pull(src, dest)
+
+    def push(self, src: str, dest: str) -> None:
+        """Pushes the src to the dest on the device."""
+        self.device.push(src, dest)
+
+    def shell(self, cmd: str, timeout: int = 10) -> str:
+        """Runs the given shell command on the emulator
+
+        Args:
+            cmd (str): Command to execute
+            timeout (int, optional): Timeout. Defaults to 10s.
+
+        Returns:
+            str: Result of the shell command
+        """
+        self.logger.info("shell (%ss): %s", timeout, cmd)
+        res = self.device.shell(cmd, timeout=timeout)
+        self.logger.info("shell (result): %s", res)
+        return res
 
     def run(self, cmd: list[str], timeout: int = 10) -> str:
         """Runs the given command on the emulator
+
+        Please do not use this, it spawns an adb process.
 
         Args:
             cmd (list[str]): Command to execute
@@ -74,47 +93,53 @@ class Adb(object):
             subprocess.CalledProcessError
         """
         self.logger.info("adb -s %s %s", self.name, " ".join(cmd))
-        command = Command([self.adb_binary, "-s", self.name] + cmd).with_environment(
-            self._enable_tracing()
+        return subprocess.check_output(
+            [self.adb_binary, "-s", self.name] + cmd, encoding="utf-8", timeout=timeout
         )
-        _, result = command.run_until_finished(timeout)
-        return "\n".join(result)
 
-    def stream(self, cmd: list[str], timeout: int = 2) -> AdbStream:
-        """Runs the given command on the emulator
+    def stream(self, cmd: str, timeout: int = 10) -> AdbStream:
+        """Runs the given command on the emulator asynchronously
 
         You usually want to use this like this:
 
-        with adb.stream(["logcat", "-s", "aemu"]) as stream:
+        with adb.stream("some shell cmd") as stream:
+            # do some things.
             for line in stream
                 print(line)
 
         Args:
-            cmd (list[str]): Command to execute
+            cmd (str): Command to execute
             timeout (int): Timeout in seconds for the iterator. The
-                 iterator will exit if adb does not produce output in
+                 iterator will exit if shell cmd does not produce output in
                  the given time.
 
         Returns:
             AdbStream: An observable stream with results from adb
         """
-        self.logger.info("adb -s %s %s", self.name, " ".join(cmd))
-        return AdbStream(self.logger, self.adb_binary, self.name, cmd)
+        return AdbStream(self.logger, self.device, cmd=cmd, timeout=timeout)
 
-    def logcat(self, clear: bool = True, tag: str = None) -> AdbLogcatStream:
+    def logcat(self, clear: bool = False, tag: str = None, timeout=2) -> AdbStream:
         """Obtains the current logcat stream
 
         Args:
             tag (str): Tag to filter by
             clear (bool, optional): Clear the logcat buffer. Defaults to True.
+            timeout (int, optional): Timeout in seconds, happens if no logcat line
+                          is produced with the given time
 
         Returns:
-            AdbLogcatStream: _description_
+            LogcatStream: An iterator with logcat lines
         """
-        return AdbLogcatStream(
+        if clear:
+            self.shell("logcat -c")
+
+        cmd = "logcat"
+        if tag:
+            cmd += f" -s {tag}"
+
+        return AdbStream(
             logging.getLogger(f"{self.avd_id}-cat"),
-            self.adb_binary,
-            self.name,
-            tag,
-            clear,
+            self.device,
+            cmd=cmd,
+            timeout=timeout,
         )

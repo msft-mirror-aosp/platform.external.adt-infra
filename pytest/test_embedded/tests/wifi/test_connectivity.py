@@ -16,18 +16,17 @@ import pytest
 import sys
 from emu.timing import wait_until
 
+
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="bug: b/285402803"
-)
-def test_wifi_has_connectivity(emulator):
-
+@pytest.mark.skipif(sys.platform == "win32", reason="bug: b/285402803")
+def test_wifi_has_connectivity(avd):
     def has_connectivity():
-    # Check that AVD can connect to Google Public DNS 8.8.8.8.
-        result = emulator.adb.run(["shell","dumpsys", "connectivity", "--diag"]).rstrip()
+        # Check that AVD can connect to Google Public DNS 8.8.8.8.
+        result = avd.adb.shell("dumpsys connectivity --diag").rstrip()
         for line in result.splitlines():
             if "DNS UDP dst{8.8.8.8}" in line and "SUCCEEDED" in line:
                 return True
         return False
+
     assert wait_until(has_connectivity), "Unable to connect to dns 8.8.8.8"

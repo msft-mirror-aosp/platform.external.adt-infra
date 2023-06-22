@@ -44,7 +44,9 @@ avd_config = {
 )
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.skip(reason="Width doesn't match for display mode desktop on screenshot b/274493769")
+@pytest.mark.skip(
+    reason="Width doesn't match for display mode desktop on screenshot b/274493769"
+)
 def test_resizable_changes_resolution(emulator_controller, width, height, mode):
 
     emulator_controller.setDisplayMode(

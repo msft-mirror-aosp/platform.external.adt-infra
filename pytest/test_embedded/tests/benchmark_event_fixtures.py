@@ -89,7 +89,7 @@ def adb_event_stream(avd):
 
     Note: Needs android-Q or higher.
     """
-    with avd.adb.stream(["shell", "getevent", "-t"]) as events:
+    with avd.adb.stream("shell getevent", "-t") as events:
         found_evt = False
         # Make sure we skip the initial diagnostics.
         while not found_evt:
@@ -124,7 +124,7 @@ def android_start_time(avd):
             Epoch in seconds when the emulator started.
         """
         # Epoch realtime is tv.sec.tv_usec, /proc/uptime is tv.sec.msec
-        info = avd.adb(["shell", "echo $EPOCHREALTIME $(cat /proc/uptime)"])
+        info = adb_shell("echo $EPOCHREALTIME $(cat /proc/uptime)")
         epoch_s, uptime_s, _ = info.split(" ")
         start_time = float(epoch_s) - float(uptime_s)
         logging.info("Kernel started at +/- %s", time_to_str(start_time))

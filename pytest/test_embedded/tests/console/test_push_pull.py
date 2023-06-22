@@ -18,45 +18,20 @@ TEMP_FILE = "__push_file.txt"
 FILE_SIZE = 100
 
 
-def adb_test_push(avd, temp_file):
-    """Verify that pushing a file is successful.
-
-    Args:
-      avd: The emulator.
-      temp_file : Temporary file to push
-
-    Returns:
-      True if successful, else False.
-    """
-    return not "adb: error" in avd.adb.run(["push", temp_file, "/sdcard"])
-
-
-def adb_test_pull(avd, temp_file):
-    """Verify that pulling a file is successful.
-
-    Args:
-      avd: The emulator.
-      temp_file : Temporary file to pull.
-
-    Returns:
-      True if successful, else False.
-    """
-    return not "adb: error" in avd.adb.run(["pull /sdcard/", temp_file])
+@pytest.fixture
+def tmp_test_file(tmp_path):
+    temp_file = tmp_path / TEMP_FILE
+    temp_file.write_text(FILE_SIZE * "lorem ipsum\n")
+    return temp_file
 
 
 @pytest.mark.adb
-@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/282855106 flaky on mac_aarch64.
-def test_adb_push_pull(avd, tmp_path):
-    """Test adb push/pull operation.
+# @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/282855106 flaky on mac_aarch64.
+def test_adb_push_pull(avd, tmp_test_file):
+    device_file = f"/sdcard/{tmp_test_file.name}"
+    avd.adb.push(tmp_test_file, device_file)
+    assert "yes" in avd.adb.shell(f"[ -f {device_file} ] && echo 'yes'")
 
-    Args:
-        avd: The emulator
-        tmp_path : Fixture for creating temporary files and directory
-    """
-    temp_file = tmp_path / TEMP_FILE
-    temp_file.write_text(FILE_SIZE * "lorem ipsum\n")
-
-    success = adb_test_push(avd, str(temp_file))
-    assert success, "ADB Push failed"
-    success = adb_test_pull(avd, str(temp_file))
-    assert success, "ADB Pull failed"
+    tmp_test_file.unlink()
+    avd.adb.pull(device_file, tmp_test_file)
+    assert open(tmp_test_file, "r").read() == FILE_SIZE * "lorem ipsum\n"

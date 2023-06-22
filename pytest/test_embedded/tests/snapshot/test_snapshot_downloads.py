@@ -20,27 +20,25 @@ from zipfile import ZipFile
 
 
 def get_repository_url():
-    return ("https://dl.google.com/android/repository")
+    return "https://dl.google.com/android/repository"
+
 
 def get_emulator_filename(build_id):
-    """ given a build id, return the url and the path to download to
-
-    """
+    """given a build id, return the url and the path to download to"""
 
     if platform.system() == "Windows":
-            return f"emulator-windows_x64-{build_id}.zip"
+        return f"emulator-windows_x64-{build_id}.zip"
     elif platform.system() == "Linux":
-            return f"emulator-linux_x64-{build_id}.zip"
+        return f"emulator-linux_x64-{build_id}.zip"
     elif platform.system() == "Darwin":
         if platform.machine() == "arm64":
             return f"emulator-darwin_aarch64-{build_id}.zip"
         else:
             return f"emulator-darwin_x64-{build_id}.zip"
 
-def download_file(save_to_path, url):
-    """ Download the url to the path, skip if already done so
 
-    """
+def download_file(save_to_path, url):
+    """Download the url to the path, skip if already done so"""
     if os.path.exists(save_to_path):
         logging.info("file %s exists, skip downloading", save_to_path)
         return
@@ -54,70 +52,84 @@ def download_file(save_to_path, url):
         with open(save_to_path) as fd:
             for chunk in r.iter_content(chunk_size=4096):
                 fd.write(chunk)
-def extract_file( zf, info, extract_dir ):
-    zf.extract( info.filename, path=extract_dir )
-    out_path = os.path.join( extract_dir, info.filename )
+
+
+def extract_file(zf, info, extract_dir):
+    zf.extract(info.filename, path=extract_dir)
+    out_path = os.path.join(extract_dir, info.filename)
 
     perm = info.external_attr >> 16
-    os.chmod( out_path, perm )
+    os.chmod(out_path, perm)
+
 
 def unzip_file(path_to_zip_file):
-    """ Unziping the zip in the same directory
-
-    """
+    """Unziping the zip in the same directory"""
     directory_to_extract_to = path_to_zip_file.parent.absolute()
-    with ZipFile(path_to_zip_file, 'r') as zf:
+    with ZipFile(path_to_zip_file, "r") as zf:
         for info in zf.infolist():
-            extract_file( zf, info, directory_to_extract_to)
+            extract_file(zf, info, directory_to_extract_to)
+
 
 def check_emulator_binaries(path_to_emulator_dir) -> bool:
-    """ check emulator, qemu-system etc exists
-    """
+    """check emulator, qemu-system etc exists"""
 
     myemuexe = "emulator"
     if platform.system() == "Windows":
         myemuexe += ".exe"
     return os.path.exists(Path(path_to_emulator_dir, myemuexe))
 
-def download_emulator_zip(build_id):
-    """ Download an emulator zip with given build id
 
-    """
+def download_emulator_zip(build_id):
+    """Download an emulator zip with given build id"""
     mysdkpath = os.environ["ANDROID_SDK_ROOT"]
     logging.info("sdk root %s", mysdkpath)
     mydownloaded_emulator_path = Path(mysdkpath, "emulators").absolute()
     logging.info("sdk emulator %s", mydownloaded_emulator_path)
-    if check_emulator_binaries(Path(mydownloaded_emulator_path , f"{build_id}", "emulator")):
-        return Path(mydownloaded_emulator_path , f"{build_id}", "emulator", "emulator").absolute()
+    if check_emulator_binaries(
+        Path(mydownloaded_emulator_path, f"{build_id}", "emulator")
+    ):
+        return Path(
+            mydownloaded_emulator_path, f"{build_id}", "emulator", "emulator"
+        ).absolute()
     remote_long_path_name = get_repository_url() + "/" + get_emulator_filename(build_id)
-    local_long_path_name = Path(mydownloaded_emulator_path,  f"{build_id}",  get_emulator_filename(build_id))
+    local_long_path_name = Path(
+        mydownloaded_emulator_path, f"{build_id}", get_emulator_filename(build_id)
+    )
     Path(mydownloaded_emulator_path, f"{build_id}").mkdir(parents=True, exist_ok=True)
     logging.info("now download %s from %s", local_long_path_name, remote_long_path_name)
     download_file(local_long_path_name, remote_long_path_name)
     assert os.path.exists(local_long_path_name)
-    if not check_emulator_binaries(Path(mydownloaded_emulator_path , f"{build_id}", "emulator")):
+    if not check_emulator_binaries(
+        Path(mydownloaded_emulator_path, f"{build_id}", "emulator")
+    ):
         unzip_file(local_long_path_name)
-    assert check_emulator_binaries(Path(mydownloaded_emulator_path , f"{build_id}", "emulator"))
-    return Path(mydownloaded_emulator_path , f"{build_id}", "emulator", "emulator").absolute()
+    assert check_emulator_binaries(
+        Path(mydownloaded_emulator_path, f"{build_id}", "emulator")
+    )
+    return Path(
+        mydownloaded_emulator_path, f"{build_id}", "emulator", "emulator"
+    ).absolute()
 
-def check_boot_from_snapshot(avdpath)->bool :
-  mypath = Path(avdpath, "snapshot.trace")
-  with open(mypath) as fp:
-      for line in fp:
-          line.rstrip()
-          logging.info("reading line '%s'", line)
-          if "load_succeeded" in line:
-              return True
 
-  return False
+def check_boot_from_snapshot(avdpath) -> bool:
+    mypath = Path(avdpath, "snapshot.trace")
+    with open(mypath) as fp:
+        for line in fp:
+            line.rstrip()
+            logging.info("reading line '%s'", line)
+            if "load_succeeded" in line:
+                return True
+
+    return False
+
 
 @pytest.mark.e2e
 @pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
 def test_can_load_oldsnapshot(emulator):
-    """ test that current emulator can load the snapshot created by old emulator
+    """test that current emulator can load the snapshot created by old emulator
 
-        First, use old emulator to create a snapshot
-        Second, load it with current emulator, make sure snapshot load is successful
+    First, use old emulator to create a snapshot
+    Second, load it with current emulator, make sure snapshot load is successful
     """
 
     emulator.stop()
@@ -128,8 +140,8 @@ def test_can_load_oldsnapshot(emulator):
     # create snapshot with old emulator
     oldexe = download_emulator_zip("9847722")
     logging.info("old emu: %s", oldexe)
-    emulator.exe = oldexe;
-    myflags=["-no-snapshot-load"]
+    emulator.exe = oldexe
+    myflags = ["-no-snapshot-load"]
     if platform.processor() == "i386" and platform.system() == "Darwin":
         myflags.append("-no-window")
     assert emulator.launch(flags=myflags)
@@ -158,6 +170,7 @@ def test_can_load_oldsnapshot(emulator):
             break
 
     assert check_boot_from_snapshot(emulator.configuration.directory)
+
 
 @pytest.mark.e2e
 @pytest.mark.skip(reason="flaky and not needed for now")

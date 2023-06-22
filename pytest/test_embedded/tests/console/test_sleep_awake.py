@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import pytest
 from aemu.proto.emulator_controller_pb2 import Image, ImageFormat
 
@@ -19,7 +18,7 @@ from emu.timing import eventually
 from tests.test_utils import StreamingCall, proto_to_pillow
 
 
-def wake_up(adb):
+def wake_up(adb_shell):
     """
     Sends a wake-up command to the connected Android device using ADB. The device is woken
     up by sending the KEYCODE_WAKEUP (https://developer.android.com/reference/android/view/KeyEvent#KEYCODE_WAKEUP)
@@ -33,10 +32,10 @@ def wake_up(adb):
     Returns:
         None
     """
-    assert not "adb: error" in adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
+    assert not "adb: error" in adb_shell("input keyevent KEYCODE_WAKEUP")
 
 
-def power_down(adb):
+def power_down(adb_shell):
     """
     Sends a power-down command to the connected Android device using ADB. The device is powered
     down by sending the POWER key event (https://developer.android.com/reference/android/view/KeyEvent#KEYCODE_POWER).
@@ -50,14 +49,11 @@ def power_down(adb):
     Returns:
         None
     """
-    assert not "adb: error" in adb(["shell", "input", "keyevent", "POWER"])
-
-
-import pytest
+    assert not "adb: error" in adb_shell("input keyevent POWER")
 
 
 @pytest.fixture
-def on(adb):
+def on(adb_shell):
     """
     Fixture that ensures the connected Android device is powered on before running tests.
 
@@ -67,11 +63,11 @@ def on(adb):
     Returns:
         None
     """
-    wake_up(adb)
+    wake_up(adb_shell)
 
 
 @pytest.fixture
-def off(adb):
+def off(adb_shell):
     """
     Fixture that ensures the connected Android device is powered off before running tests.
 
@@ -81,36 +77,30 @@ def off(adb):
     Returns:
         None
     """
-    power_down(adb)
+    power_down(adb_shell)
 
 
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
-def test_power_down_sleeps_the_device(adb, on):
+def test_power_down_sleeps_the_device(adb_shell, on):
     """Test case to verify that sending the power-down command to an awake device will put the device to sleep."""
 
     def is_asleep():
-        return "Asleep" in adb(
-            ["shell", "dumpsys power | grep mWakefulness"]
-        )
+        return "Asleep" in adb_shell("dumpsys power | grep mWakefulness")
 
-    power_down(adb)
+    power_down(adb_shell)
     assert eventually(is_asleep)
 
 
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
-def test_wake_up_wakes_the_device(adb, off):
+def test_wake_up_wakes_the_device(adb_shell, off):
     """Test case to verify that sending the wake-up command to a sleeping device will wake the device."""
 
     def is_awake():
-        return "Awake" in adb(
-            ["shell", "dumpsys power | grep mWakefulness"]
-        )
+        return "Awake" in adb_shell("dumpsys power | grep mWakefulness")
 
-    wake_up(adb)
+    wake_up(adb_shell)
     assert eventually(is_awake)
 
 

@@ -20,7 +20,6 @@ from emu.timing import eventually, wait_until
 from tests.test_utils import StreamingCall
 
 
-
 def set_and_get_sensor(sensor_service, sensor_value):
     """Executes set and get sensor Rpc call
     Args:

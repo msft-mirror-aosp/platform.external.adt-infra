@@ -144,13 +144,11 @@ def test_queue_log_handler_readlines(handler):
     assert handler.readlines() == ["This is a log message."]
 
 
-
 @pytest.mark.timeout(timeout=2, func_only=True)
 def test_queue_log_handler_available(handler):
     """Test that the QueueLogHandler.available() method can return the number of log messages that are currently in the queue."""
     handler.queue.put("This is a log message.")
     assert handler.available() == 1
-
 
 
 @pytest.mark.timeout(timeout=2, func_only=True)
@@ -163,7 +161,6 @@ def test_log_handler_with_std_out_logger(logger):
     handler.with_std_out_logger(old_log_fn)
 
 
-
 @pytest.mark.timeout(timeout=2, func_only=True)
 def test_log_handler_with_std_err_logger(logger):
     """Test that the LogHandler.with_std_err_logger() method can change the function used for logging the standard error."""
@@ -174,15 +171,11 @@ def test_log_handler_with_std_err_logger(logger):
     handler.with_std_err_logger(old_log_fn)
 
 
-
-
 @pytest.mark.timeout(timeout=2, func_only=True)
 def test_queue_log_handler_log_to_queue(handler):
     """Test that the QueueLogHandler.log_to_queue() method can log the output of a process to the queue."""
     handler.log_to_queue(logging.info, "This is a log message.")
     assert handler.queue.get() == "This is a log message."
-
-
 
 
 @pytest.mark.timeout(timeout=2, func_only=True)

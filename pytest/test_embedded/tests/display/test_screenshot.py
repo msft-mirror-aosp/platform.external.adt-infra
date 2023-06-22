@@ -32,7 +32,7 @@ from tests.test_utils import proto_to_pillow, wait_for_regex
 def pause_animation_app(avd):
     """Pauses the animation app."""
 
-    with avd.adb.stream(["logcat", "-s", "aemu"]) as stream:
+    with avd.adb.logcat(tag="aemu") as stream:
         avd.description.get_emulator_controller().sendKey(
             KeyboardEvent(key="P", eventType=KeyboardEvent.keypress)
         )

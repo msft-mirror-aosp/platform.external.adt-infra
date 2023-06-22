@@ -28,6 +28,7 @@ import logging
 import os
 import platform
 import time
+import threading
 import sys
 from pathlib import Path
 import pytest
@@ -106,6 +107,27 @@ def pytest_addoption(parser):
 
 
 ALL_PLATFORMS = set("darwin linux win32".split())
+
+
+def log_thread_error(args):
+    """
+    Logs an unhandled exception in a thread.
+
+    Args:
+        args: The arguments passed to the excepthook.
+
+    Returns:
+        None.
+    """
+    exctype, value, traceback, thread = args
+    logging.error(
+        "Unhandled exception in thread: %s",
+        thread.name,
+        exc_info=(exctype, value, traceback),
+    )
+
+
+threading.excepthook = log_thread_error
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
@@ -328,72 +350,13 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     # (Note, boot times can be *REALLY* slow on windows gce..)
     assert emulator.wait_for_boot(600)
 
-    emulator.adb.run(["disconnect"])
-    emulator.adb.run(["wait-for-device"], timeout=30)
-    emulator.adb.run(["shell", "input", "keyevent", "KEYCODE_WAKEUP"])
-    count = 0
-    app_install_success = False
-    while count < 30:
-        time.sleep(1)
-        count += 1
-        allapks = emulator.adb.run(["shell", "pm", "list", "packages"])
-        logging.info("all apks %s", allapks)
-        if "com.google.AnimateBox" in allapks:
-            app_install_success = True
-            break
-        emulator.install_apk(APP_DEBUG_APK.absolute())
+    assert emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
+    emulator.reset_state()
 
-    assert app_install_success
     yield emulator
 
     # Stop the emulator.
     emulator.stop()
-
-
-def go_home(avd: BaseEmulator):
-    """It does the following:
-
-    1. Wakes up the emulator by sending a WAKEUP
-    2. Press the android home key (The circle button)
-    3. Rotate the phone to 0,0,0
-
-    Usage:
-
-    def my_test(go_home):
-        assert(...)
-    """
-    assert avd.is_alive()
-    avd.adb.run(["disconnect"])
-    avd.adb.run(["wait-for-device"])
-    stub = avd.description.get_emulator_controller()
-    stub.sendKey(KeyboardEvent(key="WakeUp", eventType=KeyboardEvent.keypress))
-    stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
-    stub.setPhysicalModel(
-        PhysicalModelValue(
-            target=PhysicalModelValue.ROTATION,
-            value=ParameterValue(data=[0, 0, 0]),
-        )
-    )
-
-
-@pytest.fixture
-def at_home(avd: BaseEmulator):
-    """This calls the go_home fixture before running the test,
-    and after running the test.
-
-    This makes sure that the emulator ends up in a known state
-    after the test.
-
-    Usage:
-
-    def test_goes_home(go_home):
-        assert(...)
-    """
-    assert avd.is_alive()
-
-    go_home(avd)
-    yield
-    go_home(avd)
 
 
 @pytest.fixture
@@ -429,32 +392,16 @@ def launch_animiation_app(avd: BaseEmulator):
     - Start the activity
     - Wait for the welcome message to appear on logcat.
 
-    It will wait for at most 5 seconds before continuing.
+    It will wait for at most 10 seconds before continuing.
     """
     assert avd.is_alive()
+    assert avd.stop_activity("com.google.AnimateBox")
+    with avd.adb.logcat(tag="aemu", clear=True) as stream:
+        assert avd.start_activity("com.google.AnimateBox/com.google.emu.MainActivity")
+        for line in stream:
+            if "--STARTED--" in line:
+                return True
 
-    avd.adb.run(["disconnect"])
-    avd.adb.run(["wait-for-device"])
-    count = 0
-    app_launch_success = False
-    while count < 30:
-        time.sleep(1)
-        count += 1
-        avd.adb.run(
-            [
-                "shell",
-                "am",
-                "start",
-                "-n",
-                "com.google.AnimateBox/com.google.emu.MainActivity",
-            ],
-            timeout=5,
-        )
-        result = avd.adb.run(["shell", "dumpsys", "activity", "activities"])
-        if "com.google.AnimateBox/com.google.emu.MainActivity" in result:
-            app_launch_success = True
-            return True
-    logging.warning("animation app not launched")
     return False
 
 
@@ -513,6 +460,7 @@ def animation_app(avd: BaseEmulator):
     """
     assert avd.is_alive()
 
+    avd.reset_state()
     tries = 3
     while not launch_animiation_app(avd) and tries > 0:
         time.sleep(1)
@@ -521,8 +469,8 @@ def animation_app(avd: BaseEmulator):
     assert tries >= 0, "Unable to successfully launch the animation app."
     yield
 
-    avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
-    go_home(avd)
+    avd.stop_activity("com.google.AnimateBox")
+    avd.reset_state()
 
 
 @pytest.fixture
@@ -547,22 +495,20 @@ def coldboot_animation_app(avd: BaseEmulator):
     assert tries >= 0, "Unable to successfully launch the animation app."
     yield
 
-    avd.adb.run(["shell", "am", "force-stop", "com.google.AnimateBox"])
-    go_home(avd)
+    avd.stop_activity("com.google.AnimateBox")
 
 
 @pytest.fixture
-def adb(avd: BaseEmulator):
+def adb_shell(avd: BaseEmulator):
     """Function that invokes the adb executable with the given parameters.
 
     Usage:
 
-    def test_sample(adb):
-        adb(["emu", "rotate"])
+    def test_sample(adb_shell):
+        adb_shell("input keyevnet KEYCODE_WAKEUP")
     """
     assert avd.is_alive()
-
-    return avd.adb.run
+    return avd.adb.shell
 
 
 @pytest.fixture
@@ -575,5 +521,11 @@ def telnet(avd: BaseEmulator):
         telnet.send("event text")
     """
     assert avd.is_alive()
-
     return avd.console()
+
+
+@pytest.fixture
+def at_home(avd: BaseEmulator):
+    avd.reset_state()
+    yield
+    avd.reset_state()
