@@ -18,11 +18,18 @@ from aemu.proto.emulator_controller_pb2 import (
     ImageFormat,
     ParameterValue,
     PhysicalModelValue,
+    Posture,
+    Notification,
 )
+from emu.timing import eventually
+from google.protobuf import empty_pb2
+from iterators import TimeoutIterator
+from tests.test_utils import StreamingCall
 from PIL import Image
 
-
-avd_config = {"api": "33", "tag.id": "google_apis"}
+# b/288457753
+# Should use API 33 instead
+avd_config = {"api": "31", "tag.id": "google_apis", "device.name": "PixelFold"}
 
 
 def set_device_hinge_angle(emu, angle):
@@ -33,15 +40,16 @@ def set_device_hinge_angle(emu, angle):
             value=ParameterValue(data=[angle, 0.0, 0.0]),
         )
     )
-    time.sleep(5)
 
 
-@pytest.mark.skip(reason="This test needst to be updated")
+@pytest.mark.skip(reason="b/288335290")
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
 def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
+
     set_device_hinge_angle(emulator_controller, unfold_angle)
+    time.sleep(5)
     image1 = emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
@@ -53,6 +61,7 @@ def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     assert image1.format.foldedDisplay.height == 0
 
     set_device_hinge_angle(emulator_controller, fold_angle)
+    time.sleep(5)
     image2 = emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
@@ -65,10 +74,56 @@ def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     assert image2.format.foldedDisplay.width == image2.format.width
     assert image2.format.foldedDisplay.height == image2.format.height
     set_device_hinge_angle(emulator_controller, unfold_angle)
-
+    time.sleep(5)
     image3 = emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
         )
     )
     assert image3.format.width > image2.format.width
+
+
+@pytest.mark.parametrize(
+    "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 5.0, 180.0)]
+)
+def test_foldable_notifications(emulator_controller, fmt, fold_angle, unfold_angle):
+    _EMPTY_ = empty_pb2.Empty()
+
+    def check_posture_closed(notification):
+        return notification.posture.value == Posture.PostureValue.POSTURE_CLOSED
+    def check_posture_opened(notification):
+        return notification.posture.value == Posture.PostureValue.POSTURE_OPENED
+
+    # Due to an implementation issue of TimeoutIterator, we cannot use 2
+    # "eventually" with one stream. Thus we implement our own version of
+    # "eventually".
+    #
+    # We might consider moving this implementation into timing.py in future.
+    def wait_for_with_timed_iterator(predicate, timed_iterator, timeout = 5):
+        end = time.time() + timeout
+        for event in timed_iterator:
+            if time.time() > end:
+                return None
+            if event == timed_iterator.get_sentinel():
+                continue
+            if predicate(event):
+                return event
+        return None
+
+    notificationStream = emulator_controller.streamNotification(_EMPTY_)
+    with StreamingCall(notificationStream) as stream:
+        timed_iterator = TimeoutIterator(stream, timeout=0.5)
+        assert wait_for_with_timed_iterator(check_posture_opened,
+            timed_iterator), f"Did not observe initial unfolded state."
+        set_device_hinge_angle(emulator_controller, fold_angle)
+        assert wait_for_with_timed_iterator(check_posture_closed,
+            timed_iterator), f"Did not observe folding event."
+
+    notificationStream = emulator_controller.streamNotification(_EMPTY_)
+    with StreamingCall(notificationStream) as stream:
+        timed_iterator = TimeoutIterator(stream, timeout=0.5)
+        assert wait_for_with_timed_iterator(check_posture_closed,
+            timed_iterator), f"Did not observe initial folded state."
+        set_device_hinge_angle(emulator_controller, unfold_angle)
+        assert wait_for_with_timed_iterator(check_posture_opened,
+            timed_iterator), f"Did not observe unfolding event."
