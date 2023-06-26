@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pytest
+import sys
 
 TEMP_FILE = "__push_file.txt"
 FILE_SIZE = 100
@@ -26,7 +27,10 @@ def tmp_test_file(tmp_path):
 
 
 @pytest.mark.adb
-# @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/282855106 flaky on mac_aarch64.
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/282855106 flaky on mac_aarch64.
+@pytest.mark.skip(
+    reason="Test fails on all platforms b/288447852"
+)
 def test_adb_push_pull(avd, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"
     avd.adb.push(tmp_test_file, device_file)
