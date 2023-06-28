@@ -608,8 +608,8 @@ def run_tests(
             env={
                 "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
                 "ANDROID_AVD_HOME": str(tmpdir),
-                "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS")
-                if os.getenv("PYTEST_ADDOPTS")
+                "PYTEST_ADDOPTS": os.getenv('PYTEST_ADDOPTS')
+                if os.getenv('PYTEST_ADDOPTS')
                 else " -m 'not perf'",
             },
             timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
