@@ -6,6 +6,9 @@ REM This will be invoked by aosp-emu-master-dev.
 
 set SESSION_DIR=%1
 
+setx PYTEST_ADDOPTS "-m 'not perf'"
+echo %PYTEST_ADDOPTS%
+
 prebuilts\python\windows-x86\python.exe external\adt-infra\pytest\test_embedded\run_tests.py --build_dir out\prebuilt_cached\builds --logdir %SESSION_DIR%\testlogs
 if errorlevel 1 (
     echo "Failures during test execution!"

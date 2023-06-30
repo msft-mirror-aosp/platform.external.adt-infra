@@ -580,6 +580,7 @@ def run_tests(
     # sanity checks
     verbose = ["-vvv"] if verbose else []
     emulator = str(resolve_emulator(emulator))
+    logging.info("Checking to see if PYTEST_ADDOPTS is available for running tests: %s", os.getenv('PYTEST_ADDOPTS'))
 
     pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
 
