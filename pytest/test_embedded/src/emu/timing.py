@@ -87,8 +87,8 @@ def wait_for_event(predicate, iterator=None, timeout=5):
                  before timing out. Default is 5 seconds.
 
     Returns:
-        True if the `predicate` function returns True for any event produced
-        by `iterator` within the given `timeout` period. False otherwise.
+        The event for which the given `predicate` function returns True. 'None'
+        if none of the events satisfies `predicate` before timing out.
     """
     # We need to special case queue handlers as they use their own thread
     # and will handle timeouts themselves.
@@ -102,7 +102,7 @@ def wait_for_event(predicate, iterator=None, timeout=5):
     timed_iterator = TimeoutIterator(iterator, timeout=0.5)
     for event in timed_iterator:
         if time.time() > end:
-            return False
+            return None
 
         if event == timed_iterator.get_sentinel():
             continue

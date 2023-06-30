@@ -136,20 +136,12 @@ def test_sensor_value_events(service, test_name, sensor_value, x, y, z):
         target=sensor_value,
         value=ParameterValue(data=[x, y, z]),
     )
-    count = 0
 
     sensor_service: SensorServiceStub = service(SensorServiceStub)
     stream = sensor_service.receiveSensorEvents(SensorValue(target=sensor_value))
 
     def receives_an_update_event(sensor_event):
         logging.info("Received event %s", sensor_event)
-        nonlocal count
-        count += 1
-
-        # First event, set the sensor.. This should trigger an event on our stream.
-        if count == 1:
-            sensor_service.setSensor(expected)
-            return False
 
         if sensor_event.target != expected.target:
             assert False, "This should never happen! Wronge event received!"
@@ -161,6 +153,7 @@ def test_sensor_value_events(service, test_name, sensor_value, x, y, z):
         return True
 
     with StreamingCall(stream) as stream:
+        sensor_service.setSensor(expected)
         assert eventually(
             receives_an_update_event, stream
         ), "Did not receive an update notification, even though I registered."
