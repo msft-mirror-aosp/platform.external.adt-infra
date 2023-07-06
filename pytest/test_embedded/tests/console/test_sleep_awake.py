@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pytest
 import sys
-from aemu.proto.emulator_controller_pb2 import Image, ImageFormat
+
+import pytest
+from aemu.proto.emulator_controller_pb2 import ImageFormat
 
 from emu.timing import eventually
-from tests.test_utils import StreamingCall, proto_to_pillow
 
 
 def wake_up(adb_shell):
@@ -54,7 +54,7 @@ def power_down(adb_shell):
 
 
 @pytest.fixture
-def on(adb_shell):
+def emulator_on(adb_shell):
     """
     Fixture that ensures the connected Android device is powered on before running tests.
 
@@ -68,7 +68,7 @@ def on(adb_shell):
 
 
 @pytest.fixture
-def off(adb_shell):
+def emulator_off(adb_shell):
     """
     Fixture that ensures the connected Android device is powered off before running tests.
 
@@ -85,7 +85,7 @@ def off(adb_shell):
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.skipif(sys.platform == "win32", reason="b/288441746")
-def test_power_down_sleeps_the_device(adb_shell, on):
+def test_power_down_sleeps_the_device(adb_shell, emulator_on):
     """Test case to verify that sending the power-down command to an awake device will put the device to sleep."""
 
     def is_asleep():
@@ -98,7 +98,7 @@ def test_power_down_sleeps_the_device(adb_shell, on):
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-def test_wake_up_wakes_the_device(adb_shell, off):
+def test_wake_up_wakes_the_device(adb_shell, emulator_off):
     """Test case to verify that sending the wake-up command to a sleeping device will wake the device."""
 
     def is_awake():
@@ -112,23 +112,20 @@ def test_wake_up_wakes_the_device(adb_shell, off):
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-def test_power_down_turns_off_the_screen(emulator_controller, off):
+def test_power_down_turns_off_the_screen(emulator_off, get_screenshot):
     """Test case to verify that a powered-down device has a black screen.
 
     An e2e adb test where emulator is turned off using adb command and then check is made to verify if there is a
     black screen on the emulator.
     """
 
-    def is_a_black_image(image: Image):
+    def emulator_screen_is_black():
         """Verify if the emulator screen is black.
-
-        Args:
-            img (Image): An image received from the emulator.
 
         Returns:
             bool: True if the screen is black, False otherwise.
         """
-        img = proto_to_pillow(image)
+        __doc__, img = get_screenshot(ImageFormat())
         for x in range(img.width):
             for y in range(img.height):
                 co = (x, y)
@@ -139,6 +136,4 @@ def test_power_down_turns_off_the_screen(emulator_controller, off):
         return True
 
     # We eventually should see a black screen..
-    images = emulator_controller.streamScreenshot(ImageFormat())
-    with StreamingCall(images) as stream:
-        assert eventually(is_a_black_image, stream), "The screen did not become black!"
+    assert eventually(emulator_screen_is_black), "The screen did not become black!"

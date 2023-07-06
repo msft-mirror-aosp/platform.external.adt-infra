@@ -14,7 +14,6 @@
 import logging
 import platform
 import re
-from emu.timing import eventually, wait_until
 from functools import partial
 
 import pytest
@@ -25,7 +24,9 @@ from aemu.proto.emulator_controller_pb2 import (
     Rotation,
 )
 from PIL import Image
-from tests.test_utils import StreamingCall, proto_to_pillow
+
+from emu.images.convert import proto_to_pillow
+from emu.timing import eventually, wait_until
 
 # This test validates the behavior of rotating the device.
 # The android device derives its orientation from the physical model.
@@ -65,7 +66,7 @@ def counter_clockwise_to_clockwise(angle):
 
 def for_each_rotation(emulator_controller):
     """Loops to each rotation mapping setting the physical rotation model and yielding z-axis and symbolic value."""
-    for (fine, coarse) in ROTATION_MAPPING:
+    for fine, coarse in ROTATION_MAPPING:
         logging.info("Rotating to fine: %s, coarse: %s", fine, coarse)
         emulator_controller.setPhysicalModel(
             PhysicalModelValue(
@@ -85,7 +86,7 @@ def test_rotation_observable_through_screenshot(emulator_controller, animation_a
         img = emulator_controller.getScreenshot(ImageFormat())
         return img.format.rotation.rotation == coarse
 
-    for (fine, coarse) in for_each_rotation(emulator_controller):
+    for fine, coarse in for_each_rotation(emulator_controller):
         assert wait_until(partial(image_rotated_correctly, coarse), timeout=2)
 
 
@@ -112,7 +113,7 @@ def test_rotation_observable_through_adbstream(
             partial(rotation_from_logcat, 0), stream
         ), "Did not rotate to 0 in time"
 
-        for (fine, coarse) in for_each_rotation(emulator_controller):
+        for fine, coarse in for_each_rotation(emulator_controller):
             angle = counter_clockwise_to_clockwise(fine)
             assert eventually(
                 partial(rotation_from_logcat, angle), stream
@@ -121,15 +122,13 @@ def test_rotation_observable_through_adbstream(
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.flaky(reruns=2, reruns_delay=2)
+# @pytest.mark.flaky(reruns=2, reruns_delay=2)
 def test_rotation_observable_through_stream_screenshot(
-    animation_app, emulator_controller
+    animation_app, emulator_controller, stream_screenshot
 ):
     """Test that setting the rotation, is observable through streaming screenshot."""
-    for (angle, coarse) in for_each_rotation(emulator_controller):
-
-        imgStream = emulator_controller.streamScreenshot(ImageFormat())
-        with StreamingCall(imgStream) as stream:
+    for angle, coarse in for_each_rotation(emulator_controller):
+        with stream_screenshot(ImageFormat()) as stream:
             assert eventually(
                 lambda img: img.format.rotation.rotation == coarse, stream
             ), f"Did not observe rotation to {angle}"
@@ -209,8 +208,7 @@ def square_in_quadrant(img: Image) -> int:
 def rotation_through_console_observable_through_screenshot(emulator_controller, telnet):
     """Verify that rotation through console is observable through screenshot."""
     default = ImageFormat()
-    for (_, coarse) in ROTATION_MAPPING:
-
+    for _, coarse in ROTATION_MAPPING:
         telnet.send("rotate")
         assert eventually(
             lambda: emulator_controller.getScreenshot(default).format.rotation.rotation
@@ -219,20 +217,17 @@ def rotation_through_console_observable_through_screenshot(emulator_controller, 
 
 
 def rotation_through_console_observable_through_stream_screenshot(
-    emulator_controller, adb
+    stream_screenshot, adb
 ):
     """Verify that rotation through console is observable through stream screenshot."""
-    for (angle, coarse) in ROTATION_MAPPING:
+    for angle, coarse in ROTATION_MAPPING:
         adb(["emu", "rotate"])
-        imgStream = emulator_controller.streamScreenshot(
-            ImageFormat(width=320, height=200), timeout=5
-        )
 
         def image_has_coarse_rotation(img: Image) -> bool:
             """True if the rotation matches the coarse rotation."""
             return img.format.rotation.rotation == coarse
 
-        with StreamingCall(imgStream) as stream:
+        with stream_screenshot(ImageFormat(width=320, height=200)) as stream:
             # Keep looking at the queue until we see what we need.
             # if we never see it we will timeout.
             assert eventually(
@@ -248,7 +243,7 @@ def rotation_through_console_observable_through_stream_screenshot(
     [(0, 1), (90, 2), (-180, 3), (-90, 4)],
 )
 def test_rotation_pixels_in_the_right_place(
-    animation_app, emulator_controller, rotation, quadrant
+    animation_app, emulator_controller, rotation, quadrant, stream_screenshot
 ):
     """Test the colored square is in the expected location.
     The animation app draws a square in the top right corner (first quadrant).
@@ -264,15 +259,12 @@ def test_rotation_pixels_in_the_right_place(
             value=ParameterValue(data=[0, 0, rotation]),
         )
     )
-    imgStream = emulator_controller.streamScreenshot(
-        ImageFormat(format=ImageFormat.RGB888), timeout=5
-    )
 
     def find_square_in_image(img: Image) -> bool:
         pillow_img = proto_to_pillow(img)
         return square_in_quadrant(pillow_img) == quadrant
 
-    with StreamingCall(imgStream) as stream:
+    with stream_screenshot(ImageFormat(format=ImageFormat.RGB888)) as stream:
         assert eventually(
             find_square_in_image, stream
         ), f"Did not see the rotation to {rotation} in time."
@@ -294,7 +286,7 @@ def test_rotation_through_console_observable_through_physical_model(
         )
         return rotate.value.data[2] == expected_angle
 
-    for (angle, _) in ROTATION_MAPPING:
+    for angle, _ in ROTATION_MAPPING:
         telnet.send("rotate")
 
         assert eventually(partial(emulator_is_rotated_to, angle))

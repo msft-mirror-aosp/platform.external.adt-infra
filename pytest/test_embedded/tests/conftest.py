@@ -27,22 +27,21 @@ provide access to parts of the emulator.
 import logging
 import os
 import platform
-import time
-import threading
+import re
 import sys
+import threading
+import time
 from pathlib import Path
+
 import pytest
-from aemu.proto.emulator_controller_pb2 import (
-    KeyboardEvent,
-    ParameterValue,
-    PhysicalModelValue,
-)
+from aemu.proto.emulator_controller_pb2 import ImageFormat
 
 from emu.apk import APP_DEBUG_APK
-from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.crashreporter import CrashReporter
+from emu.emulator import BaseEmulator, DebugEmulator, Emulator
+from emu.images.convert import save_image
 from emu.utils import system_cpu
-
+from tests.test_utils import StreamingCall
 
 OS_NAME = platform.system().lower()
 AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
@@ -531,3 +530,53 @@ def at_home(avd: BaseEmulator):
     avd.reset_state()
     yield
     avd.reset_state()
+
+
+@pytest.fixture
+def log_directory(pytestconfig):
+    """Get the directory from value of the --log-file option, or the current working directory."""
+    log_file = pytestconfig.getoption("--log-file")
+    if log_file:
+        return Path(log_file).parent
+
+    return Path.cwd()
+
+
+@pytest.fixture
+def get_screenshot(emulator_controller, log_directory, request):
+    def do_get_screenshot(image_format: ImageFormat):
+        """Get a screenshot from the emulator and save it to a file.
+
+        Args:
+            image_format: The format of the screenshot image.
+
+        Returns:
+            A tuple of the raw screenshot image and the Pillow image object.
+        """
+        img = emulator_controller.getScreenshot(image_format)
+        file_name = re.sub(r"[\\/\{\}:]", "_", request.node.nodeid)
+        pillow_image = save_image(img, log_directory, file_name)
+        return img, pillow_image
+
+    return do_get_screenshot
+
+
+@pytest.fixture
+def stream_screenshot(emulator_controller, log_directory, request):
+
+    class StreamingImageCall(StreamingCall):
+        def __init__(
+            self, image_format: ImageFormat
+        ):
+            super().__init__(emulator_controller.streamScreenshot(image_format))
+            self.test_name = re.sub(r"[\\/\{\}:]", "_", request.node.nodeid)
+
+
+        def _enqueue(self, incoming_message):
+            save_image(incoming_message, log_directory, self.test_name)
+            self._queue.put(incoming_message)
+
+    def streaming_img_call(image_format: ImageFormat):
+        return StreamingImageCall(image_format)
+
+    return streaming_img_call

@@ -26,7 +26,8 @@ from aemu.proto.emulator_controller_pb2 import (
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
 
-from tests.test_utils import proto_to_pillow, wait_for_regex
+from emu.images.convert import proto_to_pillow
+from tests.test_utils import wait_for_regex
 
 
 def pause_animation_app(avd):
@@ -63,7 +64,7 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.skipif(sys.platform == "win32", reason="b/275586631")
 def test_screenshot_all_formats_are_equal(
-    avd, emulator_controller, animation_app, w, h
+    avd, get_screenshot, animation_app, w, h
 ):
     """Make sure that all the screenshots are exactly the same, regardless of format.
 
@@ -73,12 +74,9 @@ def test_screenshot_all_formats_are_equal(
     assert pause_animation_app(avd)
     last_pixels = None
     for image_format in [ImageFormat.RGBA8888, ImageFormat.RGB888, ImageFormat.PNG]:
-        image = emulator_controller.getScreenshot(
+        _, pillow_image = get_screenshot(
             ImageFormat(format=image_format, width=w, height=h)
         )
-
-        # Load and convert the image using pillow
-        pillow_image = proto_to_pillow(image)
 
         # a == b, b == c --> a == c, so we can just compare the last known image
         # to the current one.
@@ -95,7 +93,7 @@ def test_screenshot_all_formats_are_equal(
 @pytest.mark.parametrize("degrees", [0, 90])
 @pytest.mark.timeout(timeout=60, func_only=True)
 def test_screenshot_exact_amount_of_pixels(
-    at_home, emulator_controller, image_format, bpp, degrees
+    at_home, get_screenshot, emulator_controller, image_format, bpp, degrees
 ):
     """Tests that the screenshot API delivers exactly the right amount of pixels.
 
@@ -103,7 +101,7 @@ def test_screenshot_exact_amount_of_pixels(
     """
     rotate_device(emulator_controller, degrees)
 
-    image = emulator_controller.getScreenshot(
+    image, _ = get_screenshot(
         ImageFormat(
             format=image_format,
         )
@@ -152,10 +150,10 @@ def all_orientations(emulator_controller, request):
 
 @pytest.mark.timeout(timeout=60, func_only=True)
 def test_screenshot_gets_default_resolution(
-    at_home, emulator_controller, default_display_config, all_orientations
+    at_home, get_screenshot, default_display_config, all_orientations
 ):
     """Verifies that the default resolution will match the emulator display dimensions"""
-    image = emulator_controller.getScreenshot(ImageFormat())
+    image, _ = get_screenshot(ImageFormat())
     fmt = image.format
     assert (
         fmt.width == default_display_config.width
@@ -169,14 +167,14 @@ def test_screenshot_gets_default_resolution(
 
 @pytest.mark.timeout(timeout=60, func_only=True)
 def test_screenshot_never_scales_up(
-    at_home, emulator_controller, default_display_config, all_orientations
+    at_home, get_screenshot, default_display_config, all_orientations
 ):
     """Verifies b/238205075, streamScreenshot should not scale display images up."""
     # The width and height are guaranteed to be larger than the actual screen
     max_width = default_display_config.width + default_display_config.height
     max_height = default_display_config.height + default_display_config.width
 
-    image = emulator_controller.getScreenshot(
+    image, _ = get_screenshot(
         ImageFormat(width=max_width, height=max_height, display=0)
     )
 
