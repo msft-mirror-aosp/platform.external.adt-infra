@@ -587,7 +587,7 @@ def run_tests(
 
     pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
 
-    logdir = Path(logdir) / "embedded_test" / "log"
+    logdir = Path(logdir)
     logdir.mkdir(exist_ok=True, parents=True)
     with tempfile.TemporaryDirectory() as tmpdir:
         junit_test_results = Path(tmpdir) / "test_unit.xml"
