@@ -149,7 +149,7 @@ class Adb:
         """
         return AdbStream(self.logger, self.device, cmd=cmd, timeout=timeout)
 
-    def logcat(self, clear: bool = False, tag: str = None, timeout=2) -> AdbStream:
+    def logcat(self, clear: bool = False, tag: str = None, timeout=10) -> AdbStream:
         """Obtains the current logcat stream
 
         Args:
