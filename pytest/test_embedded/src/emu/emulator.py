@@ -261,12 +261,14 @@ class BaseEmulator(object):
         self.adb.shell(f"am start -n {activity}")
 
         count = 0
-        while not activity_is_running() and count < 10:
+        while count < 10:
             self.adb.shell(f"am start -n {activity}")
             time.sleep(1)
+            if activity_is_running():
+                return True
             count += 1
 
-        return activity_is_running()
+        return False
 
     def stop_activity(self, activity: str) -> bool:
         """Attempts to stop the given activity.
