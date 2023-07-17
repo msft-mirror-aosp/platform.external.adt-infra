@@ -41,6 +41,23 @@ class Adb:
 
         self.adb_binary = adb.absolute()
 
+    def _with_adb_retry(self, method, params):
+        try:
+            logging.info(
+                "adb: %s(%s)", method.__name__, ", ".join([str(x) for x in params])
+            )
+            return method(*params)
+        except RuntimeError as rerr:
+            logging.error(
+                "Failed to invoke method due %s, retry after adb restart", rerr
+            )
+            self.stop_server()
+            self.start_server()
+            return method(*params)
+
+    def stop_server(self) -> None:
+        """Stops the adb server."""
+        subprocess.check_call([self.adb_binary, "kill-server"])
 
     def start_server(self) -> None:
         """Starts the adb server."""
@@ -48,19 +65,24 @@ class Adb:
 
     def is_installed(self, package: str) -> bool:
         """True if the given package is installed."""
-        return self.device.is_installed(package)
+        return self._with_adb_retry(self.device.is_installed, [package])
 
     def install(self, apk: Path) -> None:
         """Install the given apk on the device."""
-        self.device.install(apk)
+        self._with_adb_retry(self.device.install, [apk])
 
     def pull(self, src: str, dest: str) -> None:
         """Pull the src of the device to the dest."""
-        self.device.pull(src, dest)
+        self._with_adb_retry(self.device.pull, [src, dest])
 
     def push(self, src: str, dest: str) -> None:
         """Pushes the src to the dest on the device."""
-        self.device.push(src, dest)
+        self._with_adb_retry(self.device.push, [src, dest])
+
+    def wait_boot_complete(self, timeout=60, timedelta=1):
+        return self._with_adb_retry(
+            self.device.wait_boot_complete, [timeout, timedelta]
+        )
 
     def shell(self, cmd: str, timeout: int = 10) -> str:
         """Runs the given shell command on the emulator
@@ -73,7 +95,16 @@ class Adb:
             str: Result of the shell command
         """
         self.logger.info("shell (%ss): %s", timeout, cmd)
-        res = self.device.shell(cmd, timeout=timeout)
+        try:
+            res = self.device.shell(cmd, timeout=timeout)
+        except RuntimeError as rerr:
+            logging.error(
+                "Failed to invoke method due %s, retry after adb restart", rerr
+            )
+            self.stop_server()
+            self.start_server()
+            res = self.device.shell(cmd, timeout=timeout)
+
         self.logger.info("shell (result): %s", res)
         return res
 
@@ -118,7 +149,7 @@ class Adb:
         """
         return AdbStream(self.logger, self.device, cmd=cmd, timeout=timeout)
 
-    def logcat(self, clear: bool = False, tag: str = None, timeout=2) -> AdbStream:
+    def logcat(self, clear: bool = False, tag: str = None, timeout=10) -> AdbStream:
         """Obtains the current logcat stream
 
         Args:

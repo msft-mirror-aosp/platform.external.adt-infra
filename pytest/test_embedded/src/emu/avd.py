@@ -321,10 +321,10 @@ class AvdWriter:
         self.writer = TemplateWriter(self.avd_home)
 
     def _write_config_ini(
-        self, name: str, avd: dict[str, str], custom_cfg: dict[str, str]
+        self, name: str, device_name: str, avd: dict[str, str], custom_cfg: dict[str, str]
     ) -> None:
         """Writes the custom config ini to the avd_home directory"""
-        cfg = self.writer.template_to_dict("Pixel2.avd/config.ini", avd)
+        cfg = self.writer.template_to_dict(f"{device_name}.avd/config.ini", avd)
         cfg.update(custom_cfg)
 
         cfg_file = f"{name}.avd/config.ini"
@@ -338,7 +338,7 @@ class AvdWriter:
                 avd_cfg_file.write(f"{key} = {value}\n")
 
     def _create_avd(
-        self, api: str, abi: str, tag: str, name: str, custom_cfg: dict[str, str]
+        self, api: str, abi: str, tag: str, name: str, device_name: str, custom_cfg: dict[str, str]
     ) -> AvdConfig:
         avd = self.sys_imgs.find_and_unpack(api, abi, tag)
         if not avd:
@@ -354,8 +354,8 @@ class AvdWriter:
         avd["avd_home"] = self.avd_home
         avd["host_cpu"] = system_cpu()
 
-        self.writer.write_template("Pixel2.ini", avd, f"{name}.ini")
-        self._write_config_ini(name, avd, custom_cfg)
+        self.writer.write_template(f"{device_name}.ini", avd, f"{name}.ini")
+        self._write_config_ini(name, device_name, avd, custom_cfg)
         return AvdConfig(self.avd_home / f"{name}.ini")
 
     def create_from_config(self, config: dict[str, str]) -> AvdConfig:
@@ -366,6 +366,7 @@ class AvdWriter:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of the machine. Note that qemu must support this abi!
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv
+            [optional] device.name (str): One of Pixel2|PixelFold, defaults to Pixel2.
 
         Note, you will need to look at the actual templates (templates/Pixel2.avd/config.ini) to see
         which values you can actually pass in as config.
@@ -383,13 +384,14 @@ class AvdWriter:
         abi = config["abi"]
         tag = config["tag.id"]
         api = config["api"]
+        device_name = config.get("device.name", "Pixel2")
 
         if not abi in self.SUPPORTED_ABI:
             raise UnsupportedAbiOrCpu(
                 f"Abi {abi} is not supported, please use one of: {', '.join(self.SUPPORTED_ABI)}"
             )
 
-        name = "{}_{}_{}".format(api, tag, abi)
+        name = f"{api}_{tag}_{abi}_{device_name}"
         avd_cfg = {
             "AvdId": name,
             "tag.id": tag,
@@ -397,7 +399,7 @@ class AvdWriter:
         }
         avd_cfg.update(config)
 
-        return self._create_avd(api, abi, tag, name, avd_cfg)
+        return self._create_avd(api, abi, tag, name, device_name, avd_cfg)
 
     def create(self, api: str, abi: str, tag: str = "google_apis") -> str:
         """Create a basic avd using the given api, abi and tag.

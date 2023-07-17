@@ -27,7 +27,8 @@ if %ERRORLEVEL% NEQ 0 (
     python3 --version
 )
 
-setx PYTEST_ADDOPTS "-m 'adb'"
+:: Temporarily remove setting PYTEST_ADDOPTS  to check if Windows target can run all the tests.
+:: setx PYTEST_ADDOPTS "-m 'adb'"
 call refreshenv
 
 @echo on

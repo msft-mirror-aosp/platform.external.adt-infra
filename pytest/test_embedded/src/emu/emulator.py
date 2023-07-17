@@ -34,7 +34,6 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from google.protobuf import empty_pb2
 from grpc import RpcError
-from ppadb.client import Client as AdbClient
 
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
@@ -184,7 +183,7 @@ class BaseEmulator(object):
         Returns:
             bool: True if the emulator has booted, False otherwise.
         """
-        return self.adb.device.wait_boot_complete(timeout=timeout)
+        return self.adb.wait_boot_complete(timeout=timeout)
 
     def console(self) -> EmulatorConnection:
         """Returns a connection to the emulator console, authenticating if needed.
@@ -224,7 +223,7 @@ class BaseEmulator(object):
         Args:
             apk (Path): Path to the apk that should be installed.
             package (str): The name of the package.
-xx
+
         Returns;
             True if the package name is in `pm list packages`
         """
@@ -234,7 +233,7 @@ xx
             time.sleep(1)
             count += 1
 
-        return self.adb.device.is_installed(package_name)
+        return self.adb.is_installed(package_name)
 
     def start_activity(self, activity: str) -> bool:
         """Attempts to start the given activity.
@@ -262,12 +261,14 @@ xx
         self.adb.shell(f"am start -n {activity}")
 
         count = 0
-        while not activity_is_running() and count < 10:
+        while count < 10:
             self.adb.shell(f"am start -n {activity}")
             time.sleep(1)
+            if activity_is_running():
+                return True
             count += 1
 
-        return activity_is_running()
+        return False
 
     def stop_activity(self, activity: str) -> bool:
         """Attempts to stop the given activity.

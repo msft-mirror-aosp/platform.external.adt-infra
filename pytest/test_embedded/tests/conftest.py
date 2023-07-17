@@ -289,10 +289,11 @@ def emulator(request, pytestconfig) -> BaseEmulator:
         "tag.id": "google_apis",
         "cpu": system_cpu(),
         "avd.ini.displayname": "°º¤ø,¸¸,ø¤º°`°º¤ø, UTF-8 ¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸",
+        "device.name": "Pixel2",
     }
     avd_user_config = getattr(request.module, "avd_config", {})
     avd_config.update(avd_user_config)
-    name = f"{avd_config['api']}_{avd_config['tag.id']}_{avd_config['cpu']}"
+    name = f"{avd_config['api']}_{avd_config['tag.id']}_{avd_config['cpu']}_{avd_config['device.name']}"
 
     if name not in pytest.emulators:
         if pytestconfig.getoption("debug_emulator") or not pytestconfig.getoption(
@@ -396,12 +397,13 @@ def launch_animiation_app(avd: BaseEmulator):
     """
     assert avd.is_alive()
     assert avd.stop_activity("com.google.AnimateBox")
-    with avd.adb.logcat(tag="aemu", clear=True) as stream:
+    with avd.adb.logcat(tag="aemu", clear=True, timeout=10) as stream:
         assert avd.start_activity("com.google.AnimateBox/com.google.emu.MainActivity")
         for line in stream:
             if "--STARTED--" in line:
                 return True
 
+    logging.warning("The animation app has not been launched.")
     return False
 
 

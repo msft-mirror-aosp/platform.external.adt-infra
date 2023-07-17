@@ -580,10 +580,14 @@ def run_tests(
     # sanity checks
     verbose = ["-vvv"] if verbose else []
     emulator = str(resolve_emulator(emulator))
+    logging.info(
+        "Checking to see if PYTEST_ADDOPTS is available for running tests: %s",
+        os.getenv("PYTEST_ADDOPTS"),
+    )
 
     pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
 
-    logdir = Path(logdir) / "embedded_test" / "log"
+    logdir = Path(logdir)
     logdir.mkdir(exist_ok=True, parents=True)
     with tempfile.TemporaryDirectory() as tmpdir:
         junit_test_results = Path(tmpdir) / "test_unit.xml"
@@ -608,8 +612,8 @@ def run_tests(
             env={
                 "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
                 "ANDROID_AVD_HOME": str(tmpdir),
-                "PYTEST_ADDOPTS": os.getenv('PYTEST_ADDOPTS')
-                if os.getenv('PYTEST_ADDOPTS')
+                "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS")
+                if os.getenv("PYTEST_ADDOPTS")
                 else " -m 'not perf'",
             },
             timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
@@ -780,6 +784,10 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logging.critical("Terminated by user")
         sys.exit(1)
+    except UnitTestFailure as utf:
+        logging.error("Test failure: %s", str(utf))
+        if args.use_exceptions:
+            sys.exit(1)
     except Exception as exc:
         if args.verbose:
             logging.error("Failure during execution", exc_info=exc)
