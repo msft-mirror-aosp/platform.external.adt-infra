@@ -349,7 +349,7 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
 
     # Make sure the emulator is booted in at least 10 minutes.
     # (Note, boot times can be *REALLY* slow on windows gce..)
-    assert emulator.wait_for_boot(600)
+    assert emulator.wait_for_boot(timeout=600)
 
     assert emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
     emulator.reset_state()

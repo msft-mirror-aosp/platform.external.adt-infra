@@ -84,6 +84,9 @@ class Adb:
             self.device.wait_boot_complete, [timeout, timedelta]
         )
 
+    def online(self):
+        return "device" in self._with_adb_retry(self.device.get_state, [])
+
     def shell(self, cmd: str, timeout: int = 10) -> str:
         """Runs the given shell command on the emulator
 
