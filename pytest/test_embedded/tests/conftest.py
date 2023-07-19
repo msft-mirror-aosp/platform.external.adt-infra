@@ -104,6 +104,11 @@ def pytest_addoption(parser):
         action="store_true",
         help="Do not delete the created avds. Useful if you need to debug snapshot related issues.",
     )
+    parser.addoption(
+        "--build_target",
+        action="store",
+        help="The build target name.",
+    )
 
 
 ALL_PLATFORMS = set("darwin linux win32".split())
