@@ -27,6 +27,8 @@ AOSP_DIR=$(
     pwd
 )
 
+build_target=${BUILD_TARGET_NAME:-unknown_build_target}
+
 aosp_find_python() {
     local AOSP_PREBUILTS_DIR=$AOSP_DIR/prebuilts
     local OS_NAME=$(get_build_os)
@@ -36,4 +38,4 @@ aosp_find_python() {
 }
 
 PYTHON=$(aosp_find_python)
-run $PYTHON $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.py --build_dir out/prebuilt_cached/builds --logdir $DISTRIB_DIR/testlogs
+run $PYTHON $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.py --build_dir out/prebuilt_cached/builds --logdir $DISTRIB_DIR/testlogs --build_target $build_target
