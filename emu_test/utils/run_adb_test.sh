@@ -37,6 +37,8 @@ AOSP_DIR=$(
     pwd
 )
 
+build_target=${BUILD_TARGET_NAME:-unknown_build_target}
+
 # Finds the python installation that is part of our repository
 aosp_find_python() {
     local AOSP_PREBUILTS_DIR=$AOSP_DIR/prebuilts
@@ -48,4 +50,4 @@ aosp_find_python() {
 
 PYTHON=$(aosp_find_python)
 export PYTEST_ADDOPTS="-m 'adb'"
-run $PYTHON "$AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.py" --build_dir out/prebuilt_cached/builds --logdir "$DISTRIB_DIR/testlogs"
+run $PYTHON "$AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.py" --build_dir out/prebuilt_cached/builds --logdir "$DISTRIB_DIR/testlogs" --build_target $build_target
