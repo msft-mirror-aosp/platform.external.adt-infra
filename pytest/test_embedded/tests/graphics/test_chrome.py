@@ -151,9 +151,6 @@ def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
     """
     _, port = test_server
     chrome_page = f"http://10.0.2.2:{port}/"
-    avd.adb.shell(
-        f"am start -a android.intent.action.VIEW -d {chrome_page} com.android.chrome"
-    )
 
     def at_least_40_percent_of_image_is_blue():
         """
@@ -179,6 +176,12 @@ def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
                     blue_count += 1
         return blue_count > (rgb_image.width * rgb_image.height * percent_blue / 100)
 
-    assert wait_until(
-        at_least_40_percent_of_image_is_blue
-    ), "Did not see a screenshot with 40%% blue pixels"
+    max_retries = 2
+    for i in range(0, max_retries):
+        avd.adb.shell(
+            f"am start -a android.intent.action.VIEW -d {chrome_page} com.android.chrome"
+        )
+        if wait_until(at_least_40_percent_of_image_is_blue):
+            return
+
+    assert False, f"Did not see a screenshot with 40%% blue pixels with {max_retries} retries"
