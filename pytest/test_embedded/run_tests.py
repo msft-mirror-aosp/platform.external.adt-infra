@@ -708,6 +708,7 @@ def parse_arguments():
         "--build_target",
         dest="build_target",
         help="The name of the build target",
+        default="unknown-build-target",
     )
 
     parser.add_argument(
