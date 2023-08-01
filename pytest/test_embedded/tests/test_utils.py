@@ -11,43 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import io
 import logging
 import re
 import threading
 import time
+from pathlib import Path
 from queue import Queue
-from emu.timing import eventually
-
 
 import google.protobuf.text_format
 import grpc
-from aemu.proto.emulator_controller_pb2 import Image, ImageFormat
-from PIL import Image as PillowImage
+from aemu.proto.emulator_controller_pb2 import ImageFormat
 
-
-def proto_to_pillow(image: Image) -> PillowImage:
-    """Converts an emulator protobuf image to a Pillow Image
-
-    Args:
-        image (Image): An image obtained from the screenShot api.
-
-    Returns:
-        PillowImage: A Pillow Image
-    """
-    EMU_TO_PIL_IMAGE_FORMATS = {
-        ImageFormat.RGB888: "RGB",
-        ImageFormat.RGBA8888: "RGBA",
-        ImageFormat.PNG: "PNG",
-    }
-
-    if image.format.format == ImageFormat.PNG:
-        return PillowImage.open(io.BytesIO(image.image))
-    return PillowImage.frombytes(
-        EMU_TO_PIL_IMAGE_FORMATS[image.format.format],
-        (image.format.width, image.format.height),
-        image.image,
-    )
+from emu.images.convert import save_image
+from emu.timing import eventually
 
 
 def fmt_proto(msg):
@@ -91,20 +67,25 @@ class StreamingCall(object):
     def __init__(self, stream_call):
         self._queue = Queue()
         self._stream_call = stream_call
+        self.client_cancel = False
+
+    def _enqueue(self, incoming_message):
+        self._queue.put(incoming_message)
 
     def _observe_call(self):
         received = 0
         try:
             for val in self._stream_call:
-                self._queue.put(val)
+                self._enqueue(val)
                 received = received + 1
         except grpc.RpcError as e:
             # We expect to be cancelled by either the client or server.
             logging.info(
-                "Completed observation: %s, %s, received: %d messages",
+                "Completed observation: %s, %s, received: %d messages. Cancelled by client?: %s",
                 e.code(),
                 e.details(),
                 received,
+                self.client_cancel,
             )
         self._queue.put(self.__FINISHED_SENTINEL__)
 
@@ -124,4 +105,8 @@ class StreamingCall(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # We left scope, cancel from the client side.
+        self.client_cancel = True
         self._stream_call.cancel()
+
+
+

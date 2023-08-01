@@ -45,11 +45,18 @@ def wait_until(predicate, timeout=15, pre_requisite=lambda: True, hz=2):
         bool: True if the predicate function returns True before the timeout
             expires, otherwise False.
     """
+    start = time.time()
     end = time.time() + timeout
-    while not predicate() and (time.time() < end and pre_requisite()):
+    predicate_state = predicate()
+    pre_requisite_state = pre_requisite()
+    while not predicate_state and (time.time() < end and pre_requisite_state):
         time.sleep(1 / hz)
+        predicate_state = predicate()
+        pre_requisite_state = pre_requisite()
 
-    return pre_requisite() and predicate()
+    if time.time() >= end:
+        logging.info("Operation timed out after %s seconds", time.time() - start)
+    return predicate_state and pre_requisite_state
 
 
 def _eventually_queue(queue: QueueLogHandler, predicate, timeout=10):
@@ -60,7 +67,6 @@ def _eventually_queue(queue: QueueLogHandler, predicate, timeout=10):
     # Timeout (i.e. stop the queue), if we have no events before the timeout
     queue.set_timeout(timeout)
     for event in queue:
-
         # Check the case where we had events, but not one matching the predicate
         if time.time() > end:
             return None

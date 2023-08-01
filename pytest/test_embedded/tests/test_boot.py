@@ -1,12 +1,29 @@
+# Copyright 2023 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 import logging
 import platform
-import psutil
-import pytest
 import sys
 import time
 from pathlib import Path
+
+import psutil
+import pytest
 from google.protobuf import empty_pb2
+from aemu.proto.emulator_controller_pb2 import BootCompletedNotication
+
 from emu.apk import APP_DEBUG_APK
+from emu.timing import eventually
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -19,7 +36,7 @@ from emu.apk import APP_DEBUG_APK
 
 def has_network(adb):
     """check whether it has network or not
-    adb shell ifconfig, it shouls have both eth0 and wlan0
+    adb shell ifconfig, it should have both eth0 and wlan0
     """
     radio_wifi = False
     result = adb.shell("ifconfig")
@@ -29,13 +46,17 @@ def has_network(adb):
     return radio_wifi
 
 
-def check_cpu_usage_less_than_threshold(emulator):
+def cpu_usage(emulator):
+    """
+    Check if the CPU usage of the specified emulator is less than a threshold.
+
+    This function checks the CPU usage of an emulator and compares it to the given threshold (25%).
+    If the CPU usage is lower than or equal to the threshold, the function returns True;
+    otherwise, it returns False."""
     proc_emu = psutil.Process(emulator.description.pid())
     cpu_usage = proc_emu.cpu_percent(interval=2)
     logging.info("emulator usage is %d", cpu_usage)
-    if cpu_usage <= 25:
-        return True
-    return False
+    return cpu_usage
 
 
 def shutdown(emulator):
@@ -45,20 +66,37 @@ def shutdown(emulator):
     # the multiinstnace.lock failure, hopefully, especially on gcp windows
     if platform.system() == "Windows":
         time.sleep(30)
-    count = 0
-    while count < 60:
-        time.sleep(1)
-        count += 1
-        if not emulator.is_alive():
-            break
+
+    def emulator_died():
+        return not emulator.is_alive()
+
+    eventually(emulator_died, timeout=60)
+
+    # Maybe we didn't shutdown in time, if so try some other method.
     if emulator.is_alive():
         emulator.stop(timeout=60)
+
     assert not emulator.is_alive()
+
+
+def check_has_booted_notification(emulator, timeout):
+    response_iterator = (
+        emulator.description.get_emulator_controller().streamNotification(
+            empty_pb2.Empty(), timeout=timeout
+        )
+    )
+
+    for notification in response_iterator:
+        logging.info("Notification: %s", notification)
+        if notification.HasField("booted"):
+            logging.info("Boot completed in %d ms.", notification.booted.time)
+            return True
+
+    return False
 
 
 @pytest.mark.boot
 @pytest.mark.e2e
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.timeout(timeout=2800, func_only=True)
 def test_first_time_booted(emulator):
     """Make sure the emulator status is set to booted."""
@@ -72,23 +110,19 @@ def test_first_time_booted(emulator):
     assert emulator.launch(flags=myflags)
 
     logging.info("Wating for it to boot up ...")
-    assert emulator.wait_for_boot(timeout=1080)
-    logging.info("Wating for it to stablize ...")
-    # make sure it has both radio and wifi
-    count = 0
-    while count < 30:
-        time.sleep(1)
-        count += 1
-        if has_network(emulator.adb):
-            logging.info("found radio and wifi")
-            break
-        logging.info("radio or wifi not ready yet")
 
+    assert check_has_booted_notification(emulator, timeout=1080)
+
+    logging.info("Wating for it to stablize ...")
+
+    def network_up():
+        return has_network(emulator.adb)
+
+    # make sure it has both radio and wifi
+    assert eventually(network_up, timeout=30), "Radio and wifi are not ready!"
     assert emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
 
-    logging.info("Shutting it down ...")
     shutdown(emulator)
-    logging.info("emulator is shut down successfully")
 
 
 def check_boot_from_snapshot(avdpath) -> bool:
@@ -127,17 +161,15 @@ def test_snapshot_booted(emulator):
     logging.info("Wating for it to boot up from snapshot ...")
     assert emulator.wait_for_boot(timeout=mytimeout)
     logging.info("Wating for it to stablize ...")
-    count = 0
-    while count < 10:
-        time.sleep(1)
-        count += 1
-        if check_boot_from_snapshot(emulator.configuration.directory):
-            break
 
-    assert check_boot_from_snapshot(emulator.configuration.directory)
-    logging.info("Shutting it down ...")
+    def has_booted_from_snapshot():
+        return check_boot_from_snapshot(emulator.configuration.directory)
+
+    assert eventually(
+        has_booted_from_snapshot
+    ), f"The file {emulator.configuration.directory} does not exist or contain load_succeeded"
+
     shutdown(emulator)
-    logging.info("emulator is shut down successfully")
 
 
 @pytest.mark.boot
@@ -158,19 +190,30 @@ def test_emulator_should_idle(emulator):
     mytimeout = 45
     if platform.processor() == "i386" and platform.system() == "Darwin":
         mytimeout = 360
-    logging.info("Wating for it to boot up from snapshot ...")
+    logging.info(
+        "Waiting at most %s seconds for emulator to boot from snapshot", mytimeout
+    )
     assert emulator.wait_for_boot(timeout=mytimeout)
     logging.info("Wating for it to stablize ...")
-    count = 0
-    while count < 100:
-        time.sleep(1)
-        count += 1
-        if check_cpu_usage_less_than_threshold(emulator):
-            break
 
-    # cannot keep cpu spinning
-    assert count < 100
+    def emulator_is_stable():
+        """True if the emulator is stable, consuming less than 25% of the cpu."""
+        return cpu_usage(emulator) <= 25
+
+    assert eventually(
+        emulator_is_stable, timeout=300
+    ), f"Cpu did not stabilize (i.e. cpu usage < 25%), cpu: {cpu_usage(emulator)}"
+
     logging.info("Shutting it down ...")
     if emulator.is_alive():
         emulator.stop(timeout=60)
     logging.info("emulator is shut down successfully")
+
+
+
+@pytest.mark.boot
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=10, func_only=True)
+def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
+    assert avd.has_booted()
+    assert check_has_booted_notification(avd, timeout=10)

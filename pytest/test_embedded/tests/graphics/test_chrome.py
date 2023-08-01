@@ -13,16 +13,12 @@
 # limitations under the License.
 
 import http.server
-import logging
 import threading
-import time
-from pathlib import Path
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 
 from emu.timing import wait_until
-from tests.test_utils import proto_to_pillow
 
 
 class TemporaryWebServer(http.server.SimpleHTTPRequestHandler):
@@ -102,16 +98,6 @@ def test_server(request):
 
 
 @pytest.fixture
-def log_directory(pytestconfig):
-    """Get the value of the --log-file option."""
-    log_file = pytestconfig.getoption("--log-file")
-    if log_file:
-        return Path(log_file).parent
-
-    return Path.cwd()
-
-
-@pytest.fixture
 def prepare_chrome(avd):
     """
     Pytest fixture that launches Chrome and configures it
@@ -155,43 +141,9 @@ def test_make_sure_webserver_works(test_server):
     assert result.read().decode("utf-8") == TemporaryWebServer.text
 
 
-def get_rgb_screenshot(emulator_controller, image_format, image_dir):
-    """
-    Get an RGB screenshot from the emulator controller and save it to a file.
-
-    This method captures a screenshot using the provided emulator
-    controller in the specified image format,
-    converts the image to RGB mode, saves the screenshot
-    as a JPG to the specified file, and returns the RGB image.
-
-    Args:
-        emulator_controller (EmulatorController): An instance of the emulator controller.
-        image_format (ImageFormat): The desired format of the screenshot image.
-        image_file (Path): The file path to save the screenshot image.
-
-    Returns:
-        Image: The RGB image obtained from the screenshot.
-    """
-    img = proto_to_pillow(emulator_controller.getScreenshot(image_format))
-
-    # Convert image to RGB mode to access individual color channels
-    rgb_image = img.convert("RGB")
-    image_file = image_dir / f"screenshot-{round(time.time())}.png"
-    logging.info(
-        "Got %sx%s, saving screenshot to %s",
-        img.width,
-        img.height,
-        image_file.absolute(),
-    )
-    rgb_image.save(image_file, "PNG")
-    return rgb_image
-
-
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=120, func_only=True)
-def test_launch_chrome_google(
-    prepare_chrome, test_server, avd, emulator_controller, log_directory
-):
+def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
     """
     This test launches Chrome on an Android device, navigates to  a `blue`
     page served by the test server, captures a screenshot, and verifies
@@ -199,9 +151,6 @@ def test_launch_chrome_google(
     """
     _, port = test_server
     chrome_page = f"http://10.0.2.2:{port}/"
-    avd.adb.shell(
-        f"am start -a android.intent.action.VIEW -d {chrome_page} com.android.chrome"
-    )
 
     def at_least_40_percent_of_image_is_blue():
         """
@@ -210,9 +159,8 @@ def test_launch_chrome_google(
         Returns:
             bool: True if at least 10% of the image pixels are blue, False otherwise.
         """
-        rgb_image = get_rgb_screenshot(
-            emulator_controller, ImageFormat(), log_directory
-        )
+        _, rgb_image = get_screenshot(ImageFormat())
+        rgb_image = rgb_image.convert("RGB")
 
         percent_blue = 40
         blue_count = 0
@@ -228,6 +176,12 @@ def test_launch_chrome_google(
                     blue_count += 1
         return blue_count > (rgb_image.width * rgb_image.height * percent_blue / 100)
 
-    assert wait_until(
-        at_least_40_percent_of_image_is_blue
-    ), "Did not see a screenshot with 40%% blue pixels"
+    max_retries = 2
+    for i in range(0, max_retries):
+        avd.adb.shell(
+            f"am start -a android.intent.action.VIEW -d {chrome_page} com.android.chrome"
+        )
+        if wait_until(at_least_40_percent_of_image_is_blue):
+            return
+
+    assert False, f"Did not see a screenshot with 40%% blue pixels with {max_retries} retries"

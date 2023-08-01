@@ -563,6 +563,7 @@ def run_tests(
     logdir: Path,
     verbose: bool,
     symbol_path: Path,
+    build_target: str,
     pyrun: PyRunner,
 ):
     """runs tests on an emulator. It installs necessary packages, restarts adb,
@@ -592,6 +593,10 @@ def run_tests(
     with tempfile.TemporaryDirectory() as tmpdir:
         junit_test_results = Path(tmpdir) / "test_unit.xml"
 
+        default_markers = "not perf"
+        if "gfxstream" in build_target:
+            default_markers += " and not nongfxstream"
+
         exit_code = pyrun.run(
             [
                 "-m",
@@ -614,7 +619,7 @@ def run_tests(
                 "ANDROID_AVD_HOME": str(tmpdir),
                 "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS")
                 if os.getenv("PYTEST_ADDOPTS")
-                else " -m 'not perf'",
+                else f" -m '{default_markers}'",
             },
             timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
             check_output=False,
@@ -700,6 +705,13 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--build_target",
+        dest="build_target",
+        help="The name of the build target",
+        default="unknown-build-target",
+    )
+
+    parser.add_argument(
         "-g",
         "--generate",
         default=False,
@@ -763,6 +775,7 @@ def main(args):
                 logdir=args.logdir,
                 verbose=args.verbose,
                 symbol_path=symbols,
+                build_target=args.build_target,
                 pyrun=py_exe,
             )
     else:
@@ -772,6 +785,7 @@ def main(args):
             logdir=args.logdir,
             verbose=args.verbose,
             symbol_path=args.symbols,
+            build_target=args.build_target,
             pyrun=py_exe,
         )
 

@@ -41,6 +41,7 @@ from emu.console.emulator_connection import EmulatorConnection
 from emu.logging.log_handler import QueueLogHandler
 from emu.process.command import Command
 from emu.utils import LogObserver
+from emu.timing import wait_until
 
 
 class FailedToLaunchException(Exception):
@@ -170,9 +171,11 @@ class BaseEmulator(object):
         try:
             _EMPTY_ = empty_pb2.Empty()
             emu = self.description.get_emulator_controller()
-            return emu.getStatus(_EMPTY_).booted
-        except RpcError as err:
+            return emu.getStatus(_EMPTY_).booted and self.adb.online()
+        except Exception as err:
             self.logger.warning("Unable to determine boot state due to %s", err)
+
+        return False
 
     def wait_for_boot(self, timeout: int = 600) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
@@ -183,7 +186,16 @@ class BaseEmulator(object):
         Returns:
             bool: True if the emulator has booted, False otherwise.
         """
-        return self.adb.wait_boot_complete(timeout=timeout)
+        assert (
+            self.description is not None
+        ), "You cannot call wait_for_boot on an undiscovered emulator."
+        logging.info(
+            "Waiting at most %s seconds until %s has booted, state: %s",
+            timeout,
+            self.description.name(),
+            self.has_booted()
+        )
+        return wait_until(self.has_booted, timeout=timeout)
 
     def console(self) -> EmulatorConnection:
         """Returns a connection to the emulator console, authenticating if needed.
@@ -559,7 +571,7 @@ class Emulator(BaseEmulator):
             self.proc.terminate()
 
     def has_booted(self) -> bool:
-        """Makes a check of bootcoompleted.ini to check if the emulator has booted.
+        """Check if the emulator has booted.
 
         This method will also observe the emulator kernel log to see if it sees
         a kernel start message.
@@ -588,10 +600,14 @@ class Emulator(BaseEmulator):
             self.kernel_start < 5
         ), f"Detected {self.kernel_start} kernel restarts.. This is likely a problem."
 
-        path = Path(
-            self.android_avd_home, f"{self.configuration.name}.avd", "bootcompleted.ini"
-        )
-        return path.is_file()
+        try:
+            _EMPTY_ = empty_pb2.Empty()
+            emu = self.description.get_emulator_controller()
+            return emu.getStatus(_EMPTY_).booted and self.adb.online()
+        except Exception as err:
+            self.logger.warning("Unable to determine boot state due to %s", err)
+
+        return False
 
     def delete(self) -> None:
         self.configuration.delete()
