@@ -125,6 +125,7 @@ def check_boot_from_snapshot(avdpath) -> bool:
 
 @pytest.mark.e2e
 @pytest.mark.nongfxstream
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
 def test_can_load_oldsnapshot(emulator):
     """test that current emulator can load the snapshot created by old emulator

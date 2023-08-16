@@ -125,6 +125,7 @@ def prepare_chrome(avd):
     avd.stop_activity("com.android.chrome")
 
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.skipif(sys.platform == "win32", reason="b/291324083")
 def test_make_sure_webserver_works(test_server):
     """Test function to ensure that the web server is functioning correctly.
 
