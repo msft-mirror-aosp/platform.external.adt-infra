@@ -615,7 +615,8 @@ def run_tests(
             ],
             cwd=HERE,
             env={
-                "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
+                "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES"
+                if platform.system() != "Windows" else "NO",
                 "ANDROID_AVD_HOME": str(tmpdir),
                 "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS")
                 if os.getenv("PYTEST_ADDOPTS")
