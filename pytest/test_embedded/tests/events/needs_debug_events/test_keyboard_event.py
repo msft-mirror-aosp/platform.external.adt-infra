@@ -130,7 +130,6 @@ def send_letter_over(send_fn, avd, log):
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
-@pytest.mark.skip(reason="-debug-events is not logging key events.")
 def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over grpc.
 
@@ -152,7 +151,6 @@ def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
-@pytest.mark.skip(reason="-debug-events is not logging key events.")
 def test_letter_perf_host_host_telnet(avd, emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over telnet.
 
