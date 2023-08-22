@@ -157,6 +157,34 @@ def test_multidisplay_can_configure_four(no_displays, emulator_controller):
     # We have default screen, + the ones we added.
     assert len(cfg.displays) == len(displays) + 1
 
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_multidisplay_add_should_not_remove(no_displays, emulator_controller):
+    """This tests makes sure that a total of 4 displays can be configured.
+
+    Adding 3 additional displays, should return a total of 4.
+    """
+    displays = [
+        DisplayConfiguration(width=720, height=1280, dpi=213, display=2)
+    ]
+    cfg = emulator_controller.setDisplayConfigurations(
+        DisplayConfigurations(displays=displays)
+    )
+
+    # All screens have been made available.
+    assert all([x in cfg.displays for x in displays])
+    displays = [
+        DisplayConfiguration(width=720, height=1280, dpi=213, display=1),
+        DisplayConfiguration(width=720, height=1280, dpi=213, display=2)
+    ]
+    cfg = emulator_controller.setDisplayConfigurations(
+        DisplayConfigurations(displays=displays)
+    )
+
+    # All screens have been made available.
+    assert all([x in cfg.displays for x in displays])
+
+
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=20, func_only=True)
