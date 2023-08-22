@@ -13,6 +13,8 @@
 # limitations under the License.
 import time
 
+import sys
+
 import pytest
 
 from aemu.proto.screen_recording_service_pb2 import RecordingInfo
@@ -68,6 +70,7 @@ def test_screen_records_video(screen_service, animation_app, tmp_path):
 
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.skipif(sys.platform == "win32", reason="b/296421623")
 def test_can_only_record_once(screen_service, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
