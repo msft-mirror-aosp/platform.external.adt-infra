@@ -136,7 +136,6 @@ def test_multidisplay_double_ids_error(no_displays, emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.skip(reason="b/237838045. This seems to crash the emulator.")
 def test_multidisplay_can_configure_four(no_displays, emulator_controller):
     """This tests makes sure that a total of 4 displays can be configured.
 
