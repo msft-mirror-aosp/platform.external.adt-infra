@@ -23,6 +23,7 @@ _EMPTY_ = empty_pb2.Empty()
 
 
 @pytest.mark.e2e
+@pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "clipboard_data",

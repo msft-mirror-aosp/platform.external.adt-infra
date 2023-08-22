@@ -1,0 +1,144 @@
+{
+    "landscape_test_suite": {
+        "description": "Set of tests that verify that graphic related tests work well in a `landscape` emulator",
+        "launch_flags": [
+            "-no-snapshot"
+        ],
+        "pytest_flags": [
+            "-m graphics",
+            "--timeout=300"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis",
+            "hw.initialOrientation": "landscape",
+            "skin.name": "1280x720"
+        },
+        "status": "disabled: rotation is not working as expected."
+    },
+    "portrait_test_suite": {
+        "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
+        "launch_flags": [
+            "-no-snapshot"
+        ],
+        "pytest_flags": [
+            "-m graphics",
+            "--timeout=300"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "embedded_test_suite": {
+        "description": "Set of tests that verify that the embedded emulator works when launched in portrait mode.",
+        "launch_flags": [
+            "-no-snapshot",
+            "-qt-hide-window",
+            "-grpc-use-token"
+        ],
+        "pytest_flags": [
+            "-m embedded or graphics",
+            "--timeout=600"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis",
+            "hw.initialOrientation": "landscape",
+            "skin.name": "1280x720"
+        },
+        "status": "enabled"
+    },
+    "embedded_landscape_test_suite": {
+        "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
+        "launch_flags": [
+            "-no-snapshot",
+            "-qt-hide-window",
+            "-grpc-use-token"
+        ],
+        "pytest_flags": [
+            "-m embedded or graphics",
+            "--timeout=600"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis",
+            "hw.initialOrientation": "landscape",
+            "skin.name": "1280x720"
+        },
+        "status": "disabled: rotation is not working as expected."
+    },
+    "snapshot_test_suite": {
+        "description": "Set of tests that verify that snapshots work for the default emulator.",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m snapshot",
+            "--timeout=600"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "foldable_emulator_test_suite": {
+        "description": "Set of tests that verify that the foldable emulator works as expected.",
+        "launch_flags": [
+        ],
+        "pytest_flags": [
+            "-m foldable",
+            "--timeout=300"
+        ],
+        "avd_config": {
+            "api": "31",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "resizable_emulator_test_suite": {
+        "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
+        "launch_flags": [
+        ],
+        "pytest_flags": [
+            "-m graphics or resizable",
+            "--timeout=300"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis",
+            "hw.device.name": "resizable",
+            "hw.resizable.configs": "phone-0-1080-2340-420, foldable-1-1768-2208-420, tablet-2-1920-1200-240, desktop-3-1920-1080-160",
+            "skin.name": "1080x2340",
+            "skin.path": "no_skin"
+        },
+        "status": "enabled"
+    },
+    "hardware_test_suite": {
+        "description": "Set of tests that validate hardware, console and adb",
+        "launch_flags": [
+        ],
+        "pytest_flags": [
+            "-m hardware or console or adb",
+            "--timeout=300"
+        ],
+        "avd_config": {
+            "api": "31",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "presubmit_emulator_test_suite": {
+        "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m boot and not slow",
+            "--timeout=300"
+        ],
+        "avd_config": {
+            "api": "31",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    }
+}

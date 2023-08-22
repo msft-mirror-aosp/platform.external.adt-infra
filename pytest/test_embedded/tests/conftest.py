@@ -29,6 +29,7 @@ import os
 import platform
 import re
 import sys
+import json
 import threading
 import time
 from pathlib import Path
@@ -84,6 +85,16 @@ def pytest_addoption(parser):
         action="store_true",
         help="Connect to the first available emulator for debugging. "
         "Use this if you have launched you own emulator and want to run the tests against that instance.",
+    )
+    parser.addoption(
+        "--avd_config",
+        default="{}",
+        help="A JSON snippet that contains the avd configuration that should be used to run this test",
+    )
+    parser.addoption(
+        "--emulator_launch_flags",
+        default="[]",
+        help="A JSON snippet that contains the avd configuration that should be used to run this test",
     )
     parser.addoption(
         "--debug_emulator_log",
@@ -297,6 +308,11 @@ def emulator(request, pytestconfig) -> BaseEmulator:
     }
     avd_user_config = getattr(request.module, "avd_config", {})
     avd_config.update(avd_user_config)
+
+    cfg = pytestconfig.getoption("avd_config")
+    logging.info("Using avd config:%s", cfg)
+    avd_param_config = json.loads(cfg)
+    avd_config.update(avd_param_config)
     name = f"{avd_config['api']}_{avd_config['tag.id']}_{avd_config['cpu']}_{avd_config['device.name']}"
 
     if name not in pytest.emulators:
@@ -326,7 +342,7 @@ def emulator(request, pytestconfig) -> BaseEmulator:
 
 @pytest.mark.timeout(600)
 @pytest.fixture(scope="module")
-def avd(emulator: BaseEmulator, request) -> BaseEmulator:
+def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
     Note that the following holds:
@@ -336,9 +352,6 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
 
     - The emulator will be (re-)started if needed.
 
-    - You can provide the "param" property on the request to provide additional
-      flags to the emulator during re-start.
-
     Args:
         emulator (BaseEmulator): Test fixture that provides the configured emulator.
         request: Provide information on the executing test function.
@@ -346,10 +359,8 @@ def avd(emulator: BaseEmulator, request) -> BaseEmulator:
     Returns:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
-    if hasattr(request, "param"):
-        emulator.restart([request.param])
-    else:
-        emulator.restart([])
+    emulator_launch_flags = json.loads(pytestconfig.getoption("emulator_launch_flags"))
+    emulator.restart(emulator_launch_flags)
 
     # Make sure the emulator is booted in at least 10 minutes.
     # (Note, boot times can be *REALLY* slow on windows gce..)
@@ -557,9 +568,11 @@ def get_screenshot(emulator_controller, log_directory, request):
         Returns:
             A tuple of the raw screenshot image and the Pillow image object.
         """
+        screenshot_dir = Path(log_directory) / "screenshots"
+        screenshot_dir.mkdir(parents=True, exist_ok=True)
         img = emulator_controller.getScreenshot(image_format)
         file_name = re.sub(r"[\\/\{\}:]", "_", request.node.nodeid)
-        pillow_image = save_image(img, log_directory, file_name)
+        pillow_image = save_image(img, screenshot_dir.absolute(), file_name)
         return img, pillow_image
 
     return do_get_screenshot
@@ -567,17 +580,15 @@ def get_screenshot(emulator_controller, log_directory, request):
 
 @pytest.fixture
 def stream_screenshot(emulator_controller, log_directory, request):
-
     class StreamingImageCall(StreamingCall):
-        def __init__(
-            self, image_format: ImageFormat
-        ):
+        def __init__(self, image_format: ImageFormat):
             super().__init__(emulator_controller.streamScreenshot(image_format))
             self.test_name = re.sub(r"[\\/\{\}:]", "_", request.node.nodeid)
-
+            self.screenshot_dir = Path(log_directory) / "screenshots"
+            self.screenshot_dir.mkdir(parents=True, exist_ok=True)
 
         def _enqueue(self, incoming_message):
-            save_image(incoming_message, log_directory, self.test_name)
+            save_image(incoming_message, self.screenshot_dir, self.test_name)
             self._queue.put(incoming_message)
 
     def streaming_img_call(image_format: ImageFormat):

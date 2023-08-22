@@ -193,7 +193,7 @@ class BaseEmulator(object):
             "Waiting at most %s seconds until %s has booted, state: %s",
             timeout,
             self.description.name(),
-            self.has_booted()
+            self.has_booted(),
         )
         return wait_until(self.has_booted, timeout=timeout)
 
@@ -432,6 +432,7 @@ class Emulator(BaseEmulator):
     def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
         self.logger = logging.getLogger(self.configuration.name)
         self.log = QueueLogHandler(logging.getLogger(f"{self.configuration.name}-exe"))
+        self.kernel_start = 0
 
         cmd = Command(cmd).with_environment(env).with_log_handler(self.log)
         if sys.platform == "win32":
@@ -537,7 +538,7 @@ class Emulator(BaseEmulator):
                 str(port),
                 "-grpc",
                 str(grpc_port),
-                "-log-detailed",
+                "-debug-log",
                 "-gpu",
                 "swiftshader_indirect",
                 # Vulkan will cause snapshot saving failure, disable it for now
@@ -561,14 +562,11 @@ class Emulator(BaseEmulator):
         """
         self.disconnect()
         if self.description is not None:
-            self.description.shutdown(timeout)
-            # prevent double termination.
+            if self.description.shutdown(timeout):
+                logging.info("Terminated the emulator")
+            else:
+                logging.warning("Unable to terminate emulator!")
             self.description = None
-
-        # Only needed for the case where we were partially launched
-        # self.description is likely None, and we failed to stop cleanly.
-        if self.proc is not None:
-            self.proc.terminate()
 
     def has_booted(self) -> bool:
         """Check if the emulator has booted.
