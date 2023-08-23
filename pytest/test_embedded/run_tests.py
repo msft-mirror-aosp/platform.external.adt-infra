@@ -629,7 +629,8 @@ def run_tests(
                     if os.getenv("PYTEST_ADDOPTS")
                     else f" -m '{default_markers}'",
                 },
-                timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
+                # Give pytest a chance to "nicely" terminate everything.
+                timeout = 2800 if platform.system() != "Windows" else 3200,
                 check_output=False,
             )
 
