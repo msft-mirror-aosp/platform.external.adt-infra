@@ -692,3 +692,19 @@ aosp_find_python() {
   $PYTHON --version >/dev/null || panic "Unable to get python version from $PYTHON"
   printf "$PYTHON"
 }
+
+check_physical_display() {
+    case $(get_build_os) in
+        darwin)
+            run system_profiler SPDisplaysDataType
+            display_type=$(system_profiler SPDisplaysDataType | grep "Display Type:")
+            if [ -z $display_type ]; then
+                panic "No physical display detected. Aborting tests."
+            else
+                printf "Display type found: $display_type"
+            fi
+            ;;
+        *)
+            ;;
+    esac
+}
