@@ -101,12 +101,18 @@ class ZipFileWithAttr(ZipFile):
         return targetpath
 
 
-class AdbServer:
+class AdbServer():
+
+    def __init__(self, pyrun):
+        self.pyrun = pyrun
+
     def __enter__(self):
+        self.pyrun.run(["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False)
         run([ADB, "start-server"], timeout=60)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         run([ADB, "kill-server"], timeout=60)
+        self.pyrun.run(["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False)
 
 
 def _reader(pipe, logfn):
@@ -590,80 +596,82 @@ def run_tests(
 
     logdir = Path(logdir)
     logdir.mkdir(exist_ok=True, parents=True)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        junit_test_results = Path(tmpdir) / "test_unit.xml"
+    with AdbServer(pyrun):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            junit_test_results = Path(tmpdir) / "test_unit.xml"
 
-        default_markers = "not perf"
-        if "gfxstream" in build_target:
-            default_markers += " and not nongfxstream"
+            default_markers = "not perf"
+            if "gfxstream" in build_target:
+                default_markers += " and not nongfxstream"
 
-        exit_code = pyrun.run(
-            [
-                "-m",
-                "pytest",
-                "-vv",
-                "-x" if use_exceptions else "",
-                f"--junitxml={junit_test_results}",
-                # Boot times in windows can be >6 mins, and we are booting several times!
-                # We will give us at most 45 minutes.
-                "--timeout=2700",
-                f"--log-file={logdir}/pytest.log",
-                f"--emulator={emulator}",
-                f"--symbols={symbol_path}",
-                f"--android_avd_home={tmpdir}",
-                f"--android_home={ANDROID_SDK_ROOT}",
-            ],
-            cwd=HERE,
-            env={
-                "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
-                "ANDROID_AVD_HOME": str(tmpdir),
-                "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS")
-                if os.getenv("PYTEST_ADDOPTS")
-                else f" -m '{default_markers}'",
-            },
-            timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
-            check_output=False,
-        )
-
-        # Let's see if we can collect crash reports..
-        collect_crash_reports(emulator, symbol_path, logdir)
-
-        # Forcefully terminate all emulator processess
-        pyrun.run(["-m", "emu.process.kill_emulator"], check_output=False)
-
-        if not junit_test_results.exists():
-            raise NoTestResultsProduced(
-                f"We expected a junit report in {junit_test_results}."
+            exit_code = pyrun.run(
+                [
+                    "-m",
+                    "pytest",
+                    "-vv",
+                    "-x" if use_exceptions else "",
+                    f"--junitxml={junit_test_results}",
+                    # Boot times in windows can be >6 mins, and we are booting several times!
+                    # We will give us at most 45 minutes.
+                    "--timeout=2700",
+                    f"--log-file={logdir}/pytest.log",
+                    f"--emulator={emulator}",
+                    f"--symbols={symbol_path}",
+                    f"--android_avd_home={tmpdir}",
+                    f"--android_home={ANDROID_SDK_ROOT}",
+                ],
+                cwd=HERE,
+                env={
+                    "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES"
+                    if platform.system() != "Windows" else "NO",
+                    "ANDROID_AVD_HOME": str(tmpdir),
+                    "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS")
+                    if os.getenv("PYTEST_ADDOPTS")
+                    else f" -m '{default_markers}'",
+                },
+                timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
+                check_output=False,
             )
 
-        apply_xslt(
-            python_exe=pyrun,
-            source=junit_test_results,
-            xslt=HERE / "cfg" / "liftSystemOut.xslt",
-            dest=Path(logdir) / "test_embedded_test.xml",
-        )
-        apply_xslt(
-            python_exe=pyrun,
-            source=junit_test_results,
-            xslt=HERE / "cfg" / "asHtml.xslt",
-            dest=Path(logdir) / "test_report.html",
-        )
+            # Let's see if we can collect crash reports..
+            collect_crash_reports(emulator, symbol_path, logdir)
 
-        # Let's exit with a message that contains the first failure
-        # This way we can have it show up as part of the snippet we display
-        # on our build bots
-        # See https://docs.pytest.org/en/7.1.x/reference/exit-codes.html for
-        # the status codes.
-        if exit_code == 1:
-            failure_file = Path(logdir) / "fail.txt"
+            # Forcefully terminate all emulator processess
+            pyrun.run(["-m", "emu.process.kill_emulator"], check_output=False)
+
+            if not junit_test_results.exists():
+                raise NoTestResultsProduced(
+                    f"We expected a junit report in {junit_test_results}."
+                )
+
             apply_xslt(
                 python_exe=pyrun,
                 source=junit_test_results,
-                xslt=HERE / "cfg" / "asFirstFailureText.xslt",
-                dest=failure_file,
+                xslt=HERE / "cfg" / "liftSystemOut.xslt",
+                dest=Path(logdir) / "test_embedded_test.xml",
             )
-            with open(failure_file, "r", encoding="utf-8") as failure:
-                raise UnitTestFailure(failure.read())
+            apply_xslt(
+                python_exe=pyrun,
+                source=junit_test_results,
+                xslt=HERE / "cfg" / "asHtml.xslt",
+                dest=Path(logdir) / "test_report.html",
+            )
+
+            # Let's exit with a message that contains the first failure
+            # This way we can have it show up as part of the snippet we display
+            # on our build bots
+            # See https://docs.pytest.org/en/7.1.x/reference/exit-codes.html for
+            # the status codes.
+            if exit_code == 1:
+                failure_file = Path(logdir) / "fail.txt"
+                apply_xslt(
+                    python_exe=pyrun,
+                    source=junit_test_results,
+                    xslt=HERE / "cfg" / "asFirstFailureText.xslt",
+                    dest=failure_file,
+                )
+                with open(failure_file, "r", encoding="utf-8") as failure:
+                    raise UnitTestFailure(failure.read())
 
 
 def parse_arguments():
@@ -793,8 +801,7 @@ def main(args):
 if __name__ == "__main__":
     args = parse_arguments()
     try:
-        with AdbServer():
-            main(args)
+        main(args)
     except KeyboardInterrupt:
         logging.critical("Terminated by user")
         sys.exit(1)

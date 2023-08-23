@@ -157,7 +157,6 @@ def test_mouse_perf_host_guest_grpc(
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-host")
-@pytest.mark.skip(reason="-debug-events is not logging events.")
 def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over grpc.
 
@@ -180,7 +179,6 @@ def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-host")
-@pytest.mark.skip(reason="-debug-events is not logging events.")
 def test_mouse_perf_host_host_telnet(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over telnet.
 

@@ -21,7 +21,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
 
     var angle = 0f
     var color = 0
-    var firstRender = true
+    var frameCount = 0
 
 
     override fun onSurfaceCreated(
@@ -35,13 +35,20 @@ class MyGLRenderer : GLSurfaceView.Renderer {
     }
 
     override fun onDrawFrame(unused: GL10) {
-        if (firstRender) {
-            Log.i(TAG, "--STARTED--")
+        frameCount++
+        if (frameCount == 1) {
             val up = SystemClock.uptimeMillis();
             val ts = System.currentTimeMillis();
+            Log.i(TAG, "First frame rendered!")
             Log.i(TAG, "Timing: ${ts}, ${up}")
-            firstRender = false
         }
+
+        // We will wait until we have drawn 120 frames, before we message
+        // that we are ready to handle all events.
+        if (frameCount == 120) {
+            Log.i(TAG, "--STARTED--")
+        }
+
         val scratch = FloatArray(16)
         // Draw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)

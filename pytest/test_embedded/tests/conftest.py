@@ -380,8 +380,7 @@ def emulator_log(avd: BaseEmulator):
     assert avd.is_alive()
 
     if avd.log:
-        while not avd.log.empty():
-            avd.log.get(False)
+        avd.log.readlines()
     return avd.log
 
 
