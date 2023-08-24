@@ -17,6 +17,7 @@ import sys
 import threading
 from functools import partial
 from queue import Empty, Queue
+from .time_formatter import TimeFormatter
 
 
 class LogBelowLevel(logging.Filter):
@@ -39,9 +40,11 @@ def configure_logging(logging_level):
     logging_handler_out = logging.StreamHandler(sys.stdout)
     logging_handler_out.setLevel(logging.DEBUG)
     logging_handler_out.addFilter(LogBelowLevel(logging.WARNING))
+    logging_handler_out.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
 
     logging_handler_err = logging.StreamHandler(sys.stderr)
     logging_handler_err.setLevel(logging.WARNING)
+    logging_handler_err.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
 
     logging.root = logging.getLogger("root")
     logging.root.setLevel(logging_level)
