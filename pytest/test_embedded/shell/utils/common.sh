@@ -701,12 +701,33 @@ is_presubmit () {
 check_physical_display() {
     case $(get_build_os) in
         darwin)
-            run system_profiler SPDisplaysDataType
-            display_type=$(system_profiler SPDisplaysDataType | grep "Displays:")
-            if [ -z $display_type ]; then
+            output=$(system_profiler SPDisplaysDataType)
+            printf ">> system_profiler SPDisplaysDataType\n$output\n"
+            # Example output:
+            # Graphics/Displays:
+            #
+            #     Apple M1 Pro:
+            #
+            #       Chipset Model: Apple M1 Pro
+            #       Type: GPU
+            #       Bus: Built-In
+            #       Total Number of Cores: 16
+            #       Vendor: Apple (0x106b)
+            #       Metal Support: Metal 3
+            #       Displays:
+            #         Color LCD:
+            #           Display Type: Built-in Liquid Retina XDR Display
+            #           Resolution: 3456 x 2234 Retina
+            #           Main Display: Yes
+            #           Mirror: Off
+            #           Online: Yes
+            #           Automatically Adjust Brightness: Yes
+            #           Connection Type: Internal
+            display_type=$(system_profiler SPDisplaysDataType | grep "^[[:blank:]]*Displays:")
+            if [ -z "$display_type" ]; then
                 warn "No physical display detected. Tests may fail."
             else
-                printf "Display type found: $display_type"
+                printf "Display type found.\n"
             fi
             ;;
         *)
