@@ -698,6 +698,22 @@ is_presubmit () {
   printf "$retval"
 }
 
+check_physical_display() {
+    case $(get_build_os) in
+        darwin)
+            run system_profiler SPDisplaysDataType
+            display_type=$(system_profiler SPDisplaysDataType | grep "Displays:")
+            if [ -z $display_type ]; then
+                warn "No physical display detected. Tests may fail."
+            else
+                printf "Display type found: $display_type"
+            fi
+            ;;
+        *)
+            ;;
+    esac
+}
+
 PYTHON="python3"
 
 # Check that python is installed and working.
