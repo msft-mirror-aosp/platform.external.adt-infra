@@ -34,6 +34,7 @@ def set_and_get_brightness(emu_controller, brightness_value):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.parametrize(
     "test_name, brightness_value",

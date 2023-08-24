@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+import json
 import logging
 import os
 import platform
@@ -101,18 +102,21 @@ class ZipFileWithAttr(ZipFile):
         return targetpath
 
 
-class AdbServer():
-
+class AdbServer:
     def __init__(self, pyrun):
         self.pyrun = pyrun
 
     def __enter__(self):
-        self.pyrun.run(["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False)
+        self.pyrun.run(
+            ["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False
+        )
         run([ADB, "start-server"], timeout=60)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         run([ADB, "kill-server"], timeout=60)
-        self.pyrun.run(["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False)
+        self.pyrun.run(
+            ["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False
+        )
 
 
 def _reader(pipe, logfn):
@@ -470,7 +474,7 @@ class AospPyRunner(PyRunner):
             virtualenv = "venv"
 
         self.tmp = tempfile.TemporaryDirectory()
-        tmpdir = Path(self.tmp.name)
+        tmpdir = Path("/tmp/venv")  # Path(self.tmp.name)
         run(
             [
                 PYTHON,
@@ -489,7 +493,17 @@ class AospPyRunner(PyRunner):
         self.env["VIRTUAL_ENV"] = str(tmpdir / ".venv")
 
         self.run(
-            ["-m", "pip", "install", "--upgrade", "pip", "--index-url", f"{self.repo}"]
+            [
+                "-m",
+                "pip",
+                "install",
+                "--upgrade",
+                "pip",
+                "wheel",
+                "setuptools",
+                "--index-url",
+                f"{self.repo}",
+            ]
         )
 
     def _fixup_windows_py3_dll(self):
@@ -545,6 +559,23 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
         logging.warning("Failed to apply xslt: %s to %s due to (%s)", xslt, source, err)
 
 
+def merge_results(python_exe: PyRunner, sources: [Path], dest: Path):
+    try:
+        python_exe.run(
+            [
+                f"{HERE}/src/xml/merge_results.py",
+                "--out",
+                dest,
+            ]
+            + [str(x) for x in sources],
+            timeout=10,
+        )
+    except Exception as err:
+        logging.warning(
+            "Failed to merge results: %s to %s due to (%s)", sources, dest, err
+        )
+
+
 def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path):
     emulator_directory = Path(emulator).parent if emulator else None
     crash_report = CrashReporter(emulator_directory, symbol_path)
@@ -563,6 +594,83 @@ def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path):
     crash_report.clear()
 
 
+def run_single_suite(
+    emulator: str,
+    use_exceptions: bool,
+    logdir: Path,
+    symbol_path: Path,
+    tmpdir: str,
+    build_target: str,
+    pyrun: PyRunner,
+    launch_flags: [str],
+    pytest_flags: str,
+    avd_config: str,
+    name: str,
+):
+    junit_test_results = Path(logdir) / f"{name}_test_unit.xml"
+    exit_code = pyrun.run(
+        [
+            "-m",
+            "pytest",
+            "-vv",
+            "-x" if use_exceptions else "",
+            f"--junitxml={junit_test_results}",
+            # Boot times in windows can be >6 mins, and we are booting several times!
+            # We will give us at most 45 minutes.
+            "--timeout=2700",
+            f"--log-file={logdir}/{name}.log",
+            f"--emulator={emulator}",
+            f"--symbols={symbol_path}",
+            f"--avd_config",
+            avd_config,
+            f"--emulator_launch_flags",
+            launch_flags,
+            f"--android_avd_home={tmpdir}",
+            f"--build_target={build_target}," f"--android_home={ANDROID_SDK_ROOT}",
+        ]
+        + pytest_flags,
+        cwd=HERE,
+        env={
+            "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES"
+            if platform.system() != "Windows"
+            else "NO",
+            "ANDROID_AVD_HOME": str(tmpdir),
+            "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or "",
+        },
+        timeout=2800,  # Give pytest a chance to "nicely" terminate everything.
+        check_output=False,
+    )
+
+    # Let's see if we can collect crash reports..
+    collect_crash_reports(emulator, symbol_path, logdir)
+
+    # Forcefully terminate all emulator processess
+    pyrun.run(["-m", "emu.process.kill_emulator"], check_output=False)
+
+    if not junit_test_results.exists():
+        raise NoTestResultsProduced(
+            f"We expected a junit report in {junit_test_results}."
+        )
+
+    # Let's exit with a message that contains the first failure
+    # This way we can have it show up as part of the snippet we display
+    # on our build bots
+    # See https://docs.pytest.org/en/7.1.x/reference/exit-codes.html for
+    # the status codes.
+    if exit_code == 1 and use_exceptions:
+        failure_file = Path(logdir) / "fail.txt"
+        apply_xslt(
+            python_exe=pyrun,
+            source=junit_test_results,
+            xslt=HERE / "cfg" / "asFirstFailureText.xslt",
+            dest=failure_file,
+        )
+        with open(failure_file, "r", encoding="utf-8") as failure:
+            raise UnitTestFailure(failure.read())
+
+    return junit_test_results
+
+
 def run_tests(
     emulator: str,
     use_exceptions: bool,
@@ -571,18 +679,20 @@ def run_tests(
     symbol_path: Path,
     build_target: str,
     pyrun: PyRunner,
+    tests_to_run,
 ):
     """runs tests on an emulator. It installs necessary packages, restarts adb,
     runs pytest and converts the results to a junit xml and HTML files.
 
     Args:
 
-        emulator (str):    Path to the emulator binary
+        emulator (str):       Path to the emulator binary
         use_exceptions(bool): True if an excpetion should be raised on pytest failures.
-        symbol_path(Path): Optional path to the symbols that belong with this emulator.
-        logdir (Path):     The directory where all the logs will be written to
-        verbose: (bool):   True if we should be (very) verbose.
-        pyrun (PyRunner):  The python runner used to run python.
+        symbol_path(Path):    Optional path to the symbols that belong with this emulator.
+        logdir (Path):        The directory where all the logs will be written to
+        verbose: (bool):      True if we should be (very) verbose.
+        pyrun (PyRunner):     The python runner used to run python.
+        tests_to_run (str, dict):
     """
     # sanity checks
     verbose = ["-vvv"] if verbose else []
@@ -596,83 +706,44 @@ def run_tests(
 
     logdir = Path(logdir)
     logdir.mkdir(exist_ok=True, parents=True)
-    with AdbServer(pyrun):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            junit_test_results = Path(tmpdir) / "test_unit.xml"
 
-            default_markers = "not perf"
-            if "gfxstream" in build_target:
-                default_markers += " and not nongfxstream"
-
-            exit_code = pyrun.run(
-                [
-                    "-m",
-                    "pytest",
-                    "-vv",
-                    "-x" if use_exceptions else "",
-                    f"--junitxml={junit_test_results}",
-                    # Boot times in windows can be >6 mins, and we are booting several times!
-                    # We will give us at most 45 minutes.
-                    "--timeout=2700",
-                    f"--log-file={logdir}/pytest.log",
-                    f"--emulator={emulator}",
-                    f"--symbols={symbol_path}",
-                    f"--android_avd_home={tmpdir}",
-                    f"--android_home={ANDROID_SDK_ROOT}",
-                ],
-                cwd=HERE,
-                env={
-                    "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES"
-                    if platform.system() != "Windows" else "NO",
-                    "ANDROID_AVD_HOME": str(tmpdir),
-                    "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS")
-                    if os.getenv("PYTEST_ADDOPTS")
-                    else f" -m '{default_markers}'",
-                },
-                # Give pytest a chance to "nicely" terminate everything.
-                timeout = 2800 if platform.system() != "Windows" else 3200,
-                check_output=False,
-            )
-
-            # Let's see if we can collect crash reports..
-            collect_crash_reports(emulator, symbol_path, logdir)
-
-            # Forcefully terminate all emulator processess
-            pyrun.run(["-m", "emu.process.kill_emulator"], check_output=False)
-
-            if not junit_test_results.exists():
-                raise NoTestResultsProduced(
-                    f"We expected a junit report in {junit_test_results}."
+    result_xmls = []
+    for name, cfg in tests_to_run:
+        with AdbServer(pyrun):
+            with tempfile.TemporaryDirectory() as tmpdir:
+                pytest_flags = cfg["pytest_flags"]
+                launch_flags = json.dumps(cfg["launch_flags"])
+                avd_config = json.dumps(cfg["avd_config"])
+                logging.info("Running %s (%s)", name, cfg["description"])
+                res = run_single_suite(
+                    emulator,
+                    use_exceptions,
+                    logdir,
+                    symbol_path,
+                    tmpdir,
+                    build_target,
+                    pyrun,
+                    launch_flags,
+                    pytest_flags,
+                    avd_config,
+                    name,
                 )
+                result_xmls.append(res)
 
-            apply_xslt(
-                python_exe=pyrun,
-                source=junit_test_results,
-                xslt=HERE / "cfg" / "liftSystemOut.xslt",
-                dest=Path(logdir) / "test_embedded_test.xml",
-            )
-            apply_xslt(
-                python_exe=pyrun,
-                source=junit_test_results,
-                xslt=HERE / "cfg" / "asHtml.xslt",
-                dest=Path(logdir) / "test_report.html",
-            )
-
-            # Let's exit with a message that contains the first failure
-            # This way we can have it show up as part of the snippet we display
-            # on our build bots
-            # See https://docs.pytest.org/en/7.1.x/reference/exit-codes.html for
-            # the status codes.
-            if exit_code == 1:
-                failure_file = Path(logdir) / "fail.txt"
-                apply_xslt(
-                    python_exe=pyrun,
-                    source=junit_test_results,
-                    xslt=HERE / "cfg" / "asFirstFailureText.xslt",
-                    dest=failure_file,
-                )
-                with open(failure_file, "r", encoding="utf-8") as failure:
-                    raise UnitTestFailure(failure.read())
+    result = Path(logdir) / "test_embedded_test.xml"
+    merge_results(python_exe=pyrun, sources=result_xmls, dest=result)
+    apply_xslt(
+        python_exe=pyrun,
+        source=result,
+        xslt=HERE / "cfg" / "asHtml.xslt",
+        dest=Path(logdir) / f"test_report.html",
+    )
+    apply_xslt(
+        python_exe=pyrun,
+        source=result,
+        xslt=HERE / "cfg" / "liftSystemOut.xslt",
+        dest=result,
+    )
 
 
 def parse_arguments():
@@ -732,12 +803,14 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "-v",
         "--verbose",
         dest="verbose",
         default=False,
         action="store_true",
         help="Enable verbose logging",
     )
+
     parser.add_argument(
         "--no-aosp",
         action="store_true",
@@ -753,6 +826,18 @@ def parse_arguments():
         action="store_true",
         help="Treat test failures as errors. Test failures will raise an "
         "exception when this flag is present.",
+    )
+
+    parser.add_argument(
+        "--test_config",
+        default=EMU_TEST_DIR / "cfg" / "emulator_tests.json",
+        help="The test configuration file that describes which tests should be run for each configuration",
+    )
+
+    parser.add_argument(
+        "--test_suite",
+        default=".*",
+        help="Regex which will be used to determie which test suite to run",
     )
 
     args = parser.parse_args()
@@ -776,6 +861,18 @@ def main(args):
 
     py_exe = PyRunner() if args.local_python else AospPyRunner(repo)
 
+    with open(args.test_config, "r", encoding="utf-8") as file:
+        test_cfg = json.load(file)
+
+    tests_to_run = [
+        (name, test_cfg[name])
+        for name in test_cfg
+        if (re.match(args.test_suite, name) and test_cfg[name]["status"] == "enabled")
+    ]
+    if not tests_to_run:
+        raise NoTestResultsProduced(f"No enabled test suite matching {args.test_suite}")
+
+    logging.info("Scheduling %d suites", len(tests_to_run))
     if args.build_dir:
         with TemporaryEmulatorDeploy(args.build_dir) as (emulator, symbols):
             run_tests(
@@ -786,6 +883,7 @@ def main(args):
                 symbol_path=symbols,
                 build_target=args.build_target,
                 pyrun=py_exe,
+                tests_to_run=tests_to_run,
             )
     else:
         run_tests(
@@ -796,6 +894,7 @@ def main(args):
             symbol_path=args.symbols,
             build_target=args.build_target,
             pyrun=py_exe,
+            tests_to_run=tests_to_run,
         )
 
 
@@ -808,8 +907,7 @@ if __name__ == "__main__":
         sys.exit(1)
     except UnitTestFailure as utf:
         logging.error("Test failure: %s", str(utf))
-        if args.use_exceptions:
-            sys.exit(1)
+        sys.exit(1)
     except Exception as exc:
         if args.verbose:
             logging.error("Failure during execution", exc_info=exc)

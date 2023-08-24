@@ -36,6 +36,7 @@ def no_displays(emulator_controller, adb_shell):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.graphics
 def test_multidisplay_none(no_displays, emulator_controller):
     """Erasing displays leaves nothing behind."""
     cfg = emulator_controller.setDisplayConfigurations(
@@ -47,6 +48,7 @@ def test_multidisplay_none(no_displays, emulator_controller):
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_multiple(no_displays, emulator_controller):
     """Adding a display should work."""
@@ -66,6 +68,7 @@ def test_multidisplay_multiple(no_displays, emulator_controller):
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_multiple_error(no_displays, emulator_controller):
     """A failure should not modify the status."""
@@ -103,6 +106,7 @@ def test_multidisplay_multiple_error(no_displays, emulator_controller):
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_get_after_set(no_displays, emulator_controller):
     """Adding a display should work."""
@@ -119,6 +123,7 @@ def test_multidisplay_get_after_set(no_displays, emulator_controller):
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_double_ids_error(no_displays, emulator_controller):
     """Adding the same display twice should result in an error."""
@@ -135,6 +140,7 @@ def test_multidisplay_double_ids_error(no_displays, emulator_controller):
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_can_configure_four(no_displays, emulator_controller):
     """This tests makes sure that a total of 4 displays can be configured.
@@ -157,6 +163,7 @@ def test_multidisplay_can_configure_four(no_displays, emulator_controller):
     assert len(cfg.displays) == len(displays) + 1
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_add_should_not_remove(no_displays, emulator_controller):
     """This tests makes sure that a total of 4 displays can be configured.
@@ -186,6 +193,7 @@ def test_multidisplay_add_should_not_remove(no_displays, emulator_controller):
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_error_too_many(no_displays, emulator_controller):
     """Adding too many displays should raise an exception."""

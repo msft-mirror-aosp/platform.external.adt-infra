@@ -32,6 +32,8 @@ def read_pixel(width, height, pack, arr):
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
+@pytest.mark.embedded
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
@@ -171,6 +173,8 @@ def test_stream_screenshot_perf_mmap(
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
+@pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "fmt",
@@ -189,6 +193,8 @@ def test_screenshot_bytes_size(emulator_controller, fmt):
     assert image.format.width * image.format.height * pixelSize == len(image.image)
 
 
+@pytest.mark.graphics
+@pytest.mark.embedded
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_stream_screenshot_should_fail_if_does_not_exist(
     at_home,

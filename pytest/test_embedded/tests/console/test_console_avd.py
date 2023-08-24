@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 @pytest.mark.boot
+@pytest.mark.console
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/278273476 flaky on linux_x64.
@@ -19,6 +20,7 @@ def test_avd_canonical_path(emulator, avd):
 
 
 @pytest.mark.boot
+@pytest.mark.console
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)

@@ -128,6 +128,7 @@ def send_letter_over(send_fn, avd, log):
 
 
 @pytest.mark.perf
+@pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
 def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
@@ -149,6 +150,7 @@ def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
 
 
 @pytest.mark.perf
+@pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
 def test_letter_perf_host_host_telnet(avd, emulator_log, at_home, benchmark_stat):
