@@ -51,6 +51,7 @@ def set_display_mode(emulator_controller, mode, timeout=5):
     return emulator_controller.getDisplayMode(_EMPTY_).value
 
 
+@pytest.mark.resizable
 @pytest.mark.parametrize(
     "width, height, mode",
     [

@@ -1,14 +1,52 @@
 # Embedded Emulator E2E
 
-This contains a series of integration tests that validate that the emulator works as expected
-from android studio's perspective.
+This contains a series of integration tests that validate that the emulator works as expected under various configurations.
 
 We write the integration tests in pytest and run them as part of the automated build process. The tests are launched using the run_tests.py script. The script roughly does the following:
 
-Creates a temporary directory with a virtual environment
-Installs all the dependencies
-Sets up ANDROID_SDK_ROOT to point to $AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
-Launches pytest to run all the tests.
+- Creates a temporary directory with a virtual environment
+- Installs all the dependencies
+- Sets up ANDROID_SDK_ROOT to point to $AOSP_ROOT / "prebuilts"  / "android-emulator-build" / "system-images" / OS_NAME
+- Loads the test definitions from [cfg/emulator_tests.json](emulator_tests.json)
+- Launches pytest to run all the tests defined in the test configuration
+
+## Test configuration file
+
+The test configuration file is a json file that describes which set of
+tests to run under a given configuration. It has the following format:
+
+```json
+  {
+    "test_suite_1" : xxx,
+    "test_suite_2" : xxx,
+  }
+```
+
+Where xxx descibes a test as follows:
+
+```json
+ "landscape_test_suite": {
+       // This contains a human readable description of what this suite should do
+        "description": "Set of tests that verify that graphic related tests work well in a `landscape` emulator",
+        // Set of flags to pass to the emulator when it gets launched.
+        // for example "-qt-hide-window" will run as an embedded emulator
+        "launch_flags": [],
+        // Set of flags to pass to the pytest launcher, in this case only test
+        // marked as graphics will be run
+        "pytest_flags": [
+            "-m graphics"
+        ],
+        // The avd configuration that will be used when running these tests.
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis",
+            "hw.initialOrientation": "landscape",
+            "skin.name" : "1280x720"
+        }
+    },
+```
+
+You can select which suite to run by passing in the `--run_suite` flag. Every suite description matching the regex will be executed.
 
 ## Running the tests on your local machine
 

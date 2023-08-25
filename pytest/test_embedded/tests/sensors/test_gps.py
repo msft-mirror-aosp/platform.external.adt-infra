@@ -38,6 +38,7 @@ def set_and_get_gps(emulator_controller, state):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 def test_gps_latitude_is_observable(emulator_controller, default_gps_location):
     """Test observe latitude."""
     location = default_gps_location
@@ -47,6 +48,7 @@ def test_gps_latitude_is_observable(emulator_controller, default_gps_location):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 def test_gps_longitude_is_observable(emulator_controller, default_gps_location):
     """Test observe longitude."""
     location = default_gps_location
@@ -56,6 +58,7 @@ def test_gps_longitude_is_observable(emulator_controller, default_gps_location):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 def test_gps_rotation_is_observable(emulator_controller, default_gps_location):
     """Test observe rotation."""
     location = default_gps_location
@@ -65,6 +68,7 @@ def test_gps_rotation_is_observable(emulator_controller, default_gps_location):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 def test_gps_speed_is_observable(emulator_controller, default_gps_location):
     """Test observe speed."""
     location = default_gps_location
@@ -74,6 +78,7 @@ def test_gps_speed_is_observable(emulator_controller, default_gps_location):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 def test_gps_altitude_is_observable(emulator_controller, default_gps_location):
     """Test observe altitude."""
     location = default_gps_location
