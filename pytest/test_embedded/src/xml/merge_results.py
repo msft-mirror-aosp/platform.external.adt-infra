@@ -18,21 +18,25 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-def copy_element(source_element: ET.Element):
-    """Recursively copies an ElementTree element to another tree."""
+def merge_results_multiple_suites(xml_files):
+    """Merge all the tests files into multiple suites."""
+    suites = []
+    for file_name in xml_files:
+        config_name = Path(file_name).stem
+        tree = ET.parse(file_name)
+        test_suite = tree.getroot().find("testsuite")
+        test_suite.attrib["name"] = config_name
+        suites.append(test_suite)
 
-    destination_element = ET.Element(source_element.tag, source_element.attrib)
-    for child in source_element:
-        destination_element.append(copy_element(child))
+    new_root = ET.Element("testsuites")
+    for suite in suites:
+        new_root.append(suite)
 
-    if source_element.text:
-        destination_element.text = source_element.text
-
-    return destination_element
+    return ET.ElementTree(new_root)
 
 
-def merge_results(xml_files, out):
-    """ "Merges al the test results into a single xml file that we can present."""
+def merge_results(xml_files):
+    """Merges al the test results into a single xml as a single suite that we can present."""
     failures = 0
     tests = 0
     errors = 0
@@ -76,9 +80,7 @@ def merge_results(xml_files, out):
     for case in cases:
         test_suite.append(case)
 
-    new_tree = ET.ElementTree(new_root)
-    new_tree.write(out, encoding="utf-8")
-    out.flush()
+    return ET.ElementTree(new_root)
 
 
 def launch():
@@ -92,6 +94,12 @@ def launch():
     parser.add_argument(
         "xml", nargs="*", help="The list of junit xml files that are to be merged"
     )
+    parser.add_argument(
+        "--single",
+        default=False,
+        action="store_true",
+        help="Merge into a singlue suite",
+    )
 
     args = parser.parse_args()
 
@@ -99,7 +107,13 @@ def launch():
     if args.out:
         out = open(args.out, "wb")
 
-    merge_results(args.xml, out)
+    if args.single:
+        new_tree = merge_results_multiple_suites(args.xml)
+    else:
+        new_tree = merge_results(args.xml)
+
+    new_tree.write(out, encoding="utf-8")
+    out.flush()
 
 
 if __name__ == "__main__":

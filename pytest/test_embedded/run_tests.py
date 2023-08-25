@@ -564,6 +564,7 @@ def merge_results(python_exe: PyRunner, sources: [Path], dest: Path):
         python_exe.run(
             [
                 f"{HERE}/src/xml/merge_results.py",
+                "--single",
                 "--out",
                 dest,
             ]
@@ -607,7 +608,7 @@ def run_single_suite(
     avd_config: str,
     name: str,
 ):
-    junit_test_results = Path(logdir) / f"{name}_test_unit.xml"
+    junit_test_results = Path(logdir) / f"{name}.xml"
     exit_code = pyrun.run(
         [
             "-m",
@@ -709,6 +710,8 @@ def run_tests(
 
     result_xmls = []
     for name, cfg in tests_to_run:
+        test_log_dir = logdir / name
+        test_log_dir.mkdir(exist_ok=True, parents=True)
         with AdbServer(pyrun):
             with tempfile.TemporaryDirectory() as tmpdir:
                 pytest_flags = cfg["pytest_flags"]
@@ -718,7 +721,7 @@ def run_tests(
                 res = run_single_suite(
                     emulator,
                     use_exceptions,
-                    logdir,
+                    test_log_dir,
                     symbol_path,
                     tmpdir,
                     build_target,
