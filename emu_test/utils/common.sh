@@ -720,7 +720,7 @@ check_physical_display() {
             #           Connection Type: Internal
             display_type=$(system_profiler SPDisplaysDataType | grep "^[[:blank:]]*Displays:")
             if [ -z "$display_type" ]; then
-                warn "No physical display detected. Tests may fail."
+                panic "No physical display detected. Skipping tests and marking build as failed."
             else
                 printf "Display type found.\n"
             fi
