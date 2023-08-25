@@ -474,7 +474,7 @@ class AospPyRunner(PyRunner):
             virtualenv = "venv"
 
         self.tmp = tempfile.TemporaryDirectory()
-        tmpdir = Path("/tmp/venv")  # Path(self.tmp.name)
+        tmpdir = Path(self.tmp.name)
         run(
             [
                 PYTHON,

@@ -5,7 +5,7 @@
             "-no-snapshot"
         ],
         "pytest_flags": [
-            "-m graphics",
+            "-m graphics and not multidisplay",
             "--timeout=300"
         ],
         "avd_config": {
@@ -14,7 +14,7 @@
             "hw.initialOrientation": "landscape",
             "skin.name": "1280x720"
         },
-        "status": "disabled: rotation is not working as expected."
+        "status": "enabled"
     },
     "portrait_test_suite": {
         "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
@@ -58,7 +58,7 @@
             "-grpc-use-token"
         ],
         "pytest_flags": [
-            "-m embedded or graphics",
+            "-m graphics and not multidisplay or embedded",
             "--timeout=600"
         ],
         "avd_config": {
@@ -67,7 +67,7 @@
             "hw.initialOrientation": "landscape",
             "skin.name": "1280x720"
         },
-        "status": "disabled: rotation is not working as expected."
+        "status": "enabled"
     },
     "snapshot_test_suite": {
         "description": "Set of tests that verify that snapshots work for the default emulator.",
@@ -84,8 +84,7 @@
     },
     "foldable_emulator_test_suite": {
         "description": "Set of tests that verify that the foldable emulator works as expected.",
-        "launch_flags": [
-        ],
+        "launch_flags": [],
         "pytest_flags": [
             "-m foldable",
             "--timeout=300"
@@ -98,10 +97,9 @@
     },
     "resizable_emulator_test_suite": {
         "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
-        "launch_flags": [
-        ],
+        "launch_flags": [],
         "pytest_flags": [
-            "-m graphics or resizable",
+            "-m graphics and not multidisplay or resizable",
             "--timeout=300"
         ],
         "avd_config": {
@@ -116,8 +114,7 @@
     },
     "hardware_test_suite": {
         "description": "Set of tests that validate hardware, console and adb",
-        "launch_flags": [
-        ],
+        "launch_flags": [],
         "pytest_flags": [
             "-m hardware or console or adb",
             "--timeout=300"
