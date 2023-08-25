@@ -27,6 +27,8 @@ def merge_results_multiple_suites(xml_files):
         test_suite = tree.getroot().find("testsuite")
         test_suite.attrib["name"] = config_name
         suites.append(test_suite)
+        for case in test_suite.findall("testcase"):
+            case.attrib["classname"] = f"{config_name}.{case.get('classname', '')}"
 
     new_root = ET.Element("testsuites")
     for suite in suites:

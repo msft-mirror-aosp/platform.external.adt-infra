@@ -733,7 +733,7 @@ def run_tests(
                 )
                 result_xmls.append(res)
 
-    result = Path(logdir) / "test_embedded_test.xml"
+    result = Path(logdir) / "TEST-embedded_test.xml"
     merge_results(python_exe=pyrun, sources=result_xmls, dest=result)
     apply_xslt(
         python_exe=pyrun,
