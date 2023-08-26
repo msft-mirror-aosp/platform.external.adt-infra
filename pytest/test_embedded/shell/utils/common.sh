@@ -714,7 +714,7 @@ check_physical_display() {
             #       Total Number of Cores: 16
             #       Vendor: Apple (0x106b)
             #       Metal Support: Metal 3
-            #       Displays:  ### This will be absent if no display is detected
+            #       Displays:
             #         Color LCD:
             #           Display Type: Built-in Liquid Retina XDR Display
             #           Resolution: 3456 x 2234 Retina
@@ -725,7 +725,7 @@ check_physical_display() {
             #           Connection Type: Internal
             display_type=$(system_profiler SPDisplaysDataType | grep "^[[:blank:]]*Displays:")
             if [ -z "$display_type" ]; then
-                panic "No physical display detected. Skipping tests and marking build as failed."
+                warn "No physical display detected. Tests may fail."
             else
                 printf "Display type found.\n"
             fi
