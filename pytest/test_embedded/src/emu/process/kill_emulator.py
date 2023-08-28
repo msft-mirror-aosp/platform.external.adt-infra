@@ -13,6 +13,7 @@
 # limitations under the License.
 import argparse
 import logging
+import platform
 import sys
 
 import psutil
@@ -128,7 +129,7 @@ def kill_all_emulators(process_names):
         for process in psutil.process_iter(["pid", "name"])
         if is_emulator_process(process, process_names)
     ]
-    attempts = 3
+    attempts = 3 if platform.system() != 'Windows' else 6
 
     # This is the active set of emulator processes we could find.
     # We are going to kill every member of this set.
