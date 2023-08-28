@@ -632,9 +632,7 @@ def run_single_suite(
         + pytest_flags,
         cwd=HERE,
         env={
-            "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES"
-            if platform.system() != "Windows"
-            else "NO",
+            "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
             "ANDROID_AVD_HOME": str(tmpdir),
             "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or "",
         },
