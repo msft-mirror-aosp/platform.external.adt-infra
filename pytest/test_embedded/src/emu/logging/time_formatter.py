@@ -43,17 +43,13 @@ class TimeFormatter(logging.Formatter):
             The formatted time string.
         """
         fmt = datefmt or "%H:%M:%S"
-        ct = self.converter(record.created)
-        dt = datetime.timedelta(seconds=record.created - self.start_time)
-        mm, ss = divmod(dt.total_seconds(), 60)
-        _, mm = divmod(mm, 60)
-        mm = int(mm)
-        ss = int(ss)
-
-        # 2 digit precision is sufficient.
-        microseconds = int(dt.microseconds % 100)
-        dt_fmt = f"{mm:02d}:{ss:02d}.{microseconds:02d}"
-        return f"{time.strftime(fmt, ct)}({dt_fmt})"
+        creation_time = self.converter(record.created)
+        time_delta = datetime.timedelta(seconds=record.created - self.start_time)
+        hours = time_delta.seconds // 3600
+        minutes = (time_delta.seconds % 3600) // 60
+        seconds = time_delta.seconds % 60
+        microseconds = time_delta.microseconds
+        return f"{time.strftime(fmt or '%H:%M:%S', creation_time)} ({hours:02d}:{minutes:02d}:{seconds:02d}.{microseconds:06d})"
 
     def format(self, record):
         """

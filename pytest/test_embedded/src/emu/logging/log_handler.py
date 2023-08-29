@@ -31,25 +31,30 @@ class LogBelowLevel(logging.Filter):
         return True if record.levelno < self.max_level else False
 
 
-def configure_logging(logging_level):
+def configure_logging(logging_level, split_to_stderr=False):
     """Configures the logging system to log at the given level
 
     Args:
-        logging_level (_type_): A logging level, or number.
+        logging_level (int): A logging level, or number.
+        split_to_stderr (bool): Whether to split warning and above messages to
+            stderr.
     """
     logging_handler_out = logging.StreamHandler(sys.stdout)
     logging_handler_out.setLevel(logging.DEBUG)
-    logging_handler_out.addFilter(LogBelowLevel(logging.WARNING))
     logging_handler_out.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
-
-    logging_handler_err = logging.StreamHandler(sys.stderr)
-    logging_handler_err.setLevel(logging.WARNING)
-    logging_handler_err.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
 
     logging.root = logging.getLogger("root")
     logging.root.setLevel(logging_level)
     logging.root.addHandler(logging_handler_out)
-    logging.root.addHandler(logging_handler_err)
+
+    # Filter warning and above to stderr
+    if split_to_stderr:
+        logging_handler_out.addFilter(LogBelowLevel(logging.WARNING))
+
+        logging_handler_err = logging.StreamHandler(sys.stderr)
+        logging_handler_err.setLevel(logging.WARNING)
+        logging_handler_err.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
+        logging.root.addHandler(logging_handler_err)
 
 
 class LogHandler:

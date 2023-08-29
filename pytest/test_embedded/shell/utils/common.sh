@@ -170,7 +170,7 @@ run () {
             "$@" >/dev/null
             ;;
         *)
-            "$@" >&2
+            "$@"
             ;;
     esac
 }
@@ -617,7 +617,7 @@ run_timeout() {
         else
             logd "run_timeout: there is still a sleep process alive (PID "${pid_sleep}")"
         fi
-        
+
 }
 
 run_test() {

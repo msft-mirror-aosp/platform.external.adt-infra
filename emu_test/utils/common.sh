@@ -162,7 +162,7 @@ run () {
             "$@" >/dev/null
             ;;
         *)
-            "$@" >&2
+            "$@"
             ;;
     esac
 }
@@ -528,14 +528,14 @@ run_timeout() {
     # regular intervals.
     #
     # $1 Timeout in seconds after which a kill -9 signal will be sent.
-    # $@ Command to be executed.    
+    # $@ Command to be executed.
     local timeout
     if [ -n "${TIMEOUT}" ]; then
         timeout="${TIMEOUT}"
     else
         timeout=$1
     fi
-    
+
     shift
     declare -i interval=1  # Interval between checks if the process is still alive.
     declare -i delay=1  # Delay between the posting of the signals SIGTERM and SIGKILL.
