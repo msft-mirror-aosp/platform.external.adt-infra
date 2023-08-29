@@ -83,7 +83,6 @@ def test_mouse_perf_wall_grpc(avd, android_start_time, adb_event_stream, benchma
 
 
 @pytest.mark.perf
-@pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-wall")
 @pytest.mark.skip(

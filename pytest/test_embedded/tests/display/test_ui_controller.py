@@ -33,7 +33,6 @@ def get_user_config(avd):
 
 @pytest.mark.dependency()
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.embedded
 def test_ui_controller_clean(avd):
     """Tests that the emulator has no extended control setting, this means
     the extended window was never shown before.
@@ -46,7 +45,6 @@ def test_ui_controller_clean(avd):
 
 
 @pytest.mark.e2e
-@pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.dependency(depends=["test_ui_controller_clean"])
 def test_ui_controller_first_position_works(avd, ui_controller):
@@ -90,7 +88,6 @@ def test_ui_controller_first_position_works(avd, ui_controller):
 
 
 @pytest.mark.e2e
-@pytest.mark.embedded
 @pytest.mark.dependency(depends=["test_ui_controller_first_position_works"])
 @pytest.mark.timeout(timeout=10, func_only=True)
 def test_ui_controller_position_does_not_change(avd, ui_controller):
@@ -127,7 +124,6 @@ def test_ui_controller_position_does_not_change(avd, ui_controller):
 
 
 @pytest.mark.e2e
-@pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
 def test_ui_controller_fast_switch_should_work(ui_controller):
     """Make sure we can open and close the window quickly.

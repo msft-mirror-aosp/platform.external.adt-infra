@@ -43,7 +43,6 @@ def dumpAvdConent(mypath):
 
 @pytest.mark.e2e
 @pytest.mark.slow
-@pytest.mark.snapshot
 @pytest.mark.timeout(timeout=1800, func_only=True)
 @pytest.mark.skipif(
     sys.platform == "win32", reason="Windows takes >2700 seconds to boot"

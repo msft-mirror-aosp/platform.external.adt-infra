@@ -23,19 +23,12 @@ def transform(xml, xsl, out):
     Args:
         xml (str): A path to a valid XML file
         xsl (str): A path to a valid XSL file
-        out (file): A file lname to write the transformed xml to, or None to write to stdout
+        out (file): A file like object where to write the transformed xml to
     """
     parser = ET.XMLParser(huge_tree=True)
     dom = ET.parse(xml, parser=parser)
     xslt = ET.parse(xsl, parser=parser)
     transformer = ET.XSLT(xslt)
-
-    if out:
-        out = open(out, "wb")
-    else:
-        out = sys.stdout.buffer
-
-
     out.write(transformer(dom))
     out.flush()
 
@@ -56,7 +49,11 @@ def launch():
 
     args = parser.parse_args()
 
-    transform(args.xml, args.xsl, args.out)
+    out = sys.stdout.buffer
+    if args.out:
+        out = open(args.out, "wb")
+
+    transform(args.xml, args.xsl, out)
 
 
 if __name__ == "__main__":

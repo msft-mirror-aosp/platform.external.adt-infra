@@ -66,7 +66,6 @@ def keypress_expects(emulator, log, jskey, expected_code):
 
 
 @pytest.mark.e2e
-@pytest.mark.hardware
 @pytest.mark.timeout(timeout=5, func_only=True)
 def test_hardware_keys(avd, at_home, emulator_log):
     """Checks that the hardware key events that studio sends are working."""
@@ -88,7 +87,6 @@ def test_hardware_keys(avd, at_home, emulator_log):
 
 
 @pytest.mark.e2e
-@pytest.mark.hardware
 @pytest.mark.timeout(timeout=5, func_only=True)
 def test_whitespace_chrs(avd, at_home, emulator_log):
     """Checks that the whitespace characters that studio sends are working."""
@@ -108,7 +106,6 @@ def test_whitespace_chrs(avd, at_home, emulator_log):
 
 
 @pytest.mark.e2e
-@pytest.mark.hardware
 @pytest.mark.timeout(timeout=10, func_only=True)
 def test_unicode_no_deadlock(at_home, emulator_controller):
     """Tests that we properly handle unicode characters."""

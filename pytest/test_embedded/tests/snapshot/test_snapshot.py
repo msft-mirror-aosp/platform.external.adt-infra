@@ -31,14 +31,12 @@ def snapshot_service(avd):
 
 
 @pytest.mark.e2e
-@pytest.mark.snapshot
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
     assert not snapshot_service.load("foo")
 
 
 @pytest.mark.e2e
-@pytest.mark.snapshot
 @pytest.mark.timeout(timeout=60, func_only=True)
 def test_snapshot_can_save_and_load(snapshot_service):
     assert snapshot_service.save("foo")
@@ -47,7 +45,6 @@ def test_snapshot_can_save_and_load(snapshot_service):
 
 
 @pytest.mark.e2e
-@pytest.mark.snapshot
 @pytest.mark.timeout(timeout=60, func_only=True)
 def test_snapshot_delete_removes(snapshot_service):
     assert snapshot_service.save("foo")
@@ -57,7 +54,6 @@ def test_snapshot_delete_removes(snapshot_service):
 
 
 @pytest.mark.skip
-@pytest.mark.snapshot
 @pytest.mark.e2e
 def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
@@ -70,7 +66,6 @@ def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
 
 
 @pytest.mark.skip
-@pytest.mark.snapshot
 @pytest.mark.e2e
 def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility

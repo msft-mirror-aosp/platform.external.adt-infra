@@ -56,7 +56,6 @@ def set_and_get_sensor(sensor_service, sensor_value):
 
 
 @pytest.mark.e2e
-@pytest.mark.hardware
 @pytest.mark.parametrize(
     "test_name, sensor_value, x, y, z",
     [
@@ -104,7 +103,6 @@ def test_sensor_value(service, test_name, sensor_value, x, y, z):
 
 
 @pytest.mark.e2e
-@pytest.mark.hardware
 @pytest.mark.parametrize(
     "test_name, sensor_value, x, y, z",
     [
@@ -133,7 +131,6 @@ def test_sensor_value(service, test_name, sensor_value, x, y, z):
     ],
 )
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.hardware
 def test_sensor_value_events(service, test_name, sensor_value, x, y, z):
     expected = SensorValue(
         target=sensor_value,

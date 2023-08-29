@@ -59,9 +59,6 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 }
 
 
-
-@pytest.mark.graphics
-@pytest.mark.embedded
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
@@ -89,8 +86,6 @@ def test_screenshot_all_formats_are_equal(
         last_pixels == pixels
 
 
-@pytest.mark.graphics
-@pytest.mark.embedded
 @pytest.mark.parametrize(
     "image_format,bpp",
     [(ImageFormat.RGB888, 3), (ImageFormat.RGBA8888, 4)],
@@ -154,8 +149,6 @@ def all_orientations(emulator_controller, request):
 
 
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.graphics
-@pytest.mark.embedded
 def test_screenshot_gets_default_resolution(
     at_home, get_screenshot, default_display_config, all_orientations
 ):
@@ -173,8 +166,6 @@ def test_screenshot_gets_default_resolution(
 
 
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.graphics
-@pytest.mark.embedded
 def test_screenshot_never_scales_up(
     at_home, get_screenshot, default_display_config, all_orientations
 ):
@@ -199,8 +190,6 @@ def test_screenshot_never_scales_up(
 
 
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.graphics
-@pytest.mark.embedded
 def test_screenshot_should_fail_if_does_not_exist(
     at_home, emulator_controller, default_display_config
 ):

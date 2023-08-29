@@ -151,26 +151,25 @@ function goto_id(id) {
                 </p>
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
-                    <xsl:variable name="name" select="../@name" />
                     <xsl:variable name="fid" select=" format-number($id, '0000')"/>
                     <xsl:choose>
                         <xsl:when test="failure">
-                            <span class="buttonfailed" onClick="goto_id('tst{$name}_{$id}l')">
+                            <span class="buttonfailed" onClick="goto_id('tst{$id}l')">
                                 <xsl:value-of select="$fid"/>
                             </span>&#160;
                         </xsl:when>
                         <xsl:when test="error">
-                            <span class="buttonfailed" onClick="goto_id('tst{$name}_{$id}l')">
+                            <span class="buttonfailed" onClick="goto_id('tst{$id}l')">
                                 <xsl:value-of select="$fid"/>
                             </span>&#160;
                         </xsl:when>
                         <xsl:when test="skipped">
-                            <span class="buttonskipped" onClick="goto_id('tst{$name}_{$id}l')">
+                            <span class="buttonskipped" onClick="goto_id('tst{$id}l')">
                                 <xsl:value-of select="$fid"/>
                             </span>&#160;
                         </xsl:when>
                         <xsl:otherwise>
-                            <span class="buttonpassed" onClick="goto_id('tst{$name}_{$id}l')">
+                            <span class="buttonpassed" onClick="goto_id('tst{$id}l')">
                                 <xsl:value-of select="$fid"/>
                             </span>&#160;
                         </xsl:otherwise>
@@ -179,15 +178,15 @@ function goto_id(id) {
                 <h2>tests</h2>
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
-                    <xsl:variable name="name" select="../@name" />
                     <xsl:variable name="fid" select="format-number($id, '0000')"/>
                     <xsl:choose>
                         <xsl:when test="failure">
-                            <li class="failed" id="tst{$name}_{$id}l">
-                                <span id="tst{$name}_{$id}+" class="buttonfailed" onClick="show('tst{$name}_{$id}')">+
+                            <li class="failed" id="tst{$id}l">
+                                <span id="tst{$id}+" class="buttonfailed" onClick="show('tst{$id}')">+
                                     <xsl:value-of select="$fid"/>
++
                                 </span>
-                                <span id="tst{$name}_{$id}-" class="buttonfailed" onClick="hide('tst{$name}_{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span id="tst{$id}-" class="buttonfailed" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
                                                 -
                                     <xsl:value-of select="$fid"/>
 -
@@ -196,7 +195,7 @@ function goto_id(id) {
                                 <xsl:value-of select="@classname"/>
 .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment failed" id="tst{$name}_{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span class="comment failed" id="tst{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
                                     <pre>
                                         <xsl:value-of select="."/>
                                     </pre>
@@ -204,12 +203,12 @@ function goto_id(id) {
                             </li>
                         </xsl:when>
                         <xsl:when test="skipped">
-                            <li class="skipped" id="tst{$name}_{$id}l">
-                                <span id="tst{$name}_{$id}+" class="buttonskip" onClick="show('tst{$name}_{$id}')">+
+                            <li class="skipped" id="tst{$id}l">
+                                <span id="tst{$id}+" class="buttonskip" onClick="show('tst{$id}')">+
                                     <xsl:value-of select="$fid"/>
 +
                                 </span>
-                                <span id="tst{$name}_{$id}-" class="buttonskip" onClick="hide('tst{$name}_{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span id="tst{$id}-" class="buttonskip" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
                                                 -
                                     <xsl:value-of select="$fid"/>
 -
@@ -218,7 +217,7 @@ function goto_id(id) {
                                 <xsl:value-of select="@classname"/>
 .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment skipped" id="tst{$name}_{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span class="comment skipped" id="tst{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
                                     <pre>
                                         <xsl:value-of select="."/>
                                     </pre>
@@ -226,12 +225,12 @@ function goto_id(id) {
                             </li>
                         </xsl:when>
                         <xsl:when test="error">
-                            <li class="error" id="tst{$name}_{$id}l">
-                                <span id="tst{$name}_{$id}+" class="buttonerror" onClick="show('tst{$name}_{$id}')">+
+                            <li class="error" id="tst{$id}l">
+                                <span id="tst{$id}+" class="buttonerror" onClick="show('tst{$id}')">+
                                     <xsl:value-of select="$fid"/>
 +
                                 </span>
-                                <span id="tst{$name}_{$id}-" class="buttonerror" onClick="hide('tst{$name}_{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span id="tst{$id}-" class="buttonerror" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
                                                 -
                                     <xsl:value-of select="$fid"/>
 -
@@ -240,7 +239,7 @@ function goto_id(id) {
                                 <xsl:value-of select="@classname"/>
 .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment error" id="tst{$name}_{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span class="comment error" id="tst{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
                                     <pre>
                                         <xsl:value-of select="."/>
                                     </pre>
@@ -248,12 +247,12 @@ function goto_id(id) {
                             </li>
                         </xsl:when>
                         <xsl:otherwise>
-                            <li class="passed" id="tst{$name}_{$id}l">
-                                <span id="tst{$name}_{$id}+" class="buttonpassed" onClick="show('tst{$name}_{$id}')">+
+                            <li class="passed" id="tst{$id}l">
+                                <span id="tst{$id}+" class="buttonpassed" onClick="show('tst{$id}')">+
                                     <xsl:value-of select="$fid"/>
 +
                                 </span>
-                                <span id="tst{$name}_{$id}-" class="buttonpassed" onClick="hide('tst{$name}_{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span id="tst{$id}-" class="buttonpassed" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
                                                 -
                                     <xsl:value-of select="$fid"/>
 -
@@ -262,7 +261,7 @@ function goto_id(id) {
                                 <xsl:value-of select="@classname"/>
 .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment passed" id="tst{$name}_{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
+                                <span class="comment passed" id="tst{$id}" style="POSITION: absolute; VISIBILITY: hidden;">
                                     <pre>
                                         <xsl:value-of select="."/>
                                     </pre>

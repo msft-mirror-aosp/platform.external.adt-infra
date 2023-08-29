@@ -37,7 +37,6 @@ def screen_service(service):
 
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.graphics
 def test_screen_record_sends_event(screen_service, tmp_path):
     stream = screen_service.ReceiveRecordingEvents(empty_pb2.Empty())
     info = RecordingInfo(width=120, height=120, file_name=str(tmp_path / "sample.webm"))
@@ -56,7 +55,6 @@ def test_screen_record_sends_event(screen_service, tmp_path):
 
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.graphics
 def test_screen_records_video(screen_service, animation_app, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
@@ -73,7 +71,6 @@ def test_screen_records_video(screen_service, animation_app, tmp_path):
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.skipif(sys.platform == "win32", reason="b/296421623")
-@pytest.mark.graphics
 def test_can_only_record_once(screen_service, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
@@ -87,7 +84,6 @@ def test_can_only_record_once(screen_service, tmp_path):
 
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.graphics
 def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))

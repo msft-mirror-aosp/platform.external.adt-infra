@@ -53,7 +53,6 @@ def set_and_get_sensor(emu_controller, sensor_value):
 
 
 @pytest.mark.e2e
-@pytest.mark.hardware
 @pytest.mark.parametrize(
     "test_name, sensor_value, x, y, z",
     [
