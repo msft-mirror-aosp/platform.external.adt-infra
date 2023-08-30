@@ -63,25 +63,32 @@ def set_display_mode(emulator_controller, mode, timeout=5):
 )
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-def test_resizable_changes_resolution(emulator_controller, width, height, mode):
+def test_resizable_changes_resolution(
+    animation_app, emulator_controller, width, height, mode, get_screenshot
+):
     emulator_controller.setDisplayMode(DisplayMode(value=mode))
     # Eventually the currentMode is equal to the one we have set.
     # If this is broken the test will timeout
     assert wait_until(lambda: emulator_controller.getDisplayMode(_EMPTY_).value == mode)
 
-    image = emulator_controller.getScreenshot(
-        ImageFormat(
-            format=ImageFormat.RGB888,
+    def screenshot_is_sized_properly():
+        image, _ = get_screenshot(
+            ImageFormat(
+                format=ImageFormat.RGB888,
+            )
         )
-    )
 
-    # prevent crazy logging in case of assert failures
-    format = image.format
-    byte_count = len(image.image)
+        format = image.format
+        byte_count = len(image.image)
 
-    assert format.width == width
-    assert format.height == height
-    assert byte_count == width * height * 3
+        return (
+            format.width == width
+            and format.height == height
+            and byte_count == width * height * 3
+        )
+
+    # Eventually we should receive a screenshot that has the expected size.
+    assert wait_until(screenshot_is_sized_properly)
 
 
 @pytest.mark.timeout(timeout=60, func_only=True)
@@ -92,7 +99,9 @@ def test_resizable_changes_resolution(emulator_controller, width, height, mode):
         (ImageFormat.RGB888, 3),
     ],
 )
-def test_resizable_observable_from_streaming(emulator_controller, fmt, bpp):
+def test_resizable_observable_from_streaming(
+    emulator_controller, stream_screenshot, fmt, bpp
+):
     available_dimensions = iter(
         [
             (1080, 2340, DisplayModeValue.PHONE),
@@ -106,16 +115,12 @@ def test_resizable_observable_from_streaming(emulator_controller, fmt, bpp):
     w, h, mode = next(available_dimensions)
     assert set_display_mode(emulator_controller, mode) == mode
 
-    stream = emulator_controller.streamScreenshot(
-        ImageFormat(format=fmt),
-    )
-
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
     # Eventually we run out dimensions, resulting in a StopIteration
     # If things are broken we will timeout.
     with pytest.raises(StopIteration):
-        with StreamingCall(stream) as stream:
+        with stream_screenshot(ImageFormat(format=fmt)) as stream:
             for image in stream:
                 if image.format.width == w and image.format.height == h:
                     pixel_count = len(image.image)
@@ -134,7 +139,9 @@ def test_resizable_observable_from_streaming(emulator_controller, fmt, bpp):
         (ImageFormat.RGB888, 3),
     ],
 )
-def test_resizable_observable_from_streaming(emulator_controller, fmt, bpp):
+def test_resizable_observable_from_streaming(
+    emulator_controller, stream_screenshot, fmt, bpp
+):
     available_dimensions = iter(
         [
             (1080, 2340, DisplayModeValue.PHONE),
@@ -151,16 +158,12 @@ def test_resizable_observable_from_streaming(emulator_controller, fmt, bpp):
     # If this is broken the test will timeout
     assert wait_until(lambda: emulator_controller.getDisplayMode(_EMPTY_).value == mode)
 
-    stream = emulator_controller.streamScreenshot(
-        ImageFormat(format=fmt),
-    )
-
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
     # Eventually we run out dimensions, resulting in a StopIteration
     # If things are broken we will timeout.
     with pytest.raises(StopIteration):
-        with StreamingCall(stream) as stream:
+        with stream_screenshot(ImageFormat(format=fmt)) as stream:
             for image in stream:
                 if image.format.width == w and image.format.height == h:
                     pixel_count = len(image.image)
