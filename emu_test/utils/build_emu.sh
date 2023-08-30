@@ -31,7 +31,7 @@ OUT_DIR=$1
 DISTRIB_DIR=$2
 export BID=$3
 export CPU=$4
-USE_QTWEBENGINE=$5
+QTWEBENGINE_ARG=$5
 TEST_DIR=$(dirname "$0")/..
 
 # Get the absolute path to the AOSP ROOT
