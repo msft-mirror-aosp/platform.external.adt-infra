@@ -79,6 +79,7 @@ def for_each_rotation(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.graphics
 def test_rotation_observable_through_screenshot(emulator_controller, animation_app):
     """Test that setting the rotation, is observable through getting a screenshot."""
 
@@ -92,6 +93,7 @@ def test_rotation_observable_through_screenshot(emulator_controller, animation_a
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.graphics
 # @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/277819419 flaky on windows.
 def test_rotation_observable_through_adbstream(
     avd, at_home, animation_app, emulator_controller
@@ -122,6 +124,7 @@ def test_rotation_observable_through_adbstream(
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.graphics
 # @pytest.mark.flaky(reruns=2, reruns_delay=2)
 def test_rotation_observable_through_stream_screenshot(
     animation_app, emulator_controller, stream_screenshot
@@ -236,6 +239,7 @@ def rotation_through_console_observable_through_stream_screenshot(
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/280512023 flaky on windows_x64.
 @pytest.mark.parametrize(
@@ -271,6 +275,7 @@ def test_rotation_pixels_in_the_right_place(
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.skip(reason="real bug with adb emu rotate, need to fix it first")
 def test_rotation_through_console_observable_through_physical_model(
@@ -293,6 +298,7 @@ def test_rotation_through_console_observable_through_physical_model(
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.skip(reason="real bug with adb emu rotate, need to fix it first")
 def test_rotation_through_console_observable_through_screenshot(
@@ -305,6 +311,7 @@ def test_rotation_through_console_observable_through_screenshot(
 
 
 @pytest.mark.e2e
+@pytest.mark.graphics
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.skip(reason="real bug with adb emu rotate, need to fix it first")
 def test_rotation_through_console_observable_through_stream_screenshot(
@@ -323,7 +330,6 @@ def test_rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=480, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.parametrize("avd", ["-qt-hide-window"], indirect=True)
 @pytest.mark.skipif(platform.processor() == "arm", reason="b/275593138")
 def test_rotation_observable_through_screenshot_embedded_mode(
     emulator_controller, telnet, emulator
@@ -339,7 +345,6 @@ def test_rotation_observable_through_screenshot_embedded_mode(
 @pytest.mark.timeout(timeout=480, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.skip(reason="real bug with adb emu rotate, need to fix it first")
-@pytest.mark.parametrize("avd", ["-qt-hide-window"], indirect=True)
 def test_rotation_observable_through_stream_screenshot_embedded_mode(
     emulator_controller, telnet, emulator
 ):

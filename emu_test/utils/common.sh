@@ -162,7 +162,7 @@ run () {
             "$@" >/dev/null
             ;;
         *)
-            "$@" >&2
+            "$@"
             ;;
     esac
 }
@@ -528,14 +528,14 @@ run_timeout() {
     # regular intervals.
     #
     # $1 Timeout in seconds after which a kill -9 signal will be sent.
-    # $@ Command to be executed.    
+    # $@ Command to be executed.
     local timeout
     if [ -n "${TIMEOUT}" ]; then
         timeout="${TIMEOUT}"
     else
         timeout=$1
     fi
-    
+
     shift
     declare -i interval=1  # Interval between checks if the process is still alive.
     declare -i delay=1  # Delay between the posting of the signals SIGTERM and SIGKILL.
@@ -696,12 +696,33 @@ aosp_find_python() {
 check_physical_display() {
     case $(get_build_os) in
         darwin)
-            run system_profiler SPDisplaysDataType
-            display_type=$(system_profiler SPDisplaysDataType | grep "Displays:")
-            if [ -z $display_type ]; then
+            output=$(system_profiler SPDisplaysDataType)
+            printf ">> system_profiler SPDisplaysDataType\n$output\n"
+            # Example output:
+            # Graphics/Displays:
+            #
+            #     Apple M1 Pro:
+            #
+            #       Chipset Model: Apple M1 Pro
+            #       Type: GPU
+            #       Bus: Built-In
+            #       Total Number of Cores: 16
+            #       Vendor: Apple (0x106b)
+            #       Metal Support: Metal 3
+            #       Displays:  ### This will be absent if no display is detected
+            #         Color LCD:
+            #           Display Type: Built-in Liquid Retina XDR Display
+            #           Resolution: 3456 x 2234 Retina
+            #           Main Display: Yes
+            #           Mirror: Off
+            #           Online: Yes
+            #           Automatically Adjust Brightness: Yes
+            #           Connection Type: Internal
+            display_type=$(system_profiler SPDisplaysDataType | grep "^[[:blank:]]*Displays:")
+            if [ -z "$display_type" ]; then
                 warn "No physical display detected. Tests may fail."
             else
-                printf "Display type found: $display_type"
+                printf "Display type found.\n"
             fi
             ;;
         *)
