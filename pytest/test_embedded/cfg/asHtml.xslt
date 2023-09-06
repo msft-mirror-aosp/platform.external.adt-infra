@@ -109,6 +109,12 @@ span.buttonfailed {
         margin-top: 10px;
         background-color: #ffaaaa;
 }
+span.buttonerror {
+        font-family: monospace;
+        margin-top: 10px;
+        background-color: #dd5d5d;
+}
+
                 </style>
                 <script language="JavaScript">
 function make_visible(elt) { elt.style.visibility='visible'; elt.style.position='relative';
@@ -147,6 +153,8 @@ function goto_id(id) {
 , passed:
                             <xsl:value-of select="@tests - @failures - @errors - @skipped"/>
 , failed:
+                            <xsl:value-of select="@failures"/>
+, errors:
                             <xsl:value-of select="@errors"/>
 , skipped:
                             <xsl:value-of select="@skipped"/>)
@@ -162,7 +170,7 @@ function goto_id(id) {
                                     </span>&#160;
                                 </xsl:when>
                                 <xsl:when test="error">
-                                    <span class="buttonfailed" onClick="goto_id('tst{$name}_{$id}l')">
+                                    <span class="buttonerror" onClick="goto_id('tst{$name}_{$id}l')">
                                         <xsl:value-of select="$fid"/>
                                     </span>&#160;
                                 </xsl:when>
@@ -210,7 +218,7 @@ function goto_id(id) {
                     </span>&#160;
                 </xsl:when>
                 <xsl:when test="error">
-                    <span class="buttonfailed" onClick="goto_id('tst{$name}_{$id}l')">
+                    <span class="buttonerror" onClick="goto_id('tst{$name}_{$id}l')">
                         <xsl:value-of select="$fid"/>
                     </span>&#160;
                 </xsl:when>
