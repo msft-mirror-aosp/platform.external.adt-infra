@@ -43,6 +43,7 @@ def set_and_get_model(emu_controller, model_value):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.skip(
     reason=" getPhysicalModel and SetPhysicalModel for PhysicalModelValue.ROTATION "
@@ -63,6 +64,7 @@ def test_physical_rotation(emulator_controller):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 @pytest.mark.parametrize(
     "test_name, physical_type_value, x, y, z",
     [
@@ -100,6 +102,7 @@ def test_physical_model_value(
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.parametrize(
     "test_name, posture",

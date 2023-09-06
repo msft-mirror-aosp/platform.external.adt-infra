@@ -37,5 +37,6 @@ aosp_find_python() {
     printf "$PYTHON"
 }
 
+check_physical_display
 PYTHON=$(aosp_find_python)
 run $PYTHON $AOSP_DIR/external/adt-infra/pytest/test_embedded/run_tests.py --build_dir out/prebuilt_cached/builds --logdir $DISTRIB_DIR/testlogs --build_target $build_target

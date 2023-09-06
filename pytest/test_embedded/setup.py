@@ -13,7 +13,7 @@ def compile_apk():
     # raise Exception("Failure")
     here = Path(__file__).parent.absolute()
     source = here / "AnimateBox"
-    apk_dest = here / "src" / "emu" / "apk" / "app-debug.apk"
+    apk_dest = here / "src" / "emu" / "apk" / "app-release.apk"
 
     if apk_dest.exists():
             sys.stderr.write(f">>>>>--- {apk_dest} exists, no need to build. "
@@ -33,7 +33,7 @@ def compile_apk():
 
     sys.stderr.write(f"Invoking {bin} for: {source}\n")
 
-    subprocess.check_call([str(bin), "assembleDebug"], cwd=source)
+    subprocess.check_call([str(bin), "build"], cwd=source)
     apk_produced = (
         here
         / "AnimateBox"
@@ -41,8 +41,8 @@ def compile_apk():
         / "build"
         / "outputs"
         / "apk"
-        / "debug"
-        / "app-debug.apk"
+        / "release"
+        / "app-release.apk"
     )
 
     sys.stderr.write(f"   copyfile({apk_produced}, {apk_dest})\n")

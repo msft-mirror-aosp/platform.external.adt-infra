@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 import random
 import re
 import string
@@ -130,7 +129,6 @@ def send_letter_over(send_fn, avd, log):
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
-@pytest.mark.skip(reason="-debug-events is not logging key events.")
 def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over grpc.
 
@@ -152,7 +150,6 @@ def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
-@pytest.mark.skip(reason="-debug-events is not logging key events.")
 def test_letter_perf_host_host_telnet(avd, emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over telnet.
 

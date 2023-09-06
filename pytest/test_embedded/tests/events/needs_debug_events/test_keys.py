@@ -17,13 +17,14 @@ import time
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
+from emu.logging.log_handler import QueueLogHandler
 
 # Parse emulator log.
 EMU_MANY_KEY_EVENT = re.compile(r".* (\d+): sendKeyCodes: \[([0-9a-fA-F ,]+)\]")
 EMU_SINGLE_KEY_EVENT = re.compile(r".* (\d+): sendKeyCode: (\d+)")
 
 
-def wait_for_keyboard(event_stream, ev_code, timeout=10):
+def wait_for_keyboard(event_stream: QueueLogHandler, ev_code, timeout=10):
     """Wait for the evdev value to occur in the given event stream
 
     Args:
@@ -38,8 +39,7 @@ def wait_for_keyboard(event_stream, ev_code, timeout=10):
     """
     until = time.time() + timeout
     while time.time() < until:
-        while not event_stream.empty():
-            line = event_stream.get(False)
+        for line in event_stream:
             entry = EMU_MANY_KEY_EVENT.match(line)
             if entry:
                 codes = [int(x, 16) for x in entry.group(2).split(",")]
@@ -66,8 +66,8 @@ def keypress_expects(emulator, log, jskey, expected_code):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 @pytest.mark.timeout(timeout=5, func_only=True)
-@pytest.mark.skip(reason="-debug-events is not logging key events.")
 def test_hardware_keys(avd, at_home, emulator_log):
     """Checks that the hardware key events that studio sends are working."""
     if not emulator_log:
@@ -88,8 +88,8 @@ def test_hardware_keys(avd, at_home, emulator_log):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 @pytest.mark.timeout(timeout=5, func_only=True)
-@pytest.mark.skip(reason="-debug-events is not logging key events.")
 def test_whitespace_chrs(avd, at_home, emulator_log):
     """Checks that the whitespace characters that studio sends are working."""
     if not emulator_log:
@@ -108,6 +108,7 @@ def test_whitespace_chrs(avd, at_home, emulator_log):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 @pytest.mark.timeout(timeout=10, func_only=True)
 def test_unicode_no_deadlock(at_home, emulator_controller):
     """Tests that we properly handle unicode characters."""

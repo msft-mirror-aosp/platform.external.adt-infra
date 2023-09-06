@@ -13,6 +13,7 @@
 # limitations under the License.
 import argparse
 import logging
+import platform
 import sys
 
 import psutil
@@ -88,7 +89,7 @@ def kill_process_tree(process: psutil.Process) -> None:
     safe_kill(process)
 
 
-def is_emulator_process(process: psutil.Process) -> bool:
+def is_emulator_process(process: psutil.Process, emulator_process_names="emulator,qemu-system,netsim,netsimd") -> bool:
     """Checks if the given process is an emulator (or related) process
 
     This includes: emulator, qemu-system.*, netsim, netsimd
@@ -99,7 +100,7 @@ def is_emulator_process(process: psutil.Process) -> bool:
     Returns:
         bool: True if this is an emulator related process
     """
-    emulator_process_names = ["emulator", "qemu-system", "netsim", "netsimd"]
+    emulator_process_names = [x.strip() for x in emulator_process_names.split(",")]
     try:
         name = process.name()
         return any(p in name for p in emulator_process_names)
@@ -121,14 +122,14 @@ def kill_process_set(process_set) -> None:
                 )
 
 
-def kill_all_emulators():
+def kill_all_emulators(process_names):
     """Kills all running emulator or qemu-system processes."""
     process_set = [
         process
         for process in psutil.process_iter(["pid", "name"])
-        if is_emulator_process(process)
+        if is_emulator_process(process, process_names)
     ]
-    attempts = 3
+    attempts = 3 if platform.system() != 'Windows' else 6
 
     # This is the active set of emulator processes we could find.
     # We are going to kill every member of this set.
@@ -164,6 +165,13 @@ def main():
         help="Enable verbose logging",
     )
 
+    parser.add_argument(
+        "-p",
+        "--process_names",
+        default="emulator, qemu-system, netsim, netsimd",
+        help="Names of processes that should be killed"
+    )
+
     args = parser.parse_args()
 
     lvl = logging.DEBUG if args.verbose else logging.INFO
@@ -174,7 +182,7 @@ def main():
         datefmt="%H:%M:%S",
         level=lvl,
     )
-    kill_all_emulators()
+    kill_all_emulators(args.process_names)
 
 
 if __name__ == "__main__":

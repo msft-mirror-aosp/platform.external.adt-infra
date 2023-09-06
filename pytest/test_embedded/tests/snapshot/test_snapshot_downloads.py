@@ -124,14 +124,20 @@ def check_boot_from_snapshot(avdpath) -> bool:
 
 
 @pytest.mark.e2e
-@pytest.mark.nongfxstream
+@pytest.mark.snapshot
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
-def test_can_load_oldsnapshot(emulator):
+@pytest.mark.skip(reason="b/297882650")
+def test_can_load_oldsnapshot(emulator, pytestconfig):
     """test that current emulator can load the snapshot created by old emulator
 
     First, use old emulator to create a snapshot
     Second, load it with current emulator, make sure snapshot load is successful
     """
+    if "gfxstream" in pytestconfig.getoption("build_target"):
+        pytest.skip(
+            f"Not running this test on {pytestconfig.getoption('build_target')}"
+        )
 
     emulator.stop()
 

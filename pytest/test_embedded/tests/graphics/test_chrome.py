@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import http.server
+import sys
 import threading
 
 import pytest
@@ -123,7 +124,9 @@ def prepare_chrome(avd):
 
     avd.stop_activity("com.android.chrome")
 
-
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.skipif(sys.platform == "win32", reason="b/291324083")
+@pytest.mark.graphics
 def test_make_sure_webserver_works(test_server):
     """Test function to ensure that the web server is functioning correctly.
 
@@ -143,6 +146,9 @@ def test_make_sure_webserver_works(test_server):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=120, func_only=True)
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.skipif(sys.platform == "win32", reason="b/291324083")
+@pytest.mark.graphics
 def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
     """
     This test launches Chrome on an Android device, navigates to  a `blue`
