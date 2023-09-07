@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
 import pytest
 from grpc import RpcError, StatusCode
 from aemu.proto.emulator_controller_pb2 import (
@@ -52,7 +50,7 @@ def no_displays(emulator_controller, adb_shell):
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.graphics
 @pytest.mark.multidisplay
-@pytest.mark.skipif(sys.platform == "win32", reason="298027530")
+@pytest.mark.skipos('win', '298027530')
 def test_multidisplay_none(no_displays, emulator_controller, is_landscape):
     """Erasing displays leaves nothing behind."""
     if is_landscape:

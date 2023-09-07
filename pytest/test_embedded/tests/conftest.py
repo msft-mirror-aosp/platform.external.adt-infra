@@ -176,8 +176,12 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
                 (os == 'mac' and pytest._system == 'Darwin') or
                 (os == 'm1' and pytest._system == 'Darwin'
                     and pytest._processor == 'arm64')):
-                pytest.skip(marker.args[1]) if len(marker.args) > 1 \
-                                            else pytest.skip()
+                if len(marker.args) > 1:
+                    pytest.skip(marker.args[1])
+                elif 'reason' in marker.kwargs:
+                    pytest.skip(marker.kwargs['reason'])
+                else:
+                    pytest.skip()
 
     logging.info("=============== Setup: %s ===============", item.name)
 
