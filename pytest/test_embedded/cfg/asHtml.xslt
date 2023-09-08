@@ -211,24 +211,26 @@ function goto_id(id) {
                 <h1>All Skipped Tests: <xsl:value-of select="count(//testsuite/testcase/skipped)"/></h1>
                 <ul>
                     <xsl:for-each select="testsuite">
-                        <!--h4 style="margin: 8px auto 5px;"-->
-                        <li style="margin: 5px auto 3px;"><strong><xsl:value-of select="@name"/></strong></li>
-                        <!--/h4-->
-                        <xsl:for-each select="testcase">
-                            <xsl:variable name="id" select="position()"/>
-                            <xsl:variable name="name" select="../@name" />
-                            <xsl:variable name="fid" select="format-number($id, '0000')"/>
-                            <xsl:choose>
-                                <xsl:when test="skipped">
-                                    <li style="list-style: none">
-                                        <span class="buttonskipped" onClick="goto_id('tst{$name}_{$id}l')" style="margin-right: 7px">
-                                            <xsl:value-of select="$fid"/>
-                                        </span>
-                                        <xsl:value-of select="@name"/>
-                                    </li>
-                                </xsl:when>
-                            </xsl:choose>
-                        </xsl:for-each>
+                        <xsl:variable name="skips" select="sum(@skipped)"/>
+                        <xsl:if test="$skips &gt; 0">
+                            <li style="margin: 5px auto 3px;"><strong><xsl:value-of select="@name"/> (<xsl:value-of select="$skips"/>)</strong></li>
+                            <xsl:for-each select="testcase">
+                                <xsl:variable name="id" select="position()"/>
+                                <xsl:variable name="name" select="../@name" />
+                                <xsl:variable name="fid" select="format-number($id, '0000')"/>
+                                <xsl:choose>
+                                    <xsl:when test="skipped">
+                                        <li style="list-style: none">
+                                            <span class="buttonskipped" onClick="goto_id('tst{$name}_{$id}l')" style="margin-right: 7px">
+                                                <xsl:value-of select="$fid"/>
+                                            </span>
+                                            <xsl:value-of select="@name"/>&#160;
+                                            <font style="color: #666666;">[<xsl:value-of select="skipped/@message"/>]</font>
+                                        </li>
+                                    </xsl:when>
+                                </xsl:choose>
+                            </xsl:for-each>
+                        </xsl:if>
                     </xsl:for-each>
                 </ul>
                 <xsl:apply-templates select="testsuite"/>
