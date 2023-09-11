@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import platform
 import re
 from functools import partial
 
@@ -94,7 +93,6 @@ def test_rotation_observable_through_screenshot(emulator_controller, animation_a
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.graphics
-# @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/277819419 flaky on windows.
 def test_rotation_observable_through_adbstream(
     avd, at_home, animation_app, emulator_controller
 ):
@@ -125,7 +123,6 @@ def test_rotation_observable_through_adbstream(
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.graphics
-# @pytest.mark.flaky(reruns=2, reruns_delay=2)
 def test_rotation_observable_through_stream_screenshot(
     animation_app, emulator_controller, stream_screenshot
 ):
@@ -330,7 +327,7 @@ def test_rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=480, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.skipif(platform.processor() == "arm", reason="b/275593138")
+@pytest.mark.skipos('m1', 'b/275593138')
 def test_rotation_observable_through_screenshot_embedded_mode(
     emulator_controller, telnet, emulator
 ):

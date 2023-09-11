@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import platform
 import re
-import sys
 from typing import List
 
 import pytest
@@ -106,7 +104,7 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 @pytest.mark.flaky(
     reruns=3, reruns_delay=5
 )  # b/278266218 flaky on linux_x64-gfxstream.
-@pytest.mark.skipif(platform.processor() == "i386", reason="b/275642912")
+@pytest.mark.skipos('mac', 'b/275642912')
 def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     """Make sure the emulator can crash, and produces a report.
 
@@ -128,7 +126,7 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 @pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.skipif(sys.platform == "win32", reason="b/275577019")
+@pytest.mark.skipos('win', 'b/275577019')
 def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     """Make sure that there are symbols in the crashes reported by the emulator.
 

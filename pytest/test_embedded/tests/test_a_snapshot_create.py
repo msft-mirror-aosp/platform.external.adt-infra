@@ -3,7 +3,6 @@ import os
 import platform
 import shutil
 import subprocess
-import sys
 import time
 from pathlib import Path
 from zipfile import ZipFile
@@ -45,9 +44,7 @@ def dumpAvdConent(mypath):
 @pytest.mark.slow
 @pytest.mark.snapshot
 @pytest.mark.timeout(timeout=1800, func_only=True)
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows takes >2700 seconds to boot"
-)
+@pytest.mark.skipos('win', 'Windows takes >2700 seconds to boot')
 def test_snapshot_create(emulator):
     """Make sure the emulator status is set to booted."""
     if "DIST_DIR" in os.environ:

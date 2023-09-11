@@ -13,13 +13,12 @@
 # limitations under the License.
 
 import pytest
-import sys
 from emu.timing import wait_until
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.skipif(sys.platform == "win32", reason="bug: b/285402803")
+@pytest.mark.skipos('win', 'b/285402803')
 @pytest.mark.boot
 def test_wifi_has_connectivity(avd):
     def has_connectivity():

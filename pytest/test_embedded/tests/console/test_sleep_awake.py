@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sys
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
@@ -84,7 +83,7 @@ def emulator_off(adb_shell):
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.skipif(sys.platform == "win32", reason="b/288441746")
+@pytest.mark.skipos('win', 'b/288441746')
 def test_power_down_sleeps_the_device(adb_shell, emulator_on):
     """Test case to verify that sending the power-down command to an awake device will put the device to sleep."""
 
