@@ -176,6 +176,7 @@ def test_snapshot_booted(emulator):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=600, func_only=True)
 @pytest.mark.skipif(sys.platform == "win32", reason="will turn on later")
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/286570480
 def test_emulator_should_idle(emulator):
     """check emulator use less than 25% single cpu when idle."""
 
