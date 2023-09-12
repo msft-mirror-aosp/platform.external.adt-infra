@@ -327,7 +327,6 @@ def test_rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=480, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.skipos('m1', 'b/275593138')
 def test_rotation_observable_through_screenshot_embedded_mode(
     emulator_controller, telnet, emulator
 ):
