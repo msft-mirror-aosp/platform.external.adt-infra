@@ -175,7 +175,8 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
                 (os == 'linux' and pytest._system == 'Linux') or
                 (os == 'mac' and pytest._system == 'Darwin') or
                 (os == 'm1' and pytest._system == 'Darwin'
-                    and pytest._processor == 'arm64')):
+                    and pytest._processor == 'arm64') or
+                (os == 'all')):
                 if len(marker.args) > 1:
                     pytest.skip(marker.args[1])
                 elif 'reason' in marker.kwargs:
