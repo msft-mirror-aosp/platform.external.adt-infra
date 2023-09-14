@@ -1,14 +1,54 @@
-# Embedded Emulator E2E
+# Emulator End-to-End Testing
 
-This contains a series of integration tests that validate that the emulator works as expected under various configurations.
+This document describes the  integration tests designed to thoroughly assess the emulator's performance under various conditions.
 
-We write the integration tests in pytest and run them as part of the automated build process. The tests are launched using the run_tests.py script. The script roughly does the following:
+**Test Framework**: We employ the pytest framework for creating and executing these integration tests, seamlessly integrating them into our automated build process.
 
-* Creates a temporary directory with a virtual environment
-* Installs all the dependencies
-* Sets up ANDROID_SDK_ROOT to point to $AOSP_ROOT / "prebuilts"  / "android-emulator-build" / "system-images" / OS_NAME
-* Loads the test definitions from [cfg/emulator_tests.json](cfg/emulator_tests.json)
-* Launches pytest to run all the tests defined in the test configuration
+**Test Launcher**: To initiate these tests, we utilize the `run_tests.py` script, which undertakes the following tasks:
+
+1. **Temporary Environment**: It sets up a temporary directory and establishes a virtual environment to isolate the testing environment from the main system.
+
+2. **Dependency Installation**: Within this virtual environment, all necessary dependencies are installed to ensure the emulator and its components function correctly.
+
+3. **Environment Configuration**: The script configures the `ANDROID_SDK_ROOT` environment variable to point to the relevant location within the current repository, specifically at `$AOSP_ROOT/prebuilts/android-emulator-build/system-images/OS_NAME`, that contains all system images that can be tested.
+
+4. **Test Definitions**: For orchestrating the tests, the script loads test definitions from the [cfg/emulator_tests.json](cfg/emulator_tests.json) file.
+
+5. **Test Execution**: Lastly, the script leverages pytest to execute all the tests defined within the test configuration, providing thorough coverage of emulator functionality.
+
+These end-to-end tests play a pivotal role in ensuring the emulator's reliability and robustness, allowing us to maintain the expected behavior across a wide range of configurations.
+
+## Running the tests on your local machine
+
+To execute the tests on your local machine, follow these steps based on your operating system:
+
+### On Posix (Linux/macOS):
+
+You can run the tests using the `run_tests.sh` script. Additionally, you will need to provide the path to the emulator binary using the `-e` flag.
+
+```bash
+./run_tests.sh -e ~/src/emu-master-dev/external/qemu/objs/emulator
+```
+
+If you have a local build, you can enable symbol usage from the build:
+
+```bash
+./run_tests.sh -e ~/src/emu-master-dev/external/qemu/objs/emulator --symbols ~/src/emu-master-dev/external/qemu/objs/build/symbols
+```
+
+### On Windows:
+
+To execute the tests on your Windows machine, use the `run_tests.cmd` script. You will also need to provide the path to the emulator binary using the `-e` flag.
+
+```cmd
+run_tests.cmd -e C:\src\emu\external\qemu\objs\emulator.exe
+```
+
+If you have a local build, you can enable symbol usage from the build directory:
+
+```cmd
+run_tests.cmd -e C:\src\emu\external\qemu\objs\emulator.exe --symbols C:\src\emu\external\qemu\objs\build\symbols
+```
 
 ## Test configuration file
 
@@ -16,10 +56,10 @@ The test configuration file is a json file that describes which set of
 tests to run under a given configuration. It has the following format:
 
 ```json
-  {
-    "test_suite_1" : xxx,
-    "test_suite_2" : xxx,
-  }
+{
+  "test_suite_1" : xxx,
+  "test_suite_2" : xxx,
+}
 ```
 
 Where xxx descibes a test as follows:
@@ -29,14 +69,24 @@ Where xxx descibes a test as follows:
        // This contains a human readable description of what this suite should do
         "description": "Set of tests that verify that graphic related tests work well in a `landscape` emulator",
         // Set of flags to pass to the emulator when it gets launched.
-        // for example "-qt-hide-window" will run as an embedded emulator
-        "launch_flags": [],
-        // Set of flags to pass to the pytest launcher, in this case only test
-        // marked as graphics will be run
+        // If this case if the tests require an emulator to be
+        // launched it will add the `-qt-hide-window` flag.
+        "launch_flags": ["-qt-window"],
+        // Set of flags to pass to the pytest launcher. These
+        // parameters are directly appended to the the pytest
+        // invocation.
+        // For example in this case we add `-m graphics`
+        // parameter.
         "pytest_flags": [
             "-m graphics"
         ],
         // The avd configuration that will be used when running these tests.
+        // These parameters are appended to the config.ini file of the
+        // avd that will be created. This allows you to define your own custom
+        // avd. The example below results in the creation of configuration
+        // that uses api 33.
+        //
+        // Note that "abi.type" will be auto derived at the moment,
         "avd_config": {
             "api": "33",
             "tag.id": "google_apis",
@@ -46,23 +96,60 @@ Where xxx descibes a test as follows:
     },
 ```
 
-You can select which suite to run by passing in the `--run_suite` flag. Every suite description matching the regex will be executed.
+You can select the suite to test by passing in the `--test_suite` flag to the run_tests script:
 
-## Running the tests on your local machine
+```sh
+run_tests.sh -e ~/src/emu-master-dev/external/qemu/objs/emulator --test_suite landscape_test_suite
+```
 
-To run the tests on your local machine, you can run `run_tests.sh` on Posix or `run_tests.cmd` on Windows. You will need to provide the path to the emulator binary using the `-e` flag.
+## Development
 
-If you have a local build you could launch it with the symbols flag to use the symbols produced during build:
+To set up your development environment, follow these steps:
 
-   run_tests.sh -e ~/src/emu-master-dev/external/qemu/objs/emulator --symbols ~/src/emu-master-dev/external/qemu/objs/build/symbols
+1. **Create a Virtual Environment**: Execute the following command to establish a virtual environment and install all the necessary dependencies required for running the tests:
 
-Note that we are using the AOSP python interpreter, which has limitations. For example, we have no symbols and TLS.
+```sh
+. ./configure.sh
+```
+
+2. **Running Specific Tests:** If you want to run a specific subset of tests with an already active emulator, follow these instructions:
+
+    - Ensure that you have launched the emulator with an Android Virtual Device (AVD) configuration that you intend to use for the tests.
+
+    - Employ the following command to execute a particular test by specifying its name:
+          pytest --debug_emulator -k "name_of_the_test"
+
+    Replace `name_of_the_test` with the actual name of the test you wish to run.
+
+### Running tests from Visual Studio Code
+
+Visual Studio Code offers helpful extensions for [debugging](https://code.visualstudio.com/docs/python/testing) tests. Follow these steps to debug the e2e tests in Visual Studio Code:
+
+1. **Open the Workspace**: Start by opening the Visual Studio Code [workspace](test_embedded.code-workspace).
+
+2. **Install the Pylance Extension**: You will likely receive a recommendation to install the `ms-python.python` extension. You can install it from the [extension marketplace](https://marketplace.visualstudio.com/items?itemName=ms-python.python).
+
+3. **Configure the Virtual Environment**: Run the `./configure.sh` script to configure the virtual environment.
+
+4. **Select the Python Interpreter**: Choose the virtual environment as the Python Interpreter in VSCode. To do this, use the "Python: Select Interpreter" command and select `.venv/bin/python` from the test_embedded workspace.
+
+5. **Launch the Emulator**: Manually start the emulator with the AVD configuration you want to test. The emulator can be launched from the command line, or from another visual studio code session.
+
+6. **Choose the Test**: Select the specific test you wish to run. You can either debug or run the test from the options available under the flask icon.
+
+Here's an example image for reference:
+
+![Python Debugging](cfg/py_debug.png)
+
+By following these steps, you can easily debug and run tests in Visual Studio Code. Note that not all the tests can succeed when ran from within visual studio. For example tests that need to restart the emulator will fail as we do not have
+the ability to restart running emulators.
 
 ### Running tests with your local python interpreter
 
-You can work around this by using your own python install. For example, you could use pyenv:
+By default the test runner scripts are using the AOSP Python interpreter, which comes with some limitations, such as the absence of symbols and TLS support. The most troublesome limitation is that you will not be able to install additional packages, or use packages that rely on public symbols, such as [py-spy](https://github.com/benfred/py-spy). To work around this
+you can install your own matching interpreter:
 
-* Install PyEnv (`brew install pyenv`)
+* Install [PyEnv](https://github.com/pyenv/pyenv) (`brew install pyenv`).
 * Install Python 3.10.6 (`pyenv install 3.10.6`)
 * Create a new virtual environment (`python -m venv .venv`)
 * Activate the virtual environment (`source .venv/bin/activate`)
@@ -74,17 +161,7 @@ For example:
 
 Now you can use your own python tools to inspect issues.
 
-## Development
-
-To create a virtual environment, run `. ./configure.sh` This will install a virtual environment in the .venv directory and install all the dependencies required to run the tests.
-
-You can run a subset of the tests with an already running emulator. In order
-to do so you will have to launch the emulator with an avd that you will use for the tests. You can see details on this in the section below.
-
-    pytest --debug_emulator -k "name_of_the_test"
-
-
-### Running tests from a suite
+### Manually running tests from a suite
 
 If you wish to run a test from a suite you will have to pass in the right parameters. You can find the exact details in the [cfg/emulator_tests.json](cfg/emulator_tests.json) file. For example to run the landscape test suite from the command line can run:
 
@@ -101,10 +178,7 @@ If you wish to run a test from a suite you will have to pass in the right parame
 
 ## Obtaining new packages with devpi
 
-The virtual environment is using the python interpreter in AOSP. This interpreter does
-not support TLS, and hence you will not be able to install external packages. To work
-around this you can run a local devpi server using a python interpreter that does support
-tls.
+The virtual environment is using the python interpreter in AOSP. This interpreter does not support TLS, and hence you will not be able to install external packages. To work around this you can run a local devpi server using a python interpreter that does support tls.
 
 Devpi can be run by running a devpi server that is found here: [../../devpi/](../../devpi).
 
@@ -122,27 +196,11 @@ Once the devpi server is running, you can install packages from the devpi reposi
 
 For example, to install the py-spy package, you would run the following command:
 
-  pip install py-spy
+    pip install py-spy
 
-### Running against an already running emulator
+### Making new packages available for tests
 
-Some test require access to the emulator logs, this means you must have run the emulator such that it produces logs. You must have *at least* specified the following flags and redirected the output. For example
-
-    ./objs/emulator @R -verbose -debug-events -debug-time  | tee /tmp/emu.log
-
-This will launch  the emulator and output the logs to /tmp/emu.log. Next you can run the pytests as follows:
-
-    pytest  --debug_emulator_log=/tmp/emu.log --debug_emulator  -k 'test_mouse_perf_host_host_grpc'
-
-This will run the test: `test_mouse_perf_host_host_grpc` against the emulator you started earlier.
-
-### Filtering tests
-
-You can use the standard pytest commands to run specific tests, and reconfigure the runner by modifying tox.ini. For example you can use the `-k` flag to select tests of interest:
-
-## Making sure it will run successfully on the build bots
-
-If you are adding new packages you must make them available in our on disk repository. This means you will have to install the dependencies in our local repo. See [../../devpi/README. MD](../../devpi/README. MD) for more information.
+If you are adding new packages you must make them available in our on disk repository. This means you will have to install the dependencies in our local repo. See [../../devpi/README. MD](../../devpi/README. MD) for more information on how to add new python packages to our local repository.
 
 ## I would like to add some tests
 
@@ -154,9 +212,6 @@ You can add your tests in a new .py file that automatically will be discovered. 
 import pytest
 from google.protobuf import empty_pb2
 
-# Use a custom avd configuration, vs. the default
-avd_config = {"api": "33", "tag.id": "google_apis"}
-
 @pytest.mark.e2e
 def test_booted(emulator_controller):
     """Make sure the emulator status is set to booted."""
@@ -164,11 +219,7 @@ def test_booted(emulator_controller):
     assert response.booted
 ```
 
-If you wish to use your own avd configuration you can set the `avd_config` dictionary to contain the desired key = value pairs that should be used in the config.ini of the avd.
-
-A single [module](https://docs.python.org/3/tutorial/modules.html) will use the same avd configuration.
-
-**Note** The emulator will keep running for the duration of the test, so multiple emulators can (and likely) will be running concurrently.
+Make sure to start every test that you want to run with the `test_` prefix, otherwise it will not be discovered by pytest.
 
 ### Test Fixtures
 
