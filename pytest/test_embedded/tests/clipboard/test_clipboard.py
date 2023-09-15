@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
 import pytest
 
 from aemu.proto.emulator_controller_pb2 import ClipData
@@ -34,7 +32,6 @@ _EMPTY_ = empty_pb2.Empty()
         "How is Weather?",
     ],
 )
-@pytest.mark.skipif(sys.platform == "win32", reason="298027530")
 def test_clipboard_data(emulator_controller, clipboard_data):
     """Send clipboard data to the emulator.
 

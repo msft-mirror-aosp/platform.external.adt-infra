@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import sys
 import tarfile
 import time
 
@@ -35,7 +34,6 @@ def snapshot_service(avd):
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.skipif(sys.platform == "win32", reason="298027530")
 def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
     assert not snapshot_service.load("foo")
 

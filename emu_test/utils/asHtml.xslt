@@ -85,6 +85,7 @@ span.closed { color: #808080; }
 .pass {background-color: #ffffff; color: #008900;}
 .fail {background-color: #ffffff; color: #bd2121;}
 .error {background-color: #ffffff; color: #720808;}
+.skip {background-color: #ffffff; color: #d1c10f;}
 
 li.passed {color: #002000;}
 li.failed {color: #200000;}

@@ -147,8 +147,8 @@ threading.excepthook = log_thread_error
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
     """
-    Check whether the test is supported on the platform and log the setup information
-    for the test.
+    Check whether the test is supported on the platform, handle
+    custom markers and log the setup information.
 
     Args:
         item (pytest.Item): The test item.
@@ -159,6 +159,30 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     plat = sys.platform
     if supported_platforms and plat not in supported_platforms:
         pytest.skip(f"cannot run {item.name} on platform {plat}")
+
+    # Handle the 'skipos' marker.
+    markers = [marker for marker in item.iter_markers() if marker.name in 'skipos']
+    for marker in markers:
+        if len(marker.args) == 0:
+            pytest.exit("The 'skipos' marker needs at least one argument.")
+        oss = marker.args[0].lower()
+        if ',' in oss:
+            oss = oss.replace(' ', '').split(',')
+        else:
+            oss = [oss]
+        for os in oss:
+            if ((os == 'win' and pytest._system == 'Windows') or
+                (os == 'linux' and pytest._system == 'Linux') or
+                (os == 'mac' and pytest._system == 'Darwin') or
+                (os == 'm1' and pytest._system == 'Darwin'
+                    and pytest._processor == 'arm64') or
+                (os == 'all')):
+                if len(marker.args) > 1:
+                    pytest.skip(marker.args[1])
+                elif 'reason' in marker.kwargs:
+                    pytest.skip(marker.kwargs['reason'])
+                else:
+                    pytest.skip()
 
     logging.info("=============== Setup: %s ===============", item.name)
 
@@ -192,6 +216,16 @@ def pytest_configure(config):
     """Configure pytest, this method is run before any tests is run."""
     pytest.emulator = None
     pytest.emulators = {}
+    pytest._system = platform.system()
+    pytest._processor = platform.processor()
+    # Register the 'skipos' marker.
+    config.addinivalue_line (
+        "markers", ("skipos(platform, reason=None): "
+            "skip the given test for the given platform. "
+            "Valid options and system are: "
+            "win (Windows), linux (Linux), mac (macOS), m1 (macOS aarch64). "
+            "Multiple OS values are accepted, such as \"win, linux\".")
+    )
 
 
 def pytest_sessionfinish(

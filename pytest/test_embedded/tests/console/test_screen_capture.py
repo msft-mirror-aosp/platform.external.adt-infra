@@ -13,20 +13,17 @@
 # limitations under the License.
 
 import pytest
-from emu.timing import wait_until
+TEMP_FILE = "__screenshot.png"
 
+@pytest.fixture
+def tmp_test_file(tmp_path):
+    temp_file = tmp_path / TEMP_FILE
+    return temp_file
 
-@pytest.mark.e2e
-@pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.skipos('win', 'b/285402803')
-@pytest.mark.boot
-def test_wifi_has_connectivity(avd):
-    def has_connectivity():
-        # Check that AVD can connect to Google Public DNS 8.8.8.8.
-        result = avd.adb.shell("dumpsys connectivity --diag").rstrip()
-        for line in result.splitlines():
-            if "DNS UDP dst{8.8.8.8}" in line and "SUCCEEDED" in line:
-                return True
-        return False
-
-    assert wait_until(has_connectivity), "Unable to connect to dns 8.8.8.8"
+@pytest.mark.adb
+@pytest.mark.timeout(timeout=20, func_only=True)
+def test_adb_screencapture(avd, tmp_test_file):
+    device_file = f"/sdcard/{tmp_test_file.name}"
+    assert not "adb: error" in avd.adb.run(["shell", "screencap", device_file])
+    avd.adb.pull(device_file, tmp_test_file)
+    assert "yes" in avd.adb.shell(f"[ -f {device_file} ] && echo 'yes'")
