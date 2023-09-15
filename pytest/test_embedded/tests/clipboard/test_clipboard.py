@@ -32,7 +32,6 @@ _EMPTY_ = empty_pb2.Empty()
         "How is Weather?",
     ],
 )
-@pytest.mark.skipos('win', '298027530')
 def test_clipboard_data(emulator_controller, clipboard_data):
     """Send clipboard data to the emulator.
 

@@ -50,7 +50,6 @@ def no_displays(emulator_controller, adb_shell):
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.graphics
 @pytest.mark.multidisplay
-@pytest.mark.skipos('win', '298027530')
 def test_multidisplay_none(no_displays, emulator_controller, is_landscape):
     """Erasing displays leaves nothing behind."""
     if is_landscape:
