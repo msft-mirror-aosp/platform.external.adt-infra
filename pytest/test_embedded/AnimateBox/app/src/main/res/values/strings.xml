@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AnimateBox</string>
+    <string name="clip_activity_label">Clipboard Activity</string>
 </resources>
