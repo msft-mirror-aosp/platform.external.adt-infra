@@ -67,9 +67,7 @@ def send_mouse_over(tester):
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-wall")
-@pytest.mark.skip(
-    reason="Wall time measurements with adb are flaky and not supported beyond P."
-)
+@pytest.mark.skipos('all', 'Wall time measurements with adb are flaky and not supported beyond P.')
 def test_mouse_perf_wall_grpc(avd, android_start_time, adb_event_stream, benchmark):
     """Checks that we can send mouse events over gRPC.
 
@@ -86,9 +84,7 @@ def test_mouse_perf_wall_grpc(avd, android_start_time, adb_event_stream, benchma
 @pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-wall")
-@pytest.mark.skip(
-    reason="Wall time measurements with adb are flaky and not supported beyond P."
-)
+@pytest.mark.skipos('all', 'Wall time measurements with adb are flaky and not supported beyond P.')
 def test_mouse_perf_wall_telnet(avd, android_start_time, adb_event_stream, benchmark):
     """Checks that we can send mouse events over telnet.
 
@@ -106,9 +102,7 @@ def test_mouse_perf_wall_telnet(avd, android_start_time, adb_event_stream, bench
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-guest")
-@pytest.mark.skip(
-    reason="Wall time measurements with adb are flaky and not supported beyond P."
-)
+@pytest.mark.skipos('all', 'Wall time measurements with adb are flaky and not supported beyond P.')
 def test_mouse_perf_host_guest_telnet(
     avd, android_start_time, adb_event_stream, benchmark_stat
 ):
@@ -133,9 +127,7 @@ def test_mouse_perf_host_guest_telnet(
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-guest")
-@pytest.mark.skip(
-    reason="Wall time measurements with adb are flaky and not supported beyond P."
-)
+@pytest.mark.skipos('all', 'Wall time measurements with adb are flaky and not supported beyond P.')
 def test_mouse_perf_host_guest_grpc(
     avd, android_start_time, adb_event_stream, benchmark_stat
 ):

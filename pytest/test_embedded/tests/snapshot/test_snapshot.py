@@ -57,7 +57,7 @@ def test_snapshot_delete_removes(snapshot_service):
     assert "foo" not in [x.snapshot_id for x in snapshot_service.lists()]
 
 
-@pytest.mark.skip
+@pytest.mark.skipos('all')
 @pytest.mark.snapshot
 @pytest.mark.e2e
 def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
@@ -70,7 +70,7 @@ def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     assert tar.getmembers()
 
 
-@pytest.mark.skip
+@pytest.mark.skipos('all')
 @pytest.mark.snapshot
 @pytest.mark.e2e
 def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):

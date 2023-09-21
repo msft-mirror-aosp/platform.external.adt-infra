@@ -179,7 +179,7 @@ def test_can_load_oldsnapshot(emulator, pytestconfig):
 
 
 @pytest.mark.e2e
-@pytest.mark.skip(reason="flaky and not needed for now")
+@pytest.mark.skipos('all', 'Flaky and not needed for now.')
 @pytest.mark.timeout(timeout=600, func_only=True)
 def test_snapshot_download(emulator):
     """Make sure the emulator status is set to booted."""

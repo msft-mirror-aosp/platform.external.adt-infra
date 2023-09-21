@@ -42,7 +42,7 @@ def dimenisions(emulator_controller):
     return width, height
 
 
-@pytest.mark.skip(reason="b/203787882")
+@pytest.mark.skipos('all', 'b/203787882')
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
@@ -97,7 +97,7 @@ def test_mmap_grpc_perf(
     assert True
 
 
-@pytest.mark.skip(reason="b/203787882")
+@pytest.mark.skipos('all', 'b/203787882')
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
