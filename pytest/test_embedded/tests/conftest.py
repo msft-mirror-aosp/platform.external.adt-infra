@@ -446,7 +446,7 @@ def launch_animiation_app(avd: BaseEmulator):
     assert avd.is_alive()
     assert avd.stop_activity("com.google.AnimateBox")
     with avd.adb.logcat(tag="aemu", clear=True, timeout=10) as stream:
-        assert avd.start_activity("com.google.AnimateBox/com.google.emu.MainActivity")
+        assert avd.start_activity("com.google.AnimateBox/com.google.emu.MainActivity", params=None)
         for line in stream:
             if "--STARTED--" in line:
                 return True

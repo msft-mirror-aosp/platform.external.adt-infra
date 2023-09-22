@@ -113,11 +113,11 @@ def prepare_chrome(avd):
     avd.adb.shell("am set-debug-app --persistent com.android.chrome")
 
     # Start Chrome for the first time
-    avd.start_activity("com.android.chrome/com.google.android.apps.chrome.Main")
+    avd.start_activity("com.android.chrome/com.google.android.apps.chrome.Main", params=None)
 
     # Kill and restart to skip a pop-up
     avd.stop_activity("com.android.chrome")
-    avd.start_activity("com.android.chrome/com.google.android.apps.chrome.Main")
+    avd.start_activity("com.android.chrome/com.google.android.apps.chrome.Main", params=None)
 
     yield
 
