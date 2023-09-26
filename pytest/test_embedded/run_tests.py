@@ -719,6 +719,7 @@ def run_tests(
     logdir.mkdir(exist_ok=True, parents=True)
 
     result_xmls = []
+    skip_reports = []
     for name, cfg in tests_to_run:
         test_log_dir = logdir / name
         test_log_dir.mkdir(exist_ok=True, parents=True)
@@ -742,9 +743,12 @@ def run_tests(
                     name,
                 )
                 result_xmls.append(res)
+                skip_reports.append(test_log_dir.joinpath(name + '_skip.xml'))
 
     result = Path(logdir) / "TEST-embedded_test.xml"
     merge_results(python_exe=pyrun, sources=result_xmls, dest=result)
+    xml_skip_report = Path(logdir) / 'skipped_tests.xml'
+    merge_skip_reports(python_exe=pyrun, sources=skip_reports, dest=xml_skip_report)
     apply_xslt(
         python_exe=pyrun,
         source=result,
@@ -757,7 +761,35 @@ def run_tests(
         xslt=HERE / "cfg" / "liftSystemOut.xslt",
         dest=result,
     )
+    apply_xslt(
+        python_exe=pyrun,
+        source=xml_skip_report,
+        xslt=HERE / "cfg" / "skippedTests.xslt",
+        dest=xml_skip_report.with_suffix('.html'),
+    )
 
+def merge_skip_reports(python_exe: PyRunner, sources: [Path], dest: Path):
+    """Run the standalone skip report module
+
+    Args:
+        python_exe (PyRunner): The python runner used to run python.
+        sources ([Path]): List of xml skip reports that are to be merged.
+        dest (Path): The (optional) output file where the result will be written to.
+    """
+    try:
+        python_exe.run(
+            [
+                f"{HERE}/src/xml/merge_skip_reports.py",
+                "--out",
+                dest,
+            ]
+            + [str(x) for x in sources],
+            timeout=10,
+        )
+    except Exception as err:
+        logging.warning(
+            "Failed to merge skip reports: %s to %s due to (%s)", sources, dest, err
+        )
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
