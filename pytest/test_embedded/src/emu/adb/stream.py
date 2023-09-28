@@ -123,10 +123,17 @@ class AdbStream:
         # connections.
         self.logger.info("Waiting for _execute_shell_cmd completion.")
         start = time.time()
-        self.thread.join()
-        self.logger.info(
-            "_execute_shell_cmd completed after %s seconds", time.time() - start
-        )
+        self.thread.join(timeout=180)
+
+        if self.thread.is_alive():
+            self.logger.warning(
+                "_execute_shell_cmd never completed, ignoring thread after %s seconds",
+                time.time() - start,
+            )
+        else:
+            self.logger.info(
+                "_execute_shell_cmd completed after %s seconds", time.time() - start
+            )
 
     def _execute_shell_cmd(self):
         """Execute the shell command and read the output in the callback."""

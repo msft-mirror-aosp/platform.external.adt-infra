@@ -42,7 +42,7 @@ def set_device_hinge_angle(emu, angle):
     )
 
 
-@pytest.mark.skip(reason="b/288335290")
+@pytest.mark.skipos('all', 'b/288335290')
 @pytest.mark.foldable
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]

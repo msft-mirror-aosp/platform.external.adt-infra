@@ -43,6 +43,7 @@ from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.images.convert import save_image
 from emu.utils import system_cpu
 from tests.test_utils import StreamingCall
+import xml.etree.ElementTree as ET
 
 OS_NAME = platform.system().lower()
 AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
@@ -123,6 +124,8 @@ def pytest_addoption(parser):
 
 ALL_PLATFORMS = set("darwin linux win32".split())
 
+SKIPOS_PLATFORMS = "win linux mac m1 all".split()
+
 
 def log_thread_error(args):
     """
@@ -165,18 +168,11 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     for marker in markers:
         if len(marker.args) == 0:
             pytest.exit("The 'skipos' marker needs at least one argument.")
-        oss = marker.args[0].lower()
-        if ',' in oss:
-            oss = oss.replace(' ', '').split(',')
-        else:
-            oss = [oss]
-        for os in oss:
-            if ((os == 'win' and pytest._system == 'Windows') or
-                (os == 'linux' and pytest._system == 'Linux') or
-                (os == 'mac' and pytest._system == 'Darwin') or
-                (os == 'm1' and pytest._system == 'Darwin'
-                    and pytest._processor == 'arm64') or
-                (os == 'all')):
+        platforms = marker.args[0].lower()
+        platforms = platforms.replace(' ', '').split(',')
+
+        for plat in platforms:
+            if plat == pytest.os or plat == 'all':
                 if len(marker.args) > 1:
                     pytest.skip(marker.args[1])
                 elif 'reason' in marker.kwargs:
@@ -216,16 +212,23 @@ def pytest_configure(config):
     """Configure pytest, this method is run before any tests is run."""
     pytest.emulator = None
     pytest.emulators = {}
-    pytest._system = platform.system()
-    pytest._processor = platform.processor()
+    pytest.system = platform.system()
+    pytest.processor = platform.processor()
+    
     # Register the 'skipos' marker.
     config.addinivalue_line (
         "markers", ("skipos(platform, reason=None): "
             "skip the given test for the given platform. "
-            "Valid options and system are: "
-            "win (Windows), linux (Linux), mac (macOS), m1 (macOS aarch64). "
-            "Multiple OS values are accepted, such as \"win, linux\".")
+            "Valid platform values and systems are: "
+            "'win' (Windows), 'linux' (Linux), 'mac' (macOS), "
+            "'m1' (macOS aarch64). "
+            "Multiple OS values are accepted, such as 'win, linux'. "
+            "To skip the test in all platforms, use the 'all' option.")
     )
+    os_map = {'Windows': 'win', 'Linux': 'linux',
+              'Darwin': 'm1' if pytest.processor == 'arm' else 'mac'}
+    # Current skipos platform
+    pytest.os = os_map.get(pytest.system, 'unknown')
 
 
 def pytest_sessionfinish(
@@ -446,7 +449,7 @@ def launch_animiation_app(avd: BaseEmulator):
     assert avd.is_alive()
     assert avd.stop_activity("com.google.AnimateBox")
     with avd.adb.logcat(tag="aemu", clear=True, timeout=10) as stream:
-        assert avd.start_activity("com.google.AnimateBox/com.google.emu.MainActivity")
+        assert avd.start_activity("com.google.AnimateBox/com.google.emu.MainActivity", params=None)
         for line in stream:
             if "--STARTED--" in line:
                 return True
@@ -581,7 +584,7 @@ def at_home(avd: BaseEmulator):
     avd.reset_state()
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def log_directory(pytestconfig):
     """Get the directory from value of the --log-file option, or the current working directory."""
     log_file = pytestconfig.getoption("--log-file")
@@ -629,3 +632,88 @@ def stream_screenshot(emulator_controller, log_directory, request):
         return StreamingImageCall(image_format)
 
     return streaming_img_call
+
+@pytest.fixture(scope="session", autouse=True)
+def generate_skip_report(skipped_tests, log_directory):
+    """Generate a xml report containing the tests currently skipped on each platform.
+
+    Args:
+        skipped_tests: Fixture that provides the skipped tests by platform.
+        log_directory: Pytest's internal request fixture with test function information.
+    """
+    xml_testsuite = ET.Element('testsuite')
+    xml_testsuite.set('name', log_directory.name)
+    xml_platforms = ET.SubElement(xml_testsuite, 'platforms')
+    fullname_map = {"win": "Windows", "linux": "Linux", "mac": "Mac Intel",
+                     "m1": "Mac M1", "all": "All platforms"}
+    for os_, tests in skipped_tests.items():
+        xml_platform = ET.SubElement(xml_platforms, 'platform')
+        xml_platform.set('name', os_)
+        xml_platform.set('fullname', fullname_map.get(os_, 'Unknown'))
+        for test in tests:
+            xml_test = ET.SubElement(xml_platform, 'test')
+            for property in ['name', 'reason', 'nodeid']:
+                xml_test_child = ET.SubElement(xml_test, property)
+                xml_test_child.text = str(test[property])
+
+    xml_tree = ET.ElementTree(xml_testsuite)
+    xml_report_filepath = log_directory.joinpath(log_directory.name + '_skip.xml')
+    xml_tree.write(xml_report_filepath, xml_declaration=True, encoding='utf-8')
+    logging.info(f"Generated skipped tests file '{xml_report_filepath}'")
+
+
+@pytest.fixture(scope="session")
+def skipped_tests(request):
+    """Collect the tests currently skipped on each platform.
+
+    Args:
+        request: Pytest's internal request fixture with test function information.
+
+    Returns:
+        A dictionary with the lists of tests skipped by each platform.
+    """
+    session = request.node
+    all_skip_markers = ['skip', 'skipos', 'darwin', 'linux', 'win32']
+    skipped_tests = dict([(os_, []) for os_ in [pytest.os] + SKIPOS_PLATFORMS])
+
+    for test in session.items:
+        skip_markers = [marker for marker in test.own_markers
+                           if marker.name in all_skip_markers]
+        for marker in skip_markers:
+            platforms, reason = get_skipped_platforms(marker)
+            skip_data = {'name': test.name, 'nodeid': test.nodeid, 'reason': reason}
+            for plat in platforms:
+                skipped_tests[plat].append(skip_data)
+
+    return skipped_tests
+
+
+def get_skipped_platforms(marker):
+    """Return the platforms filtered by a given skip marker.
+
+    Note: The following markers are accepted: skip, skipos, darwin, linux
+          and win32. The marker `skipif` is currently not considered.
+
+    Args:
+        marker: a pytest skip marker.
+
+    Returns:
+        (list[str], str): a tuple containing the list of platforms filtered
+                          by the marker, as well as the skip reason.
+    """
+    reason = marker.kwargs.get('reason', 'n/a')
+    filtered_platforms = []
+
+    if marker.name in ['darwin', 'linux', 'win32']:
+        os_ = marker.name.replace('darwin', 'mac').replace('win32', 'win')
+        reason = ' '.join(marker.name, 'only')
+        filtered_platforms = list(set(SKIPOS_PLATFORMS) - set([os_, 'all']))
+    elif marker.name == 'skip':
+        reason = marker.args[0] if len(marker.args) else reason
+        filtered_platforms = ['all']
+    elif marker.name == 'skipos':
+        os_ = marker.args[0]
+        reason = marker.args[1] if len(marker.args) > 1 else reason
+        filtered_platforms = [os_]
+
+    return (filtered_platforms, reason)

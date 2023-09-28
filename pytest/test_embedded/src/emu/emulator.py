@@ -247,7 +247,7 @@ class BaseEmulator(object):
 
         return self.adb.is_installed(package_name)
 
-    def start_activity(self, activity: str) -> bool:
+    def start_activity(self, activity: str, params) -> bool:
         """Attempts to start the given activity.
 
         An activity is considered to be running when the activity is in the list returned
@@ -270,11 +270,14 @@ class BaseEmulator(object):
             )
             return activity in in_focus
 
-        self.adb.shell(f"am start -n {activity}")
+        shell = f"am start -n {activity}"
+        if params:
+            shell += f" {params}"
 
+        self.adb.shell(shell)
         count = 0
         while count < 10:
-            self.adb.shell(f"am start -n {activity}")
+            self.adb.shell(shell)
             time.sleep(1)
             if activity_is_running():
                 return True

@@ -23,6 +23,16 @@ panic() {
   exit 1
 }
 
+function check_no_aosp_flag() {
+  for flag in "$@"; do
+    if [[ "$flag" == "--no-aosp" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+
 # Return the build machine's operating system tag.
 # Valid return values are:
 #    linux
@@ -85,8 +95,6 @@ HERE=$AOSP_DIR/external/adt-infra/pytest/test_embedded
 AEMU_GRPC=$AOSP_DIR/external/qemu/android/android-grpc/python/aemu-grpc/
 SNAPTOOL=$AOSP_DIR/external/qemu/android/android-grpc/python/snaptool/
 NETSIM_GRPC=$AOSP_DIR/tools/netsim/testing/netsim-grpc/
-PYTHON=$(aosp_find_python)
-PY_VER=$($PYTHON --version)
 
 # Point ANDROID_SDK_ROOT to the one that we ship
 SDK_EMULATOR=$AOSP_DIR/prebuilts/android-emulator-build/system-images/$(get_build_os)
@@ -105,13 +113,19 @@ setup_virtual_env() {
     # We need a virtual environment, so we can set up the proper include directories
     # as, well, it seem that our crippled python release does not report the proper include
     # directory
-    local PYTHON=$(aosp_find_python)
-    local PYTHON_INCLUDE=$(aosp_find_python_include)
-    local WHEEL_DIR=$(devpi_dir)/repo/simple
+    if check_no_aosp_flag "$@"; then
+       echo "Using local python interpreter"
+       local PYTHON=python3
+       $PYTHON -m venv $VIRTUAL_ENV_DEST
+    else
+      local PYTHON=$(aosp_find_python)
+      local PYTHON_INCLUDE=$(aosp_find_python_include)
+      $PYTHON -m venv $VIRTUAL_ENV_DEST
 
-    $PYTHON -m venv $VIRTUAL_ENV_DEST
-    rm -r $VIRTUAL_ENV_DEST/include
-    ln -sf $PYTHON_INCLUDE $VIRTUAL_ENV_DEST/include
+      rm -r $VIRTUAL_ENV_DEST/include
+      ln -sf $PYTHON_INCLUDE $VIRTUAL_ENV_DEST/include
+    fi
+    local WHEEL_DIR=$(devpi_dir)/repo/simple
 
     # Activate and setup a pip conf that points to our local devpi server
     # This will make sure all our packages are from the local server.
@@ -130,6 +144,6 @@ if [ -e $VIRTUAL_ENV_DEST/bin/activate ]; then
   . $VIRTUAL_ENV_DEST/bin/activate
   pip install -e .
 else
-  setup_virtual_env
+  setup_virtual_env "$@"
   pip install -e .
 fi

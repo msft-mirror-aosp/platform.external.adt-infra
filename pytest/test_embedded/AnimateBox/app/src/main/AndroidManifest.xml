@@ -17,6 +17,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Second Activity -->
+        <activity
+            android:name=".ClipActivity"
+            android:exported="true"
+            android:label="@string/clip_activity_label">
+        </activity>
     </application>
 
 </manifest>

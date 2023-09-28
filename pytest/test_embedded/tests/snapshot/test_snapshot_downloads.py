@@ -144,7 +144,7 @@ def test_can_load_oldsnapshot(emulator, pytestconfig):
     totexe = emulator.exe
 
     # create snapshot with old emulator
-    oldexe = download_emulator_zip("10775820")
+    oldexe = download_emulator_zip("10816734")
     logging.info("old emu: %s", oldexe)
     emulator.exe = oldexe
     myflags = ["-no-snapshot-load"]
@@ -179,7 +179,7 @@ def test_can_load_oldsnapshot(emulator, pytestconfig):
 
 
 @pytest.mark.e2e
-@pytest.mark.skip(reason="flaky and not needed for now")
+@pytest.mark.skipos('all', 'Flaky and not needed for now.')
 @pytest.mark.timeout(timeout=600, func_only=True)
 def test_snapshot_download(emulator):
     """Make sure the emulator status is set to booted."""
