@@ -826,7 +826,7 @@ def parse_arguments():
     parser.add_argument(
         "--symbols",
         dest="symbols",
-        help="Path to the directory or zipfile with breakpad symbols",
+        help="Path to the directory with breakpad symbols",
     )
 
     parser.add_argument(
