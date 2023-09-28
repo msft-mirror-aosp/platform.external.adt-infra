@@ -141,7 +141,7 @@ def get_test_channel(desc, max_length=4096):
     if "grpc.token" in desc._description:
         bearer = "Bearer {}".format(desc.get("grpc.token", ""))
         return grpc.intercept_channel(
-            channel, header_adder_interceptor("authorization", bearer, False)
+            channel, header_adder_interceptor("authorization", bearer)
         )
 
 
