@@ -6,7 +6,7 @@
         ],
         "pytest_flags": [
             "-m graphics and not multidisplay",
-            "--timeout=300"
+            "--timeout=600"
         ],
         "avd_config": {
             "api": "33",
@@ -23,7 +23,7 @@
         ],
         "pytest_flags": [
             "-m graphics",
-            "--timeout=300"
+            "--timeout=600"
         ],
         "avd_config": {
             "api": "33",
@@ -40,7 +40,7 @@
         ],
         "pytest_flags": [
             "-m embedded or graphics",
-            "--timeout=600"
+            "--timeout=900"
         ],
         "avd_config": {
             "api": "33",
@@ -59,7 +59,7 @@
         ],
         "pytest_flags": [
             "-m graphics and not multidisplay or embedded",
-            "--timeout=600"
+            "--timeout=900"
         ],
         "avd_config": {
             "api": "33",
@@ -74,7 +74,7 @@
         "launch_flags": [],
         "pytest_flags": [
             "-m snapshot",
-            "--timeout=600"
+            "--timeout=900"
         ],
         "avd_config": {
             "api": "33",
@@ -87,7 +87,7 @@
         "launch_flags": [],
         "pytest_flags": [
             "-m foldable",
-            "--timeout=300"
+            "--timeout=600"
         ],
         "avd_config": {
             "api": "31",
@@ -100,7 +100,7 @@
         "launch_flags": [],
         "pytest_flags": [
             "-m graphics and not multidisplay or resizable",
-            "--timeout=300"
+            "--timeout=600"
         ],
         "avd_config": {
             "api": "33",
@@ -117,7 +117,7 @@
         "launch_flags": [],
         "pytest_flags": [
             "-m hardware or console or adb",
-            "--timeout=300"
+            "--timeout=600"
         ],
         "avd_config": {
             "api": "31",
@@ -130,7 +130,7 @@
         "launch_flags": [],
         "pytest_flags": [
             "-m boot and not slow",
-            "--timeout=300"
+            "--timeout=600"
         ],
         "avd_config": {
             "api": "31",

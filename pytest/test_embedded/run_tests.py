@@ -603,8 +603,8 @@ def run_single_suite(
     tmpdir: str,
     build_target: str,
     pyrun: PyRunner,
-    launch_flags: [str],
-    pytest_flags: str,
+    launch_flags: str,
+    pytest_flags: [str],
     avd_config: str,
     name: str,
 ):
@@ -629,7 +629,8 @@ def run_single_suite(
                 f"--emulator_launch_flags",
                 launch_flags,
                 f"--android_avd_home={tmpdir}",
-                f"--build_target={build_target}," f"--android_home={ANDROID_SDK_ROOT}",
+                f"--build_target={build_target}",
+                f"--android_home={ANDROID_SDK_ROOT}",
             ]
             + pytest_flags,
             cwd=HERE,
@@ -875,7 +876,7 @@ def parse_arguments():
 
     parser.add_argument(
         "--test_config",
-        default=EMU_TEST_DIR / "cfg" / "emulator_tests.json",
+        default=EMU_TEST_DIR / "cfg" / f"emulator_{OS_NAME}_tests.json",
         help="The test configuration file that describes which tests should be run for each configuration",
     )
 
