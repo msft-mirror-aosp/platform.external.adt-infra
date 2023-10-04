@@ -45,7 +45,6 @@ def set_and_get_model(emu_controller, model_value):
 @pytest.mark.e2e
 @pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.skipos('all', 'getPhysicalModel and SetPhysicalModel for PhysicalModelValue.ROTATION does not match b/254898806')
 def test_physical_rotation(emulator_controller):
     """Test that setting the physical model is observable."""
     for x in [-180, 90, 0, 180]:

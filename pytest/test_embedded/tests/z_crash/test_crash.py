@@ -104,7 +104,6 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 @pytest.mark.flaky(
     reruns=3, reruns_delay=5
 )  # b/278266218 flaky on linux_x64-gfxstream.
-@pytest.mark.skipos('mac', 'b/275642912')
 def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     """Make sure the emulator can crash, and produces a report.
 
