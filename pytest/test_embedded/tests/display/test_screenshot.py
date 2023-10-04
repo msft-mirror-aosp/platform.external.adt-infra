@@ -64,7 +64,6 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.skipos('win', 'b/275586631')
 def test_screenshot_all_formats_are_equal(
     avd, get_screenshot, animation_app, w, h
 ):

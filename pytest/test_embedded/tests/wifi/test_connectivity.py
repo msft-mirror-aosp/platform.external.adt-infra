@@ -18,7 +18,6 @@ from emu.timing import wait_until
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.skipos('win', 'b/285402803')
 @pytest.mark.boot
 def test_wifi_has_connectivity(avd):
     def has_connectivity():
