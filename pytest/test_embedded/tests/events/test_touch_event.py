@@ -43,6 +43,7 @@ def test_touch_event_identifier_ranges(at_home, emulator_controller):
 @pytest.mark.e2e
 @pytest.mark.hardware
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 def test_touch_event_identifier_to_many(at_home, emulator_controller):
     """Tests that we properly handle too many registered identifiers."""
     x = 1

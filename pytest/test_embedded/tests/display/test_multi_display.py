@@ -47,7 +47,8 @@ def no_displays(emulator_controller, adb_shell):
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 def test_multidisplay_none(no_displays, emulator_controller, is_landscape):

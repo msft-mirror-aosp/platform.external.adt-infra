@@ -53,6 +53,7 @@ def test_screen_record_sends_event(screen_service, tmp_path):
 
 
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.graphics
 def test_screen_records_video(screen_service, animation_app, tmp_path):

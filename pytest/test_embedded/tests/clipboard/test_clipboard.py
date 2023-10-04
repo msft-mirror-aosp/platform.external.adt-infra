@@ -45,6 +45,7 @@ def wait_for_with_timed_iterator(predicate, timed_iterator, timeout=5):
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.parametrize(
     "clipboard_data",
     [
@@ -93,6 +94,7 @@ def test_stream_clipboard_immediately_sends_data(emulator_controller):
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 def test_stream_clipboard_sends_updated_data(emulator_controller, avd):
     """Validate that the streaming call will immediately send the current clipboard status and
     will send out events if the clipboard status changes.
@@ -148,6 +150,7 @@ def get_test_channel(desc, max_length=4096):
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 def test_stream_clipboard_sends_updated_data_to_other_channel(avd):
     # We forcefully create 2 different channel configurations to make
     # sure that python is not going to "cleverly" re-use an existing channel.
@@ -245,6 +248,7 @@ def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(avd):
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 def test_stream_clipboard_from_android_immediately_sends_data(avd, emulator_controller):
     """Verify that the internal clipboard status that is changed within android is sent."""
     clipboard_data = "ola"
