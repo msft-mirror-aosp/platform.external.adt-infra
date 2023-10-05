@@ -113,10 +113,23 @@
         "status": "enabled"
     },
     "hardware_test_suite": {
-        "description": "Set of tests that validate hardware, console and adb",
+        "description": "Set of tests that validate hardware and console",
         "launch_flags": [],
         "pytest_flags": [
-            "-m hardware or console or adb",
+            "-m hardware or console",
+            "--timeout=600"
+        ],
+        "avd_config": {
+            "api": "31",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "adb_test_suite": {
+        "description": "Set of tests that validate adb",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m adb",
             "--timeout=600"
         ],
         "avd_config": {
