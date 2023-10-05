@@ -89,7 +89,10 @@ def kill_process_tree(process: psutil.Process) -> None:
     safe_kill(process)
 
 
-def is_emulator_process(process: psutil.Process, emulator_process_names="emulator,qemu-system,netsim,netsimd") -> bool:
+def is_emulator_process(
+    process: psutil.Process,
+    emulator_process_names="emulator,qemu-system,netsim,netsimd",
+) -> bool:
     """Checks if the given process is an emulator (or related) process
 
     This includes: emulator, qemu-system.*, netsim, netsimd
@@ -129,7 +132,7 @@ def kill_all_emulators(process_names):
         for process in psutil.process_iter(["pid", "name"])
         if is_emulator_process(process, process_names)
     ]
-    attempts = 3 if platform.system() != 'Windows' else 6
+    attempts = 3 if platform.system() != "Windows" else 6
 
     # This is the active set of emulator processes we could find.
     # We are going to kill every member of this set.
@@ -169,7 +172,7 @@ def main():
         "-p",
         "--process_names",
         default="emulator, qemu-system, netsim, netsimd",
-        help="Names of processes that should be killed"
+        help="Names of processes that should be killed",
     )
 
     args = parser.parse_args()

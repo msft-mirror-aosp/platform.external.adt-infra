@@ -41,6 +41,7 @@ class Adb:
         emulator (str): Name of the emulator, this will be passed in as the -s parameter.
         adb (Path): Path to the adb executable.
     """
+
     def __init__(self, avd_id: str, emulator: str, adb: Path) -> None:
         """Create an adb object that runs against the given emulator
 

@@ -18,12 +18,11 @@ import random
 import re
 import shutil
 import socket
+import subprocess
 import sys
 import time
-import subprocess
 from pathlib import Path
-from typing import Optional, List
-
+from typing import List, Optional
 
 from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
@@ -34,14 +33,16 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from google.protobuf import empty_pb2
 from grpc import RpcError
+from mobly.controllers import android_device
 
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
 from emu.logging.log_handler import QueueLogHandler
+from emu.mobly.snippet_shell import SnippetShell
 from emu.process.command import Command
-from emu.utils import LogObserver
 from emu.timing import wait_until
+from emu.utils import LogObserver
 
 
 class FailedToLaunchException(Exception):
@@ -86,6 +87,7 @@ class BaseEmulator(object):
             self.android_avd_home,
         )
         self.adb: Adb = None
+        self.ads: android_device.AndroidDevice = None
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
 
@@ -141,6 +143,18 @@ class BaseEmulator(object):
             self.description.name(),
             self.description.get("avd.id"),
         )
+
+    def mobly(self):
+        if self.ads is not None:
+            return self.ads
+
+        devices = android_device.get_instances([self.description.name()])
+        if len(devices) != 1:
+            raise EmulatorNotFoundException(
+                f"Unable to find the mobly android device, found: {devices}"
+            )
+        self.ads = devices[0]
+        return self.ads
 
     def launch(self, flags: [str]) -> bool:
         """Launches the emulator

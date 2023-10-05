@@ -35,7 +35,6 @@ def transform(xml, xsl, out):
     else:
         out = sys.stdout.buffer
 
-
     out.write(transformer(dom))
     out.flush()
 

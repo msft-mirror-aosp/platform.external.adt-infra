@@ -27,42 +27,46 @@ def merge_skip_reports(xml_files):
     Returns:
         xml.etree.ElementTree: skip report xml merged tree
     """
-    testsuites = ET.Element('testsuites')
+    testsuites = ET.Element("testsuites")
     alltests = {}
     for xml_file in xml_files:
         try:
             tree = ET.parse(xml_file)
         except ET.ParseError as err:
-            logging.info('Xml parser ' + err.msg + ' (' + xml_file.name + ')')
+            logging.info("Xml parser " + err.msg + " (" + xml_file.name + ")")
             continue
         testsuite = tree.getroot()
         testsuites.append(testsuite)
-        for platform_ in testsuite.findall('./platforms/platform'):
-            os_ = platform_.get('name')
+        for platform_ in testsuite.findall("./platforms/platform"):
+            os_ = platform_.get("name")
             alltests.setdefault(os_, {})
-            for test in platform_.findall('.//test'):
-                nodeid = test.find('./nodeid').text
-                name = test.find('./name').text
-                reason = test.find('./reason').text
-                test_data = {'name': name,
-                             'reason': reason if reason else ''}
+            for test in platform_.findall(".//test"):
+                nodeid = test.find("./nodeid").text
+                name = test.find("./name").text
+                reason = test.find("./reason").text
+                test_data = {"name": name, "reason": reason if reason else ""}
                 alltests[os_].setdefault(nodeid, test_data)
 
     # Create tag 'all_testsuites'
-    all_testsuites = ET.SubElement(testsuites, 'all_testsuites')
-    all_platforms = ET.SubElement(all_testsuites, 'platforms')
-    fullname_map = {"win": "Windows", "linux": "Linux", "mac": "Mac Intel",
-                    "m1": "Mac M1", "all": "All platforms"}
+    all_testsuites = ET.SubElement(testsuites, "all_testsuites")
+    all_platforms = ET.SubElement(all_testsuites, "platforms")
+    fullname_map = {
+        "win": "Windows",
+        "linux": "Linux",
+        "mac": "Mac Intel",
+        "m1": "Mac M1",
+        "all": "All platforms",
+    }
 
     for os_, tests in alltests.items():
         tests = dict(sorted(tests.items()))
-        xml_platform = ET.SubElement(all_platforms, 'platform')
-        xml_platform.set('name', os_)
-        xml_platform.set('fullname', fullname_map.get(os_, 'Unknonw'))
+        xml_platform = ET.SubElement(all_platforms, "platform")
+        xml_platform.set("name", os_)
+        xml_platform.set("fullname", fullname_map.get(os_, "Unknonw"))
         for nodeid, test in tests.items():
-            xml_test = ET.SubElement(xml_platform, 'test')
-            ET.SubElement(xml_test, 'nodeid').text = nodeid
-            for property in ['name', 'reason']:
+            xml_test = ET.SubElement(xml_platform, "test")
+            ET.SubElement(xml_test, "nodeid").text = nodeid
+            for property in ["name", "reason"]:
                 ET.SubElement(xml_test, property).text = test[property]
 
     return ET.ElementTree(testsuites)
@@ -87,7 +91,11 @@ def launch():
         out = open(args.out, "wb")
 
     new_tree = merge_skip_reports(args.xml)
-    new_tree.write(out, encoding="utf-8", xml_declaration=True, )
+    new_tree.write(
+        out,
+        encoding="utf-8",
+        xml_declaration=True,
+    )
     out.flush()
 
 

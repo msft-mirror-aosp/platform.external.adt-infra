@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../../devpi"
+		},
+		{
+			"path": "../../../../../pokowaka/mobly"
 		}
 	],
 	"settings": {

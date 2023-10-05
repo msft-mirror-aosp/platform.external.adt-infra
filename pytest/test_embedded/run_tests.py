@@ -75,6 +75,8 @@ class BuildDirectoryNotFound(Exception):
 class JavaNotFound(Exception):
     pass
 
+class AdbNotFound(Exception):
+    pass
 
 class NoTestResultsProduced(Exception):
     pass
@@ -305,9 +307,15 @@ class PyRunner:
             "ANDROID_SDK_ROOT": str(ANDROID_SDK_ROOT),
             "ANDROID_HOME": str(ANDROID_SDK_ROOT),
             "JAVA_HOME": self._get_java_home(),
-            "PATH": f"{self._get_jdk_path()}{os.pathsep}{os.environ['PATH']}",
+            # Make sure adb and java are on the path.
+            "PATH": f"{self._get_jdk_path()}"
+            + f"{os.pathsep}{ANDROID_SDK_ROOT / 'platform-tools'}"
+            + f"{os.pathsep}{os.environ['PATH']}",
         }
         self.py_exe = shutil.which("python")
+        if not shutil.which("adb", path=self.env["PATH"]):
+            raise AdbNotFound(f"Unable to find adb on the path: {self.env['PATH']}")
+
         if platform.system() == "Linux":
             try:
                 display = self._get_X_Display()
