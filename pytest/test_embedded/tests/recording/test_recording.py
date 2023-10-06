@@ -53,6 +53,7 @@ def test_screen_record_sends_event(screen_service, tmp_path):
 
 
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.graphics
 def test_screen_records_video(screen_service, animation_app, tmp_path):
@@ -70,7 +71,6 @@ def test_screen_records_video(screen_service, animation_app, tmp_path):
 
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.skipos('win', 'b/296421623')
 @pytest.mark.graphics
 def test_can_only_record_once(screen_service, tmp_path):
     sample_webm = tmp_path / "sample.webm"

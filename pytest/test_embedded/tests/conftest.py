@@ -180,6 +180,21 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
                 else:
                     pytest.skip()
 
+    # Process the 'timeout_win' marker
+    timeout_win = item.get_closest_marker('timeout_win')
+    if timeout_win and pytest.os == 'win':
+        timeout_win_sec = timeout_win.args[0] if timeout_win.args \
+                                else timeout_win.kwargs.get('timeout')
+        func_only = timeout_win.kwargs.get('func_only', True)
+        # Remove existing timeout marker
+        timeout = [m for m, marker in enumerate(item.iter_markers())
+                                         if marker.name == 'timeout']
+        if timeout:
+            item.own_markers.pop(timeout[0])
+
+        item.add_marker(pytest.mark.timeout(timeout=timeout_win_sec,
+                                                func_only=func_only))
+
     logging.info("=============== Setup: %s ===============", item.name)
 
 
@@ -214,9 +229,9 @@ def pytest_configure(config):
     pytest.emulators = {}
     pytest.system = platform.system()
     pytest.processor = platform.processor()
-    
+
     # Register the 'skipos' marker.
-    config.addinivalue_line (
+    config.addinivalue_line(
         "markers", ("skipos(platform, reason=None): "
             "skip the given test for the given platform. "
             "Valid platform values and systems are: "
@@ -229,6 +244,12 @@ def pytest_configure(config):
               'Darwin': 'm1' if pytest.processor == 'arm' else 'mac'}
     # Current skipos platform
     pytest.os = os_map.get(pytest.system, 'unknown')
+
+    # Register the 'timeout_win' marker
+    config.addinivalue_line(
+        "markers", "timeout_win(timeout): "
+        "Set a timeout for Windows platforms (overrides an existing timeout)."
+    )
 
 
 def pytest_sessionfinish(
