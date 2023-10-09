@@ -56,6 +56,7 @@ def test_screen_record_sends_event(screen_service, tmp_path):
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.graphics
+@pytest.mark.sanity
 def test_screen_records_video(screen_service, animation_app, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))

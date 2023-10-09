@@ -67,6 +67,7 @@ def test_multidisplay_none(no_displays, emulator_controller, is_landscape):
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
+@pytest.mark.sanity
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_multiple(no_displays, emulator_controller, is_landscape):
     """Adding a display should work."""

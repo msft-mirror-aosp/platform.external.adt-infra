@@ -21,6 +21,7 @@ def tmp_test_file(tmp_path):
     return temp_file
 
 @pytest.mark.adb
+@pytest.mark.sanity
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_adb_screencapture(avd, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"

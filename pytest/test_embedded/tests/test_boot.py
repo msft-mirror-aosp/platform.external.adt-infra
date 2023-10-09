@@ -96,6 +96,7 @@ def check_has_booted_notification(emulator, timeout):
 
 @pytest.mark.boot
 @pytest.mark.e2e
+@pytest.mark.sanity
 @pytest.mark.timeout(timeout=2800, func_only=True)
 def test_first_time_booted(emulator):
     """Make sure the emulator status is set to booted."""
@@ -138,6 +139,7 @@ def check_boot_from_snapshot(avdpath) -> bool:
 
 @pytest.mark.boot
 @pytest.mark.e2e
+@pytest.mark.sanity
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.timeout_win(timeout=120)
 def test_snapshot_booted(emulator):
