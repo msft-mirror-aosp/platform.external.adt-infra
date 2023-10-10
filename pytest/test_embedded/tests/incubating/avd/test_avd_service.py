@@ -37,7 +37,7 @@ def test_avd_info_status_is_as_expected(avd, service):
     avd_info_service = service(AvdServiceStub)
     avd_info = avd_info_service.getAvdInfo(__EMPTY__)
 
-    assert avd_info.name == avd.configuration.hardware["AvdId"]
+    assert avd_info.device_name == avd.configuration.hardware["AvdId"]
     assert avd_info.api_level == int(avd.configuration.hardware["api"])
 
 
