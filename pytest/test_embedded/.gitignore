@@ -144,3 +144,5 @@ cython_debug/
 
 src/emu/apk/app-debug.apk
 
+# Logging directory
+testlogs

@@ -847,7 +847,7 @@ def parse_arguments():
     parser.add_argument(
         "-l",
         "--logdir",
-        default=Path(os.getcwd()),
+        default=Path(os.getcwd()) / "testlogs",
         dest="logdir",
         help="The directory where the logs should be placed. "
         + "On the build bots this should be dist_dir/testlogs.",
@@ -922,7 +922,7 @@ def parse_arguments():
     parser.add_argument(
         "--test_suite",
         default=".*",
-        help="Regex which will be used to determie which test suite to run",
+        help="Regex which will be used to determine which test suite to run",
     )
 
     args = parser.parse_args()
