@@ -273,7 +273,6 @@ def pytest_sessionfinish(
     """Stops and remove all running emulators at the end of all tests."""
     for name, emu in pytest.emulators.items():
         logging.info("Shutting down and removing %s", name)
-        emu.disconnect()
         emu.stop()
         if not session.config.getoption("avd_keep"):
             emu.delete()

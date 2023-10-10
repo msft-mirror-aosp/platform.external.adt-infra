@@ -21,7 +21,7 @@ from threading import Condition, Thread
 from typing import Callable, Optional
 
 
-class EmulatorConnection:
+class AsyncEmulatorConnection:
     """
     Connects to the emulator telnet console and authenticates.
 
@@ -203,8 +203,8 @@ class EmulatorConnection:
             emulator_name = f"port-{port}"
         logger = logging.getLogger(f"{emulator_name}-con")
 
-        sock = EmulatorConnection.open_socket(port)
-        connection = EmulatorConnection(logger, Condition(), sock, callback, port)
+        sock = AsyncEmulatorConnection.open_socket(port)
+        connection = AsyncEmulatorConnection(logger, Condition(), sock, callback, port)
 
         logger.debug("Connecting to console..")
         with connection.cv:
@@ -215,3 +215,149 @@ class EmulatorConnection:
             "Connected: %s to emulator on port: %s", connection.is_connected(), port
         )
         return connection
+
+
+class InvalidConsoleCommand(Exception):
+    pass
+
+
+class EmulatorConnection:
+    """Connects to the Android emulator over the telnet console and authenticates when needed.
+
+    The console responds with OK if a command succeeded and KO if it failed. The OK/KO
+    responses will never be returned and parsed out.
+
+    Args:
+        port: The port that the Android emulator is listening on.
+        logger: A logging.Logger instance.
+    """
+
+    def __init__(self, port: int, logger: logging.Logger):
+        """Initializes the EmulatorConnection instance.
+
+        Args:
+            port: The port that the Android emulator is listening on.
+            logger: A logging.Logger instance.
+        """
+
+        self.transport = self._open_socket(port)
+        self.logger = logger
+        login_response = self.read()
+        if "Android Console: Authentication required" in login_response:
+            # Last line contains the path to the auth, file.
+            self._auth(login_response[-1])
+
+    def _auth(self, fname: str):
+        """Authenticates to the Android emulator using the given auth file.
+
+        Args:
+            fname: The path to the auth file in quotes ('path')
+        """
+        self.logger.info("Authenticating using %s", fname)
+        with open(fname[1:-1], "r", encoding="utf-8") as authfile:
+            token = authfile.read()
+            msg = f"auth {token}".strip()
+            self.send(msg)
+
+    def send(self, command: str) -> str:
+        """Sends a command to the Android emulator and returns the response.
+
+        Args:
+            command: The command to send.
+
+        Returns:
+            The response from the Android emulator.
+
+        Raises:
+            InvalidConsoleCommand: If the Android emulator returns a KO response,
+                                   indicating the command failed.
+        """
+
+        self.logger.info("Send: %s", command)
+        self.transport.sendall(f"{command}\n".encode())
+        return self.read()
+
+    def stop(self):
+        """Closes the connection to the Android emulator."""
+
+        self.transport.close()
+
+    def _read_line(self):
+        """Reads a line from the Android emulator.
+
+        Yields:
+            The line that was read.
+        """
+
+        data = b""
+        while True:
+            byte = self.transport.recv(1)
+            if byte == b"\n":
+                yield data.decode("utf-8").strip()
+                data = b""
+            else:
+                data += byte
+
+    def read(self) -> [str]:
+        """Reads all of the lines from the Android emulator until an OK or KO response is received.
+
+        Returns:
+            A list of strings, where each string is a line from the Android emulator.
+
+        Raises:
+            InvalidConsoleCommand: If the Android emulator returns a KO response.
+        """
+
+        lines = []
+        for line in self._read_line():
+            logging.info("Recv: %s", line)
+            if line == "OK":
+                return lines
+            if line == "KO":
+                info = "\n".join(lines)
+                raise InvalidConsoleCommand(f"Invalid console command {info}")
+            lines.append(line)
+
+    def _open_socket(self, port: int, max_tries: int = 5):
+        """Opens a socket connection to the Android emulator.
+
+        Args:
+            port: The port that the Android emulator is listening on.
+            max_tries: The maximum number of times to try to connect to the Android emulator.
+
+        Returns:
+            A socket connection to the Android emulator.
+
+        Raises:
+            IOError: If the connection to the Android emulator cannot be established.
+        """
+
+        for x in range(max_tries):
+            sock = socket.create_connection(("localhost", port), timeout=1)
+            if sock.fileno() != -1:
+                return sock
+            time.sleep(0.5)
+
+        raise IOError(f"Unable to connect to port {port}")
+
+    @staticmethod
+    def connect(
+        port: int,
+        emulator_name: Optional[str] = None,
+    ):
+        """Connects to the Android emulator on the given port and returns an EmulatorConnection instance.
+
+        Args:
+            port: The port that the Android emulator is listening on.
+            emulator_name: The name of the emulator. If not specified, the emulator name will be `port-{port}`.
+
+        Returns:
+            An EmulatorConnection instance.
+
+        Raises:
+            IOError: If the connection to the Android emulator cannot be established.
+        """
+
+        if not emulator_name:
+            emulator_name = f"port-{port}"
+        return EmulatorConnection(port, logging.getLogger(f"{emulator_name}-con"))

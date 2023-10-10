@@ -73,7 +73,6 @@ class BaseEmulator(object):
         Raises:
             AndroidSdkRootNotSet: The ANDROID_SDK_ROOT environment variable is not set.
         """
-        self.telnet = None
         self.description: EmulatorDescription = None
         self.android_home = android_home.absolute()
         self.android_avd_home = android_avd_home.absolute()
@@ -90,10 +89,6 @@ class BaseEmulator(object):
         self.ads: android_device.AndroidDevice = None
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
-
-    def __del__(self):
-        if self.telnet:
-            self.telnet.stop()
 
     def _initialize_with_description(self, description: Optional[EmulatorDescription]):
         """Setup the emulator given the description
@@ -217,18 +212,10 @@ class BaseEmulator(object):
         Returns:
             EmulatorConnection: A connection to the emulator.
         """
-        if self.telnet is None or not self.telnet.is_connected():
-            self.logger.info("Connecting to console")
-            self.telnet = EmulatorConnection.connect(
+        return EmulatorConnection.connect(
                 self.description.get("port.serial"), self.description.get("avd.id")
             )
 
-        return self.telnet
-
-    def disconnect(self) -> None:
-        """Closes the connection to the emulator."""
-        if self.telnet:
-            self.telnet.stop()
 
     def is_alive(self) -> bool:
         """Returns true if we believe the emulator is still alive."""
@@ -373,9 +360,6 @@ class DebugEmulator(BaseEmulator):
 
     def restart(self, emu_flags: List[str]) -> bool:
         return self.launch(emu_flags)
-
-    def stop(self) -> None:
-        self.disconnect()
 
 
 class Emulator(BaseEmulator):
@@ -577,7 +561,6 @@ class Emulator(BaseEmulator):
             timeout (int, optional): Time in seconds before the emulator will be terminated.
             Defaults to 10.
         """
-        self.disconnect()
         if self.description is not None:
             if self.description.shutdown(timeout):
                 logging.info("Terminated the emulator")
