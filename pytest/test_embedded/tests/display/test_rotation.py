@@ -238,6 +238,7 @@ def rotation_through_console_observable_through_stream_screenshot(
 
 @pytest.mark.e2e
 @pytest.mark.graphics
+@pytest.mark.sanity
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout(timeout=60)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/280512023 flaky on windows_x64.
@@ -327,6 +328,7 @@ def test_rotation_through_console_observable_through_stream_screenshot(
 
 @pytest.mark.e2e
 @pytest.mark.embedded
+@pytest.mark.sanity
 @pytest.mark.timeout(timeout=480, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 def test_rotation_observable_through_screenshot_embedded_mode(
