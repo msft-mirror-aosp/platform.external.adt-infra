@@ -36,6 +36,7 @@ def read_pixel(width, height, pack, arr):
 @pytest.mark.embedded
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.parametrize(
     "fmt,channel",
     [
