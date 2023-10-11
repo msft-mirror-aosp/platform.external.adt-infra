@@ -689,6 +689,11 @@ def generate_skip_report(skipped_tests, log_directory):
         skipped_tests: Fixture that provides the skipped tests by platform.
         log_directory: Pytest's internal request fixture with test function information.
     """
+    xml_report_filepath = log_directory.joinpath(log_directory.name + '_skip.xml')
+    if xml_report_filepath.exists():
+        # Avoid the fixture running on every re-run (pytest b/#51)
+        # https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+        return
     xml_testsuite = ET.Element("testsuite")
     xml_testsuite.set("name", log_directory.name)
     xml_platforms = ET.SubElement(xml_testsuite, "platforms")
@@ -710,7 +715,6 @@ def generate_skip_report(skipped_tests, log_directory):
                 xml_test_child.text = str(test[property])
 
     xml_tree = ET.ElementTree(xml_testsuite)
-    xml_report_filepath = log_directory.joinpath(log_directory.name + "_skip.xml")
     xml_tree.write(xml_report_filepath, xml_declaration=True, encoding="utf-8")
     logging.info(f"Generated skipped tests file '{xml_report_filepath}'")
 
@@ -771,3 +775,20 @@ def get_skipped_platforms(marker):
         filtered_platforms = [os_]
 
     return (filtered_platforms, reason)
+
+@pytest.fixture(scope="session", autouse=True)
+def add_junitxml_properties(request, record_testsuite_property):
+    """Add new properties to the testsuite junitxml report
+
+    The properties include the api level and tag id
+
+    Args:
+        request: FixtureRequest
+        record_testsuite_property: Callable[[str, object], None]
+    """
+    if request.node.testsfailed > 0:
+        return
+    avd_config = json.loads(request.config.getoption('avd_config'))
+    for key, property in avd_config.items():
+        record_testsuite_property(key, property)
+

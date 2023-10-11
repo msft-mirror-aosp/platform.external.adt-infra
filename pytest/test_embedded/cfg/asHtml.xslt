@@ -232,37 +232,41 @@ function goto_id(id) {
                             </xsl:for-each>
                         </xsl:if>
                     </xsl:for-each>
-                </ul>
-                <xsl:apply-templates select="testsuite"/>
+                  </ul>
+                  <div style="margin-top: 35">
+                    <h1>Test Results by Test Suite</h1>
+                    <xsl:for-each select="testsuite/properties/property[@name='api' and generate-id() = generate-id(key('api',@value)[1])]">
+                        <xsl:sort select="@value"/>
+                        <!-- Traverse the testsuites according to the (sorted) API levels -->
+                        <xsl:variable name="api_level" select="@value"/>
+                        <div>
+                            <font style="color: #777777;">
+                                <h1 style="margin-bottom: 30">
+                                    <span style="margin-left: 10;">Api <xsl:value-of select="$api_level"/>&#160;</span>
+                                </h1>
+                            </font>
+                            <ul>
+                                <xsl:apply-templates select="../../../testsuite[properties/property/@name='api' and properties/property/@value=$api_level]"/>
+                            </ul>
+                        </div>
+                    </xsl:for-each>
+                </div>
             </body>
         </html>
     </xsl:template>
     <xsl:template match="testsuite">
-        <h1>Test Results for:
-            <xsl:value-of select="@name"/>
-        </h1>
-        <p> TOTAL=
-            <xsl:value-of select="@tests"/>
-, PASSED=
-            <xsl:value-of select="@tests - @failures - @errors - @skipped"/>
-, FAILED=
-            <xsl:value-of select="@failures"/>
-, ERRORS=
-            <xsl:value-of select="@errors"/>
-, SKIPPED=
-            <xsl:value-of select="@skipped"/>
-, <font class="pass">PASSED=
-            <xsl:value-of select="@tests - @failures - @errors - @skipped"/></font>
-, <font class="fail">FAILED=
-            <xsl:value-of select="@failures"/></font>
-, <font class="error">ERRORS=
-            <xsl:value-of select="@errors"/></font>
-, <font class="skip">SKIPPED=
-            <xsl:value-of select="@skipped"/></font>
-      </p>
-        <xsl:for-each select="testcase">
-            <xsl:variable name="id" select="position()"/>
-            <xsl:variable name="name" select="../@name" />
+        <div>
++        <li style="padding-top: 0; padding-bottom: 20; list-style-type: circle; margin-left: -5">
++            <h2><xsl:value-of select="@name"/></h2>
++            <p> TOTAL= <xsl:value-of select="@tests"/> ,
++                <font class="pass">PASSED = <xsl:value-of select="@tests - @failures - @errors - @skipped"/></font> ,
++                <font class="fail">FAILED = <xsl:value-of select="@failures"/></font> ,
++                <font class="error">ERRORS = <xsl:value-of select="@errors"/></font> ,
++                <font class="skip">SKIPPED = <xsl:value-of select="@skipped"/></font>
+           </p>
+           <xsl:for-each select="testcase">
+           <xsl:variable name="id" select="position()"/>
+           <xsl:variable name="name" select="../@name" />
             <xsl:variable name="fid" select=" format-number($id, '0000')"/>
             <xsl:choose>
                 <xsl:when test="failure">
@@ -286,15 +290,16 @@ function goto_id(id) {
                     </span>&#160;
                 </xsl:otherwise>
             </xsl:choose>
-        </xsl:for-each>
-        <h2>Tests:</h2>
-        <xsl:for-each select="testcase">
-            <xsl:variable name="id" select="position()"/>
-            <xsl:variable name="name" select="../@name" />
-            <xsl:variable name="fid" select="format-number($id, '0000')"/>
-            <xsl:choose>
-                <xsl:when test="failure">
-                    <li class="failed" id="tst{$name}_{$id}l">
+          </xsl:for-each>
+          <h3 style="margin-bottom: 15; margin-top: 15;">Tests:</h3>
+          <xsl:for-each select="testcase">
+              <xsl:variable name="id" select="position()"/>
+              <xsl:variable name="name" select="../@name" />
+              <xsl:variable name="fid" select="format-number($id, '0000')"/>
+              <ul style="list-style-type: disc; margin-left: -40;">
+                  <xsl:choose>
+                    <xsl:when test="failure">
+                      <li class="failed" style="margin-top: 0" id="tst{$name}_{$id}l">
                         <span id="tst{$name}_{$id}+" class="buttonfailed" onClick="show('tst{$name}_{$id}')">+
                             <xsl:value-of select="$fid"/>
 +
@@ -381,7 +386,11 @@ function goto_id(id) {
                         </span>
                     </li>
                 </xsl:otherwise>
-            </xsl:choose>
+              </xsl:choose>
+          </ul>
         </xsl:for-each>
-    </xsl:template>
+    </li>
+    </div>
+  </xsl:template>
+  <xsl:key name="api" match="property[@name='api']" use="@value" />
 </xsl:stylesheet>
