@@ -18,7 +18,25 @@ import socket
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 
-from emu.timing import wait_until
+from emu.timing import eventually, wait_until
+
+def check_server_availability(server_address):
+  """Checks if the web server is up and running and has bound to the given port.
+
+  Args:
+    server_address: A tuple of (host, port) where the web server is running.
+
+  Returns:
+    True if the web server is up and running, False otherwise.
+  """
+
+  try:
+    s = socket.socket()
+    s.connect(server_address)
+    s.close()
+    return True
+  except:
+    return False
 
 
 def find_available_port(start_port=8000, num_ports=100):
@@ -117,6 +135,12 @@ def test_server(request):
     thread = threading.Thread(target=httpd.serve_forever)
     thread.daemon = True
     thread.start()
+
+    def server_is_available():
+        return check_server_availability(("localhost", port))
+
+    # Wait until the web server is up and running.
+    assert eventually(server_is_available, timeout=10)
 
     # Obtain the actual port on which the server is running
     host, port = httpd.server_address
