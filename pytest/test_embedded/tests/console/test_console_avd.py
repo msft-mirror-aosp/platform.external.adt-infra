@@ -6,42 +6,48 @@ from pathlib import Path
 @pytest.mark.boot
 @pytest.mark.console
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=300, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/278273476 flaky on linux_x64.
-def test_avd_canonical_path(emulator, avd):
+@pytest.mark.timeout(timeout=10, func_only=True)
+def test_avd_canonical_path(emulator, avd, telnet):
     """Test adb emu avd path returns a canonical path"""
+    expected_path = Path(
+        emulator.android_avd_home, f"{emulator.configuration.name}.avd"
+    ).absolute()
 
-    path = Path(emulator.android_avd_home, f"{emulator.configuration.name}.avd")
-    expected_path = f"{path.absolute()}"
+    assert str(expected_path) in telnet.send("avd path")
 
-    result = [x.rstrip() for x in avd.adb.run(["emu", "avd", "path"]).splitlines()]
-    logging.info("adb avd path returned '%s'", result)
-    assert expected_path in result
+
+def read_property_file(from_file) -> str:
+    """Reads a property file and returns a dictionary of the key-value pairs.
+
+    Args:
+        from_file: The filename of the property file.
+
+    Returns:
+        A dictionary of the key-value pairs in the property file.
+    """
+    with open(from_file, "r", encoding="utf-8") as f:
+        return dict([x.strip().split("=", 2) for x in f.readlines()])
 
 
 @pytest.mark.boot
 @pytest.mark.console
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=300, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
-def test_avd_dir_is_canonical_in_pid_xxx_ini(emulator, avd):
+@pytest.mark.timeout(timeout=10, func_only=True)
+def test_avd_dir_is_canonical_in_pid_xxx_ini(avd, telnet):
     """Test pid_xxx.ini contains canonical path for avd.dir
 
     example:
     avd.dir=/Users/me/.android/avd/x.avd
     """
+    pid_path = Path(telnet.send("avd discoverypath")[0])
+    assert (
+        pid_path.exists()
+    ), f"We expect the reported discovery path: {pid_path} to exist"
 
-    path = Path(emulator.android_avd_home, f"{emulator.configuration.name}.avd")
-    expected_path = f"{path.absolute()}"
+    props = read_property_file(pid_path)
+    assert "avd.dir" in props, f"Did not find 'avd.dir' in {props}"
 
-    result = [x.rstrip() for x in avd.adb.run(["emu", "avd", "discoverypath"]).splitlines()]
-    pid_path = result[-2].rstrip() # Last line should be OK
-    avd_dir = ""
-    with open(pid_path) as f:
-        for line in f:
-            if "avd.dir" in line:
-                avd_dir = line.split("=", 2)[1].rstrip()
-                logging.info("found avd_dir as %s", avd_dir)
-                break
-
-    assert avd_dir == expected_path
+    expected_path = Path(
+        avd.android_avd_home, f"{avd.configuration.name}.avd"
+    ).absolute()
+    assert props["avd.dir"] == str(expected_path)
