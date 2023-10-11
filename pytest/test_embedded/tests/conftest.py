@@ -695,28 +695,23 @@ def generate_skip_report(skipped_tests, log_directory):
         # Avoid the fixture running on every re-run (pytest b/#51)
         # https://github.com/pytest-dev/pytest-rerunfailures/issues/51
         return
-    xml_testsuite = ET.Element("testsuite")
-    xml_testsuite.set("name", log_directory.name)
-    xml_platforms = ET.SubElement(xml_testsuite, "platforms")
-    fullname_map = {
-        "win": "Windows",
-        "linux": "Linux",
-        "mac": "Mac Intel",
-        "m1": "Mac M1",
-        "all": "All platforms",
-    }
+    xml_testsuite = ET.Element('testsuite')
+    xml_testsuite.set('name', log_directory.name)
+    xml_platforms = ET.SubElement(xml_testsuite, 'platforms')
+    fullname_map = {"win": "Windows", "linux": "Linux", "mac": "Mac Intel",
+                     "m1": "Mac M1", "all": "All platforms"}
     for os_, tests in skipped_tests.items():
-        xml_platform = ET.SubElement(xml_platforms, "platform")
-        xml_platform.set("name", os_)
-        xml_platform.set("fullname", fullname_map.get(os_, "Unknown"))
+        xml_platform = ET.SubElement(xml_platforms, 'platform')
+        xml_platform.set('name', os_)
+        xml_platform.set('fullname', fullname_map.get(os_, 'Unknown'))
         for test in tests:
-            xml_test = ET.SubElement(xml_platform, "test")
-            for property in ["name", "reason", "nodeid"]:
+            xml_test = ET.SubElement(xml_platform, 'test')
+            for property in ['name', 'reason', 'nodeid']:
                 xml_test_child = ET.SubElement(xml_test, property)
                 xml_test_child.text = str(test[property])
 
     xml_tree = ET.ElementTree(xml_testsuite)
-    xml_tree.write(xml_report_filepath, xml_declaration=True, encoding="utf-8")
+    xml_tree.write(xml_report_filepath, xml_declaration=True, encoding='utf-8')
     logging.info(f"Generated skipped tests file '{xml_report_filepath}'")
 
 
@@ -776,6 +771,7 @@ def get_skipped_platforms(marker):
         filtered_platforms = [os_]
 
     return (filtered_platforms, reason)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def add_junitxml_properties(request, record_testsuite_property):
