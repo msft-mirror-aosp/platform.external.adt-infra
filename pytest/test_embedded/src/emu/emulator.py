@@ -213,9 +213,8 @@ class BaseEmulator(object):
             EmulatorConnection: A connection to the emulator.
         """
         return EmulatorConnection.connect(
-                self.description.get("port.serial"), self.description.get("avd.id")
-            )
-
+            self.description.get("port.serial"), self.description.get("avd.id")
+        )
 
     def is_alive(self) -> bool:
         """Returns true if we believe the emulator is still alive."""
@@ -266,10 +265,7 @@ class BaseEmulator(object):
 
         def activity_is_running():
             """Returns true if the given activity is running."""
-            in_focus = self.adb.shell(
-                f"dumpsys activity activities | grep {activity}"
-            )
-            return activity in in_focus
+            return self.pgrep(activity[: activity.find("/")])
 
         shell = f"am start -n {activity}"
         if params:
@@ -285,6 +281,9 @@ class BaseEmulator(object):
             count += 1
 
         return False
+
+    def pgrep(self, process_name: str) -> bool:
+      return process_name in self.adb.shell(f"ps -A | grep {process_name}")
 
     def stop_activity(self, activity: str) -> bool:
         """Attempts to stop the given activity.
@@ -303,10 +302,7 @@ class BaseEmulator(object):
 
         def activity_is_running():
             """Returns true if the given activity is running."""
-            in_focus = self.adb.shell(
-                f"dumpsys activity activities | grep {activity}"
-            )
-            return activity in in_focus
+            return self.pgrep(activity)
 
         self.adb.shell(f"am force-stop {activity}")
         count = 0
