@@ -34,6 +34,7 @@ def snapshot_service(avd):
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.skipos('win', 'reason: b/305017763 - error at setup.')
 def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
     assert not snapshot_service.load("foo")
 

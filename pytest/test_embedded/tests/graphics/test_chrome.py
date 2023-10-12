@@ -187,6 +187,7 @@ def prepare_chrome(avd):
 
 
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.skipos('win', 'reason: b/304785674 - test crashes.')
 @pytest.mark.graphics
 def test_make_sure_webserver_works(test_server):
     """Test function to ensure that the web server is functioning correctly.

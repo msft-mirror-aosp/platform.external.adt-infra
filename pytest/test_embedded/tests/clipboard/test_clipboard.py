@@ -46,6 +46,7 @@ def wait_for_with_timed_iterator(predicate, timed_iterator, timeout=5):
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
+@pytest.mark.skipos('win', 'reason: b/303295516 - error at setup.')
 @pytest.mark.parametrize(
     "clipboard_data",
     [
@@ -71,6 +72,7 @@ def test_clipboard_data(emulator_controller, clipboard_data):
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.skipos('win', 'reason=b/305040235 - error at setup.')
 def test_stream_clipboard_immediately_sends_data(emulator_controller):
     """Validate that the streaming call will immediately send the current clipboard status."""
     clipboard_data = "Hello there!"
@@ -95,6 +97,7 @@ def test_stream_clipboard_immediately_sends_data(emulator_controller):
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
+@pytest.mark.skipos('win', 'reason=b/305040856 - error at setup.')
 def test_stream_clipboard_sends_updated_data(emulator_controller, avd):
     """Validate that the streaming call will immediately send the current clipboard status and
     will send out events if the clipboard status changes.
