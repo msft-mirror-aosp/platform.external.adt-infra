@@ -267,7 +267,7 @@ class BaseEmulator(object):
         def activity_is_running():
             """Returns true if the given activity is running."""
             in_focus = self.adb.shell(
-                "dumpsys activity activities | grep mFocusedWindow"
+                f"dumpsys activity activities | grep {activity}"
             )
             return activity in in_focus
 
@@ -304,7 +304,7 @@ class BaseEmulator(object):
         def activity_is_running():
             """Returns true if the given activity is running."""
             in_focus = self.adb.shell(
-                "dumpsys activity activities | grep mFocusedWindow"
+                f"dumpsys activity activities | grep {activity}"
             )
             return activity in in_focus
 

@@ -227,6 +227,13 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
             "-----------> %s completed: %s <-----------", report.nodeid, report.outcome
         )
 
+@pytest.hookimpl(tryfirst=True)
+def pytest_fixture_setup(fixturedef, request):
+    logging.info(f">>>>>>>>>>>>>> Configuring fixture '{fixturedef}'")
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_fixture_post_finalizer(fixturedef, request):
+    logging.info(f"<<<<<<<<<<<<<< Tearing down fixture '{fixturedef}'")
 
 # Workaround for
 # https://docs.pytest.org/en/latest/deprecations.html#pytest-namespace
@@ -436,6 +443,7 @@ def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     # Make sure the emulator is booted in at least 10 minutes.
     # (Note, boot times can be *REALLY* slow on windows gce..)
     assert emulator.wait_for_boot(timeout=600)
+    logging.info("The emulator has finished booting")
 
     assert emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
     assert emulator.install_apk(
