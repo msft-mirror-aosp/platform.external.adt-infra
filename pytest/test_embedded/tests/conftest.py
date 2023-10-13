@@ -227,13 +227,16 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
             "-----------> %s completed: %s <-----------", report.nodeid, report.outcome
         )
 
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_fixture_setup(fixturedef, request):
     logging.info(f">>>>>>>>>>>>>> Configuring fixture '{fixturedef}'")
 
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_fixture_post_finalizer(fixturedef, request):
     logging.info(f"<<<<<<<<<<<<<< Tearing down fixture '{fixturedef}'")
+
 
 # Workaround for
 # https://docs.pytest.org/en/latest/deprecations.html#pytest-namespace
@@ -632,11 +635,27 @@ def at_home(avd: BaseEmulator):
 
 
 @pytest.fixture
-def mbs(avd: BaseEmulator):
-    avd.mobly().load_snippet(
-        name="mbs", package="com.google.android.mobly.snippet.bundled"
-    )
-    return avd.mobly().mbs
+def mobly(avd: BaseEmulator):
+    def mobly_package(package: str):
+        device = avd.mobly()
+        if hasattr(device, package):
+            return getattr(device, package)
+
+        if package == "mbs":
+            device.load_snippet(
+                name="mbs", package="com.google.android.mobly.snippet.bundled"
+            )
+            return device.mbs
+        else:
+            device.load_snippet(name=package, package="com.google.AnimateBox")
+            return getattr(device, package)
+
+    return mobly_package
+
+
+@pytest.fixture
+def mbs(mobly):
+    return mobly("mbs")
 
 
 @pytest.fixture(scope="session")
@@ -697,28 +716,33 @@ def generate_skip_report(skipped_tests, log_directory):
         skipped_tests: Fixture that provides the skipped tests by platform.
         log_directory: Pytest's internal request fixture with test function information.
     """
-    xml_report_filepath = log_directory.joinpath(log_directory.name + '_skip.xml')
+    xml_report_filepath = log_directory.joinpath(log_directory.name + "_skip.xml")
     if xml_report_filepath.exists():
         # Avoid the fixture running on every re-run (pytest b/#51)
         # https://github.com/pytest-dev/pytest-rerunfailures/issues/51
         return
-    xml_testsuite = ET.Element('testsuite')
-    xml_testsuite.set('name', log_directory.name)
-    xml_platforms = ET.SubElement(xml_testsuite, 'platforms')
-    fullname_map = {"win": "Windows", "linux": "Linux", "mac": "Mac Intel",
-                     "m1": "Mac M1", "all": "All platforms"}
+    xml_testsuite = ET.Element("testsuite")
+    xml_testsuite.set("name", log_directory.name)
+    xml_platforms = ET.SubElement(xml_testsuite, "platforms")
+    fullname_map = {
+        "win": "Windows",
+        "linux": "Linux",
+        "mac": "Mac Intel",
+        "m1": "Mac M1",
+        "all": "All platforms",
+    }
     for os_, tests in skipped_tests.items():
-        xml_platform = ET.SubElement(xml_platforms, 'platform')
-        xml_platform.set('name', os_)
-        xml_platform.set('fullname', fullname_map.get(os_, 'Unknown'))
+        xml_platform = ET.SubElement(xml_platforms, "platform")
+        xml_platform.set("name", os_)
+        xml_platform.set("fullname", fullname_map.get(os_, "Unknown"))
         for test in tests:
-            xml_test = ET.SubElement(xml_platform, 'test')
-            for property in ['name', 'reason', 'nodeid']:
+            xml_test = ET.SubElement(xml_platform, "test")
+            for property in ["name", "reason", "nodeid"]:
                 xml_test_child = ET.SubElement(xml_test, property)
                 xml_test_child.text = str(test[property])
 
     xml_tree = ET.ElementTree(xml_testsuite)
-    xml_tree.write(xml_report_filepath, xml_declaration=True, encoding='utf-8')
+    xml_tree.write(xml_report_filepath, xml_declaration=True, encoding="utf-8")
     logging.info(f"Generated skipped tests file '{xml_report_filepath}'")
 
 
@@ -792,7 +816,6 @@ def add_junitxml_properties(request, record_testsuite_property):
     """
     if request.node.testsfailed > 0:
         return
-    avd_config = json.loads(request.config.getoption('avd_config'))
+    avd_config = json.loads(request.config.getoption("avd_config"))
     for key, property in avd_config.items():
         record_testsuite_property(key, property)
-
