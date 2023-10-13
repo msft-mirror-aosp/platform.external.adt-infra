@@ -80,6 +80,7 @@ def for_each_rotation(emulator_controller):
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.graphics
+@pytest.mark.skipos('win', 'reason: b/305268095 - error at setup.')
 def test_rotation_observable_through_screenshot(emulator_controller, animation_app):
     """Test that setting the rotation, is observable through getting a screenshot."""
 
@@ -94,6 +95,7 @@ def test_rotation_observable_through_screenshot(emulator_controller, animation_a
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.graphics
+@pytest.mark.skipos('win', 'reason: b/305269036 - error at setup.')
 def test_rotation_observable_through_adbstream(
     avd, at_home, animation_app, emulator_controller
 ):
@@ -124,6 +126,7 @@ def test_rotation_observable_through_adbstream(
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.graphics
+@pytest.mark.skipos('win', 'reason: b/305270248 - error at setup.')
 def test_rotation_observable_through_stream_screenshot(
     animation_app, emulator_controller, stream_screenshot
 ):
@@ -239,9 +242,9 @@ def rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.sanity
+@pytest.mark.skipos('win', 'reason: b/305259781 - error at setup for params [-180-3] and [-90-4]')
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/280512023 flaky on windows_x64.
 @pytest.mark.parametrize(
     "rotation, quadrant",
     [(0, 1), (90, 2), (-180, 3), (-90, 4)],
