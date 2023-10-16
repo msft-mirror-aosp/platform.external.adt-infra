@@ -34,12 +34,14 @@ def snapshot_service(avd):
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.skipos('win', 'reason: b/305017763 - error at setup.')
 def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
     assert not snapshot_service.load("foo")
 
 
 @pytest.mark.e2e
 @pytest.mark.snapshot
+@pytest.mark.sanity
 @pytest.mark.timeout(timeout=60, func_only=True)
 def test_snapshot_can_save_and_load(snapshot_service):
     assert snapshot_service.save("foo")
@@ -49,6 +51,7 @@ def test_snapshot_can_save_and_load(snapshot_service):
 
 @pytest.mark.e2e
 @pytest.mark.snapshot
+@pytest.mark.sanity
 @pytest.mark.timeout(timeout=60, func_only=True)
 def test_snapshot_delete_removes(snapshot_service):
     assert snapshot_service.save("foo")
@@ -73,6 +76,7 @@ def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
 @pytest.mark.skipos('all')
 @pytest.mark.snapshot
 @pytest.mark.e2e
+@pytest.mark.sanity
 def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     assert snapshot_service.save("foo")

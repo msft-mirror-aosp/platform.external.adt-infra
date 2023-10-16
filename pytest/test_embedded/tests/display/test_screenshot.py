@@ -89,6 +89,7 @@ def test_screenshot_all_formats_are_equal(
 
 @pytest.mark.graphics
 @pytest.mark.embedded
+@pytest.mark.sanity
 @pytest.mark.parametrize(
     "image_format,bpp",
     [(ImageFormat.RGB888, 3), (ImageFormat.RGBA8888, 4)],

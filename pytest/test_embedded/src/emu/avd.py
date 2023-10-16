@@ -321,7 +321,11 @@ class AvdWriter:
         self.writer = TemplateWriter(self.avd_home)
 
     def _write_config_ini(
-        self, name: str, device_name: str, avd: dict[str, str], custom_cfg: dict[str, str]
+        self,
+        name: str,
+        device_name: str,
+        avd: dict[str, str],
+        custom_cfg: dict[str, str],
     ) -> None:
         """Writes the custom config ini to the avd_home directory"""
         cfg = self.writer.template_to_dict(f"{device_name}.avd/config.ini", avd)
@@ -338,7 +342,13 @@ class AvdWriter:
                 avd_cfg_file.write(f"{key} = {value}\n")
 
     def _create_avd(
-        self, api: str, abi: str, tag: str, name: str, device_name: str, custom_cfg: dict[str, str]
+        self,
+        api: str,
+        abi: str,
+        tag: str,
+        name: str,
+        device_name: str,
+        custom_cfg: dict[str, str],
     ) -> AvdConfig:
         avd = self.sys_imgs.find_and_unpack(api, abi, tag)
         if not avd:

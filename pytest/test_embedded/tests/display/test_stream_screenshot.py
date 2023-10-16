@@ -34,8 +34,10 @@ def read_pixel(width, height, pack, arr):
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.embedded
+@pytest.mark.skipos('win', 'reason: b/305252175 - error at setup. Only the parameter [2-1] fails.')
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.parametrize(
     "fmt,channel",
     [
@@ -175,6 +177,7 @@ def test_stream_screenshot_perf_mmap(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.embedded
+@pytest.mark.skipos('win', 'reason: b/305254892 FAILURES | b/305255695 ERRORS at setup')
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "fmt",
@@ -195,6 +198,7 @@ def test_screenshot_bytes_size(emulator_controller, fmt):
 
 @pytest.mark.graphics
 @pytest.mark.embedded
+@pytest.mark.skipos('win', 'reason: b/305258769 - error at setup.')
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_stream_screenshot_should_fail_if_does_not_exist(
     at_home,

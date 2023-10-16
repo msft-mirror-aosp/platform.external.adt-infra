@@ -18,12 +18,11 @@ import random
 import re
 import shutil
 import socket
+import subprocess
 import sys
 import time
-import subprocess
 from pathlib import Path
-from typing import Optional, List
-
+from typing import List, Optional
 
 from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
@@ -34,14 +33,16 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from google.protobuf import empty_pb2
 from grpc import RpcError
+from mobly.controllers import android_device
 
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
 from emu.logging.log_handler import QueueLogHandler
+from emu.mobly.snippet_shell import SnippetShell
 from emu.process.command import Command
-from emu.utils import LogObserver
 from emu.timing import wait_until
+from emu.utils import LogObserver
 
 
 class FailedToLaunchException(Exception):
@@ -72,7 +73,6 @@ class BaseEmulator(object):
         Raises:
             AndroidSdkRootNotSet: The ANDROID_SDK_ROOT environment variable is not set.
         """
-        self.telnet = None
         self.description: EmulatorDescription = None
         self.android_home = android_home.absolute()
         self.android_avd_home = android_avd_home.absolute()
@@ -86,12 +86,9 @@ class BaseEmulator(object):
             self.android_avd_home,
         )
         self.adb: Adb = None
+        self.ads: android_device.AndroidDevice = None
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
-
-    def __del__(self):
-        if self.telnet:
-            self.telnet.stop()
 
     def _initialize_with_description(self, description: Optional[EmulatorDescription]):
         """Setup the emulator given the description
@@ -141,6 +138,18 @@ class BaseEmulator(object):
             self.description.name(),
             self.description.get("avd.id"),
         )
+
+    def mobly(self):
+        if self.ads is not None:
+            return self.ads
+
+        devices = android_device.get_instances([self.description.name()])
+        if len(devices) != 1:
+            raise EmulatorNotFoundException(
+                f"Unable to find the mobly android device, found: {devices}"
+            )
+        self.ads = devices[0]
+        return self.ads
 
     def launch(self, flags: [str]) -> bool:
         """Launches the emulator
@@ -203,18 +212,9 @@ class BaseEmulator(object):
         Returns:
             EmulatorConnection: A connection to the emulator.
         """
-        if self.telnet is None or not self.telnet.is_connected():
-            self.logger.info("Connecting to console")
-            self.telnet = EmulatorConnection.connect(
-                self.description.get("port.serial"), self.description.get("avd.id")
-            )
-
-        return self.telnet
-
-    def disconnect(self) -> None:
-        """Closes the connection to the emulator."""
-        if self.telnet:
-            self.telnet.stop()
+        return EmulatorConnection.connect(
+            self.description.get("port.serial"), self.description.get("avd.id")
+        )
 
     def is_alive(self) -> bool:
         """Returns true if we believe the emulator is still alive."""
@@ -265,10 +265,7 @@ class BaseEmulator(object):
 
         def activity_is_running():
             """Returns true if the given activity is running."""
-            in_focus = self.adb.shell(
-                "dumpsys activity activities | grep mFocusedWindow"
-            )
-            return activity in in_focus
+            return self.pgrep(activity[: activity.find("/")])
 
         shell = f"am start -n {activity}"
         if params:
@@ -284,6 +281,9 @@ class BaseEmulator(object):
             count += 1
 
         return False
+
+    def pgrep(self, process_name: str) -> bool:
+      return process_name in self.adb.shell(f"ps -A | grep {process_name}")
 
     def stop_activity(self, activity: str) -> bool:
         """Attempts to stop the given activity.
@@ -302,10 +302,7 @@ class BaseEmulator(object):
 
         def activity_is_running():
             """Returns true if the given activity is running."""
-            in_focus = self.adb.shell(
-                "dumpsys activity activities | grep mFocusedWindow"
-            )
-            return activity in in_focus
+            return self.pgrep(activity)
 
         self.adb.shell(f"am force-stop {activity}")
         count = 0
@@ -359,9 +356,6 @@ class DebugEmulator(BaseEmulator):
 
     def restart(self, emu_flags: List[str]) -> bool:
         return self.launch(emu_flags)
-
-    def stop(self) -> None:
-        self.disconnect()
 
 
 class Emulator(BaseEmulator):
@@ -563,7 +557,6 @@ class Emulator(BaseEmulator):
             timeout (int, optional): Time in seconds before the emulator will be terminated.
             Defaults to 10.
         """
-        self.disconnect()
         if self.description is not None:
             if self.description.shutdown(timeout):
                 logging.info("Terminated the emulator")

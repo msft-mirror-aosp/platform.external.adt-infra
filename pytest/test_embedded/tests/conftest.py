@@ -37,7 +37,7 @@ from pathlib import Path
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 
-from emu.apk import APP_DEBUG_APK
+from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.images.convert import save_image
@@ -164,36 +164,43 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
         pytest.skip(f"cannot run {item.name} on platform {plat}")
 
     # Handle the 'skipos' marker.
-    markers = [marker for marker in item.iter_markers() if marker.name in 'skipos']
+    markers = [marker for marker in item.iter_markers() if marker.name in "skipos"]
     for marker in markers:
         if len(marker.args) == 0:
             pytest.exit("The 'skipos' marker needs at least one argument.")
         platforms = marker.args[0].lower()
-        platforms = platforms.replace(' ', '').split(',')
+        platforms = platforms.replace(" ", "").split(",")
 
         for plat in platforms:
-            if plat == pytest.os or plat == 'all':
+            if plat == pytest.os or plat == "all":
                 if len(marker.args) > 1:
                     pytest.skip(marker.args[1])
-                elif 'reason' in marker.kwargs:
-                    pytest.skip(marker.kwargs['reason'])
+                elif "reason" in marker.kwargs:
+                    pytest.skip(marker.kwargs["reason"])
                 else:
                     pytest.skip()
 
     # Process the 'timeout_win' marker
-    timeout_win = item.get_closest_marker('timeout_win')
-    if timeout_win and pytest.os == 'win':
-        timeout_win_sec = timeout_win.args[0] if timeout_win.args \
-                                else timeout_win.kwargs.get('timeout')
-        func_only = timeout_win.kwargs.get('func_only', True)
+    timeout_win = item.get_closest_marker("timeout_win")
+    if timeout_win and pytest.os == "win":
+        timeout_win_sec = (
+            timeout_win.args[0]
+            if timeout_win.args
+            else timeout_win.kwargs.get("timeout")
+        )
+        func_only = timeout_win.kwargs.get("func_only", True)
         # Remove existing timeout marker
-        timeout = [m for m, marker in enumerate(item.iter_markers())
-                                         if marker.name == 'timeout']
+        timeout = [
+            m
+            for m, marker in enumerate(item.iter_markers())
+            if marker.name == "timeout"
+        ]
         if timeout:
             item.own_markers.pop(timeout[0])
 
-        item.add_marker(pytest.mark.timeout(timeout=timeout_win_sec,
-                                                func_only=func_only))
+        item.add_marker(
+            pytest.mark.timeout(timeout=timeout_win_sec, func_only=func_only)
+        )
 
     logging.info("=============== Setup: %s ===============", item.name)
 
@@ -220,6 +227,13 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
             "-----------> %s completed: %s <-----------", report.nodeid, report.outcome
         )
 
+@pytest.hookimpl(tryfirst=True)
+def pytest_fixture_setup(fixturedef, request):
+    logging.info(f">>>>>>>>>>>>>> Configuring fixture '{fixturedef}'")
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_fixture_post_finalizer(fixturedef, request):
+    logging.info(f"<<<<<<<<<<<<<< Tearing down fixture '{fixturedef}'")
 
 # Workaround for
 # https://docs.pytest.org/en/latest/deprecations.html#pytest-namespace
@@ -232,23 +246,30 @@ def pytest_configure(config):
 
     # Register the 'skipos' marker.
     config.addinivalue_line(
-        "markers", ("skipos(platform, reason=None): "
+        "markers",
+        (
+            "skipos(platform, reason=None): "
             "skip the given test for the given platform. "
             "Valid platform values and systems are: "
             "'win' (Windows), 'linux' (Linux), 'mac' (macOS), "
             "'m1' (macOS aarch64). "
             "Multiple OS values are accepted, such as 'win, linux'. "
-            "To skip the test in all platforms, use the 'all' option.")
+            "To skip the test in all platforms, use the 'all' option."
+        ),
     )
-    os_map = {'Windows': 'win', 'Linux': 'linux',
-              'Darwin': 'm1' if pytest.processor == 'arm' else 'mac'}
+    os_map = {
+        "Windows": "win",
+        "Linux": "linux",
+        "Darwin": "m1" if pytest.processor == "arm" else "mac",
+    }
     # Current skipos platform
-    pytest.os = os_map.get(pytest.system, 'unknown')
+    pytest.os = os_map.get(pytest.system, "unknown")
 
     # Register the 'timeout_win' marker
     config.addinivalue_line(
-        "markers", "timeout_win(timeout): "
-        "Set a timeout for Windows platforms (overrides an existing timeout)."
+        "markers",
+        "timeout_win(timeout): "
+        "Set a timeout for Windows platforms (overrides an existing timeout).",
     )
 
 
@@ -259,7 +280,6 @@ def pytest_sessionfinish(
     """Stops and remove all running emulators at the end of all tests."""
     for name, emu in pytest.emulators.items():
         logging.info("Shutting down and removing %s", name)
-        emu.disconnect()
         emu.stop()
         if not session.config.getoption("avd_keep"):
             emu.delete()
@@ -423,8 +443,12 @@ def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     # Make sure the emulator is booted in at least 10 minutes.
     # (Note, boot times can be *REALLY* slow on windows gce..)
     assert emulator.wait_for_boot(timeout=600)
+    logging.info("The emulator has finished booting")
 
     assert emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
+    assert emulator.install_apk(
+        APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
+    )
     emulator.reset_state()
 
     yield emulator
@@ -470,7 +494,9 @@ def launch_animiation_app(avd: BaseEmulator):
     assert avd.is_alive()
     assert avd.stop_activity("com.google.AnimateBox")
     with avd.adb.logcat(tag="aemu", clear=True, timeout=10) as stream:
-        assert avd.start_activity("com.google.AnimateBox/com.google.emu.MainActivity", params=None)
+        assert avd.start_activity(
+            "com.google.AnimateBox/com.google.emu.MainActivity", params=None
+        )
         for line in stream:
             if "--STARTED--" in line:
                 return True
@@ -605,7 +631,15 @@ def at_home(avd: BaseEmulator):
     avd.reset_state()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture
+def mbs(avd: BaseEmulator):
+    avd.mobly().load_snippet(
+        name="mbs", package="com.google.android.mobly.snippet.bundled"
+    )
+    return avd.mobly().mbs
+
+
+@pytest.fixture(scope="session")
 def log_directory(pytestconfig):
     """Get the directory from value of the --log-file option, or the current working directory."""
     log_file = pytestconfig.getoption("--log-file")
@@ -654,6 +688,7 @@ def stream_screenshot(emulator_controller, log_directory, request):
 
     return streaming_img_call
 
+
 @pytest.fixture(scope="session", autouse=True)
 def generate_skip_report(skipped_tests, log_directory):
     """Generate a xml report containing the tests currently skipped on each platform.
@@ -662,6 +697,11 @@ def generate_skip_report(skipped_tests, log_directory):
         skipped_tests: Fixture that provides the skipped tests by platform.
         log_directory: Pytest's internal request fixture with test function information.
     """
+    xml_report_filepath = log_directory.joinpath(log_directory.name + '_skip.xml')
+    if xml_report_filepath.exists():
+        # Avoid the fixture running on every re-run (pytest b/#51)
+        # https://github.com/pytest-dev/pytest-rerunfailures/issues/51
+        return
     xml_testsuite = ET.Element('testsuite')
     xml_testsuite.set('name', log_directory.name)
     xml_platforms = ET.SubElement(xml_testsuite, 'platforms')
@@ -678,7 +718,6 @@ def generate_skip_report(skipped_tests, log_directory):
                 xml_test_child.text = str(test[property])
 
     xml_tree = ET.ElementTree(xml_testsuite)
-    xml_report_filepath = log_directory.joinpath(log_directory.name + '_skip.xml')
     xml_tree.write(xml_report_filepath, xml_declaration=True, encoding='utf-8')
     logging.info(f"Generated skipped tests file '{xml_report_filepath}'")
 
@@ -694,15 +733,16 @@ def skipped_tests(request):
         A dictionary with the lists of tests skipped by each platform.
     """
     session = request.node
-    all_skip_markers = ['skip', 'skipos', 'darwin', 'linux', 'win32']
+    all_skip_markers = ["skip", "skipos", "darwin", "linux", "win32"]
     skipped_tests = dict([(os_, []) for os_ in [pytest.os] + SKIPOS_PLATFORMS])
 
     for test in session.items:
-        skip_markers = [marker for marker in test.own_markers
-                           if marker.name in all_skip_markers]
+        skip_markers = [
+            marker for marker in test.own_markers if marker.name in all_skip_markers
+        ]
         for marker in skip_markers:
             platforms, reason = get_skipped_platforms(marker)
-            skip_data = {'name': test.name, 'nodeid': test.nodeid, 'reason': reason}
+            skip_data = {"name": test.name, "nodeid": test.nodeid, "reason": reason}
             for plat in platforms:
                 skipped_tests[plat].append(skip_data)
 
@@ -722,19 +762,37 @@ def get_skipped_platforms(marker):
         (list[str], str): a tuple containing the list of platforms filtered
                           by the marker, as well as the skip reason.
     """
-    reason = marker.kwargs.get('reason', 'n/a')
+    reason = marker.kwargs.get("reason", "n/a")
     filtered_platforms = []
 
-    if marker.name in ['darwin', 'linux', 'win32']:
-        os_ = marker.name.replace('darwin', 'mac').replace('win32', 'win')
-        reason = ' '.join(marker.name, 'only')
-        filtered_platforms = list(set(SKIPOS_PLATFORMS) - set([os_, 'all']))
-    elif marker.name == 'skip':
+    if marker.name in ["darwin", "linux", "win32"]:
+        os_ = marker.name.replace("darwin", "mac").replace("win32", "win")
+        reason = " ".join(marker.name, "only")
+        filtered_platforms = list(set(SKIPOS_PLATFORMS) - set([os_, "all"]))
+    elif marker.name == "skip":
         reason = marker.args[0] if len(marker.args) else reason
-        filtered_platforms = ['all']
-    elif marker.name == 'skipos':
+        filtered_platforms = ["all"]
+    elif marker.name == "skipos":
         os_ = marker.args[0]
         reason = marker.args[1] if len(marker.args) > 1 else reason
         filtered_platforms = [os_]
 
     return (filtered_platforms, reason)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def add_junitxml_properties(request, record_testsuite_property):
+    """Add new properties to the testsuite junitxml report
+
+    The properties include the api level and tag id
+
+    Args:
+        request: FixtureRequest
+        record_testsuite_property: Callable[[str, object], None]
+    """
+    if request.node.testsfailed > 0:
+        return
+    avd_config = json.loads(request.config.getoption('avd_config'))
+    for key, property in avd_config.items():
+        record_testsuite_property(key, property)
+

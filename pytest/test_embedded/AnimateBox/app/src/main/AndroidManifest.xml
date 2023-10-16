@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.google.emu">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
-
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -10,7 +9,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity" android:configChanges="orientation|screenSize|screenLayout">
+        <!-- Required: list of all classes with @Rpc methods. -->
+        <meta-data
+            android:name="mobly-snippets"
+            android:value="com.google.emu.snippets.ExampleSnippet" />
+<!--        <meta-data-->
+<!--            android:name="mobly-log-tag"-->
+<!--            android:value="com.google.emu.snippets" />-->
+
+        <activity android:name=".MainActivity" android:configChanges="orientation|screenSize|screenLayout" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -25,5 +32,7 @@
             android:label="@string/clip_activity_label">
         </activity>
     </application>
-
+    <instrumentation
+        android:name="com.google.android.mobly.snippet.SnippetRunner"
+        android:targetPackage="com.google.AnimateBox" />
 </manifest>

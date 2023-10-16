@@ -37,6 +37,7 @@ AOSP_ROOT = EMU_TEST_DIR.parents[3]
 SDK_EMULATOR = (
     AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
 )
+JDK_ROOT = AOSP_ROOT / "prebuilts" / "studio" / "jdk" / "jdk11"
 ANDROID_SDK_ROOT = SDK_EMULATOR
 
 AEMU_GRPC = (
@@ -74,6 +75,8 @@ class BuildDirectoryNotFound(Exception):
 class JavaNotFound(Exception):
     pass
 
+class AdbNotFound(Exception):
+    pass
 
 class NoTestResultsProduced(Exception):
     pass
@@ -304,8 +307,15 @@ class PyRunner:
             "ANDROID_SDK_ROOT": str(ANDROID_SDK_ROOT),
             "ANDROID_HOME": str(ANDROID_SDK_ROOT),
             "JAVA_HOME": self._get_java_home(),
+            # Make sure adb and java are on the path.
+            "PATH": f"{self._get_jdk_path()}"
+            + f"{os.pathsep}{ANDROID_SDK_ROOT / 'platform-tools'}"
+            + f"{os.pathsep}{os.environ['PATH']}",
         }
         self.py_exe = shutil.which("python")
+        if not shutil.which("adb", path=self.env["PATH"]):
+            raise AdbNotFound(f"Unable to find adb on the path: {self.env['PATH']}")
+
         if platform.system() == "Linux":
             try:
                 display = self._get_X_Display()
@@ -321,6 +331,19 @@ class PyRunner:
 
         logging.info("Using environment: %s", self.env)
 
+    def _get_jdk_path(self):
+        """Gets the path to java + javac from AOSP"""
+        jdk_map = {
+            "windows": JDK_ROOT / "win" / "bin",
+            "linux": JDK_ROOT / "linux" / "bin",
+            "darwin-arm64": JDK_ROOT / "mac-arm64" / "Contents" / "Home" / "bin",
+            "darwin-x86_64": JDK_ROOT / "mac" / "Contents" / "Home" / "bin",
+        }
+        jdk = jdk_map.get(OS_NAME, None)
+        if OS_NAME == "darwin":
+            jdk = jdk_map.get(f"{OS_NAME}-{platform.machine()}")
+        return f"{jdk}"
+
     def _get_java_home(self):
         """Retrieves the path to the Java home directory from the active Java interpreter.
 
@@ -330,15 +353,17 @@ class PyRunner:
         Raises:
             JavaNotFound: If no `java` interpreter is found on the system path.
         """
-        if not shutil.which("java"):
+        jdk = self._get_jdk_path()
+        java = shutil.which("java", path=jdk)
+        if not java:
             raise JavaNotFound(
-                "No `java` interpreter on the path. Java is required for "
+                f"No `java` interpreter on the path ({jdk}). Java is required for "
                 + "creating the APK's used by the test."
             )
 
         is_windows = platform.system() == "Windows"
         status = subprocess.run(
-            ["java", "-XshowSettings:properties", "-version"],
+            [java, "-XshowSettings:properties", "-version"],
             encoding="utf-8",
             capture_output=True,
             shell=is_windows,
@@ -360,9 +385,7 @@ class PyRunner:
           bool: True if X is running, False otherwise
         """
         return (
-            subprocess.run(
-                ["xset", "-display", display, "-q"],
-            ).returncode
+            subprocess.run(["xset", "-display", display, "-q"], check=True).returncode
             == 0
         )
 
@@ -396,7 +419,7 @@ class PyRunner:
         Args:
             packages ([str]): The set of packages to install
         """
-        self.run(["-m", "pip", "install", "--upgrade"] + packages)
+        self.run(["-m", "pip", "install", "-v", "--upgrade"] + packages)
 
     def run(
         self,
@@ -441,9 +464,14 @@ class AospPyRunner(PyRunner):
     - Patch the windows interpreter to work with the pytests.
     """
 
-    def __init__(self, repo):
+    def __init__(self, repo, in_directory=None):
         super().__init__()
         self.repo = repo
+        self.in_directory = in_directory
+        if not in_directory:
+            self.tmp = tempfile.TemporaryDirectory()
+            self.in_directory = self.tmp.name
+
         if platform.system() == "Windows":
             self._fixup_windows_py3_dll()
             run(
@@ -473,8 +501,7 @@ class AospPyRunner(PyRunner):
         else:
             virtualenv = "venv"
 
-        self.tmp = tempfile.TemporaryDirectory()
-        tmpdir = Path(self.tmp.name)
+        tmpdir = Path(self.in_directory)
         run(
             [
                 PYTHON,
@@ -624,9 +651,9 @@ def run_single_suite(
                 f"--log-file={logdir}/{name}.log",
                 f"--emulator={emulator}",
                 f"--symbols={symbol_path}",
-                f"--avd_config",
+                "--avd_config",
                 avd_config,
-                f"--emulator_launch_flags",
+                "--emulator_launch_flags",
                 launch_flags,
                 f"--android_avd_home={tmpdir}",
                 f"--build_target={build_target}",
@@ -637,10 +664,10 @@ def run_single_suite(
             env={
                 "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
                 "ANDROID_AVD_HOME": str(tmpdir),
-                "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or ""
+                "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or "",
             },
             # Give pytest a chance to "nicely" terminate everything.
-            timeout = 2800 if platform.system() != "Windows" else 3200,
+            timeout=2800 if platform.system() != "Windows" else 3200,
             check_output=False,
         )
     except subprocess.TimeoutExpired as timeout_exception:
@@ -680,7 +707,7 @@ def run_single_suite(
             with open(failure_file, "r", encoding="utf-8") as failure:
                 raise UnitTestFailure(failure.read())
 
-        return junit_test_results
+    return junit_test_results
 
 
 def run_tests(
@@ -744,17 +771,17 @@ def run_tests(
                     name,
                 )
                 result_xmls.append(res)
-                skip_reports.append(test_log_dir.joinpath(name + '_skip.xml'))
+                skip_reports.append(test_log_dir.joinpath(name + "_skip.xml"))
 
     result = Path(logdir) / "TEST-embedded_test.xml"
     merge_results(python_exe=pyrun, sources=result_xmls, dest=result)
-    xml_skip_report = Path(logdir) / 'skipped_tests.xml'
+    xml_skip_report = Path(logdir) / "skipped_tests.xml"
     merge_skip_reports(python_exe=pyrun, sources=skip_reports, dest=xml_skip_report)
     apply_xslt(
         python_exe=pyrun,
         source=result,
         xslt=HERE / "cfg" / "asHtml.xslt",
-        dest=Path(logdir) / f"test_report.html",
+        dest=Path(logdir) / "test_report.html",
     )
     apply_xslt(
         python_exe=pyrun,
@@ -766,8 +793,9 @@ def run_tests(
         python_exe=pyrun,
         source=xml_skip_report,
         xslt=HERE / "cfg" / "skippedTests.xslt",
-        dest=xml_skip_report.with_suffix('.html'),
+        dest=xml_skip_report.with_suffix(".html"),
     )
+
 
 def merge_skip_reports(python_exe: PyRunner, sources: [Path], dest: Path):
     """Run the standalone skip report module
@@ -791,6 +819,7 @@ def merge_skip_reports(python_exe: PyRunner, sources: [Path], dest: Path):
         logging.warning(
             "Failed to merge skip reports: %s to %s due to (%s)", sources, dest, err
         )
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -818,7 +847,7 @@ def parse_arguments():
     parser.add_argument(
         "-l",
         "--logdir",
-        default=Path(os.getcwd()),
+        default=Path(os.getcwd()) / "testlogs",
         dest="logdir",
         help="The directory where the logs should be placed. "
         + "On the build bots this should be dist_dir/testlogs.",
@@ -835,6 +864,14 @@ def parse_arguments():
         dest="build_target",
         help="The name of the build target",
         default="unknown-build-target",
+    )
+
+    parser.add_argument(
+        "-d",
+        "--directory",
+        dest="virtual_env_dir",
+        help="Path to the directory where to create the virtual environment"
+        + ", omit to use a temporary directory",
     )
 
     parser.add_argument(
@@ -862,7 +899,8 @@ def parse_arguments():
         action="store_true",
         dest="local_python",
         default=False,
-        help="Use the current python interpreter v.s. the one in AOSP. You should only use this for debugging.",
+        help="Use the current python interpreter v.s. the one in AOSP."
+        + " You should only use this for debugging.",
     )
 
     parser.add_argument(
@@ -877,19 +915,23 @@ def parse_arguments():
     parser.add_argument(
         "--test_config",
         default=EMU_TEST_DIR / "cfg" / f"emulator_{OS_NAME}_tests.json",
-        help="The test configuration file that describes which tests should be run for each configuration",
+        help="The test configuration file that describes which tests"
+        + " should be run for each configuration",
     )
 
     parser.add_argument(
         "--test_suite",
         default=".*",
-        help="Regex which will be used to determie which test suite to run",
+        help="Regex which will be used to determine which test suite to run",
     )
 
     args = parser.parse_args()
     configure_logging(logging.DEBUG if args.verbose else logging.INFO)
     if args.build_dir and args.emulator:
-        raise ValueError("Use either --build_dir or --emulator not both.")
+        raise ValueError("Use either --build_dir or --emulator flag, not both.")
+
+    if not args.build_dir and not args.emulator:
+        raise ValueError("You must provide either --build_dir or --emulator flag.")
 
     return args
 
@@ -905,7 +947,9 @@ def main(args):
         if platform.system() != "Windows":
             repo = f"file://{repo}"
 
-    py_exe = PyRunner() if args.local_python else AospPyRunner(repo)
+    py_exe = (
+        PyRunner() if args.local_python else AospPyRunner(repo, args.virtual_env_dir)
+    )
 
     with open(args.test_config, "r", encoding="utf-8") as file:
         test_cfg = json.load(file)
@@ -945,9 +989,9 @@ def main(args):
 
 
 if __name__ == "__main__":
-    args = parse_arguments()
+    arguments = parse_arguments()
     try:
-        main(args)
+        main(arguments)
     except KeyboardInterrupt:
         logging.critical("Terminated by user")
         sys.exit(1)
@@ -955,7 +999,7 @@ if __name__ == "__main__":
         logging.error("Test failure: %s", str(utf))
         sys.exit(1)
     except Exception as exc:
-        if args.verbose:
+        if arguments.verbose:
             logging.error("Failure during execution", exc_info=exc)
         else:
             logging.error("Failure during execution: %s", str(exc))

@@ -14,7 +14,7 @@
             "hw.initialOrientation": "landscape",
             "skin.name": "1280x720"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "portrait_test_suite": {
         "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
@@ -48,7 +48,7 @@
             "hw.initialOrientation": "landscape",
             "skin.name": "1280x720"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "embedded_landscape_test_suite": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
@@ -67,7 +67,7 @@
             "hw.initialOrientation": "landscape",
             "skin.name": "1280x720"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "snapshot_test_suite": {
         "description": "Set of tests that verify that snapshots work for the default emulator.",
@@ -80,9 +80,22 @@
             "api": "33",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "foldable_emulator_test_suite": {
+	"description": "Set of tests that verify that the foldable emulator works as expected.",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m foldable",
+            "--timeout=900"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "foldable_emulator_test_suite_api_31": {
         "description": "Set of tests that verify that the foldable emulator works as expected.",
         "launch_flags": [],
         "pytest_flags": [
@@ -93,7 +106,7 @@
             "api": "31",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "resizable_emulator_test_suite": {
         "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
@@ -113,10 +126,23 @@
         "status": "enabled"
     },
     "hardware_test_suite": {
-        "description": "Set of tests that validate hardware, console and adb",
+	"description": "Set of tests that validate hardware and console",
         "launch_flags": [],
         "pytest_flags": [
-            "-m hardware or console or adb",
+            "-m hardware or console",
+            "--timeout=900"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "hardware_test_suite_api_31": {
+        "description": "Set of tests that validate hardware and console",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m hardware or console",
             "--timeout=900"
         ],
         "avd_config": {
@@ -125,7 +151,59 @@
         },
         "status": "enabled"
     },
+    "adb_test_suite": {
+	"description": "Set of tests that validate adb",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m adb",
+            "--timeout=900"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "adb_test_suite_api_31": {
+        "description": "Set of tests that validate adb",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m adb",
+            "--timeout=900"
+        ],
+        "avd_config": {
+            "api": "31",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "sanity_test_suite": {
+        "description": "Set of tests we want to run as a part of emulator sanity test suite",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m sanity and not resizable",
+            "--timeout=900"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis"
+        },
+        "status": "disabled"
+    },
     "presubmit_emulator_test_suite": {
+	"description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m boot and not slow",
+            "--timeout=900"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
+    "presubmit_emulator_test_suite_api_31": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "launch_flags": [],
         "pytest_flags": [

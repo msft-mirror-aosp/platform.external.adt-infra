@@ -11,14 +11,59 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import http.server
 import threading
+import socket
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 
-from emu.timing import wait_until
+from emu.timing import eventually, wait_until
+
+def check_server_availability(server_address):
+  """Checks if the web server is up and running and has bound to the given port.
+
+  Args:
+    server_address: A tuple of (host, port) where the web server is running.
+
+  Returns:
+    True if the web server is up and running, False otherwise.
+  """
+
+  try:
+    s = socket.socket()
+    s.connect(server_address)
+    s.close()
+    return True
+  except:
+    return False
+
+
+def find_available_port(start_port=8000, num_ports=100):
+    """Find an available port within a specified range.
+
+    This function iterates through a range of ports starting from `start_port` and checks each
+    port to determine if it is available for binding. It returns the first available port found
+    within the specified range.
+
+    Args:
+        start_port (int, optional): The starting port to begin the search (default is 8000).
+        num_ports (int, optional): The number of consecutive ports to check (default is 100).
+
+    Returns:
+        int or None: The first available port found within the specified range, or None if no
+        available port is found.
+    """
+    for port in range(start_port, start_port + num_ports):
+        try:
+            # Attempt to create a socket and bind to the port
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(("localhost", port))
+            return port
+        except OSError as _err:
+            # Port is already in use, continue to the next one
+            continue
+    return None
 
 
 class TemporaryWebServer(http.server.SimpleHTTPRequestHandler):
@@ -77,12 +122,25 @@ def test_server(request):
             # Access the server using the obtained host and port
             ...
     """
+    # First we find an available port in the range 8000-8100 (b/303719691)
+    port = find_available_port()
+    if port is None:
+        raise OSError(
+            "Unable to find an available port in the range [8000,8100] for binding the webserver."
+        )
+
     # Start the HTTP server in a separate thread
-    server_address = ("", 0)  # Random port
+    server_address = ("", port)
     httpd = http.server.HTTPServer(server_address, TemporaryWebServer)
     thread = threading.Thread(target=httpd.serve_forever)
     thread.daemon = True
     thread.start()
+
+    def server_is_available():
+        return check_server_availability(("localhost", port))
+
+    # Wait until the web server is up and running.
+    assert eventually(server_is_available, timeout=10)
 
     # Obtain the actual port on which the server is running
     host, port = httpd.server_address
@@ -113,17 +171,23 @@ def prepare_chrome(avd):
     avd.adb.shell("am set-debug-app --persistent com.android.chrome")
 
     # Start Chrome for the first time
-    avd.start_activity("com.android.chrome/com.google.android.apps.chrome.Main", params=None)
+    avd.start_activity(
+        "com.android.chrome/com.google.android.apps.chrome.Main", params=None
+    )
 
     # Kill and restart to skip a pop-up
     avd.stop_activity("com.android.chrome")
-    avd.start_activity("com.android.chrome/com.google.android.apps.chrome.Main", params=None)
+    avd.start_activity(
+        "com.android.chrome/com.google.android.apps.chrome.Main", params=None
+    )
 
     yield
 
     avd.stop_activity("com.android.chrome")
 
+
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.skipos('win', 'reason: b/304785674 - test crashes.')
 @pytest.mark.graphics
 def test_make_sure_webserver_works(test_server):
     """Test function to ensure that the web server is functioning correctly.
@@ -187,4 +251,6 @@ def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
         if wait_until(at_least_40_percent_of_image_is_blue):
             return
 
-    assert False, f"Did not see a screenshot with 40%% blue pixels with {max_retries} retries"
+    assert (
+        False
+    ), f"Did not see a screenshot with 40%% blue pixels with {max_retries} retries"

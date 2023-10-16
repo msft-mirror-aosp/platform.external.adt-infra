@@ -28,6 +28,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.apk
 MANIFEST
 
 # PyInstaller
@@ -143,3 +144,5 @@ cython_debug/
 
 src/emu/apk/app-debug.apk
 
+# Logging directory
+testlogs
