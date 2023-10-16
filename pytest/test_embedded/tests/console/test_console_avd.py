@@ -15,6 +15,18 @@ def test_avd_canonical_path(emulator, avd, telnet):
 
     assert str(expected_path) in telnet.send("avd path")
 
+@pytest.mark.boot
+@pytest.mark.console
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=10, func_only=True)
+def test_avd_tracing_is_mounted(emulator, avd, telnet):
+    """Test adb shell ls /sys/kernel/tracing/trace_marker valid"""
+
+    no_file="No such file or directory"
+    if no_file in emulator.adb.shell("ls /sys/kernel/tracing/trace_marker"):
+        assert no_file not in emulator.adb.shell("ls /sys/kernel/debug/tracing/trace_marker")
+
+
 
 def read_property_file(from_file) -> str:
     """Reads a property file and returns a dictionary of the key-value pairs.
