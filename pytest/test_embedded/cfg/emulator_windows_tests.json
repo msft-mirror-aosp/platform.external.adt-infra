@@ -29,7 +29,7 @@
             "api": "33",
             "tag.id": "google_apis"
         },
-        "status": "disabled"
+        "status": "enabled"
     },
     "embedded_test_suite": {
         "description": "Set of tests that verify that the embedded emulator works when launched in portrait mode.",
@@ -93,7 +93,7 @@
             "api": "33",
             "tag.id": "google_apis"
         },
-        "status": "disabled"
+        "status": "enabled"
     },
     "foldable_emulator_test_suite_api_31": {
         "description": "Set of tests that verify that the foldable emulator works as expected.",
@@ -123,7 +123,7 @@
             "skin.name": "1080x2340",
             "skin.path": "no_skin"
         },
-        "status": "disabled"
+        "status": "enabled"
     },
     "hardware_test_suite": {
 	"description": "Set of tests that validate hardware and console",
@@ -136,7 +136,7 @@
             "api": "33",
             "tag.id": "google_apis"
         },
-        "status": "disabled"
+        "status": "enabled"
     },
     "hardware_test_suite_api_31": {
         "description": "Set of tests that validate hardware and console",
@@ -149,7 +149,7 @@
             "api": "31",
             "tag.id": "google_apis"
         },
-        "status": "disabled"
+        "status": "enabled"
     },
     "adb_test_suite": {
 	"description": "Set of tests that validate adb",
@@ -162,7 +162,7 @@
             "api": "33",
             "tag.id": "google_apis"
         },
-        "status": "disabled"
+        "status": "enabled"
     },
     "adb_test_suite_api_31": {
         "description": "Set of tests that validate adb",
@@ -175,7 +175,7 @@
             "api": "31",
             "tag.id": "google_apis"
         },
-        "status": "disabled"
+        "status": "enabled"
     },
     "sanity_test_suite": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
