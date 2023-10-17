@@ -49,7 +49,7 @@
                 &#160;
                 <div>
                     <h1>Skipped Tests (by Test Suite)</h1>
-                    <xsl:for-each select="./testsuite">
+                    <xsl:for-each select="./testsuite[not(contains(@name, '_api'))]">
                         <div style="margin-bottom: 30px">
                             <font style="color: #555555;"><h1><xsl:value-of select="@name"/></h1></font>
                             <h2>Platforms:</h2>
