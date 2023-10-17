@@ -6,7 +6,7 @@ from emu.timing import eventually, wait_until
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 def test_can_invoke_a_simple_snippet(mobly):
-    mobly("snippet").getFoo(5) == "foo 5"
+    mobly("animation").getFoo(5) == "foo 5"
 
 
 @pytest.mark.e2e
