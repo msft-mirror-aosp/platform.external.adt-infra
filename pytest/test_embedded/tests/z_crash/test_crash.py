@@ -125,6 +125,7 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 @pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.timeout(timeout=60, func_only=True)
+@pytest.mark.skipos("win", "Symbol decoding works differently on windows (b/305990645)")
 def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     """Make sure that there are symbols in the crashes reported by the emulator.
 
