@@ -680,9 +680,9 @@ def get_screenshot(emulator_controller, log_directory, request):
             A tuple of the raw screenshot image and the Pillow image object.
         """
         screenshot_dir = Path(log_directory) / "screenshots"
-        screenshot_dir.mkdir(parents=True, exist_ok=True)
         img = emulator_controller.getScreenshot(image_format)
-        file_name = re.sub(r"[\\/\{\}:]", "_", request.node.nodeid)
+        test_name = request.node.nodeid.split("::")[-1]
+        file_name = re.sub(r"[\\/\{\}:]", "_", test_name)
         pillow_image = save_image(img, screenshot_dir.absolute(), file_name)
         return img, pillow_image
 
@@ -694,7 +694,7 @@ def stream_screenshot(emulator_controller, log_directory, request):
     class StreamingImageCall(StreamingCall):
         def __init__(self, image_format: ImageFormat):
             super().__init__(emulator_controller.streamScreenshot(image_format))
-            self.test_name = re.sub(r"[\\/\{\}:]", "_", request.node.nodeid)
+            self.test_name = request.node.nodeid.split("::")[-1]
             self.screenshot_dir = Path(log_directory) / "screenshots"
             self.screenshot_dir.mkdir(parents=True, exist_ok=True)
 
