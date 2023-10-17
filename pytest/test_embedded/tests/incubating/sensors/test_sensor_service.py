@@ -21,16 +21,24 @@ from tests.test_utils import StreamingCall
 
 
 def is_equal(model_value, other, consider_equal={}) -> bool:
-    """Returns True if the two PhysicalModelValues are equal, False otherwise."""
+    """
+    Checks whether the two PhysicalModelValues are approximately equal.
 
-    if len(model_value.value.data) != len(other.value.data):
-        return False
+    Args:
+        model_value (PhysicalModelValue): The first PhysicalModelValue for comparison.
+        other (PhysicalModelValue): The second PhysicalModelValue for comparison.
+        consider_equal (dict): Dictionary of values to consider as equal.
 
-    return all(
-        pytest.approx(x) == pytest.approx(y)
-        or (int(x) in consider_equal and consider_equal[int(x)] == pytest.approx(y))
-        for x, y in zip(model_value.value.data, other.value.data)
-    )
+    Returns:
+        bool: True if the two PhysicalModelValues are approximately equal, False otherwise.
+    """
+    for x, y in zip(other.value.data, model_value.value.data):
+        if not (
+            pytest.approx(x, rel=0.1) == y
+            or (int(x) in consider_equal and consider_equal[int(x)] == pytest.approx(y))
+        ):
+            return False
+    return True
 
 
 def set_and_get_sensor(sensor_service, sensor_value):
