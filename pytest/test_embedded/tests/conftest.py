@@ -658,6 +658,21 @@ def mbs(mobly):
     return mobly("mbs")
 
 
+@pytest.fixture
+def log_adb_interactions():
+    """
+    A fixture to configure logging for the ADB interactions.
+
+    This fixture sets the logging level for the "ppadb" module to DEBUG before the test begins.
+    You can use this to analyze if there are strange things happening with ADB interactions.
+
+    """
+    logging.getLogger("ppadb").setLevel(logging.DEBUG)
+    logging.info("Enabled!")
+    yield
+    logging.getLogger("ppadb").setLevel(logging.CRITICAL)
+
+
 @pytest.fixture(scope="session")
 def log_directory(pytestconfig):
     """Get the directory from value of the --log-file option, or the current working directory."""

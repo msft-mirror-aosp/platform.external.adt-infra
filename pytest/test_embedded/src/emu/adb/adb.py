@@ -181,7 +181,7 @@ class Adb:
         self.logger.info("shell (%ss): %s", timeout, cmd)
         try:
             res = self.device().shell(cmd, timeout=timeout)
-        except RuntimeError as rerr:
+        except (RuntimeError, TimeoutError) as rerr:
             logging.error(
                 "Failed to invoke method due %s, retry after adb restart", rerr
             )

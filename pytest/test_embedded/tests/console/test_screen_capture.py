@@ -17,26 +17,29 @@ from PIL import Image
 
 TEMP_FILE = "__screenshot.png"
 
+
 @pytest.fixture
 def tmp_test_file(tmp_path):
     temp_file = tmp_path / TEMP_FILE
     return temp_file
 
+
 @pytest.mark.adb
 @pytest.mark.sanity
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_adb_screencapture_creates_a_file(avd, tmp_test_file):
+@pytest.mark.timeout(timeout=15, func_only=True)
+def test_adb_screencapture_creates_a_file(avd, log_adb_interactions, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"
     assert not "adb: error" in avd.adb.shell(f"screencap {device_file}")
     assert "yes" in avd.adb.shell(f"[ -f {device_file} ] && echo 'yes'")
 
+
 @pytest.mark.adb
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_adb_screencapture_is_a_png(avd, tmp_test_file):
+@pytest.mark.timeout(timeout=15, func_only=True)
+def test_adb_screencapture_is_a_png(avd, log_adb_interactions, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"
     assert not "adb: error" in avd.adb.shell(f"screencap {device_file}")
 
     # Check that we have a png file.
     avd.adb.pull(device_file, tmp_test_file)
-    img:Image.Image = Image.open(tmp_test_file)
+    img: Image.Image = Image.open(tmp_test_file)
     assert img.format == "PNG"
