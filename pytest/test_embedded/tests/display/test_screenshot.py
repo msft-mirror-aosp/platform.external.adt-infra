@@ -151,6 +151,20 @@ def all_orientations(emulator_controller, request):
     # Give the emulator a chance to actually rotate around.
     sleep(0.1)
 
+#bug 299344829
+@pytest.mark.graphics
+@pytest.mark.embedded
+@pytest.mark.timeout(timeout=60, func_only=True)
+@pytest.mark.timeout_win(timeout=120)
+def test_screenshot_valid_width_and_height(emulator, get_screenshot, default_display_config):
+    """Make sure that screenshot returns valid w and h"""
+
+    image, _ = get_screenshot(ImageFormat())
+    fmt = image.format
+    assert (
+        fmt.width == default_display_config.width
+        and fmt.height == default_display_config.height
+    ), "The width and height should be equal to the device width and height"
 
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.graphics
