@@ -85,7 +85,7 @@ def test_physical_rotation_around_axis_will_update_magneto_meter(
 
     This test merely validates that the magneto sensor will change and stabilizes.
     """
-    physics = mobly("physics")
+    physics = mobly("animation")
 
     def reset_state():
         model_value = PhysicalModelValue(

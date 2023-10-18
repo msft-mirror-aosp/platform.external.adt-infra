@@ -26,39 +26,20 @@ from typing import List, Optional
 
 from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
-from aemu.proto.emulator_controller_pb2 import (
-    KeyboardEvent,
-    ParameterValue,
-    PhysicalModelValue,
-)
+from aemu.proto.emulator_controller_pb2 import (KeyboardEvent, ParameterValue,
+                                                PhysicalModelValue)
 from google.protobuf import empty_pb2
 from grpc import RpcError
-from mobly.controllers import android_device
 
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorConnection
+from emu.emulator_exceptions import EmulatorNotFoundException
 from emu.logging.log_handler import QueueLogHandler
-from emu.mobly.snippet_shell import SnippetShell
+from emu.mobly.snippet import Mobly
 from emu.process.command import Command
 from emu.timing import wait_until
 from emu.utils import LogObserver
-
-
-class FailedToLaunchException(Exception):
-    pass
-
-
-class EmulatorNotFoundException(Exception):
-    pass
-
-
-class EmulatorDiedException(Exception):
-    pass
-
-
-class FailedToInstallApk(Exception):
-    pass
 
 
 class BaseEmulator(object):
@@ -86,7 +67,7 @@ class BaseEmulator(object):
             self.android_avd_home,
         )
         self.adb: Adb = None
-        self.ads: android_device.AndroidDevice = None
+        self.mobly_device: Mobly = None
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
 
@@ -131,7 +112,7 @@ class BaseEmulator(object):
             self.description.name(),
             self.android_home / "platform-tools" / "adb",
         )
-
+        self.mobly_device = Mobly(self.adb, self.description.name())
         self.logger.info(
             "Discovered emulator pid: %s (%s), named: %s",
             self.description.pid(),
@@ -139,17 +120,8 @@ class BaseEmulator(object):
             self.description.get("avd.id"),
         )
 
-    def mobly(self):
-        if self.ads is not None:
-            return self.ads
-
-        devices = android_device.get_instances([self.description.name()])
-        if len(devices) != 1:
-            raise EmulatorNotFoundException(
-                f"Unable to find the mobly android device, found: {devices}"
-            )
-        self.ads = devices[0]
-        return self.ads
+    def mobly(self, name: str):
+        return self.mobly_device.snippet(name)
 
     def launch(self, flags: [str]) -> bool:
         """Launches the emulator
@@ -283,7 +255,7 @@ class BaseEmulator(object):
         return False
 
     def pgrep(self, process_name: str) -> bool:
-      return process_name in self.adb.shell(f"ps -A | grep {process_name}")
+        return process_name in self.adb.shell(f"ps -A | grep {process_name}")
 
     def stop_activity(self, activity: str) -> bool:
         """Attempts to stop the given activity.

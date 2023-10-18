@@ -637,18 +637,7 @@ def at_home(avd: BaseEmulator):
 @pytest.fixture
 def mobly(avd: BaseEmulator):
     def mobly_package(package: str):
-        device = avd.mobly()
-        if hasattr(device, package):
-            return getattr(device, package)
-
-        if package == "mbs":
-            device.load_snippet(
-                name="mbs", package="com.google.android.mobly.snippet.bundled"
-            )
-            return device.mbs
-        else:
-            device.load_snippet(name=package, package="com.google.AnimateBox")
-            return getattr(device, package)
+       return avd.mobly(package)
 
     return mobly_package
 
