@@ -20,23 +20,24 @@ from aemu.proto.emulator_controller_pb2 import ImageFormat
 
 from emu.timing import eventually, wait_until
 
+
 def check_server_availability(server_address):
-  """Checks if the web server is up and running and has bound to the given port.
+    """Checks if the web server is up and running and has bound to the given port.
 
-  Args:
-    server_address: A tuple of (host, port) where the web server is running.
+    Args:
+      server_address: A tuple of (host, port) where the web server is running.
 
-  Returns:
-    True if the web server is up and running, False otherwise.
-  """
+    Returns:
+      True if the web server is up and running, False otherwise.
+    """
 
-  try:
-    s = socket.socket()
-    s.connect(server_address)
-    s.close()
-    return True
-  except:
-    return False
+    try:
+        s = socket.socket()
+        s.connect(server_address)
+        s.close()
+        return True
+    except:
+        return False
 
 
 def find_available_port(start_port=8000, num_ports=100):
@@ -94,8 +95,10 @@ class TemporaryWebServer(http.server.SimpleHTTPRequestHandler):
   </body>
 </html>
 """
+    count = 0
 
     def do_GET(self):
+        TemporaryWebServer.count += 1
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -118,7 +121,7 @@ def test_server(request):
 
     Example:
         def test_example(test_server):
-            host, port = test_server
+            host, port, server = test_server
             # Access the server using the obtained host and port
             ...
     """
@@ -164,6 +167,7 @@ def prepare_chrome(avd):
     This fixture prepares the Chrome application on an
     Android Virtual Device (AVD) for testing.
     """
+    TemporaryWebServer.count = 0
     # Configure to skip welcome page
     avd.adb.shell(
         'echo "chrome --disable-fre --no-default-browser-check --no-first-run --skip_first_run_ui" > /data/local/tmp/chrome-command-line'
@@ -180,14 +184,16 @@ def prepare_chrome(avd):
     avd.start_activity(
         "com.android.chrome/com.google.android.apps.chrome.Main", params=None
     )
+    avd.adb.shell(
+        f"am start -a android.intent.action.VIEW -d www.google.com com.android.chrome"
+    )
 
     yield
 
     avd.stop_activity("com.android.chrome")
 
 
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.skipos('win', 'reason: b/304785674 - test crashes.')
+@pytest.mark.skipos("win", "reason: b/304785674 - test crashes.")
 @pytest.mark.graphics
 def test_make_sure_webserver_works(test_server):
     """Test function to ensure that the web server is functioning correctly.
@@ -196,6 +202,7 @@ def test_make_sure_webserver_works(test_server):
     the expected content defined in the `TemporaryWebServer` class.
     """
     host, port = test_server
+    get_count = TemporaryWebServer.count
 
     # Access the server using the obtained host and port
     response = http.client.HTTPConnection(host, port)
@@ -204,11 +211,36 @@ def test_make_sure_webserver_works(test_server):
 
     assert result.status == 200
     assert result.read().decode("utf-8") == TemporaryWebServer.text
+    assert TemporaryWebServer.count >= get_count + 1
+
+
+def request_page_in_chrome(avd, page):
+    avd.stop_activity("com.android.chrome")
+    avd.start_activity(
+        "com.android.chrome/com.google.android.apps.chrome.Main", params=None
+    )
+    avd.adb.shell(
+        f"am start -a android.intent.action.VIEW -d {page} com.android.chrome"
+    )
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=120, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.graphics
+def test_launch_chrome_google_gets_page(avd, prepare_chrome, test_server):
+    _, port = test_server
+    chrome_page = f"http://10.0.2.2:{port}/"
+    get_count = TemporaryWebServer.count
+
+    request_page_in_chrome(avd, chrome_page)
+    assert wait_until(
+        lambda: TemporaryWebServer.count > get_count, timeout=5
+    ), f"Chrome did not make a get call in a timely fashion {TemporaryWebServer.count} <= {get_count}"
+
+
+@pytest.mark.e2e
+@pytest.mark.timeout(timeout=120, func_only=True)
+@pytest.mark.flaky(reruns=1, reruns_delay=5)
 @pytest.mark.graphics
 def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
     """
@@ -243,12 +275,10 @@ def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
                     blue_count += 1
         return blue_count > (rgb_image.width * rgb_image.height * percent_blue / 100)
 
-    max_retries = 2
-    for i in range(0, max_retries):
-        avd.adb.shell(
-            f"am start -a android.intent.action.VIEW -d {chrome_page} com.android.chrome"
-        )
-        if wait_until(at_least_40_percent_of_image_is_blue):
+    max_retries = 3
+    for _ in range(0, max_retries):
+        request_page_in_chrome(avd, chrome_page)
+        if wait_until(at_least_40_percent_of_image_is_blue, timeout=5):
             return
 
     assert (
