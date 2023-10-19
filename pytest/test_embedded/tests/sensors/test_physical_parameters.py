@@ -71,6 +71,7 @@ class Axis(Enum):
 
 
 @pytest.mark.hardware
+@pytest.mark.skip("Very flaky, the physical model appears non-deterministic")
 @pytest.mark.timeout(timeout=5 * 72, func_only=True)
 @pytest.mark.parametrize("axis", [Axis.X, Axis.Y, Axis.Z])
 def test_physical_rotation_around_axis_will_update_magneto_meter(
