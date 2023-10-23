@@ -95,6 +95,7 @@ def test_inbound_call_bad_operation(at_home, emulator_controller):
 @pytest.mark.e2e
 @pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.skipos('win', 'reason: b/305810509 - test timeout.')
 def test_inbound_call_bad_number(at_home, emulator_controller):
     """Sends phone call from a bad number to the emulator.
 

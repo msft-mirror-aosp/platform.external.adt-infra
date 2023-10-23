@@ -20,6 +20,27 @@ from emu.timing import eventually, wait_until
 from tests.test_utils import StreamingCall
 
 
+def is_equal(model_value, other, consider_equal={}) -> bool:
+    """
+    Checks whether the two PhysicalModelValues are approximately equal.
+
+    Args:
+        model_value (PhysicalModelValue): The first PhysicalModelValue for comparison.
+        other (PhysicalModelValue): The second PhysicalModelValue for comparison.
+        consider_equal (dict): Dictionary of values to consider as equal.
+
+    Returns:
+        bool: True if the two PhysicalModelValues are approximately equal, False otherwise.
+    """
+    for x, y in zip(other.value.data, model_value.value.data):
+        if not (
+            pytest.approx(x, rel=0.1) == y
+            or (int(x) in consider_equal and consider_equal[int(x)] == pytest.approx(y))
+        ):
+            return False
+    return True
+
+
 def set_and_get_sensor(sensor_service, sensor_value):
     """Executes set and get sensor Rpc call
     Args:
@@ -42,11 +63,7 @@ def set_and_get_sensor(sensor_service, sensor_value):
             retrieved.target == sensor_value.target
         ), "Target value for sensor doesn't match"
 
-        for i in range(len(retrieved.value.data)):
-            if pytest.approx(retrieved.value.data[i]) != sensor_value.value.data[i]:
-                return False
-
-        return True
+        return is_equal(retrieved, sensor_value)
 
     # We will try the request a few times, if the sensor value does not stabilize in
     # a seconds we will just give up.

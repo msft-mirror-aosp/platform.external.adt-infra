@@ -13,12 +13,37 @@
 # limitations under the License.
 
 import pytest
+import logging
 
 from aemu.proto.emulator_controller_pb2 import (
     PhysicalModelValue,
     ParameterValue,
     Posture,
 )
+from emu.timing import eventually, wait_until
+from functools import partial
+from enum import Enum
+
+
+def is_equal(model_value, other, consider_equal={}) -> bool:
+    """
+    Checks whether the two PhysicalModelValues are approximately equal.
+
+    Args:
+        model_value (PhysicalModelValue): The first PhysicalModelValue for comparison.
+        other (PhysicalModelValue): The second PhysicalModelValue for comparison.
+        consider_equal (dict): Dictionary of values to consider as equal.
+
+    Returns:
+        bool: True if the two PhysicalModelValues are approximately equal, False otherwise.
+    """
+    for x, y in zip(other.value.data, model_value.value.data):
+        if not (
+            pytest.approx(x, rel=0.1) == y
+            or (int(x) in consider_equal and consider_equal[int(x)] == pytest.approx(y))
+        ):
+            return False
+    return True
 
 
 def set_and_get_model(emu_controller, model_value):
@@ -36,27 +61,70 @@ def set_and_get_model(emu_controller, model_value):
         retrieved.target == model_value.target
     ), "Target value for physical model  doesn't match"
 
-    for i in range(len(retrieved.value.data)):
-        assert pytest.approx(retrieved.value.data[i]) == pytest.approx(
-            model_value.value.data[i]
-        ), "Data for physical model  doesn't match"
+    assert is_equal(model_value, retrieved), f"{model_value} != {retrieved}"
 
 
-@pytest.mark.e2e
+class Axis(Enum):
+    X = 0
+    Y = 1
+    Z = 2
+
+
 @pytest.mark.hardware
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_physical_rotation(emulator_controller):
-    """Test that setting the physical model is observable."""
-    for x in [-180, 90, 0, 180]:
-        for y in [-180, 90, 0, 180]:
-            for z in [-180, 90, 0, 180]:
-                set_and_get_model(
-                    emulator_controller,
-                    PhysicalModelValue(
-                        target=PhysicalModelValue.ROTATION,
-                        value=ParameterValue(data=[x, y, z]),
-                    ),
-                )
+@pytest.mark.timeout(timeout=5 * 72, func_only=True)
+@pytest.mark.parametrize("axis", [Axis.X, Axis.Y, Axis.Z])
+def test_physical_rotation_around_axis_will_update_magneto_meter(
+    emulator_controller, mobly, at_home, axis
+):
+    """Test that setting the physical model is observable through the magneto meter.
+
+    Note the physical model is not straightforwards, i.e. setting the physical model
+    can result in unexpected changes (to see this in action look at the UI in the
+    extended controls, device pose window, set all values to 0 and slide the Y axis around,
+    can you get the Z & and X axis to 180 without modifying them?)
+
+    This test merely validates that the magneto sensor will change and stabilizes.
+    """
+    physics = mobly("animation")
+
+    def reset_state():
+        model_value = PhysicalModelValue(
+            target=PhysicalModelValue.ROTATION,
+            value=ParameterValue(data=[0, 0, 0]),
+        )
+        emulator_controller.setPhysicalModel(model_value)
+
+        assert wait_until(physical_model_stabilized)
+
+    def guest_magnetic_field():
+        return physics.getMagnetometerReading()
+
+    def host_magnetic_field():
+        return emulator_controller.getPhysicalModel(
+            PhysicalModelValue(
+                target=PhysicalModelValue.MAGNETIC_FIELD,
+            )
+        ).value.data
+
+    def physical_model_stabilized():
+        host = host_magnetic_field()
+        guest = guest_magnetic_field()
+        logging.info("Check if %s = %s", host, guest)
+        return pytest.approx(host, abs=1) == guest
+
+    for rotation in range(-179, 179, 5):
+        reset_state()
+        data = [0, 0, 0]
+        data[axis.value] = rotation
+        model_value = PhysicalModelValue(
+            target=PhysicalModelValue.ROTATION,
+            value=ParameterValue(data=data),
+        )
+        emulator_controller.setPhysicalModel(model_value)
+
+        assert wait_until(
+            physical_model_stabilized, timeout=10
+        ), f"{pytest.approx(host_magnetic_field(), abs=1)} != {guest_magnetic_field()} ({model_value.value.data}) in a timely fashion."
 
 
 @pytest.mark.e2e

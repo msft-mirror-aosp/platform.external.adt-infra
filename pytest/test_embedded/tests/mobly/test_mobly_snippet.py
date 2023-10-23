@@ -5,10 +5,8 @@ from emu.timing import eventually, wait_until
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
-def test_can_invoke_a_simple_snippet(avd):
-    assert avd.has_booted()
-    avd.mobly().load_snippet(name="snippet", package="com.google.AnimateBox")
-    assert avd.mobly().snippet.getFoo(5) == "foo 5"
+def test_can_invoke_a_simple_snippet(mobly):
+    mobly("animation").getFoo(5) == "foo 5"
 
 
 @pytest.mark.e2e

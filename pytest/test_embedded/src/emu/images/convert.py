@@ -44,7 +44,7 @@ def proto_to_pillow(image: Image) -> PillowImage:
 
 
 def save_image(received_image, image_dir, test_name):
-    """Saves an image to a file.
+    """Saves an image to a file in the specified directory.
 
     Args:
         received_image (Image): The image to save.
@@ -52,15 +52,24 @@ def save_image(received_image, image_dir, test_name):
         test_name (str): The name of the test that the image was captured from.
 
     Returns:
-        PillowImage: The saved image."""
-    img = proto_to_pillow(received_image)
-    epoch_time_ms = int(time.time() * 1000)
-    image_file = image_dir / f"screenshot-{test_name}-{epoch_time_ms}.png"
-    logging.info(
-        "Received %sx%s, saving screenshot to %s",
-        img.width,
-        img.height,
-        image_file.absolute(),
-    )
-    img.save(image_file, "PNG")
-    return img
+        PillowImage: The saved image if successful, None otherwise.
+    """
+    try:
+        img = proto_to_pillow(received_image)
+        epoch_time_ms = int(time.time() * 1000)
+        if not image_dir.exists():
+            image_dir.mkdir(parents=True)
+        image_file = image_dir / f"screenshot-{test_name}-{epoch_time_ms}.png"
+        logging.info(
+            "Received %sx%s, saving screenshot to %s",
+            img.width,
+            img.height,
+            image_file.absolute(),
+        )
+        img.save(image_file, "PNG")
+        return img
+    except Exception as e:
+        logging.warning(
+            "An error occurred while saving the image: %s", str(e)
+        )
+        return None

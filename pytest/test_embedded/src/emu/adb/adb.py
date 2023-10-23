@@ -109,6 +109,11 @@ class Adb:
         """Starts the adb server."""
         subprocess.check_call([self.adb_binary, "start-server"])
 
+    def restart(self) -> None:
+        """Restarts the adb server."""
+        self.stop_server()
+        self.start_server()
+
     def is_installed(self, package: str) -> bool:
         """Check if the given package is installed on the device.
 
@@ -181,7 +186,7 @@ class Adb:
         self.logger.info("shell (%ss): %s", timeout, cmd)
         try:
             res = self.device().shell(cmd, timeout=timeout)
-        except RuntimeError as rerr:
+        except (RuntimeError, TimeoutError) as rerr:
             logging.error(
                 "Failed to invoke method due %s, retry after adb restart", rerr
             )
