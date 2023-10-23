@@ -126,7 +126,7 @@
         "status": "enabled"
     },
     "hardware_test_suite": {
-	"description": "Set of tests that validate hardware and console",
+        "description": "Set of tests that validate hardware and console",
         "launch_flags": [],
         "pytest_flags": [
             "-m hardware or console",
@@ -153,7 +153,10 @@
     },
     "adb_test_suite": {
         "description": "Set of tests that validate adb",
-        "launch_flags": [],
+        "launch_flags": [
+            "-monitor-adb",
+            "3"
+        ],
         "pytest_flags": [
             "-m adb",
             "--timeout=600"
@@ -191,7 +194,7 @@
         "status": "enabled"
     },
     "presubmit_emulator_test_suite": {
-	"description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
+        "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "launch_flags": [],
         "pytest_flags": [
             "-m boot and not slow",
