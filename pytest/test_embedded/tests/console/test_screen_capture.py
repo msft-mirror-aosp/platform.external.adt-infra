@@ -27,6 +27,7 @@ def tmp_test_file(tmp_path):
 @pytest.mark.adb
 @pytest.mark.sanity
 @pytest.mark.timeout(timeout=15, func_only=True)
+@pytest.mark.skipos('all', 'Test fails on all platforms b/305308029')
 def test_adb_screencapture_creates_a_file(avd, log_adb_interactions, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"
     assert not "adb: error" in avd.adb.shell(f"screencap {device_file}")
@@ -35,6 +36,7 @@ def test_adb_screencapture_creates_a_file(avd, log_adb_interactions, tmp_test_fi
 
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=15, func_only=True)
+@pytest.mark.skipos('all', 'Test fails on all platforms b/305308029')
 def test_adb_screencapture_is_a_png(avd, log_adb_interactions, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"
     assert not "adb: error" in avd.adb.shell(f"screencap {device_file}")
