@@ -16,6 +16,12 @@ import sys
 
 import xml.etree.ElementTree as ET
 import logging
+import json
+import platform
+from pathlib import Path
+
+AOSP_ROOT = Path(__file__).parents[6]
+CFG = AOSP_ROOT / "external" / "adt-infra" / "pytest" / "test_embedded" / "cfg"
 
 
 def merge_skip_reports(xml_files):
@@ -47,7 +53,7 @@ def merge_skip_reports(xml_files):
                 test_data = {"name": name, "reason": reason if reason else ""}
                 alltests[os_].setdefault(nodeid, test_data)
 
-    # Create tag 'all_testsuites'
+    # Create element 'all_testsuites'
     all_testsuites = ET.SubElement(testsuites, "all_testsuites")
     all_platforms = ET.SubElement(all_testsuites, "platforms")
     fullname_map = {
@@ -68,6 +74,30 @@ def merge_skip_reports(xml_files):
             ET.SubElement(xml_test, "nodeid").text = nodeid
             for property in ["name", "reason"]:
                 ET.SubElement(xml_test, property).text = test[property]
+
+    # Create element 'skipped_testsuites'
+    platforms = list(dict.fromkeys([platform.system()] +
+                                   ['Linux', 'Darwin', 'Windows']).keys())
+    skipped_testsuites = {}
+    for plat in platforms:
+        emulator_config = Path(CFG / f"emulator_{plat.lower()}_tests.json")
+        with open(emulator_config, "r", encoding="utf-8") as file:
+            config_json = json.load(file)
+            for name, testsuite in config_json.items():
+                if testsuite['status'] == 'disabled':
+                    skipped_testsuites.setdefault(plat, [])
+                    skipped_testsuites[plat].append(name)
+
+    if skipped_testsuites:
+        skipped_testsuites_xml = ET.SubElement(testsuites, "skipped_testsuites")
+        platforms_ = ET.SubElement(skipped_testsuites_xml, "platforms")
+        for plat, testsuites_list in skipped_testsuites.items():
+            platform_ = ET.SubElement(platforms_, "platform")
+            platform_.set("name", plat)
+            testsuites_ = ET.SubElement(platform_, 'testsuites')
+            for name in testsuites_list:
+                testsuite_ = ET.SubElement(testsuites_, 'testsuite')
+                testsuite_.set('name', name)
 
     return ET.ElementTree(testsuites)
 

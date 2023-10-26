@@ -27,6 +27,26 @@
                 </style>
             </head>
             <body>
+                <xsl:if test="./skipped_testsuites">
+                    <div>
+                        <h1>Skipped Test Suites</h1>
+                        <h2>Platforms:</h2>
+                        <xsl:for-each select="./skipped_testsuites/platforms/platform">
+                            <xsl:variable name="ntestsuites" select="count(./testsuites/testsuite)"/>
+                            <div style="padding-left: 10px">
+                                <h3><xsl:value-of select="@name"/> (<xsl:value-of select="$ntestsuites"/>)</h3>
+                                <ul>
+                                    <xsl:for-each select="testsuites/testsuite">
+                                        <li class="test_row">
+                                            <xsl:value-of select="@name"/>
+                                        </li>
+                                    </xsl:for-each>
+                                </ul>
+                            </div>
+                        </xsl:for-each>
+                    </div>
+                </xsl:if>
+                &#160;
                 <h1>Skipped Tests</h1>
                 <h2>Platforms:</h2>
                 <xsl:for-each select="all_testsuites/platforms/platform">

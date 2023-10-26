@@ -83,7 +83,7 @@
         "status": "disabled"
     },
     "foldable_emulator_test_suite": {
-	"description": "Set of tests that verify that the foldable emulator works as expected.",
+        "description": "Set of tests that verify that the foldable emulator works as expected.",
         "launch_flags": [],
         "pytest_flags": [
             "-m foldable",
@@ -126,7 +126,7 @@
         "status": "enabled"
     },
     "hardware_test_suite": {
-	"description": "Set of tests that validate hardware and console",
+        "description": "Set of tests that validate hardware and console",
         "launch_flags": [],
         "pytest_flags": [
             "-m hardware or console",
@@ -152,8 +152,11 @@
         "status": "disabled"
     },
     "adb_test_suite": {
-	"description": "Set of tests that validate adb",
-        "launch_flags": [],
+        "description": "Set of tests that validate adb",
+        "launch_flags": [
+            "-monitor-adb",
+            "3"
+        ],
         "pytest_flags": [
             "-m adb",
             "--timeout=900"
@@ -191,7 +194,7 @@
         "status": "disabled"
     },
     "presubmit_emulator_test_suite": {
-	"description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
+        "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "launch_flags": [],
         "pytest_flags": [
             "-m boot and not slow",
