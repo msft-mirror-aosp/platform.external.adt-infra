@@ -193,6 +193,19 @@
         },
         "status": "disabled"
     },
+    "fast_test_suite": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m fast and not resizable",
+            "--timeout=900"
+        ],
+        "avd_config": {
+            "api": "33",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
     "presubmit_emulator_test_suite": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "launch_flags": [],

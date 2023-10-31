@@ -5,6 +5,7 @@ from pathlib import Path
 
 @pytest.mark.boot
 @pytest.mark.console
+@pytest.mark.fast
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 def test_avd_canonical_path(emulator, avd, telnet):

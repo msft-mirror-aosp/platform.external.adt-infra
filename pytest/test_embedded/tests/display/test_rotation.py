@@ -242,6 +242,7 @@ def rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.sanity
+@pytest.mark.fast
 @pytest.mark.skipos('win', 'reason: b/305259781 - error at setup for params [-180-3] and [-90-4]')
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)

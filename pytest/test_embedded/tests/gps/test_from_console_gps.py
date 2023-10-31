@@ -20,6 +20,7 @@ from aemu.proto.emulator_controller_pb2 import GpsState
 
 
 @pytest.mark.hardware
+@pytest.mark.fast
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "latitude,longitude,speed,bearing,altitude,satellites",

@@ -58,6 +58,7 @@ def test_screen_record_sends_event(screen_service, tmp_path):
 @pytest.mark.skipos('win', 'reason: b/306418109 - ERROR at setup.')
 @pytest.mark.graphics
 @pytest.mark.sanity
+@pytest.mark.fast
 def test_screen_records_video(screen_service, animation_app, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
@@ -75,6 +76,7 @@ def test_screen_records_video(screen_service, animation_app, tmp_path):
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.skipos('win', 'reason: b/306418109 - ERROR at setup.')
 @pytest.mark.graphics
+@pytest.mark.fast
 def test_can_only_record_once(screen_service, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
