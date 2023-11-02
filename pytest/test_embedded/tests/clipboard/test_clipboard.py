@@ -44,6 +44,7 @@ def wait_for_with_timed_iterator(predicate, timed_iterator, timeout=5):
 
 @pytest.mark.e2e
 @pytest.mark.embedded
+@pytest.mark.fast
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.skipos('win', 'reason: b/303295516 - error at setup.')

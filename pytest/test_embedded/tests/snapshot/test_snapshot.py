@@ -52,6 +52,7 @@ def test_snapshot_can_save_and_load(snapshot_service):
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.sanity
+@pytest.mark.fast
 @pytest.mark.timeout(timeout=60, func_only=True)
 def test_snapshot_delete_removes(snapshot_service):
     assert snapshot_service.save("foo")

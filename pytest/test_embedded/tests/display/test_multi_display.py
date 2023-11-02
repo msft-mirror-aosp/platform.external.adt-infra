@@ -134,6 +134,7 @@ def test_multidisplay_multiple_error(no_displays, emulator_controller, is_landsc
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
+@pytest.mark.fast
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_get_after_set(no_displays, emulator_controller, is_landscape):
     """Adding a display should work."""
@@ -176,6 +177,7 @@ def test_multidisplay_double_ids_error(no_displays, emulator_controller, is_land
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
+@pytest.mark.fast
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_multidisplay_can_configure_four(
     no_displays, emulator_controller, is_landscape

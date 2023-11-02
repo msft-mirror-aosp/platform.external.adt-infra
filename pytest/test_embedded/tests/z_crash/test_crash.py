@@ -100,6 +100,7 @@ def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 
 @pytest.mark.e2e
 @pytest.mark.boot
+@pytest.mark.fast
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.flaky(
     reruns=3, reruns_delay=5
