@@ -227,6 +227,7 @@ def request_page_in_chrome(avd, page):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=120, func_only=True)
 @pytest.mark.graphics
+@pytest.mark.xpass
 def test_launch_chrome_google_gets_page(avd, prepare_chrome, test_server):
     _, port = test_server
     chrome_page = f"http://10.0.2.2:{port}/"
@@ -242,11 +243,16 @@ def test_launch_chrome_google_gets_page(avd, prepare_chrome, test_server):
 @pytest.mark.timeout(timeout=120, func_only=True)
 @pytest.mark.flaky(reruns=1, reruns_delay=5)
 @pytest.mark.graphics
+@pytest.mark.xpass
 def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
     """
     This test launches Chrome on an Android device, navigates to  a `blue`
     page served by the test server, captures a screenshot, and verifies
     that at least 40% of the image pixels are blue.
+
+    TODO(jansene): We should not use an external webserver, but instead render
+    a local page. This test is really here to validate that gfxstream is sort
+    of working as expected.
     """
     _, port = test_server
     chrome_page = f"http://10.0.2.2:{port}/"
