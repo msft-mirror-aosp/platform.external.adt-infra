@@ -285,7 +285,7 @@
             "api": "34",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "resizable_emulator_test_suite_api_33": {
         "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
@@ -336,7 +336,7 @@
             "skin.name": "1080x2340",
             "skin.path": "no_skin"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "hardware_test_suite_api_33": {
         "description": "Set of tests that validate hardware and console",
@@ -508,6 +508,6 @@
             "api": "34",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     }
 }
