@@ -59,3 +59,12 @@ def test_netsim_radio_state_toggle(avd):
     for chip in post_patch_device.chips:
         if chip.kind == netsim_client.common.ChipKind.BLUETOOTH:
             assert chip.bt.low_energy.state == netsim_client.model.State.ON
+
+    # Turn off Radio State (BLE) of Device, Reset and Verify if it's on
+    patch_state = False
+    netsim_client.NetsimClient().set_radio(device_name, patch_radio, patch_state)
+    netsim_client.NetsimClient().reset()
+    post_patch_reset_device = netsim_client.NetsimClient().get_devices()[device_name]
+    for chip in post_patch_reset_device.chips:
+        if chip.kind == netsim_client.common.ChipKind.BLUETOOTH:
+            assert chip.bt.low_energy.state == netsim_client.model.State.ON

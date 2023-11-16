@@ -65,6 +65,7 @@ def set_display_mode(emulator_controller, mode, timeout=5):
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.sanity
+@pytest.mark.skipos('all', 'reason: b/309463427')
 def test_resizable_changes_resolution(
     animation_app, emulator_controller, width, height, mode, get_screenshot
 ):

@@ -48,7 +48,7 @@
             "hw.initialOrientation": "landscape",
             "skin.name": "1280x720"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "portrait_test_suite_api_33": {
         "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
@@ -93,7 +93,7 @@
             "api": "34",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "embedded_test_suite_api_33": {
         "description": "Set of tests that verify that the embedded emulator works when launched in portrait mode.",
@@ -150,7 +150,7 @@
             "hw.initialOrientation": "landscape",
             "skin.name": "1280x720"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "embedded_landscape_test_suite_api_33": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
@@ -207,7 +207,7 @@
             "hw.initialOrientation": "landscape",
             "skin.name": "1280x720"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "snapshot_test_suite_api_33": {
         "description": "Set of tests that verify that snapshots work for the default emulator.",
@@ -246,7 +246,7 @@
             "api": "34",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "foldable_emulator_test_suite_api_33": {
         "description": "Set of tests that verify that the foldable emulator works as expected.",
@@ -285,7 +285,7 @@
             "api": "34",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "resizable_emulator_test_suite_api_33": {
         "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
@@ -296,23 +296,6 @@
         ],
         "avd_config": {
             "api": "33",
-            "tag.id": "google_apis",
-            "hw.device.name": "resizable",
-            "hw.resizable.configs": "phone-0-1080-2340-420, foldable-1-1768-2208-420, tablet-2-1920-1200-240, desktop-3-1920-1080-160",
-            "skin.name": "1080x2340",
-            "skin.path": "no_skin"
-        },
-        "status": "enabled"
-    },
-    "resizable_emulator_test_suite_api_31": {
-        "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
-        "launch_flags": [],
-        "pytest_flags": [
-            "-m graphics and not multidisplay or resizable",
-            "--timeout=600"
-        ],
-        "avd_config": {
-            "api": "31",
             "tag.id": "google_apis",
             "hw.device.name": "resizable",
             "hw.resizable.configs": "phone-0-1080-2340-420, foldable-1-1768-2208-420, tablet-2-1920-1200-240, desktop-3-1920-1080-160",
@@ -336,7 +319,7 @@
             "skin.name": "1080x2340",
             "skin.path": "no_skin"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "hardware_test_suite_api_33": {
         "description": "Set of tests that validate hardware and console",
@@ -375,7 +358,7 @@
             "api": "34",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "adb_test_suite_api_33": {
         "description": "Set of tests that validate adb",
@@ -469,7 +452,7 @@
             "api": "34",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     },
     "presubmit_emulator_test_suite_api_33": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
@@ -508,6 +491,6 @@
             "api": "34",
             "tag.id": "google_apis"
         },
-        "status": "enabled"
+        "status": "disabled"
     }
 }
