@@ -633,8 +633,12 @@ def run_single_suite(
     launch_flags: str,
     pytest_flags: [str],
     avd_config: str,
+    collect: bool,
     name: str,
 ):
+    if collect:
+        pytest_flags.append("--setup-plan")
+
     junit_test_results = Path(logdir) / f"{name}.xml"
     exit_code = 1
     try:
@@ -719,6 +723,7 @@ def run_tests(
     build_target: str,
     pyrun: PyRunner,
     tests_to_run,
+    collect: bool,
 ):
     """runs tests on an emulator. It installs necessary packages, restarts adb,
     runs pytest and converts the results to a junit xml and HTML files.
@@ -732,6 +737,7 @@ def run_tests(
         verbose: (bool):      True if we should be (very) verbose.
         pyrun (PyRunner):     The python runner used to run python.
         tests_to_run (str, dict):
+        collect: (bool):      True if the list of tests should be collected, not run.
     """
     # sanity checks
     verbose = ["-vvv"] if verbose else []
@@ -768,12 +774,16 @@ def run_tests(
                     launch_flags,
                     pytest_flags,
                     avd_config,
+                    collect,
                     name,
                 )
                 result_xmls.append(res)
                 skip_reports.append(test_log_dir.joinpath(name + "_skip.xml"))
 
-    result = Path(logdir) / "TEST-embedded_test.xml"
+    if collect:
+        result = Path(logdir) / "COLLECT-embedded_test.xml"
+    else:
+        result = Path(logdir) / "TEST-embedded_test.xml"
     merge_results(python_exe=pyrun, sources=result_xmls, dest=result)
     xml_skip_report = Path(logdir) / "skipped_tests.xml"
     merge_skip_reports(python_exe=pyrun, sources=skip_reports, dest=xml_skip_report)
@@ -925,6 +935,14 @@ def parse_arguments():
         help="Regex which will be used to determine which test suite to run",
     )
 
+    parser.add_argument(
+        "--collect-only",
+        default=False,
+        action="store_true",
+        dest="collect",
+        help="collect the list of tests, but do not run them",
+    )
+
     args = parser.parse_args()
     configure_logging(logging.DEBUG if args.verbose else logging.INFO)
     if args.build_dir and args.emulator:
@@ -974,6 +992,7 @@ def main(args):
                 build_target=args.build_target,
                 pyrun=py_exe,
                 tests_to_run=tests_to_run,
+                collect=args.collect,
             )
     else:
         run_tests(
@@ -985,6 +1004,7 @@ def main(args):
             build_target=args.build_target,
             pyrun=py_exe,
             tests_to_run=tests_to_run,
+            collect=args.collect,
         )
 
 
