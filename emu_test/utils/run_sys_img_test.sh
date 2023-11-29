@@ -36,6 +36,8 @@ function run_with_timeout () {
 
 # Grab everything after git_devtools-test- starting with api.
 TARGET="$(echo $DIST_DIR | sed "s/.*git_devtools-test-.*-\(api.*\)\/.*/\1/g")"
+export ADT_INFRA='/buildbot/adt-infra'
+export ANDROID_SDK_ROOT='/buildbot/src/android/emu-master-dev/prebuilts/android-emulator-build/system-images/linux'
 # BUILD_DIR="out/prebuilt_cached/builds/$TARGET"
 
 # if [[ ! -d $BUILD_DIR ]]
