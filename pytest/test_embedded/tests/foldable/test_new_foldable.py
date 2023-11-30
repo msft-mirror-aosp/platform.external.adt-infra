@@ -62,7 +62,7 @@ def set_device_hinge_angle(emu, angle):
     )
 
 
-@pytest.mark.foldable
+@pytest.mark.newfoldable
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
@@ -103,7 +103,7 @@ def test_new_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     assert image3.format.width > image2.format.width
 
 
-@pytest.mark.foldable
+@pytest.mark.newfoldable
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 5.0, 180.0)]
 )
