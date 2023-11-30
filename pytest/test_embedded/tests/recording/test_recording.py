@@ -66,9 +66,12 @@ def test_screen_records_video(screen_service, animation_app, tmp_path):
     time.sleep(2)
     screen_service.StopRecording(info)
 
+    # bump the size to 10240, as empty webm will be around 4k already
+    # realistically, the size should be around 49621, but lets leave some
+    # room for that
     assert sample_webm.exists()
     assert (
-        sample_webm.stat().st_size > 1024
+        sample_webm.stat().st_size > 10240
     ), "We should have recorded a series of frames"
 
 
