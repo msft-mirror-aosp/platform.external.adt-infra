@@ -13,7 +13,7 @@ authors = [{ name = "Erwin Jansen", email = "jansene@google.com" }]
 license = { file = "LICENSE.TXT" }
 version = "0.0.1"
 classifiers = ["Topic :: Software Development"]
-
+dynamic = ["optional-dependencies"]
 
 dependencies = [
     "Jinja2==3.1.2",
