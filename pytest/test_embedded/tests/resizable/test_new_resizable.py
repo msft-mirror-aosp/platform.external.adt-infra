@@ -82,7 +82,7 @@ def set_display_mode(emulator_controller, mode, timeout=5):
     return emulator_controller.getDisplayMode(_EMPTY_).value
 
 
-@pytest.mark.resizable
+@pytest.mark.newresizable
 @pytest.mark.parametrize(
     "width, height, mode",
     [
@@ -125,6 +125,7 @@ def test_new_resizable_changes_resolution(
     assert wait_until(screenshot_is_sized_properly)
 
 
+@pytest.mark.newresizable
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.parametrize(
     "fmt, bpp",
@@ -167,6 +168,7 @@ def test_new_resizable_observable_from_streaming(
                     time.sleep(5)
 
 
+@pytest.mark.newresizable
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.parametrize(
     "fmt, bpp",
@@ -218,6 +220,7 @@ def test_new_resizable_observable_from_streaming(
                         == mode
                     )
 
+@pytest.mark.newresizable
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.parametrize(
     "fmt, bpp",
