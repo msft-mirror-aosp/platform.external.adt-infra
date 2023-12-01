@@ -327,18 +327,36 @@
         "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
         "launch_flags": [],
         "pytest_flags": [
-            "-m graphics and not multidisplay or resizable",
+            "-m graphics and not multidisplay or newresizable",
             "--timeout=300"
         ],
         "avd_config": {
             "api": "34",
             "tag.id": "google_apis",
             "hw.device.name": "resizable",
-            "hw.resizable.configs": "phone-0-1080-2340-420, foldable-1-1768-2208-420, tablet-2-1920-1200-240, desktop-3-1920-1080-160",
+            "hw.resizable.configs": "phone-0-1080-2340-420, foldable-1-2208-1840-420, tablet-2-1920-1200-240, desktop-3-1920-1080-160",
+            "hw.lcd.density" : "420",
+            "hw.lcd.height" : "2340",
+            "hw.lcd.width" : "1080",
+            "hw.displayRegion.0.1.height" : "2092",
+            "hw.displayRegion.0.1.width" : "1080",
+            "hw.displayRegion.0.1.xOffset" : "0",
+            "hw.displayRegion.0.1.yOffset" : "0",
+            "hw.sensor.hinge" : "yes",
+            "hw.sensor.hinge.areas" : "1840-0-0-1840",
+            "hw.sensor.hinge.count" : "1",
+            "hw.sensor.hinge.defaults" : "180",
+            "hw.sensor.hinge.ranges" : "0-180",
+            "hw.sensor.hinge.sub_type" : "1",
+            "hw.sensor.hinge.type" : "1",
+            "hw.sensor.hinge_angles_posture_definitions" : "0-30, 30-150, 150-180",
+            "hw.sensor.posture_list" : "1, 2, 3",
+            "hw.sensors.orientation" : "yes",
+            "hw.sensors.proximity" : "yes",
             "skin.name": "1080x2340",
             "skin.path": "no_skin"
         },
-        "status": "disabled"
+        "status": "enabled"
     },
     "hardware_test_suite_api_33": {
         "description": "Set of tests that validate hardware and console",
