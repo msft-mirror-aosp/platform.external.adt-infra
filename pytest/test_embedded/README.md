@@ -290,7 +290,7 @@ For timeouts we make use of the [pytest-timeout](https://pypi.org/project/pytest
 
 ### Using mobly
 
-The test framework includes (limited) support for mobly. Basically you can write your own mobly snippets to make it easier to write end to end tests that interact with the device. The AnimationApp contains a sample of how to write a client side [snippet](AnimateBox/app/src/main/java/com/google/emu/snippets/ExampleSnippet.kt) that can be used from within a [test](tests/mobly//test_mobly_snippet.py).
+The test framework includes (limited) support for mobly. Mobly gradle dependencies require JDK 11. Basically you can write your own mobly snippets to make it easier to write end to end tests that interact with the device. The AnimationApp contains a sample of how to write a client side [snippet](AnimateBox/app/src/main/java/com/google/emu/snippets/ExampleSnippet.kt) that can be used from within a [test](tests/mobly//test_mobly_snippet.py).
 
 To learn how to write your own mobly extensions to create more comprehensive tests look (here)[https://github.com/google/mobly-snippet-lib].
 
