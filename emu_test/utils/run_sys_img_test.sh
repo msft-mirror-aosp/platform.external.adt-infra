@@ -89,7 +89,7 @@ fi
 
 # Set image ABI
 ABI=x86
-if [[ $TARGET == *"x86_64"* ]]
+if [[ $TARGET == *"x64"* ]]
 then
     ABI=x86_64
 fi
