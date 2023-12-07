@@ -37,7 +37,10 @@ function run_with_timeout () {
 # Grab everything after git_devtools-test- starting with api.
 TARGET="$(echo $DIST_DIR | sed "s/.*git_devtools-test-.*-\(api.*\)\/.*/\1/g")"
 export ADT_INFRA='/buildbot/src/android/emu-master-dev/external/adt-infra'
-export ANDROID_SDK_ROOT='/buildbot/src/android/emu-master-dev/prebuilts/android-emulator-build/system-images/linux'
+export ANDROID_SDK_ROOT="$SDK_EMULATOR"
+rm -rf "$ANDROID_SDK_ROOT/system-images"
+ln -sf "/buildbot/src/android/emu-master-dev/prebuilts/android-emulator-build/system-images/linux/system-images" "$ANDROID_SDK_ROOT"
+ls $SDK_EMULATOR
 # BUILD_DIR="out/prebuilt_cached/builds/$TARGET"
 
 # if [[ ! -d $BUILD_DIR ]]
@@ -86,7 +89,7 @@ fi
 
 # Set image ABI
 ABI=x86
-if [[ $TARGET == *"x86_64"* ]]
+if [[ $TARGET == *"x64"* ]]
 then
     ABI=x86_64
 fi

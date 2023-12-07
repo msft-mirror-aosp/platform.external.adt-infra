@@ -17,11 +17,10 @@ from aemu.proto.emulator_controller_pb2 import ImageFormat
 
 from emu.timing import eventually
 
-
 def wake_up(adb_shell):
     """
     Sends a wake-up command to the connected Android device using ADB. The device is woken
-    up by sending the KEYCODE_WAKEUP (https://developer.android.com/reference/android/view/KeyEvent#KEYCODE_WAKEUP)
+    up by sending the KEYCODE_WAKEUP key event (https://developer.android.com/reference/android/view/KeyEvent#KEYCODE_WAKEUP)
 
     Args:
         adb (callable): A function or method that executes ADB commands.
@@ -38,7 +37,7 @@ def wake_up(adb_shell):
 def power_down(adb_shell):
     """
     Sends a power-down command to the connected Android device using ADB. The device is powered
-    down by sending the POWER key event (https://developer.android.com/reference/android/view/KeyEvent#KEYCODE_POWER).
+    down by sending the KEYCODE_SLEEP key event (https://developer.android.com/reference/android/view/KeyEvent#KEYCODE_SLEEP).
 
     Args:
         adb (callable): A function or method that executes ADB commands.
@@ -49,7 +48,7 @@ def power_down(adb_shell):
     Returns:
         None
     """
-    assert not "adb: error" in adb_shell("input keyevent POWER")
+    assert not "adb: error" in adb_shell("input keyevent KEYCODE_SLEEP")
 
 
 @pytest.fixture
@@ -82,7 +81,6 @@ def emulator_off(adb_shell):
 
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
 def test_power_down_sleeps_the_device(adb_shell, emulator_on):
     """Test case to verify that sending the power-down command to an awake device will put the device to sleep."""
 
@@ -95,7 +93,6 @@ def test_power_down_sleeps_the_device(adb_shell, emulator_on):
 
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
 def test_wake_up_wakes_the_device(adb_shell, emulator_off):
     """Test case to verify that sending the wake-up command to a sleeping device will wake the device."""
 
@@ -109,8 +106,6 @@ def test_wake_up_wakes_the_device(adb_shell, emulator_off):
 @pytest.mark.e2e
 @pytest.mark.adb
 @pytest.mark.timeout(timeout=60, func_only=True)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.xpass
 def test_power_down_turns_off_the_screen(emulator_off, get_screenshot):
     """Test case to verify that a powered-down device has a black screen.
 
