@@ -227,7 +227,6 @@ def request_page_in_chrome(avd, page):
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=120, func_only=True)
 @pytest.mark.graphics
-@pytest.mark.skipos('m1', 'reason: b/311200619')
 def test_launch_chrome_google_gets_page(avd, prepare_chrome, test_server):
     _, port = test_server
     chrome_page = f"http://10.0.2.2:{port}/"
