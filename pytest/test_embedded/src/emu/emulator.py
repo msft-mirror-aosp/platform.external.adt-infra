@@ -219,7 +219,7 @@ class BaseEmulator(object):
 
         return self.adb.is_installed(package_name)
 
-    def start_activity(self, activity: str, params) -> bool:
+    def start_activity(self, activity: str, params=None) -> bool:
         """Attempts to start the given activity.
 
         An activity is considered to be running when the activity is in the list returned

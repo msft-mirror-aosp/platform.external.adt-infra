@@ -37,6 +37,12 @@
             android:name=".ClipActivity"
             android:exported="true"
             android:label="@string/clip_activity_label"></activity>
+
+        <!-- Activity to test dialog background dimming -->
+        <activity
+            android:name=".DialogDimActivity"
+            android:exported="true"
+            android:label="@string/dialog_dim_activity_label"></activity>
     </application>
     <instrumentation
         android:name="com.google.android.mobly.snippet.SnippetRunner"
