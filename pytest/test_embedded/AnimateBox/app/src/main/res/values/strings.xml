@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">AnimateBox</string>
     <string name="clip_activity_label">Clipboard Activity</string>
+    <string name="dialog_dim_activity_label">Dialog Dim Activity</string>
 </resources>
