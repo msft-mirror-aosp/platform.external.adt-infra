@@ -113,6 +113,7 @@ span.buttonpassed {
             border: 1px solid black;
             padding: 0 2px;
             margin-right: 2px;
+            cursor: pointer;
 }
 span.buttonfailed {
         font-family: monospace;
@@ -176,11 +177,11 @@ li.collapsable {
     overflow: auto;
     margin-left: 17px;
     margin-bottom: 10px;
-    border: solid 1px #ccc;
+    border: solid 1px #ddd;
     display: inline-block;
     float: left;
     resize: both;
-    width: min-content;
+    max-width: 90vw;
 }
 
 .text-box {
@@ -193,8 +194,24 @@ li.collapsable {
     white-space: pre-wrap;
     word-wrap: break-word;
     background-color: #fff0f0;
+    border: 0px solid #bbb;
+}
+
+.text-box-passed {
+    text-align: left;
+    margin: 0 1px;
+    font-size: 13px;
+    overflow-x: auto;
+    overflow-y: auto;
+    line-height: 1.42857143;
+    color: #2E7D32;
+    <!-- white-space: pre-wrap; -->
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #EEEEEE;
     border: 0px solid #ccc;
-    min-width: max-content;
+    max-width: 100%;
+    max-height: 600px;
 }
 
 .image-box {
@@ -269,7 +286,7 @@ function goto_id(id) {
                 </script>
             </head>
             <body onload="embed_attachments()">
-                <h1>Test Results for:
+                <h1 style="text-align: left">Test Results for:
                     <xsl:value-of select="@name"/>
                 </h1>
                 <p> TOTAL=
@@ -377,17 +394,26 @@ function goto_id(id) {
                         </xsl:when>
                         <xsl:otherwise>
                             <li class="passed" id="tst{$id}l">
-                                <span id="tst{$id}+" class="buttonpassed">&#160;
-                                    <xsl:value-of select="$fid"/>&#160;
-                                </span>&#160;
+                                <span id="tst{$id}+" class="buttonpassed" onClick="show('tst{$id}')">
+                                +
+                                    <xsl:value-of select="$fid"/>
+                                +</span>
+                                <span id="tst{$id}-" class="buttonpassed" onClick="hide('tst{$id}')" style="position: absolute; visibility: hidden;">
+                                -
+                                    <xsl:value-of select="$fid"/>
+                                -</span>&#160;
                                 <xsl:value-of select="@classname"/>
 .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment passed" id="tst{$id}" style="position: absolute; visibility: hidden;">
-                                    <pre>
-                                        <xsl:value-of select="."/>
-                                    </pre>
+                                <div style="clear: both;"></div>
+                                <span id="tst{$id}" style="position: absolute; visibility: hidden;">
+                                    <div class="embedding">
+                                        <pre class="text-box-passed" id="text-{$id}">
+                                            <xsl:value-of select="./*"/>
+                                        </pre>
+                                    </div>
                                 </span>
+                                <div style="clear: both;"></div>
                             </li>
                         </xsl:otherwise>
                     </xsl:choose>
