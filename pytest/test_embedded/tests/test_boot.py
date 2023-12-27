@@ -78,7 +78,7 @@ def shutdown(emulator):
     assert not emulator.is_alive()
 
 
-def check_has_booted_notification(emulator, timeout):
+def get_booted_notification_time(emulator, timeout):
     response_iterator = (
         emulator.description.get_emulator_controller().streamNotification(
             empty_pb2.Empty(), timeout=timeout
@@ -89,9 +89,9 @@ def check_has_booted_notification(emulator, timeout):
         logging.info("Notification: %s", notification)
         if notification.HasField("booted"):
             logging.info("Boot completed in %d ms.", notification.booted.time)
-            return True
+            return notification.booted.time
 
-    return False
+    return None
 
 
 @pytest.mark.boot
@@ -99,7 +99,7 @@ def check_has_booted_notification(emulator, timeout):
 @pytest.mark.sanity
 @pytest.mark.fast
 @pytest.mark.timeout(timeout=2800, func_only=True)
-def test_first_time_booted(emulator):
+def test_first_time_booted(emulator, record_property):
     """Make sure the emulator status is set to booted."""
 
     emulator.stop()
@@ -112,7 +112,9 @@ def test_first_time_booted(emulator):
 
     logging.info("Wating for it to boot up ...")
 
-    assert check_has_booted_notification(emulator, timeout=1080)
+    boot_time = get_booted_notification_time(emulator, timeout=1080)
+    assert boot_time is not None
+    record_property("emulator_boot_time", boot_time)
 
     logging.info("Wating for it to stablize ...")
 
@@ -221,4 +223,4 @@ def test_emulator_should_idle(emulator):
 @pytest.mark.timeout_win(timeout=60)
 def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
     assert avd.has_booted()
-    assert check_has_booted_notification(avd, timeout=10)
+    assert get_booted_notification_time(avd, timeout=10) is not None
