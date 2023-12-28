@@ -339,8 +339,8 @@ def add_logcat(testcase: ET, logcat_file: Path):
         logging.warning(f"Couldn't find logcat file '{logcat_file.stem}'")
         return
 
-        with open(logcat_file, 'r') as file:
-            logcat_content = file.read()
+    with open(logcat_file, 'r') as file:
+        logcat_content = file.read()
 
     log_levels = 'IWE'  # Debug (D), Error (E), Info (I), Warning (W), Verbose (V).
     name = testcase.get('name')
