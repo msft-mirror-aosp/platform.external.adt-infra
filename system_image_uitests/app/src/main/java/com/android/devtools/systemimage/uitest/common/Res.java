@@ -174,6 +174,7 @@ public class Res {
     public static final String ANDROID_BUTTON_ONE = "android:id/button1";
     public static final String ANDROID_BUTTON_TWO = "android:id/button2";
     public static final String ANDROID_WIFI_SUMMARY_RES = "com.android.systemui:id/wifi_connected_summary";
+    public static final String ANDROID_DONE_BUTTON_RES = "com.android.systemui:id/done_button";
 
     // Android TV Resources.
     public static final String TV_LAUNCHER = "com.google.android.tvlauncher:id/button_icon";
