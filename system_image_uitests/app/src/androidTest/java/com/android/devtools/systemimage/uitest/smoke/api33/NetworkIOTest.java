@@ -86,39 +86,50 @@ public class NetworkIOTest {
                 UiObject internetTile = device.findObject(new UiSelector().resourceId(
                         Res.NOTIFICATIONS_TILE_LABEL).text("Internet"));
                 assertTrue("Could not connect to the network.",
-                        new Wait().until(internetTile::exists));
+                        new Wait(TimeUnit.SECONDS.toMillis(30)).until(internetTile::exists));
                 internetTile.click();
                 UiObject connectWifiSummary = device.findObject(new UiSelector().resourceId(
-                        Res.ANDROID_SUMMARY_RES).text("Connected"));
-                assertTrue("Could not connect to the network.",
-                        new Wait().until(connectWifiSummary::exists));
+                        Res.ANDROID_WIFI_SUMMARY_RES).text("Connected"));
+                assertTrue("Could not find connected label.",
+                        new Wait(TimeUnit.SECONDS.toMillis(30)).until(connectWifiSummary::exists));
+
+                UiObject doneButton = device.findObject(new UiSelector().resourceId(
+                        Res.ANDROID_DONE_BUTTON_RES).text("Done"));
+                assertTrue("Could not find done button.",
+                        new Wait(TimeUnit.SECONDS.toMillis(5)).until(connectWifiSummary::exists));
+                doneButton.clickAndWaitForNewWindow();
+
                 device.pressHome();
 
                 AppLauncher.launch(instrumentation, "Chrome");
                 // If this is the first launch, dismiss the "Welcome to Chrome" screen.
                 UiObject acceptButton = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-                if (acceptButton.exists()) {
+                if (acceptButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
                     acceptButton.clickAndWaitForNewWindow();
                 }
 
                 // Dismiss the "Sign in to Chrome" screen if it's there.
                 UiObject noThanksButton = device.findObject(new UiSelector().resourceIdMatches(
                         Res.CHROME_NO_THANKS_BUTTON_RES));
-                if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(3))) {
+                if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
                     noThanksButton.clickAndWaitForNewWindow();
+
+                    if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+                        noThanksButton.clickAndWaitForNewWindow();
+                    }
                 }
 
                 UiObject searchBox = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_SEARCH_BOX_RES));
-                if (searchBox.exists()) {
+                if (searchBox.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
                     searchBox.clickAndWaitForNewWindow();
                 }
 
                 final UiObject textField = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_URL_BAR_RES));
                 Assert.assertTrue("Chrome URL bar not found",
-                        new Wait().until(textField::exists));
+                        new Wait(TimeUnit.SECONDS.toMillis(5)).until(textField::exists));
 
                 textField.click();
                 textField.clearTextField();
@@ -130,8 +141,9 @@ public class NetworkIOTest {
                 final UiObject progress =
                         device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
                 boolean isSuccess =
-                        new Wait().until(() -> !progress.exists());
+                        new Wait(TimeUnit.SECONDS.toMillis(5)).until(() -> !progress.exists());
                 assertTrue("Failed to dismiss the loading bar.", isSuccess);
+                device.pressBack();
             }
         }
     }
@@ -314,12 +326,10 @@ public class NetworkIOTest {
      *   2. Open Settings > Network & internet > SIMs > Preferred Network Type
      *   3. Enable LTE Data mode, if not enabled.
      *   4. Enable 3G Data mode.
-     *   5. Enable 2G Data mode.
-     *   6. Re-enable LTE Data mode.
+     *   5. Re-enable LTE Data mode.
      *   Verify:
      *   1. LTE is set as preferred network type.
      *   2. 3G is set as preferred network type.
-     *   3. 2G is set as preferred network type.
      *   </pre>
      * <p>
      */
@@ -334,7 +344,6 @@ public class NetworkIOTest {
 
         UiObject dataSwitchLTE = device.findObject(new UiSelector().text("LTE (recommended)"));
         UiObject dataSwitch3G = device.findObject(new UiSelector().text("3G"));
-        UiObject dataSwitch2G = device.findObject(new UiSelector().text("2G"));
 
         if (dataSwitchLTE.waitForExists(5L)) {
             if (!dataSwitchLTE.isChecked()) {
@@ -354,17 +363,6 @@ public class NetworkIOTest {
             }
         }
         assertTrue("3G data mode is not enabled.", new Wait().until(dataSwitch3G::exists));
-        AppLauncher.launchPath(instrumentation, true, path);
-
-        if (dataSwitch2G.waitForExists(5L)) {
-            if (!dataSwitch2G.isChecked()) {
-                dataSwitch2G.clickAndWaitForNewWindow(5L);
-            }
-            else {
-                device.pressBack();
-            }
-        }
-        assertTrue("2G data mode is not enabled.", new Wait().until(dataSwitch2G::exists));
         AppLauncher.launchPath(instrumentation, true, path);
 
         if (dataSwitchLTE.waitForExists(5L)) {

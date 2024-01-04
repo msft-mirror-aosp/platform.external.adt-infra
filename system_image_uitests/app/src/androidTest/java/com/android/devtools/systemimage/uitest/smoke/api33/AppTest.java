@@ -35,6 +35,7 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.AppWatcher;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -73,7 +74,7 @@ public class AppTest {
      * <p/>
      */
     @Test
-    @TestInfo(id = "14578823")
+    @Ignore("Covered by CTS. Move to FAT")
     public void installAppAndLaunch() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
@@ -127,7 +128,7 @@ public class AppTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "14578831")
+    @Ignore("Covered by FAT")
     public void bookmarkWebSiteInBrowser() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = UiDevice.getInstance(instrumentation);

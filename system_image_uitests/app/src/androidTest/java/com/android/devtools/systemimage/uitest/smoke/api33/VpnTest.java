@@ -31,6 +31,7 @@ import com.android.devtools.systemimage.uitest.utils.VpnTestUtil;
 import com.android.devtools.systemimage.uitest.watchers.VpnPopupWatcher;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -68,7 +69,7 @@ public class VpnTest {
      * <p/>
      */
     @Test
-    @TestInfo(id = "14578822")
+    @Ignore("Bug: 317918808 - No 'Install anyway' button element listed in the XML hierarchy")
     public void testVpn() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();

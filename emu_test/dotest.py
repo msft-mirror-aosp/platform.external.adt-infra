@@ -22,6 +22,8 @@ from subprocess import PIPE, check_call, CalledProcessError
 import xml.etree.ElementTree as ET
 import lxml.etree as LET
 import base64
+import glob
+from pathlib import Path
 
 
 # Add parent directory to current module. Then, emu_test module is recognized.
@@ -214,10 +216,7 @@ def printHtml(emu_args):
     if not os.path.exists(gradle_report_path):
         logger.info('Failed to find gradle report path.')
         return
-    xml_files = []
-    for filename in os.listdir(gradle_report_path):
-        if filename.endswith('.xml'):
-            xml_files += [os.path.join(gradle_report_path, filename)]
+    xml_files = sorted(Path(gradle_report_path).glob('*.xml'))
     if not xml_files:
         logger.info('No gradle XML reports found.')
         return
@@ -234,11 +233,11 @@ def printHtml(emu_args):
     xml_report_testsuite = ET.SubElement(xml_report, 'testsuite')
     xml_report_testsuite.set('name', xml_report_name)
     errors = tests = failures = skipped = times = 0
-    for xml_file in sorted(xml_files):
+    for xml_file in xml_files:
         try:
             tree = ET.parse(xml_file)
         except ET.ParseError as err:
-            logger.info('Xml parser ' + err.msg + ' (' + os.path.basename(xml_file) + ')')
+            logger.info('Xml parser ' + err.msg + ' (' + xml_file.name + ')')
             continue
         testsuite = tree.getroot()
         tests += int(testsuite.get('tests', 0))
@@ -248,6 +247,7 @@ def printHtml(emu_args):
         times += float(testsuite.get('time', 0.))
 
         classname = testsuite.get('name').split('.')[-1]
+        logcat_file = xml_file.with_name(xml_file.stem + '_logcat.txt')
         available_report_folders = next(os.walk(gradle_report_path))[1]
         detailed_report_folder = [folder for folder in available_report_folders \
                                         if classname in folder and '_details' in folder]
@@ -285,6 +285,7 @@ def printHtml(emu_args):
                                 base64enc = base64.b64encode(img.read())
                                 screenshot.set('base64', base64enc.decode('utf-8'))
 
+            add_logcat(testcase, logcat_file)  # Add logcat info to the testcase tree.
             xml_report_testsuite.append(testcase)
 
     xml_report_testsuite.set('tests', str(tests))
@@ -311,6 +312,51 @@ def printHtml(emu_args):
     else:
         html_result.write(html_report_filepath)
         logger.info("Created file '%s'", html_report_filepath)
+
+
+def add_logcat(testcase: ET, logcat_file: Path):
+    """Add logcat information to the testcase tree.
+
+    Args:
+        testcase (xml.etree.ElementTree.Element): testcase element tree.
+        logcat_file (Path): path to the logcat (class) file.
+
+    Notes:
+        The default behavior of the AndroidJUnit4 XML renderer is to omit
+        writing stdout output for passed tests in the XML JUnit reports.
+        This method adds a new XML element, system-out, to test_report.xml
+        for passed test cases and test cases not included in ignored_testcases.
+        Only log entries of types log_levels are written.
+    """
+    subelements = set([child.tag for child in testcase])
+    ignored_testcases = {'failure', 'error', 'skipped'}
+    if subelements & ignored_testcases:
+        # Don't add logcat info to testcases types in `ignored_testcases`
+        return
+
+    logcat_content = ''
+    if not logcat_file.exists():
+        logging.warning(f"Couldn't find logcat file '{logcat_file.stem}'")
+        return
+
+    with open(logcat_file, 'r') as file:
+        logcat_content = file.read()
+
+    log_levels = 'IWE'  # Debug (D), Error (E), Info (I), Warning (W), Verbose (V).
+    name = testcase.get('name')
+    start_tag = f'TestRunner: started: {name}'
+    end_tag = f'TestRunner: finished: {name}'
+    testcase_regex = re.compile(fr'(?sm)^[^\n]+{re.escape(start_tag)}.*?{re.escape(end_tag)}')
+    match = testcase_regex.search(logcat_content)
+
+    if match:
+        entries = match.group().strip().split('\n')
+        logcat_pattern = re.compile(r'^\S+\s+\S+\s+\d+\s+\d+\s+[' + log_levels + ']\s+.*')
+        # Filter entries that match `log_level`
+        filtered_entries = [entry for entry in entries if logcat_pattern.search(entry)]
+        ET.SubElement(testcase, 'system-out').text = '\n'.join(filtered_entries)
+    else:
+        logging.warning(f"Couldn't find entries for test '{name}' in file '{logcat_file}'")
 
 
 def setupLogger():
