@@ -41,11 +41,15 @@ public class GoogleAppUtil {
     }
 
     private static final int api = SystemUtil.getApiLevel();
-    private static final String email = "demo.sysimg.user1@gmail.com";
-    private static final String password = "00iw9dttff";
+    private static final String email = "sysimgui.tester1@gmail.com";
+    private static final String password = "qc0yl3z2zz";
 
-    public String getTestUserEmail() {
+    public static String getUserEmail() {
         return email;
+    }
+
+    public static String getUserPassword() {
+        return password;
     }
 
     /**
@@ -82,7 +86,7 @@ public class GoogleAppUtil {
         UiObject chromePositiveButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_POSITIVE_BUTTON_RES));
 
-        UiObject testUserEmail = device.findObject(new UiSelector().text(email));
+        UiObject testUserEmail = device.findObject(new UiSelector().text(getUserEmail()));
         UiObject accountSelectionMark = device.findObject(new UiSelector().resourceId(
                 Res.CHROME_ACCOUNT_SELECTION_MARK_RES));
         UiObject continueButton = device.findObject(
@@ -166,7 +170,7 @@ public class GoogleAppUtil {
 
         Log.i("Login", "enter email");
         editInput.clearTextField();
-        editInput.setText(email);
+        editInput.setText(getUserEmail());
         clickNext(device);
 
         UiObject forgotPasswordLink;
@@ -192,7 +196,7 @@ public class GoogleAppUtil {
         }
 
         Log.i("Login", "enter password");
-        editInput.setText(password);
+        editInput.setText(getUserPassword());
         clickNext(device);
 
         boolean isSignedIn =
@@ -294,7 +298,7 @@ public class GoogleAppUtil {
 
         if (api >= 31) {
             final UiObject emailLabel = device.findObject(
-                    new UiSelector().text(email).resourceId(Res.ANDROID_SUMMARY_RES));
+                    new UiSelector().text(getUserEmail()).resourceId(Res.ANDROID_SUMMARY_RES));
             if (new Wait().until(emailLabel::exists)) {
                 emailLabel.clickAndWaitForNewWindow();
             }
@@ -318,7 +322,7 @@ public class GoogleAppUtil {
 
         for (int i = 0; i < 3; i++) {
             UiObject loggedInUser =
-                    device.findObject(new UiSelector().text(email));
+                    device.findObject(new UiSelector().text(getUserEmail()));
             if (new Wait().until(loggedInUser::exists)) {
                 loggedInUser.clickAndWaitForNewWindow();
             }
@@ -348,6 +352,12 @@ public class GoogleAppUtil {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
         AppLauncher.launch(instrumentation, "Chrome");
+
+        UiObject addAccountToDeviceButton = device.findObject(
+                new UiSelector().resourceId("com.android.chrome:id/signin_fre_continue_button"));
+        if (addAccountToDeviceButton.waitForExists(TimeUnit.SECONDS.toMillis(20))) {
+            addAccountToDeviceButton.clickAndWaitForNewWindow();
+        }
 
         UiObject termsAcceptButton = device.findObject(new UiSelector().
                 resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
@@ -410,9 +420,5 @@ public class GoogleAppUtil {
         if (noThanksButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             noThanksButton.clickAndWaitForNewWindow();
         }
-    }
-
-    public static String getUserEmail() {
-        return email;
     }
 }

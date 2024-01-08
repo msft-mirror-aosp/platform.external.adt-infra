@@ -23,8 +23,10 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
-
+import android.widget.FrameLayout;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
@@ -32,6 +34,7 @@ import com.android.devtools.systemimage.uitest.utils.ApiDemosInstaller;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
+import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
@@ -42,6 +45,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -63,7 +68,7 @@ public class SettingsTest {
     // Tests under this class takes up to 240 seconds depending on the performance of the bot the
     // tests run on.
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(360);
+    public Timeout globalTimeout = Timeout.seconds(720);
 
     @Before
     public void activateDeviceAdmin() throws Exception {
@@ -416,6 +421,151 @@ public class SettingsTest {
         String timezoneOffset = "GMT-08:00";
         assertTrue("Target time zone label not found",
                 device.findObject(new UiSelector().textContains(timezoneOffset)).waitForExists(3L));
+    }
+    
+    /**
+     * Verifies that the user can register the device from Google Settings.
+     * <p>
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > Google
+     *   3. Check if user account is registered to the device.
+     *   4. Remove Google account if logged in.
+     *   5. Log in user account from Settings > Google.
+     *   Verify:
+     *   User Google account has been successfully logged in.
+     *   </pre>
+     */
+    @Test
+    public void testGoogleLoginSettings() throws Exception {
+        String userEmail = GoogleAppUtil.getUserEmail();
+        String userPassword = GoogleAppUtil.getUserPassword();
+
+        AppLauncher.launchPath(
+                    instrumentation, true, "Settings", "Google");
+
+        final UiObject userLoginInfo = device.findObject(
+                new UiSelector().
+                        resourceId(Res.GOOGLE_SERVICES_DESCRIPTION_BUTTON_RES).
+                        className(TextView.class).
+                        text(userEmail)
+                );
+
+        if (new Wait(30000L).until(userLoginInfo::exists)
+                && SettingsUtil.verifyGoogleAccountStatus(device, userEmail)) {
+            userLoginInfo.clickAndWaitForNewWindow();
+            assertTrue("Google account could not be removed.",
+                    SettingsUtil.removeGoogleAccount(device, userEmail));
+
+            final UiObject passwordsLabel = device.findObject(
+                    new UiSelector().
+                            resourceId(Res.SETTINGS_COLLAPSING_TOOLBAR_RES).
+                            description("Passwords & accounts").
+                            className(FrameLayout.class)
+            );
+
+            assertTrue("Passwords & accounts label not found.",
+                    new Wait(1000L).until(passwordsLabel::exists));
+
+            device.pressBack();
+        }
+
+        final UiObject googleAccountButton = device.findObject(
+                new UiSelector().resourceId(Res.GOOGLE_ACCOUNT_BUTTON_RES));
+
+        assertTrue("Google account button not found.",
+                new Wait(5000L).until(googleAccountButton::exists)
+        );
+
+        googleAccountButton.clickAndWaitForNewWindow();
+        TimeUnit.SECONDS.sleep(60);
+
+        final UiObject forgotEmail = device.findObject(
+                new UiSelector().
+                        text("Forgot email?").
+                        className(Button.class));
+
+        assertTrue("Forgot email label not found.",
+                new Wait(10000L).until(forgotEmail::exists)
+        );
+
+        final UiObject googleEmailInput = device.findObject(
+                new UiSelector().
+                        resourceId("identifierId").
+                        className(EditText.class));
+
+        assertTrue("Google account email input not found.",
+                new Wait(1000L).until(googleEmailInput::exists)
+        );
+
+        googleEmailInput.clearTextField();
+        googleEmailInput.setText(userEmail);
+
+        final UiObject nextButton = device.findObject(
+                new UiSelector().
+                        text("Next").
+                        className(Button.class));
+
+        assertTrue("Next button not found after email.",
+                new Wait(10000L).until(nextButton::exists)
+        );
+
+        nextButton.clickAndWaitForNewWindow();
+        TimeUnit.SECONDS.sleep(30);
+
+        final UiObject showPassword = device.findObject(
+                new UiSelector().
+                        text("Show password").
+                        className(TextView.class));
+
+        assertTrue("Show password label not found.",
+                new Wait(10000L).until(showPassword::exists)
+        );
+
+        final UiObject googlePasswordInput = device.findObject(
+                new UiSelector().
+                        className(EditText.class));
+
+        assertTrue("Google account password input not found.",
+                new Wait(10000L).until(googlePasswordInput::exists)
+        );
+
+        googlePasswordInput.clearTextField();
+        googlePasswordInput.setText(userPassword);
+
+        assertTrue("Next button not found after password.",
+                new Wait(10000L).until(nextButton::exists));
+
+        nextButton.clickAndWaitForNewWindow();
+
+        final UiObject iAgreeButton = device.findObject(
+                new UiSelector().
+                        text("I agree").
+                        className(Button.class));
+
+        assertTrue("Agree button not found.",
+                new Wait(30000L).until(iAgreeButton::exists)
+        );
+
+        iAgreeButton.clickAndWaitForNewWindow();
+
+        final UiObject googleServicesLabel = device.findObject(
+                new UiSelector().
+                        text("Google services").
+                        resourceId(Res.GOOGLE_SERVICES_LABEL_RES).
+                        className(TextView.class));
+
+        assertTrue("Logged in Google Services not found.",
+                new Wait(60000L).until(googleServicesLabel::exists)
+        );
+
+        AppLauncher.launchPath(
+                instrumentation, true, "Settings", "Google");
+
+        assertTrue("User login not confirmed",
+                new Wait(30000L).until(userLoginInfo::exists) &&
+                        SettingsUtil.verifyGoogleAccountStatus(device, userEmail));
     }
 
     /**
