@@ -15,6 +15,7 @@ import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
