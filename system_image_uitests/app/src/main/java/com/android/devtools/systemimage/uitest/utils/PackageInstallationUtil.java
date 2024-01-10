@@ -152,7 +152,9 @@ public class PackageInstallationUtil {
             if (allowSwitch.waitForExists(3000)) {
                 if (allowSwitch.getText().equals("OFF") || !allowSwitch.isChecked()) {
                     allowSwitch.click();
-                    device.pressBack();
+                    if (SystemUtil.getApiLevel() < 33) {
+                        device.pressBack();
+                    }
                     return true;
                 }
             }
@@ -199,7 +201,7 @@ public class PackageInstallationUtil {
                 className("android.widget.Button"));
 
         boolean hasSettings = settingsButton.waitForExists(TimeUnit.MILLISECONDS.convert(
-                INSTALL_WAIT, TimeUnit.SECONDS));
+                INSTALL_WAIT*2, TimeUnit.SECONDS));
 
         if (hasSettings || !isV2[0]) {
             if (!allowInstallation(device)) {
@@ -229,17 +231,20 @@ public class PackageInstallationUtil {
 
                 final UiObject unsafeAppDetailsButton = device.findObject(new UiSelector().
                 text("More details").packageName(Res.GOOGLE_PLAY_VENDING_RES));
-        if (unsafeAppDetailsButton.waitForExists(10000)) {
+        if (unsafeAppDetailsButton.waitForExists(10000L)) {
             unsafeAppDetailsButton.clickAndWaitForNewWindow();
         }
 
         final UiObject installAnywayButton = device.findObject(new UiSelector().
-                text("Install anyway").packageName(Res.GOOGLE_PLAY_VENDING_RES));
-        if (installAnywayButton.waitForExists(5L)) {
+                textContains("Install anyway").packageName(Res.GOOGLE_PLAY_VENDING_RES));
+        if (installAnywayButton.waitForExists(5000L)) {
             installAnywayButton.clickAndWaitForNewWindow();
         }
 
-        if (!hasInstallButton) {
+        boolean finalHasInstallButton = hasInstallButton;
+        boolean isInstallationSuccess = new Wait(INSTALL_WAIT*12).
+                until(() -> finalHasInstallButton);
+        if (!isInstallationSuccess) {
             result.append("Could not find install button.");
         }
 
@@ -256,7 +261,7 @@ public class PackageInstallationUtil {
         final UiObject doneButtonRes = device.findObject(new UiSelector().resourceId(Res.PACKAGE_INSTALL_DONE_RES));
         final UiObject doneLabel = device.findObject(new UiSelector().text("App installed."));
 
-        boolean installationSuccess = new Wait(INSTALL_WAIT * 12L).
+        boolean installationSuccess = new Wait(INSTALL_WAIT*12).
                 until(() -> doneButtonText.exists() || doneButtonRes.exists() || doneLabel.exists());
 
         if (installationSuccess) {

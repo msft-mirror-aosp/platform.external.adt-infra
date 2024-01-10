@@ -248,14 +248,17 @@ public class SettingsUtil {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        SettingsUtil.openItem(instrumentation, appText);
-
-        SettingsUtil.clickAdvancedMenu(device);
+        if (SystemUtil.getApiLevel() <= 32) {
+            SettingsUtil.openItem(instrumentation, appText);
+            SettingsUtil.clickAdvancedMenu(device);
+        } else {
+            AppLauncher.launchPath(instrumentation, true, "Settings", appText);
+        }
 
         UiObject seeAllApps = device.findObject(new UiSelector()
                 .textContains("See all"));
 
-        if (seeAllApps.waitForExists(3L)) {
+        if (seeAllApps.waitForExists(5000L)) {
             seeAllApps.clickAndWaitForNewWindow();
         } else {
             seeAllApps = device.findObject(new UiSelector()
@@ -288,7 +291,8 @@ public class SettingsUtil {
             }
         }
 
-        throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
+        throw new UiObjectNotFoundException(
+                "Failed to find the item " + (appType) + ":" + (appText) + " in App permissions.");
     }
 
     /**
