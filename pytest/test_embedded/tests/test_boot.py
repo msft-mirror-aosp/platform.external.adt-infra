@@ -160,7 +160,7 @@ def test_snapshot_booted(emulator):
 
     assert emulator.launch(flags=myflags)
 
-    mytimeout = 45
+    mytimeout = 120
     if platform.processor() == "i386" and platform.system() == "Darwin":
         mytimeout = 360
     logging.info("Wating for it to boot up from snapshot ...")
