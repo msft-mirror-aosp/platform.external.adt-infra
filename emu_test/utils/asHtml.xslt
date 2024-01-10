@@ -87,8 +87,9 @@ span.closed { color: #808080; }
 .error {background-color: #ffffff; color: #720808;}
 .skip {background-color: #ffffff; color: #d1c10f;}
 
-li.passed {color: #002000;}
-li.failed {color: #200000;}
+li.passed {color: #002000; margin-left: 25px;}
+li.failed {color: #200000; margin-left: 25px;}
+li.skipped {margin-left: 25px;}
 span.comment { color:#000000; font-style: italic;}
 
 span.crc {
@@ -102,15 +103,17 @@ span.crc {
 span.buttonskip {
             font-family: monospace;
             margin-top: 10px;
-            border: 1px solid black;
+            border: 1px solid #aaa;
             padding: 0 2px;
             margin-right: 2px;
+            background-color: #ffffaa;
+            cursor: pointer;
 }
 span.buttonpassed {
             font-family: monospace;
             margin-top: 10px;
             background-color: #aaffaa;
-            border: 1px solid black;
+            border: 1px solid #aaa;
             padding: 0 2px;
             margin-right: 2px;
             cursor: pointer;
@@ -119,7 +122,7 @@ span.buttonfailed {
         font-family: monospace;
         margin-top: 10px;
         background-color: #ffaaaa;
-        border: 1px solid black;
+        border: 1px solid #aaa;
         padding: 0 2px;
         margin-right: 2px;
         cursor: pointer;
@@ -128,7 +131,7 @@ span.buttonerror {
         font-family: monospace;
         margin-top: 10px;
         background-color: #dd5d5d;
-        border: 1px solid black;
+        border: 1px solid #aaa;
         padding: 0 2px;
         margin-right: 2px;
         cursor: pointer;
@@ -214,6 +217,21 @@ li.collapsable {
     max-height: 600px;
 }
 
+.skip-text {
+    text-align: left;
+    border: 0px;
+    border: solid 1px #ddd;
+    margin-left: 17px;
+    font-size: 13px;
+    overflow-x: auto;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    background-color: #fff3cd;
+    color: #333;
+    padding: 12.5 30 10 10;
+    width: max-content;
+}
+
 .image-box {
     height:600px;
 }
@@ -289,17 +307,15 @@ function goto_id(id) {
                 <h1 style="text-align: left">Test Results for:
                     <xsl:value-of select="@name"/>
                 </h1>
-                <p> TOTAL=
-                    <xsl:value-of select="@tests"/>
-, <font class="pass"> PASSED </font>=
-                    <xsl:value-of select="@tests - @failures - @errors - @skipped"/>
-, <font class="fail"> FAILED </font>=
-                    <xsl:value-of select="@failures"/>
-, <font class="error"> ERRORS </font>=
-                    <xsl:value-of select="@errors"/>
-, SKIPPED=
-                    <xsl:value-of select="@skipped"/>
-                </p>
+                <strong>
+                    <p>
+                        TOTAL=&#160;<xsl:value-of select="@tests"/>&#160;,
+                        <font class="pass">PASSED=&#160;<xsl:value-of select="@tests - @failures - @errors - @skipped"/>&#160;</font>,
+                        <font class="fail">FAILED=&#160;<xsl:value-of select="@failures"/>&#160;</font>,
+                        <font class="error">ERRORS=&#160;<xsl:value-of select="@errors"/>&#160;</font>,
+                        <font class="skip">SKIPPED=&#160;<xsl:value-of select="@skipped"/>&#160;</font>
+                    </p>
+                </strong>
                 <!-- SUMMARY SQUARES SECTION -->
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
@@ -314,10 +330,36 @@ function goto_id(id) {
                     </xsl:variable>
                     <span class="{$buttonclass}" onClick="goto_id('tst{$id}l')">
                         <xsl:value-of select="$fid"/>
-                    </span>
+                    </span>&#160;
                 </xsl:for-each>
-                <!-- TESTS SECTION -->
-                <h2>tests</h2>
+                <!-- Ignored Tests Section -->
+                <div style="margin-top: 30px;">
+                    <h2>Ignored tests (<xsl:value-of select="count(testcase/skipped)"/>)</h2>
+                    <ul>
+                        <xsl:for-each select="testcase">
+                        <xsl:variable name="id" select="position()"/>
+                        <xsl:variable name="fid" select=" format-number($id, '000')"/>
+                            <xsl:choose>
+                                <xsl:when test="skipped">
+                                    <li>
+                                <span class="buttonskip" style="cursor: default; padding: 0 4; margin-right: 8px;">
+                                    <xsl:value-of select="$fid"/>
+                                </span>
+
+                                <xsl:value-of select="@classname"/>
+.
+                                <xsl:value-of select="@name"/>
+
+                                <font style="margin-left: 8px; color: #666666;">[<xsl:value-of select="skipped/@message"/>]</font>
+                                    </li>
+                                </xsl:when>
+                            </xsl:choose>
+                        </xsl:for-each>
+                    </ul>
+                </div>
+                <!-- TESTS RESULTS SECTION -->
+                <div style="margin-top: 20px">
+                <h2>All tests results</h2>
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
                     <xsl:variable name="fid" select="format-number($id, '000')"/>
@@ -378,16 +420,19 @@ function goto_id(id) {
                         </xsl:when>
                         <xsl:when test="skipped">
                             <li class="skipped" id="tst{$id}l">
-                                <span id="tst{$id}" class="buttonskip" >&#160;
-                                    <xsl:value-of select="$fid"/>&#160;
-                                </span>
-                                        &#160;
+                                <span id="tst{$id}+" class="buttonskip" onClick="show('tst{$id}')">+
+                                    <xsl:value-of select="$fid"/>
+                                    +</span>
+                                <span id="tst{$id}-" class="buttonskip" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
+                                    -
+                                    <xsl:value-of select="$fid"/>
+                                    -</span>&#160;
                                 <xsl:value-of select="@classname"/>
-.
+                                .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment skipped" id="tst{$id}" style="position: absolute; visibility: hidden;">
-                                    <pre>
-                                        <xsl:value-of select="."/>
+                                <span id="tst{$id}" style="position: absolute; visibility: hidden;">
+                                    <pre class="skip-text" >
+                                        <xsl:value-of select="skipped/@message"/>
                                     </pre>
                                 </span>
                             </li>
@@ -417,8 +462,9 @@ function goto_id(id) {
                             </li>
                         </xsl:otherwise>
                     </xsl:choose>
-                </xsl:for-each>
-            <script charset="utf-8">
+                  </xsl:for-each>
+                  </div>
+              <script charset="utf-8">
                 function embed_attachments() {
                     <xsl:for-each select="testcase">
                         <xsl:variable name="id" select="position()"/>
