@@ -254,8 +254,6 @@ def write_xml_report(emu_args):
          logger.info('Failed to find gradle report path.')
          return
 
-        logger.info('Failed to find gradle report path.')
-        return
     xml_files = sorted(Path(gradle_report_path).glob('*.xml'))
     if not xml_files:
         logger.info('No gradle XML reports found.')
