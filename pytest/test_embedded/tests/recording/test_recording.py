@@ -28,9 +28,9 @@ from tests.test_utils import StreamingCall
 def screen_service(service):
     """A screen service fixture that will stop any active recording on test completion."""
     screen_service: ScreenRecordingStub = service(ScreenRecordingStub)
-    screen_service.StopRecording(RecordingInfo())
+    screen_service.StopRecording(RecordingInfo(), timeout=10)
     yield screen_service
-    screen_service.StopRecording(RecordingInfo())
+    screen_service.StopRecording(RecordingInfo(), timeout=10)
 
 
 @pytest.mark.timeout(timeout=20, func_only=True)
