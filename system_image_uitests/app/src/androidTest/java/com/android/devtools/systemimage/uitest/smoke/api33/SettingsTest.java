@@ -234,7 +234,7 @@ public class SettingsTest {
 
         final UiObject myLocation;
         myLocation = device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION));
-        if (new Wait().until(myLocation::exists())
+        if (new Wait().until(myLocation::exists))
             myLocation.clickAndWaitForNewWindow();
 
         final UiObject allowForegroundButton = device.findObject(
