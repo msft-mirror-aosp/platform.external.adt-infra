@@ -202,7 +202,6 @@ li.collapsable {
 
 .text-box-passed {
     text-align: left;
-    margin: 0 1px;
     font-size: 13px;
     overflow-x: auto;
     overflow-y: auto;
@@ -261,21 +260,99 @@ li.collapsable {
                 <script language="JavaScript">
 
 function toggle(container, inner_type) {
-    var icon = container.getElementsByClassName("icon")[0];
-    var outer = container.getElementsByClassName("contents")[0];
+    var icon = container.querySelector("icon");
+    var contents = container.getElementsByClassName("contents")[0];
     var inner = container.getElementsByClassName(inner_type)[0];
 
     // toggling icon
-    icon.classList.toggle('fa-angle-right');
-    icon.classList.toggle('fa-angle-down');
+    if (icon != undefined) {
+        icon.classList.toggle('fa-angle-right');
+        icon.classList.toggle('fa-angle-down');
+    }
 
     // toggling contents
-    if (outer.style.display === "none") {
-        outer.style.display = "block";
+   if (contents.style.display === "none") {
+        contents.style.display = "block";
         inner.style.display = "block";
     } else {
-        outer.style.display = "none";
+        contents.style.display = "none";
         inner.style.display = "none";
+    }
+}
+
+/**
+ * Extract the testcase logcat from the class logcat
+ * @param {string} filename - logcat (class) filename
+ * @param {string} testname - testcase name
+ */
+async function extractLogcat(filename, testname) {
+
+    const currentUrl = window.location.href;
+    const currentPath = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+    const logcatUrl = currentPath + filename;
+
+    try {
+        // Fetch the content from the provided URL
+        const response = await fetch(logcatUrl);
+
+        if (!response.ok) {
+            console.error('Failed to fetch the filepath.');
+            return '';
+        }
+
+        // Read the content from the response
+        const fileContent = await response.text();
+
+        // Find the indexes of the start and ending lines
+        const startTag = 'TestRunner: started: ' + testname;
+        const endTag = 'TestRunner: finished: ' + testname;
+        const startIndex = fileContent.lastIndexOf(startTag);
+        const startLineIndex = fileContent.lastIndexOf('\n', startIndex) + 1;
+        const endIndex = fileContent.indexOf(endTag, startIndex);
+        const endLineIndex = fileContent.indexOf('\n', endIndex);
+
+        // Check if both start and end lines are found
+        if (startLineIndex === -1 || endLineIndex === -1) {
+            console.error('Start or end tag not found in the logcat file.');
+            return '';
+        }
+
+        const extractedContent = fileContent.slice(startLineIndex, endLineIndex);
+
+        return extractedContent;
+
+    } catch (error) {
+        console.error('Error during fetch:', error.message);
+        return '';
+    }
+
+}
+
+/**
+ * Toggle the state of a button of passed class
+ * @param {HTMLElement} container - parent HTML container
+ * @param {string} id - test number id
+ * @param {string} logcatFile - logcat filepath
+ * @param {string} testname - testcase name
+ */
+async function toggleButtonPassed(container, id, logcatFile, testname) {
+
+    var icons_text = container.querySelectorAll('.icon_txt');
+    icons_text.forEach(function(status) {
+        status.textContent = (status.textContent === '+') ? '-' : '+';
+    });
+
+    var text = document.getElementById('text-' + id);
+    if (text !== null) {
+        // loading/hiding contents
+        if (text.style.display === "none") {
+            const logcat = await extractLogcat(logcatFile, testname);
+            text.textContent = logcat;
+            text.style.display = "block";
+        } else {
+            text.style.display = "none";
+            text.textContent = "";
+        }
     }
 }
 
@@ -286,9 +363,9 @@ function make_hidden(elt) { elt.style.visibility='hidden'; elt.style.position='a
 }
 
 function hide(id) {
-    make_hidden(document.getElementById(id+'-'))
-    make_visible(document.getElementById(id+'+'))
-    make_hidden(document.getElementById(id))
+    make_hidden(document.getElementById(id+'-')); // '-' class placeholder
+    make_visible(document.getElementById(id+'+')); // '+' class placeholder
+    make_hidden(document.getElementById(id)); // stores the actual test container contents
 }
 
 function show(id) {
@@ -439,25 +516,20 @@ function goto_id(id) {
                         </xsl:when>
                         <xsl:otherwise>
                             <li class="passed" id="tst{$id}l">
-                                <span id="tst{$id}+" class="buttonpassed" onClick="show('tst{$id}')">
-                                +
-                                    <xsl:value-of select="$fid"/>
-                                +</span>
-                                <span id="tst{$id}-" class="buttonpassed" onClick="hide('tst{$id}')" style="position: absolute; visibility: hidden;">
-                                -
-                                    <xsl:value-of select="$fid"/>
-                                -</span>&#160;
-                                <xsl:value-of select="@classname"/>
-.
-                                <xsl:value-of select="@name"/>
+                                <div id="tst{$id}" onClick="toggleButtonPassed(this, {$id}, '{@logcat}', '{@name}')" style="display: inline-block">
+                                        <span class="testrow">
+                                            <span class="buttonpassed" style="margin-right: 0.73em">
+                                                <span class="icon_txt">+</span>
+                                                <span style="margin: 0 .6em"><xsl:value-of select="$fid"/></span>
+                                                <span class="icon_txt">+</span>
+                                            </span>
+                                            <xsl:value-of select="@classname"/> . <xsl:value-of select="@name"/>
+                                        </span>
+                                </div>
                                 <div style="clear: both;"></div>
-                                <span id="tst{$id}" style="position: absolute; visibility: hidden;">
-                                    <div class="embedding">
-                                        <pre class="text-box-passed" id="text-{$id}">
-                                            <xsl:value-of select="./*"/>
-                                        </pre>
-                                    </div>
-                                </span>
+                                <div class="embedding" style="margin-bottom: 0px; border: 0px">
+                                    <pre class="text-box-passed" id="text-{$id}" style="display:none"></pre>
+                                </div>
                                 <div style="clear: both;"></div>
                             </li>
                         </xsl:otherwise>
