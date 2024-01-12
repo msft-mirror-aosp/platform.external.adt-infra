@@ -301,7 +301,7 @@ def write_xml_report(emu_args):
         for testcase in testcases:
             testcase.set('classname', testcase.get('classname') \
                                               .replace('com.android.devtools.', ''))
-            testcase.set('logcat', logcat_path)
+            testcase.set('logcat', logcat_path.name)
             testcase_log_path = test_log_path / testcase.get('name')
 
             # For ignored testcases, add the ignore reason as the 'message' property
