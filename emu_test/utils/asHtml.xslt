@@ -409,6 +409,12 @@ function goto_id(id) {
                         <xsl:value-of select="$fid"/>
                     </span>&#160;
                 </xsl:for-each>
+                <h3 style="margin: 20 0 0 0">
+                    <font style="color: red">
+                        <span style="margin-right: 3px">API: </span>
+                        <xsl:value-of select="substring-before(//testsuites/properties/property[@name='device']/@value,'(AVD)')"/>
+                    </font>
+                </h3>
                 <!-- Ignored Tests Section -->
                 <div style="margin-top: 30px;">
                     <h2>Ignored tests (<xsl:value-of select="count(testcase/skipped)"/>)</h2>
