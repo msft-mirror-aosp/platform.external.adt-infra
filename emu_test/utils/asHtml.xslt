@@ -332,10 +332,8 @@ async function extractLogcat(filename, testname) {
  * Toggle the state of a button of passed class
  * @param {HTMLElement} container - parent HTML container
  * @param {string} id - test number id
- * @param {string} logcatFile - logcat filepath
- * @param {string} testname - testcase name
  */
-async function toggleButtonPassed(container, id, logcatFile, testname) {
+async function toggleButtonPassed(container, id) {
 
     var icons_text = container.querySelectorAll('.icon_txt');
     icons_text.forEach(function(status) {
@@ -346,12 +344,9 @@ async function toggleButtonPassed(container, id, logcatFile, testname) {
     if (text !== null) {
         // loading/hiding contents
         if (text.style.display === "none") {
-            const logcat = await extractLogcat(logcatFile, testname);
-            text.textContent = logcat;
             text.style.display = "block";
         } else {
             text.style.display = "none";
-            text.textContent = "";
         }
     }
 }
@@ -516,7 +511,7 @@ function goto_id(id) {
                         </xsl:when>
                         <xsl:otherwise>
                             <li class="passed" id="tst{$id}l">
-                                <div id="tst{$id}" onClick="toggleButtonPassed(this, {$id}, '{@logcat}', '{@name}')" style="display: inline-block">
+                                <div id="tst{$id}" onClick="toggleButtonPassed(this, {$id})" style="display: inline-block">
                                         <span class="testrow">
                                             <span class="buttonpassed" style="margin-right: 0.73em">
                                                 <span class="icon_txt">+</span>
@@ -528,7 +523,9 @@ function goto_id(id) {
                                 </div>
                                 <div style="clear: both;"></div>
                                 <div class="embedding" style="margin-bottom: 0px; border: 0px">
-                                    <pre class="text-box-passed" id="text-{$id}" style="display:none"></pre>
+                                    <pre class="text-box-passed" id="text-{$id}" style="display: none">
++                                        <xsl:value-of select="system-out"/>
++                                    </pre>
                                 </div>
                                 <div style="clear: both;"></div>
                             </li>
