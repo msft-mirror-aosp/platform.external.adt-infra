@@ -530,8 +530,8 @@ function goto_id(id) {
                                 <div style="clear: both;"></div>
                                 <div class="embedding" style="margin-bottom: 0px; border: 0px">
                                     <pre class="text-box-passed" id="text-{$id}" style="display: none">
-+                                        <xsl:value-of select="system-out"/>
-+                                    </pre>
+                                        <xsl:value-of select="system-out"/>
+                                    </pre>
                                 </div>
                                 <div style="clear: both;"></div>
                             </li>
