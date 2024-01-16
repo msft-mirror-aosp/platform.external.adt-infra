@@ -292,8 +292,8 @@ def write_xml_report(emu_args):
         ignored_testcases_report = test_log_path / 'ignored_tests.xml'
         if ignored_testcases_report.exists():
             try:
-                tree = ET.parse(ignored_testcases_report)
-                ignored_testcases = tree.getroot()
+                ignored_testcases_tree = ET.parse(ignored_testcases_report)
+                ignored_testcases = ignored_testcases_tree.getroot()
             except ET.ParseError as err:
                 logger.info(f"Error parsing XML file '{ignored_testcases_report}': {err}")
                 ignored_testcases= None
@@ -303,6 +303,12 @@ def write_xml_report(emu_args):
                                               .replace('com.android.devtools.', ''))
             testcase.set('logcat', logcat_path.name)
             testcase_log_path = test_log_path / testcase.get('name')
+
+            if xml_report.find('properties') is None:
+                # Append the properties of the first test class to the main xml report
+                properties = ET.SubElement(xml_report, 'properties')
+                testsuite_properties = testsuite.findall('./properties/property')
+                [properties.append(property) for property in testsuite_properties]
 
             # For ignored testcases, add the ignore reason as the 'message' property
             skipped_element = testcase.find('./skipped')
