@@ -757,20 +757,29 @@ public class SettingsUtil {
     /**
      * Report the current Google login status, using the given account name
      *
-     * @param device UiDevice
-     * @param accountName String
+     * @param instrumentation UiInstrumentation
+     * @param userLoginInfo UiObject
      * @return boolean
      */
-    public static boolean verifyGoogleAccountStatus(UiDevice device, String accountName) throws Exception {
-        final UiObject userLoginInfo = device.findObject(
-                new UiSelector().
-                        resourceId(Res.GOOGLE_SERVICES_DESCRIPTION_BUTTON_RES).
-                        className(TextView.class).
-                        text(accountName)
-        );
+    public static boolean verifyGoogleAccountStatus(
+            Instrumentation instrumentation, UiObject userLoginInfo) throws Exception {
 
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        AppLauncher.launchPath(
+                instrumentation, true, "Settings", "Google");
+
+        final UiObject googleAccountLogo = device.findObject(
+                new UiSelector()
+                        .className("android.widget.ImageView")
+                        .resourceId("com.google.android.gms:id/logo"));
+
+        boolean googleAccountLogoExists = new Wait(20000L).until(userLoginInfo::exists);
+        if (googleAccountLogoExists){
+            googleAccountLogo.waitUntilGone(30000L);
+        }
         return new Wait(30000L).until(userLoginInfo::exists);
-    }
+    };
 
     /**
      * Remove the given Google account registration from the device
