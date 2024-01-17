@@ -28,7 +28,7 @@ def tmp_test_file(tmp_path):
 
 @pytest.mark.adb
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/282855106 flaky on mac_aarch64.
-@pytest.mark.skipos('all', 'Test fails on all platforms b/288447852')
+@pytest.mark.skipos('win', 'Test fails on Windows b/288447852')
 def test_adb_push_pull(avd, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"
     avd.adb.push(tmp_test_file, device_file)
