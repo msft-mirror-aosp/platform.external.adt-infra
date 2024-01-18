@@ -468,14 +468,14 @@ public class SettingsTest {
                 new UiSelector().resourceId(Res.GOOGLE_ACCOUNT_BUTTON_RES));
 
         assertTrue("Manage Google account button not found.",
-                new Wait(5000L).until(googleAccountButton::exists));
+                new Wait(5000L).until(manageAccountButton::exists));
 
         manageAccountButton.click();
 
         assertTrue("Manage Google account button not dismissed.",
                 manageAccountButton.waitUntilGone(10000L));
 
-                final UiObject checkingInfoLabel = device.findObject(
+        final UiObject checkingInfoLabel = device.findObject(
                 new UiSelector().resourceId(Res.GOOGLE_LAYOUT_ICON_RES));
 
         assertTrue("Checking info label before email input not found.",
