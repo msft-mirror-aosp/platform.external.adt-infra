@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
+import asyncio
 import mmap
 import os
 import time
@@ -20,10 +20,6 @@ import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat, ImageTransport
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
-
-from emu.timing import eventually
-from tests.benchmark_event_fixtures import benchmark_stat
-from tests.test_utils import StreamingCall
 
 
 def read_pixel(width, height, pack, arr):
@@ -38,7 +34,6 @@ def read_pixel(width, height, pack, arr):
     "win", "reason: b/305252175 - error at setup. Only the parameter [2-1] fails."
 )
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.parametrize(
     "fmt,channel",
@@ -49,7 +44,7 @@ def read_pixel(width, height, pack, arr):
         (ImageFormat.RGB888, ImageTransport.MMAP),
     ],
 )
-def test_stream_screenshot_receives_frames(
+async def test_stream_screenshot_receives_frames(
     animation_app, emulator_controller, tmpdir, fmt, channel
 ):
     """Test that streaming screenshot receives a series of frames."""
@@ -68,66 +63,49 @@ def test_stream_screenshot_receives_frames(
         timeout=5,
     )
 
-    count = 0
+    async def count_10_images():
+        count = 0
+        async for img in stream:
+            count += 1
+            if count >= 10:
+                return
 
-    def receives_at_least_10_frames(img):
-        nonlocal count
-        count += 1
-        return count >= 10
-
-    with StreamingCall(stream) as stream:
-        assert eventually(
-            receives_at_least_10_frames, stream
-        ), "Did not receive 10 frames in within 10 seconds."
+    await asyncio.wait_for(count_10_images(), timeout=4)
 
 
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="animation")
 @pytest.mark.parametrize(
     "w,h",
     [(270, 480), (360, 640), (720, 1280), (810, 1440), (1080, 1920), (1440, 2880)],
 )
-def test_stream_screenshot_perf(
+async def test_stream_screenshot_perf(
     animation_app, emulator_controller, benchmark_stat, pytestconfig, w, h
 ):
     """Test the performance of streaming frames."""
-    # This test can only run if we launched the emulator
     stream = emulator_controller.streamScreenshot(
         ImageFormat(width=w, height=h, format=ImageFormat.RGB888),
     )
-    count = 0
-    dropped = 0
-    timeout = pytestconfig.getoption("stream_test_time") + time.time()
 
-    seq = None
-    with StreamingCall(stream) as stream:
-        # We should get a continous sequence of frames..
+    async def frame_counter():
         start_time = time.time()
-        for img in stream:
+        async for img in stream:
             receive_time = time.time()
             benchmark_stat.update(receive_time - start_time)
-
-            if seq and seq + 1 < img.seq:
-                dropped += img.seq - seq + 1
-            seq = img.seq
-            count += 1
-            if time.time() > timeout:
-                break
             start_time = receive_time
 
-    logging.warning("Received %d frames and dropped %d frames", count, dropped)
-    assert True
+    timeout = pytestconfig.getoption("stream_test_time")
+    with pytest.raises(asyncio.exceptions.TimeoutError):
+        await asyncio.wait_for(frame_counter(), timeout=timeout)
 
 
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="animation")
 @pytest.mark.parametrize(
     "w,h",
     [(270, 480), (360, 640), (720, 1280), (810, 1440), (1080, 1920), (1440, 2880)],
 )
-def test_stream_screenshot_perf_mmap(
+async def test_stream_screenshot_perf_mmap(
     emulator_controller, animation_app, benchmark_stat, pytestconfig, tmpdir, w, h
 ):
     """Test the performance of streaming frames."""
@@ -146,48 +124,37 @@ def test_stream_screenshot_perf_mmap(
             ),
         )
     )
-    count = 0
-    dropped = 0
-    timeout = pytestconfig.getoption("stream_test_time") + time.time()
 
-    seq = None
-    with open(tmp_file, "r+b") as f:
-        # memory-map the file, size 0 means whole file
-        mm = mmap.mmap(f.fileno(), 0)
-        with StreamingCall(stream) as stream:
-            # We should get a continous sequence of frames..
+    async def frame_counter_mmap():
+        with open(tmp_file, "r+b") as f:
+            # memory-map the file, size 0 means whole file
+            mm = mmap.mmap(f.fileno(), 0)
+
             start_time = time.time()
-            for img in stream:
-                # Force a read, as the gRPC call reads all the bytes as well.
-                mm.seek(0)
-                img_bytes = mm.read()
+            async for img in stream:
+                mm.seek(0)  # Let's do something with the bytes..
+                _ = mm.read()
+
                 receive_time = time.time()
                 benchmark_stat.update(receive_time - start_time)
-
-                if seq and seq + 1 < img.seq:
-                    dropped += img.seq - seq + 1
-                seq = img.seq
-                count += 1
-                if time.time() > timeout:
-                    break
                 start_time = receive_time
 
-    logging.warning("Received %d frames and dropped %d frames", count, dropped)
-    assert True
+    timeout = pytestconfig.getoption("stream_test_time")
+    with pytest.raises(asyncio.exceptions.TimeoutError):
+        await asyncio.wait_for(frame_counter_mmap(), timeout=timeout)
 
 
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.skipos("win", "reason: b/305254892 FAILURES | b/305255695 ERRORS at setup")
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "fmt",
     [ImageFormat.RGBA8888, ImageFormat.RGB888],
 )
-def test_screenshot_bytes_size(emulator_controller, fmt):
+async def test_screenshot_bytes_size(emulator_controller, fmt):
     """Test that getScreenshot returns the proper number of bytes."""
-    image = emulator_controller.getScreenshot(
+    image = await emulator_controller.getScreenshot(
         ImageFormat(
             width=360,
             height=640,
@@ -201,22 +168,21 @@ def test_screenshot_bytes_size(emulator_controller, fmt):
 @pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.skipos("win", "reason: b/305258769 - error at setup.")
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_stream_screenshot_should_fail_if_does_not_exist(
+async def test_stream_screenshot_should_fail_if_does_not_exist(
     at_home,
     emulator_controller,
     animation_app,
 ):
     """Verifies b/206033509 streamScreenshot/getScreenshot should fail with INVALID_ARGUMENT if the display doesn't exist"""
     _EMPTY_ = empty_pb2.Empty()
-    cfg = emulator_controller.getDisplayConfigurations(_EMPTY_)
+    cfg = await emulator_controller.getDisplayConfigurations(_EMPTY_)
     non_existing_display = len(cfg.displays) + 1
 
     with pytest.raises(RpcError) as e:
         stream = emulator_controller.streamScreenshot(
             ImageFormat(display=non_existing_display)
         )
-        for img in stream:
+        async for img in stream:
             assert False, "We should never have received an image!"
 
     assert e.value.code() == StatusCode.INVALID_ARGUMENT

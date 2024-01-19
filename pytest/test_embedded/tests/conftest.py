@@ -24,6 +24,7 @@ setup services, state, or other operating environments.
 The fixtures below can be used to bring the emulator to a certain state, or to
 provide access to parts of the emulator.
 """
+import asyncio
 import json
 import logging
 import os
@@ -31,19 +32,18 @@ import platform
 import re
 import sys
 import threading
-import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
+from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 
 from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.images.convert import save_image
 from emu.utils import system_cpu
-from tests.test_utils import StreamingCall
 
 OS_NAME = platform.system().lower()
 AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
@@ -199,7 +199,7 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
             item.own_markers.pop(timeout[0])
 
         item.add_marker(
-            pytest.mark.timeout(timeout=timeout_win_sec, func_only=func_only)
+            pytest.mark.async_timeout(timeout=timeout_win_sec, func_only=func_only)
         )
 
     logging.info("=============== Setup: %s ===============", item.name)
@@ -283,7 +283,7 @@ def pytest_sessionfinish(
     """Stops and remove all running emulators at the end of all tests."""
     for name, emu in pytest.emulators.items():
         logging.info("Shutting down and removing %s", name)
-        emu.stop()
+        asyncio.run(emu.stop())
         if not session.config.getoption("avd_keep"):
             emu.delete()
 
@@ -295,7 +295,8 @@ def get_crash_reporter(pytestconfig):
 
 
 @pytest.fixture(autouse=True)
-def crash_reporter(pytestconfig):
+@pytest.mark.async_timeout(5)
+async def crash_reporter(pytestconfig):
     """A fixture to handle crash reports in the emulator.
 
     This fixture returns the crash reporter associated with the emulator,
@@ -317,16 +318,16 @@ def crash_reporter(pytestconfig):
     """
     log_file = pytestconfig.getoption("--log-file")
     crash_report = get_crash_reporter(pytestconfig)
-    crash_report.clear()
+    await crash_report.clear()
     yield crash_report
 
-    # Report crashes on the log
-    crash_report.list_crashes()
+    # Write reports to file, reports can already be seen on the
+    # log as part of process observation
     if log_file and Path(log_file).exists():
         log_dir = Path(log_file).parent
-        crash_report.write_reports_to_disk(log_dir)
+        await crash_report.write_reports_to_disk(log_dir)
 
-    crash_report.clear()
+    await crash_report.clear()
 
 
 # -------------------------------
@@ -421,9 +422,9 @@ def emulator(request, pytestconfig) -> BaseEmulator:
     return pytest.emulators[name]
 
 
-@pytest.mark.timeout(600)
 @pytest.fixture(scope="module")
-def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
+@pytest.mark.async_timeout(200)
+async def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
     Note that the following holds:
@@ -441,27 +442,25 @@ def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
     emulator_launch_flags = json.loads(pytestconfig.getoption("emulator_launch_flags"))
-    emulator.restart(emulator_launch_flags)
+    await emulator.restart(emulator_launch_flags)
 
-    # Make sure the emulator is booted in at least 10 minutes.
-    # (Note, boot times can be *REALLY* slow on windows gce..)
-    assert emulator.wait_for_boot(timeout=600)
+    assert await emulator.wait_for_boot()
     logging.info("The emulator has finished booting")
 
-    assert emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
-    assert emulator.install_apk(
+    assert await emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
+    assert await emulator.install_apk(
         APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
     )
-    emulator.reset_state()
+    await emulator.reset_state()
 
     yield emulator
 
     # Stop the emulator.
-    emulator.stop()
+    await emulator.stop()
 
 
 @pytest.fixture
-def emulator_log(avd: BaseEmulator):
+async def emulator_log(avd: BaseEmulator):
     """Returns the emulator log as a Queue (https://docs.python.org/3/library/queue.html)
     This contains the output seen on the console when the emulator is launched.
 
@@ -470,8 +469,8 @@ def emulator_log(avd: BaseEmulator):
     Usage:
 
     def test_logs_line(emulator_log):
-        line = emulator_log.get(block=True, timeout=1.5)
-        assert line == 'INFO    | Started GRPC server at 127.0.0.1:8554, security: Local, auth: none'
+        async for line in emulator_log:
+           assert line == 'INFO    | Started GRPC server at 127.0.0.1:8554, security: Local, auth: none'
     """
     assert avd.is_alive()
 
@@ -480,28 +479,32 @@ def emulator_log(avd: BaseEmulator):
     return avd.log
 
 
-def launch_animiation_app(avd: BaseEmulator):
+@pytest.mark.async_timeout(20)
+async def launch_animiation_app(avd: BaseEmulator):
     """Launches the debug animation app.
 
     This launches the animation app that ships with this library and
     waits until it has launched. It will:
 
-    - Clear out logcat
+    - Clear out logcat (Do not rely on this!, it is best effort)
     - Wake-up the emulator (by sending the wakup code)
     - Force stop any existing running animation app
     - Start the activity
     - Wait for the welcome message to appear on logcat.
 
-    It will wait for at most 10 seconds before continuing.
+    It will wait for at most 20 seconds before continuing.
     """
     assert avd.is_alive()
-    assert avd.stop_activity("com.google.AnimateBox")
-    with avd.adb.logcat(tag="aemu", clear=True, timeout=10) as stream:
-        assert avd.start_activity(
+    assert await avd.stop_activity("com.google.AnimateBox")
+
+    async with await avd.adb.logcat(tag="aemu", clear=True, timeout=20) as stream:
+        assert await avd.start_activity(
             "com.google.AnimateBox/com.google.emu.MainActivity", params=None
         )
-        for line in stream:
+        async for line in stream:
             if "--STARTED--" in line:
+                # Note: this cannot be relied on..
+                await avd.adb.shell("logcat -c")
                 return True
 
     logging.warning("The animation app has not been launched.")
@@ -515,18 +518,18 @@ def emulator_controller(avd: BaseEmulator):
     Usage:
 
     def test_sample(emulator_controller):
-        response = emulator_controller.getStatus(empty_pb2.Empty())
+        response = await emulator_controller.getStatus(empty_pb2.Empty())
         assert response.booted
     """
     assert avd.is_alive()
 
-    ctrl = avd.description.get_emulator_controller()
+    ctrl = EmulatorControllerStub(avd.channel)
     return ctrl
 
 
 @pytest.fixture
 def service(avd: BaseEmulator):
-    """A grpc stub to the emulator of the given type
+    """An async grpc stub to the emulator of the given type
 
     Usage:
 
@@ -536,14 +539,17 @@ def service(avd: BaseEmulator):
     """
 
     def service(klazz):
-        channel = avd.description.get_grpc_channel()
+        channel = avd.description.get_async_grpc_channel(
+            [("emulator.security", "token")]
+        )
         return klazz(channel)
 
     return service
 
 
 @pytest.fixture
-def animation_app(avd: BaseEmulator):
+@pytest.mark.async_timeout(90)
+async def animation_app(avd: BaseEmulator):
     """Activates the animation app that displays a rotating triangle.
 
      The app does the following things:
@@ -563,42 +569,43 @@ def animation_app(avd: BaseEmulator):
     """
     assert avd.is_alive()
 
-    avd.reset_state()
+    await avd.reset_state()
     tries = 3
-    while not launch_animiation_app(avd) and tries > 0:
-        time.sleep(1)
+    while not await launch_animiation_app(avd) and tries > 0:
+        await asyncio.sleep(1)
         tries = tries - 1
 
     assert tries >= 0, "Unable to successfully launch the animation app."
     yield
 
-    avd.stop_activity("com.google.AnimateBox")
-    avd.reset_state()
+    await avd.stop_activity("com.google.AnimateBox")
+    await avd.reset_state()
 
 
 @pytest.fixture
-def coldboot_animation_app(avd: BaseEmulator):
+@pytest.mark.async_timeout(200)
+async def coldboot_animation_app(avd: BaseEmulator):
     """Similar to animation_app, but do it with cold boot"""
-    avd.stop()
-    assert avd.launch(flags=["-no-snapshot-load"])
-    assert avd.wait_for_boot(timeout=600)
+    await avd.stop()
+    assert await avd.launch(flags=["-no-snapshot-load"])
+    assert await avd.wait_for_boot()
 
     assert avd.is_alive()
 
     # sleep a few seconds so that system ui have updated
     # time, lte signal and so on; we are doing a cold boot
     # and this extra seconds seems reasonable
-    time.sleep(10)
+    asyncio.sleep(10)
 
     tries = 3
-    while not launch_animiation_app(avd) and tries > 0:
-        time.sleep(1)
+    while not await launch_animiation_app(avd) and tries > 0:
+        asyncio.sleep(1)
         tries = tries - 1
 
     assert tries >= 0, "Unable to successfully launch the animation app."
     yield
 
-    avd.stop_activity("com.google.AnimateBox")
+    await avd.stop_activity("com.google.AnimateBox")
 
 
 @pytest.fixture
@@ -615,7 +622,7 @@ def adb_shell(avd: BaseEmulator):
 
 
 @pytest.fixture
-def telnet(avd: BaseEmulator):
+async def telnet(avd: BaseEmulator):
     """Access to the telnet console of the current emulator.
 
     Usage:
@@ -624,14 +631,14 @@ def telnet(avd: BaseEmulator):
         telnet.send("event text")
     """
     assert avd.is_alive()
-    return avd.console()
+    return await avd.console()
 
 
 @pytest.fixture
-def at_home(avd: BaseEmulator):
-    avd.reset_state()
+async def at_home(avd: BaseEmulator):
+    await avd.reset_state()
     yield
-    avd.reset_state()
+    await avd.reset_state()
 
 
 @pytest.fixture
@@ -657,7 +664,6 @@ def log_adb_interactions():
 
     """
     logging.getLogger("ppadb").setLevel(logging.DEBUG)
-    logging.info("Enabled!")
     yield
     logging.getLogger("ppadb").setLevel(logging.CRITICAL)
 
@@ -673,8 +679,8 @@ def log_directory(pytestconfig):
 
 
 @pytest.fixture
-def get_screenshot(emulator_controller, log_directory, request):
-    def do_get_screenshot(image_format: ImageFormat):
+async def get_screenshot(emulator_controller, log_directory, request):
+    async def do_get_screenshot(image_format: ImageFormat):
         """Get a screenshot from the emulator and save it to a file.
 
         Args:
@@ -684,7 +690,7 @@ def get_screenshot(emulator_controller, log_directory, request):
             A tuple of the raw screenshot image and the Pillow image object.
         """
         screenshot_dir = Path(log_directory) / "screenshots"
-        img = emulator_controller.getScreenshot(image_format)
+        img = await emulator_controller.getScreenshot(image_format)
         test_name = request.node.nodeid.split("::")[-1]
         file_name = re.sub(r"[\\/\{\}:]", "_", test_name)
         pillow_image = save_image(img, screenshot_dir.absolute(), file_name)
@@ -694,20 +700,16 @@ def get_screenshot(emulator_controller, log_directory, request):
 
 
 @pytest.fixture
-def stream_screenshot(emulator_controller, log_directory, request):
-    class StreamingImageCall(StreamingCall):
-        def __init__(self, image_format: ImageFormat):
-            super().__init__(emulator_controller.streamScreenshot(image_format))
-            self.test_name = request.node.nodeid.split("::")[-1]
-            self.screenshot_dir = Path(log_directory) / "screenshots"
-            self.screenshot_dir.mkdir(parents=True, exist_ok=True)
+async def stream_screenshot(emulator_controller, log_directory, request):
+    async def streaming_img_call(image_format: ImageFormat):
+        test_name = request.node.nodeid.split("::")[-1]
+        screenshot_dir = Path(log_directory) / "screenshots"
+        screenshot_dir.mkdir(parents=True, exist_ok=True)
 
-        def _enqueue(self, incoming_message):
-            save_image(incoming_message, self.screenshot_dir, self.test_name)
-            self._queue.put(incoming_message)
-
-    def streaming_img_call(image_format: ImageFormat):
-        return StreamingImageCall(image_format)
+        stream = emulator_controller.streamScreenshot(image_format)
+        async for img in stream:
+            save_image(img, screenshot_dir, test_name)
+            yield img
 
     return streaming_img_call
 
@@ -795,7 +797,7 @@ def get_skipped_platforms(marker):
 
     if marker.name in ["darwin", "linux", "win32"]:
         os_ = marker.name.replace("darwin", "mac").replace("win32", "win")
-        reason = " ".join(marker.name, "only")
+        reason = " ".join(marker.name)
         filtered_platforms = list(set(SKIPOS_PLATFORMS) - set([os_, "all"]))
     elif marker.name == "skip":
         reason = marker.args[0] if len(marker.args) else reason

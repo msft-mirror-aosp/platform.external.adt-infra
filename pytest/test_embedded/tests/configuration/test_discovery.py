@@ -1,10 +1,8 @@
 import pytest
-import requests
 
 
 @pytest.mark.e2e
 @pytest.mark.boot
-@pytest.mark.timeout(timeout=20, func_only=True)
 def test_discovery_contains_display_name(avd):
     """Make sure the discovery file contains the proper display name with utf-8."""
     displayname: str = avd.configuration.hardware["avd.ini.displayname"]

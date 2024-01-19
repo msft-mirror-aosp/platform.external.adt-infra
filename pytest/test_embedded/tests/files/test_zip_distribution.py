@@ -9,7 +9,6 @@ from emu.emulator import BaseEmulator
 
 @pytest.mark.e2e
 @pytest.mark.boot
-@pytest.mark.timeout(timeout=60, func_only=True)
 def test_zip_file_contains_all_expected_files(emulator: BaseEmulator):
     emu_root = Path(emulator.exe).parent
     assert emu_root.exists(), "Emulator folder does not exist."

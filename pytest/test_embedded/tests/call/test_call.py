@@ -16,14 +16,14 @@ import pytest
 from aemu.proto.emulator_controller_pb2 import PhoneCall, PhoneResponse
 
 
-def send_phone_call(emu_controller, phone_call, expected_phone_response):
+async def send_phone_call(emu_controller, phone_call, expected_phone_response):
     """Executes sendPhone Rpc call
     Args:
       emu_controller : emulator controller
       phone_call: phone Call to emulator
       expected_phone_response: expected PhoneResponse.response.
     """
-    phone_response = emu_controller.sendPhone(phone_call)
+    phone_response = await emu_controller.sendPhone(phone_call)
     assert phone_response.response == expected_phone_response, (
         "Phone response is not %s " % expected_phone_response
         + "but was %s" % phone_response.response
@@ -44,11 +44,12 @@ def send_phone_call(emu_controller, phone_call, expected_phone_response):
         ("TakeCallOffHold", PhoneCall.TakeCallOffHold),
     ],
 )
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.hardware
 @pytest.mark.sanity
 @pytest.mark.skipos("win", "Phone response is InvalidAction instead of OK  b/254332148")
-def test_inbound_call(at_home, emulator_controller, test_name, phone_call_operation):
+async def test_inbound_call(
+    at_home, emulator_controller, test_name, phone_call_operation
+):
     """Sends phone call to the emulator.
 
     Test steps:
@@ -70,7 +71,6 @@ def test_inbound_call(at_home, emulator_controller, test_name, phone_call_operat
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-@pytest.mark.timeout(timeout=20, func_only=True)
 def test_inbound_call_bad_operation(at_home, emulator_controller):
     """Sends invalid phone call operation to the emulator.
 
@@ -93,7 +93,6 @@ def test_inbound_call_bad_operation(at_home, emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.skipos("win", "reason: b/305810509 - test timeout.")
 def test_inbound_call_bad_number(at_home, emulator_controller):
     """Sends phone call from a bad number to the emulator.

@@ -25,7 +25,7 @@ from aemu.proto.emulator_controller_pb2 import (
 from PIL import Image
 
 from emu.images.convert import proto_to_pillow
-from emu.timing import eventually, wait_until
+from emu.timing import eventually
 
 # This test validates the behavior of rotating the device.
 # The android device derives its orientation from the physical model.
@@ -63,11 +63,11 @@ def counter_clockwise_to_clockwise(angle):
     return (360 - angle) % 360
 
 
-def for_each_rotation(emulator_controller):
+async def for_each_rotation(emulator_controller):
     """Loops to each rotation mapping setting the physical rotation model and yielding z-axis and symbolic value."""
     for fine, coarse in ROTATION_MAPPING:
         logging.info("Rotating to fine: %s, coarse: %s", fine, coarse)
-        emulator_controller.setPhysicalModel(
+        await emulator_controller.setPhysicalModel(
             PhysicalModelValue(
                 target=PhysicalModelValue.ROTATION,
                 value=ParameterValue(data=[0, 0, fine]),
@@ -77,26 +77,31 @@ def for_each_rotation(emulator_controller):
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.async_timeout(10)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.graphics
 @pytest.mark.skipos("win", "reason: b/305268095 - error at setup.")
-def test_rotation_observable_through_screenshot(emulator_controller, animation_app):
+async def test_rotation_observable_through_screenshot(
+    emulator_controller, animation_app
+):
     """Test that setting the rotation, is observable through getting a screenshot."""
 
-    def image_rotated_correctly(coarse) -> bool:
-        img = emulator_controller.getScreenshot(ImageFormat())
+    async def image_rotated_correctly(coarse) -> bool:
+        img = await emulator_controller.getScreenshot(ImageFormat())
         return img.format.rotation.rotation == coarse
 
-    for fine, coarse in for_each_rotation(emulator_controller):
-        assert wait_until(partial(image_rotated_correctly, coarse), timeout=2)
+    async for fine, coarse in for_each_rotation(emulator_controller):
+
+        async def is_properly_rotated():
+            return await image_rotated_correctly(coarse)
+
+        assert await eventually(is_properly_rotated, timeout=2)
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.graphics
 @pytest.mark.skipos("win", "reason: b/305269036 - error at setup.")
-def test_rotation_observable_through_adbstream(
+async def test_rotation_observable_through_adbstream(
     avd, at_home, animation_app, emulator_controller
 ):
     """Test that setting the rotation, is observable the adb logstream.
@@ -110,32 +115,27 @@ def test_rotation_observable_through_adbstream(
         m = ROTATION_RE.match(line)
         return m and int(m.group(1)) == angle
 
-    with avd.adb.logcat(tag="aemu") as stream:
-        # Wait for the first rotation (should be set to 0).
-        assert eventually(
-            partial(rotation_from_logcat, 0), stream
-        ), "Did not rotate to 0 in time"
-
-        for fine, coarse in for_each_rotation(emulator_controller):
+    async with await avd.adb.logcat(tag="aemu") as stream:
+        async for fine, coarse in for_each_rotation(emulator_controller):
             angle = counter_clockwise_to_clockwise(fine)
-            assert eventually(
+            assert await eventually(
                 partial(rotation_from_logcat, angle), stream
             ), f"Did not observe a rotation to {angle} in time"
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.async_timeout(10)
 @pytest.mark.graphics
 @pytest.mark.skipos("win", "reason: b/305270248 - error at setup.")
-def test_rotation_observable_through_stream_screenshot(
+async def test_rotation_observable_through_stream_screenshot(
     animation_app, emulator_controller, stream_screenshot
 ):
     """Test that setting the rotation, is observable through streaming screenshot."""
-    for angle, coarse in for_each_rotation(emulator_controller):
-        with stream_screenshot(ImageFormat()) as stream:
-            assert eventually(
-                lambda img: img.format.rotation.rotation == coarse, stream
-            ), f"Did not observe rotation to {angle}"
+    async for angle, coarse in for_each_rotation(emulator_controller):
+        stream = stream_screenshot(ImageFormat())
+        assert await eventually(
+            lambda img: img.format.rotation.rotation == coarse, stream
+        ), f"Did not observe rotation to {angle}"
 
 
 RED_PIXEL = (255, 0, 0)
@@ -209,23 +209,29 @@ def square_in_quadrant(img: Image) -> int:
     return 4
 
 
-def rotation_through_console_observable_through_screenshot(emulator_controller, telnet):
+async def rotation_through_console_observable_through_screenshot(
+    emulator_controller, telnet
+):
     """Verify that rotation through console is observable through screenshot."""
     default = ImageFormat()
     for _, coarse in ROTATION_MAPPING:
-        telnet.send("rotate")
-        assert eventually(
-            lambda: emulator_controller.getScreenshot(default).format.rotation.rotation
-            == coarse
+
+        async def expected_rotation():
+            screen = await emulator_controller.getScreenshot(default)
+            return screen.format.rotation.rotation == coarse
+
+        await telnet.send("rotate")
+        assert await eventually(
+            expected_rotation
         ), f"Did not observe rotation to {coarse}"
 
 
-def rotation_through_console_observable_through_stream_screenshot(
-    stream_screenshot, adb
+async def rotation_through_console_observable_through_stream_screenshot(
+    stream_screenshot, telnet
 ):
     """Verify that rotation through console is observable through stream screenshot."""
     for angle, coarse in ROTATION_MAPPING:
-        adb(["emu", "rotate"])
+        await telnet.send("rotate")
 
         def image_has_coarse_rotation(img: Image) -> bool:
             """True if the rotation matches the coarse rotation."""
@@ -246,13 +252,13 @@ def rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.skipos(
     "win", "reason: b/305259781 - error at setup for params [-180-3] and [-90-4]"
 )
-@pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.async_timeout(10)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.parametrize(
     "rotation, quadrant",
     [(0, 1), (90, 2), (-180, 3), (-90, 4)],
 )
-def test_rotation_pixels_in_the_right_place(
+async def test_rotation_pixels_in_the_right_place(
     animation_app, emulator_controller, rotation, quadrant, stream_screenshot
 ):
     """Test the colored square is in the expected location.
@@ -263,7 +269,7 @@ def test_rotation_pixels_in_the_right_place(
     This tests make sure that we are rendering the screenshot properly.
     b/179172837, b/176886063
     """
-    emulator_controller.setPhysicalModel(
+    await emulator_controller.setPhysicalModel(
         PhysicalModelValue(
             target=PhysicalModelValue.ROTATION,
             value=ParameterValue(data=[0, 0, rotation]),
@@ -274,53 +280,59 @@ def test_rotation_pixels_in_the_right_place(
         pillow_img = proto_to_pillow(img)
         return square_in_quadrant(pillow_img) == quadrant
 
-    with stream_screenshot(ImageFormat(format=ImageFormat.RGB888)) as stream:
-        assert eventually(
-            find_square_in_image, stream
-        ), f"Did not see the rotation to {rotation} in time."
+    stream = stream_screenshot(ImageFormat(format=ImageFormat.RGB888))
+    assert await eventually(
+        find_square_in_image, stream
+    ), f"Did not see the rotation to {rotation} in time."
 
 
 @pytest.mark.e2e
+@pytest.mark.async_timeout(10)
 @pytest.mark.graphics
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
-def test_rotation_through_console_observable_through_physical_model(
+# @pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
+async def test_rotation_through_console_observable_through_physical_model(
     emulator_controller, telnet, at_home
 ):
     """Test that rotate through console, is observable through screenshot.
     bug: b/159635109
     """
 
-    def emulator_is_rotated_to(expected_angle):
-        rotate = emulator_controller.getPhysicalModel(
+    async def emulator_is_rotated_to(expected_angle):
+        rotate = await emulator_controller.getPhysicalModel(
             PhysicalModelValue(target=PhysicalModelValue.ROTATION)
         )
         return rotate.value.data[2] == expected_angle
 
     for angle, _ in ROTATION_MAPPING:
-        telnet.send("rotate")
 
-        assert eventually(partial(emulator_is_rotated_to, angle))
+        async def emulator_is_rotated():
+            return await emulator_is_rotated_to(angle)
+
+        await telnet.send("rotate")
+        assert await eventually(emulator_is_rotated)
 
 
 @pytest.mark.e2e
 @pytest.mark.graphics
-@pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.async_timeout(10)
 @pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
-def test_rotation_through_console_observable_through_screenshot(
+async def test_rotation_through_console_observable_through_screenshot(
     at_home, emulator_controller, telnet
 ):
     """Test that rotate through console, is observable through screenshot.
     bug: b/159635109
     """
-    rotation_through_console_observable_through_screenshot(emulator_controller, telnet)
+    await rotation_through_console_observable_through_screenshot(
+        emulator_controller, telnet
+    )
 
 
 @pytest.mark.e2e
 @pytest.mark.graphics
-@pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.async_timeout(10)
 @pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
-def test_rotation_through_console_observable_through_stream_screenshot(
+async def test_rotation_through_console_observable_through_stream_screenshot(
     at_home, animation_app, emulator_controller, telnet
 ):
     """Test that rotate through console, is observable through stream screenshot.
@@ -335,28 +347,24 @@ def test_rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.sanity
-@pytest.mark.timeout(timeout=480, func_only=True)
+@pytest.mark.async_timeout(10)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-def test_rotation_observable_through_screenshot_embedded_mode(
-    emulator_controller, telnet, emulator
+async def test_rotation_observable_through_screenshot_embedded_mode(
+    emulator_controller, telnet, emulator, at_home
 ):
-    rotation_through_console_observable_through_screenshot(emulator_controller, telnet)
-    # Stop the emulator, this makes sure emulator ends up in a known state after the test.
-    emulator.stop()
-    assert not emulator.is_alive()
+    await rotation_through_console_observable_through_screenshot(
+        emulator_controller, telnet
+    )
 
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=480, func_only=True)
+@pytest.mark.async_timeout(10)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
-def test_rotation_observable_through_stream_screenshot_embedded_mode(
-    emulator_controller, telnet, emulator
+async def test_rotation_observable_through_stream_screenshot_embedded_mode(
+    emulator_controller, telnet, emulator, at_home
 ):
-    rotation_through_console_observable_through_stream_screenshot(
+    await rotation_through_console_observable_through_stream_screenshot(
         emulator_controller, telnet
     )
-    # Stop the emulator, this makes sure emulator ends up in a known state after the test.
-    emulator.stop()
-    assert not emulator.is_alive()

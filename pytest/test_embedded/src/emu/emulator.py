@@ -1,4 +1,4 @@
-# Copyright 2020 - The Android Open Source Project
+# Copyright 2024 - The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 import os
 import platform
@@ -20,7 +21,6 @@ import shutil
 import socket
 import subprocess
 import sys
-import time
 from pathlib import Path
 from typing import List, Optional
 
@@ -31,17 +31,18 @@ from aemu.proto.emulator_controller_pb2 import (
     ParameterValue,
     PhysicalModelValue,
 )
+from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
-from grpc import RpcError
+from grpc import RpcError, StatusCode
+from grpc.aio import AioRpcError
 
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
-from emu.console.emulator_connection import EmulatorConnection
+from emu.console.emulator_connection import EmulatorClient
 from emu.emulator_exceptions import EmulatorNotFoundException
-from emu.logging.log_handler import QueueLogHandler
 from emu.mobly.snippet import Mobly
 from emu.process.command import Command
-from emu.timing import wait_until
+from emu.timing import eventually, wait_until
 from emu.utils import LogObserver
 
 
@@ -69,8 +70,10 @@ class BaseEmulator(object):
             self.android_home,
             self.android_avd_home,
         )
+        self.cmd = None
         self.adb: Adb = None
         self.mobly_device: Mobly = None
+        self.channel = None
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
 
@@ -115,18 +118,21 @@ class BaseEmulator(object):
             self.description.name(),
             self.android_home / "platform-tools" / "adb",
         )
-        self.mobly_device = Mobly(self.adb, self.description.name())
+        self.mobly_device = Mobly(self.description.name())
         self.logger.info(
             "Discovered emulator pid: %s (%s), named: %s",
             self.description.pid(),
             self.description.name(),
             self.description.get("avd.id"),
         )
+        self.channel = self.description.get_async_grpc_channel(
+            [("emulator.security", "token")]
+        )
 
     def mobly(self, name: str):
         return self.mobly_device.snippet(name)
 
-    def launch(self, flags: [str]) -> bool:
+    async def launch(self, flags: [str]) -> bool:
         """Launches the emulator
 
         Args:
@@ -138,13 +144,13 @@ class BaseEmulator(object):
         """
         return True
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stops the emulator from running"""
 
     def delete(self) -> None:
         """Delete the given emulator, removing data from disk if applicable."""
 
-    def has_booted(self) -> bool:
+    async def has_booted(self) -> bool:
         """Makes a check of bootcoompleted.ini to check if the emulator has booted.
 
         Returns:
@@ -152,14 +158,28 @@ class BaseEmulator(object):
         """
         try:
             _EMPTY_ = empty_pb2.Empty()
-            emu = self.description.get_emulator_controller()
-            return emu.getStatus(_EMPTY_).booted and self.adb.online()
+            emu = EmulatorControllerStub(self.channel)
+            status = await emu.getStatus(_EMPTY_)
+            online = await self.adb.online()
+            return status.booted and online
+        except (RpcError, AioRpcError) as exc:
+            if exc.value.code() == StatusCode.UNAVAILABLE:
+                raise EmulatorNotFoundException(
+                    "The emulator %s is no longer around.", self.description.name
+                )
+            self.logger.error(
+                "gRPC error while determining boot state, details: %s",
+                exc,
+                exc_info=True,
+            )
         except Exception as err:
-            self.logger.warning("Unable to determine boot state due to %s", err)
+            self.logger.error(
+                "Unable to determine boot state due to %s", err, exc_info=True
+            )
 
         return False
 
-    def wait_for_boot(self, timeout: int = 600) -> bool:
+    async def wait_for_boot(self, timeout: int = 600) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
 
         Args:
@@ -175,18 +195,19 @@ class BaseEmulator(object):
             "Waiting at most %s seconds until %s has booted, state: %s",
             timeout,
             self.description.name(),
-            self.has_booted(),
+            await self.has_booted(),
         )
-        return wait_until(self.has_booted, timeout=timeout)
+        return await wait_until(self.has_booted, timeout=timeout)
 
-    def console(self) -> EmulatorConnection:
+    async def console(self) -> EmulatorClient:
         """Returns a connection to the emulator console, authenticating if needed.
 
         Returns:
             EmulatorConnection: A connection to the emulator.
         """
-        return EmulatorConnection.connect(
-            self.description.get("port.serial"), self.description.get("avd.id")
+        return await EmulatorClient.connect(
+            self.description.get("port.serial"),
+            self.description.get("avd.id"),
         )
 
     def is_alive(self) -> bool:
@@ -199,7 +220,7 @@ class BaseEmulator(object):
 
         return self.description.is_alive()
 
-    def install_apk(self, apk: Path, package_name: str) -> bool:
+    async def install_apk(self, apk: Path, package_name: str) -> bool:
         """Installs an apk in the emulator.
 
         Note: An apk will be installed only once unless force has been set to
@@ -213,14 +234,14 @@ class BaseEmulator(object):
             True if the package name is in `pm list packages`
         """
         count = 0
-        while not self.adb.is_installed(package_name) and count < 10:
-            self.adb.install(apk.absolute())
-            time.sleep(1)
+        while not await self.adb.is_installed(package_name) and count < 10:
+            await self.adb.install(apk.absolute())
+            await asyncio.sleep(1)
             count += 1
 
-        return self.adb.is_installed(package_name)
+        return await self.adb.is_installed(package_name)
 
-    def start_activity(self, activity: str, params=None) -> bool:
+    async def start_activity(self, activity: str, params=None) -> bool:
         """Attempts to start the given activity.
 
         An activity is considered to be running when the activity is in the list returned
@@ -236,29 +257,30 @@ class BaseEmulator(object):
             True if the activity was started successfully, False otherwise.
         """
 
-        def activity_is_running():
+        async def activity_is_running():
             """Returns true if the given activity is running."""
-            return self.pgrep(activity[: activity.find("/")])
+            return await self.pgrep(activity[: activity.find("/")])
 
         shell = f"am start -n {activity}"
         if params:
             shell += f" {params}"
 
-        self.adb.shell(shell)
+        await self.adb.shell(shell)
         count = 0
         while count < 10:
-            self.adb.shell(shell)
-            time.sleep(1)
-            if activity_is_running():
+            await self.adb.shell(shell)
+            await asyncio.sleep(1)
+            if await activity_is_running():
                 return True
             count += 1
 
-        return False
+        return await activity_is_running()
 
-    def pgrep(self, process_name: str) -> bool:
-        return process_name in self.adb.shell(f"ps -A | grep {process_name}")
+    async def pgrep(self, process_name: str) -> bool:
+        shell = await self.adb.shell(f"ps -A | grep {process_name}")
+        return process_name in shell
 
-    def stop_activity(self, activity: str) -> bool:
+    async def stop_activity(self, activity: str) -> bool:
         """Attempts to stop the given activity.
 
         An activity is considered to be running when the activity is in the list returned
@@ -273,20 +295,22 @@ class BaseEmulator(object):
             True if the activity is not running, False otherwise.
         """
 
-        def activity_is_running():
+        async def activity_is_running():
             """Returns true if the given activity is running."""
-            return self.pgrep(activity)
+            return await self.pgrep(activity)
 
-        self.adb.shell(f"am force-stop {activity}")
+        await self.adb.shell(f"am force-stop {activity}")
         count = 0
-        while activity_is_running() and count < 10:
-            self.adb.shell(f"am force-stop {activity}")
-            time.sleep(1)
+        running = await activity_is_running()
+        while running and count < 10:
+            await self.adb.shell(f"am force-stop {activity}")
+            await asyncio.sleep(1)
+            running = await activity_is_running()
             count += 1
 
-        return not activity_is_running()
+        return not running
 
-    def reset_state(self):
+    async def reset_state(self):
         """Resets this emulator to a well known state.
 
         This is a best effort operation that will:
@@ -295,10 +319,14 @@ class BaseEmulator(object):
         - Move the device upright
         - Wake up the device. (send the wake up event)
         """
-        stub = self.description.get_emulator_controller()
-        stub.sendKey(KeyboardEvent(key="WakeUp", eventType=KeyboardEvent.keypress))
-        stub.sendKey(KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress))
-        stub.setPhysicalModel(
+        stub = EmulatorControllerStub(self.channel)
+        await stub.sendKey(
+            KeyboardEvent(key="WakeUp", eventType=KeyboardEvent.keypress)
+        )
+        await stub.sendKey(
+            KeyboardEvent(key="GoHome", eventType=KeyboardEvent.keypress)
+        )
+        await stub.setPhysicalModel(
             PhysicalModelValue(
                 target=PhysicalModelValue.ROTATION,
                 value=ParameterValue(data=[0, 0, 0]),
@@ -323,12 +351,12 @@ class DebugEmulator(BaseEmulator):
         self._discover(None)
         self.logger = logging.getLogger(self.description.get("avd.id"))
 
-    def launch(self, flags: List[str] = []) -> bool:
+    async def launch(self, flags: List[str] = []) -> bool:
         self.logger.info("Debug emulators cannot be launched.")
         return True
 
-    def restart(self, emu_flags: List[str]) -> bool:
-        return self.launch(emu_flags)
+    async def restart(self, emu_flags: List[str]) -> bool:
+        return await self.launch(emu_flags)
 
 
 class Emulator(BaseEmulator):
@@ -363,7 +391,7 @@ class Emulator(BaseEmulator):
         self.proc = None
         self.kernel_start = 0
 
-    def restart(self, emu_flags: List[str]) -> bool:
+    async def restart(self, emu_flags: List[str]) -> bool:
         """Restarts the emulator, disabling snapshot save if a default snapshot exists.
 
         Args:
@@ -373,7 +401,7 @@ class Emulator(BaseEmulator):
             True if the emulator has launched.
         """
         if self.is_alive():
-            self.stop()
+            await self.stop()
 
         assert not self.is_alive()
 
@@ -384,7 +412,7 @@ class Emulator(BaseEmulator):
         if mysnapshottexture.exists():
             emu_flags.append("-no-snapshot-save")
 
-        return self.launch(flags=emu_flags)
+        return await self.launch(flags=emu_flags)
 
     def _default_abi(self) -> str:
         """Returns the abi that is natively supported by this machine.
@@ -399,33 +427,32 @@ class Emulator(BaseEmulator):
             return "arm64-v8a"
         return "x86_64"
 
-    def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
+    async def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
         self.logger = logging.getLogger(self.configuration.name)
-        self.log = QueueLogHandler(logging.getLogger(f"{self.configuration.name}-exe"))
-        self.kernel_start = 0
 
-        cmd = Command(cmd).with_environment(env).with_log_handler(self.log)
+        self.cmd = Command(cmd, self.logger).with_environment(env)
         if sys.platform == "win32":
             cmd.in_directory(self.exe.parent)
 
-        self.proc = cmd.run()
+        proc = await self.cmd.run()
+        self.log = proc.handler
 
-        max_wait = 20
         self.logger.info("Waiting for an emulator to become available.")
         discovery = EmulatorDiscovery()
 
-        while (
-            max_wait > 0
-            and discovery.find_emulator("avd.id", self.configuration.name) is None
-        ):
-            max_wait = max_wait - 1
+        def discover_emulator():
             self.logger.info(
-                "Waiting %d more seconds, found %d emulators so far.",
-                max_wait,
+                "Found %d emulators so far, looking for pid: %s",
                 discovery.available(),
+                proc.process.pid,
             )
-            time.sleep(1)
+            return (
+                discovery.find_emulator("avd.id", self.configuration.name) is not None
+            )
 
+        await eventually(discover_emulator, timeout=10)
+
+        self.kernel_start = 0
         self._discover(self.configuration.name)
         return self.is_alive()
 
@@ -466,7 +493,7 @@ class Emulator(BaseEmulator):
                 port += 2
         raise IOError("no free ports")
 
-    def launch(self, flags: [str] = []) -> bool:
+    async def launch(self, flags: [str] = []) -> bool:
         """Launches the emulator
 
         Args:
@@ -491,7 +518,10 @@ class Emulator(BaseEmulator):
         # to keep that.
         grpc_port = self._get_free_port(port + 3000, 4096)
 
-        return self._launch(
+        # The security file.
+        access_file = Path(__file__).parent / "templates" / "emulator_test_access.json"
+
+        return await self._launch(
             [
                 self.exe,
                 "-avd",
@@ -508,6 +538,8 @@ class Emulator(BaseEmulator):
                 str(port),
                 "-grpc",
                 str(grpc_port),
+                "-grpc-allowlist",
+                str(access_file),
                 "-debug-log",
                 "-gpu",
                 "swiftshader_indirect",
@@ -523,21 +555,25 @@ class Emulator(BaseEmulator):
             local_env,
         )
 
-    def stop(self, timeout: int = 30) -> None:
+    async def stop(self, timeout: int = 30) -> None:
         """Stops the emulator, terminating it does not exits gracefully within the given timeout
 
         Args:
             timeout (int, optional): Time in seconds before the emulator will be terminated.
             Defaults to 10.
         """
+        logging.info("Stopping the emulator.")
         if self.description is not None:
             if self.description.shutdown(timeout):
                 logging.info("Terminated the emulator")
             else:
                 logging.warning("Unable to terminate emulator!")
             self.description = None
+        if self.cmd:
+            logging.info("Cancelling cmd task.")
+            await self.cmd.cancel()
 
-    def has_booted(self) -> bool:
+    async def has_booted(self) -> bool:
         """Check if the emulator has booted.
 
         This method will also observe the emulator kernel log to see if it sees
@@ -569,8 +605,19 @@ class Emulator(BaseEmulator):
 
         try:
             _EMPTY_ = empty_pb2.Empty()
-            emu = self.description.get_emulator_controller()
-            return emu.getStatus(_EMPTY_).booted and self.adb.online()
+            emu = EmulatorControllerStub(self.channel)
+            status = await emu.getStatus(_EMPTY_)
+            return status.booted and await self.adb.online()
+        except AioRpcError as exc:
+            if exc.code() == StatusCode.UNAVAILABLE:
+                raise EmulatorNotFoundException(
+                    "The emulator %s is no longer around.", self.description.name
+                )
+            self.logger.error(
+                "gRPC error while determining boot state, details: %s",
+                exc,
+                exc_info=True,
+            )
         except Exception as err:
             self.logger.warning("Unable to determine boot state due to %s", err)
 

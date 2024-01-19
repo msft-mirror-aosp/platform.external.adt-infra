@@ -19,15 +19,15 @@ _EMPTY_ = empty_pb2.Empty()
 
 
 @pytest.fixture
-def default_gps_location(emulator_controller):
+async def default_gps_location(emulator_controller):
     location = GpsState(latitude=39.237256, longitude=-123.150032, satellites=4)
-    emulator_controller.setGps(location)
+    await emulator_controller.setGps(location)
     return location
 
 
-def set_and_get_gps(emulator_controller, state):
-    emulator_controller.setGps(state)
-    retrieved = emulator_controller.getGps(_EMPTY_)
+async def set_and_get_gps(emulator_controller, state):
+    await emulator_controller.setGps(state)
+    retrieved = await emulator_controller.getGps(_EMPTY_)
     assert pytest.approx(retrieved.latitude) == state.latitude
     assert pytest.approx(retrieved.longitude) == state.longitude
     assert pytest.approx(retrieved.speed) == state.speed
@@ -38,49 +38,49 @@ def set_and_get_gps(emulator_controller, state):
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-def test_gps_latitude_is_observable(emulator_controller, default_gps_location):
+async def test_gps_latitude_is_observable(emulator_controller, default_gps_location):
     """Test observe latitude."""
     location = default_gps_location
     for inc in range(1, 100):
         location.latitude = location.latitude + 0.001
-        set_and_get_gps(emulator_controller, location)
+        await set_and_get_gps(emulator_controller, location)
 
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-def test_gps_longitude_is_observable(emulator_controller, default_gps_location):
+async def test_gps_longitude_is_observable(emulator_controller, default_gps_location):
     """Test observe longitude."""
     location = default_gps_location
     for inc in range(1, 100):
         location.longitude = location.longitude + 0.001
-        set_and_get_gps(emulator_controller, location)
+        await set_and_get_gps(emulator_controller, location)
 
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-def test_gps_rotation_is_observable(emulator_controller, default_gps_location):
+async def test_gps_rotation_is_observable(emulator_controller, default_gps_location):
     """Test observe rotation."""
     location = default_gps_location
     for direction in range(0, 360):
         location.bearing = direction
-        set_and_get_gps(emulator_controller, location)
+        await set_and_get_gps(emulator_controller, location)
 
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-def test_gps_speed_is_observable(emulator_controller, default_gps_location):
+async def test_gps_speed_is_observable(emulator_controller, default_gps_location):
     """Test observe speed."""
     location = default_gps_location
     for speed in range(0, 100):
         location.speed = speed
-        set_and_get_gps(emulator_controller, location)
+        await set_and_get_gps(emulator_controller, location)
 
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-def test_gps_altitude_is_observable(emulator_controller, default_gps_location):
+async def test_gps_altitude_is_observable(emulator_controller, default_gps_location):
     """Test observe altitude."""
     location = default_gps_location
     for altitude in range(0, 100):
         location.altitude = altitude
-        set_and_get_gps(emulator_controller, location)
+        await set_and_get_gps(emulator_controller, location)

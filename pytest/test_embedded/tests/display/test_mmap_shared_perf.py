@@ -17,8 +17,8 @@ This contains a set of performance tests to determine how long it takes to deliv
 Both tests will launch the animation app that should deliver frames at a constant rate, and will retrieve images as defined by
 the stream_test_time propery
 """
+import asyncio
 import collections
-import logging
 import os
 import struct
 import time
@@ -28,11 +28,9 @@ import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat, ImageTransport
 from google.protobuf import empty_pb2
 
-from tests.test_utils import StreamingCall
 
-
-def dimenisions(emulator_controller):
-    response = emulator_controller.getStatus(empty_pb2.Empty())
+async def dimenisions(emulator_controller):
+    response = await emulator_controller.getStatus(empty_pb2.Empty())
     cfg = response.hardwareConfig
     width, height = 0
     for entry in cfg.entry:
@@ -45,9 +43,8 @@ def dimenisions(emulator_controller):
 
 @pytest.mark.skipos("all", "b/203787882")
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
-def test_mmap_grpc_perf(
+async def test_mmap_grpc_perf(
     animation_app, emulator_controller, tmpdir, benchmark_stat, pytestconfig
 ):
     """Test time it takes to detect a frame change event using the gRPC + mmap
@@ -57,7 +54,7 @@ def test_mmap_grpc_perf(
     This uses the emulators notification + image scaling mechanism.
     """
     # This test can only run if we launched the emulator
-    width, height = dimenisions(emulator_controller)
+    width, height = await dimenisions(emulator_controller)
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     tmp_file = os.path.join(path, "image_file.img")
     with open(tmp_file, "wb") as out:
@@ -74,37 +71,30 @@ def test_mmap_grpc_perf(
         ),
     )
 
-    count = 0
-    dropped = 0
-    timeout = pytestconfig.getoption("stream_test_time") + time.time()
-
-    seq = None
-    with StreamingCall(stream) as images:
-        # We should get a continous sequence of frames..
+    async def frame_counter():
         start_time = time.time()
-        for img in images:
+        async for img in stream:
             receive_time = time.time()
             benchmark_stat.update(receive_time - start_time)
-
-            if seq and seq + 1 < img.seq:
-                dropped += img.seq - seq + 1
-            seq = img.seq
-            count += 1
-            if time.time() > timeout:
-                break
             start_time = receive_time
 
-    logging.warning("Received %d frames and dropped %d frames", count, dropped)
-    assert True
+    timeout = pytestconfig.getoption("stream_test_time")
+    with pytest.raises(asyncio.exceptions.TimeoutError):
+        await asyncio.wait_for(frame_counter(), timeout=timeout)
 
 
 @pytest.mark.skipos("all", "b/203787882")
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
 @pytest.mark.linux
-def test_mmap_webrtc_perf(
-    avd, telnet, animation_app, tmpdir, benchmark_stat, pytestconfig
+async def test_mmap_webrtc_perf(
+    avd,
+    telnet,
+    animation_app,
+    tmpdir,
+    benchmark_stat,
+    pytestconfig,
+    emulator_controller,
 ):
     """Test time it takes to detect a frame change event by polling the shared memory
     region setup by the webrtc screen recorder.
@@ -115,14 +105,11 @@ def test_mmap_webrtc_perf(
      - This only works on linux
      - Python seems to destroy the /dev/shm region.
     """
-    telnet.send("screenrecord webrtc start")
+    await telnet.send("screenrecord webrtc start")
     # HACK: Give the emulator some time to create /dev/shm/videmulator####
-    time.sleep(0.5)
-    width, height = dimenisions(emulator_controller)
+    asyncio.sleep(0.5)
+    width, height = await dimenisions(emulator_controller)
 
-    count = 0
-    dropped = 0
-    seq = None
     video_info_struct_size = 24
     mem = SharedMemory(
         name="videmulator{}".format(avd.telnet.port),
@@ -136,11 +123,12 @@ def test_mmap_webrtc_perf(
     )
     assert struct.calcsize("IIIIQ") == video_info_struct_size
 
-    timeout = pytestconfig.getoption("stream_test_time") + time.time()
-    start_time = time.time()
+    async def frame_counter():
+        count = 0
+        dropped = 0
+        seq = None
 
-    # We should get a continous sequence of frames..
-    while time.time() < timeout:
+        start_time = time.time()
         info = VideoInfo._make(
             struct.unpack("IIIIQ", mem.buf[0:video_info_struct_size])
         )
@@ -161,7 +149,9 @@ def test_mmap_webrtc_perf(
         count += 1
         start_time = receive_time
 
-    telnet.send("screenrecord webrtc stop")
+    timeout = pytestconfig.getoption("stream_test_time")
+    with pytest.raises(asyncio.exceptions.TimeoutError):
+        await asyncio.wait_for(frame_counter(), timeout=timeout)
+
+    await telnet.send("screenrecord webrtc stop")
     mem.close()
-    logging.warning("Received %d frames and dropped %d frames", count, dropped)
-    assert True

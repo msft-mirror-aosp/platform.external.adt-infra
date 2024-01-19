@@ -106,6 +106,7 @@ def is_emulator_process(
     emulator_process_names = [x.strip() for x in emulator_process_names.split(",")]
     try:
         name = process.name()
+        logging.debug("Checking %s in %s", name, emulator_process_names)
         return any(p in name for p in emulator_process_names)
     except psutil.NoSuchProcess:
         logging.warning("Process %s disappeared", process)

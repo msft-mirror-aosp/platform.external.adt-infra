@@ -12,62 +12,66 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import os
 import tarfile
-import time
 
 import pytest
-from snaptool.snapshot import SnapshotService
+from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
+from snaptool.snapshot import AsyncSnapshotService
 
 
 @pytest.fixture
-def snapshot_service(avd):
+async def snapshot_service(avd, service):
     """Fixture to make sure the emulator has no snapshots."""
-    snap = SnapshotService(snapshot_service=avd.description.get_snapshot_service())
-    for entry in snap.lists():
-        snap.delete(entry.snapshot_id)
+    snapshot_service = service(SnapshotServiceStub)
+    snap = AsyncSnapshotService(snapshot_service=snapshot_service)
+    snapshots = await snap.lists()
+    for entry in snapshots:
+        await snap.delete(entry.snapshot_id)
     yield snap
-    for entry in snap.lists():
-        snap.delete(entry.snapshot_id)
+    snapshots = await snap.lists()
+    for entry in snapshots:
+        await snap.delete(entry.snapshot_id)
 
 
 @pytest.mark.e2e
 @pytest.mark.snapshot
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.skipos("win", "reason: b/305017763 - error at setup.")
-def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
-    assert not snapshot_service.load("foo")
+async def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
+    assert not await snapshot_service.load("foo")
 
 
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.sanity
-@pytest.mark.timeout(timeout=60, func_only=True)
-def test_snapshot_can_save_and_load(snapshot_service):
-    assert snapshot_service.save("foo")
-    assert "foo" in [x.snapshot_id for x in snapshot_service.lists()]
-    assert snapshot_service.load("foo")
+async def test_snapshot_can_save_and_load(snapshot_service):
+    assert await snapshot_service.save("foo")
+    snapshots = await snapshot_service.lists()
+    assert "foo" in [x.snapshot_id for x in snapshots]
+    assert await snapshot_service.load("foo")
 
 
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.sanity
 @pytest.mark.fast
-@pytest.mark.timeout(timeout=60, func_only=True)
-def test_snapshot_delete_removes(snapshot_service):
-    assert snapshot_service.save("foo")
-    assert "foo" in [x.snapshot_id for x in snapshot_service.lists()]
-    assert snapshot_service.delete("foo")
-    assert "foo" not in [x.snapshot_id for x in snapshot_service.lists()]
+async def test_snapshot_delete_removes(snapshot_service):
+    assert await snapshot_service.save("foo")
+    snapshots = await snapshot_service.lists()
+    assert "foo" in [x.snapshot_id for x in snapshots]
+    assert await snapshot_service.delete("foo")
+    snapshots = await snapshot_service.lists()
+    assert "foo" not in [x.snapshot_id for x in snapshots]
 
 
 @pytest.mark.skipos("all")
 @pytest.mark.snapshot
 @pytest.mark.e2e
-def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
+async def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
-    assert snapshot_service.save("foo")
-    assert snapshot_service.pull("foo", path)
+    assert await snapshot_service.save("foo")
+    assert await snapshot_service.pull("foo", path)
 
     # Let's make sure the tarfile is valid..
     tar = tarfile.open(os.path.join(path, "foo.tar"))
@@ -78,26 +82,27 @@ def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
 @pytest.mark.snapshot
 @pytest.mark.e2e
 @pytest.mark.sanity
-def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
+async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
-    assert snapshot_service.save("foo")
-    assert snapshot_service.pull("foo", path)
-    assert snapshot_service.delete("foo")
-    assert "foo" not in [x.snapshot_id for x in snapshot_service.lists()]
-
-    assert snapshot_service.push(os.path.join(path, "foo.tar"))
-    assert "foo" in [x.snapshot_id for x in snapshot_service.lists()]
-    assert snapshot_service.load("foo")
+    assert await snapshot_service.save("foo")
+    assert await snapshot_service.pull("foo", path)
+    assert await snapshot_service.delete("foo")
+    snapshots = await snapshot_service.lists()
+    assert "foo" not in [x.snapshot_id for x in snapshots]
+    assert await snapshot_service.push(os.path.join(path, "foo.tar"))
+    snapshots = await snapshot_service.lists()
+    assert "foo" in [x.snapshot_id for x in snapshots]
+    assert await snapshot_service.load("foo")
 
 
 @pytest.mark.perf
 @pytest.mark.benchmark(group="snapshot")
-def test_snapshot_list_perf(benchmark, snapshot_service, coldboot_animation_app):
+async def test_snapshot_list_perf(benchmark, snapshot_service, coldboot_animation_app):
     # create a 10 snapshots while we are running the animation app.
     for i in range(0, 10):
         # Make sure the animation state is changing the state a bit.
-        time.sleep(1.0)
-        snapshot_service.save("test-{}".format(i))
+        asyncio.sleep(1.0)
+        await snapshot_service.save("test-{}".format(i))
 
     # And measure the lists service.
     benchmark(snapshot_service.lists)

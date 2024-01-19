@@ -1,8 +1,8 @@
+import asyncio
 import logging
 import os
 import platform
 import sys
-import time
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -10,6 +10,7 @@ import pytest
 import requests
 
 from emu.process.command import Command
+from emu.timing import eventually
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -38,7 +39,7 @@ def get_emulator_filename(build_id):
             return f"emulator-darwin_x64-{build_id}.zip"
 
 
-def download_file(save_to_path, url):
+async def download_file(save_to_path, url):
     """Download the url to the path, skip if already done so"""
     if os.path.exists(save_to_path):
         logging.info("file %s exists, skip downloading", save_to_path)
@@ -80,7 +81,7 @@ def check_emulator_binaries(path_to_emulator_dir) -> bool:
     return os.path.exists(Path(path_to_emulator_dir, myemuexe))
 
 
-def download_emulator_zip(build_id):
+async def download_emulator_zip(build_id):
     """Download an emulator zip with given build id"""
     mysdkpath = os.environ["ANDROID_SDK_ROOT"]
     logging.info("sdk root %s", mysdkpath)
@@ -98,7 +99,7 @@ def download_emulator_zip(build_id):
     )
     Path(mydownloaded_emulator_path, f"{build_id}").mkdir(parents=True, exist_ok=True)
     logging.info("now download %s from %s", local_long_path_name, remote_long_path_name)
-    download_file(local_long_path_name, remote_long_path_name)
+    await download_file(local_long_path_name, remote_long_path_name)
     assert os.path.exists(local_long_path_name)
     if not check_emulator_binaries(
         Path(mydownloaded_emulator_path, f"{build_id}", "emulator")
@@ -128,7 +129,7 @@ def check_boot_from_snapshot(avdpath) -> bool:
 @pytest.mark.snapshot
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
-def test_can_load_oldsnapshot(emulator, pytestconfig):
+async def test_can_load_oldsnapshot(emulator, pytestconfig):
     """test that current emulator can load the snapshot created by old emulator
 
     First, use old emulator to create a snapshot
@@ -139,7 +140,7 @@ def test_can_load_oldsnapshot(emulator, pytestconfig):
             f"Not running this test on non-gfxstream build {pytestconfig.getoption('build_target')}"
         )
 
-    emulator.stop()
+    await emulator.stop()
 
     # save tot exe
     totexe = emulator.exe
@@ -151,44 +152,39 @@ def test_can_load_oldsnapshot(emulator, pytestconfig):
     myflags = ["-no-snapshot-load"]
     if platform.processor() == "i386" and platform.system() == "Darwin":
         myflags.append("-no-window")
-    assert emulator.launch(flags=myflags)
-    assert emulator.wait_for_boot(timeout=420)
+    assert await emulator.launch(flags=myflags)
+    assert await emulator.wait_for_boot(timeout=420)
     # there is no reliable way to detect it has reach home screen
     # so just wait enough long
-    time.sleep(10)
+    await asyncio.sleep(10)
     # windows need extra time  :(
     if platform.system() == "Windows":
-        time.sleep(20)
-    emulator.stop()
+        await asyncio.sleep(20)
+    await emulator.stop()
     # there is no reliable way to detect it has done saving
     # so just wait enough long
-    time.sleep(10)
+    await asyncio.sleep(10)
 
     # launch with tot
     emulator.exe = totexe
     assert emulator.launch(flags=["-no-snapshot-save"])
     assert emulator.wait_for_boot(timeout=60)
 
-    count = 0
-    while count < 10:
-        time.sleep(1)
-        count += 1
-        if check_boot_from_snapshot(emulator.configuration.directory):
-            break
+    def check_has_booted():
+        return check_boot_from_snapshot(emulator.configuration.directory)
 
-    assert check_boot_from_snapshot(emulator.configuration.directory)
+    assert await eventually(check_has_booted)
 
 
 @pytest.mark.e2e
 @pytest.mark.skipos("all", "Flaky and not needed for now.")
-@pytest.mark.timeout(timeout=600, func_only=True)
-def test_snapshot_download(emulator):
+async def test_snapshot_download(emulator):
     """Make sure the emulator status is set to booted."""
 
     logging.info("Using %s", emulator)
     # Make sure this emulator is not running. Other tests might have been
     # using the same emulator.
-    emulator.stop()
+    await emulator.stop()
 
     # The emulator is not running any more..
     assert not emulator.is_alive()
@@ -204,13 +200,13 @@ def test_snapshot_download(emulator):
     assert config.directory.exists()
 
     # We now actually launch the emulator from a clean slate.
-    assert emulator.launch(flags=["-wipe-data"])
+    assert await emulator.launch(flags=["-wipe-data"])
 
     # The emulator kicks of its boot process, this should succeed
-    assert emulator.wait_for_boot(timeout=420)
+    assert await emulator.wait_for_boot(timeout=420)
 
     # Stops the emulator.
-    emulator.stop()
+    await emulator.stop()
 
     # We should have created a default snapshot.
     assert (config.directory / "snapshots" / "default_boot").exists()
@@ -228,7 +224,7 @@ def test_snapshot_download(emulator):
                 fd.write(chunk)
 
     # We now actually launch the emulator, without erasing it,
-    assert emulator.launch()
+    assert await emulator.launch()
 
     # The emulator kicks of its boot process, this should succeed
-    assert emulator.wait_for_boot(timeout=180)
+    assert await emulator.wait_for_boot(timeout=180)

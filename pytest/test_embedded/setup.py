@@ -1,9 +1,10 @@
+import os
+import platform
 import subprocess
 import sys
-import platform
-import os
 from pathlib import Path
 from shutil import copyfile
+
 from setuptools import setup
 from setuptools.command.build_py import build_py
 from setuptools.command.sdist import sdist

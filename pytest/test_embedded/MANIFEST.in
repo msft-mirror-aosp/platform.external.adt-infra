@@ -3,3 +3,4 @@ include src/emu/templates/Pixel2.ini
 include src/emu/templates/Pixel2.avd/config.ini
 include src/emu/templates/PixelFold.ini
 include src/emu/templates/PixelFold.avd/config.ini
+include src/emu/templates/emulator_test_access.json

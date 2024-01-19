@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+import asyncio
 import json
 import logging
 import os
@@ -604,22 +605,19 @@ def merge_results(python_exe: PyRunner, sources: [Path], dest: Path):
         )
 
 
-def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path):
+async def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path):
     emulator_directory = Path(emulator).parent if emulator else None
     crash_report = CrashReporter(emulator_directory, symbol_path)
 
-    # Make sure they end up on the log
-    crash_report.list_crashes()
-
     # Write them to disk
-    crash_report.write_reports_to_disk(logdir)
+    await crash_report.write_reports_to_disk(logdir)
 
     # And report them..
-    crash_report.report_crashes()
+    await crash_report.report_crashes()
 
     # After reporting them we will have ids, lets print them and remove them.
-    crash_report.report_crashes()
-    crash_report.clear()
+    await crash_report.report_crashes()
+    await crash_report.clear()
 
 
 def run_single_suite(
@@ -649,9 +647,6 @@ def run_single_suite(
                 "-vv",
                 "-x" if use_exceptions else "",
                 f"--junitxml={junit_test_results}",
-                # Boot times in Windows can be >6 mins, and we are booting
-                # several times. We will give us at most 45 minutes.
-                "--timeout=2700",
                 f"--log-file={logdir}/{name}.log",
                 f"--emulator={emulator}",
                 f"--symbols={symbol_path}",
@@ -685,7 +680,7 @@ def run_single_suite(
 
     finally:
         # Let's see if we can collect crash reports..
-        collect_crash_reports(emulator, symbol_path, logdir)
+        asyncio.run(collect_crash_reports(emulator, symbol_path, logdir))
 
         # Forcefully terminate all emulator processess
         pyrun.run(["-m", "emu.process.kill_emulator"], check_output=False)

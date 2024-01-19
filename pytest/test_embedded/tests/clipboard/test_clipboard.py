@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import time
 
 import grpc
@@ -22,10 +23,8 @@ from aemu.discovery.header_manipulator_client_interceptor import (
 from aemu.proto.emulator_controller_pb2 import ClipData
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
-from iterators import TimeoutIterator
 
 from emu.timing import eventually
-from tests.test_utils import StreamingCall
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -42,11 +41,22 @@ def wait_for_with_timed_iterator(predicate, timed_iterator, timeout=5):
     return None
 
 
+async def set_clip_data(emulator_controller, clipboard_data="Hello there!"):
+    set_clip_data = ClipData(text=clipboard_data)
+    await emulator_controller.setClipboard(set_clip_data)
+
+    async def clipboard_matches_set_clip():
+        status = await emulator_controller.getClipboard(_EMPTY_)
+        return status.text == clipboard_data
+
+    # We should actually have "Hello there!" on the clipboard.
+    assert await eventually(clipboard_matches_set_clip), "Clipboard data doesn't match"
+
+
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.fast
-@pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.timeout_win(timeout=60)
+@pytest.mark.async_timeout(10)
 @pytest.mark.skipos("win", "reason: b/303295516 - error at setup.")
 @pytest.mark.parametrize(
     "clipboard_data",
@@ -55,7 +65,7 @@ def wait_for_with_timed_iterator(predicate, timed_iterator, timeout=5):
         "How is Weather?",
     ],
 )
-def test_clipboard_data(emulator_controller, clipboard_data):
+async def test_clipboard_data(emulator_controller, clipboard_data):
     """Send clipboard data to the emulator.
 
     Verify that the clipboard data received is same.
@@ -64,98 +74,83 @@ def test_clipboard_data(emulator_controller, clipboard_data):
       clipboard_data: clipboard data to be set.
     """
     set_clip_data = ClipData(text=clipboard_data)
-    emulator_controller.setClipboard(set_clip_data)
-    assert eventually(
-        lambda: emulator_controller.getClipboard(_EMPTY_).text == clipboard_data
-    ), "Clipboard data doesn't match"
+    await emulator_controller.setClipboard(set_clip_data)
+
+    async def expected_clip():
+        status = await emulator_controller.getClipboard(_EMPTY_)
+        return status.text == clipboard_data
+
+    assert await eventually(expected_clip), "Clipboard data doesn't match"
 
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=10, func_only=True)
+@pytest.mark.async_timeout(10)
 @pytest.mark.skipos("win", "reason=b/305040235 - error at setup.")
-def test_stream_clipboard_immediately_sends_data(emulator_controller):
+async def test_stream_clipboard_immediately_sends_data(emulator_controller):
     """Validate that the streaming call will immediately send the current clipboard status."""
     clipboard_data = "Hello there!"
-    set_clip_data = ClipData(text=clipboard_data)
-    emulator_controller.setClipboard(set_clip_data)
-
-    # We should actually have "Hello there!" on the clipboard.
-    assert eventually(
-        lambda: emulator_controller.getClipboard(_EMPTY_).text == clipboard_data
-    ), "Clipboard data doesn't match"
+    await set_clip_data(emulator_controller, clipboard_data)
 
     # We should get an "instant" notification with the clipboard data.
-    emulator_controller.streamClipboard(_EMPTY_)
-    with StreamingCall(emulator_controller.streamClipboard(_EMPTY_)) as stream:
-        timed_iterator = TimeoutIterator(stream, timeout=0.5)
-        assert wait_for_with_timed_iterator(
-            lambda clip: clip.text == clipboard_data, timed_iterator
-        ), f"Did receive the clipboard event with {clipboard_data}"
+    # If we get nothin we would timeout.
+    stream = emulator_controller.streamClipboard(_EMPTY_)
+    async for clip in stream:
+        assert clip.text == clipboard_data
+        return
+
+    assert False
 
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.timeout_win(timeout=60)
+@pytest.mark.async_timeout(10)
 @pytest.mark.skipos("win", "reason=b/305040856 - error at setup.")
-def test_stream_clipboard_sends_updated_data(emulator_controller, avd):
+async def test_stream_clipboard_sends_updated_data(emulator_controller, avd):
     """Validate that the streaming call will immediately send the current clipboard status and
     will send out events if the clipboard status changes.
     """
     clipboard_data = "Hello there!"
-    set_clip_data = ClipData(text=clipboard_data)
-    emulator_controller.setClipboard(set_clip_data)
+    await set_clip_data(emulator_controller, clipboard_data)
 
-    # We should actually have "Hello there!" on the clipboard.
-    assert eventually(
-        lambda: emulator_controller.getClipboard(_EMPTY_).text == clipboard_data
-    ), "Clipboard data doesn't match"
+    stream = emulator_controller.streamClipboard(_EMPTY_)
+    clip = await asyncio.wait_for(stream.read(), timeout=1)
+    assert clip.text == "Hello there!"
 
-    # We should get nothing!
-    with StreamingCall(emulator_controller.streamClipboard(_EMPTY_)) as stream:
-        timed_iterator = TimeoutIterator(stream, timeout=0.5)
-        assert wait_for_with_timed_iterator(
-            lambda clip: clip.text == clipboard_data, timed_iterator
-        ), f"Did receive the clipboard event with {clipboard_data}"
+    # Since the update came from our channel, we should not get anything
+    update = ClipData(text="new data")
+    await emulator_controller.setClipboard(update)
 
-        # Now we update the clipboard, and expect an event with the new data
-        clipboard_data = "Hello world"
-        set_clip_data = ClipData(text=clipboard_data)
-        emulator_controller.setClipboard(set_clip_data)
-
-        # We should definitely not receive an update as we should be
-        # using the same channel!
-        assert not wait_for_with_timed_iterator(
-            lambda clip: clip.text == clipboard_data, timed_iterator
-        ), f"Did receive the clipboard event with {clipboard_data}"
+    with pytest.raises(asyncio.TimeoutError):
+        # So we should timeout
+        clip = await asyncio.wait_for(stream.read(), timeout=1)
 
 
 def get_test_channel(desc, max_length=4096):
     """Configure a grpc test channel."""
     port = desc.get("grpc.port", 8554)
     addr = desc.get("grpc.address", f"localhost:{port}")
-    channel = grpc.insecure_channel(
+
+    interceptors = []
+    # Install studio token if needed.
+    if "grpc.token" in desc._description:
+        bearer = "Bearer {}".format(desc.get("grpc.token", ""))
+        interceptors = header_adder_interceptor("authorization", bearer, True)
+
+    return grpc.aio.insecure_channel(
         addr,
         options=[
             ("grpc.max_send_message_length", max_length),
             ("grpc.max_receive_message_length", max_length),
         ],
+        interceptors=interceptors,
     )
 
-    # Install studio token if needed.
-    if "grpc.token" in desc._description:
-        bearer = "Bearer {}".format(desc.get("grpc.token", ""))
-        return grpc.intercept_channel(
-            channel, header_adder_interceptor("authorization", bearer)
-        )
-
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.timeout_win(timeout=60)
-def test_stream_clipboard_sends_updated_data_to_other_channel(avd):
+@pytest.mark.async_timeout(60)
+async def test_stream_clipboard_sends_updated_data_to_other_channel(avd):
     # We forcefully create 2 different channel configurations to make
     # sure that python is not going to "cleverly" re-use an existing channel.
     channel1 = get_test_channel(avd.description, 8192)
@@ -165,40 +160,29 @@ def test_stream_clipboard_sends_updated_data_to_other_channel(avd):
     emulator_controller = EmulatorControllerStub(channel1)
     second_controller = EmulatorControllerStub(channel2)
 
+    # Set the clipboard to a known state
     clipboard_data = "Hello there!"
-    set_clip_data = ClipData(text=clipboard_data)
-    emulator_controller.setClipboard(set_clip_data)
+    await set_clip_data(emulator_controller, clipboard_data)
 
-    # We should actually have "Hello there!" on the clipboard.
-    assert eventually(
-        lambda: emulator_controller.getClipboard(_EMPTY_).text == clipboard_data
-    ), "Clipboard data doesn't match"
+    # The 2nd stream should immediately get this.
+    stream = second_controller.streamClipboard(_EMPTY_)
+    clip = await asyncio.wait_for(stream.read(), timeout=2)
+    assert clip.text == "Hello there!"
 
-    with StreamingCall(second_controller.streamClipboard(_EMPTY_)) as stream:
-        timed_iterator = TimeoutIterator(stream, timeout=0.5)
+    # Now we update the clipboard from channel1
+    clipboard_data = "Hello world"
+    update = ClipData(text=clipboard_data)
+    await emulator_controller.setClipboard(update)
 
-        # We immediately get the current state of the clipboard
-        assert wait_for_with_timed_iterator(
-            lambda clip: clip.text == clipboard_data, timed_iterator
-        ), f"Did receive the clipboard event with {clipboard_data}"
-
-        # Now we update the clipboard, and expect an event with the new data
-        # Note that we are sending the change over channel1, and are streaming
-        # on channel2
-        clipboard_data = "Hello world"
-        set_clip_data = ClipData(text=clipboard_data)
-        emulator_controller.setClipboard(set_clip_data)
-
-        # channel2 should be notified of the change.
-        assert wait_for_with_timed_iterator(
-            lambda clip: clip.text == clipboard_data, timed_iterator
-        ), f"Did receive the clipboard event with {clipboard_data}"
+    # And the 2nd stream should immediately get this.
+    clip = await asyncio.wait_for(stream.read(), timeout=2)
+    assert clip.text == "Hello world"
 
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=10, func_only=True)
-def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(avd):
+@pytest.mark.async_timeout(60)
+async def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(avd):
     # We forcefully create 2 different channel configurations to make
     # sure that python is not going to "cleverly" re-use an existing channel.
     channel1 = get_test_channel(avd.description, 8192)
@@ -208,62 +192,51 @@ def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(avd):
     emulator_controller = EmulatorControllerStub(channel1)
     second_controller = EmulatorControllerStub(channel2)
 
+    # Set the clipboard to a known state
     clipboard_data = "Hello there!"
-    set_clip_data = ClipData(text=clipboard_data)
-    emulator_controller.setClipboard(set_clip_data)
+    await set_clip_data(emulator_controller, clipboard_data)
 
-    # We should actually have "Hello there!" on the clipboard.
-    assert eventually(
-        lambda: emulator_controller.getClipboard(_EMPTY_).text == clipboard_data
-    ), "Clipboard data doesn't match"
+    # The 2nd stream should immediately get this.
+    stream = second_controller.streamClipboard(_EMPTY_)
+    clip = await asyncio.wait_for(stream.read(), timeout=2)
+    assert clip.text == "Hello there!"
 
-    with StreamingCall(second_controller.streamClipboard(_EMPTY_)) as stream:
-        timed_iterator = TimeoutIterator(stream, timeout=0.5)
+    # Now we update the clipboard from channel1
+    clipboard_data = "Hello world"
+    update = ClipData(text=clipboard_data)
+    await emulator_controller.setClipboard(update)
 
-        # We immediately get the current state of the clipboard
-        assert wait_for_with_timed_iterator(
-            lambda clip: clip.text == clipboard_data, timed_iterator
-        ), f"Did receive the clipboard event with {clipboard_data}"
+    # And the 2nd stream should immediately get this.
+    clip = await asyncio.wait_for(stream.read(), timeout=2)
+    assert clip.text == "Hello world"
 
-        # Now we update the clipboard, and expect an event with the new data
-        # Note that we are sending the change over channel1, and are streaming
-        # on channel2
-        clipboard_data = "Hello world"
-        set_clip_data = ClipData(text=clipboard_data)
-        emulator_controller.setClipboard(set_clip_data)
+    # Now we update the clipboard from channel1 with the same value
+    # again, since we are not changing the clipboard we should
+    # not get notified
+    update = ClipData(text=clipboard_data)
+    await emulator_controller.setClipboard(update)
 
-        # channel2 should be notified of the change.
-        assert wait_for_with_timed_iterator(
-            lambda clip: clip.text == clipboard_data, timed_iterator
-        ), f"Did receive the clipboard event with {clipboard_data}"
-
-        # Now let's set the same text once more, this should not
-        # result in an event as we are not "changing" the clipboard
-        emulator_controller.setClipboard(set_clip_data)
-
-        # We are not changing the state, so we should not get an event
-        assert not wait_for_with_timed_iterator(
-            lambda clip: clip.text == clipboard_data, timed_iterator
-        ), f"Did receive the clipboard event with {clipboard_data}"
+    # Since the update didn't change any state
+    with pytest.raises(asyncio.TimeoutError):
+        # We should timeout
+        clip = await asyncio.wait_for(stream.read(), timeout=1)
 
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.timeout_win(timeout=60)
-def test_stream_clipboard_from_android_immediately_sends_data(avd, emulator_controller):
+@pytest.mark.async_timeout(60)
+async def test_stream_clipboard_from_android_immediately_sends_data(
+    avd, emulator_controller
+):
     """Verify that the internal clipboard status that is changed within android is sent."""
     clipboard_data = "ola"
-    avd.stop_activity("com.google.AnimateBox")
-    avd.start_activity(
+    await avd.stop_activity("com.google.AnimateBox")
+    await avd.start_activity(
         "com.google.AnimateBox/com.google.emu.ClipActivity",
         f'--es "clip" "{clipboard_data}"',
     )
 
     # We should get a notification with the clipboard data.
-    emulator_controller.streamClipboard(_EMPTY_)
-    with StreamingCall(emulator_controller.streamClipboard(_EMPTY_)) as stream:
-        timed_iterator = TimeoutIterator(stream, timeout=0.5)
-        assert wait_for_with_timed_iterator(
-            lambda clip: clip.text == clipboard_data, timed_iterator
-        ), f"Did receive the clipboard event with {clipboard_data}"
+    stream = emulator_controller.streamClipboard(_EMPTY_)
+    clip = await asyncio.wait_for(stream.read(), timeout=2)
+    assert clip.text == clipboard_data

@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import time
-
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
     DisplayMode,
@@ -21,8 +19,7 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from google.protobuf import empty_pb2
 
-from emu.timing import wait_until
-from tests.test_utils import StreamingCall
+from emu.timing import eventually
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -36,21 +33,19 @@ avd_config = {
 }
 
 
-def set_display_mode(emulator_controller, mode, timeout=5):
-    emulator_controller.setDisplayMode(
+async def set_display_mode(emulator_controller, mode, timeout=5):
+    await emulator_controller.setDisplayMode(
         DisplayMode(
             value=mode,
         )
     )
 
-    # Eventually the currentMode is equal to the one we have set.
-    currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
-    timeout = time.time() + timeout
-    while currentMode != mode and time.time() < timeout:
-        time.sleep(0.1)
-        currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
+    async def mode_is_set():
+        currentMode = await emulator_controller.getDisplayMode(_EMPTY_)
+        return currentMode.value == mode
 
-    return emulator_controller.getDisplayMode(_EMPTY_).value
+    assert await eventually(mode_is_set, timeout=timeout)
+    return mode
 
 
 @pytest.mark.resizable
@@ -63,21 +58,17 @@ def set_display_mode(emulator_controller, mode, timeout=5):
         (1920, 1080, DisplayModeValue.DESKTOP),
     ],
 )
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.sanity
 @pytest.mark.skipos("all", "reason: b/309463427")
-def test_resizable_changes_resolution(
+async def test_resizable_changes_resolution(
     animation_app, emulator_controller, width, height, mode, get_screenshot
 ):
-    emulator_controller.setDisplayMode(DisplayMode(value=mode))
-    # Eventually the currentMode is equal to the one we have set.
-    # If this is broken the test will timeout
-    assert wait_until(lambda: emulator_controller.getDisplayMode(_EMPTY_).value == mode)
+    await set_display_mode(mode)
 
-    def screenshot_is_sized_properly():
-        image, _ = get_screenshot(
+    async def screenshot_is_sized_properly():
+        image, _ = await get_screenshot(
             ImageFormat(
                 format=ImageFormat.RGB888,
             )
@@ -93,10 +84,9 @@ def test_resizable_changes_resolution(
         )
 
     # Eventually we should receive a screenshot that has the expected size.
-    assert wait_until(screenshot_is_sized_properly)
+    assert eventually(screenshot_is_sized_properly)
 
 
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.parametrize(
     "fmt, bpp",
     [
@@ -104,7 +94,7 @@ def test_resizable_changes_resolution(
         (ImageFormat.RGB888, 3),
     ],
 )
-def test_resizable_observable_from_streaming(
+async def test_resizable_observable_from_streaming(
     emulator_controller, stream_screenshot, fmt, bpp
 ):
     available_dimensions = iter(
@@ -118,25 +108,26 @@ def test_resizable_observable_from_streaming(
 
     # Start with moving to the intial dimension
     w, h, mode = next(available_dimensions)
-    assert set_display_mode(emulator_controller, mode) == mode
+    updated = await set_display_mode(emulator_controller, mode)
+    assert updated == mode
 
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
     # Eventually we run out dimensions, resulting in a StopIteration
     # If things are broken we will timeout.
     with pytest.raises(StopIteration):
-        with stream_screenshot(ImageFormat(format=fmt)) as stream:
-            for image in stream:
-                if image.format.width == w and image.format.height == h:
-                    pixel_count = len(image.image)
-                    assert pixel_count == w * h * bpp
+        stream = stream_screenshot(ImageFormat(format=fmt))
+        async for image in stream:
+            if image.format.width == w and image.format.height == h:
+                pixel_count = len(image.image)
+                assert pixel_count == w * h * bpp
 
-                    # Transition to the next.
-                    w, h, mode = next(available_dimensions)
-                    assert set_display_mode(emulator_controller, mode) == mode
+                # Transition to the next.
+                w, h, mode = next(available_dimensions)
+                updated = await set_display_mode(emulator_controller, mode)
+                assert updated == mode
 
 
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.parametrize(
     "fmt, bpp",
     [
@@ -144,7 +135,7 @@ def test_resizable_observable_from_streaming(
         (ImageFormat.RGB888, 3),
     ],
 )
-def test_resizable_observable_from_streaming(
+async def test_resizable_observable_from_streaming(
     emulator_controller, stream_screenshot, fmt, bpp
 ):
     available_dimensions = iter(
@@ -158,29 +149,23 @@ def test_resizable_observable_from_streaming(
 
     # Start with moving to the intial dimension
     w, h, mode = next(available_dimensions)
-    emulator_controller.setDisplayMode(DisplayMode(value=mode))
-    # Eventually the currentMode is equal to the one we have set.
-    # If this is broken the test will timeout
-    assert wait_until(lambda: emulator_controller.getDisplayMode(_EMPTY_).value == mode)
+    updated = await set_display_mode(emulator_controller, mode)
 
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
     # Eventually we run out dimensions, resulting in a StopIteration
     # If things are broken we will timeout.
     with pytest.raises(StopIteration):
-        with stream_screenshot(ImageFormat(format=fmt)) as stream:
-            for image in stream:
-                if image.format.width == w and image.format.height == h:
-                    pixel_count = len(image.image)
-                    assert pixel_count == w * h * bpp
+        stream = stream_screenshot(ImageFormat(format=fmt))
+        async for image in stream:
+            if image.format.width == w and image.format.height == h:
+                pixel_count = len(image.image)
+                assert pixel_count == w * h * bpp
 
-                    # Transition to the next.
-                    w, h, mode = next(available_dimensions)
+                # Transition to the next.
+                w, h, mode = next(available_dimensions)
 
-                    emulator_controller.setDisplayMode(DisplayMode(value=mode))
-                    # Eventually the currentMode is equal to the one we have set.
-                    # If this is broken the test will timeout
-                    assert wait_until(
-                        lambda: emulator_controller.getDisplayMode(_EMPTY_).value
-                        == mode
-                    )
+                # Eventually the currentMode is equal to the one we have set.
+                # If this is broken the test will timeout
+                updated = await set_display_mode(emulator_controller, mode)
+                assert updated == mode

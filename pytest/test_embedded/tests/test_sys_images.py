@@ -1,11 +1,6 @@
 import pytest
-from google.protobuf import empty_pb2
 
-from emu.avd import (
-    SystemImageDirectoryDoesNotExist,
-    SystemImageDownloadFailed,
-    SystemImages,
-)
+from emu.avd import SystemImageDownloadFailed, SystemImages
 
 
 @pytest.fixture

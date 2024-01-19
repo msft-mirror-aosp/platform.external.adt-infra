@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright 2018 - The Android Open Source Project
+# Copyright 2024 - The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,241 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import datetime
+import asyncio
 import logging
-import socket
-import time
-from threading import Condition, Thread
-from typing import Callable, Optional
+from typing import Optional
 
 
-class AsyncEmulatorConnection:
-    """
-    Connects to the emulator telnet console and authenticates.
-
-    The class is designed to handle the telnet connection to an emulator, it
-    has methods for reading and writing to the connection.
-    """
-
-    def __init__(
-        self,
-        logger: logging.Logger,
-        cv: Condition,
-        transport: socket.socket,
-        callback: Callable,
-        port: int,
-    ):
-        """Initializes the EmulatorConnection object.
-
-        Args:
-            logger (logging.Logger): The logger used to write logging information
-            cv (Condition): Condition variable to synchronize access to the connection.
-            transport (socket.socket): The transport to be used for communication.
-            callback (Callable): A callable object to be called whenever data is
-                    received from the telnet console.
-            port (int): The port to connect to the emulator.
-        """
-        self.cv = cv
-        self.callback = callback
-        self.start = time.time()
-        self.transport = transport
-        self.connected = False
-        self.fstmsg = ""
-        self.port = port
-        self.logger = logger
-
-    def is_connected(self) -> bool:
-        """Checks if the connection to the emulator is active.
-
-        Returns:
-            bool: True if connected, False otherwise.
-        """
-        return self.connected
-
-    def auth(self, fname: str):
-        """Authenticates to the emulator.
-
-        Sends the authentication token to the emulator.
-
-        Args:
-            fname (str): The file path to the file
-                containing the authentication token.
-        """
-        self.logger.info("Authenticating using %s", fname)
-        with open(fname[1:-1], "r") as authfile:
-            token = authfile.read()
-            msg = "auth {}".format(token).strip()
-            self._set_connected(True)
-            self.send(msg)
-
-    def _set_connected(self, connected: bool):
-        """Sets the connection status to the emulator.
-
-        Args:
-            connected (bool): True if connected, False otherwise.
-        """
-        self.logger.debug("_set_connected: %s", connected)
-        with self.cv:
-            self.connected = connected
-            self.logger.info("_set_connected: %s notify listeners", connected)
-            self.cv.notify()
-
-    def _data_received(self, data: bytes):
-        """Handles the data received from the emulator.
-
-        Sends the authentication token if required and invokes
-        the callback with the received data.
-
-        Args:
-            data (bytes): Data received from the emulator.
-        """
-        msg = data.decode()
-        self.logger.info("Recv: %s", msg)
-        # send the auth token if needed
-        if self.fstmsg is not None:
-            self.fstmsg += msg
-            if "OK" in self.fstmsg:
-                if "Android Console: you can find your <auth_token> in" in self.fstmsg:
-                    lines = [x.strip() for x in self.fstmsg.split("\n")]
-                    fname = lines[lines.index("OK") - 1]
-                    self.auth(fname)
-                else:
-                    self._set_connected(True)
-                self.fstmsg = None
-
-        # do something with the received data
-        if self.callback:
-            self.callback(msg)
-
-    def connection_lost(self):
-        """Called whenever the socket connection is dropped."""
-        total = time.time() - self.start
-        self.logger.error(
-            "The emulator is gone, we were alive for: %d seconds (%s)!",
-            total,
-            str(datetime.timedelta(seconds=total)),
-        )
-        self._set_connected(False)
-
-    def reader(self):
-        """Reader thread that received bytest from the emulator and passes it
-        on the receiver function.
-        """
-        data = self.transport.recv(4096)
-        try:
-            while data:
-                self._data_received(data)
-                data = self.transport.recv(4096)
-        except:
-            # Likely got disconnected.
-            pass
-        finally:
-            self.connection_lost()
-
-    def send(self, msg):
-        """Sends plain text to the emulator
-
-        Args:
-            msg (str): The ASCII msg to send over the telnet consle
-
-        Returns:
-            Bool: True if the connection is still open.
-        """
-        if self.connected:
-            self.logger.info("Sending %s", msg)
-            try:
-                self.transport.sendall("{}\n".format(msg).encode())
-            except:
-                # Likely got disconnected.
-                return False
-        else:
-            self.logger.info("Dropping %s", msg)
-            return False
-
-        return self.connected
-
-    def stop(self):
-        """Closes the transport, and stops the reader thread."""
-        if self.connected:
-            self.logger.warning("Closing transport")
-            self.transport.close()
-
-    @staticmethod
-    def open_socket(port: int, max_tries: int = 5):
-        for x in range(max_tries):
-            sock = socket.create_connection(("localhost", port))
-            if sock.fileno() != -1:
-                return sock
-            time.sleep(0.5)
-
-        raise IOError(f"Unable to connect to port {port}")
-
-    @staticmethod
-    def connect(
-        port: int,
-        emulator_name: Optional[str] = None,
-        callback: Optional[Callable] = None,
-    ):
-        """Connects to the telnet console on the given port and authenticates.
-
-        Args:
-            port (int): The port to connect to the emulator.
-            emulator_name (str, optional): The name of the emulator. Defaults to "port-{port}".
-            callback (callable, optional): Function to be called when the telnet console has data. Defaults to None.
-
-        Returns:
-            EmulatorConnection: The actual connection to the emulator
-        """
-
-        if not emulator_name:
-            emulator_name = f"port-{port}"
-        logger = logging.getLogger(f"{emulator_name}-con")
-
-        sock = AsyncEmulatorConnection.open_socket(port)
-        connection = AsyncEmulatorConnection(logger, Condition(), sock, callback, port)
-
-        logger.debug("Connecting to console..")
-        with connection.cv:
-            Thread(target=connection.reader).start()
-            connection.cv.wait(5.0)
-
-        logging.info(
-            "Connected: %s to emulator on port: %s", connection.is_connected(), port
-        )
-        return connection
-
-
-class InvalidConsoleCommand(Exception):
+class EmulatorClientEOF(Exception):
     pass
 
 
-class EmulatorConnection:
-    """Connects to the Android emulator over the telnet console and authenticates when needed.
+class EmulatorClientBadCommand(Exception):
+    pass
 
-    The console responds with OK if a command succeeded and KO if it failed. The OK/KO
-    responses will never be returned and parsed out.
 
-    Args:
-        port: The port that the Android emulator is listening on.
-        logger: A logging.Logger instance.
-    """
+class EmulatorClient:
+    AUTH = "Android Console: Authentication required"
 
-    def __init__(self, port: int, logger: logging.Logger):
-        """Initializes the EmulatorConnection instance.
-
-        Args:
-            port: The port that the Android emulator is listening on.
-            logger: A logging.Logger instance.
-        """
-
-        self.transport = self._open_socket(port)
+    def __init__(self, port, logger: logging.Logger):
+        self.port = port
         self.logger = logger
-        login_response = self.read()
-        if "Android Console: Authentication required" in login_response:
-            # Last line contains the path to the auth, file.
-            self._auth(login_response[-1])
+        self._reader = None
+        self._writer = None
 
-    def _auth(self, fname: str):
+    async def login(self):
+        self._reader, self._writer = await asyncio.open_connection(
+            "localhost", self.port
+        )
+        lines = await self.read_until_ok_ko()
+        if EmulatorClient.AUTH in lines:
+            # Last line contains the path to the auth, file.
+            await self._auth(lines[-2])
+
+    async def _auth(self, fname: str):
         """Authenticates to the Android emulator using the given auth file.
 
         Args:
@@ -257,99 +52,42 @@ class EmulatorConnection:
         with open(fname[1:-1], "r", encoding="utf-8") as authfile:
             token = authfile.read()
             msg = f"auth {token}".strip()
-            self.send(msg)
+            await self.send(msg)
 
-    def send(self, command: str) -> str:
-        """Sends a command to the Android emulator and returns the response.
+    async def send(self, command) -> (bool, [str]):
+        self.logger.info("--> %s", command)
+        self._writer.write(f"{command}\n".encode())
+        return await self.read_until_ok_ko()
 
-        Args:
-            command: The command to send.
-
-        Returns:
-            The response from the Android emulator.
-
-        Raises:
-            InvalidConsoleCommand: If the Android emulator returns a KO response,
-                                   indicating the command failed.
-        """
-
-        self.logger.info("Send: %s", command)
-        self.transport.sendall(f"{command}\n".encode())
-        return self.read()
-
-    def stop(self):
-        """Closes the connection to the Android emulator."""
-
-        self.transport.close()
-
-    def _read_line(self):
-        """Reads a line from the Android emulator.
-
-        Yields:
-            The line that was read.
-        """
-
-        data = b""
-        while True:
-            byte = self.transport.recv(1)
-            if byte == b"\n":
-                yield data.decode("utf-8").strip()
-                data = b""
-            else:
-                data += byte
-
-    def read(self) -> [str]:
-        """Reads all of the lines from the Android emulator until an OK or KO response is received.
-
-        Returns:
-            A list of strings, where each string is a line from the Android emulator.
-
-        Raises:
-            InvalidConsoleCommand: If the Android emulator returns a KO response.
-        """
-
+    async def read_until_ok_ko(self) -> (bool, [str]):
         lines = []
-        for line in self._read_line():
-            logging.info("Recv: %s", line)
+        async for line in self._reader:  # Async iteration over lines
+            line = line.decode().strip()
+            self.logger.info("<-- %s", line)
+            lines.append(line)
             if line == "OK":
                 return lines
             if line == "KO":
-                info = "\n".join(lines)
-                raise InvalidConsoleCommand(f"Invalid console command {info}")
-            lines.append(line)
+                msg = "\n".join(lines)
+                raise EmulatorClientBadCommand(f"Invalid command {msg}")
 
-    def _open_socket(self, port: int, max_tries: int = 5):
-        """Opens a socket connection to the Android emulator.
-
-        Args:
-            port: The port that the Android emulator is listening on.
-            max_tries: The maximum number of times to try to connect to the Android emulator.
-
-        Returns:
-            A socket connection to the Android emulator.
-
-        Raises:
-            IOError: If the connection to the Android emulator cannot be established.
-        """
-
-        for x in range(max_tries):
-            sock = socket.create_connection(("localhost", port), timeout=1)
-            if sock.fileno() != -1:
-                return sock
-            time.sleep(0.5)
-
-        raise IOError(f"Unable to connect to port {port}")
+        msg = "\n".join(lines)
+        raise EmulatorClientEOF(
+            f"EOF before receiving complete emulator response: {msg}"
+        )
 
     @staticmethod
-    def connect(
+    async def connect(
         port: int,
         emulator_name: Optional[str] = None,
     ):
-        """Connects to the Android emulator on the given port and returns an EmulatorConnection instance.
+        """Connects to the Android emulator on the given port and returns an
+           EmulatorClient instance.
 
         Args:
             port: The port that the Android emulator is listening on.
-            emulator_name: The name of the emulator. If not specified, the emulator name will be `port-{port}`.
+            emulator_name: The name of the emulator. If not specified, the emulator
+            name will be `port-{port}`.
 
         Returns:
             An EmulatorConnection instance.
@@ -357,7 +95,8 @@ class EmulatorConnection:
         Raises:
             IOError: If the connection to the Android emulator cannot be established.
         """
-
         if not emulator_name:
             emulator_name = f"port-{port}"
-        return EmulatorConnection(port, logging.getLogger(f"{emulator_name}-con"))
+        client = EmulatorClient(port, logging.getLogger(f"{emulator_name}-con"))
+        await client.login()
+        return client

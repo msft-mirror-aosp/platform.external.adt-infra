@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 import platform
-import time
 from pathlib import Path
 
 import psutil
 import pytest
-from aemu.proto.emulator_controller_pb2 import BootCompletedNotication
+from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 
 from emu.apk import APP_DEBUG_APK
@@ -33,12 +33,12 @@ from emu.timing import eventually
 # avd_config = {"api": "33", "tag.id": "google_apis"}
 
 
-def has_network(adb):
+async def has_network(adb):
     """check whether it has network or not
     adb shell ifconfig, it should have both eth0 and wlan0
     """
     radio_wifi = False
-    result = adb.shell("ifconfig")
+    result = await adb.shell("ifconfig")
     if "eth0" in result and "wlan0" in result:
         logging.info("success result %s", result)
         radio_wifi = True
@@ -58,18 +58,18 @@ def cpu_usage(emulator):
     return cpu_usage
 
 
-def shutdown(emulator):
+async def shutdown(emulator):
     # kill is the way to ask it to save snapshot if applicable and quit
-    emulator.adb.run(["emu", "kill"])
+    await emulator.adb.run(["emu", "kill"])
     # for windows, wait 30 seconds for it to fully shutdown to avoid
     # the multiinstnace.lock failure, hopefully, especially on gcp windows
     if platform.system() == "Windows":
-        time.sleep(30)
+        await asyncio.sleep(30)
 
     def emulator_died():
         return not emulator.is_alive()
 
-    eventually(emulator_died, timeout=60)
+    await eventually(emulator_died, timeout=60)
 
     # Maybe we didn't shutdown in time, if so try some other method.
     if emulator.is_alive():
@@ -78,14 +78,10 @@ def shutdown(emulator):
     assert not emulator.is_alive()
 
 
-def get_booted_notification_time(emulator, timeout):
-    response_iterator = (
-        emulator.description.get_emulator_controller().streamNotification(
-            empty_pb2.Empty(), timeout=timeout
-        )
-    )
-
-    for notification in response_iterator:
+async def get_booted_notification_time(emulator):
+    controller = EmulatorControllerStub(emulator.channel)
+    stream = controller.streamNotification(empty_pb2.Empty())
+    async for notification in stream:
         logging.info("Notification: %s", notification)
         if notification.HasField("booted"):
             logging.info("Boot completed in %d ms.", notification.booted.time)
@@ -98,34 +94,36 @@ def get_booted_notification_time(emulator, timeout):
 @pytest.mark.e2e
 @pytest.mark.sanity
 @pytest.mark.fast
-@pytest.mark.timeout(timeout=2800, func_only=True)
-def test_first_time_booted(emulator, record_property):
+@pytest.mark.async_timeout(1080)
+async def test_first_time_booted(emulator, record_property):
     """Make sure the emulator status is set to booted."""
 
-    emulator.stop()
+    await emulator.stop()
     logging.info("Launching emulator ...")
     myflags = ["-wipe-data", "-no-snapshot-load"]
     if platform.processor() == "i386" and platform.system() == "Darwin":
         myflags.append("-no-window")
 
-    assert emulator.launch(flags=myflags)
+    assert await emulator.launch(flags=myflags)
 
     logging.info("Wating for it to boot up ...")
 
-    boot_time = get_booted_notification_time(emulator, timeout=1080)
-    assert boot_time is not None
+    # This will throw an exception in case of a timeout
+    boot_time = await asyncio.wait_for(
+        get_booted_notification_time(emulator), timeout=1080
+    )
     record_property("emulator_boot_time", boot_time)
 
     logging.info("Wating for it to stablize ...")
 
-    def network_up():
-        return has_network(emulator.adb)
+    async def network_up():
+        return await has_network(emulator.adb)
 
     # make sure it has both radio and wifi
-    assert eventually(network_up, timeout=30), "Radio and wifi are not ready!"
-    assert emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
+    assert await eventually(network_up, timeout=30), "Radio and wifi are not ready!"
+    assert await emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
 
-    shutdown(emulator)
+    await shutdown(emulator)
 
 
 def check_boot_from_snapshot(avdpath) -> bool:
@@ -143,55 +141,54 @@ def check_boot_from_snapshot(avdpath) -> bool:
 @pytest.mark.boot
 @pytest.mark.e2e
 @pytest.mark.sanity
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.timeout_win(timeout=120)
-def test_snapshot_booted(emulator):
+async def test_snapshot_booted(emulator):
     """Make sure the emulator status is able to boot from snapshot.
 
     It is important to boot fast from snapshot, that is why it
     is set to timeout in 60 seconds
     """
 
-    emulator.stop()
+    await emulator.stop()
     logging.info("Launching emulator ...")
     myflags = ["-no-snapshot-save"]
     if platform.system() == "Windows":
         myflags.append("-read-only")
 
-    assert emulator.launch(flags=myflags)
+    assert await emulator.launch(flags=myflags)
 
     mytimeout = 120
     if platform.processor() == "i386" and platform.system() == "Darwin":
         mytimeout = 360
     logging.info("Wating for it to boot up from snapshot ...")
-    assert emulator.wait_for_boot(timeout=mytimeout)
+    assert await emulator.wait_for_boot(timeout=mytimeout)
     logging.info("Wating for it to stablize ...")
 
     def has_booted_from_snapshot():
         return check_boot_from_snapshot(emulator.configuration.directory)
 
-    assert eventually(
+    assert await eventually(
         has_booted_from_snapshot
     ), f"The file {emulator.configuration.directory} does not exist or contain load_succeeded"
 
-    shutdown(emulator)
+    await shutdown(emulator)
 
 
 @pytest.mark.boot
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=600, func_only=True)
 @pytest.mark.skipos("win", "will turn on later")
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/286570480
-def test_emulator_should_idle(emulator):
+@pytest.mark.async_timeout(400)
+async def test_emulator_should_idle(emulator):
     """check emulator use less than 25% single cpu when idle."""
 
-    emulator.stop()
+    await emulator.stop()
     logging.info("Launching emulator ...")
     myflags = ["-no-snapshot-save"]
     if platform.system() == "Windows":
         myflags.append("-read-only")
 
-    assert emulator.launch(flags=myflags)
+    assert await emulator.launch(flags=myflags)
 
     mytimeout = 45
     if platform.processor() == "i386" and platform.system() == "Darwin":
@@ -199,27 +196,26 @@ def test_emulator_should_idle(emulator):
     logging.info(
         "Waiting at most %s seconds for emulator to boot from snapshot", mytimeout
     )
-    assert emulator.wait_for_boot(timeout=mytimeout)
+    assert await emulator.wait_for_boot(timeout=mytimeout)
     logging.info("Wating for it to stablize ...")
 
     def emulator_is_stable():
         """True if the emulator is stable, consuming less than 25% of the cpu."""
         return cpu_usage(emulator) <= 25
 
-    assert eventually(
+    assert await eventually(
         emulator_is_stable, timeout=300
     ), f"Cpu did not stabilize (i.e. cpu usage < 25%), cpu: {cpu_usage(emulator)}"
 
     logging.info("Shutting it down ...")
     if emulator.is_alive():
-        emulator.stop(timeout=60)
+        await emulator.stop()
     logging.info("emulator is shut down successfully")
 
 
 @pytest.mark.boot
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
-def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
-    assert avd.has_booted()
-    assert get_booted_notification_time(avd, timeout=10) is not None
+async def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
+    assert await avd.has_booted()
+    assert await asyncio.wait_for(get_booted_notification_time(avd), timeout=10)

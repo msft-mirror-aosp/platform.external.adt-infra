@@ -22,7 +22,7 @@ from aemu.proto.emulator_controller_pb2 import (
     Posture,
 )
 
-from emu.timing import eventually, wait_until
+from emu.timing import wait_until
 
 
 def is_equal(model_value, other, consider_equal={}) -> bool:
@@ -46,14 +46,14 @@ def is_equal(model_value, other, consider_equal={}) -> bool:
     return True
 
 
-def set_and_get_model(emu_controller, model_value):
+async def set_and_get_model(emu_controller, model_value):
     """Executes set and get physical model rpc call
     Args:
       emu_controller : emulator controller
       model_value: physical model value of emulator
     """
-    emu_controller.setPhysicalModel(model_value)
-    retrieved = emu_controller.getPhysicalModel(
+    await emu_controller.setPhysicalModel(model_value)
+    retrieved = await emu_controller.getPhysicalModel(
         PhysicalModelValue(target=model_value.target)
     )
 
@@ -72,9 +72,8 @@ class Axis(Enum):
 
 @pytest.mark.hardware
 @pytest.mark.skip("Very flaky, the physical model appears non-deterministic")
-@pytest.mark.timeout(timeout=5 * 72, func_only=True)
 @pytest.mark.parametrize("axis", [Axis.X, Axis.Y, Axis.Z])
-def test_physical_rotation_around_axis_will_update_magneto_meter(
+async def test_physical_rotation_around_axis_will_update_magneto_meter(
     emulator_controller, mobly, at_home, axis
 ):
     """Test that setting the physical model is observable through the magneto meter.
@@ -88,43 +87,43 @@ def test_physical_rotation_around_axis_will_update_magneto_meter(
     """
     physics = mobly("animation")
 
-    def reset_state():
+    async def reset_state():
         model_value = PhysicalModelValue(
             target=PhysicalModelValue.ROTATION,
             value=ParameterValue(data=[0, 0, 0]),
         )
-        emulator_controller.setPhysicalModel(model_value)
-
-        assert wait_until(physical_model_stabilized)
+        await emulator_controller.setPhysicalModel(model_value)
+        assert await wait_until(physical_model_stabilized, timeout=2)
 
     def guest_magnetic_field():
         return physics.getMagnetometerReading()
 
-    def host_magnetic_field():
-        return emulator_controller.getPhysicalModel(
+    async def host_magnetic_field():
+        state = await emulator_controller.getPhysicalModel(
             PhysicalModelValue(
                 target=PhysicalModelValue.MAGNETIC_FIELD,
             )
-        ).value.data
+        )
+        return state.value.data
 
-    def physical_model_stabilized():
-        host = host_magnetic_field()
+    async def physical_model_stabilized():
+        host = await host_magnetic_field()
         guest = guest_magnetic_field()
         logging.info("Check if %s = %s", host, guest)
         return pytest.approx(host, abs=1) == guest
 
     for rotation in range(-179, 179, 5):
-        reset_state()
+        await reset_state()
         data = [0, 0, 0]
         data[axis.value] = rotation
         model_value = PhysicalModelValue(
             target=PhysicalModelValue.ROTATION,
             value=ParameterValue(data=data),
         )
-        emulator_controller.setPhysicalModel(model_value)
+        await emulator_controller.setPhysicalModel(model_value)
 
-        assert wait_until(
-            physical_model_stabilized, timeout=10
+        assert await wait_until(
+            physical_model_stabilized, timeout=2, hz=2
         ), f"{pytest.approx(host_magnetic_field(), abs=1)} != {guest_magnetic_field()} ({model_value.value.data}) in a timely fashion."
 
 
@@ -145,7 +144,6 @@ def test_physical_rotation_around_axis_will_update_magneto_meter(
         ("Wrist_Tilt", PhysicalModelValue.WRIST_TILT, 16, 0, 0),
     ],
 )
-@pytest.mark.timeout(timeout=20, func_only=True)
 def test_physical_model_value(
     emulator_controller, test_name, physical_type_value, x, y, z
 ):
@@ -168,7 +166,6 @@ def test_physical_model_value(
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.parametrize(
     "test_name, posture",
     [

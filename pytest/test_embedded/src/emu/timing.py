@@ -11,17 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import ctypes
+import asyncio
 import logging
-import threading
 import time
-
-from iterators import TimeoutIterator
-
-from emu.logging.log_handler import QueueLogHandler
+from typing import AsyncIterator
 
 
-def wait_until(predicate, timeout=15, pre_requisite=lambda: True, hz=2):
+def true():
+    return True
+
+
+async def wait_until(predicate, timeout=15, pre_requisite=true, hz=2):
     """
     Wait until the given predicate function returns True, or until the timeout
     expires.
@@ -47,39 +47,48 @@ def wait_until(predicate, timeout=15, pre_requisite=lambda: True, hz=2):
     """
     start = time.time()
     end = time.time() + timeout
-    predicate_state = predicate()
-    pre_requisite_state = pre_requisite()
-    while not predicate_state and (time.time() < end and pre_requisite_state):
-        time.sleep(1 / hz)
+
+    if asyncio.iscoroutinefunction(predicate):
+        predicate_state = await predicate()
+    else:
         predicate_state = predicate()
+    if asyncio.iscoroutinefunction(pre_requisite):
+        pre_requisite_state = await pre_requisite()
+    else:
         pre_requisite_state = pre_requisite()
+
+    while not predicate_state and (time.time() < end and pre_requisite_state):
+        await asyncio.sleep(1 / hz)
+        if asyncio.iscoroutinefunction(predicate):
+            predicate_state = await predicate()
+        else:
+            predicate_state = predicate()
+        if asyncio.iscoroutinefunction(pre_requisite):
+            pre_requisite_state = await pre_requisite()
+        else:
+            pre_requisite_state = pre_requisite()
 
     if time.time() >= end:
         logging.info("Operation timed out after %s seconds", time.time() - start)
     return predicate_state and pre_requisite_state
 
 
-def _eventually_queue(queue: QueueLogHandler, predicate, timeout=10):
+async def _eventually_async_iter(queue: AsyncIterator, predicate):
     """Special handler for queue logs, which are aysnc iterators. We need to special case those iterators."""
+    async for event in queue:
+        if asyncio.iscoroutinefunction(predicate):
+            predicate_state = await predicate(event)
+        else:
+            predicate_state = predicate(event)
 
-    end = time.time() + timeout
-
-    # Timeout (i.e. stop the queue), if we have no events before the timeout
-    queue.set_timeout(timeout)
-    for event in queue:
-        # Check the case where we had events, but not one matching the predicate
-        if time.time() > end:
-            return None
-
-        # Check our predicate.
-        if predicate(event):
+        if predicate_state:
             return event
 
     # We timed out.
     return None
 
 
-def wait_for_event(predicate, iterator=None, timeout=5):
+async def _wait_for_event(predicate, iterator=None, timeout=5):
     """
     Returns the event for which the given `predicate` function returns True for any event
     produced by the given `iterator` within the given `timeout` period.
@@ -98,28 +107,15 @@ def wait_for_event(predicate, iterator=None, timeout=5):
     """
     # We need to special case queue handlers as they use their own thread
     # and will handle timeouts themselves.
-    if isinstance(iterator, QueueLogHandler):
-        return _eventually_queue(iterator, predicate, timeout)
-
-    end = time.time() + timeout
-
-    # Every 0.5 sec we check for a timeout.
-    logging.info("Waiting for %s", iterator)
-    timed_iterator = TimeoutIterator(iterator, timeout=0.5)
-    for event in timed_iterator:
-        if time.time() > end:
-            return None
-
-        if event == timed_iterator.get_sentinel():
-            continue
-
-        if predicate(event):
-            return event
-
-    return None
+    try:
+        return await asyncio.wait_for(
+            _eventually_async_iter(iterator, predicate), timeout
+        )
+    except asyncio.TimeoutError:
+        return None
 
 
-def eventually(predicate, iterator=None, timeout=5):
+async def eventually(predicate, iterator=None, timeout=5):
     """
     Returns True if the given `predicate` function returns True for any event
     produced by the given `iterator` within the given `timeout` period.
@@ -138,62 +134,9 @@ def eventually(predicate, iterator=None, timeout=5):
     """
 
     if iterator is None:
-        return wait_until(predicate, timeout)
+        try:
+            return await wait_until(predicate, timeout) is not None
+        except asyncio.TimeoutError:
+            return False
 
-    return wait_for_event(predicate, iterator, timeout) != None
-
-
-class TimeoutTrigger:
-    def __init__(self, callback, timeout: int = 60):
-        self.timer = threading.Timer(timeout, callback)
-        self.timer.name = f"Timeout watch thread ({timeout})"
-
-    def cancel(self):
-        """
-        Cancels the timer and waits for the timer thread to finish.
-        """
-        self.timer.cancel()
-        self.timer.join()
-
-    def __enter__(self):
-        """Enters the context and starts the timer."""
-        self.timer.start()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exits the context and cancels the timer."""
-        logging.debug("Exit %s, %s", exc_type, exc_val)
-        self.cancel()
-
-
-class TimeoutExceptionTrigger(TimeoutTrigger):
-    """
-    A subclass of TimeoutTrigger that raises a TimeoutError exception in
-    the context of the target thread.
-
-    Note: This expects the code not to block! For example it will not work
-    if the code block is using time.sleep(timeout), or is running a subprocess.
-
-    Parameters:
-        timeout: int
-            The timeout duration in seconds. Default is 60 seconds.
-    """
-
-    def __init__(self, timeout: int = 60):
-        super().__init__(self._handler, timeout)
-        self.target_tid = 0
-
-    def _handler(self):
-        """Raises a TimeoutError exception in the context of the target thread."""
-        logging.debug("Raising an exception in %s.", self.target_tid)
-        ret = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-            ctypes.c_long(self.target_tid), ctypes.py_object(TimeoutError)
-        )
-        if ret > 1:
-            # Oh oh.. Python is now in a bad state!
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(self.target_tid, None)
-            raise SystemError("PyThreadState_SetAsyncExc failed, Timout Class failure!")
-
-    def __enter__(self):
-        """Enters the context and starts the timer."""
-        self.target_tid = threading.current_thread().ident
-        return super().__enter__()
+    return await _wait_for_event(predicate, iterator, timeout) is not None

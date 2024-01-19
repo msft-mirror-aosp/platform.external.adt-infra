@@ -13,13 +13,12 @@
 # limitations under the License.
 import logging
 import platform
-import subprocess
 from pathlib import Path
 
-from ppadb.client import Client as AdbClient
-from ppadb.device import Device
+from ppadb.client_async import ClientAsync as AdbClientAsync
 
-from emu.adb.stream import AdbStream
+from emu.adb.async_device import AdbDeviceAsync, DeviceStream
+from emu.process.command import Command
 
 
 class AdbDeviceNotFound(Exception):
@@ -33,7 +32,7 @@ class Adb:
         name (str): Name of the emulator.
         avd_id (str): Identifier of the Android Virtual Device (AVD) associated with the emulator.
         logger (Logger): Logging object to handle logs for this ADB instance.
-        client (AdbClient): An instance of the AdbClient class for ADB communication.
+        client (AdbClientAsync): An instance of the AdbClientAsync class for ADB communication.
         adb_binary (Path): Path to the ADB executable.
 
     Args:
@@ -46,36 +45,37 @@ class Adb:
         """Create an adb object that runs against the given emulator
 
         Args:
-            emulator (str): Name of the emulator, this will be passed in as the -s parameter
+            emulator (str): Name of the emulator, this will be passed in as the -s parameter when making
+                            calls with the adb executable
             adb (Path): path to the adb executable.
         """
         self.name = emulator
         self.avd_id = avd_id
         self.logger = logging.getLogger(f"{avd_id}-adb")
-        self.client: AdbClient = AdbClient()
+        self.client: AdbClientAsync = AdbClientAsync()
 
         if not adb.exists() and platform.system() == "Windows":
             adb = adb.with_suffix(".exe")
 
         self.adb_binary = adb.absolute()
 
-    def device(self) -> Device:
-        """Get the Device object representing the Android emulator.
+    async def device(self) -> AdbDeviceAsync:
+        """Get the DeviceAsync object representing the Android emulator.
 
         Returns:
-            Device: An instance of the Device class representing the emulator.
+            DeviceAsync: An instance of the Device class representing the emulator.
 
         Raises:
             AdbDeviceNotFound: If the device with the specified name is not found or has crashed.
         """
-        device = self.client.device(self.name)
+        device = await self.client.device(self.name)
         if not device:
             raise AdbDeviceNotFound(
                 f"Unable to find the device {self.name}, did it crash?"
             )
-        return device
+        return AdbDeviceAsync(device, self.client, self.logger)
 
-    def _with_adb_retry(self, method, params):
+    async def _with_adb_retry(self, method, params):
         """Executes the given ADB method with retry logic in case of failure.
 
         Args:
@@ -92,29 +92,31 @@ class Adb:
             logging.info(
                 "adb: %s(%s)", method.__name__, ", ".join([str(x) for x in params])
             )
-            return method(*params)
-        except RuntimeError as rerr:
+            return await method(*params)
+        except Exception as rerr:
             logging.error(
-                "Failed to invoke method due %s, retry after adb restart", rerr
+                "Failed to invoke method due %s, retry after adb restart",
+                rerr,
+                exc_info=True,
             )
-            self.stop_server()
-            self.start_server()
-            return method(*params)
+            await self.stop_server()
+            await self.start_server()
+            return await method(*params)
 
-    def stop_server(self) -> None:
+    async def stop_server(self) -> None:
         """Stops the adb server."""
-        subprocess.check_call([self.adb_binary, "kill-server"])
+        await Command([self.adb_binary, "kill-server"]).run_until_finished()
 
-    def start_server(self) -> None:
+    async def start_server(self) -> None:
         """Starts the adb server."""
-        subprocess.check_call([self.adb_binary, "start-server"])
+        await Command([self.adb_binary, "start-server"]).run_until_finished()
 
-    def restart(self) -> None:
+    async def restart(self) -> None:
         """Restarts the adb server."""
-        self.stop_server()
-        self.start_server()
+        await self.stop_server()
+        await self.start_server()
 
-    def is_installed(self, package: str) -> bool:
+    async def is_installed(self, package: str) -> bool:
         """Check if the given package is installed on the device.
 
         Args:
@@ -123,46 +125,51 @@ class Adb:
         Returns:
             bool: True if the package is installed, False otherwise.
         """
-        return self._with_adb_retry(self.device().is_installed, [package])
+        device = await self.device()
+        return await self._with_adb_retry(device.is_installed, [package])
 
-    def install(self, apk: Path) -> None:
+    async def install(self, apk: Path) -> None:
         """Install the given apk on the device.
 
         Args:
             apk (Path): The path to the APK file to be installed.
         """
-        self._with_adb_retry(self.device().install, [apk])
+        device = await self.device()
+        await self._with_adb_retry(device.install, [apk])
 
-    def pull(self, src: str, dest: str) -> None:
+    async def pull(self, src: str, dest: str) -> None:
         """Pull a file from the device to the host.
 
         Args:
             src (str): The path of the file on the device.
             dest (str): The destination path on the host.
         """
-        self._with_adb_retry(self.device().pull, [src, dest])
+        device = await self.device()
+        await self._with_adb_retry(device.pull, [src, dest])
 
-    def push(self, src: str, dest: str) -> None:
+    async def push(self, src: str, dest: str) -> None:
         """Push a file from the host to the device.
 
         Args:
             src (str): The path of the file on the host.
             dest (str): The destination path on the device.
         """
-        self._with_adb_retry(self.device().push, [src, dest])
+        device = await self.device()
+        await self._with_adb_retry(device.push, [src, dest])
 
-    def wait_boot_complete(self, timeout=60, timedelta=1):
+    async def wait_boot_complete(self, timeout=60, timedelta=1):
         """Wait for the device to complete the boot process.
 
         Args:
             timeout (int, optional): Maximum time to wait for boot completion in seconds. Default is 60 seconds.
             timedelta (int, optional): Time interval between boot status checks in seconds. Default is 1 second.
         """
-        return self._with_adb_retry(
-            self.device().wait_boot_complete, [timeout, timedelta]
+        device = await self.device()
+        return await self._with_adb_retry(
+            device.wait_boot_complete, [timeout, timedelta]
         )
 
-    def online(self):
+    async def online(self):
         """Check if the device is connected and accessible.
 
         This state indicates that the device is ready for
@@ -171,9 +178,10 @@ class Adb:
         Returns:
             bool: True if the device is online, False otherwise.
         """
-        return "device" in self._with_adb_retry(self.device().get_state, [])
+        device = await self.device()
+        return "device" in await self._with_adb_retry(device.get_state, [])
 
-    def shell(self, cmd: str, timeout: int = 10) -> str:
+    async def shell(self, cmd: str, timeout: int = 10) -> str:
         """Runs the given shell command on the emulator
 
         Args:
@@ -183,21 +191,11 @@ class Adb:
         Returns:
             str: Result of the shell command
         """
-        self.logger.info("shell (%ss): %s", timeout, cmd)
-        try:
-            res = self.device().shell(cmd, timeout=timeout)
-        except (RuntimeError, TimeoutError) as rerr:
-            logging.error(
-                "Failed to invoke method due %s, retry after adb restart", rerr
-            )
-            self.stop_server()
-            self.start_server()
-            res = self.device().shell(cmd, timeout=timeout)
-
-        self.logger.info("shell (result): %s", res)
+        device = await self.device()
+        res = await device.shell(cmd, timeout=timeout)
         return res
 
-    def run(self, cmd: list[str], timeout: int = 10) -> str:
+    async def run(self, cmd: list[str], timeout: int = 10) -> (int, [str]):
         """Runs the given command on the emulator
 
         Please do not use this, it spawns an adb process.
@@ -212,17 +210,16 @@ class Adb:
         Raises:
             subprocess.CalledProcessError
         """
-        self.logger.info("adb -s %s %s", self.name, " ".join(cmd))
-        return subprocess.check_output(
-            [self.adb_binary, "-s", self.name] + cmd, encoding="utf-8", timeout=timeout
-        )
+        return await Command(
+            [self.adb_binary, "-s", self.name] + cmd
+        ).run_until_finished(timeout)
 
-    def stream(self, cmd: str, timeout: int = 10) -> AdbStream:
+    async def stream(self, cmd: str, timeout: int = 10) -> DeviceStream:
         """Runs the given command on the emulator asynchronously
 
         You usually want to use this like this:
 
-        with adb.stream("some shell cmd") as stream:
+        async with adb.stream("some shell cmd") as stream:
             # do some things.
             for line in stream
                 print(line)
@@ -236,10 +233,20 @@ class Adb:
         Returns:
             AdbStream: An observable stream with results from adb
         """
-        return AdbStream(self.logger, self.device(), cmd=cmd, timeout=timeout)
+        device = await self.device()
+        return await device.shell_stream(cmd, timeout)
 
-    def logcat(self, clear: bool = False, tag: str = None, timeout=10) -> AdbStream:
+    async def logcat(
+        self, clear: bool = False, tag: str = None, timeout=180
+    ) -> DeviceStream:
         """Obtains the current logcat stream
+
+        You usually want to use it like this:
+
+        async with await adb.logcat(tag="my_tag) as stream:
+            async for line in stream:
+                print(f"Here's a logcat line: {line}")
+
 
         Args:
             tag (str): Tag to filter by
@@ -248,18 +255,15 @@ class Adb:
                           is produced with the given time
 
         Returns:
-            LogcatStream: An iterator with logcat lines
+            DeviceStream: An AsyncIterator with logcat lines
         """
         if clear:
-            self.shell("logcat -c")
+            # Note: This is really best effort!
+            await self.shell("logcat -c")
 
         cmd = "logcat"
         if tag:
             cmd += f" -s {tag}"
 
-        return AdbStream(
-            logging.getLogger(f"{self.avd_id}-cat"),
-            self.device(),
-            cmd=cmd,
-            timeout=timeout,
-        )
+        device = await self.device()
+        return await device.shell_stream(cmd, timeout)

@@ -16,49 +16,49 @@ import random
 
 import pytest
 from aemu.proto.ui_controller_service_pb2 import PaneEntry, WindowPosition
+from aemu.proto.ui_controller_service_pb2_grpc import UiControllerStub
 from google.protobuf import empty_pb2
 
 __EMPTY__ = empty_pb2.Empty()
 
 
 @pytest.fixture
-def ui_controller(avd):
-    yield avd.description.get_ui_controller_service()
+def ui_controller(service):
+    yield service(UiControllerStub)
 
 
-def get_user_config(avd):
-    stub = avd.description.get_ui_controller_service()
-    status = stub.getUserConfig(__EMPTY__)
+async def get_user_config(avd):
+    channel = avd.description.get_async_grpc_channel([("emulator.security", "token")])
+    ui_controller = UiControllerStub(channel)
+    status = await ui_controller.getUserConfig(__EMPTY__)
     return dict([(x.key, x.value) for x in status.entries])
 
 
 @pytest.mark.dependency()
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.embedded
-def test_ui_controller_clean(avd):
+async def test_ui_controller_clean(avd):
     """Tests that the emulator has no extended control setting, this means
     the extended window was never shown before.
     """
-    userConfig = get_user_config(avd)
+    userConfig = await get_user_config(avd)
     logging.info(userConfig)
     assert (
-        not "extended_controls.x" in userConfig
+        "extended_controls.x" not in userConfig
     ), "The emulator already has an initial configuration, which implies the extended window has been displayed at least once!"
 
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.dependency(depends=["test_ui_controller_clean"])
-def test_ui_controller_first_position_works(avd, ui_controller):
+async def test_ui_controller_first_position_works(avd, ui_controller):
     """Tests that setting the position for the first time will work.
 
     Note: This is really a best effort test.
     """
-    ui_controller.closeExtendedControls(__EMPTY__)
+    await ui_controller.closeExtendedControls(__EMPTY__)
     x = random.randrange(800, 1200)
     y = random.randrange(400, 500)
-    controlStatus = ui_controller.showExtendedControls(
+    controlStatus = await ui_controller.showExtendedControls(
         PaneEntry(
             position=WindowPosition(
                 x=x,
@@ -72,7 +72,7 @@ def test_ui_controller_first_position_works(avd, ui_controller):
     # We became visible.
     assert controlStatus.visibilityChanged
 
-    userConfig = get_user_config(avd)
+    userConfig = await get_user_config(avd)
 
     # Check the window is left and above what we set it to.
     assert "extended_controls.x" in userConfig
@@ -86,24 +86,23 @@ def test_ui_controller_first_position_works(avd, ui_controller):
     assert userConfig["extended_controls.vanchor"] == "2"
 
     # We become invisible.
-    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
+    controlStatus = await ui_controller.closeExtendedControls(__EMPTY__)
     assert controlStatus.visibilityChanged
 
 
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.dependency(depends=["test_ui_controller_first_position_works"])
-@pytest.mark.timeout(timeout=10, func_only=True)
-def test_ui_controller_position_does_not_change(avd, ui_controller):
+async def test_ui_controller_position_does_not_change(avd, ui_controller):
     """Tests that setting the position for the second time will work, but
        does not modify the location of the window.
 
     Note: This is really a best effort test.
     """
-    userConfig = get_user_config(avd)
-    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
+    userConfig = await get_user_config(avd)
+    controlStatus = await ui_controller.closeExtendedControls(__EMPTY__)
 
-    controlStatus = ui_controller.showExtendedControls(
+    controlStatus = await ui_controller.showExtendedControls(
         PaneEntry(
             position=WindowPosition(
                 x=10,
@@ -118,24 +117,23 @@ def test_ui_controller_position_does_not_change(avd, ui_controller):
     assert controlStatus.visibilityChanged
 
     # Similarly we SHOULD NOT update the window position, as it was already set.
-    latestConfig = get_user_config(avd)
+    latestConfig = await get_user_config(avd)
     assert userConfig["extended_controls.x"] == latestConfig["extended_controls.x"]
     assert userConfig["extended_controls.y"] == latestConfig["extended_controls.y"]
 
     # We become invisible.
-    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
+    controlStatus = await ui_controller.closeExtendedControls(__EMPTY__)
     assert controlStatus.visibilityChanged
 
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=10, func_only=True)
-def test_ui_controller_fast_switch_should_work(ui_controller):
+async def test_ui_controller_fast_switch_should_work(ui_controller):
     """Make sure we can open and close the window quickly.
 
     This exposes b/183641352
     """
-    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
-    controlStatus = ui_controller.showExtendedControls(__EMPTY__)
-    controlStatus = ui_controller.closeExtendedControls(__EMPTY__)
+    controlStatus = await ui_controller.closeExtendedControls(__EMPTY__)
+    controlStatus = await ui_controller.showExtendedControls(__EMPTY__)
+    controlStatus = await ui_controller.closeExtendedControls(__EMPTY__)
     assert controlStatus.visibilityChanged

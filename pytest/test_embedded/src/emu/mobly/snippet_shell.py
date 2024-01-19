@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 
 from mobly.controllers import android_device
 from mobly.controllers.android_device_lib import jsonrpc_shell_base

@@ -11,17 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import logging
 import re
-import threading
 import time
-from queue import Queue
 
 import google.protobuf.text_format
-import grpc
-from aemu.proto.emulator_controller_pb2 import ImageFormat
 
-from emu.images.convert import save_image
 from emu.timing import eventually
 
 
@@ -46,63 +40,3 @@ def wait_for_regex(stream, regex, max_wait):
     """
     compiled = re.compile(regex)
     return eventually(compiled.match, stream, timeout=max_wait)
-
-
-class StreamingCall(object):
-    """A streaming call that receives data on a separate thread.
-
-    All the received messages will be placed in a queue that is returned
-    upon entering, tests can examine the queue to make sure it is behaving as expected.
-
-    The call will automatically be cancelled upon exit. Use it
-    as follows:
-
-    with StreamingCall(emu.streamXXX(xx)) as stream:
-        stream.get()
-    """
-
-    __FINISHED_SENTINEL__ = {"Finished": True}
-
-    def __init__(self, stream_call):
-        self._queue = Queue()
-        self._stream_call = stream_call
-        self.client_cancel = False
-
-    def _enqueue(self, incoming_message):
-        self._queue.put(incoming_message)
-
-    def _observe_call(self):
-        received = 0
-        try:
-            for val in self._stream_call:
-                self._enqueue(val)
-                received = received + 1
-        except grpc.RpcError as e:
-            # We expect to be cancelled by either the client or server.
-            logging.info(
-                "Completed observation: %s, %s, received: %d messages. Cancelled by client?: %s",
-                e.code(),
-                e.details(),
-                received,
-                self.client_cancel,
-            )
-        self._queue.put(self.__FINISHED_SENTINEL__)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        result = self._queue.get()
-        if result != self.__FINISHED_SENTINEL__:
-            return result
-        else:
-            raise StopIteration
-
-    def __enter__(self):
-        threading.Thread(target=self._observe_call).start()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # We left scope, cancel from the client side.
-        self.client_cancel = True
-        self._stream_call.cancel()

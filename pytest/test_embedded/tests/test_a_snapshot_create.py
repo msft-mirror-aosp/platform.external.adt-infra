@@ -3,12 +3,10 @@ import os
 import platform
 import shutil
 import subprocess
-import time
 from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
-from google.protobuf import empty_pb2
 
 # This will run the boot test with DownloadableSnapshot feature turned on
 # when it completes, it should save a snapshot to dist_out
@@ -43,9 +41,8 @@ def dumpAvdConent(mypath):
 @pytest.mark.e2e
 @pytest.mark.slow
 @pytest.mark.snapshot
-@pytest.mark.timeout(timeout=1800, func_only=True)
 @pytest.mark.skipos("win", "Windows takes >2700 seconds to boot")
-def test_snapshot_create(emulator):
+async def test_snapshot_create(emulator):
     """Make sure the emulator status is set to booted."""
     if "DIST_DIR" in os.environ:
         logging.info(
@@ -57,7 +54,7 @@ def test_snapshot_create(emulator):
             "Testing snashot creation, cannot save a zip file to dist_out as it is not defined"
         )
 
-    emulator.stop()
+    await emulator.stop()
 
     localpath = None
     try:
@@ -75,7 +72,7 @@ def test_snapshot_create(emulator):
         dumpAvdConent(config.directory)
 
         logging.info("Enabling DownloadableSnapshot feature")
-        assert emulator.launch(
+        assert await emulator.launch(
             flags=[
                 "-wipe-data",
                 "-feature",
@@ -85,15 +82,15 @@ def test_snapshot_create(emulator):
         )
 
         logging.info("Booting up emualtor ...")
-        assert emulator.wait_for_boot(timeout=1080)
+        assert await emulator.wait_for_boot(timeout=1080)
 
         # wait till it settle down a bit
-        time.sleep(30)
+        await asyncio.sleep(30)
 
         logging.info("Stopping emualtor")
-        emulator.stop()
+        await emulator.stop()
 
-        time.sleep(10)
+        await asyncio.sleep(10)
 
         dumpAvdConent(config.directory)
 
