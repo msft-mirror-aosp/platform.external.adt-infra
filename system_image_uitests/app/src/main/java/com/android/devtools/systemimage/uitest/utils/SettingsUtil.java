@@ -788,11 +788,14 @@ public class SettingsUtil {
      * @param accountName String
      * @return boolean
      */
-    public static boolean removeGoogleAccount(UiDevice device, String accountName) throws Exception {
+    public static boolean removeGoogleAccount(
+            UiDevice device, String accountName) throws Exception {
+
         UiObject manageAccount = device.findObject(new UiSelector().
                 resourceId(Res.GOOGLE_SERVICES_ACCOUNTS_CHIP_RES));
-        if (manageAccount.waitForExists(5L)) {
-            manageAccount.clickAndWaitForNewWindow();
+        if (manageAccount.waitForExists(10000L)) {
+            manageAccount.click();
+            manageAccount.waitUntilGone(10000L);
         } else {
             return false;
         }
@@ -800,8 +803,9 @@ public class SettingsUtil {
         UiObject userAccount = device.findObject(new UiSelector().
                 text(accountName).
                 resourceId("android:id/title"));
-        if (userAccount.waitForExists(5L)) {
-            userAccount.clickAndWaitForNewWindow();
+        if (userAccount.waitForExists(5000L)) {
+            userAccount.click();
+            userAccount.waitUntilGone(10000L);
         } else {
             return false;
         }
@@ -810,8 +814,9 @@ public class SettingsUtil {
                 text("Remove account").
                 resourceId("com.android.settings:id/button").
                 className(Button.class));
-        if (removeAccount.waitForExists(5L)) {
-            removeAccount.clickAndWaitForNewWindow();
+        if (removeAccount.waitForExists(5000L)) {
+            removeAccount.click();
+            removeAccount.waitUntilGone(10000L);
         } else {
             return false;
         }
@@ -820,8 +825,9 @@ public class SettingsUtil {
                 text("Remove account").
                 resourceId("android:id/button1").
                 className(Button.class));
-        if (confirmRemove.waitForExists(5L)) {
-            confirmRemove.clickAndWaitForNewWindow();
+        if (confirmRemove.waitForExists(5000L)) {
+            confirmRemove.click();
+            confirmRemove.waitUntilGone(10000L);
         } else {
             return false;
         }

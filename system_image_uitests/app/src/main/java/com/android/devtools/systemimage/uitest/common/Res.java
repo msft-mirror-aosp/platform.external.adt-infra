@@ -86,7 +86,7 @@ public class Res {
     public static final String SETTINGS_ACTION_BAR_RES = "com.android.settings:id/action_bar";
     public static final String SETTINGS_ACTION_BUTTON_RES = "com.android.settings:id/action_button";
     public static final String SETTINGS_COLLAPSING_TOOLBAR_RES = "com.android.settings:id/collapsing_toolbar";
-    public static final String GOOGLE_ACCOUNT_BUTTON_RES = "com.google.android.gms:id/clp_button";
+    public static final String GOOGLE_ACCOUNT_POSITIVE_BUTTON_RES = "com.google.android.gms:id/button_positive";
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";
     public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";
     public static final String CAMERA_FILE_THUMBNAIL_RES = "com.android.camera2:id/rounded_thumbnail_view";

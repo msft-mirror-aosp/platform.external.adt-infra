@@ -420,7 +420,7 @@ public class SettingsTest {
         assertTrue("Target time zone label not found",
                 device.findObject(new UiSelector().textContains(timezoneOffset)).waitForExists(3L));
     }
-    
+
     /**
      * Verifies that the user can register the device from Google Settings.
      * <p>
@@ -441,7 +441,7 @@ public class SettingsTest {
         String userPassword = GoogleAppUtil.getUserPassword();
 
         final UiObject userLoginInfo = device.findObject(
-                new UiSelector().                        
+                new UiSelector().
                         className(TextView.class).
                         text(userEmail));
 
@@ -462,19 +462,37 @@ public class SettingsTest {
                     new Wait(1000L).until(passwordsLabel::exists));
 
             device.pressBack();
+
+            if (passwordsLabel.waitForExists(5000L)) {
+                passwordsLabel.waitUntilGone(5000L);
+            }
         }
 
-        final UiObject googleAccountButton = device.findObject(
-                new UiSelector().resourceId(Res.GOOGLE_ACCOUNT_BUTTON_RES));
+        final UiObject manageAccountButton = device.findObject(
+                new UiSelector()
+                        .text(wasUserLoggedIn ? "Manage your Google Account" : "Sign in to your Google Account")
+                        .className(Button.class));
 
         assertTrue("Manage Google account button not found.",
-                new Wait(5000L).until(manageAccountButton::exists));
+                new Wait(20000L).until(manageAccountButton::exists));
 
         manageAccountButton.click();
 
-        assertTrue("Manage Google account button not dismissed.",
-                manageAccountButton.waitUntilGone(10000L));
-
+        if (wasUserLoggedIn) {
+            final UiObject addAccountButton = device.findObject(
+                    new UiSelector().
+                            resourceId(Res.GOOGLE_ACCOUNT_POSITIVE_BUTTON_RES).
+                            text("Add account").
+                            className(Button.class));
+            if (addAccountButton.waitForExists(5000L)) {
+                addAccountButton.click();
+                assertTrue("Add Google account button not dismissed.",
+                        addAccountButton.waitUntilGone(10000L));
+            }
+        } else {
+            assertTrue("Manage Google account button not dismissed.",
+                    manageAccountButton.waitUntilGone(10000L));
+        }
         final UiObject checkingInfoLabel = device.findObject(
                 new UiSelector().resourceId(Res.GOOGLE_LAYOUT_ICON_RES));
 
@@ -498,12 +516,19 @@ public class SettingsTest {
                         className(EditText.class));
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account email input not found.",
-        new Wait(20000L).until(googleEmailInput::exists));
+                new Wait(20000L).until(googleEmailInput::exists));
 
         googleEmailInput.clearTextField();
         googleEmailInput.setText(userEmail);
         googleEmailInput.clickAndWaitForNewWindow(3000L);
-        device.pressEnter();
+
+        final UiObject nextButton = device.findObject(
+                new UiSelector().
+                        text("Next").
+                        className(Button.class));
+
+        assertTrue("Email screen Next Button not found", nextButton.waitForExists(5000L));
+        nextButton.clickAndWaitForNewWindow(3000L);
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Email input entry page not dismissed.",
                 googleEmailInput.waitUntilGone(90000L));
@@ -518,7 +543,9 @@ public class SettingsTest {
         googlePasswordInput.clearTextField();
         googlePasswordInput.setText(userPassword);
         googlePasswordInput.clickAndWaitForNewWindow(3000L);
-        device.pressEnter();
+
+        assertTrue("Password screen Next Button not found", nextButton.waitForExists(5000L));
+        nextButton.clickAndWaitForNewWindow(3000L);
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Password input entry page not dismissed.",
                 googlePasswordInput.waitUntilGone(90000L));
@@ -991,3 +1018,4 @@ public class SettingsTest {
         }
     }
 }
+
