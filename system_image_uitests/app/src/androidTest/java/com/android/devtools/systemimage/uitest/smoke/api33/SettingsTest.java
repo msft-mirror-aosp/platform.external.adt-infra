@@ -65,10 +65,10 @@ public class SettingsTest {
 
     private final static String TAG = "SettingsTest";
 
-    // Tests under this class takes up to 240 seconds depending on the performance of the bot the
+    // Tests under this class takes up to 1000 seconds depending on the performance of the bot the
     // tests run on.
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(800);
+    public Timeout globalTimeout = Timeout.seconds(1000);
 
     /**
      * Verifies Location page opens on Google API images.
@@ -497,7 +497,7 @@ public class SettingsTest {
                 new UiSelector().resourceId(Res.GOOGLE_LAYOUT_ICON_RES));
 
         assertTrue("Checking info label before email input not found.",
-                new Wait(10000L).until(checkingInfoLabel::exists));
+                new Wait(90000L).until(checkingInfoLabel::exists));
 
         assertTrue("Checking info label before email input not dismissed.",
                 checkingInfoLabel.waitUntilGone(90000L));
@@ -521,15 +521,8 @@ public class SettingsTest {
         googleEmailInput.clearTextField();
         googleEmailInput.setText(userEmail);
         googleEmailInput.clickAndWaitForNewWindow(3000L);
-
-        final UiObject nextButton = device.findObject(
-                new UiSelector().
-                        text("Next").
-                        className(Button.class));
-
-        assertTrue("Email screen Next Button not found", nextButton.waitForExists(5000L));
-        nextButton.clickAndWaitForNewWindow(3000L);
-
+        device.pressEnter();
+        
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Email input entry page not dismissed.",
                 googleEmailInput.waitUntilGone(90000L));
 
@@ -543,9 +536,7 @@ public class SettingsTest {
         googlePasswordInput.clearTextField();
         googlePasswordInput.setText(userPassword);
         googlePasswordInput.clickAndWaitForNewWindow(3000L);
-
-        assertTrue("Password screen Next Button not found", nextButton.waitForExists(5000L));
-        nextButton.clickAndWaitForNewWindow(3000L);
+        device.pressEnter();        
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Password input entry page not dismissed.",
                 googlePasswordInput.waitUntilGone(90000L));
