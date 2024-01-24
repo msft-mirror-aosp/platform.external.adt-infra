@@ -1,9 +1,11 @@
 import os
 import platform
+from pathlib import Path
+
 import pytest
 
-from pathlib import Path
 from emu.emulator import BaseEmulator
+
 
 @pytest.mark.e2e
 @pytest.mark.boot
@@ -21,9 +23,7 @@ def test_zip_file_contains_all_expected_files(emulator: BaseEmulator):
     assert len(act_sub_dirs) > 0, f"{emu_root} folder missing sub directories."
     exp_sub_dirs = get_exp_sub_dirs()
     for folder in exp_sub_dirs:
-        assert (
-            folder in act_sub_dirs
-        ), f"{folder} is missing in the Emulator directory."
+        assert folder in act_sub_dirs, f"{folder} is missing in the Emulator directory."
         sub_dir_files = [f.name for f in Path(os.path.join(emu_root, folder)).iterdir()]
         for file in exp_sub_dirs[folder]:
             assert (
@@ -32,9 +32,7 @@ def test_zip_file_contains_all_expected_files(emulator: BaseEmulator):
 
 
 def get_expected_files():
-    """ given a OS environment return the expected files under emulator folder.
-
-    """
+    """given a OS environment return the expected files under emulator folder."""
     exp_files = [
         "NOTICE.csv",
         "qsn",
@@ -50,7 +48,7 @@ def get_expected_files():
         "mksdcard",
         "nimble_bridge",
         "emulator",
-        "netsim"
+        "netsim",
     ]
 
     exp_files_win = [
@@ -81,17 +79,18 @@ def get_expected_files():
         "protobuf.lib",
         "vccorlib140.dll",
         "vcruntime140.dll",
-        "vcruntime140_1.dll"
+        "vcruntime140_1.dll",
     ]
 
     if platform.system() == "Windows":
-            return exp_files_win
+        return exp_files_win
     elif platform.system() == "Linux" or platform.system() == "Darwin":
-            return exp_files
+        return exp_files
+
 
 def get_exp_sub_dirs():
-    """ given a OS environment return the expected sub directories and
-        files under them.
+    """given a OS environment return the expected sub directories and
+    files under them.
 
     """
     exp_sub_dirs = {
@@ -119,7 +118,7 @@ def get_exp_sub_dirs():
             "control_socket.proto",
             "emulator_access.json",
             "libflatbuffers.a",
-            "waterfall.proto"
+            "waterfall.proto",
         ],
         "lib64": [
             "gles_angle",
@@ -135,7 +134,7 @@ def get_exp_sub_dirs():
             "libandroid-emu-metrics.dylib",
             "libemugl_common.dylib",
             "libprotobuf.32.dylib",
-            "vulkan"
+            "vulkan",
         ],
         "netsim-ui": ["assets", "index.html", "js", "node_modules"],
         "resources": [
@@ -146,8 +145,8 @@ def get_exp_sub_dirs():
             "Toren1BD.obj",
             "Toren1BD_Decor.png",
             "macroPreviews",
-            "poster.png"
-        ]
+            "poster.png",
+        ],
     }
 
     exp_sub_dirs_win = {
@@ -163,7 +162,7 @@ def get_exp_sub_dirs():
             "cygiconv-2.dll",
             "cygintl-8.dll",
             "cyguuid-1.dll",
-            "cygwin1.dll"
+            "cygwin1.dll",
         ],
         "include": ["flatbuffers"],
         "lib": [
@@ -186,7 +185,7 @@ def get_exp_sub_dirs():
             "hostapd.conf",
             "ui_controller_service.proto",
             "emulator_access.json",
-            "flatbuffers.lib"
+            "flatbuffers.lib",
         ],
         "lib64": [
             "gles_angle",
@@ -212,7 +211,7 @@ def get_exp_sub_dirs():
             "glib-2-vs11.dll",
             "gles_swiftshader",
             "gles_mesa",
-            "concrt140.dll"
+            "concrt140.dll",
         ],
         "netsim-ui": ["assets", "index.html", "js", "node_modules"],
         "resources": [
@@ -223,7 +222,7 @@ def get_exp_sub_dirs():
             "Toren1BD.obj",
             "Toren1BD_Decor.png",
             "macroPreviews",
-            "poster.png"
+            "poster.png",
         ],
         "drivers": [
             "UsbAssist_Install.bat",
@@ -233,8 +232,8 @@ def get_exp_sub_dirs():
             "Install_Drivers.bat",
             "Android_USB_Assistant_Install.bat",
             "Android_USB_Assistant.inf",
-            "Android_USB_Assistant.cat"
-        ]
+            "Android_USB_Assistant.cat",
+        ],
     }
 
     lib64_linux = [
@@ -258,7 +257,7 @@ def get_exp_sub_dirs():
         "libandroid-webrtc.so",
         "libc++.so",
         "libc++.so.1",
-        "libtcmalloc_minimal.so.4"
+        "libtcmalloc_minimal.so.4",
     ]
 
     if platform.system() == "Windows":

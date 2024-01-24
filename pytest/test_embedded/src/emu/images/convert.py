@@ -69,7 +69,5 @@ def save_image(received_image, image_dir, test_name):
         img.save(image_file, "PNG")
         return img
     except Exception as e:
-        logging.warning(
-            "An error occurred while saving the image: %s", str(e)
-        )
+        logging.warning("An error occurred while saving the image: %s", str(e))
         return None

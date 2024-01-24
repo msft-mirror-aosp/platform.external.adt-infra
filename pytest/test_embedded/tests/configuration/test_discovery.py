@@ -1,6 +1,5 @@
 import pytest
 import requests
-import logging
 
 
 @pytest.mark.e2e

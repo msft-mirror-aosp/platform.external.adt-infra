@@ -24,14 +24,15 @@ setup services, state, or other operating environments.
 The fixtures below can be used to bring the emulator to a certain state, or to
 provide access to parts of the emulator.
 """
+import json
 import logging
 import os
 import platform
 import re
 import sys
-import json
 import threading
 import time
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
@@ -43,7 +44,6 @@ from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.images.convert import save_image
 from emu.utils import system_cpu
 from tests.test_utils import StreamingCall
-import xml.etree.ElementTree as ET
 
 OS_NAME = platform.system().lower()
 AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
@@ -637,7 +637,7 @@ def at_home(avd: BaseEmulator):
 @pytest.fixture
 def mobly(avd: BaseEmulator):
     def mobly_package(package: str):
-       return avd.mobly(package)
+        return avd.mobly(package)
 
     return mobly_package
 

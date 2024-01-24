@@ -80,7 +80,7 @@ def for_each_rotation(emulator_controller):
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.graphics
-@pytest.mark.skipos('win', 'reason: b/305268095 - error at setup.')
+@pytest.mark.skipos("win", "reason: b/305268095 - error at setup.")
 def test_rotation_observable_through_screenshot(emulator_controller, animation_app):
     """Test that setting the rotation, is observable through getting a screenshot."""
 
@@ -95,7 +95,7 @@ def test_rotation_observable_through_screenshot(emulator_controller, animation_a
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.graphics
-@pytest.mark.skipos('win', 'reason: b/305269036 - error at setup.')
+@pytest.mark.skipos("win", "reason: b/305269036 - error at setup.")
 def test_rotation_observable_through_adbstream(
     avd, at_home, animation_app, emulator_controller
 ):
@@ -126,7 +126,7 @@ def test_rotation_observable_through_adbstream(
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.graphics
-@pytest.mark.skipos('win', 'reason: b/305270248 - error at setup.')
+@pytest.mark.skipos("win", "reason: b/305270248 - error at setup.")
 def test_rotation_observable_through_stream_screenshot(
     animation_app, emulator_controller, stream_screenshot
 ):
@@ -243,7 +243,9 @@ def rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.graphics
 @pytest.mark.sanity
 @pytest.mark.fast
-@pytest.mark.skipos('win', 'reason: b/305259781 - error at setup for params [-180-3] and [-90-4]')
+@pytest.mark.skipos(
+    "win", "reason: b/305259781 - error at setup for params [-180-3] and [-90-4]"
+)
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.parametrize(
@@ -281,7 +283,7 @@ def test_rotation_pixels_in_the_right_place(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.skipos('all', 'Real bug with adb emu rotate, need to fix it first.')
+@pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
 def test_rotation_through_console_observable_through_physical_model(
     emulator_controller, telnet, at_home
 ):
@@ -304,7 +306,7 @@ def test_rotation_through_console_observable_through_physical_model(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.skipos('all', 'Real bug with adb emu rotate, need to fix it first.')
+@pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
 def test_rotation_through_console_observable_through_screenshot(
     at_home, emulator_controller, telnet
 ):
@@ -317,7 +319,7 @@ def test_rotation_through_console_observable_through_screenshot(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.skipos('all', 'Real bug with adb emu rotate, need to fix it first.')
+@pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
 def test_rotation_through_console_observable_through_stream_screenshot(
     at_home, animation_app, emulator_controller, telnet
 ):
@@ -348,7 +350,7 @@ def test_rotation_observable_through_screenshot_embedded_mode(
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=480, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.skipos('all', 'Real bug with adb emu rotate, need to fix it first.')
+@pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
 def test_rotation_observable_through_stream_screenshot_embedded_mode(
     emulator_controller, telnet, emulator
 ):

@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 from google.protobuf import empty_pb2
 
@@ -15,13 +14,13 @@ def default_image():
     return s.install(abi="arm64-v8a", api="33", tag="google_apis")
 
 
-@pytest.mark.skipos('all', 'Not related to emulator.')
+@pytest.mark.skipos("all", "Not related to emulator.")
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/278294760 flaky on mac_aarch64.
 def test_at_least_one_available(default_image):
     assert SystemImages().available() is not None
 
 
-@pytest.mark.skipos('all', 'Not related to emulator.')
+@pytest.mark.skipos("all", "Not related to emulator.")
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/278294760 flaky on mac_aarch64.
 def test_can_find_default(default_image):
     image = SystemImages().find(
@@ -30,7 +29,7 @@ def test_can_find_default(default_image):
     assert image == default_image
 
 
-@pytest.mark.skipos('all', 'Not related to emulator.')
+@pytest.mark.skipos("all", "Not related to emulator.")
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/278294760 flaky on mac_aarch64.
 def test_can_install_default(default_image):
     image = SystemImages().install(
@@ -39,7 +38,7 @@ def test_can_install_default(default_image):
     assert image == default_image
 
 
-@pytest.mark.skipos('all', 'Not related to emulator.')
+@pytest.mark.skipos("all", "Not related to emulator.")
 def test_throw_on_unknown_image_root():
     with pytest.raises(SystemImageDownloadFailed):
         SystemImages().install("foo", "bar")

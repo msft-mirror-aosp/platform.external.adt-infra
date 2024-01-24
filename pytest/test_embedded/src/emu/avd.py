@@ -49,7 +49,6 @@ class UnsupportedAbiOrCpu(Exception):
 
 
 class SystemImages:
-
     IMAGE = re.compile(
         r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
     )
@@ -166,7 +165,9 @@ class SystemImages:
         for file_gz in image_dir.glob("*.gz"):
             file: Path = file_gz.parent / file_gz.stem
             if file.exists() and os.path.getmtime(file) > os.path.getmtime(file_gz):
-                logging.warning("The %s is newer than %s, no extraction needed.", file, file_gz)
+                logging.warning(
+                    "The %s is newer than %s, no extraction needed.", file, file_gz
+                )
             else:
                 logging.info("Be patient extracting %s...", file_gz)
                 with gzip.open(file_gz, "rb") as file_gz_in:

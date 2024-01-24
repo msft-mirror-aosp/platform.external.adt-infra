@@ -18,8 +18,8 @@ from pathlib import Path
 
 import psutil
 import pytest
-from google.protobuf import empty_pb2
 from aemu.proto.emulator_controller_pb2 import BootCompletedNotication
+from google.protobuf import empty_pb2
 
 from emu.apk import APP_DEBUG_APK
 from emu.timing import eventually
@@ -180,7 +180,7 @@ def test_snapshot_booted(emulator):
 @pytest.mark.boot
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=600, func_only=True)
-@pytest.mark.skipos('win', 'will turn on later')
+@pytest.mark.skipos("win", "will turn on later")
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/286570480
 def test_emulator_should_idle(emulator):
     """check emulator use less than 25% single cpu when idle."""
@@ -214,7 +214,6 @@ def test_emulator_should_idle(emulator):
     if emulator.is_alive():
         emulator.stop(timeout=60)
     logging.info("emulator is shut down successfully")
-
 
 
 @pytest.mark.boot

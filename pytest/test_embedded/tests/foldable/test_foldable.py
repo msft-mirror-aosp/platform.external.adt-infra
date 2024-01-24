@@ -16,16 +16,17 @@ import time
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
     ImageFormat,
+    Notification,
     ParameterValue,
     PhysicalModelValue,
     Posture,
-    Notification,
 )
-from emu.timing import eventually
 from google.protobuf import empty_pb2
 from iterators import TimeoutIterator
-from tests.test_utils import StreamingCall
 from PIL import Image
+
+from emu.timing import eventually
+from tests.test_utils import StreamingCall
 
 # b/288457753
 # Should use API 33 instead
@@ -42,13 +43,12 @@ def set_device_hinge_angle(emu, angle):
     )
 
 
-@pytest.mark.skipos('all', 'b/288335290')
+@pytest.mark.skipos("all", "b/288335290")
 @pytest.mark.foldable
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
 def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
-
     set_device_hinge_angle(emulator_controller, unfold_angle)
     time.sleep(5)
     image1 = emulator_controller.getScreenshot(
@@ -93,6 +93,7 @@ def test_foldable_notifications(emulator_controller, fmt, fold_angle, unfold_ang
 
     def check_posture_closed(notification):
         return notification.posture.value == Posture.PostureValue.POSTURE_CLOSED
+
     def check_posture_opened(notification):
         return notification.posture.value == Posture.PostureValue.POSTURE_OPENED
 
@@ -101,7 +102,7 @@ def test_foldable_notifications(emulator_controller, fmt, fold_angle, unfold_ang
     # "eventually".
     #
     # We might consider moving this implementation into timing.py in future.
-    def wait_for_with_timed_iterator(predicate, timed_iterator, timeout = 5):
+    def wait_for_with_timed_iterator(predicate, timed_iterator, timeout=5):
         end = time.time() + timeout
         for event in timed_iterator:
             if time.time() > end:
@@ -115,17 +116,21 @@ def test_foldable_notifications(emulator_controller, fmt, fold_angle, unfold_ang
     notificationStream = emulator_controller.streamNotification(_EMPTY_)
     with StreamingCall(notificationStream) as stream:
         timed_iterator = TimeoutIterator(stream, timeout=0.5)
-        assert wait_for_with_timed_iterator(check_posture_opened,
-            timed_iterator), f"Did not observe initial unfolded state."
+        assert wait_for_with_timed_iterator(
+            check_posture_opened, timed_iterator
+        ), f"Did not observe initial unfolded state."
         set_device_hinge_angle(emulator_controller, fold_angle)
-        assert wait_for_with_timed_iterator(check_posture_closed,
-            timed_iterator), f"Did not observe folding event."
+        assert wait_for_with_timed_iterator(
+            check_posture_closed, timed_iterator
+        ), f"Did not observe folding event."
 
     notificationStream = emulator_controller.streamNotification(_EMPTY_)
     with StreamingCall(notificationStream) as stream:
         timed_iterator = TimeoutIterator(stream, timeout=0.5)
-        assert wait_for_with_timed_iterator(check_posture_closed,
-            timed_iterator), f"Did not observe initial folded state."
+        assert wait_for_with_timed_iterator(
+            check_posture_closed, timed_iterator
+        ), f"Did not observe initial folded state."
         set_device_hinge_angle(emulator_controller, unfold_angle)
-        assert wait_for_with_timed_iterator(check_posture_opened,
-            timed_iterator), f"Did not observe unfolding event."
+        assert wait_for_with_timed_iterator(
+            check_posture_opened, timed_iterator
+        ), f"Did not observe unfolding event."

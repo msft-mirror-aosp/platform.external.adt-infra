@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import logging
+from enum import Enum
 
+import pytest
 from aemu.proto.emulator_controller_pb2 import (
-    PhysicalModelValue,
     ParameterValue,
+    PhysicalModelValue,
     Posture,
 )
+
 from emu.timing import eventually, wait_until
-from functools import partial
-from enum import Enum
 
 
 def is_equal(model_value, other, consider_equal={}) -> bool:

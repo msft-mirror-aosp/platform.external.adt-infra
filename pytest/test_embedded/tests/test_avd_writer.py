@@ -1,4 +1,5 @@
 import pytest
+
 from emu.avd import (
     AndroidAvdHomeDoesNotExist,
     AvdWriter,

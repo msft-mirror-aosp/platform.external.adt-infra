@@ -17,8 +17,8 @@ import re
 import time
 
 import pytest
-
 from pytest_benchmark.stats import Metadata
+
 from tests.test_utils import time_to_str
 
 

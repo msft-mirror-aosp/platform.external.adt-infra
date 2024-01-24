@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
-import time
 import logging
+import time
 
 import pytest
-from aemu.proto.emulator_controller_pb2 import MouseEvent, KeyboardEvent, InputEvent
+from aemu.proto.emulator_controller_pb2 import InputEvent, KeyboardEvent, MouseEvent
 
 
 @pytest.fixture

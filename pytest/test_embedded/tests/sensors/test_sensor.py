@@ -13,7 +13,8 @@
 # limitations under the License.
 
 import pytest
-from aemu.proto.emulator_controller_pb2 import SensorValue, ParameterValue
+from aemu.proto.emulator_controller_pb2 import ParameterValue, SensorValue
+
 from emu.timing import wait_until
 
 

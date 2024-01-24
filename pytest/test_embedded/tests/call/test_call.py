@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-
 from aemu.proto.emulator_controller_pb2 import PhoneCall, PhoneResponse
 
 
@@ -48,7 +47,7 @@ def send_phone_call(emu_controller, phone_call, expected_phone_response):
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.hardware
 @pytest.mark.sanity
-@pytest.mark.skipos('win', 'Phone response is InvalidAction instead of OK  b/254332148')
+@pytest.mark.skipos("win", "Phone response is InvalidAction instead of OK  b/254332148")
 def test_inbound_call(at_home, emulator_controller, test_name, phone_call_operation):
     """Sends phone call to the emulator.
 
@@ -95,7 +94,7 @@ def test_inbound_call_bad_operation(at_home, emulator_controller):
 @pytest.mark.e2e
 @pytest.mark.hardware
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.skipos('win', 'reason: b/305810509 - test timeout.')
+@pytest.mark.skipos("win", "reason: b/305810509 - test timeout.")
 def test_inbound_call_bad_number(at_home, emulator_controller):
     """Sends phone call from a bad number to the emulator.
 

@@ -20,10 +20,10 @@ import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat, ImageTransport
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
+
+from emu.timing import eventually
 from tests.benchmark_event_fixtures import benchmark_stat
 from tests.test_utils import StreamingCall
-from emu.timing import eventually
-from functools import partial
 
 
 def read_pixel(width, height, pack, arr):
@@ -34,7 +34,9 @@ def read_pixel(width, height, pack, arr):
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.embedded
-@pytest.mark.skipos('win', 'reason: b/305252175 - error at setup. Only the parameter [2-1] fails.')
+@pytest.mark.skipos(
+    "win", "reason: b/305252175 - error at setup. Only the parameter [2-1] fails."
+)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
@@ -177,7 +179,7 @@ def test_stream_screenshot_perf_mmap(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.embedded
-@pytest.mark.skipos('win', 'reason: b/305254892 FAILURES | b/305255695 ERRORS at setup')
+@pytest.mark.skipos("win", "reason: b/305254892 FAILURES | b/305255695 ERRORS at setup")
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "fmt",
@@ -198,7 +200,7 @@ def test_screenshot_bytes_size(emulator_controller, fmt):
 
 @pytest.mark.graphics
 @pytest.mark.embedded
-@pytest.mark.skipos('win', 'reason: b/305258769 - error at setup.')
+@pytest.mark.skipos("win", "reason: b/305258769 - error at setup.")
 @pytest.mark.timeout(timeout=20, func_only=True)
 def test_stream_screenshot_should_fail_if_does_not_exist(
     at_home,

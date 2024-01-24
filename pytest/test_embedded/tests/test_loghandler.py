@@ -1,11 +1,11 @@
 import logging
+import subprocess
+import time
 from queue import Empty, Queue
 from threading import Condition, Thread
-from unittest.mock import patch, Mock, MagicMock
-import subprocess
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-import time
-from functools import partial
 
 from emu.logging.log_handler import LogHandler, QueueLogHandler
 

@@ -1,5 +1,6 @@
 import psutil
 import pytest
+
 from emu.timing import eventually
 
 

@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pytest
 import logging
+
+import pytest
 from aemu.proto.sensor_service_pb2 import ParameterValue, SensorValue
 from aemu.proto.sensor_service_pb2_grpc import SensorServiceStub
 

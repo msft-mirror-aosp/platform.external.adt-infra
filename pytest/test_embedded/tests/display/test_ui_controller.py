@@ -11,11 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pytest
-import random
 import logging
+import random
+
+import pytest
+from aemu.proto.ui_controller_service_pb2 import PaneEntry, WindowPosition
 from google.protobuf import empty_pb2
-from aemu.proto.ui_controller_service_pb2 import WindowPosition, PaneEntry
 
 __EMPTY__ = empty_pb2.Empty()
 

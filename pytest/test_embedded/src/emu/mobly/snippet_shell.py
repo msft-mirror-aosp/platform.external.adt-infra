@@ -15,16 +15,12 @@
 # limitations under the License.
 
 
-import argparse
-import logging
-import sys
-
 from mobly.controllers import android_device
 from mobly.controllers.android_device_lib import jsonrpc_shell_base
 
 
 class Error(Exception):
-  pass
+    pass
 
 
 class SnippetShell(jsonrpc_shell_base.JsonRpcShellBase):

@@ -17,10 +17,11 @@ import platform
 import subprocess
 from pathlib import Path
 
-from emu.logging.log_handler import LogHandler, QueueLogHandler
-from emu.timing import TimeoutTrigger
-from emu.process.kill_emulator import kill_process_tree
 import psutil
+
+from emu.logging.log_handler import LogHandler, QueueLogHandler
+from emu.process.kill_emulator import kill_process_tree
+from emu.timing import TimeoutTrigger
 
 
 class Command:

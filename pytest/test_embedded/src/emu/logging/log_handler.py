@@ -17,6 +17,7 @@ import sys
 import threading
 from functools import partial
 from queue import Empty, Queue
+
 from .time_formatter import TimeFormatter
 
 

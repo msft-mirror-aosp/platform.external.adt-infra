@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-from grpc import RpcError, StatusCode
 from aemu.proto.emulator_controller_pb2 import (
     DisplayConfiguration,
     DisplayConfigurations,
@@ -21,6 +20,7 @@ from aemu.proto.emulator_controller_pb2 import (
     Rotation,
 )
 from google.protobuf import empty_pb2
+from grpc import RpcError, StatusCode
 
 _EMPTY_ = empty_pb2.Empty()
 

@@ -27,6 +27,7 @@ from multiprocessing.shared_memory import SharedMemory
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat, ImageTransport
 from google.protobuf import empty_pb2
+
 from tests.test_utils import StreamingCall
 
 
@@ -42,7 +43,7 @@ def dimenisions(emulator_controller):
     return width, height
 
 
-@pytest.mark.skipos('all', 'b/203787882')
+@pytest.mark.skipos("all", "b/203787882")
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
@@ -97,7 +98,7 @@ def test_mmap_grpc_perf(
     assert True
 
 
-@pytest.mark.skipos('all', 'b/203787882')
+@pytest.mark.skipos("all", "b/203787882")
 @pytest.mark.perf
 @pytest.mark.timeout(timeout=300, func_only=True)
 @pytest.mark.benchmark(group="shared_mem")
@@ -140,7 +141,6 @@ def test_mmap_webrtc_perf(
 
     # We should get a continous sequence of frames..
     while time.time() < timeout:
-
         info = VideoInfo._make(
             struct.unpack("IIIIQ", mem.buf[0:video_info_struct_size])
         )

@@ -13,10 +13,7 @@
 # limitations under the License.
 
 import pytest
-
 from aemu.proto.emulator_controller_pb2 import BatteryState
-
-
 from google.protobuf import empty_pb2
 
 _EMPTY_ = empty_pb2.Empty()

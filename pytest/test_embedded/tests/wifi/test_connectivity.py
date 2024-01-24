@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pytest
+
 from emu.timing import wait_until
 
 

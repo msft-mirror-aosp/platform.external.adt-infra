@@ -1,14 +1,15 @@
-import pytest
-import requests
 import logging
-import platform
 import os
+import platform
 import sys
 import time
 from pathlib import Path
-from emu.process.command import Command
-
 from zipfile import ZipFile
+
+import pytest
+import requests
+
+from emu.process.command import Command
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -179,7 +180,7 @@ def test_can_load_oldsnapshot(emulator, pytestconfig):
 
 
 @pytest.mark.e2e
-@pytest.mark.skipos('all', 'Flaky and not needed for now.')
+@pytest.mark.skipos("all", "Flaky and not needed for now.")
 @pytest.mark.timeout(timeout=600, func_only=True)
 def test_snapshot_download(emulator):
     """Make sure the emulator status is set to booted."""

@@ -14,7 +14,6 @@
 import time
 
 import pytest
-
 from aemu.proto.screen_recording_service_pb2 import RecordingInfo
 from aemu.proto.screen_recording_service_pb2_grpc import ScreenRecordingStub
 from google.protobuf import empty_pb2
@@ -55,7 +54,7 @@ def test_screen_record_sends_event(screen_service, tmp_path):
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.skipos('win', 'reason: b/306418109 - ERROR at setup.')
+@pytest.mark.skipos("win", "reason: b/306418109 - ERROR at setup.")
 @pytest.mark.graphics
 @pytest.mark.sanity
 @pytest.mark.fast
@@ -77,7 +76,7 @@ def test_screen_records_video(screen_service, animation_app, tmp_path):
 
 @pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.skipos('win', 'reason: b/306418109 - ERROR at setup.')
+@pytest.mark.skipos("win", "reason: b/306418109 - ERROR at setup.")
 @pytest.mark.graphics
 @pytest.mark.fast
 def test_can_only_record_once(screen_service, tmp_path):
