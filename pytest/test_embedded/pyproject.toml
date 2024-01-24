@@ -15,13 +15,15 @@ version = "0.0.1"
 classifiers = ["Topic :: Software Development"]
 dynamic = ["optional-dependencies"]
 
+# Note here we pin the actual versions of the packages
 dependencies = [
     "Jinja2==3.1.2",
     "MarkupSafe==2.1.1",
     "mobly==1.12.2",
     "mock==4.0.3",
     "Pillow==9.2.0",
-    "protobuf==3.20.1",
+    "protobuf==4.25.2",
+    "grpcio==1.60.0",
     "pytest==7.1.3",
     "pure_python_adb==0.3.0-dev0",
     "pytest-benchmark==3.4.1",
