@@ -13,10 +13,8 @@
 # limitations under the License.
 
 import pytest
-
-from google.protobuf.empty_pb2 import Empty
-
 from aemu.proto.emulator_controller_pb2 import GpsState
+from google.protobuf.empty_pb2 import Empty
 
 
 @pytest.mark.hardware

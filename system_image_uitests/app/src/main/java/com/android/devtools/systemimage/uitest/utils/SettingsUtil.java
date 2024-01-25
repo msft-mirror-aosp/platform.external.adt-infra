@@ -13,8 +13,9 @@ import android.support.test.uiautomator.UiObjectNotFoundException;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
-import android.widget.LinearLayout;
+import android.widget.Button;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
@@ -247,14 +248,17 @@ public class SettingsUtil {
 
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        SettingsUtil.openItem(instrumentation, appText);
-
-        SettingsUtil.clickAdvancedMenu(device);
+        if (SystemUtil.getApiLevel() <= 32) {
+            SettingsUtil.openItem(instrumentation, appText);
+            SettingsUtil.clickAdvancedMenu(device);
+        } else {
+            AppLauncher.launchPath(instrumentation, true, "Settings", appText);
+        }
 
         UiObject seeAllApps = device.findObject(new UiSelector()
                 .textContains("See all"));
 
-        if (seeAllApps.waitForExists(3L)) {
+        if (seeAllApps.waitForExists(5000L)) {
             seeAllApps.clickAndWaitForNewWindow();
         } else {
             seeAllApps = device.findObject(new UiSelector()
@@ -287,7 +291,8 @@ public class SettingsUtil {
             }
         }
 
-        throw new UiObjectNotFoundException("Failed to find the item in App permissions.");
+        throw new UiObjectNotFoundException(
+                "Failed to find the item " + (appType) + ":" + (appText) + " in App permissions.");
     }
 
     /**
@@ -747,5 +752,85 @@ public class SettingsUtil {
             in.close();
             out.close();
         }
+    }
+
+    /**
+     * Report the current Google login status, using the given account name
+     *
+     * @param instrumentation UiInstrumentation
+     * @param userLoginInfo UiObject
+     * @return boolean
+     */
+    public static boolean verifyGoogleAccountStatus(
+            Instrumentation instrumentation, UiObject userLoginInfo) throws Exception {
+
+        UiDevice device = UiDevice.getInstance(instrumentation);
+
+        AppLauncher.launchPath(
+                instrumentation, true, "Settings", "Google");
+
+        final UiObject googleAccountLogo = device.findObject(
+                new UiSelector()
+                        .className("android.widget.ImageView")
+                        .resourceId("com.google.android.gms:id/logo"));
+
+        boolean googleAccountLogoExists = new Wait(20000L).until(userLoginInfo::exists);
+        if (googleAccountLogoExists){
+            googleAccountLogo.waitUntilGone(30000L);
+        }
+        return new Wait(30000L).until(userLoginInfo::exists);
+    };
+
+    /**
+     * Remove the given Google account registration from the device
+     *
+     * @param device UiDevice
+     * @param accountName String
+     * @return boolean
+     */
+    public static boolean removeGoogleAccount(
+            UiDevice device, String accountName) throws Exception {
+
+        UiObject manageAccount = device.findObject(new UiSelector().
+                resourceId(Res.GOOGLE_SERVICES_ACCOUNTS_CHIP_RES));
+        if (manageAccount.waitForExists(10000L)) {
+            manageAccount.click();
+            manageAccount.waitUntilGone(10000L);
+        } else {
+            return false;
+        }
+
+        UiObject userAccount = device.findObject(new UiSelector().
+                text(accountName).
+                resourceId("android:id/title"));
+        if (userAccount.waitForExists(5000L)) {
+            userAccount.click();
+            userAccount.waitUntilGone(10000L);
+        } else {
+            return false;
+        }
+
+        UiObject removeAccount = device.findObject(new UiSelector().
+                text("Remove account").
+                resourceId("com.android.settings:id/button").
+                className(Button.class));
+        if (removeAccount.waitForExists(5000L)) {
+            removeAccount.click();
+            removeAccount.waitUntilGone(10000L);
+        } else {
+            return false;
+        }
+
+        UiObject confirmRemove = device.findObject(new UiSelector().
+                text("Remove account").
+                resourceId("android:id/button1").
+                className(Button.class));
+        if (confirmRemove.waitForExists(5000L)) {
+            confirmRemove.click();
+            confirmRemove.waitUntilGone(10000L);
+        } else {
+            return false;
+        }
+        return true;
     }
 }

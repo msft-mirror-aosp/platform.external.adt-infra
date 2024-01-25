@@ -15,7 +15,6 @@ import logging
 import shutil
 from pathlib import Path
 
-
 # Hack attack..
 try:
     from emu.process.command import Command

@@ -17,8 +17,8 @@ import string
 import time
 
 import pytest
-
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
+
 from tests.benchmark_event_fixtures import benchmark_stat
 
 # Parse emulator log.

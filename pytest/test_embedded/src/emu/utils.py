@@ -16,7 +16,7 @@ import platform
 import threading
 import time
 from pathlib import Path
-from queue import Queue, Empty
+from queue import Empty, Queue
 
 
 def system_cpu() -> str:

@@ -87,8 +87,9 @@ span.closed { color: #808080; }
 .error {background-color: #ffffff; color: #720808;}
 .skip {background-color: #ffffff; color: #d1c10f;}
 
-li.passed {color: #002000;}
-li.failed {color: #200000;}
+li.passed {color: #002000; margin-left: 25px;}
+li.failed {color: #200000; margin-left: 25px;}
+li.skipped {margin-left: 25px;}
 span.comment { color:#000000; font-style: italic;}
 
 span.crc {
@@ -102,15 +103,17 @@ span.crc {
 span.buttonskip {
             font-family: monospace;
             margin-top: 10px;
-            border: 1px solid black;
+            border: 1px solid #aaa;
             padding: 0 2px;
             margin-right: 2px;
+            background-color: #ffffaa;
+            cursor: pointer;
 }
 span.buttonpassed {
             font-family: monospace;
             margin-top: 10px;
             background-color: #aaffaa;
-            border: 1px solid black;
+            border: 1px solid #aaa;
             padding: 0 2px;
             margin-right: 2px;
             cursor: pointer;
@@ -119,7 +122,7 @@ span.buttonfailed {
         font-family: monospace;
         margin-top: 10px;
         background-color: #ffaaaa;
-        border: 1px solid black;
+        border: 1px solid #aaa;
         padding: 0 2px;
         margin-right: 2px;
         cursor: pointer;
@@ -128,7 +131,7 @@ span.buttonerror {
         font-family: monospace;
         margin-top: 10px;
         background-color: #dd5d5d;
-        border: 1px solid black;
+        border: 1px solid #aaa;
         padding: 0 2px;
         margin-right: 2px;
         cursor: pointer;
@@ -199,7 +202,6 @@ li.collapsable {
 
 .text-box-passed {
     text-align: left;
-    margin: 0 1px;
     font-size: 13px;
     overflow-x: auto;
     overflow-y: auto;
@@ -212,6 +214,21 @@ li.collapsable {
     border: 0px solid #ccc;
     max-width: 100%;
     max-height: 600px;
+}
+
+.skip-text {
+    text-align: left;
+    border: 0px;
+    border: solid 1px #ddd;
+    margin-left: 17px;
+    font-size: 13px;
+    overflow-x: auto;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    background-color: #fff3cd;
+    color: #333;
+    padding: 12.5 30 10 10;
+    width: max-content;
 }
 
 .image-box {
@@ -243,21 +260,94 @@ li.collapsable {
                 <script language="JavaScript">
 
 function toggle(container, inner_type) {
-    var icon = container.getElementsByClassName("icon")[0];
-    var outer = container.getElementsByClassName("contents")[0];
+    var icon = container.querySelector("icon");
+    var contents = container.getElementsByClassName("contents")[0];
     var inner = container.getElementsByClassName(inner_type)[0];
 
     // toggling icon
-    icon.classList.toggle('fa-angle-right');
-    icon.classList.toggle('fa-angle-down');
+    if (icon != undefined) {
+        icon.classList.toggle('fa-angle-right');
+        icon.classList.toggle('fa-angle-down');
+    }
 
     // toggling contents
-    if (outer.style.display === "none") {
-        outer.style.display = "block";
+   if (contents.style.display === "none") {
+        contents.style.display = "block";
         inner.style.display = "block";
     } else {
-        outer.style.display = "none";
+        contents.style.display = "none";
         inner.style.display = "none";
+    }
+}
+
+/**
+ * Extract the testcase logcat from the class logcat
+ * @param {string} filename - logcat (class) filename
+ * @param {string} testname - testcase name
+ */
+async function extractLogcat(filename, testname) {
+
+    const currentUrl = window.location.href;
+    const currentPath = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+    const logcatUrl = currentPath + filename;
+
+    try {
+        // Fetch the content from the provided URL
+        const response = await fetch(logcatUrl);
+
+        if (!response.ok) {
+            console.error('Failed to fetch the filepath.');
+            return '';
+        }
+
+        // Read the content from the response
+        const fileContent = await response.text();
+
+        // Find the indexes of the start and ending lines
+        const startTag = 'TestRunner: started: ' + testname;
+        const endTag = 'TestRunner: finished: ' + testname;
+        const startIndex = fileContent.lastIndexOf(startTag);
+        const startLineIndex = fileContent.lastIndexOf('\n', startIndex) + 1;
+        const endIndex = fileContent.indexOf(endTag, startIndex);
+        const endLineIndex = fileContent.indexOf('\n', endIndex);
+
+        // Check if both start and end lines are found
+        if (startLineIndex === -1 || endLineIndex === -1) {
+            console.error('Start or end tag not found in the logcat file.');
+            return '';
+        }
+
+        const extractedContent = fileContent.slice(startLineIndex, endLineIndex);
+
+        return extractedContent;
+
+    } catch (error) {
+        console.error('Error during fetch:', error.message);
+        return '';
+    }
+
+}
+
+/**
+ * Toggle the state of a button of passed class
+ * @param {HTMLElement} container - parent HTML container
+ * @param {string} id - test number id
+ */
+async function toggleButtonPassed(container, id) {
+
+    var icons_text = container.querySelectorAll('.icon_txt');
+    icons_text.forEach(function(status) {
+        status.textContent = (status.textContent === '+') ? '-' : '+';
+    });
+
+    var text = document.getElementById('text-' + id);
+    if (text !== null) {
+        // loading/hiding contents
+        if (text.style.display === "none") {
+            text.style.display = "block";
+        } else {
+            text.style.display = "none";
+        }
     }
 }
 
@@ -268,9 +358,9 @@ function make_hidden(elt) { elt.style.visibility='hidden'; elt.style.position='a
 }
 
 function hide(id) {
-    make_hidden(document.getElementById(id+'-'))
-    make_visible(document.getElementById(id+'+'))
-    make_hidden(document.getElementById(id))
+    make_hidden(document.getElementById(id+'-')); // '-' class placeholder
+    make_visible(document.getElementById(id+'+')); // '+' class placeholder
+    make_hidden(document.getElementById(id)); // stores the actual test container contents
 }
 
 function show(id) {
@@ -289,17 +379,15 @@ function goto_id(id) {
                 <h1 style="text-align: left">Test Results for:
                     <xsl:value-of select="@name"/>
                 </h1>
-                <p> TOTAL=
-                    <xsl:value-of select="@tests"/>
-, <font class="pass"> PASSED </font>=
-                    <xsl:value-of select="@tests - @failures - @errors - @skipped"/>
-, <font class="fail"> FAILED </font>=
-                    <xsl:value-of select="@failures"/>
-, <font class="error"> ERRORS </font>=
-                    <xsl:value-of select="@errors"/>
-, SKIPPED=
-                    <xsl:value-of select="@skipped"/>
-                </p>
+                <strong>
+                    <p>
+                        TOTAL=&#160;<xsl:value-of select="@tests"/>&#160;,
+                        <font class="pass">PASSED=&#160;<xsl:value-of select="@tests - @failures - @errors - @skipped"/>&#160;</font>,
+                        <font class="fail">FAILED=&#160;<xsl:value-of select="@failures"/>&#160;</font>,
+                        <font class="error">ERRORS=&#160;<xsl:value-of select="@errors"/>&#160;</font>,
+                        <font class="skip">SKIPPED=&#160;<xsl:value-of select="@skipped"/>&#160;</font>
+                    </p>
+                </strong>
                 <!-- SUMMARY SQUARES SECTION -->
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
@@ -314,10 +402,42 @@ function goto_id(id) {
                     </xsl:variable>
                     <span class="{$buttonclass}" onClick="goto_id('tst{$id}l')">
                         <xsl:value-of select="$fid"/>
-                    </span>
+                    </span>&#160;
                 </xsl:for-each>
-                <!-- TESTS SECTION -->
-                <h2>tests</h2>
+                <h3 style="margin: 20 0 0 0">
+                    <font style="color: red">
+                        <span style="margin-right: 3px">API: </span>
+                        <xsl:value-of select="substring-before(//testsuites/properties/property[@name='device']/@value,'(AVD)')"/>
+                    </font>
+                </h3>
+                <!-- Ignored Tests Section -->
+                <div style="margin-top: 30px;">
+                    <h2>Ignored tests (<xsl:value-of select="count(testcase/skipped)"/>)</h2>
+                    <ul>
+                        <xsl:for-each select="testcase">
+                        <xsl:variable name="id" select="position()"/>
+                        <xsl:variable name="fid" select=" format-number($id, '000')"/>
+                            <xsl:choose>
+                                <xsl:when test="skipped">
+                                    <li>
+                                <span class="buttonskip" style="cursor: default; padding: 0 4; margin-right: 8px;">
+                                    <xsl:value-of select="$fid"/>
+                                </span>
+
+                                <xsl:value-of select="@classname"/>
+.
+                                <xsl:value-of select="@name"/>
+
+                                <font style="margin-left: 8px; color: #666666;">[<xsl:value-of select="skipped/@message"/>]</font>
+                                    </li>
+                                </xsl:when>
+                            </xsl:choose>
+                        </xsl:for-each>
+                    </ul>
+                </div>
+                <!-- TESTS RESULTS SECTION -->
+                <div style="margin-top: 20px">
+                <h2>All tests results</h2>
                 <xsl:for-each select="testcase">
                     <xsl:variable name="id" select="position()"/>
                     <xsl:variable name="fid" select="format-number($id, '000')"/>
@@ -378,47 +498,48 @@ function goto_id(id) {
                         </xsl:when>
                         <xsl:when test="skipped">
                             <li class="skipped" id="tst{$id}l">
-                                <span id="tst{$id}" class="buttonskip" >&#160;
-                                    <xsl:value-of select="$fid"/>&#160;
-                                </span>
-                                        &#160;
+                                <span id="tst{$id}+" class="buttonskip" onClick="show('tst{$id}')">+
+                                    <xsl:value-of select="$fid"/>
+                                    +</span>
+                                <span id="tst{$id}-" class="buttonskip" onClick="hide('tst{$id}')" style="POSITION: absolute; VISIBILITY: hidden;">
+                                    -
+                                    <xsl:value-of select="$fid"/>
+                                    -</span>&#160;
                                 <xsl:value-of select="@classname"/>
-.
+                                .
                                 <xsl:value-of select="@name"/>
-                                <span class="comment skipped" id="tst{$id}" style="position: absolute; visibility: hidden;">
-                                    <pre>
-                                        <xsl:value-of select="."/>
+                                <span id="tst{$id}" style="position: absolute; visibility: hidden;">
+                                    <pre class="skip-text" >
+                                        <xsl:value-of select="skipped/@message"/>
                                     </pre>
                                 </span>
                             </li>
                         </xsl:when>
                         <xsl:otherwise>
                             <li class="passed" id="tst{$id}l">
-                                <span id="tst{$id}+" class="buttonpassed" onClick="show('tst{$id}')">
-                                +
-                                    <xsl:value-of select="$fid"/>
-                                +</span>
-                                <span id="tst{$id}-" class="buttonpassed" onClick="hide('tst{$id}')" style="position: absolute; visibility: hidden;">
-                                -
-                                    <xsl:value-of select="$fid"/>
-                                -</span>&#160;
-                                <xsl:value-of select="@classname"/>
-.
-                                <xsl:value-of select="@name"/>
+                                <div id="tst{$id}" onClick="toggleButtonPassed(this, {$id})" style="display: inline-block">
+                                        <span class="testrow">
+                                            <span class="buttonpassed" style="margin-right: 0.73em">
+                                                <span class="icon_txt">+</span>
+                                                <span style="margin: 0 .6em"><xsl:value-of select="$fid"/></span>
+                                                <span class="icon_txt">+</span>
+                                            </span>
+                                            <xsl:value-of select="@classname"/> . <xsl:value-of select="@name"/>
+                                        </span>
+                                </div>
                                 <div style="clear: both;"></div>
-                                <span id="tst{$id}" style="position: absolute; visibility: hidden;">
-                                    <div class="embedding">
-                                        <pre class="text-box-passed" id="text-{$id}">
-                                            <xsl:value-of select="./*"/>
-                                        </pre>
-                                    </div>
-                                </span>
+                                <div class="embedding" style="margin-bottom: 0px; border: 0px">
+                                    <pre class="text-box-passed" id="text-{$id}" style="display: none">
+                                        <xsl:value-of select="system-out"/>
+                                    </pre>
+                                </div>
                                 <div style="clear: both;"></div>
                             </li>
                         </xsl:otherwise>
                     </xsl:choose>
-                </xsl:for-each>
-            <script charset="utf-8">
+                  </xsl:for-each>
+                  </div>
+              <script charset="utf-8">
                 function embed_attachments() {
                     <xsl:for-each select="testcase">
                         <xsl:variable name="id" select="position()"/>

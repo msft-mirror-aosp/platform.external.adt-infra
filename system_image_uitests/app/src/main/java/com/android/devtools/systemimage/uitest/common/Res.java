@@ -47,7 +47,7 @@ public class Res {
     public static final String ADD_NEW_CONTACT = "com.android.contacts:id/add_contact_button";
     public static final String PERMISSION_RECYCLER_VIEW = "com.android.permissioncontroller:id/recycler_view";
 
-    public static final String PERMISSION_CONTENT_FRAME = "com.android.permissioncontroller:id/content_frame";
+    public static final String PERMISSION_ALLOW_FOREGROUND_BUTTON = "com.android.permissioncontroller:id/permission_allow_foreground_only_button";
     public static final String ALLOW_PERMISSION_BUTTON = "(com.android.permissioncontroller\\d*:id)"
             + "/(allow_radio_button|allow_always_radio_button)";
     public static final String ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON = "com.android.permissioncontroller:id/allow_foreground_only_radio_button";
@@ -84,10 +84,9 @@ public class Res {
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container|list_container|content_parent)";
     public static final String SETTINGS_ACTION_BAR_RES = "com.android.settings:id/action_bar";
-
     public static final String SETTINGS_ACTION_BUTTON_RES = "com.android.settings:id/action_button";
     public static final String SETTINGS_COLLAPSING_TOOLBAR_RES = "com.android.settings:id/collapsing_toolbar";
-
+    public static final String GOOGLE_ACCOUNT_POSITIVE_BUTTON_RES = "com.google.android.gms:id/button_positive";
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";
     public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";
     public static final String CAMERA_FILE_THUMBNAIL_RES = "com.android.camera2:id/rounded_thumbnail_view";
@@ -138,12 +137,17 @@ public class Res {
 
     public static final String GOOGLE_SERVICES_ACCOUNT_BUTTON_RES =
             "com.google.android.gms:id/account";
+
+    public static final String GOOGLE_SERVICES_LABEL_RES =
+            "com.google.android.gms:id/suc_layout_title";
     public static final String GOOGLE_SERVICES_ACCOUNTS_CHIP_RES =
             "com.google.android.gms:id/manage_accounts_chip_title";
     public static final String NOW_SIGNIN_DECLINE_BUTTON_RES =
             "com.google.android.googlequicksearchbox\\d*:id/decline_button";
     public static final String GOOGLE_BACKUP_SWITCH_RES =
             "com.google.android.gms:id/sud_items_switch";
+
+    public static final String GOOGLE_LAYOUT_ICON_RES = "com.google.android.gms:id/sud_layout_icon";
 
     public static final String SEARCH_TEXT_BOX =
             "(com.google.android.apps.maps:id|com.google.android.apps.gmm:id)/(search_omnibox_text_box|search_omnibox_edit_text|textbox|edit_textbox)";

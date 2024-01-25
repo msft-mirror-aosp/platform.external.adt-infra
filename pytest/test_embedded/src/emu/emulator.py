@@ -26,8 +26,11 @@ from typing import List, Optional
 
 from aemu.discovery.emulator_description import EmulatorDescription
 from aemu.discovery.emulator_discovery import EmulatorDiscovery
-from aemu.proto.emulator_controller_pb2 import (KeyboardEvent, ParameterValue,
-                                                PhysicalModelValue)
+from aemu.proto.emulator_controller_pb2 import (
+    KeyboardEvent,
+    ParameterValue,
+    PhysicalModelValue,
+)
 from google.protobuf import empty_pb2
 from grpc import RpcError
 
@@ -137,11 +140,9 @@ class BaseEmulator(object):
 
     def stop(self) -> None:
         """Stops the emulator from running"""
-        pass
 
     def delete(self) -> None:
         """Delete the given emulator, removing data from disk if applicable."""
-        pass
 
     def has_booted(self) -> bool:
         """Makes a check of bootcoompleted.ini to check if the emulator has booted.

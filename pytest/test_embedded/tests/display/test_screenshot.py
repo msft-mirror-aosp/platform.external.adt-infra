@@ -58,16 +58,13 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 }
 
 
-
 @pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.fast
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-def test_screenshot_all_formats_are_equal(
-    avd, get_screenshot, animation_app, w, h
-):
+def test_screenshot_all_formats_are_equal(avd, get_screenshot, animation_app, w, h):
     """Make sure that all the screenshots are exactly the same, regardless of format.
 
     This is done by launching the animation app, and pausing it. This should make sure
@@ -152,12 +149,15 @@ def all_orientations(emulator_controller, request):
     # Give the emulator a chance to actually rotate around.
     sleep(0.1)
 
-#bug 299344829
+
+# bug 299344829
 @pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.timeout_win(timeout=120)
-def test_screenshot_valid_width_and_height(emulator, get_screenshot, default_display_config):
+def test_screenshot_valid_width_and_height(
+    emulator, get_screenshot, default_display_config
+):
     """Make sure that screenshot returns valid w and h"""
 
     image, _ = get_screenshot(ImageFormat())
@@ -166,6 +166,7 @@ def test_screenshot_valid_width_and_height(emulator, get_screenshot, default_dis
         fmt.width == default_display_config.width
         and fmt.height == default_display_config.height
     ), "The width and height should be equal to the device width and height"
+
 
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.graphics

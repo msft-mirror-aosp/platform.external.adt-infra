@@ -14,10 +14,11 @@
 
 import time
 
+import grpc
+import pytest
 from aemu.discovery.header_manipulator_client_interceptor import (
     header_adder_interceptor,
 )
-import pytest
 from aemu.proto.emulator_controller_pb2 import ClipData
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
@@ -25,7 +26,6 @@ from iterators import TimeoutIterator
 
 from emu.timing import eventually
 from tests.test_utils import StreamingCall
-import grpc
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -47,7 +47,7 @@ def wait_for_with_timed_iterator(predicate, timed_iterator, timeout=5):
 @pytest.mark.fast
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
-@pytest.mark.skipos('win', 'reason: b/303295516 - error at setup.')
+@pytest.mark.skipos("win", "reason: b/303295516 - error at setup.")
 @pytest.mark.parametrize(
     "clipboard_data",
     [
@@ -73,7 +73,7 @@ def test_clipboard_data(emulator_controller, clipboard_data):
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
-@pytest.mark.skipos('win', 'reason=b/305040235 - error at setup.')
+@pytest.mark.skipos("win", "reason=b/305040235 - error at setup.")
 def test_stream_clipboard_immediately_sends_data(emulator_controller):
     """Validate that the streaming call will immediately send the current clipboard status."""
     clipboard_data = "Hello there!"
@@ -98,7 +98,7 @@ def test_stream_clipboard_immediately_sends_data(emulator_controller):
 @pytest.mark.embedded
 @pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
-@pytest.mark.skipos('win', 'reason=b/305040856 - error at setup.')
+@pytest.mark.skipos("win", "reason=b/305040856 - error at setup.")
 def test_stream_clipboard_sends_updated_data(emulator_controller, avd):
     """Validate that the streaming call will immediately send the current clipboard status and
     will send out events if the clipboard status changes.
@@ -174,7 +174,6 @@ def test_stream_clipboard_sends_updated_data_to_other_channel(avd):
         lambda: emulator_controller.getClipboard(_EMPTY_).text == clipboard_data
     ), "Clipboard data doesn't match"
 
-
     with StreamingCall(second_controller.streamClipboard(_EMPTY_)) as stream:
         timed_iterator = TimeoutIterator(stream, timeout=0.5)
 
@@ -217,7 +216,6 @@ def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(avd):
     assert eventually(
         lambda: emulator_controller.getClipboard(_EMPTY_).text == clipboard_data
     ), "Clipboard data doesn't match"
-
 
     with StreamingCall(second_controller.streamClipboard(_EMPTY_)) as stream:
         timed_iterator = TimeoutIterator(stream, timeout=0.5)

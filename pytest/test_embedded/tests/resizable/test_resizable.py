@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import time
+
 import pytest
-from google.protobuf import empty_pb2
 from aemu.proto.emulator_controller_pb2 import (
-    ImageFormat,
     DisplayMode,
     DisplayModeValue,
+    ImageFormat,
 )
-from tests.test_utils import StreamingCall
+from google.protobuf import empty_pb2
+
 from emu.timing import wait_until
+from tests.test_utils import StreamingCall
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -65,7 +67,7 @@ def set_display_mode(emulator_controller, mode, timeout=5):
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.sanity
-@pytest.mark.skipos('all', 'reason: b/309463427')
+@pytest.mark.skipos("all", "reason: b/309463427")
 def test_resizable_changes_resolution(
     animation_app, emulator_controller, width, height, mode, get_screenshot
 ):

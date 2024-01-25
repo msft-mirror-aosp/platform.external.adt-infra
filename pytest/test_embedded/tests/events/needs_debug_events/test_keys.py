@@ -17,6 +17,7 @@ import time
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
+
 from emu.logging.log_handler import QueueLogHandler
 
 # Parse emulator log.

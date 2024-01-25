@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import http.server
-import threading
 import socket
+import threading
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat

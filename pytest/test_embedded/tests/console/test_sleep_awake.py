@@ -17,6 +17,7 @@ from aemu.proto.emulator_controller_pb2 import ImageFormat
 
 from emu.timing import eventually
 
+
 def wake_up(adb_shell):
     """
     Sends a wake-up command to the connected Android device using ADB. The device is woken
@@ -130,4 +131,6 @@ def test_power_down_turns_off_the_screen(emulator_off, get_screenshot):
         return True
 
     # We eventually should see a black screen..
-    assert eventually(emulator_screen_is_black, timeout=25), "The screen did not become black!"
+    assert eventually(
+        emulator_screen_is_black, timeout=25
+    ), "The screen did not become black!"

@@ -23,8 +23,10 @@ import android.support.test.uiautomator.UiObject;
 import android.support.test.uiautomator.UiScrollable;
 import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
-
+import android.widget.FrameLayout;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
@@ -32,16 +34,19 @@ import com.android.devtools.systemimage.uitest.utils.ApiDemosInstaller;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
+import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
+
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -60,15 +65,10 @@ public class SettingsTest {
 
     private final static String TAG = "SettingsTest";
 
-    // Tests under this class takes up to 240 seconds depending on the performance of the bot the
+    // Tests under this class takes up to 1000 seconds depending on the performance of the bot the
     // tests run on.
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(360);
-
-    @Before
-    public void activateDeviceAdmin() throws Exception {
-        ApiDemosInstaller.installApp("Security", "Device admin apps", false);
-    }
+    public Timeout globalTimeout = Timeout.seconds(1000);
 
     /**
      * Verifies Location page opens on Google API images.
@@ -221,28 +221,31 @@ public class SettingsTest {
                 textMatches("(?i)accept\\s&\\scontinue"));
         if (acceptAndContinueButton.exists())
             acceptAndContinueButton.clickAndWaitForNewWindow();
+
         final UiObject skipButton;
         skipButton = device.findObject(new UiSelector().textMatches("(?i)skip"));
         if (skipButton.exists())
             skipButton.clickAndWaitForNewWindow();
+
         final UiObject gotItButton;
         gotItButton = device.findObject(new UiSelector().textMatches("(?i)got\\sit"));
         if (gotItButton.exists())
             gotItButton.clickAndWaitForNewWindow();
 
         final UiObject myLocation;
-        myLocation =  device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION));
-        if (myLocation.exists())
+        myLocation = device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION));
+        if (new Wait().until(myLocation::exists))
             myLocation.clickAndWaitForNewWindow();
 
+        final UiObject allowForegroundButton = device.findObject(
+                new UiSelector().resourceId(Res.PERMISSION_ALLOW_FOREGROUND_BUTTON));
         assertTrue("Did not prompt for lack of Maps permission.",
-                new Wait().until(() -> device.findObject(new UiSelector()
-                        .resourceId(Res.ANDROID_PERMISSIONS_BUTTON)).exists())
-        );
+                new Wait(20000L).until(allowForegroundButton::exists));
+
+        device.pressHome();
 
         SettingsUtil.setAppPermissions_v3(instrumentation, appName, appName, true,
                 "Deny anyway", "Apps", "Permission manager");
-        device.pressHome();
     }
 
     /**
@@ -323,7 +326,7 @@ public class SettingsTest {
                     instrumentation, true, "Settings", "System", "Date & time");
 
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
         final UiObject timeButton = device.findObject(new UiSelector().text("Set time automatically"));
@@ -382,7 +385,7 @@ public class SettingsTest {
             AppLauncher.launchPath(
                     instrumentation, true, "Settings", "System", "Date & time");
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
         final UiObject autoTimeZoneButton = device.findObject(new UiSelector().text("Set time zone automatically"));
@@ -407,7 +410,7 @@ public class SettingsTest {
                         new UiSelector().description("Select time zone")).exists())
         );
 
-        UiObject timeZoneLabel = device.findObject(new UiSelector().textMatches("(Time zone|Select UTC offset)").
+        UiObject timeZoneLabel = device.findObject(new UiSelector().textMatches("Time zone").
                 resourceId(Res.ANDROID_TITLE_RES).packageName("com.android.settings"));
         if (timeZoneLabel.waitForExists(3L)) {
             timeZoneLabel.clickAndWaitForNewWindow();
@@ -416,6 +419,157 @@ public class SettingsTest {
         String timezoneOffset = "GMT-08:00";
         assertTrue("Target time zone label not found",
                 device.findObject(new UiSelector().textContains(timezoneOffset)).waitForExists(3L));
+    }
+
+    /**
+     * Verifies that the user can register the device from Google Settings.
+     * <p>
+     * <p>
+     *   <pre>
+     *   1. Start the emulator.
+     *   2. Open Settings > Google
+     *   3. Check if user account is registered to the device.
+     *   4. Remove Google account if logged in.
+     *   5. Log in user account from Settings > Google.
+     *   Verify:
+     *   User Google account has been successfully logged in.
+     *   </pre>
+     */
+    @Test
+    public void testGoogleLoginSettings() throws Exception {
+        String userEmail = GoogleAppUtil.getUserEmail();
+        String userPassword = GoogleAppUtil.getUserPassword();
+
+        final UiObject userLoginInfo = device.findObject(
+                new UiSelector().
+                        className(TextView.class).
+                        text(userEmail));
+
+        boolean wasUserLoggedIn = SettingsUtil.verifyGoogleAccountStatus(
+                instrumentation, userLoginInfo);
+        if (wasUserLoggedIn) {
+            userLoginInfo.clickAndWaitForNewWindow();
+            assertTrue("Google account could not be removed.",
+                    SettingsUtil.removeGoogleAccount(device, userEmail));
+
+            final UiObject passwordsLabel = device.findObject(
+                    new UiSelector().
+                            resourceId(Res.SETTINGS_COLLAPSING_TOOLBAR_RES).
+                            description("Passwords & accounts").
+                            className(FrameLayout.class));
+
+            assertTrue("Passwords & accounts label not found.",
+                    new Wait(1000L).until(passwordsLabel::exists));
+
+            device.pressBack();
+
+            if (passwordsLabel.waitForExists(5000L)) {
+                passwordsLabel.waitUntilGone(5000L);
+            }
+        }
+
+        final UiObject manageAccountButton = device.findObject(
+                new UiSelector()
+                        .text(wasUserLoggedIn ? "Manage your Google Account" : "Sign in to your Google Account")
+                        .className(Button.class));
+
+        assertTrue("Manage Google account button not found.",
+                new Wait(20000L).until(manageAccountButton::exists));
+
+        manageAccountButton.click();
+
+        if (wasUserLoggedIn) {
+            final UiObject addAccountButton = device.findObject(
+                    new UiSelector().
+                            resourceId(Res.GOOGLE_ACCOUNT_POSITIVE_BUTTON_RES).
+                            text("Add account").
+                            className(Button.class));
+            if (addAccountButton.waitForExists(5000L)) {
+                addAccountButton.click();
+                assertTrue("Add Google account button not dismissed.",
+                        addAccountButton.waitUntilGone(10000L));
+            }
+        } else {
+            assertTrue("Manage Google account button not dismissed.",
+                    manageAccountButton.waitUntilGone(10000L));
+        }
+        final UiObject checkingInfoLabel = device.findObject(
+                new UiSelector().resourceId(Res.GOOGLE_LAYOUT_ICON_RES));
+
+        assertTrue("Checking info label before email input not found.",
+                new Wait(90000L).until(checkingInfoLabel::exists));
+
+        assertTrue("Checking info label before email input not dismissed.",
+                checkingInfoLabel.waitUntilGone(90000L));
+
+        final UiObject signInLabel = device.findObject(
+                new UiSelector().
+                        text("Sign in").
+                        resourceId("headingText").
+                        className(TextView.class));
+        assertTrue("Sign in label not found.",
+                new Wait(20000L).until(signInLabel::exists));
+
+        final UiObject googleEmailInput = device.findObject(
+                new UiSelector().
+                        resourceId("identifierId").
+                        className(EditText.class));
+
+        assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account email input not found.",
+                new Wait(20000L).until(googleEmailInput::exists));
+
+        googleEmailInput.clearTextField();
+        googleEmailInput.setText(userEmail);
+        googleEmailInput.clickAndWaitForNewWindow(3000L);
+        device.pressEnter();
+        
+        assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Email input entry page not dismissed.",
+                googleEmailInput.waitUntilGone(90000L));
+
+        final UiObject googlePasswordInput = device.findObject(
+                new UiSelector().
+                        className(EditText.class));
+
+        assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account password input not found.",
+                new Wait(20000L).until(googlePasswordInput::exists));
+
+        googlePasswordInput.clearTextField();
+        googlePasswordInput.setText(userPassword);
+        googlePasswordInput.clickAndWaitForNewWindow(3000L);
+        device.pressEnter();        
+
+        assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Password input entry page not dismissed.",
+                googlePasswordInput.waitUntilGone(90000L));
+
+        final UiObject iAgreeButton = device.findObject(
+                new UiSelector().
+                        text("I agree").
+                        className(Button.class));
+
+        assertTrue("Agree button not found.",
+                new Wait(30000L).until(iAgreeButton::exists));
+
+        iAgreeButton.click();
+
+        assertTrue("Agree button not dismissed.",
+                iAgreeButton.waitUntilGone(90000L));
+
+        final UiObject googleServicesLabel = device.findObject(
+                new UiSelector().
+                        text("Google services").
+                        resourceId(Res.GOOGLE_SERVICES_LABEL_RES).
+                        className(TextView.class));
+
+        assertTrue("Logged in Google Services not found.",
+                new Wait(60000L).until(googleServicesLabel::exists)
+        );
+
+        AppLauncher.launchPath(
+                instrumentation, true, "Settings", "Google");
+
+        boolean isUserLoggedIn = SettingsUtil.verifyGoogleAccountStatus(instrumentation, userLoginInfo);
+
+        assertTrue("User login not confirmed", isUserLoggedIn);
     }
 
     /**
@@ -443,7 +597,7 @@ public class SettingsTest {
             AppLauncher.launchPath(
                     instrumentation, true, "Settings", "System", "Date & time");
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
         boolean autoTwentyFourWasEnabled = false;
@@ -507,7 +661,10 @@ public class SettingsTest {
      */
     @Test
     @TestInfo(id = "T144630613")
+    @Ignore("Device admin apps are not supported on API 33")
     public void activateDeactivatePolicy() throws Exception {
+        ApiDemosInstaller.installApp("Security", "Device admin apps", false);
+
         try {
             SettingsUtil.launchDeviceAdminApps(instrumentation, "Security", "Device admin apps");
 
@@ -779,7 +936,7 @@ public class SettingsTest {
             AppLauncher.launchPath(
                     instrumentation, true, "Settings", "Connected devices");
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
         UiObject seeAll = device.findObject(new UiSelector()
@@ -852,3 +1009,4 @@ public class SettingsTest {
         }
     }
 }
+

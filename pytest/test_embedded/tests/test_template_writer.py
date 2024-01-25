@@ -17,10 +17,10 @@
 
 """
 
-import unittest
-import tempfile
 import os
 import shutil
+import tempfile
+import unittest
 
 from emu.template_writer import TemplateWriter
 

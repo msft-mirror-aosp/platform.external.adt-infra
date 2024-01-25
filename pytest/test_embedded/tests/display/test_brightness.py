@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-
 from aemu.proto.emulator_controller_pb2 import BrightnessValue
 
 

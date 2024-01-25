@@ -15,7 +15,6 @@ import logging
 import re
 import threading
 import time
-from pathlib import Path
 from queue import Queue
 
 import google.protobuf.text_format
@@ -107,6 +106,3 @@ class StreamingCall(object):
         # We left scope, cancel from the client side.
         self.client_cancel = True
         self._stream_call.cancel()
-
-
-

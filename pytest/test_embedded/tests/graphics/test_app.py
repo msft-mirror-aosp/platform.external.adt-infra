@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pytest
 import logging
 from time import sleep
+
+import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 
 from emu.timing import eventually, wait_until
+
 
 @pytest.mark.e2e
 @pytest.mark.timeout(timeout=60, func_only=True)
@@ -32,6 +34,7 @@ def test_android_app_dialog_has_dimmed_background(avd, get_screenshot):
     Note: We need to keep the percentage of blue we check to not too high (60% should be okay),
     because of random system dialogs that can popup (e.g. Bluetooth keeps stopping).
     """
+
     def get_blue_pixel_percent(min_blue, max_blue):
         """Helper function to get the percentage of blue pixels that meet the criteria
         `min_blue <= x <= max_blue`.
@@ -56,13 +59,18 @@ def test_android_app_dialog_has_dimmed_background(avd, get_screenshot):
                 # Check if the pixel corresponds to the desired shade of blue
                 if r == 0 and g == 0 and b >= min_blue and b <= max_blue:
                     blue_count += 1
-        logging.info("blue pixel percent=%f", float(blue_count) / (rgb_image.width * rgb_image.height))
+        logging.info(
+            "blue pixel percent=%f",
+            float(blue_count) / (rgb_image.width * rgb_image.height),
+        )
         return float(blue_count) / (rgb_image.width * rgb_image.height)
 
     # Start DialogDimActivity with no dialog showing.
     avd.stop_activity("com.google.AnimateBox")
-    avd.start_activity("com.google.AnimateBox/com.google.emu.DialogDimActivity",
-        '--es "hideDialog" "true"')
+    avd.start_activity(
+        "com.google.AnimateBox/com.google.emu.DialogDimActivity",
+        '--es "hideDialog" "true"',
+    )
     # Give the system some time to start the activity
     sleep(5)
 

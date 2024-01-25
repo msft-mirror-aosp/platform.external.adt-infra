@@ -12,20 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import time
+
 import pytest
-from google.protobuf import empty_pb2
 from aemu.proto.emulator_controller_pb2 import (
+    DisplayMode,
+    DisplayModeValue,
     ImageFormat,
+    Notification,
     ParameterValue,
     PhysicalModelValue,
     Posture,
-    Notification,
-    DisplayMode,
-    DisplayModeValue,
 )
+from google.protobuf import empty_pb2
 
-from tests.test_utils import StreamingCall
 from emu.timing import wait_until
+from tests.test_utils import StreamingCall
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -33,28 +34,29 @@ avd_config = {
     "api": "34",
     "tag.id": "google_apis",
     "hw.device.name": "resizable",
-"hw.lcd.density" : "420",
-"hw.lcd.height" : "2340",
-"hw.lcd.width" : "1080",
-"hw.displayRegion.0.1.height" : "2092",
-"hw.displayRegion.0.1.width" : "1080",
-"hw.displayRegion.0.1.xOffset" : "0",
-"hw.displayRegion.0.1.yOffset" : "0",
+    "hw.lcd.density": "420",
+    "hw.lcd.height": "2340",
+    "hw.lcd.width": "1080",
+    "hw.displayRegion.0.1.height": "2092",
+    "hw.displayRegion.0.1.width": "1080",
+    "hw.displayRegion.0.1.xOffset": "0",
+    "hw.displayRegion.0.1.yOffset": "0",
     "hw.resizable.configs": "phone-0-1080-2340-420, foldable-1-2208-1840-420, tablet-2-1920-1200-240, desktop-3-1920-1080-160",
-    "hw.sensor.hinge" : "yes",
-"hw.sensor.hinge.areas" : "1840-0-0-1840",
-"hw.sensor.hinge.count" : "1",
-"hw.sensor.hinge.defaults" : "180",
-"hw.sensor.hinge.ranges" : "0-180",
-"hw.sensor.hinge.sub_type" : "1",
-"hw.sensor.hinge.type" : "1",
-"hw.sensor.hinge_angles_posture_definitions" : "0-30, 30-150, 150-180",
-"hw.sensor.posture_list" : "1, 2, 3",
-"hw.sensors.orientation" : "yes",
-"hw.sensors.proximity" : "yes",
+    "hw.sensor.hinge": "yes",
+    "hw.sensor.hinge.areas": "1840-0-0-1840",
+    "hw.sensor.hinge.count": "1",
+    "hw.sensor.hinge.defaults": "180",
+    "hw.sensor.hinge.ranges": "0-180",
+    "hw.sensor.hinge.sub_type": "1",
+    "hw.sensor.hinge.type": "1",
+    "hw.sensor.hinge_angles_posture_definitions": "0-30, 30-150, 150-180",
+    "hw.sensor.posture_list": "1, 2, 3",
+    "hw.sensors.orientation": "yes",
+    "hw.sensors.proximity": "yes",
     "skin.name": "1080x2340",
     "skin.path": "_no_skin",
 }
+
 
 def set_device_hinge_angle(emu, angle):
     """Change the device's hinge angle"""
@@ -64,6 +66,7 @@ def set_device_hinge_angle(emu, angle):
             value=ParameterValue(data=[angle, 0.0, 0.0]),
         )
     )
+
 
 def set_display_mode(emulator_controller, mode, timeout=5):
     emulator_controller.setDisplayMode(
@@ -96,7 +99,7 @@ def set_display_mode(emulator_controller, mode, timeout=5):
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.sanity
-@pytest.mark.skipos('all', 'reason: b/309463427')
+@pytest.mark.skipos("all", "reason: b/309463427")
 def test_new_resizable_changes_resolution(
     animation_app, emulator_controller, width, height, mode, get_screenshot
 ):
@@ -220,6 +223,7 @@ def test_new_resizable_observable_from_streaming(
                         == mode
                     )
 
+
 @pytest.mark.newresizable
 @pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.parametrize(
@@ -242,7 +246,7 @@ def test_new_resizable_folding_observable_from_streaming(
     )
 
     # start with unfold
-    set_device_hinge_angle(emulator_controller, 180);
+    set_device_hinge_angle(emulator_controller, 180)
     time.sleep(5)
 
     foldedw = 1080
@@ -258,7 +262,7 @@ def test_new_resizable_folding_observable_from_streaming(
     time.sleep(5)
 
     # Now fold it
-    set_device_hinge_angle(emulator_controller, 0);
+    set_device_hinge_angle(emulator_controller, 0)
     time.sleep(5)
 
     # Wait until we observe the expected dimension in the stream of screenshots

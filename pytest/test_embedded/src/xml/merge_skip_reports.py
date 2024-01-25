@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
-import sys
-
-import xml.etree.ElementTree as ET
-import logging
 import json
+import logging
 import platform
+import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 AOSP_ROOT = Path(__file__).parents[6]
@@ -76,15 +75,16 @@ def merge_skip_reports(xml_files):
                 ET.SubElement(xml_test, property).text = test[property]
 
     # Create element 'skipped_testsuites'
-    platforms = list(dict.fromkeys([platform.system()] +
-                                   ['Linux', 'Darwin', 'Windows']).keys())
+    platforms = list(
+        dict.fromkeys([platform.system()] + ["Linux", "Darwin", "Windows"]).keys()
+    )
     skipped_testsuites = {}
     for plat in platforms:
         emulator_config = Path(CFG / f"emulator_{plat.lower()}_tests.json")
         with open(emulator_config, "r", encoding="utf-8") as file:
             config_json = json.load(file)
             for name, testsuite in config_json.items():
-                if testsuite['status'] == 'disabled':
+                if testsuite["status"] == "disabled":
                     skipped_testsuites.setdefault(plat, [])
                     skipped_testsuites[plat].append(name)
 
@@ -94,10 +94,10 @@ def merge_skip_reports(xml_files):
         for plat, testsuites_list in skipped_testsuites.items():
             platform_ = ET.SubElement(platforms_, "platform")
             platform_.set("name", plat)
-            testsuites_ = ET.SubElement(platform_, 'testsuites')
+            testsuites_ = ET.SubElement(platform_, "testsuites")
             for name in testsuites_list:
-                testsuite_ = ET.SubElement(testsuites_, 'testsuite')
-                testsuite_.set('name', name)
+                testsuite_ = ET.SubElement(testsuites_, "testsuite")
+                testsuite_.set("name", name)
 
     return ET.ElementTree(testsuites)
 

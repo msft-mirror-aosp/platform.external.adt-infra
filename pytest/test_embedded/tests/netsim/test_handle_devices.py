@@ -9,6 +9,7 @@ def test_device_attaches_to_netsimd(avd):
     """Test case to verify that a device is attached to netsimd."""
     assert len(netsim_client.NetsimClient().get_devices()) != 0
 
+
 @pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.timeout(timeout=20, func_only=True)
@@ -19,9 +20,11 @@ def test_netsim_patch_and_reset(avd):
 
     # Patch Device Position and Orientation
     device_name = list(initial_devices.keys())[0]
-    patch_position = netsim_client.model.Position(x=1,y=2,z=3)
-    patch_orientation = netsim_client.model.Orientation(yaw=30,pitch=60,roll=90)
-    assert netsim_client.NetsimClient().set_position(device_name, position=patch_position, orientation=patch_orientation)
+    patch_position = netsim_client.model.Position(x=1, y=2, z=3)
+    patch_orientation = netsim_client.model.Orientation(yaw=30, pitch=60, roll=90)
+    assert netsim_client.NetsimClient().set_position(
+        device_name, position=patch_position, orientation=patch_orientation
+    )
 
     # Verfiy the new Position and Orientation
     post_patch_device = netsim_client.NetsimClient().get_devices()[device_name]
@@ -31,8 +34,11 @@ def test_netsim_patch_and_reset(avd):
     # Attempt Reset and Verify with Position and Orientation
     netsim_client.NetsimClient().reset()
     post_reset_device = netsim_client.NetsimClient().get_devices()[device_name]
-    assert post_reset_device.position == netsim_client.model.Position(x=0,y=0,z=0)
-    assert post_reset_device.orientation == netsim_client.model.Orientation(yaw=0,pitch=0,roll=0)
+    assert post_reset_device.position == netsim_client.model.Position(x=0, y=0, z=0)
+    assert post_reset_device.orientation == netsim_client.model.Orientation(
+        yaw=0, pitch=0, roll=0
+    )
+
 
 @pytest.mark.e2e
 @pytest.mark.boot

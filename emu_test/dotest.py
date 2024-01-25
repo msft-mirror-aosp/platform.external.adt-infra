@@ -83,6 +83,7 @@ def print_xml(emu_result):
     with open(dst_path, 'w+') as modified:
         modified.write('%s' % g_xml_string_result.decode())
 
+
 def printResult(result):
     """
     Prints out the results of the emulator test into the logger.
@@ -206,33 +207,67 @@ def printTestBreakdown(emu_args):
                     .format(sum(tests), sum(passes), sum(failures),
                             sum(errors), sum(skips), total_time))
 
+
 def printHtml(emu_args):
     """Generate a HTML report for all testcases
     """
     logger = logging.getLogger()
     logger.info("Write HTML report")
-    gradle_report_path = os.path.join(emu_args.session_dir, emu_args.test_dir)
+    gradle_report_path = Path(emu_args.session_dir) / emu_args.test_dir
 
-    if not os.path.exists(gradle_report_path):
-        logger.info('Failed to find gradle report path.')
+    xml_report_filepath = gradle_report_path / 'test_report.xml'
+    html_report_filepath = gradle_report_path / 'test_report.html'
+    xslt_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                                'utils', 'asHtml.xslt' )
+    write_xml_report(emu_args)
+
+    # Generate the HTML file
+    if not xml_report_filepath.exists():
+        logger.info("Couldn't find the XML test suites report.")
         return
+
+    lxml_tree = LET.parse(xml_report_filepath)
+    xslt = LET.parse(xslt_filepath)
+    try:
+        transform = LET.XSLT(xslt)
+        html_result = transform(lxml_tree)
+    except Exception as err:
+        logging.warning("Failed to generate file '%s' from '%s' due to error '%s'.",
+                            os.path.basename(xml_report_filepath),
+                            os.path.basename(xslt_filepath), err)
+    else:
+        html_result.write(html_report_filepath)
+        logger.info("Created file '%s'", html_report_filepath)
+
+
+def write_xml_report(emu_args):
+    """Write a XML test suites report
+
+    Args:
+        emu_args (argparse.Namespace): parsed command-line arguments
+    """
+    logger = logging.getLogger()
+    logger.info("Write XML test suites report")
+
+    gradle_report_path = Path(emu_args.session_dir) / emu_args.test_dir
+    if not gradle_report_path.exists():
+         logger.info('Failed to find gradle report path.')
+         return
+
     xml_files = sorted(Path(gradle_report_path).glob('*.xml'))
     if not xml_files:
         logger.info('No gradle XML reports found.')
         return
 
-    xml_report_filepath = os.path.join(gradle_report_path, 'test_report.xml')
-    html_report_filepath = os.path.join(gradle_report_path, 'test_report.html')
-    xslt_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                'utils', 'asHtml.xslt' )
-    xml_report_name = ''.join(emu_args.session_dir.split('/')[3:4]).\
-                                                replace('git_devtools-','')
+    xml_report_filepath = gradle_report_path / 'test_report.xml'
+    session_name = ''.join(emu_args.session_dir.split('/')[3:4]) \
+                                   .replace('git_devtools-','')
 
-    # Create the xml tree and append individual testcases
     xml_report = ET.Element('testsuites')
     xml_report_testsuite = ET.SubElement(xml_report, 'testsuite')
-    xml_report_testsuite.set('name', xml_report_name)
+    xml_report_testsuite.set('name', session_name)
     errors = tests = failures = skipped = times = 0
+
     for xml_file in xml_files:
         try:
             tree = ET.parse(xml_file)
@@ -247,45 +282,65 @@ def printHtml(emu_args):
         times += float(testsuite.get('time', 0.))
 
         classname = testsuite.get('name').split('.')[-1]
-        logcat_file = xml_file.with_name(xml_file.stem + '_logcat.txt')
-        available_report_folders = next(os.walk(gradle_report_path))[1]
-        detailed_report_folder = [folder for folder in available_report_folders \
-                                        if classname in folder and '_details' in folder]
+        logcat_path = xml_file.with_name(xml_file.stem + '_logcat.txt')
+        test_details_path = xml_file.with_name(xml_file.stem + '_details')
+        test_log_path = test_details_path / classname
         testcases = sorted(testsuite.findall('./testcase'),
                             key=lambda child: child.get('name'))
+
+        # Parse the XML file containing the ignored tests of the current test class
+        ignored_testcases_report = test_log_path / 'ignored_tests.xml'
+        if ignored_testcases_report.exists():
+            try:
+                ignored_testcases_tree = ET.parse(ignored_testcases_report)
+                ignored_testcases = ignored_testcases_tree.getroot()
+            except ET.ParseError as err:
+                logger.info(f"Error parsing XML file '{ignored_testcases_report}': {err}")
+                ignored_testcases= None
+
         for testcase in testcases:
-            testcase.set('classname', testcase.get('classname').\
-                                                replace('com.android.devtools.', ''))
-            # Add 'xml' and 'png' files that may exist in the '_detais' folder.
-            if detailed_report_folder:
-                testcase_reports_relpath = os.path.join(detailed_report_folder[0],
-                                                        classname, testcase.get('name'))
-                testcase_reports_path = os.path.join(gradle_report_path,
-                                                     testcase_reports_relpath)
-                if os.path.exists(testcase_reports_path):
-                    testcase_hierarchies = ET.SubElement(testcase, 'hierarchies')
-                    testcase_screenshots = ET.SubElement(testcase, 'screenshots')
+            testcase.set('classname', testcase.get('classname') \
+                                              .replace('com.android.devtools.', ''))
+            testcase.set('logcat', logcat_path.name)
+            testcase_log_path = test_log_path / testcase.get('name')
 
-                    for filename in os.listdir(testcase_reports_path):
-                        attachment_path = os.path.join(testcase_reports_path,
-                                                        filename)
-                        if filename.endswith('.xml'):
-                            hierarchy = ET.SubElement(testcase_hierarchies, 'hierarchy')
-                            hierarchy.set('name', filename)
-                            # Include hierarchy file contents
-                            with open(attachment_path, "r", encoding="utf-8") as hierarchy_file:
-                                contents = hierarchy_file.read()
-                                # hierachy.set('xml-content', contents)
-                                hierarchy.text = contents
-                        elif filename.endswith('.png'):
-                            screenshot = ET.SubElement(testcase_screenshots, 'screenshot')
-                            screenshot.set('name', filename)
-                            # Add base64 encoding of the image
-                            with open(attachment_path, "rb") as img:
-                                base64enc = base64.b64encode(img.read())
-                                screenshot.set('base64', base64enc.decode('utf-8'))
+            if xml_report.find('properties') is None:
+                # Append the properties of the first test class to the main xml report
+                properties = ET.SubElement(xml_report, 'properties')
+                testsuite_properties = testsuite.findall('./properties/property')
+                [properties.append(property) for property in testsuite_properties]
 
-            add_logcat(testcase, logcat_file)  # Add logcat info to the testcase tree.
+            # For ignored testcases, add the ignore reason as the 'message' property
+            skipped_element = testcase.find('./skipped')
+            if skipped_element is not None and ignored_testcases:
+                ignore_reason_xpath = '/'.join(['ignoredTest',
+                                                f"[methodName='{testcase.get('name')}']",
+                                                'ignoreReason'])
+                ignore_reason = ignored_testcases.find(ignore_reason_xpath)
+                skipped_element.set('message', ignore_reason.text)
+
+            if testcase_log_path.exists():
+                # Add 'xml' and 'png' reports that may have been pulled.
+                testcase_hierarchies = ET.SubElement(testcase, 'hierarchies')
+                testcase_screenshots = ET.SubElement(testcase, 'screenshots')
+                for report in testcase_log_path.glob('*'):
+                    if report.suffix == '.xml':
+                        hierarchy = ET.SubElement(testcase_hierarchies, 'hierarchy')
+                        hierarchy.set('name', report.name)
+                        # Include hierarchy file contents
+                        with open(report, "r", encoding="utf-8") as hierarchy_file:
+                            contents = hierarchy_file.read()
+                            # hierachy.set('xml-content', contents)
+                            hierarchy.text = contents
+                    elif report.suffix == '.png':
+                        screenshot = ET.SubElement(testcase_screenshots, 'screenshot')
+                        screenshot.set('name', report.name)
+                        # Add base64 encoding of the image
+                        with open(report, "rb") as img:
+                            base64enc = base64.b64encode(img.read())
+                            screenshot.set('base64', base64enc.decode('utf-8'))
+
+            add_logcat(testcase, logcat_path)  # Add logcat info to the testcase tree.
             xml_report_testsuite.append(testcase)
 
     xml_report_testsuite.set('tests', str(tests))
@@ -298,20 +353,6 @@ def printHtml(emu_args):
     # Write test_report.xml
     xml_tree = ET.ElementTree(xml_report)
     xml_tree.write(xml_report_filepath, xml_declaration=True, encoding='UTF-8')
-
-    # Generate the HTML file
-    lxml_tree = LET.parse(xml_report_filepath)
-    xslt = LET.parse(xslt_filepath)
-    try:
-        transform = LET.XSLT(xslt)
-        html_result = transform(lxml_tree)
-    except Exception as err:
-        logging.warning("Failed to generate file '%s' from '%s' due to error '%s'.",
-                            os.path.basename(xml_report_filepath),
-                            os.path.basename(xslt_filepath), err)
-    else:
-        html_result.write(html_report_filepath)
-        logger.info("Created file '%s'", html_report_filepath)
 
 
 def add_logcat(testcase: ET, logcat_file: Path):

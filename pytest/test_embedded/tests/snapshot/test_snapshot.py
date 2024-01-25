@@ -34,7 +34,7 @@ def snapshot_service(avd):
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.timeout(timeout=20, func_only=True)
-@pytest.mark.skipos('win', 'reason: b/305017763 - error at setup.')
+@pytest.mark.skipos("win", "reason: b/305017763 - error at setup.")
 def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
     assert not snapshot_service.load("foo")
 
@@ -61,7 +61,7 @@ def test_snapshot_delete_removes(snapshot_service):
     assert "foo" not in [x.snapshot_id for x in snapshot_service.lists()]
 
 
-@pytest.mark.skipos('all')
+@pytest.mark.skipos("all")
 @pytest.mark.snapshot
 @pytest.mark.e2e
 def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
@@ -74,7 +74,7 @@ def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     assert tar.getmembers()
 
 
-@pytest.mark.skipos('all')
+@pytest.mark.skipos("all")
 @pytest.mark.snapshot
 @pytest.mark.e2e
 @pytest.mark.sanity

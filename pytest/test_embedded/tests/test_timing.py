@@ -1,8 +1,10 @@
-import pytest
-import time
 import logging
-from emu.timing import TimeoutExceptionTrigger
+import time
+
+import pytest
+
 from emu.process.command import Command, TimeoutKillProcessTrigger
+from emu.timing import TimeoutExceptionTrigger
 
 
 def test_timeout_raises():
@@ -27,7 +29,7 @@ def sleep_time():
     )
 
 
-@pytest.mark.skipos('win', 'b/275573612')
+@pytest.mark.skipos("win", "b/275573612")
 def test_timeout_proc_terminates(sleep_time, caplog):
     """The sleep command should be forcefully terminated by our external kill mechanism."""
     start = time.time()
