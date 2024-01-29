@@ -18,15 +18,14 @@ from emu.timing import wait_until
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.boot
-def test_wifi_has_connectivity(avd):
-    def has_connectivity():
+async def test_wifi_has_connectivity(avd):
+    async def has_connectivity():
         # Check that AVD can connect to Google Public DNS 8.8.8.8.
-        result = avd.adb.shell("dumpsys connectivity --diag").rstrip()
-        for line in result.splitlines():
+        result = await avd.adb.shell("dumpsys connectivity --diag")
+        for line in result.rstrip().splitlines():
             if "DNS UDP dst{8.8.8.8}" in line and "SUCCEEDED" in line:
                 return True
         return False
 
-    assert wait_until(has_connectivity), "Unable to connect to dns 8.8.8.8"
+    assert await wait_until(has_connectivity), "Unable to connect to dns 8.8.8.8"

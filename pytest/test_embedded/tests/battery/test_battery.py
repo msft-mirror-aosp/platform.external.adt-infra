@@ -19,14 +19,14 @@ from google.protobuf import empty_pb2
 _EMPTY_ = empty_pb2.Empty()
 
 
-def set_and_get_battery(emu_controller, battery_state):
+async def set_and_get_battery(emu_controller, battery_state):
     """Executes set and get battery rpc call
     Args:
       emu_controller : emulator controller
       battery_state: battery state of emulator
     """
-    emu_controller.setBattery(battery_state)
-    retrieved = emu_controller.getBattery(_EMPTY_)
+    await emu_controller.setBattery(battery_state)
+    retrieved = await emu_controller.getBattery(_EMPTY_)
 
     assert retrieved.status == battery_state.status, "Battery status doesn't match"
     assert retrieved.health == battery_state.health, "Battery health doesn't match"
@@ -43,8 +43,8 @@ def set_and_get_battery(emu_controller, battery_state):
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
+@pytest.mark.async_timeout(30)
 @pytest.mark.parametrize(
     "test_name, battery_status, battery_health",
     [
@@ -63,7 +63,7 @@ def set_and_get_battery(emu_controller, battery_state):
         ("StatusCharging_HealthGood", BatteryState.CHARGING, BatteryState.GOOD),
     ],
 )
-def test_battery_status_health(
+async def test_battery_status_health(
     emulator_controller, test_name, battery_status, battery_health
 ):
     """Sends battery state to the emulator.
@@ -75,7 +75,7 @@ def test_battery_status_health(
     Verify:
       Battery state is set correctly on the emulator.
     """
-    set_and_get_battery(
+    await set_and_get_battery(
         emulator_controller,
         BatteryState(
             status=battery_status,

@@ -26,8 +26,8 @@ _EMPTY_ = empty_pb2.Empty()
 
 
 @pytest.fixture
-def is_landscape(get_screenshot):
-    image, _ = get_screenshot(ImageFormat(width=320, height=200))
+async def is_landscape(get_screenshot):
+    image, _ = await get_screenshot(ImageFormat(width=320, height=200))
     return (
         image.format.rotation.rotation == Rotation.REVERSE_LANDSCAPE
         or image.format.rotation.rotation == Rotation.LANDSCAPE
@@ -35,28 +35,31 @@ def is_landscape(get_screenshot):
 
 
 @pytest.fixture
-def no_displays(emulator_controller, adb_shell):
+async def no_displays(emulator_controller, adb_shell):
     """Fixture to make sure the emulator has no multi displays configured.
 
     Use this if you want to make sure the emulator has no secondary displays
     """
-    adb_shell("input keyevent KEYCODE_WAKEUP")
-    emulator_controller.setDisplayConfigurations(DisplayConfigurations(displays=[]))
+    await adb_shell("input keyevent KEYCODE_WAKEUP")
+    await emulator_controller.setDisplayConfigurations(
+        DisplayConfigurations(displays=[])
+    )
     yield
-    emulator_controller.setDisplayConfigurations(DisplayConfigurations(displays=[]))
+    await emulator_controller.setDisplayConfigurations(
+        DisplayConfigurations(displays=[])
+    )
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.graphics
 @pytest.mark.multidisplay
-def test_multidisplay_none(no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_none(no_displays, emulator_controller, is_landscape):
     """Erasing displays leaves nothing behind."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
 
-    cfg = emulator_controller.setDisplayConfigurations(
+    cfg = await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(displays=[])
     )
 
@@ -68,13 +71,12 @@ def test_multidisplay_none(no_displays, emulator_controller, is_landscape):
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.sanity
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_multidisplay_multiple(no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_multiple(no_displays, emulator_controller, is_landscape):
     """Adding a display should work."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
 
-    cfg = emulator_controller.setDisplayConfigurations(
+    cfg = await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(
             displays=[
                 DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
@@ -92,13 +94,14 @@ def test_multidisplay_multiple(no_displays, emulator_controller, is_landscape):
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_multidisplay_multiple_error(no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_multiple_error(
+    no_displays, emulator_controller, is_landscape
+):
     """A failure should not modify the status."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
 
-    cfg = emulator_controller.setDisplayConfigurations(
+    cfg = await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(
             displays=[
                 DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
@@ -111,7 +114,7 @@ def test_multidisplay_multiple_error(no_displays, emulator_controller, is_landsc
 
     # Incorrectly modifying a display configuration should fail and leave the existing one intact
     with pytest.raises(RpcError) as exc_info:
-        cfg = emulator_controller.setDisplayConfigurations(
+        cfg = await emulator_controller.setDisplayConfigurations(
             DisplayConfigurations(
                 displays=[
                     DisplayConfiguration(
@@ -123,7 +126,7 @@ def test_multidisplay_multiple_error(no_displays, emulator_controller, is_landsc
     assert exc_info.value.code() == StatusCode.INVALID_ARGUMENT
 
     # The failure leaves the displays untouched.
-    cfg = emulator_controller.getDisplayConfigurations(_EMPTY_)
+    cfg = await emulator_controller.getDisplayConfigurations(_EMPTY_)
     assert len(cfg.displays) == 2
     assert cfg.displays[1].display == 2
     assert cfg.displays[1].dpi == 213
@@ -135,13 +138,14 @@ def test_multidisplay_multiple_error(no_displays, emulator_controller, is_landsc
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_multidisplay_get_after_set(no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_get_after_set(
+    no_displays, emulator_controller, is_landscape
+):
     """Adding a display should work."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
 
-    cfg = emulator_controller.setDisplayConfigurations(
+    cfg = await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(
             displays=[
                 DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
@@ -149,21 +153,22 @@ def test_multidisplay_get_after_set(no_displays, emulator_controller, is_landsca
         )
     )
 
-    cfg2 = emulator_controller.getDisplayConfigurations(_EMPTY_)
+    cfg2 = await emulator_controller.getDisplayConfigurations(_EMPTY_)
     assert cfg == cfg2
 
 
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_multidisplay_double_ids_error(no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_double_ids_error(
+    no_displays, emulator_controller, is_landscape
+):
     """Adding the same display twice should result in an error."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
 
     with pytest.raises(RpcError) as exc_info:
-        emulator_controller.setDisplayConfigurations(
+        await emulator_controller.setDisplayConfigurations(
             DisplayConfigurations(
                 displays=[
                     DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
@@ -178,8 +183,7 @@ def test_multidisplay_double_ids_error(no_displays, emulator_controller, is_land
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_multidisplay_can_configure_four(
+async def test_multidisplay_can_configure_four(
     no_displays, emulator_controller, is_landscape
 ):
     """This tests makes sure that a total of 4 displays can be configured.
@@ -194,7 +198,7 @@ def test_multidisplay_can_configure_four(
         DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
         for idx, x in enumerate(resolutions)
     ]
-    cfg = emulator_controller.setDisplayConfigurations(
+    cfg = await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(displays=displays)
     )
 
@@ -208,8 +212,7 @@ def test_multidisplay_can_configure_four(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_multidisplay_add_should_not_remove(
+async def test_multidisplay_add_should_not_remove(
     no_displays, emulator_controller, is_landscape
 ):
     """This tests makes sure that a total of 4 displays can be configured.
@@ -220,7 +223,7 @@ def test_multidisplay_add_should_not_remove(
         pytest.skip("Cannot run multi display tests in landscape mode.")
 
     displays = [DisplayConfiguration(width=720, height=1280, dpi=213, display=2)]
-    cfg = emulator_controller.setDisplayConfigurations(
+    cfg = await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(displays=displays)
     )
 
@@ -230,7 +233,7 @@ def test_multidisplay_add_should_not_remove(
         DisplayConfiguration(width=720, height=1280, dpi=213, display=1),
         DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
     ]
-    cfg = emulator_controller.setDisplayConfigurations(
+    cfg = await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(displays=displays)
     )
 
@@ -241,8 +244,9 @@ def test_multidisplay_add_should_not_remove(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_multidisplay_error_too_many(no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_error_too_many(
+    no_displays, emulator_controller, is_landscape
+):
     """Adding too many displays should raise an exception."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
@@ -253,6 +257,6 @@ def test_multidisplay_error_too_many(no_displays, emulator_controller, is_landsc
         for idx, x in enumerate(resolutions)
     ]
     with pytest.raises(RpcError):
-        emulator_controller.setDisplayConfigurations(
+        await emulator_controller.setDisplayConfigurations(
             DisplayConfigurations(displays=displays)
         )

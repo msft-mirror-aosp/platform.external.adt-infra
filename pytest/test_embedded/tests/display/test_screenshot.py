@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
-import time
-from time import sleep
+import re
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
@@ -22,33 +22,44 @@ from aemu.proto.emulator_controller_pb2 import (
     ParameterValue,
     PhysicalModelValue,
 )
+from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
 
-from emu.images.convert import proto_to_pillow
-from tests.test_utils import wait_for_regex
+from emu.timing import eventually
 
 
-def pause_animation_app(avd):
+async def wait_for_regex(stream, regex, max_wait):
+    """Waits for the given regex to appear on the logcat stream,
+    or until max_wait time has passed.
+
+    Returns the match, or None in case of timeout.
+    """
+    compiled = re.compile(regex)
+    return await eventually(compiled.match, stream, timeout=max_wait)
+
+
+async def pause_animation_app(avd):
     """Pauses the animation app."""
 
-    with avd.adb.logcat(tag="aemu") as stream:
-        avd.description.get_emulator_controller().sendKey(
+    async with await avd.adb.logcat(tag="aemu") as stream:
+        controller = EmulatorControllerStub(avd.channel)
+        await controller.sendKey(
             KeyboardEvent(key="P", eventType=KeyboardEvent.keypress)
         )
         logging.info("Waiting for regex.")
-        return wait_for_regex(stream, r".*Pausing animation.", 5)
+        return await wait_for_regex(stream, r".*Pausing animation.", 5)
 
 
-def rotate_device(emu, angle):
+async def rotate_device(emu, angle):
     """Rotate the device to the given angle."""
-    emu.setPhysicalModel(
+    await emu.setPhysicalModel(
         PhysicalModelValue(
             target=PhysicalModelValue.ROTATION,
             value=ParameterValue(data=[0, 0, angle]),
         )
     )
-    time.sleep(0.2)
+    await asyncio.sleep(0.2)
 
 
 EMU_TO_PIL_IMAGE_FORMATS = {
@@ -62,18 +73,19 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 @pytest.mark.embedded
 @pytest.mark.fast
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-def test_screenshot_all_formats_are_equal(avd, get_screenshot, animation_app, w, h):
+async def test_screenshot_all_formats_are_equal(
+    avd, get_screenshot, animation_app, w, h
+):
     """Make sure that all the screenshots are exactly the same, regardless of format.
 
     This is done by launching the animation app, and pausing it. This should make sure
     we always have the same frame displayed on the device.
     """
-    assert pause_animation_app(avd)
+    assert await pause_animation_app(avd)
     last_pixels = None
     for image_format in [ImageFormat.RGBA8888, ImageFormat.RGB888, ImageFormat.PNG]:
-        _, pillow_image = get_screenshot(
+        _, pillow_image = await get_screenshot(
             ImageFormat(format=image_format, width=w, height=h)
         )
 
@@ -93,17 +105,16 @@ def test_screenshot_all_formats_are_equal(avd, get_screenshot, animation_app, w,
     [(ImageFormat.RGB888, 3), (ImageFormat.RGBA8888, 4)],
 )
 @pytest.mark.parametrize("degrees", [0, 90])
-@pytest.mark.timeout(timeout=60, func_only=True)
-def test_screenshot_exact_amount_of_pixels(
+async def test_screenshot_exact_amount_of_pixels(
     at_home, get_screenshot, emulator_controller, image_format, bpp, degrees
 ):
     """Tests that the screenshot API delivers exactly the right amount of pixels.
 
     The number of pixels is determined by the bytes per pixel * w * h, irrespective of rotation.
     """
-    rotate_device(emulator_controller, degrees)
+    await rotate_device(emulator_controller, degrees)
 
-    image, _ = get_screenshot(
+    image, _ = await get_screenshot(
         ImageFormat(
             format=image_format,
         )
@@ -112,10 +123,10 @@ def test_screenshot_exact_amount_of_pixels(
 
 
 @pytest.fixture
-def default_display_config(emulator_controller):
+async def default_display_config(emulator_controller):
     """A fixture that provides the default (display 0) configuration of the emulator."""
     _EMPTY_ = empty_pb2.Empty()
-    display_cfg = emulator_controller.getDisplayConfigurations(_EMPTY_)
+    display_cfg = await emulator_controller.getDisplayConfigurations(_EMPTY_)
     default_display_config = display_cfg.displays[0]
     assert default_display_config.display == 0
     return default_display_config
@@ -129,7 +140,7 @@ def default_display_config(emulator_controller):
         "REVERSE_LANDSCAPE",
     ]
 )
-def all_orientations(emulator_controller, request):
+async def all_orientations(emulator_controller, request):
     """A fixture that will rotate the emulator in all possible orientations."""
 
     # Map labels to orientation, this is mainly so the tests are are named nicely.
@@ -140,27 +151,26 @@ def all_orientations(emulator_controller, request):
         "PORTRAIT": 0,
     }
 
-    emulator_controller.setPhysicalModel(
+    await emulator_controller.setPhysicalModel(
         PhysicalModelValue(
             target=PhysicalModelValue.ROTATION,
             value=ParameterValue(data=[0, 0, ROTATION_MAPPING[request.param]]),
         )
     )
     # Give the emulator a chance to actually rotate around.
-    sleep(0.1)
+    await asyncio.sleep(0.1)
 
 
 # bug 299344829
 @pytest.mark.graphics
 @pytest.mark.embedded
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.timeout_win(timeout=120)
-def test_screenshot_valid_width_and_height(
+async def test_screenshot_valid_width_and_height(
     emulator, get_screenshot, default_display_config
 ):
     """Make sure that screenshot returns valid w and h"""
 
-    image, _ = get_screenshot(ImageFormat())
+    image, _ = await get_screenshot(ImageFormat())
     fmt = image.format
     assert (
         fmt.width == default_display_config.width
@@ -168,14 +178,13 @@ def test_screenshot_valid_width_and_height(
     ), "The width and height should be equal to the device width and height"
 
 
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.graphics
 @pytest.mark.embedded
-def test_screenshot_gets_default_resolution(
+async def test_screenshot_gets_default_resolution(
     at_home, get_screenshot, default_display_config, all_orientations
 ):
     """Verifies that the default resolution will match the emulator display dimensions"""
-    image, _ = get_screenshot(ImageFormat())
+    image, _ = await get_screenshot(ImageFormat())
     fmt = image.format
     assert (
         fmt.width == default_display_config.width
@@ -187,10 +196,9 @@ def test_screenshot_gets_default_resolution(
     ), "The height should be equal to the device height (portrait), or device width (landscape)"
 
 
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.graphics
 @pytest.mark.embedded
-def test_screenshot_never_scales_up(
+async def test_screenshot_never_scales_up(
     at_home, get_screenshot, default_display_config, all_orientations
 ):
     """Verifies b/238205075, streamScreenshot should not scale display images up."""
@@ -198,7 +206,7 @@ def test_screenshot_never_scales_up(
     max_width = default_display_config.width + default_display_config.height
     max_height = default_display_config.height + default_display_config.width
 
-    image, _ = get_screenshot(
+    image, _ = await get_screenshot(
         ImageFormat(width=max_width, height=max_height, display=0)
     )
 
@@ -213,18 +221,17 @@ def test_screenshot_never_scales_up(
     ), "The height should be equal to the device height (portrait), or device width (landscape)"
 
 
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.graphics
 @pytest.mark.embedded
-def test_screenshot_should_fail_if_does_not_exist(
+async def test_screenshot_should_fail_if_does_not_exist(
     at_home, emulator_controller, default_display_config
 ):
     """Verifies b/206033509 streamScreenshot/getScreenshot should fail with INVALID_ARGUMENT if the display doesn't exist"""
     _EMPTY_ = empty_pb2.Empty()
-    cfg = emulator_controller.getDisplayConfigurations(_EMPTY_)
+    cfg = await emulator_controller.getDisplayConfigurations(_EMPTY_)
     non_existing_display = len(cfg.displays) + 1
     with pytest.raises(RpcError) as e:
-        image = emulator_controller.getScreenshot(
+        _ = await emulator_controller.getScreenshot(
             ImageFormat(display=non_existing_display)
         )
 

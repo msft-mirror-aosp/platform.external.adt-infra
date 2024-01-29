@@ -16,15 +16,10 @@ import random
 import pytest
 from aemu.proto.emulator_controller_pb2 import MouseEvent
 
-from tests.benchmark_event_fixtures import (
-    EventTimeTester,
-    adb_event_stream,
-    android_start_time,
-    benchmark_stat,
-)
+from tests.benchmark_event_fixtures import EventTimeTester
 
 
-def send_grpc_click(avd, x, y, buttons):
+async def send_grpc_click(avd, x, y, buttons):
     """Sends a mouse click using gRPC.
 
     Args:
@@ -32,12 +27,11 @@ def send_grpc_click(avd, x, y, buttons):
         y: The y coordinate
         buttons: The number of buttons.
     """
-    avd.description.get_emulator_controller().sendMouse(
-        MouseEvent(x=x, y=y, buttons=buttons)
-    )
+    controller = EmulatorControllerStub(avd.channel)
+    await controller.sendMouse(MouseEvent(x=x, y=y, buttons=buttons))
 
 
-def send_telnet_click(avd, x, y, buttons):
+async def send_telnet_click(avd, x, y, buttons):
     """Sends a mouse click using the telnet console.
 
     Args:
@@ -45,7 +39,7 @@ def send_telnet_click(avd, x, y, buttons):
         y: The y coordinate
         buttons: The number of buttons.
     """
-    avd.get_telnet().send("event mouse {} {} 0 {}".format(x, y, buttons))
+    await avd.get_telnet().send("event mouse {} {} 0 {}".format(x, y, buttons))
 
 
 def send_mouse_over(tester):
@@ -65,7 +59,6 @@ def send_mouse_over(tester):
 
 
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-wall")
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
@@ -84,7 +77,6 @@ def test_mouse_perf_wall_grpc(avd, android_start_time, adb_event_stream, benchma
 
 @pytest.mark.perf
 @pytest.mark.hardware
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-wall")
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
@@ -104,7 +96,6 @@ def test_mouse_perf_wall_telnet(avd, android_start_time, adb_event_stream, bench
 
 
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-guest")
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
@@ -131,7 +122,6 @@ def test_mouse_perf_host_guest_telnet(
 
 
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-guest")
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
@@ -156,7 +146,6 @@ def test_mouse_perf_host_guest_grpc(
 
 
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-host")
 def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over grpc.
@@ -178,7 +167,6 @@ def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
 
 
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="mouse-host-host")
 def test_mouse_perf_host_host_telnet(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over telnet.

@@ -11,31 +11,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import time
+import asyncio
 
+import grpc
 import pytest
 from aemu.proto.screen_recording_service_pb2 import RecordingInfo
 from aemu.proto.screen_recording_service_pb2_grpc import ScreenRecordingStub
 from google.protobuf import empty_pb2
-from grpc._channel import _InactiveRpcError
 
 from emu.timing import eventually
-from tests.test_utils import StreamingCall
 
 
 @pytest.fixture
-def screen_service(service):
+@pytest.mark.async_timeout(5)
+async def screen_service(service):
     """A screen service fixture that will stop any active recording on test completion."""
     screen_service: ScreenRecordingStub = service(ScreenRecordingStub)
-    screen_service.StopRecording(RecordingInfo(), timeout=10)
+    await screen_service.StopRecording(RecordingInfo())
     yield screen_service
-    screen_service.StopRecording(RecordingInfo(), timeout=10)
+    await screen_service.StopRecording(RecordingInfo())
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.graphics
-def test_screen_record_sends_event(screen_service, tmp_path):
+async def test_screen_record_sends_event(screen_service, tmp_path):
     stream = screen_service.ReceiveRecordingEvents(empty_pb2.Empty())
     info = RecordingInfo(width=120, height=120, file_name=str(tmp_path / "sample.webm"))
 
@@ -44,26 +43,24 @@ def test_screen_record_sends_event(screen_service, tmp_path):
         # temporary file.
         return recording_info.file_name == info.file_name
 
-    with StreamingCall(stream) as stream:
-        screen_service.StartRecording(info)
-        assert eventually(
-            receives_an_update_event, stream
-        ), "Did not receive a notification, even though I started recording"
+    await screen_service.StartRecording(info)
+    assert eventually(
+        receives_an_update_event, stream
+    ), "Did not receive a notification, even though I started recording"
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.skipos("win", "reason: b/306418109 - ERROR at setup.")
 @pytest.mark.graphics
 @pytest.mark.sanity
 @pytest.mark.fast
-def test_screen_records_video(screen_service, animation_app, tmp_path):
+async def test_screen_records_video(screen_service, animation_app, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
-    screen_service.StartRecording(info)
-    time.sleep(2)
-    screen_service.StopRecording(info)
+    await screen_service.StartRecording(info)
+    await asyncio.sleep(5)
+    await screen_service.StopRecording(info)
 
     # bump the size to 10240, as empty webm will be around 4k already
     # realistically, the size should be around 49621, but lets leave some
@@ -74,31 +71,29 @@ def test_screen_records_video(screen_service, animation_app, tmp_path):
     ), "We should have recorded a series of frames"
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.skipos("win", "reason: b/306418109 - ERROR at setup.")
 @pytest.mark.graphics
 @pytest.mark.fast
-def test_can_only_record_once(screen_service, tmp_path):
+async def test_can_only_record_once(screen_service, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
-    screen_service.StartRecording(info)
+    await screen_service.StartRecording(info)
     with pytest.raises(
-        _InactiveRpcError, match=".*The recorder is not in a stopped state.*"
+        grpc.aio._call.AioRpcError, match=".*The recorder is not in a stopped state.*"
     ):
         # Our second record attempt should result in an error
-        screen_service.StartRecording(info)
+        await screen_service.StartRecording(info)
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.graphics
-def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
+async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
-    screen_service.StartRecording(info)
-    time.sleep(2)
-    screen_service.StopRecording(info)
+    await screen_service.StartRecording(info)
+    await asyncio.sleep(2)
+    await screen_service.StopRecording(info)
 
     with open(sample_webm, "rb") as file:
         header = file.read(4)

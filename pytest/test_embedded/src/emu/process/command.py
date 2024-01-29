@@ -1,4 +1,4 @@
-# Copyright 2022 - The Android Open Source Project
+# Copyright 2024 - The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the',  help='License');
 # you may not use this file except in compliance with the License.
@@ -11,102 +11,158 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 import os
-import platform
-import subprocess
 from pathlib import Path
 
 import psutil
 
-from emu.logging.log_handler import LogHandler, QueueLogHandler
+from emu.logging.log_handler import AsyncLogHandler
 from emu.process.kill_emulator import kill_process_tree
-from emu.timing import TimeoutTrigger
 
 
 class Command:
-    """A Command that can be run in a shell."""
+    """
+    Represents an asynchronous command to be executed in a subprocess.
 
-    def __init__(self, cmd):
-        self.env = os.environ
+    Provides methods to manage environment variables, working directory, and execute the command with logging.
+    """
+
+    def __init__(self, cmd, logger=None):
+        """
+        Initializes the Command instance.
+
+        Args:
+            cmd (list[str]): The command to be executed, as a list of strings (e.g., ["ls", "-l"]).
+            logger (logging.Logger, optional): A logger instance for logging output. If not provided,
+                                               a logger named after the command is created.
+        """
+
+        self.env = os.environ.copy()  # Make a copy of the environment
         self.cmd = [str(c) for c in cmd]
-        self.log_handler = LogHandler()
+        self.process = None
+        if not logger:
+            name = Path(cmd[0]).name
+            self.handler = AsyncLogHandler(logging.getLogger(f"{name}"))
+        else:
+            self.handler = AsyncLogHandler(logger)  # Use provided logger
         self.working_directory = None
-        self.use_shell = platform.system() == "Windows"
-        self.ignore_errors = False
+        self.log_task = None
 
     def with_environment(self, env: dict[str, str]):
-        """Additional environment to use when running this command
+        """
+        Adds or updates environment variables for the command execution.
 
         Args:
-            env (dict[str, str]): Environment used to override
-                                default os environment.
+            env (dict[str, str]): A dictionary of environment variables (key=name, value=value).
 
         Returns:
-            Command: The command itself
+            self: The Command instance for method chaining.
         """
-        for k, v in env.items():
-            self.env[str(k)] = str(v)
-        return self
 
-    def with_log_handler(self, handler: LogHandler):
-        """Sets the log
-
-        Args:
-            handler (LogHandler): The loghandler responsible for logging
-
-        Returns:
-            Command: The command itself
-        """
-        self.log_handler = handler
+        self.env.update(env)  # Update the environment dictionary
         return self
 
     def in_directory(self, directory):
+        """
+        Sets the working directory for the command execution.
+
+        Args:
+            directory (str or Path): The path to the working directory.
+
+        Returns:
+            self: The Command instance for method chaining.
+        """
+
         self.working_directory = Path(directory)
         return self
 
-    def run(self):
-        """Runs the given command."""
-        cmdstr = " ".join(self.cmd)
-        logging.info("Run: %s", cmdstr)
+    async def __aenter__(self):
+        return self.handler
 
-        proc: subprocess.Popen = subprocess.Popen(
-            self.cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            cwd=self.working_directory,
-            shell=self.use_shell,
-            env=self.env,
-            encoding="utf-8",
-        )
+    async def __aexit__(self, type, value, traceback):
+        if self.log_task and not self.log_task.done():
+            self.log_task.cancel()
 
-        self.log_handler.start_log_proc(proc)
+    async def cancel(self):
+        """Cancel and terminate the outstanding process.
+
+        The process, and all its descendants will be forcefully terminated.
+        """
+        if self.log_task and not self.log_task.done():
+            self.log_task.cancel()
+        if self.process:
+            try:
+                proc = psutil.Process(self.process.pid)
+                if proc.is_running():
+                    logging.info("Forcefully terrminating: %s", proc)
+                    kill_process_tree(proc)
+            except psutil.NoSuchProcess:
+                # Proc is dead
+                pass
+
+    async def wait(self):
+        """Wait until the process exit and return the process return code."""
+        proc = await self.process.wait()
+
+        # The logtask should be closed out soon, we want to make sure all the logs
+        # have been handled before returning.
+        await asyncio.wait_for(self.log_task, timeout=1)
         return proc
 
-    def run_until_finished(self, timeout: int = 10):
-        """Runs the command until it is finished, returning the exit code."""
+    async def run(self):
+        """
+        Creates a subprocess to execute the command.
 
-        # Create an infinte queue, so we capture all the output.
-        q = QueueLogHandler(logging.getLogger(f"{self.cmd[0]}"), max_lines_to_log=0)
-        self.with_log_handler(q)
-        proc = self.run()
-        with TimeoutKillProcessTrigger(proc.pid, timeout=timeout):
-            status = proc.wait(timeout=timeout)
+        A logger will be attached that will log the output from stdout/stderr
+        a log handler that will log it logger.info/logger.warning.
 
-        return status, q.readlines()
+        Returns:
+            asyncio.subprocess.Process: The created subprocess object.
+        """
 
+        self.process = await asyncio.create_subprocess_exec(
+            *self.cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=self.working_directory,  # Use the working directory if set
+            env=self.env,  # Use the specified environment
+        )
+        cmdstr = " ".join(self.cmd)
+        logging.info("Run: %s, (%d)", cmdstr, self.process.pid)
+        self.log_task = asyncio.create_task(
+            self.handler.async_log(self.process)
+        )  # Start logging task
+        return self
 
-class TimeoutKillProcessTrigger(TimeoutTrigger):
-    def __init__(self, pid, timeout: int = 60):
-        super().__init__(self._handler, timeout)
-        self.proc = psutil.Process(pid)
+    async def run_until_finished(self, timeout: int = 10) -> (int, [str]):
+        """
+        Runs the command, waits for completion (with a timeout), and captures output.
 
-    def _handler(self):
-        if self.proc.is_running():
-            logging.debug("Killing %s", self.proc)
-            kill_process_tree(self.proc)
+        Args:
+            timeout (int, optional): Maximum time (in seconds) to wait for command
+            completion. Defaults to 10.
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exits the context and terminates the process."""
-        self._handler()
-        self.cancel()
+        Returns:
+            tuple:
+                - exit_code (int): The exit code of the process, -1 in case of timeout and termination.
+                - output (list[str]): A list of lines captured from the command's
+                  output (stdout and stderr).
+        """
+        try:
+            await asyncio.wait_for(self.run(), timeout=timeout)
+            status = await asyncio.wait_for(self.wait(), timeout=timeout)
+            res = self.handler.readlines()
+            logging.info("Completed: %d", status)
+            return status, res
+        except (Exception, asyncio.TimeoutError) as err:
+            logging.info("Timed out/Error: %s", err)
+            try:
+                proc = psutil.Process(self.process.pid)
+                kill_process_tree(proc)
+            except psutil.NoSuchProcess:
+                pass
+            pid = self.process.pid if self.process else "(no process pid available)"
+            logging.info("Terminated pid:%s, returing -1, and lines", pid)
+            return -1, self.handler.readlines()

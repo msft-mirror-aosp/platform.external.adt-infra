@@ -16,14 +16,14 @@ import pytest
 from aemu.proto.emulator_controller_pb2 import BrightnessValue
 
 
-def set_and_get_brightness(emu_controller, brightness_value):
+async def set_and_get_brightness(emu_controller, brightness_value):
     """Executes set and get brightness Rpc call
     Args:
       emu_controller : Emulator Controller
       brightness_value: brightness_value to emulator
     """
-    emu_controller.setBrightness(brightness_value)
-    retrieved = emu_controller.getBrightness(
+    await emu_controller.setBrightness(brightness_value)
+    retrieved = await emu_controller.getBrightness(
         BrightnessValue(target=brightness_value.target)
     )
 
@@ -34,7 +34,7 @@ def set_and_get_brightness(emu_controller, brightness_value):
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-@pytest.mark.timeout(timeout=20, func_only=True)
+@pytest.mark.async_timeout(10)
 @pytest.mark.parametrize(
     "test_name, brightness_value",
     [
@@ -43,7 +43,7 @@ def set_and_get_brightness(emu_controller, brightness_value):
         ("Button", BrightnessValue.BUTTON),
     ],
 )
-def test_brightness_value(emulator_controller, test_name, brightness_value):
+async def test_brightness_value(emulator_controller, test_name, brightness_value):
     """Sends brightness value to the emulator.
 
     Test steps:

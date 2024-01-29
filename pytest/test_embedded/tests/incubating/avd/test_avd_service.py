@@ -11,9 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import pytest
-from aemu.proto.avd_service_pb2 import AvdInfo
 from aemu.proto.avd_service_pb2_grpc import AvdServiceStub
 from google.protobuf import empty_pb2
 
@@ -22,21 +20,19 @@ __EMPTY__ = empty_pb2.Empty()
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_avd_info_is_constant(service):
+async def test_avd_info_is_constant(service):
     avd_info_service = service(AvdServiceStub)
-    avd_info = avd_info_service.getAvdInfo(__EMPTY__)
-    avd_info2 = avd_info_service.getAvdInfo(__EMPTY__)
+    avd_info = await avd_info_service.getAvdInfo(__EMPTY__)
+    avd_info2 = await avd_info_service.getAvdInfo(__EMPTY__)
 
     assert avd_info == avd_info2
 
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_avd_info_status_is_as_expected(avd, service):
+async def test_avd_info_status_is_as_expected(avd, service):
     avd_info_service = service(AvdServiceStub)
-    avd_info = avd_info_service.getAvdInfo(__EMPTY__)
+    avd_info = await avd_info_service.getAvdInfo(__EMPTY__)
 
     assert avd_info.device_name == avd.configuration.hardware["AvdId"]
     assert avd_info.api_level == int(avd.configuration.hardware["api"])

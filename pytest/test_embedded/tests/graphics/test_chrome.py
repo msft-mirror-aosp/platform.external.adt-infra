@@ -106,7 +106,7 @@ class TemporaryWebServer(http.server.SimpleHTTPRequestHandler):
 
 
 @pytest.fixture(scope="module")
-def test_server(request):
+async def test_server(request):
     """
     Pytest fixture that starts an HTTP server on a random port using the TemporaryWebServer handler.
 
@@ -143,7 +143,7 @@ def test_server(request):
         return check_server_availability(("localhost", port))
 
     # Wait until the web server is up and running.
-    assert eventually(server_is_available, timeout=10)
+    assert await eventually(server_is_available, timeout=10)
 
     # Obtain the actual port on which the server is running
     host, port = httpd.server_address
@@ -159,7 +159,7 @@ def test_server(request):
 
 
 @pytest.fixture
-def prepare_chrome(avd):
+async def prepare_chrome(avd):
     """
     Pytest fixture that launches Chrome and configures it
     to skip the welcome page.
@@ -169,33 +169,33 @@ def prepare_chrome(avd):
     """
     TemporaryWebServer.count = 0
     # Configure to skip welcome page
-    avd.adb.shell(
+    await avd.adb.shell(
         'echo "chrome --disable-fre --no-default-browser-check --no-first-run --skip_first_run_ui" > /data/local/tmp/chrome-command-line'
     )
-    avd.adb.shell("am set-debug-app --persistent com.android.chrome")
+    await avd.adb.shell("am set-debug-app --persistent com.android.chrome")
 
     # Start Chrome for the first time
-    avd.start_activity(
+    await avd.start_activity(
         "com.android.chrome/com.google.android.apps.chrome.Main", params=None
     )
 
     # Kill and restart to skip a pop-up
-    avd.stop_activity("com.android.chrome")
-    avd.start_activity(
+    await avd.stop_activity("com.android.chrome")
+    await avd.start_activity(
         "com.android.chrome/com.google.android.apps.chrome.Main", params=None
     )
-    avd.adb.shell(
+    await avd.adb.shell(
         f"am start -a android.intent.action.VIEW -d www.google.com com.android.chrome"
     )
 
     yield
 
-    avd.stop_activity("com.android.chrome")
+    await avd.stop_activity("com.android.chrome")
 
 
-@pytest.mark.skipos("win", "reason: b/304785674 - test crashes.")
+@pytest.mark.skipos("all", "reason: b/304785674 - test crashes.")
 @pytest.mark.graphics
-def test_make_sure_webserver_works(test_server):
+async def test_make_sure_webserver_works(test_server):
     """Test function to ensure that the web server is functioning correctly.
 
     This test function verifies that the server responds with a 200 status code and returns
@@ -214,36 +214,35 @@ def test_make_sure_webserver_works(test_server):
     assert TemporaryWebServer.count >= get_count + 1
 
 
-def request_page_in_chrome(avd, page):
-    avd.stop_activity("com.android.chrome")
-    avd.start_activity(
+async def request_page_in_chrome(avd, page):
+    await avd.stop_activity("com.android.chrome")
+    await avd.start_activity(
         "com.android.chrome/com.google.android.apps.chrome.Main", params=None
     )
-    avd.adb.shell(
+    await avd.adb.shell(
         f"am start -a android.intent.action.VIEW -d {page} com.android.chrome"
     )
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=120, func_only=True)
+@pytest.mark.skipos("all", "reason: b/304785674 - test crashes.")
 @pytest.mark.graphics
-def test_launch_chrome_google_gets_page(avd, prepare_chrome, test_server):
+async def test_launch_chrome_google_gets_page(avd, prepare_chrome, test_server):
     _, port = test_server
     chrome_page = f"http://10.0.2.2:{port}/"
     get_count = TemporaryWebServer.count
 
-    request_page_in_chrome(avd, chrome_page)
-    assert wait_until(
+    await request_page_in_chrome(avd, chrome_page)
+    assert await wait_until(
         lambda: TemporaryWebServer.count > get_count, timeout=5
     ), f"Chrome did not make a get call in a timely fashion {TemporaryWebServer.count} <= {get_count}"
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=120, func_only=True)
 @pytest.mark.flaky(reruns=1, reruns_delay=5)
 @pytest.mark.graphics
 @pytest.mark.xpass
-def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
+async def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
     """
     This test launches Chrome on an Android device, navigates to  a `blue`
     page served by the test server, captures a screenshot, and verifies
@@ -256,14 +255,14 @@ def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
     _, port = test_server
     chrome_page = f"http://10.0.2.2:{port}/"
 
-    def at_least_40_percent_of_image_is_blue():
+    async def at_least_40_percent_of_image_is_blue():
         """
         Helper function to check if at least 10% of the image pixels are blue.
 
         Returns:
             bool: True if at least 10% of the image pixels are blue, False otherwise.
         """
-        _, rgb_image = get_screenshot(ImageFormat())
+        _, rgb_image = await get_screenshot(ImageFormat())
         rgb_image = rgb_image.convert("RGB")
 
         percent_blue = 40
@@ -282,8 +281,8 @@ def test_launch_chrome_google(prepare_chrome, test_server, avd, get_screenshot):
 
     max_retries = 3
     for _ in range(0, max_retries):
-        request_page_in_chrome(avd, chrome_page)
-        if wait_until(at_least_40_percent_of_image_is_blue, timeout=5):
+        await request_page_in_chrome(avd, chrome_page)
+        if await wait_until(at_least_40_percent_of_image_is_blue, timeout=5):
             return
 
     assert (

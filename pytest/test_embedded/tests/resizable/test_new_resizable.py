@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import time
 
 import pytest
@@ -18,15 +19,12 @@ from aemu.proto.emulator_controller_pb2 import (
     DisplayMode,
     DisplayModeValue,
     ImageFormat,
-    Notification,
     ParameterValue,
     PhysicalModelValue,
-    Posture,
 )
 from google.protobuf import empty_pb2
 
-from emu.timing import wait_until
-from tests.test_utils import StreamingCall
+from emu.timing import eventually, wait_until
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -58,9 +56,9 @@ avd_config = {
 }
 
 
-def set_device_hinge_angle(emu, angle):
+async def set_device_hinge_angle(emu, angle):
     """Change the device's hinge angle"""
-    emu.setPhysicalModel(
+    await emu.setPhysicalModel(
         PhysicalModelValue(
             target=PhysicalModelValue.HINGE_ANGLE0,
             value=ParameterValue(data=[angle, 0.0, 0.0]),
@@ -68,18 +66,18 @@ def set_device_hinge_angle(emu, angle):
     )
 
 
-def set_display_mode(emulator_controller, mode, timeout=5):
-    emulator_controller.setDisplayMode(
+async def set_display_mode(emulator_controller, mode, timeout=5):
+    await emulator_controller.setDisplayMode(
         DisplayMode(
             value=mode,
         )
     )
 
     # Eventually the currentMode is equal to the one we have set.
-    currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
+    currentMode = await emulator_controller.getDisplayMode(_EMPTY_).value
     timeout = time.time() + timeout
     while currentMode != mode and time.time() < timeout:
-        time.sleep(0.1)
+        await asyncio.sleep(0.1)
         currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
 
     return emulator_controller.getDisplayMode(_EMPTY_).value
@@ -95,21 +93,25 @@ def set_display_mode(emulator_controller, mode, timeout=5):
         (1920, 1080, DisplayModeValue.DESKTOP),
     ],
 )
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
 @pytest.mark.sanity
-@pytest.mark.skipos("all", "reason: b/309463427")
-def test_new_resizable_changes_resolution(
+# @pytest.mark.skipos("all", "reason: b/309463427")
+async def test_new_resizable_changes_resolution(
     animation_app, emulator_controller, width, height, mode, get_screenshot
 ):
-    emulator_controller.setDisplayMode(DisplayMode(value=mode))
+    await emulator_controller.setDisplayMode(DisplayMode(value=mode))
+
+    async def display_is_set_to_mode():
+        updated = await emulator_controller.getDisplayMode(_EMPTY_)
+        return updated.value == mode
+
     # Eventually the currentMode is equal to the one we have set.
     # If this is broken the test will timeout
-    assert wait_until(lambda: emulator_controller.getDisplayMode(_EMPTY_).value == mode)
+    assert await wait_until(display_is_set_to_mode)
 
-    def screenshot_is_sized_properly():
-        image, _ = get_screenshot(
+    async def screenshot_is_sized_properly():
+        image, _ = await get_screenshot(
             ImageFormat(
                 format=ImageFormat.RGB888,
             )
@@ -125,11 +127,10 @@ def test_new_resizable_changes_resolution(
         )
 
     # Eventually we should receive a screenshot that has the expected size.
-    assert wait_until(screenshot_is_sized_properly)
+    assert await wait_until(screenshot_is_sized_properly)
 
 
 @pytest.mark.newresizable
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.parametrize(
     "fmt, bpp",
     [
@@ -137,7 +138,7 @@ def test_new_resizable_changes_resolution(
         (ImageFormat.RGB888, 3),
     ],
 )
-def test_new_resizable_observable_from_streaming(
+async def test_new_resizable_observable_from_streaming(
     emulator_controller, stream_screenshot, fmt, bpp
 ):
     available_dimensions = iter(
@@ -152,7 +153,7 @@ def test_new_resizable_observable_from_streaming(
     # Start with moving to the intial dimension
     w, h, mode = next(available_dimensions)
     assert set_display_mode(emulator_controller, mode) == mode
-    time.sleep(5)
+    await asyncio.sleep(5)
 
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
@@ -168,11 +169,10 @@ def test_new_resizable_observable_from_streaming(
                     # Transition to the next.
                     w, h, mode = next(available_dimensions)
                     assert set_display_mode(emulator_controller, mode) == mode
-                    time.sleep(5)
+                    await asyncio.sleep(5)
 
 
 @pytest.mark.newresizable
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.parametrize(
     "fmt, bpp",
     [
@@ -180,7 +180,7 @@ def test_new_resizable_observable_from_streaming(
         (ImageFormat.RGB888, 3),
     ],
 )
-def test_new_resizable_observable_from_streaming(
+async def test_new_resizable_observable_from_streaming(
     emulator_controller, stream_screenshot, fmt, bpp
 ):
     available_dimensions = iter(
@@ -198,7 +198,7 @@ def test_new_resizable_observable_from_streaming(
     # Eventually the currentMode is equal to the one we have set.
     # If this is broken the test will timeout
     assert wait_until(lambda: emulator_controller.getDisplayMode(_EMPTY_).value == mode)
-    time.sleep(5)
+    await asyncio.sleep(5)
 
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
@@ -215,7 +215,7 @@ def test_new_resizable_observable_from_streaming(
                     w, h, mode = next(available_dimensions)
 
                     emulator_controller.setDisplayMode(DisplayMode(value=mode))
-                    time.sleep(5)
+                    await asyncio.sleep(5)
                     # Eventually the currentMode is equal to the one we have set.
                     # If this is broken the test will timeout
                     assert wait_until(
@@ -225,7 +225,6 @@ def test_new_resizable_observable_from_streaming(
 
 
 @pytest.mark.newresizable
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.parametrize(
     "fmt, bpp",
     [
@@ -233,7 +232,7 @@ def test_new_resizable_observable_from_streaming(
         (ImageFormat.RGB888, 3),
     ],
 )
-def test_new_resizable_folding_observable_from_streaming(
+async def test_new_resizable_folding_observable_from_streaming(
     emulator_controller, stream_screenshot, fmt, bpp
 ):
     available_dimensions = iter(
@@ -246,33 +245,34 @@ def test_new_resizable_folding_observable_from_streaming(
     )
 
     # start with unfold
-    set_device_hinge_angle(emulator_controller, 180)
-    time.sleep(5)
+    await set_device_hinge_angle(emulator_controller, 180)
+    await asyncio.sleep(5)
 
     foldedw = 1080
     foldedh = 2092
     # Start with moving to the intial dimension
     w, h, mode = next(available_dimensions)
-    assert set_display_mode(emulator_controller, mode) == mode
-    time.sleep(5)
+    updated = await set_display_mode(emulator_controller, mode)
+    assert updated == mode
+    await asyncio.sleep(5)
 
     # Transition to the next.
     w, h, mode = next(available_dimensions)
-    assert set_display_mode(emulator_controller, mode) == DisplayModeValue.FOLDABLE
-    time.sleep(5)
+    updated = await set_display_mode(emulator_controller, mode)
+    assert updated == DisplayModeValue.FOLDABLE
+    await asyncio.sleep(5)
 
     # Now fold it
-    set_device_hinge_angle(emulator_controller, 0)
-    time.sleep(5)
+    await set_device_hinge_angle(emulator_controller, 0)
+    await asyncio.sleep(5)
 
     # Wait until we observe the expected dimension in the stream of screenshots
-    with pytest.raises(StopIteration):
-        with stream_screenshot(ImageFormat(format=fmt)) as stream:
-            for image in stream:
-                if image.format.width == foldedw and image.format.height == foldedh:
-                    pixel_count = len(image.image)
-                    assert pixel_count == foldedw * foldedh * bpp
-                    w, h, mode = next(available_dimensions)
-                    w, h, mode = next(available_dimensions)
-                    w, h, mode = next(available_dimensions)
-                    w, h, mode = next(available_dimensions)
+    def image_is_properly_sized(image):
+        return (
+            image.format.width == foldedw
+            and image.format.height == foldedh
+            and len(image.image) == foldedw * foldedh * bpp
+        )
+
+    stream = stream_screenshot(ImageFormat(format=fmt))
+    assert await eventually(image_is_properly_sized, stream)

@@ -1,0 +1,44 @@
+// This contains the allow lists of the emulator gRPC endpoint.
+// This list defines which sets of methods are accessible by whom.
+//
+// You can protect the gRPC services as follows:
+//
+// - Unprotected: The set of methods that can be invoked even when
+//                no access token is presented. No security checks will
+//                be performed when these methods are invoked.
+//
+// - allowlist: A set of json objects that specificies for each token issuer,
+//              what is allowed and what requires an "aud" field.
+//
+//             - "iss": The token issuer.
+//             - "allowed": List of methods which are allowed, even if no "aud" field
+//                        is present on the jwt token.
+//             - "protected": List of methods which are allowed *ONLY IF* the given method
+//                        is present in the "aud" field of the jwt token.
+//             Note: Methods that are not on the allowed or protected list will ALWAYS be rejected.
+{
+    // Set of methods that do not require any validations, they do not require a token.
+    // You are always able to invoke this method, without presenting any form of authentication.
+    // This is a list of regular expressions. Access will be granted if the regular expression
+    // matches the endpoint.
+    "unprotected": [
+        // ".*" // Matches every method, no authentication will be used **DANGER**
+        // "/android.emulation.control.SnapshotService.*" // Everyone can make snapshots.
+    ],
+    // List of methods that require a token, these are the methods
+    // we will allow if you present a signed JWT token.
+    "allowlist": [
+        {
+            "iss": "PyModule",
+            "allowed": [
+                ".*"
+            ]
+        },
+        {
+            "iss": "android-studio",
+            "allowed": [
+                ".*"
+            ]
+        }
+    ]
+}

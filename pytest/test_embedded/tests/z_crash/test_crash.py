@@ -74,38 +74,38 @@ def minidump_has_symbols(minidump):
     return any([crash_re.match(x) for x in minidump.splitlines()])
 
 
-def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
+async def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
     # Launch the emulator if needed.
     if not emulator.is_alive():
-        emulator.launch()
+        await emulator.launch()
 
     assert emulator.is_alive()
 
-    crash_count = len(crash_reporter.crashes())
-    assert emulator.adb.run(["emu", "crash"])
+    crash_count = len(await crash_reporter.crashes())
+    assert await emulator.adb.run(["emu", "crash"])
 
     # Wait until the emulator is gone
     def emulator_dead():
         return not emulator.is_alive()
 
-    assert wait_until(emulator_dead)
+    assert await wait_until(emulator_dead)
 
-    def crash_detected():
-        return crash_count < len(crash_reporter.crashes())
+    async def crash_detected():
+        crashes = await crash_reporter.crashes()
+        return crash_count < len(crashes)
 
-    assert wait_until(crash_detected)
+    assert await wait_until(crash_detected)
 
-    return crash_reporter.crashes()
+    return await crash_reporter.crashes()
 
 
 @pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.fast
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.flaky(
     reruns=3, reruns_delay=5
 )  # b/278266218 flaky on linux_x64-gfxstream.
-def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
+async def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     """Make sure the emulator can crash, and produces a report.
 
     Note, this test is placed in the z_crash directory to have it run last.
@@ -115,9 +115,9 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 
     # Do not run if we have existing crashes!
     # This likely means the emulator went down in another test.
-    assert len(crash_reporter.crashes()) == 0, "We have existing crash data!"
+    assert len(await crash_reporter.crashes()) == 0, "We have existing crash data!"
 
-    crashes = crash(emulator, crash_reporter)
+    crashes = await crash(emulator, crash_reporter)
 
     # We should have at least one new crash.
     assert len(crashes) >= 1
@@ -125,9 +125,8 @@ def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 
 @pytest.mark.e2e
 @pytest.mark.boot
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.skipos("win", "Symbol decoding works differently on windows (b/305990645)")
-def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
+async def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     """Make sure that there are symbols in the crashes reported by the emulator.
 
     This makes sure that we produced symbols, so that if we have crash reports
@@ -139,7 +138,7 @@ def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     if not crash_reporter.has_symbols():
         pytest.skip("No symbols available, let's not crash the emulator")
 
-    crashes = crash(emulator, crash_reporter)
+    crashes = await crash(emulator, crash_reporter)
     assert any(
-        [minidump_has_symbols(crash_reporter.dump_crash(c)) for c in crashes]
+        [minidump_has_symbols(await crash_reporter.dump_crash(c)) for c in crashes]
     ), "None of the crash reports have decoded symbols"

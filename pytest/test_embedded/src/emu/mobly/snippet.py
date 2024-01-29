@@ -25,11 +25,10 @@ class Mobly:
 
     Attributes:
         ads: An instance of the Android device.
-        adb: An instance of the ADB (Android Debug Bridge) controller.
         name (str): The name of the device.
     """
 
-    def __init__(self, adb, device_name):
+    def __init__(self, device_name):
         """
         Initializes the Mobly class.
 
@@ -38,7 +37,6 @@ class Mobly:
             device_name (str): The name of the device.
         """
         self.ads = None
-        self.adb = adb
         self.name = device_name
 
     def _connect(self):
@@ -69,10 +67,7 @@ class Mobly:
         try:
             self.ads.load_snippet(name, package)
         except AdbError as err:
-            logging.warning(
-                "Adb failure, trying again, after adb restart. Error: %s", err
-            )
-            self.adb.restart()
+            logging.error("Adb failure, trying again. Error: %s", err)
             self.ads.load_snippet(name, package)
 
     def snippet(self, name: str):

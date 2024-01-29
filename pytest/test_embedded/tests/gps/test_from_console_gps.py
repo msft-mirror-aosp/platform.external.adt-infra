@@ -19,12 +19,11 @@ from google.protobuf.empty_pb2 import Empty
 
 @pytest.mark.hardware
 @pytest.mark.fast
-@pytest.mark.timeout(timeout=10, func_only=True)
 @pytest.mark.parametrize(
     "latitude,longitude,speed,bearing,altitude,satellites",
     [(37.0, -122.0, 0.0, 0.0, 0.0, 1), (100.0, 200.0, 0.0, 0.0, 100.0, 1)],
 )
-def test_gps(
+async def test_gps(
     emulator_controller, latitude, longitude, speed, bearing, altitude, satellites
 ):
     """Set emulator gps state to specified parameters
@@ -48,8 +47,8 @@ def test_gps(
         satellites=satellites,
     )
 
-    emulator_controller.setGps(expected_gps_state)
-    actual_gps_state = emulator_controller.getGps(Empty())
+    await emulator_controller.setGps(expected_gps_state)
+    actual_gps_state = await emulator_controller.getGps(Empty())
 
     assert actual_gps_state.latitude == latitude
     assert actual_gps_state.longitude == longitude

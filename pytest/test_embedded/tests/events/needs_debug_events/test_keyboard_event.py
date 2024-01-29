@@ -18,8 +18,7 @@ import time
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
-
-from tests.benchmark_event_fixtures import benchmark_stat
+from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 
 # Parse emulator log.
 EMU_MANY_KEY_EVENT = re.compile(r".* (\d+): sendKeyCodes: \[([0-9a-fA-F ,]+)\]")
@@ -91,7 +90,7 @@ def send_grpc_letter(avd, letter):
     Args:
        letter: The letter to send
     """
-    grpc = avd.description.get_emulator_controller()
+    grpc = EmulatorControllerStub(emulator.channel)
     grpc.sendKey(KeyboardEvent(text=letter))
 
 
@@ -127,7 +126,6 @@ def send_letter_over(send_fn, avd, log):
 
 
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
 def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over grpc.
@@ -148,7 +146,6 @@ def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
 
 
 @pytest.mark.perf
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.benchmark(group="letter-host-host")
 def test_letter_perf_host_host_telnet(avd, emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over telnet.

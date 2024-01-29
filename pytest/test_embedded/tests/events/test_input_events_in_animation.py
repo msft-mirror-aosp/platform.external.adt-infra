@@ -11,16 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import json
 import logging
-import time
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import InputEvent, KeyboardEvent, MouseEvent
 
 
 @pytest.fixture
-def retrieve_events(avd):
+async def retrieve_events(animation_app, avd):
     """Retrieves events from the aemu animation app.
 
     The animation app logs key and mouse events. With this
@@ -37,6 +37,7 @@ def retrieve_events(avd):
     Returns:
         A list of events.
     """
+    observed = []
 
     def _extract_event(line: str):
         """Extracts an event from a line of logcat output.
@@ -54,22 +55,26 @@ def retrieve_events(avd):
         except ValueError as _ignore:
             return {}
 
-    def _retrieve_events():
-        """Retrieves events from logcat.
-
-        Returns:
-            A list of events.
-        """
-        observed = []
-        with avd.adb.logcat(tag="aemu", timeout=1) as stream:
-            for logline in stream:
+    async def _retrieve_events():
+        """Retrieves events from logcat."""
+        async with await avd.adb.logcat(tag="aemu") as stream:
+            observed.clear()
+            async for logline in stream:
                 logging.info("Extracting %s", logline)
+                if "--STARTED--" in logline:
+                    # Workaround for lingering logcat.
+                    observed.clear()
                 event = _extract_event(logline)
                 if "type" in event:
                     observed.append(event)
-        return observed
 
-    return _retrieve_events
+    async def _retrieve_events_with_timeout():
+        try:
+            await asyncio.wait_for(_retrieve_events(), 1)
+        except asyncio.TimeoutError:
+            return observed
+
+    return _retrieve_events_with_timeout
 
 
 def event_to_json(event):
@@ -92,16 +97,16 @@ def event_to_json(event):
 
 
 @pytest.fixture
-def send_event(emulator_controller):
+async def send_event(avd, emulator_controller):
     expected = []
 
-    def send_single_event(event, throttle=0.1):
-        time.sleep(throttle)
+    async def send_single_event(event, throttle=0.1):
+        await asyncio.sleep(throttle)
 
         if isinstance(event, MouseEvent):
-            emulator_controller.sendMouse(event)
+            await emulator_controller.sendMouse(event)
         if isinstance(event, KeyboardEvent):
-            emulator_controller.sendKey(event)
+            await emulator_controller.sendKey(event)
 
         expected.append(event_to_json(event))
         return expected
@@ -109,32 +114,40 @@ def send_event(emulator_controller):
     return send_single_event
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_send_a_sequence_of_single_mouse_events(
+@pytest.mark.async_timeout(10)
+async def test_send_a_sequence_of_single_mouse_events(
     animation_app, send_event, retrieve_events
 ):
     # Send a series of clicks that we can observe
     for x in range(150, 160):
-        expected = send_event(MouseEvent(x=x, y=x, buttons=1))
-        expected = send_event(MouseEvent(x=x, y=x, buttons=0))
+        await send_event(MouseEvent(x=x, y=x, buttons=1))
+        expected = await send_event(MouseEvent(x=x, y=x, buttons=0))
 
-    assert expected == retrieve_events()
+    retrieved = await retrieve_events()
+    logging.info("expected: %s", expected)
+    logging.info("retrieved: %s", retrieved)
+    assert expected == retrieved
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_send_a_sequence_of_single_key_events(
+@pytest.mark.async_timeout(10)
+async def test_send_a_sequence_of_single_key_events(
     animation_app, send_event, retrieve_events
 ):
     # Send a series of clicks that we can observe
     for key in "abcdefghijklmnopqrstuvwxyz":
-        expected = send_event(KeyboardEvent(key=key, eventType=KeyboardEvent.keydown))
-        expected = send_event(KeyboardEvent(key=key, eventType=KeyboardEvent.keyup))
+        await send_event(KeyboardEvent(key=key, eventType=KeyboardEvent.keydown))
+        expected = await send_event(
+            KeyboardEvent(key=key, eventType=KeyboardEvent.keyup)
+        )
 
-    assert expected == retrieve_events()
+    retrieved = await retrieve_events()
+    logging.info("expected: %s", expected)
+    logging.info("retrieved: %s", retrieved)
+    assert expected == retrieved
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_stream_a_sequence_of_key_events(
+@pytest.mark.async_timeout(10)
+async def test_stream_a_sequence_of_key_events(
     animation_app, emulator_controller, retrieve_events
 ):
     # Send a series of clicks that we can observe
@@ -143,19 +156,21 @@ def test_stream_a_sequence_of_key_events(
             yield KeyboardEvent(key=key, eventType=KeyboardEvent.keydown)
             yield KeyboardEvent(key=key, eventType=KeyboardEvent.keyup)
 
-    def delayed_key_input_event_generator():
+    async def delayed_key_input_event_generator():
         for key in key_input_event_generator():
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             yield InputEvent(key_event=key)
 
-    emulator_controller.streamInputEvent(delayed_key_input_event_generator())
+    await emulator_controller.streamInputEvent(delayed_key_input_event_generator())
 
     expected = [event_to_json(event) for event in key_input_event_generator()]
-    assert expected == retrieve_events()
+    retrieved = await retrieve_events()
+    logging.info("expected: %s", expected)
+    logging.info("retrieved: %s", retrieved)
+    assert expected == retrieved
 
 
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_stream_a_sequence_of_mouse_events(
+async def test_stream_a_sequence_of_mouse_events(
     animation_app, emulator_controller, retrieve_events
 ):
     # Send a series of clicks that we can observe
@@ -164,12 +179,15 @@ def test_stream_a_sequence_of_mouse_events(
             yield MouseEvent(x=x, y=x, buttons=1)
             yield MouseEvent(x=x, y=x, buttons=0)
 
-    def delayed_mouse_input_event_generator():
+    async def delayed_mouse_input_event_generator():
         for mouse in mouse_input_event_generator():
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             yield InputEvent(mouse_event=mouse)
 
-    emulator_controller.streamInputEvent(delayed_mouse_input_event_generator())
+    await emulator_controller.streamInputEvent(delayed_mouse_input_event_generator())
 
     expected = [event_to_json(event) for event in mouse_input_event_generator()]
-    assert expected == retrieve_events()
+    retrieved = await retrieve_events()
+    logging.info("expected: %s", expected)
+    logging.info("retrieved: %s", retrieved)
+    assert expected == retrieved

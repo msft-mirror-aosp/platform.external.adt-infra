@@ -17,8 +17,7 @@ import pytest
 from aemu.proto.sensor_service_pb2 import ParameterValue, SensorValue
 from aemu.proto.sensor_service_pb2_grpc import SensorServiceStub
 
-from emu.timing import eventually, wait_until
-from tests.test_utils import StreamingCall
+from emu.timing import eventually
 
 
 def is_equal(model_value, other, consider_equal={}) -> bool:
@@ -42,7 +41,7 @@ def is_equal(model_value, other, consider_equal={}) -> bool:
     return True
 
 
-def set_and_get_sensor(sensor_service, sensor_value):
+async def set_and_get_sensor(sensor_service, sensor_value):
     """Executes set and get sensor Rpc call
     Args:
       sensor_service : Emulator Controller
@@ -51,7 +50,7 @@ def set_and_get_sensor(sensor_service, sensor_value):
     sensor_service.setSensor(sensor_value)
     retrieved = None
 
-    def get_sensor_equals_set_sensor():
+    async def get_sensor_equals_set_sensor():
         """
         Checks if the retrieved SensorValue object matches the provided SensorValue object.
 
@@ -68,7 +67,7 @@ def set_and_get_sensor(sensor_service, sensor_value):
 
     # We will try the request a few times, if the sensor value does not stabilize in
     # a seconds we will just give up.
-    assert wait_until(
+    assert eventually(
         get_sensor_equals_set_sensor, timeout=3
     ), f"Data for sensor doesn't match {sensor_value} != {retrieved}"
 
@@ -103,8 +102,7 @@ def set_and_get_sensor(sensor_service, sensor_value):
         ),
     ],
 )
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_sensor_value(service, test_name, sensor_value, x, y, z):
+async def test_sensor_value(service, test_name, sensor_value, x, y, z):
     """Sends sensor value to the emulator.
     Test steps:
       1. Launch an emulator AVD
@@ -113,7 +111,7 @@ def test_sensor_value(service, test_name, sensor_value, x, y, z):
     Verify:
       Sensor value is set correctly on the emulator.
     """
-    set_and_get_sensor(
+    await set_and_get_sensor(
         service(SensorServiceStub),
         SensorValue(
             target=sensor_value,
@@ -151,9 +149,8 @@ def test_sensor_value(service, test_name, sensor_value, x, y, z):
         ),
     ],
 )
-@pytest.mark.timeout(timeout=20, func_only=True)
 @pytest.mark.hardware
-def test_sensor_value_events(service, test_name, sensor_value, x, y, z):
+async def test_sensor_value_events(service, test_name, sensor_value, x, y, z):
     expected = SensorValue(
         target=sensor_value,
         value=ParameterValue(data=[x, y, z]),
@@ -168,14 +165,13 @@ def test_sensor_value_events(service, test_name, sensor_value, x, y, z):
         if sensor_event.target != expected.target:
             assert False, "This should never happen! Wronge event received!"
 
-        for i in range(len(sensor_event.value.data)):
+        for i in range(len(expected.value.data)):
             if pytest.approx(sensor_event.value.data[i]) != expected.value.data[i]:
                 return False
 
         return True
 
-    with StreamingCall(stream) as stream:
-        sensor_service.setSensor(expected)
-        assert eventually(
-            receives_an_update_event, stream
-        ), "Did not receive an update notification, even though I registered."
+    await sensor_service.setSensor(expected)
+    assert await eventually(
+        receives_an_update_event, stream, timeout=2
+    ), "Did not receive an update notification, even though I registered."

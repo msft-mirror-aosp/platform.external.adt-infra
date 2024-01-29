@@ -11,19 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
-from time import sleep
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 
-from emu.timing import eventually, wait_until
+from emu.timing import eventually
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout(timeout=60, func_only=True)
 @pytest.mark.graphics
-def test_android_app_dialog_has_dimmed_background(avd, get_screenshot):
+@pytest.mark.async_timeout(60)
+async def test_android_app_dialog_has_dimmed_background(avd, get_screenshot):
     """
     Test for b/315308358.
 
@@ -35,7 +35,7 @@ def test_android_app_dialog_has_dimmed_background(avd, get_screenshot):
     because of random system dialogs that can popup (e.g. Bluetooth keeps stopping).
     """
 
-    def get_blue_pixel_percent(min_blue, max_blue):
+    async def get_blue_pixel_percent(min_blue, max_blue):
         """Helper function to get the percentage of blue pixels that meet the criteria
         `min_blue <= x <= max_blue`.
 
@@ -46,7 +46,7 @@ def test_android_app_dialog_has_dimmed_background(avd, get_screenshot):
         Returns:
             float: The percentage (0.0 to 1.0) of blue pixels that meet the above criteria.
         """
-        _, rgb_image = get_screenshot(ImageFormat())
+        _, rgb_image = await get_screenshot(ImageFormat())
         rgb_image = rgb_image.convert("RGB")
 
         blue_count = 0
@@ -66,46 +66,32 @@ def test_android_app_dialog_has_dimmed_background(avd, get_screenshot):
         return float(blue_count) / (rgb_image.width * rgb_image.height)
 
     # Start DialogDimActivity with no dialog showing.
-    avd.stop_activity("com.google.AnimateBox")
-    avd.start_activity(
+    await avd.stop_activity("com.google.AnimateBox")
+    await avd.start_activity(
         "com.google.AnimateBox/com.google.emu.DialogDimActivity",
         '--es "hideDialog" "true"',
     )
     # Give the system some time to start the activity
-    sleep(5)
+    await asyncio.sleep(5)
 
     # Without the dialog, most of the display should be blue (>= 60%).
-    def at_least_60percent_blue():
-        return get_blue_pixel_percent(240, 255) >= 0.6
+    async def at_least_60percent_blue():
+        blue_percentage = await get_blue_pixel_percent(240, 255)
+        return blue_percentage >= 0.6
 
-    max_retries = 3
-    passed = False
-    for _ in range(0, max_retries):
-        if wait_until(at_least_60percent_blue, timeout=5):
-            passed = True
-            break
-
-    assert (
-        passed
-    ), f"Did not see a screenshot with at least 60%% blue pixels with {max_retries} retries"
+    passed = await eventually(at_least_60percent_blue, timeout=5)
+    assert passed, "Did not see a screenshot with at least 60% blue pixels"
 
     # Start DialogDimActivity with the dialog showing.
-    avd.stop_activity("com.google.AnimateBox")
-    avd.start_activity("com.google.AnimateBox/com.google.emu.DialogDimActivity")
+    await avd.stop_activity("com.google.AnimateBox")
+    await avd.start_activity("com.google.AnimateBox/com.google.emu.DialogDimActivity")
     # Give the system some time to start the activity
-    sleep(5)
+    await asyncio.sleep(5)
 
     # With the dialog, the blue will now become a darker shade.
-    def at_least_60percent_dark_blue():
-        return get_blue_pixel_percent(20, 100) >= 0.6
+    async def at_least_60percent_dark_blue():
+        dark_blue_percentage = await get_blue_pixel_percent(20, 100)
+        return dark_blue_percentage >= 0.6
 
-    max_retries = 3
-    passed = False
-    for _ in range(0, max_retries):
-        if wait_until(at_least_60percent_dark_blue, timeout=5):
-            passed = True
-            break
-
-    assert (
-        passed
-    ), f"Did not see a screenshot with at most 60%% dark blue pixels with {max_retries} retries"
+    passed = await eventually(at_least_60percent_dark_blue, timeout=5)
+    assert passed, "Did not see a screenshot with at most 60% dark blue pixels"

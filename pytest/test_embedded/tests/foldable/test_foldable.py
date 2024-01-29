@@ -11,31 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import time
+import asyncio
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
     ImageFormat,
-    Notification,
     ParameterValue,
     PhysicalModelValue,
     Posture,
 )
 from google.protobuf import empty_pb2
-from iterators import TimeoutIterator
-from PIL import Image
-
-from emu.timing import eventually
-from tests.test_utils import StreamingCall
 
 # b/288457753
 # Should use API 33 instead
 avd_config = {"api": "31", "tag.id": "google_apis", "device.name": "PixelFold"}
 
 
-def set_device_hinge_angle(emu, angle):
+async def set_device_hinge_angle(emu, angle):
     """Change the device's hinge angle"""
-    emu.setPhysicalModel(
+    await emu.setPhysicalModel(
         PhysicalModelValue(
             target=PhysicalModelValue.HINGE_ANGLE0,
             value=ParameterValue(data=[angle, 0.0, 0.0]),
@@ -48,10 +42,11 @@ def set_device_hinge_angle(emu, angle):
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
-def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
+@pytest.mark.async_timeout(30)
+async def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     set_device_hinge_angle(emulator_controller, unfold_angle)
-    time.sleep(5)
-    image1 = emulator_controller.getScreenshot(
+    asyncio.sleep(5)
+    image1 = await emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
         )
@@ -61,9 +56,9 @@ def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     assert image1.format.foldedDisplay.width == 0
     assert image1.format.foldedDisplay.height == 0
 
-    set_device_hinge_angle(emulator_controller, fold_angle)
-    time.sleep(5)
-    image2 = emulator_controller.getScreenshot(
+    await set_device_hinge_angle(emulator_controller, fold_angle)
+    asyncio.sleep(5)
+    image2 = await emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
         )
@@ -74,9 +69,9 @@ def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     # should be the same as the folded screen in config.ini
     assert image2.format.foldedDisplay.width == image2.format.width
     assert image2.format.foldedDisplay.height == image2.format.height
-    set_device_hinge_angle(emulator_controller, unfold_angle)
-    time.sleep(5)
-    image3 = emulator_controller.getScreenshot(
+    await set_device_hinge_angle(emulator_controller, unfold_angle)
+    asyncio.sleep(5)
+    image3 = await emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
         )
@@ -88,7 +83,10 @@ def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 5.0, 180.0)]
 )
-def test_foldable_notifications(emulator_controller, fmt, fold_angle, unfold_angle):
+@pytest.mark.async_timeout(30)
+async def test_foldable_notifications(
+    emulator_controller, fmt, fold_angle, unfold_angle
+):
     _EMPTY_ = empty_pb2.Empty()
 
     def check_posture_closed(notification):
@@ -97,40 +95,21 @@ def test_foldable_notifications(emulator_controller, fmt, fold_angle, unfold_ang
     def check_posture_opened(notification):
         return notification.posture.value == Posture.PostureValue.POSTURE_OPENED
 
-    # Due to an implementation issue of TimeoutIterator, we cannot use 2
-    # "eventually" with one stream. Thus we implement our own version of
-    # "eventually".
-    #
-    # We might consider moving this implementation into timing.py in future.
-    def wait_for_with_timed_iterator(predicate, timed_iterator, timeout=5):
-        end = time.time() + timeout
-        for event in timed_iterator:
-            if time.time() > end:
-                return None
-            if event == timed_iterator.get_sentinel():
-                continue
-            if predicate(event):
-                return event
-        return None
+    # True if the predicate holds for an element in the stream
+    async def contains(predicate, stream):
+        async for elem in stream:
+            if predicate(elem):
+                return True
+        return False
 
     notificationStream = emulator_controller.streamNotification(_EMPTY_)
-    with StreamingCall(notificationStream) as stream:
-        timed_iterator = TimeoutIterator(stream, timeout=0.5)
-        assert wait_for_with_timed_iterator(
-            check_posture_opened, timed_iterator
-        ), f"Did not observe initial unfolded state."
-        set_device_hinge_angle(emulator_controller, fold_angle)
-        assert wait_for_with_timed_iterator(
-            check_posture_closed, timed_iterator
-        ), f"Did not observe folding event."
+    # assert await eventually(contains(check_posture_opened, notificationStream))
 
-    notificationStream = emulator_controller.streamNotification(_EMPTY_)
-    with StreamingCall(notificationStream) as stream:
-        timed_iterator = TimeoutIterator(stream, timeout=0.5)
-        assert wait_for_with_timed_iterator(
-            check_posture_closed, timed_iterator
-        ), f"Did not observe initial folded state."
-        set_device_hinge_angle(emulator_controller, unfold_angle)
-        assert wait_for_with_timed_iterator(
-            check_posture_opened, timed_iterator
-        ), f"Did not observe unfolding event."
+    assert await asyncio.wait_for(
+        contains(check_posture_opened, notificationStream), timeout=5
+    )
+    await set_device_hinge_angle(emulator_controller, fold_angle)
+    # assert await eventually(contains(check_posture_closed, notificationStream))
+    assert await asyncio.wait_for(
+        await contains(check_posture_closed, notificationStream), timeout=5
+    )

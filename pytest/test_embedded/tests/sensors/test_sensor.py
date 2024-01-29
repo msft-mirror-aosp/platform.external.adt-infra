@@ -18,16 +18,16 @@ from aemu.proto.emulator_controller_pb2 import ParameterValue, SensorValue
 from emu.timing import wait_until
 
 
-def set_and_get_sensor(emu_controller, sensor_value):
+async def set_and_get_sensor(emu_controller, sensor_value):
     """Executes set and get sensor Rpc call
     Args:
       emu_controller : Emulator Controller
       sensor_value: SensorValue to emulator
     """
-    emu_controller.setSensor(sensor_value)
+    await emu_controller.setSensor(sensor_value)
     retrieved = None
 
-    def get_sensor_equals_set_sensor():
+    async def get_sensor_equals_set_sensor():
         """
         Checks if the retrieved SensorValue object matches the provided SensorValue object.
 
@@ -35,7 +35,9 @@ def set_and_get_sensor(emu_controller, sensor_value):
             bool: True if the retrieved SensorValue object matches the provided SensorValue object, False otherwise.
         """
         nonlocal retrieved
-        retrieved = emu_controller.getSensor(SensorValue(target=sensor_value.target))
+        retrieved = await emu_controller.getSensor(
+            SensorValue(target=sensor_value.target)
+        )
         assert (
             retrieved.target == sensor_value.target
         ), "Target value for sensor doesn't match"
@@ -76,8 +78,7 @@ def set_and_get_sensor(emu_controller, sensor_value):
         ("Gyroscope_Uncalibrated", SensorValue.GYROSCOPE_UNCALIBRATED, 2, 2, 2),
     ],
 )
-@pytest.mark.timeout(timeout=20, func_only=True)
-def test_sensor_value(emulator_controller, test_name, sensor_value, x, y, z):
+async def test_sensor_value(emulator_controller, test_name, sensor_value, x, y, z):
     """Sends sensor value to the emulator.
     Test steps:
       1. Launch an emulator AVD
@@ -86,7 +87,7 @@ def test_sensor_value(emulator_controller, test_name, sensor_value, x, y, z):
     Verify:
       Sensor value is set correctly on the emulator.
     """
-    set_and_get_sensor(
+    await set_and_get_sensor(
         emulator_controller,
         SensorValue(
             target=sensor_value,

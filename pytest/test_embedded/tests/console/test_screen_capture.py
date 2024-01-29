@@ -26,24 +26,28 @@ def tmp_test_file(tmp_path):
 
 @pytest.mark.adb
 @pytest.mark.sanity
-@pytest.mark.timeout(timeout=15, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/321322524
 @pytest.mark.skipos("win", "Test fails on all platforms b/305308029")
-def test_adb_screencapture_creates_a_file(avd, log_adb_interactions, tmp_test_file):
+@pytest.mark.async_timeout(10)
+@pytest.mark.skipos("win", "Test fails on all platforms b/305308029")
+async def test_adb_screencapture_creates_a_file(
+    avd, log_adb_interactions, tmp_test_file
+):
     device_file = f"/sdcard/{tmp_test_file.name}"
-    assert not "adb: error" in avd.adb.shell(f"screencap {device_file}")
-    assert "yes" in avd.adb.shell(f"[ -f {device_file} ] && echo 'yes'")
+    assert "adb: error" not in await avd.adb.shell(f"screencap {device_file}")
+    assert "yes" in await avd.adb.shell(f"[ -f {device_file} ] && echo 'yes'")
 
 
 @pytest.mark.adb
-@pytest.mark.timeout(timeout=15, func_only=True)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/321299842
 @pytest.mark.skipos("win", "Test fails on all platforms b/305308029")
-def test_adb_screencapture_is_a_png(avd, log_adb_interactions, tmp_test_file):
+@pytest.mark.async_timeout(10)
+@pytest.mark.skipos("win", "Test fails on all platforms b/305308029")
+async def test_adb_screencapture_is_a_png(avd, log_adb_interactions, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"
-    assert not "adb: error" in avd.adb.shell(f"screencap {device_file}")
+    assert "adb: error" not in await avd.adb.shell(f"screencap {device_file}")
 
     # Check that we have a png file.
-    avd.adb.pull(device_file, tmp_test_file)
+    await avd.adb.pull(device_file, tmp_test_file)
     img: Image.Image = Image.open(tmp_test_file)
     assert img.format == "PNG"
