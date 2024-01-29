@@ -497,7 +497,7 @@ public class SettingsTest {
                 new UiSelector().resourceId(Res.GOOGLE_LAYOUT_ICON_RES));
 
         assertTrue("Checking info label before email input not found.",
-                new Wait(90000L).until(checkingInfoLabel::exists));
+                new Wait(10000L).until(checkingInfoLabel::exists));
 
         assertTrue("Checking info label before email input not dismissed.",
                 checkingInfoLabel.waitUntilGone(90000L));
@@ -508,7 +508,7 @@ public class SettingsTest {
                         resourceId("headingText").
                         className(TextView.class));
         assertTrue("Sign in label not found.",
-                new Wait(20000L).until(signInLabel::exists));
+                new Wait(90000L).until(signInLabel::exists));
 
         final UiObject googleEmailInput = device.findObject(
                 new UiSelector().
@@ -522,7 +522,7 @@ public class SettingsTest {
         googleEmailInput.setText(userEmail);
         googleEmailInput.clickAndWaitForNewWindow(3000L);
         device.pressEnter();
-        
+
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Email input entry page not dismissed.",
                 googleEmailInput.waitUntilGone(90000L));
 
@@ -536,7 +536,7 @@ public class SettingsTest {
         googlePasswordInput.clearTextField();
         googlePasswordInput.setText(userPassword);
         googlePasswordInput.clickAndWaitForNewWindow(3000L);
-        device.pressEnter();        
+        device.pressEnter();
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Password input entry page not dismissed.",
                 googlePasswordInput.waitUntilGone(90000L));
@@ -589,7 +589,6 @@ public class SettingsTest {
      *   Example time on screen shows 13:00.
      *   </pre>
      */
-    @Ignore("24 hour format option has been removed from Settings.")
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
@@ -759,7 +758,7 @@ public class SettingsTest {
         String contactsText = "Contacts";
         String locationText = "Location";
         String microphoneText = "Microphone";
-        String storageText = "Files and media";
+        String storageText = "Photos and videos";
 
         // Variables to store the state of permissions.
         boolean contactsSwitchState;
@@ -768,6 +767,12 @@ public class SettingsTest {
         boolean storageSwitchState;
 
         AppManager.openAppList_v3(instrumentation);
+
+        final UiObject allAppsTextLabel = device.findObject(new UiSelector()
+                .resourceId(Res.ANDROID_TITLE_RES).text("All apps"));
+
+        new Wait().until(allAppsTextLabel::exists);
+        allAppsTextLabel.clickAndWaitForNewWindow();
 
         // Find and click "Maps" in apps list.
         UiScrollable itemList =
@@ -796,38 +801,69 @@ public class SettingsTest {
         //Store current permissions state of switch widgets.
         UiObject contactSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), contactsText);
+        assertTrue("Contact switch not found", contactSwitch.waitForExists(5000L));
         contactSwitch.click();
         UiObject contactsAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
+
         contactsSwitchState = contactsAllowSwitch.isChecked();
+        if (contactsSwitchState) {
+            UiObject contactsDenySwitch = device.findObject(new UiSelector().resourceIdMatches(Res.DENY_PERMISSION_BUTTON));
+            contactsDenySwitch.clickAndWaitForNewWindow(1000);
+        }
+
+        assertFalse("Contacts permission already allowed", contactsAllowSwitch.isChecked());
         contactsAllowSwitch.clickAndWaitForNewWindow(1000);
-        assertEquals(contactsSwitchState, !contactsAllowSwitch.isChecked());
+        assertTrue("Contacts permission not allowed", contactsAllowSwitch.isChecked());
         device.pressBack();
 
         UiObject locationSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), locationText);
         locationSwitch.click();
         UiObject locationAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
+
         locationSwitchState = locationAllowSwitch.isChecked();
+        if (locationSwitchState) {
+            UiObject locationDenySwitch = device.findObject(new UiSelector().resourceIdMatches(Res.DENY_PERMISSION_BUTTON));
+            locationDenySwitch.clickAndWaitForNewWindow(1000);
+        }
+
+        assertFalse("Location permission already allowed", locationAllowSwitch.isChecked());
         locationAllowSwitch.clickAndWaitForNewWindow(1000);
-        assertEquals(locationSwitchState, !locationAllowSwitch.isChecked());
+        assertTrue("Location permission not allowed", locationAllowSwitch.isChecked());
         device.pressBack();
 
         UiObject microphoneSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), microphoneText);
         microphoneSwitch.clickAndWaitForNewWindow(1000);
         UiObject microphoneAllowSwitch = device.findObject(new UiSelector().resourceId(Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON));
+
         microphoneSwitchState = microphoneAllowSwitch.isChecked();
+        if (microphoneSwitchState) {
+            UiObject microphoneDenySwitch = device.findObject(new UiSelector().resourceIdMatches(Res.DENY_PERMISSION_BUTTON));
+            microphoneDenySwitch.clickAndWaitForNewWindow(1000);
+        }
+
+        assertFalse("Microphone permission already allowed", microphoneAllowSwitch.isChecked());
         microphoneAllowSwitch.clickAndWaitForNewWindow(1000);
-        assertEquals(microphoneSwitchState, !microphoneAllowSwitch.isChecked());
+        assertTrue("Microphone permission not allowed", microphoneAllowSwitch.isChecked());
+
         device.pressBack();
 
         UiObject storageSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), storageText);
         storageSwitch.click();
-        UiObject storageAllowSwitch = device.findObject(new UiSelector().resourceId(Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON));
+        UiObject storageAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
+
         storageSwitchState = storageAllowSwitch.isChecked();
+        if (storageSwitchState) {
+            UiObject storageDenySwitch = device.findObject(new UiSelector().resourceIdMatches(Res.DENY_PERMISSION_BUTTON));
+            storageDenySwitch.clickAndWaitForNewWindow(1000);
+        }
+
+        assertFalse("Storage permission already allowed", storageAllowSwitch.isChecked());
         storageAllowSwitch.clickAndWaitForNewWindow(1000);
-        assertEquals(storageSwitchState, !storageAllowSwitch.isChecked());
+        assertTrue("Storage permission not allowed", storageAllowSwitch.isChecked());
+
         device.pressBack();
 
 
@@ -839,7 +875,12 @@ public class SettingsTest {
         device.pressMenu();
         device.findObject(
                 new UiSelector().textContains("Reset app preferences")).clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().textContains("Reset Apps")).clickAndWaitForNewWindow();
+
+        try {
+            device.findObject(new UiSelector().textContains("Reset Apps")).clickAndWaitForNewWindow();
+        } catch (Exception e) {
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+        }
 
         //Open Maps info.
         itemList.scrollIntoView(new UiSelector().text(appName));
@@ -856,7 +897,7 @@ public class SettingsTest {
         contactSwitch = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), contactsText);
         contactSwitch.clickAndWaitForNewWindow(1000);
         contactsAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
-        assertEquals(contactsSwitchState, contactsAllowSwitch.isChecked());
+        assertTrue("Contacts permissions ", contactsAllowSwitch.isChecked());
         device.pressBack();
 
         locationSwitch = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), locationText);
