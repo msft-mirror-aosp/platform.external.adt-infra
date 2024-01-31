@@ -432,7 +432,7 @@ class Emulator(BaseEmulator):
 
         self.cmd = Command(cmd, self.logger).with_environment(env)
         if sys.platform == "win32":
-            cmd.in_directory(self.exe.parent)
+            self.cmd.in_directory(self.exe.parent)
 
         proc = await self.cmd.run()
         self.log = proc.handler
