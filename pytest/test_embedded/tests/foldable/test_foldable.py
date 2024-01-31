@@ -111,5 +111,5 @@ async def test_foldable_notifications(
     await set_device_hinge_angle(emulator_controller, fold_angle)
     # assert await eventually(contains(check_posture_closed, notificationStream))
     assert await asyncio.wait_for(
-        await contains(check_posture_closed, notificationStream), timeout=5
+        contains(check_posture_closed, notificationStream), timeout=5
     )
