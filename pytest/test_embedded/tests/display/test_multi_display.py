@@ -21,6 +21,7 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
+from tests.test_utils import fmt_proto
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -28,6 +29,7 @@ _EMPTY_ = empty_pb2.Empty()
 @pytest.fixture
 async def is_landscape(get_screenshot):
     image, _ = await get_screenshot(ImageFormat(width=320, height=200))
+    logging.info("get_screenshot: %s", fmt_proto(image.format))
     return (
         image.format.rotation.rotation == Rotation.REVERSE_LANDSCAPE
         or image.format.rotation.rotation == Rotation.LANDSCAPE
@@ -40,14 +42,17 @@ async def no_displays(emulator_controller, adb_shell):
 
     Use this if you want to make sure the emulator has no secondary displays
     """
+    logging.info("--> no_displays")
     await adb_shell("input keyevent KEYCODE_WAKEUP")
     await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(displays=[])
     )
     yield
+    logging.info("<-- no_displays")
     await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(displays=[])
     )
+    logging.info("=== finished no_displays")
 
 
 @pytest.mark.e2e
@@ -198,15 +203,17 @@ async def test_multidisplay_can_configure_four(
         DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
         for idx, x in enumerate(resolutions)
     ]
-    cfg = await emulator_controller.setDisplayConfigurations(
-        DisplayConfigurations(displays=displays)
-    )
+    to_set = DisplayConfigurations(displays=displays)
+    cfg = await emulator_controller.setDisplayConfigurations(to_set)
 
-    # All screens have been made available.
-    assert all([x in cfg.displays for x in displays])
+    logging.info("setDisplayConfigurations:(%s) = %s", fm_proto(to_set), fmt_proto(cfg))
 
     # We have default screen, + the ones we added.
     assert len(cfg.displays) == len(displays) + 1
+
+    # All screens have been made available.
+    for display in displays:
+        assert display in cfg.display
 
 
 @pytest.mark.e2e
@@ -223,22 +230,26 @@ async def test_multidisplay_add_should_not_remove(
         pytest.skip("Cannot run multi display tests in landscape mode.")
 
     displays = [DisplayConfiguration(width=720, height=1280, dpi=213, display=2)]
-    cfg = await emulator_controller.setDisplayConfigurations(
-        DisplayConfigurations(displays=displays)
-    )
+    to_set = DisplayConfigurations(displays=displays)
+    cfg = await emulator_controller.setDisplayConfigurations(to_set)
+    logging.info("setDisplayConfigurations:(%s) = %s", fm_proto(to_set), fmt_proto(cfg))
 
     # All screens have been made available.
-    assert all([x in cfg.displays for x in displays])
+    for display in displays:
+        assert display in cfg.display
+
     displays = [
         DisplayConfiguration(width=720, height=1280, dpi=213, display=1),
         DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
     ]
-    cfg = await emulator_controller.setDisplayConfigurations(
-        DisplayConfigurations(displays=displays)
-    )
+    to_set = DisplayConfigurations(displays=displays)
+    cfg = await emulator_controller.setDisplayConfigurations(to_set)
+
+    logging.info("setDisplayConfigurations:(%s) = %s", fm_proto(to_set), fmt_proto(cfg))
 
     # All screens have been made available.
-    assert all([x in cfg.displays for x in displays])
+    for display in displays:
+        assert display in cfg.display
 
 
 @pytest.mark.e2e

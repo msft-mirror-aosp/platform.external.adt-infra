@@ -88,6 +88,7 @@ async def test_rotation_observable_through_screenshot(
 
     async def image_rotated_correctly(coarse) -> bool:
         img = await emulator_controller.getScreenshot(ImageFormat())
+        logging.info("Current state: %s", img.format.rotation)
         return img.format.rotation.rotation == coarse
 
     async for fine, coarse in for_each_rotation(emulator_controller):
@@ -132,9 +133,14 @@ async def test_rotation_observable_through_stream_screenshot(
 ):
     """Test that setting the rotation, is observable through streaming screenshot."""
     async for angle, coarse in for_each_rotation(emulator_controller):
+
+        def is_rotated(img):
+            logging.info("img: %s - %s", img.seq, img.format.rotation)
+            return img.format.rotation.rotation == coarse
+
         stream = stream_screenshot(ImageFormat())
         assert await eventually(
-            lambda img: img.format.rotation.rotation == coarse, stream
+            is_rotated, stream
         ), f"Did not observe rotation to {angle}"
 
 
@@ -237,12 +243,12 @@ async def rotation_through_console_observable_through_stream_screenshot(
             """True if the rotation matches the coarse rotation."""
             return img.format.rotation.rotation == coarse
 
-        with stream_screenshot(ImageFormat(width=320, height=200)) as stream:
-            # Keep looking at the queue until we see what we need.
-            # if we never see it we will timeout.
-            assert eventually(
-                image_has_coarse_rotation, stream
-            ), f"Did not observe rotation to {angle} in time"
+        stream = stream_screenshot(ImageFormat(width=320, height=200))
+        # Keep looking at the queue until we see what we need.
+        # if we never see it we will timeout.
+        assert eventually(
+            image_has_coarse_rotation, stream
+        ), f"Did not observe rotation to {angle} in time"
 
 
 @pytest.mark.e2e
@@ -277,6 +283,9 @@ async def test_rotation_pixels_in_the_right_place(
     )
 
     def find_square_in_image(img: Image) -> bool:
+        logging.info(
+            "Checking if %s (%s) is in the right quadrant", img.seq, img.timestampUs
+        )
         pillow_img = proto_to_pillow(img)
         return square_in_quadrant(pillow_img) == quadrant
 
@@ -301,6 +310,9 @@ async def test_rotation_through_console_observable_through_physical_model(
     async def emulator_is_rotated_to(expected_angle):
         rotate = await emulator_controller.getPhysicalModel(
             PhysicalModelValue(target=PhysicalModelValue.ROTATION)
+        )
+        logging.info(
+            "emulator_is_rotated_to %s == %s", rotate.value.data[2], expected_angle
         )
         return rotate.value.data[2] == expected_angle
 

@@ -14,6 +14,7 @@
 import asyncio
 import time
 
+import pytest
 from aemu.proto.emulator_controller_pb2 import (
     ImageFormat,
     Notification,
@@ -21,10 +22,10 @@ from aemu.proto.emulator_controller_pb2 import (
     PhysicalModelValue,
     Posture,
 )
-from emu.timing import eventually
 from google.protobuf import empty_pb2
 from PIL import Image
-import pytest
+
+from emu.timing import eventually
 
 avd_config = {
     "api": "34",

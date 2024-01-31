@@ -2,12 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../../../../../pytest-asyncio"
-		},
-		{
-			"path": "../../../../../alt-pytest-asyncio"
 		}
 	],
 	"settings": {

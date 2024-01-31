@@ -18,7 +18,9 @@ from pathlib import Path
 from ppadb.client_async import ClientAsync as AdbClientAsync
 
 from emu.adb.async_device import AdbDeviceAsync, DeviceStream
+from emu.logging.logcat_parser import parse_logcat
 from emu.process.command import Command
+from emu.timing import eventually
 
 
 class AdbDeviceNotFound(Exception):
@@ -236,6 +238,35 @@ class Adb:
         device = await self.device()
         return await device.shell_stream(cmd, timeout)
 
+    async def clear_logcat(self):
+        """
+        Clears the Android device's Logcat buffer and waits for a new log line to appear.
+
+        Returns:
+            True if the Logcat was successfully cleared, False if a timeout occurred (3s).
+        """
+        lines = await self.shell("logcat -d")
+        old = parse_logcat(lines)
+        await self.shell("logcat -c")
+
+        async def logcat_cleared():
+            """
+            Checks if the logcat has been cleared by comparing timestamps.
+
+            Returns:
+                True if the logcat has a new entry with a later timestamp, False otherwise.
+            """
+
+            lines = await self.shell("logcat -d")
+            now = parse_logcat(lines)
+            if len(now) == 0:
+                return False
+            if len(old) == 0:
+                return True
+            return now[0]["ts"] > old[0]["ts"]
+
+        return eventually(logcat_cleared, timeout=3)
+
     async def logcat(
         self, clear: bool = False, tag: str = None, timeout=180
     ) -> DeviceStream:
@@ -258,8 +289,7 @@ class Adb:
             DeviceStream: An AsyncIterator with logcat lines
         """
         if clear:
-            # Note: This is really best effort!
-            await self.shell("logcat -c")
+            self.clear_logcat()
 
         cmd = "logcat"
         if tag:

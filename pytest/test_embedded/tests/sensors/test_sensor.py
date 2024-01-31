@@ -50,7 +50,7 @@ async def set_and_get_sensor(emu_controller, sensor_value):
 
     # We will try the request a few times, if the sensor value does not stabilize in
     # a seconds we will just give up.
-    assert wait_until(
+    assert await wait_until(
         get_sensor_equals_set_sensor, timeout=3
     ), f"Data for sensor doesn't match {sensor_value} != {retrieved}"
 

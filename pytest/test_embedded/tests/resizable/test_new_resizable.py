@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import asyncio
+import logging
 import time
 
 import pytest
@@ -27,33 +28,6 @@ from google.protobuf import empty_pb2
 from emu.timing import eventually, wait_until
 
 _EMPTY_ = empty_pb2.Empty()
-
-avd_config = {
-    "api": "34",
-    "tag.id": "google_apis",
-    "hw.device.name": "resizable",
-    "hw.lcd.density": "420",
-    "hw.lcd.height": "2340",
-    "hw.lcd.width": "1080",
-    "hw.displayRegion.0.1.height": "2092",
-    "hw.displayRegion.0.1.width": "1080",
-    "hw.displayRegion.0.1.xOffset": "0",
-    "hw.displayRegion.0.1.yOffset": "0",
-    "hw.resizable.configs": "phone-0-1080-2340-420, foldable-1-2208-1840-420, tablet-2-1920-1200-240, desktop-3-1920-1080-160",
-    "hw.sensor.hinge": "yes",
-    "hw.sensor.hinge.areas": "1840-0-0-1840",
-    "hw.sensor.hinge.count": "1",
-    "hw.sensor.hinge.defaults": "180",
-    "hw.sensor.hinge.ranges": "0-180",
-    "hw.sensor.hinge.sub_type": "1",
-    "hw.sensor.hinge.type": "1",
-    "hw.sensor.hinge_angles_posture_definitions": "0-30, 30-150, 150-180",
-    "hw.sensor.posture_list": "1, 2, 3",
-    "hw.sensors.orientation": "yes",
-    "hw.sensors.proximity": "yes",
-    "skin.name": "1080x2340",
-    "skin.path": "_no_skin",
-}
 
 
 async def set_device_hinge_angle(emu, angle):
@@ -74,13 +48,15 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
     )
 
     # Eventually the currentMode is equal to the one we have set.
-    currentMode = await emulator_controller.getDisplayMode(_EMPTY_).value
+    currentMode = await emulator_controller.getDisplayMode(_EMPTY_)
+    logging.info("set_display_mode: currentMode:%s == %s", currentMode.value, mode)
     timeout = time.time() + timeout
-    while currentMode != mode and time.time() < timeout:
+    while currentMode.value != mode and time.time() < timeout:
         await asyncio.sleep(0.1)
-        currentMode = emulator_controller.getDisplayMode(_EMPTY_).value
+        currentMode = await emulator_controller.getDisplayMode(_EMPTY_)
+        logging.info("set_display_mode: currentMode:%s == %s", currentMode.value, mode)
 
-    return emulator_controller.getDisplayMode(_EMPTY_).value
+    return currentMode.value
 
 
 @pytest.mark.newresizable
@@ -104,11 +80,12 @@ async def test_new_resizable_changes_resolution(
 
     async def display_is_set_to_mode():
         updated = await emulator_controller.getDisplayMode(_EMPTY_)
+        logging.info("display_is_set_to_mode: %s == %s", updated.value, mode)
         return updated.value == mode
 
     # Eventually the currentMode is equal to the one we have set.
     # If this is broken the test will timeout
-    assert await wait_until(display_is_set_to_mode)
+    assert await wait_until(display_is_set_to_mode, timeout=5)
 
     async def screenshot_is_sized_properly():
         image, _ = await get_screenshot(
@@ -118,6 +95,13 @@ async def test_new_resizable_changes_resolution(
         )
 
         format = image.format
+        logging.info(
+            "screenshot_is_sized_properly: %sx%s = %sx%s",
+            format.width,
+            format.height,
+            width,
+            height,
+        )
         byte_count = len(image.image)
 
         return (
@@ -127,7 +111,7 @@ async def test_new_resizable_changes_resolution(
         )
 
     # Eventually we should receive a screenshot that has the expected size.
-    assert await wait_until(screenshot_is_sized_properly)
+    assert await wait_until(screenshot_is_sized_properly, timeout=5)
 
 
 @pytest.mark.newresizable
@@ -139,7 +123,7 @@ async def test_new_resizable_changes_resolution(
     ],
 )
 async def test_new_resizable_observable_from_streaming(
-    emulator_controller, stream_screenshot, fmt, bpp
+    animation_app, emulator_controller, stream_screenshot, fmt, bpp
 ):
     available_dimensions = iter(
         [
@@ -153,23 +137,21 @@ async def test_new_resizable_observable_from_streaming(
     # Start with moving to the intial dimension
     w, h, mode = next(available_dimensions)
     assert set_display_mode(emulator_controller, mode) == mode
-    await asyncio.sleep(5)
 
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
     # Eventually we run out dimensions, resulting in a StopIteration
     # If things are broken we will timeout.
     with pytest.raises(StopIteration):
-        with stream_screenshot(ImageFormat(format=fmt)) as stream:
-            for image in stream:
-                if image.format.width == w and image.format.height == h:
-                    pixel_count = len(image.image)
-                    assert pixel_count == w * h * bpp
+        stream = stream_screenshot(ImageFormat(format=fmt))
+        async for image in stream:
+            if image.format.width == w and image.format.height == h:
+                pixel_count = len(image.image)
+                assert pixel_count == w * h * bpp
 
-                    # Transition to the next.
-                    w, h, mode = next(available_dimensions)
-                    assert set_display_mode(emulator_controller, mode) == mode
-                    await asyncio.sleep(5)
+                # Transition to the next.
+                w, h, mode = next(available_dimensions)
+                assert set_display_mode(emulator_controller, mode) == mode
 
 
 @pytest.mark.newresizable
@@ -181,7 +163,7 @@ async def test_new_resizable_observable_from_streaming(
     ],
 )
 async def test_new_resizable_observable_from_streaming(
-    emulator_controller, stream_screenshot, fmt, bpp
+    animation_app, emulator_controller, stream_screenshot, fmt, bpp
 ):
     available_dimensions = iter(
         [
@@ -194,34 +176,22 @@ async def test_new_resizable_observable_from_streaming(
 
     # Start with moving to the intial dimension
     w, h, mode = next(available_dimensions)
-    emulator_controller.setDisplayMode(DisplayMode(value=mode))
-    # Eventually the currentMode is equal to the one we have set.
-    # If this is broken the test will timeout
-    assert wait_until(lambda: emulator_controller.getDisplayMode(_EMPTY_).value == mode)
-    await asyncio.sleep(5)
+    assert set_display_mode(emulator_controller, mode) == mode
 
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
     # Eventually we run out dimensions, resulting in a StopIteration
     # If things are broken we will timeout.
     with pytest.raises(StopIteration):
-        with stream_screenshot(ImageFormat(format=fmt)) as stream:
-            for image in stream:
-                if image.format.width == w and image.format.height == h:
-                    pixel_count = len(image.image)
-                    assert pixel_count == w * h * bpp
+        stream = stream_screenshot(ImageFormat(format=fmt))
+        async for image in stream:
+            if image.format.width == w and image.format.height == h:
+                pixel_count = len(image.image)
+                assert pixel_count == w * h * bpp
 
-                    # Transition to the next.
-                    w, h, mode = next(available_dimensions)
-
-                    emulator_controller.setDisplayMode(DisplayMode(value=mode))
-                    await asyncio.sleep(5)
-                    # Eventually the currentMode is equal to the one we have set.
-                    # If this is broken the test will timeout
-                    assert wait_until(
-                        lambda: emulator_controller.getDisplayMode(_EMPTY_).value
-                        == mode
-                    )
+                # Transition to the next.
+                w, h, mode = next(available_dimensions)
+                assert set_display_mode(emulator_controller, mode) == mode
 
 
 @pytest.mark.newresizable
@@ -233,7 +203,7 @@ async def test_new_resizable_observable_from_streaming(
     ],
 )
 async def test_new_resizable_folding_observable_from_streaming(
-    emulator_controller, stream_screenshot, fmt, bpp
+    animation_app, emulator_controller, stream_screenshot, fmt, bpp
 ):
     available_dimensions = iter(
         [
@@ -246,7 +216,7 @@ async def test_new_resizable_folding_observable_from_streaming(
 
     # start with unfold
     await set_device_hinge_angle(emulator_controller, 180)
-    await asyncio.sleep(5)
+    await asyncio.sleep(1)
 
     foldedw = 1080
     foldedh = 2092
@@ -254,20 +224,27 @@ async def test_new_resizable_folding_observable_from_streaming(
     w, h, mode = next(available_dimensions)
     updated = await set_display_mode(emulator_controller, mode)
     assert updated == mode
-    await asyncio.sleep(5)
+    await asyncio.sleep(1)
 
     # Transition to the next.
     w, h, mode = next(available_dimensions)
     updated = await set_display_mode(emulator_controller, mode)
     assert updated == DisplayModeValue.FOLDABLE
-    await asyncio.sleep(5)
+    await asyncio.sleep(1)
 
     # Now fold it
     await set_device_hinge_angle(emulator_controller, 0)
-    await asyncio.sleep(5)
+    await asyncio.sleep(1)
 
     # Wait until we observe the expected dimension in the stream of screenshots
     def image_is_properly_sized(image):
+        logging.info(
+            "image_is_properly_sized %sx%s == %sx%s",
+            image.format.width,
+            image.format.height,
+            foldedw,
+            foldedh,
+        )
         return (
             image.format.width == foldedw
             and image.format.height == foldedh
