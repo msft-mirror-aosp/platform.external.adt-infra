@@ -107,6 +107,7 @@ async def test_wake_up_wakes_the_device(adb_shell, emulator_off):
 
 @pytest.mark.e2e
 @pytest.mark.adb
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/322557339
 @pytest.mark.async_timeout(60)
 async def test_power_down_turns_off_the_screen(emulator_off, get_screenshot):
     """Test case to verify that a powered-down device has a black screen.
