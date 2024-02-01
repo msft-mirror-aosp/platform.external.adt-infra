@@ -245,7 +245,7 @@ class Adb:
         Returns:
             True if the Logcat was successfully cleared, False if a timeout occurred (3s).
         """
-        lines = await self.shell("logcat -d")
+        lines = await self.shell("logcat -d | tail")
         old = parse_logcat(lines)
         await self.shell("logcat -c")
 
@@ -257,7 +257,7 @@ class Adb:
                 True if the logcat has a new entry with a later timestamp, False otherwise.
             """
 
-            lines = await self.shell("logcat -d")
+            lines = await self.shell("logcat -d | tail")
             now = parse_logcat(lines)
             if len(now) == 0:
                 return False
@@ -265,7 +265,7 @@ class Adb:
                 return True
             return now[0]["ts"] > old[0]["ts"]
 
-        return eventually(logcat_cleared, timeout=3)
+        return await eventually(logcat_cleared, timeout=3)
 
     async def logcat(
         self, clear: bool = False, tag: str = None, timeout=180
