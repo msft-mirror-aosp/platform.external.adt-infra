@@ -170,11 +170,11 @@ async def test_sensor_value_events(service, test_name, sensor_value, x, y, z):
         # In gRPC land a missing value == 0
         values = max(len(expected.value.data), len(sensor_event.value))
         for i in range(values):
-            expected = expected.value.data[i] if i < len(expected.value.data) else 0
+            looking_for = expected.value.data[i] if i < len(expected.value.data) else 0
             received = (
                 sensor_event.valua.data[i] if i < len(sensor_event.value.data) else 0
             )
-            if pytest.approx(received) != expected:
+            if pytest.approx(received) != looking_for:
                 return False
 
         return True
