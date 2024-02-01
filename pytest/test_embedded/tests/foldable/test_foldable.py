@@ -22,11 +22,6 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from google.protobuf import empty_pb2
 
-# b/288457753
-# Should use API 33 instead
-avd_config = {"api": "31", "tag.id": "google_apis", "device.name": "PixelFold"}
-
-
 async def set_device_hinge_angle(emu, angle):
     """Change the device's hinge angle"""
     await emu.setPhysicalModel(
@@ -37,7 +32,6 @@ async def set_device_hinge_angle(emu, angle):
     )
 
 
-@pytest.mark.skipos("all", "b/288335290")
 @pytest.mark.foldable
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
