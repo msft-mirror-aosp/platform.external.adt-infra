@@ -136,7 +136,7 @@ async def test_new_resizable_observable_from_streaming(
 
     # Start with moving to the intial dimension
     w, h, mode = next(available_dimensions)
-    assert set_display_mode(emulator_controller, mode) == mode
+    assert await set_display_mode(emulator_controller, mode) == mode
 
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
@@ -151,47 +151,7 @@ async def test_new_resizable_observable_from_streaming(
 
                 # Transition to the next.
                 w, h, mode = next(available_dimensions)
-                assert set_display_mode(emulator_controller, mode) == mode
-
-
-@pytest.mark.newresizable
-@pytest.mark.parametrize(
-    "fmt, bpp",
-    [
-        (ImageFormat.RGBA8888, 4),
-        (ImageFormat.RGB888, 3),
-    ],
-)
-async def test_new_resizable_observable_from_streaming(
-    animation_app, emulator_controller, stream_screenshot, fmt, bpp
-):
-    available_dimensions = iter(
-        [
-            (1080, 2340, DisplayModeValue.PHONE),
-            (2208, 1840, DisplayModeValue.FOLDABLE),
-            (1920, 1200, DisplayModeValue.TABLET),
-            (1920, 1080, DisplayModeValue.DESKTOP),
-        ]
-    )
-
-    # Start with moving to the intial dimension
-    w, h, mode = next(available_dimensions)
-    assert set_display_mode(emulator_controller, mode) == mode
-
-    # Wait until we observe the expected dimension in the stream of screenshots
-    # If we see it we move to the next dimension we are going to check
-    # Eventually we run out dimensions, resulting in a StopIteration
-    # If things are broken we will timeout.
-    with pytest.raises(StopIteration):
-        stream = stream_screenshot(ImageFormat(format=fmt))
-        async for image in stream:
-            if image.format.width == w and image.format.height == h:
-                pixel_count = len(image.image)
-                assert pixel_count == w * h * bpp
-
-                # Transition to the next.
-                w, h, mode = next(available_dimensions)
-                assert set_display_mode(emulator_controller, mode) == mode
+                assert await set_display_mode(emulator_controller, mode) == mode
 
 
 @pytest.mark.newresizable
