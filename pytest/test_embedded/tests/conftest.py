@@ -500,7 +500,7 @@ async def launch_animiation_app(avd: BaseEmulator):
         "com.google.AnimateBox/com.google.emu.MainActivity", params=None
     )
 
-    async with await avd.adb.logcat(tag="aemu", timeout=20) as stream:
+    async with await avd.adb.logcat(tag="aemu", timeout=10) as stream:
         logging.info("Waiting for --STARTED-- in logcat stream.")
         async for line in stream:
             if "--STARTED--" in line:
