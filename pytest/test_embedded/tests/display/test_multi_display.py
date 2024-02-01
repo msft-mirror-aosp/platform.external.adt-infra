@@ -207,7 +207,7 @@ async def test_multidisplay_can_configure_four(
     to_set = DisplayConfigurations(displays=displays)
     cfg = await emulator_controller.setDisplayConfigurations(to_set)
 
-    logging.info("setDisplayConfigurations:(%s) = %s", fm_proto(to_set), fmt_proto(cfg))
+    logging.info("setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg))
 
     # We have default screen, + the ones we added.
     assert len(cfg.displays) == len(displays) + 1
@@ -233,7 +233,7 @@ async def test_multidisplay_add_should_not_remove(
     displays = [DisplayConfiguration(width=720, height=1280, dpi=213, display=2)]
     to_set = DisplayConfigurations(displays=displays)
     cfg = await emulator_controller.setDisplayConfigurations(to_set)
-    logging.info("setDisplayConfigurations:(%s) = %s", fm_proto(to_set), fmt_proto(cfg))
+    logging.info("setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg))
 
     # All screens have been made available.
     for display in displays:
@@ -246,7 +246,7 @@ async def test_multidisplay_add_should_not_remove(
     to_set = DisplayConfigurations(displays=displays)
     cfg = await emulator_controller.setDisplayConfigurations(to_set)
 
-    logging.info("setDisplayConfigurations:(%s) = %s", fm_proto(to_set), fmt_proto(cfg))
+    logging.info("setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg))
 
     # All screens have been made available.
     for display in displays:
