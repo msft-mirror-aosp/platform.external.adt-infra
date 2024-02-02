@@ -505,8 +505,8 @@ class Emulator(BaseEmulator):
         """
         # Setup android sdk/avd etc.
         local_env = {
-            "ANDROID_AVD_HOME": self.android_avd_home,
-            "ANDROID_SDK_ROOT": self.android_home,
+            "ANDROID_AVD_HOME": str(self.android_avd_home),
+            "ANDROID_SDK_ROOT": str(self.android_home),
             "DISPLAY": os.environ.get("DISPLAY", ":0"),
         }
 
