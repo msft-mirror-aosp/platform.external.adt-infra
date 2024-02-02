@@ -601,9 +601,18 @@ public class SettingsTest {
 
         boolean autoTwentyFourWasEnabled = false;
         boolean useTwentyFourWasEnabled = false;
-        UiObject useTwentyFourLabel = device.findObject(new UiSelector().text("Use 24-hour format"));
+        
+        final UiSelector twentyFourHourSelector = new UiSelector().text("Use 24-hour format");
+        UiObject useTwentyFourLabel = device.findObject(twentyFourHourSelector);
         UiObject autoTwentyFourLabel = device.findObject(new UiSelector().text("Use locale default"));
         final UiObject thirteenHundredLabel = device.findObject(new UiSelector().text("13:00"));
+        
+        UiScrollable itemList =
+                new UiScrollable(
+                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
+                );
+        itemList.setAsVerticalList();
+        itemList.scrollIntoView(twentyFourHourSelector);
 
         // Initialize automatic format option to disabled state.
         if (autoTwentyFourLabel.waitForExists(3L) && !useTwentyFourLabel.isEnabled()) {
