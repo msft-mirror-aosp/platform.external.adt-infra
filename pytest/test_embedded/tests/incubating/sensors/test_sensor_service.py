@@ -168,11 +168,11 @@ async def test_sensor_value_events(service, test_name, sensor_value, x, y, z):
             assert False, "This should never happen! Wronge event received!"
 
         # In gRPC land a missing value == 0
-        values = max(len(expected.value.data), len(sensor_event.value))
+        values = max(len(expected.value.data), len(sensor_event.value.data))
         for i in range(values):
             looking_for = expected.value.data[i] if i < len(expected.value.data) else 0
             received = (
-                sensor_event.valua.data[i] if i < len(sensor_event.value.data) else 0
+                sensor_event.value.data[i] if i < len(sensor_event.value.data) else 0
             )
             if pytest.approx(received) != looking_for:
                 return False
