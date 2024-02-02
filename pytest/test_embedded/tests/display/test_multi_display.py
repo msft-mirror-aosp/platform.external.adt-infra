@@ -26,6 +26,17 @@ from tests.test_utils import fmt_proto
 _EMPTY_ = empty_pb2.Empty()
 
 
+def contains(display: DisplayConfiguration, displays: [DisplayConfiguration]):
+    logging.info("Checking if %s is in %s", display, displays)
+    displays_by_ids = [d for d in displays if d.display == display.display]
+    assert len(displays_by_ids) == 1
+    display_by_id = displays_by_ids[0]
+    assert display_by_id is not None
+    assert display_by_id.width == display.width
+    assert display_by_id.height == display.height
+    assert display_by_id.dpi == display.dpi
+
+
 @pytest.fixture
 async def is_landscape(get_screenshot):
     image, _ = await get_screenshot(ImageFormat(width=320, height=200))
@@ -207,14 +218,16 @@ async def test_multidisplay_can_configure_four(
     to_set = DisplayConfigurations(displays=displays)
     cfg = await emulator_controller.setDisplayConfigurations(to_set)
 
-    logging.info("setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg))
+    logging.info(
+        "setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg)
+    )
 
     # We have default screen, + the ones we added.
     assert len(cfg.displays) == len(displays) + 1
 
     # All screens have been made available.
     for display in displays:
-        assert display in cfg.display
+        contains(display, cfg.displays)
 
 
 @pytest.mark.e2e
@@ -233,11 +246,13 @@ async def test_multidisplay_add_should_not_remove(
     displays = [DisplayConfiguration(width=720, height=1280, dpi=213, display=2)]
     to_set = DisplayConfigurations(displays=displays)
     cfg = await emulator_controller.setDisplayConfigurations(to_set)
-    logging.info("setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg))
+    logging.info(
+        "setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg)
+    )
 
     # All screens have been made available.
     for display in displays:
-        assert display in cfg.display
+        contains(display, cfg.displays)
 
     displays = [
         DisplayConfiguration(width=720, height=1280, dpi=213, display=1),
@@ -246,11 +261,13 @@ async def test_multidisplay_add_should_not_remove(
     to_set = DisplayConfigurations(displays=displays)
     cfg = await emulator_controller.setDisplayConfigurations(to_set)
 
-    logging.info("setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg))
+    logging.info(
+        "setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg)
+    )
 
     # All screens have been made available.
     for display in displays:
-        assert display in cfg.display
+        contains(display, cfg.displays)
 
 
 @pytest.mark.e2e
