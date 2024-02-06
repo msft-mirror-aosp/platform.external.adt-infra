@@ -418,7 +418,7 @@
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "launch_flags": [],
         "pytest_flags": [
-            "-m sanity and not resizable"
+            "-m sanity and not resizable and not newresizable"
         ],
         "avd_config": {
             "api": "33",
@@ -430,7 +430,7 @@
         "description": "Set of tests we want to run as a part of emulator fast test suite",
         "launch_flags": [],
         "pytest_flags": [
-            "-m fast and not resizable"
+            "-m fast and not resizable and not newresizable"
         ],
         "avd_config": {
             "api": "33",
@@ -442,7 +442,7 @@
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "launch_flags": [],
         "pytest_flags": [
-            "-m sanity and not resizable"
+            "-m sanity and not resizable and not newresizable"
         ],
         "avd_config": {
             "api": "31",
@@ -454,7 +454,7 @@
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "launch_flags": [],
         "pytest_flags": [
-            "-m sanity and not resizable"
+            "-m sanity and not resizable and not newresizable"
         ],
         "avd_config": {
             "api": "34",
