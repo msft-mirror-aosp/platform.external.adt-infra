@@ -70,6 +70,7 @@ class BaseEmulator(object):
             self.android_home,
             self.android_avd_home,
         )
+        self.hardware = {}
         self.cmd = None
         self.adb: Adb = None
         self.mobly_device: Mobly = None
@@ -129,6 +130,11 @@ class BaseEmulator(object):
             [("emulator.security", "token")]
         )
 
+    def api_level(self) -> int:
+        # This assumes we have called has_booted..
+        assert self.hardware.items(), "Only valid after the emulator has been started."
+        return int(self.hardware.get("avd.api_level", "0"))
+
     def mobly(self, name: str):
         return self.mobly_device.snippet(name)
 
@@ -160,6 +166,9 @@ class BaseEmulator(object):
             _EMPTY_ = empty_pb2.Empty()
             emu = EmulatorControllerStub(self.channel)
             status = await emu.getStatus(_EMPTY_)
+            self.hardware = dict(
+                [(x.key, x.value) for x in status.hardwareConfig.entry]
+            )
             online = await self.adb.online()
             return status.booted and online
         except (RpcError, AioRpcError) as exc:
