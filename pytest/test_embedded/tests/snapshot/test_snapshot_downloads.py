@@ -146,7 +146,7 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
     totexe = emulator.exe
 
     # create snapshot with old emulator
-    oldexe = download_emulator_zip("10816734")
+    oldexe = await download_emulator_zip("10816734")
     logging.info("old emu: %s", oldexe)
     emulator.exe = oldexe
     myflags = ["-no-snapshot-load"]
@@ -167,8 +167,8 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
 
     # launch with tot
     emulator.exe = totexe
-    assert emulator.launch(flags=["-no-snapshot-save"])
-    assert emulator.wait_for_boot(timeout=60)
+    assert await emulator.launch(flags=["-no-snapshot-save"])
+    assert await emulator.wait_for_boot(timeout=60)
 
     def check_has_booted():
         return check_boot_from_snapshot(emulator.configuration.directory)
