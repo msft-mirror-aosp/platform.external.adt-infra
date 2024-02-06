@@ -76,7 +76,8 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
 async def test_new_resizable_changes_resolution(
     avd, animation_app, emulator_controller, width, height, mode, get_screenshot
 ):
-    if avd.api_level() < 34:
+    api_level = await avd.api_level()
+    if api_level < 34:
         pytest.skip(reason="Requires api level >=34!")
 
     await emulator_controller.setDisplayMode(DisplayMode(value=mode))
@@ -128,7 +129,8 @@ async def test_new_resizable_changes_resolution(
 async def test_new_resizable_observable_from_streaming(
     avd, at_home, animation_app, emulator_controller, stream_screenshot, fmt, bpp
 ):
-    if avd.api_level() < 34:
+    api_level = await avd.api_level()
+    if api_level < 34:
         pytest.skip(reason="Requires api level >=34!")
 
     available_dimensions = iter(
@@ -171,7 +173,8 @@ async def test_new_resizable_observable_from_streaming(
 async def test_new_resizable_folding_observable_from_streaming(
     avd, animation_app, emulator_controller, stream_screenshot, fmt, bpp
 ):
-    if avd.api_level() < 34:
+    api_level = await avd.api_level()
+    if api_level < 34:
         pytest.skip(reason="Requires api level >=34!")
 
     available_dimensions = iter(
