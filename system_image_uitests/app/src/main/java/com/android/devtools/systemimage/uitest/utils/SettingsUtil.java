@@ -15,7 +15,6 @@ import android.support.test.uiautomator.UiSelector;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Switch;
-import android.widget.TextView;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
@@ -481,6 +480,29 @@ public class SettingsUtil {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    /**
+     * Scroll the view to a target element in a given region.
+     * @param device UiDevice
+     * @param region UiSelector
+     * @param target UiSelector
+     */
+    public static void scrollToObject(UiDevice device, UiSelector region, UiSelector target)
+            throws RuntimeException {
+        try {
+            UiScrollable scrollable = new UiScrollable(region);
+            scrollable.setAsVerticalList();
+
+            UiScrollable itemList =
+                    new UiScrollable(region);
+            itemList.setAsVerticalList();
+            itemList.scrollIntoView(target);
+            assertTrue("Failed to scroll to the target object",
+                    new Wait().until(() -> device.findObject(target).exists()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

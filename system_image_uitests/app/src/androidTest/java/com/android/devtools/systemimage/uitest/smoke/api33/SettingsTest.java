@@ -46,7 +46,6 @@ import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -607,12 +606,8 @@ public class SettingsTest {
         UiObject autoTwentyFourLabel = device.findObject(new UiSelector().text("Use locale default"));
         final UiObject thirteenHundredLabel = device.findObject(new UiSelector().text("13:00"));
         
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-        itemList.scrollIntoView(twentyFourHourSelector);
+        UiSelector dateTimeRegion = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
+        SettingsUtil.scrollToObject(device, dateTimeRegion, twentyFourHourSelector);
 
         // Initialize automatic format option to disabled state.
         if (autoTwentyFourLabel.waitForExists(3L) && !useTwentyFourLabel.isEnabled()) {
