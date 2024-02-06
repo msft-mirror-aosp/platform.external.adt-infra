@@ -43,9 +43,12 @@ class MyGLRenderer : GLSurfaceView.Renderer {
             Log.i(TAG, "Timing: ${ts}, ${up}")
         }
 
-        // We will wait until we have drawn 120 frames, before we message
+        if (frameCount < 60) {
+            Log.i(TAG, "Rendered ${frameCount} frames.")
+        }
+        // We will wait until we have drawn 60 frames, before we message
         // that we are ready to handle all events.
-        if (frameCount == 120) {
+        if (frameCount == 60) {
             Log.i(TAG, "--STARTED--")
         }
 
