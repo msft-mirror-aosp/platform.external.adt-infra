@@ -488,8 +488,9 @@ public class SettingsUtil {
      * @param device UiDevice
      * @param region UiSelector
      * @param target UiSelector
+     * @return boolean
      */
-    public static void scrollToObject(UiDevice device, UiSelector region, UiSelector target)
+    public static boolean scrollToObject(UiDevice device, UiSelector region, UiSelector target)
             throws RuntimeException {
         try {
             UiScrollable scrollable = new UiScrollable(region);
@@ -504,6 +505,7 @@ public class SettingsUtil {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return true;
     }
 
     /*

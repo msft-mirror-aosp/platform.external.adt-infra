@@ -91,20 +91,14 @@ public class SettingsTest {
         }
 
         AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-
-        UiObject locationSetting = device.findObject(
-                new UiSelector()
-                        .className("android.widget.TextView")
-                        .text("Location"));
+        UiSelector region = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
+        UiSelector target = new UiSelector()
+                .className("android.widget.TextView")
+                .text("Location");
 
         assertTrue("Location not found in Settings List",
-                itemList.scrollIntoView(locationSetting));
-        locationSetting.clickAndWaitForNewWindow();
+                SettingsUtil.scrollToObject(device, region, target));
+        device.findObject(target).clickAndWaitForNewWindow();
 
         boolean recentAccessText = new Wait().until(
                 () -> device.findObject(new UiSelector()
@@ -948,16 +942,11 @@ public class SettingsTest {
                     AppLauncher.launchPath(
                             instrumentation, true, "Settings", "System", "Developer options"));
         }
+        
+        UiSelector region = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
+        UiSelector target = new UiSelector().text("USB debugging");
 
-
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-
-        UiObject usbDebugging = device.findObject(new UiSelector().text("USB debugging"));
-        assertTrue("USB debugging controls not found", itemList.scrollIntoView(usbDebugging));
+        assertTrue("USB debugging controls not found", SettingsUtil.scrollToObject(device, region, target));
     }
 
     /**
