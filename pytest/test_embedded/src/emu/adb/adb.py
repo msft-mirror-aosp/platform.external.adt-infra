@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 import platform
 from pathlib import Path
@@ -183,19 +184,24 @@ class Adb:
         device = await self.device()
         return "device" in await self._with_adb_retry(device.get_state, [])
 
-    async def shell(self, cmd: str, timeout: int = 10) -> str:
+    async def shell(self, cmd: str, timeout: int = 10, retry:int = 1) -> str:
         """Runs the given shell command on the emulator
 
         Args:
             cmd (str): Command to execute
             timeout (int, optional): Timeout. Defaults to 10s.
+            retry (int, optional): Attempts that will be made to execute
+                     the shell command when encountering timeouts.
 
         Returns:
             str: Result of the shell command
         """
-        device = await self.device()
-        res = await device.shell(cmd, timeout=timeout)
-        return res
+        for attempts in range(retry):
+            try:
+                device = await self.device()
+                return await device.shell(cmd, timeout=timeout)
+            except (asyncio.TimeoutError, TimeoutError) as te:
+                logging.error("Timeout when calling shell command, attempt %s/%s", attempts, range)
 
     async def run(self, cmd: list[str], timeout: int = 10) -> (int, [str]):
         """Runs the given command on the emulator

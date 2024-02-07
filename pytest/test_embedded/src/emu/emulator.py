@@ -282,10 +282,10 @@ class BaseEmulator(object):
         if params:
             shell += f" {params}"
 
-        await self.adb.shell(shell, timeout=2)
+        await self.adb.shell(shell, timeout=2, retry=3)
         count = 0
         while count < 10:
-            await self.adb.shell(shell, timeout=2)
+            await self.adb.shell(shell, timeout=2, retry=3)
             await asyncio.sleep(1)
             if await activity_is_running():
                 return True
@@ -294,7 +294,7 @@ class BaseEmulator(object):
         return await activity_is_running()
 
     async def pgrep(self, process_name: str) -> bool:
-        shell = await self.adb.shell(f"ps -A | grep {process_name}", timeout=2)
+        shell = await self.adb.shell(f"ps -A | grep {process_name}", timeout=2, retry=3)
         return process_name in shell
 
     async def stop_activity(self, activity: str) -> bool:
@@ -316,11 +316,11 @@ class BaseEmulator(object):
             """Returns true if the given activity is running."""
             return await self.pgrep(activity)
 
-        await self.adb.shell(f"am force-stop {activity}", timeout=1)
+        await self.adb.shell(f"am force-stop {activity}", timeout=1, retry=3)
         count = 0
         running = await activity_is_running()
         while running and count < 10:
-            await self.adb.shell(f"am force-stop {activity}", timeout=1)
+            await self.adb.shell(f"am force-stop {activity}", timeout=1, retry=3)
             await asyncio.sleep(1)
             running = await activity_is_running()
             count += 1

@@ -492,6 +492,8 @@ async def launch_animiation_app(avd: BaseEmulator):
     It will wait for at most 20 seconds before continuing.
     """
     logging.info("--> launch_animiation_app")
+    old_level = logging.getLogger("ppadb").level
+    logging.getLogger("ppadb").setLevel(logging.DEBUG)
     assert avd.is_alive()
     assert await avd.stop_activity("com.google.AnimateBox")
 
@@ -500,14 +502,20 @@ async def launch_animiation_app(avd: BaseEmulator):
         "com.google.AnimateBox/com.google.emu.MainActivity", params=None
     )
 
-    async with await avd.adb.logcat(tag="aemu", timeout=10) as stream:
-        logging.info("Waiting for --STARTED-- in logcat stream.")
-        async for line in stream:
-            if "--STARTED--" in line:
-                return True
+    async def wait_for_started():
+        async with await avd.adb.logcat(tag="aemu") as stream:
+            logging.info("Waiting for --STARTED-- in logcat stream.")
+            async for line in stream:
+                if "--STARTED--" in line:
+                    logging.getLogger("ppadb").setLevel(old_level)
+                    return True
 
-    logging.warning("No --STARTED-- tag seen.")
-    return False
+    try:
+        return await asyncio.wait_for(wait_for_started(), timeout=5)
+    except asyncio.TimeoutError:
+        logging.warning("No --STARTED-- tag seen.")
+        logging.getLogger("ppadb").setLevel(old_level)
+        return False
 
 
 @pytest.fixture
@@ -646,7 +654,7 @@ async def at_home(avd: BaseEmulator):
     await avd.reset_state()
     logging.info("--> yield at_home")
     yield
-    logging.info("<-- teardwon at_home")
+    logging.info("<-- teardown at_home")
 
     await avd.reset_state()
     logging.info("=== finalized at_home")
