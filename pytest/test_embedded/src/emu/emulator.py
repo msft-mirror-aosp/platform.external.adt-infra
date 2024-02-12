@@ -139,7 +139,7 @@ class BaseEmulator(object):
     async def api_level(self) -> int:
         # This assumes we have called has_booted..
         if not self.hardware:
-          await self.hardware()
+          await self._hardware()
 
         return int(self.hardware.get("avd.api_level", "0"))
 
