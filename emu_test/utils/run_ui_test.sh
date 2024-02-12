@@ -5,10 +5,24 @@
 #  {src}/test/run_sys_img_test.sh
 
 set -x
+set -e # exit on first error
 echo $@
 env
 
 . $(dirname "$0")/common.sh
+
+function cleanup() {
+  exit_code=$?
+  log "deactivate virtualenv"
+  deactivate_virtualenv
+
+  rm -rf $SNAPSHOT_DIR
+
+  find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
+  [ $exit_code -eq 0 ] && echo "UI test completed" || echo "Error in UI test"
+}
+
+trap cleanup EXIT
 
 DISTRIB_DIR=$1
 FILTER=$2
@@ -65,11 +79,3 @@ python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG \
                                         --load_snapshot \
                                         --headless \
                                         --generate_html
-log "deactivate virtualenv"
-deactivate_virtualenv
-
-rm -rf $SNAPSHOT_DIR
-
-find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
-
-echo "UI test completed"
