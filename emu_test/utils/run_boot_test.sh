@@ -17,7 +17,7 @@ function cleanup() {
   exit_code=$?
   log "deactivate virtualenv"
   deactivate_virtualenv
-  find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
+  find $SESSION_DIR -size  0 -print0 | xargs -0 rm -f --
   [ $exit_code -eq 0 ] && echo "Boot test completed" || echo "Error in boot test"
 }
 
