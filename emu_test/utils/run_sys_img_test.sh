@@ -24,7 +24,7 @@ function run_with_timeout () {
    ( sleep $4 && kill -HUP $pid ) 2>/dev/null & watcher=$!
    wait $pid 2>/dev/null
    exit_status=$?
-   if [ $exit_status -eq 129 ]; then
+   if [ $exit_status -eq 129 ] then
       echo "Test time out."
       # kill the process tree for test
       pkill -9 -g $pid
