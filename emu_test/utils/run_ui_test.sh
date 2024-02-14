@@ -18,7 +18,7 @@ function cleanup() {
 
   rm -rf $SNAPSHOT_DIR
 
-  find $SESSION_DIR -size  0 -print0 | xargs -0 rm -f --
+  find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
   [ $exit_code -eq 0 ] && echo "UI test completed" || echo "Error in UI test"
 }
 
