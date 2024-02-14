@@ -13,16 +13,6 @@ env
 DISTRIB_DIR=$1
 FILTER=$2
 
-function cleanup() {
-  exit_code=$?
-  log "deactivate virtualenv"
-  deactivate_virtualenv
-  find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
-  [ $exit_code -eq 0 ] && echo "Boot test completed" || echo "Error in boot test"
-}
-
-trap cleanup EXIT
-
 export ANDROID_EMU_ENABLE_CRASH_REPORTING="NO"
 
 BUILDERNAME="Linux_gce"
@@ -46,3 +36,10 @@ log "activate virtualenv"
 activate_virtualenv $ADT_INFRA/emu_test/utils
 
 python -u $ADT_INFRA/emu_test/dotest.py --loglevel DEBUG --session_dir $SESSION_DIR --emulator $ANDROID_SDK_ROOT/emulator/emulator --test_dir BOOT_test --file_pattern 'test_boot.*' --config_file $ADT_INFRA/emu_test/config/boot_cfg_byob.csv --buildername $BUILDERNAME --filter $FILTER --generate_xml --headless
+
+log "deactivate virtualenv"
+deactivate_virtualenv
+
+find $SESSION_DIR -size  0 -print0 |xargs -0 rm --
+
+echo "Boot test completed"
