@@ -22,27 +22,17 @@ ORI=$3
 function run_with_timeout () {
    ( $1 $2 $3 ) & pid=$!
    ( sleep $4 && kill -HUP $pid ) 2>/dev/null & watcher=$!
-   wait $pid 2>/dev/null
-   exit_status=$?
-   if [ $exit_status -eq 129 ] then
+   if wait $pid 2>/dev/null; then
+      pkill -HUP -P $watcher
+      wait $watcher
+   else
       echo "Test time out."
       # kill the process tree for test
       pkill -9 -g $pid
       rm -rf /buildbot/prebuilt/*
-   else
-      pkill -HUP -P $watcher
-      wait $watcher
+      exit 1
    fi
-   return $exit_status
 }
-
-function error_handler() {
-  local exit_status=$?
-  echo "run_sys_img_test.sh: error $exit_status"
-  exit $exit_status
-}
-
-trap "error_handler" ERR
 
 # Grab everything after git_devtools-test- starting with api.
 TARGET="$(echo $DIST_DIR | sed "s/.*git_devtools-test-.*-\(api.*\)\/.*/\1/g")"
