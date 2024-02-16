@@ -205,7 +205,7 @@ def get_exp_sub_dirs():
             "msvcp140_2.dll",
             "msvcp140_1.dll",
             "msvcp140.dll",
-            "glib-2-vs11.dll",
+            "libglib2_windows_msvc-x86_64.dll",
             "gles_swiftshader",
             "gles_mesa",
             "concrt140.dll",
