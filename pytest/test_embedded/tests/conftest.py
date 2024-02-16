@@ -440,10 +440,16 @@ async def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     assert await emulator.wait_for_boot()
     logging.info("The emulator has finished booting")
 
-    assert await emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
-    assert await emulator.install_apk(
+    # Note install appears to fail at times, b/324920328
+    installed = await emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
+    if not installed:
+        logging.warning("The animation app failed to install, this can cause unexpected failures")
+    installed = await emulator.install_apk(
         APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
     )
+    if not installed:
+        logging.warning("The mobly snippets failed to install, this can cause unexpected failures")
+
     await emulator.reset_state()
 
     logging.info("--> yielding emulator")

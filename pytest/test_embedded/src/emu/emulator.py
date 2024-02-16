@@ -251,12 +251,14 @@ class BaseEmulator(object):
             True if the package name is in `pm list packages`
         """
         count = 0
-        while not await self.adb.is_installed(package_name) and count < 10:
-            await self.adb.install(apk.absolute())
-            await asyncio.sleep(1)
-            count += 1
+        try:
+            while not await self.adb.is_installed(package_name) and count < 10:
+                await self.adb.install(apk.absolute())
+                await asyncio.sleep(1)
+                count += 1
 
-        return await self.adb.is_installed(package_name)
+        finally:
+            return await self.adb.is_installed(package_name)
 
     async def start_activity(self, activity: str, params=None) -> bool:
         """Attempts to start the given activity.

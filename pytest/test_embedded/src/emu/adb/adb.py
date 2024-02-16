@@ -17,6 +17,7 @@ import platform
 from pathlib import Path
 
 from ppadb.client_async import ClientAsync as AdbClientAsync
+from ppadb import InstallError
 
 from emu.adb.async_device import AdbDeviceAsync, DeviceStream
 from emu.logging.logcat_parser import parse_logcat
@@ -96,6 +97,12 @@ class Adb:
                 "adb: %s(%s)", method.__name__, ", ".join([str(x) for x in params])
             )
             return await method(*params)
+        except InstallError as ierr:
+            logging.error(
+                "Encoutered an installation failure, propagating without retry (%s).",
+                ierr,
+            )
+            raise ierr
         except Exception as rerr:
             logging.error(
                 "Failed to invoke method due %s, retry after adb restart",
@@ -184,7 +191,7 @@ class Adb:
         device = await self.device()
         return "device" in await self._with_adb_retry(device.get_state, [])
 
-    async def shell(self, cmd: str, timeout: int = 10, retry:int = 1) -> str:
+    async def shell(self, cmd: str, timeout: int = 10, retry: int = 1) -> str:
         """Runs the given shell command on the emulator
 
         Args:
@@ -201,7 +208,9 @@ class Adb:
                 device = await self.device()
                 return await device.shell(cmd, timeout=timeout)
             except (asyncio.TimeoutError, TimeoutError) as te:
-                logging.error("Timeout when calling shell command, attempt %s/%s", attempts, range)
+                logging.error(
+                    "Timeout when calling shell command, attempt %s/%s", attempts, range
+                )
 
     async def run(self, cmd: list[str], timeout: int = 10) -> (int, [str]):
         """Runs the given command on the emulator
