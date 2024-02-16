@@ -11,40 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import datetime
 
 import pytest
 from PIL import Image
 
-TEMP_FILE = "__screenshot.png"
-
 
 @pytest.fixture
 def tmp_test_file(tmp_path):
-    temp_file = tmp_path / TEMP_FILE
+    current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    temp_file = tmp_path / f"__screenshot_{current_time}.png"
     return temp_file
 
 
 @pytest.mark.adb
 @pytest.mark.sanity
-@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/321322524
-@pytest.mark.skipos("win", "Test fails on all platforms b/305308029")
+@pytest.mark.flaky(reruns=2, reruns_delay=5)
 @pytest.mark.async_timeout(30)
-@pytest.mark.skipos("mac", "Test fails on all platforms b/305308029")
 async def test_adb_screencapture_creates_a_file(
     avd, log_adb_interactions, tmp_test_file
 ):
     device_file = f"/sdcard/{tmp_test_file.name}"
+    await avd.adb.shell(f"rm {device_file}")
     assert "adb: error" not in await avd.adb.shell(f"screencap {device_file}")
     assert "yes" in await avd.adb.shell(f"[ -f {device_file} ] && echo 'yes'")
 
 
 @pytest.mark.adb
-@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/321299842
-@pytest.mark.skipos("win", "Test fails on all platforms b/305308029")
+@pytest.mark.flaky(reruns=2, reruns_delay=5)
 @pytest.mark.async_timeout(30)
-@pytest.mark.skipos("mac", "Test fails on all platforms b/305308029")
 async def test_adb_screencapture_is_a_png(avd, log_adb_interactions, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"
+    await avd.adb.shell(f"rm {device_file}")
     assert "adb: error" not in await avd.adb.shell(f"screencap {device_file}")
 
     # Check that we have a png file.
