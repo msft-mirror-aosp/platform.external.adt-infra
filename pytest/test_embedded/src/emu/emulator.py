@@ -78,6 +78,9 @@ class BaseEmulator(object):
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
 
+    def __str__(self):
+        return str(self.description)
+
     def _initialize_with_description(self, description: Optional[EmulatorDescription]):
         """Setup the emulator given the description
 
@@ -118,6 +121,7 @@ class BaseEmulator(object):
             self.description.get("avd.id"),
             self.description.name(),
             self.android_home / "platform-tools" / "adb",
+            self,
         )
         self.mobly_device = Mobly(self.description.name())
         self.logger.info(
@@ -134,12 +138,12 @@ class BaseEmulator(object):
         _EMPTY_ = empty_pb2.Empty()
         emu = EmulatorControllerStub(self.channel)
         status = await emu.getStatus(_EMPTY_)
-        self.hardware = dict( [(x.key, x.value) for x in status.hardwareConfig.entry])
+        self.hardware = dict([(x.key, x.value) for x in status.hardwareConfig.entry])
 
     async def api_level(self) -> int:
         # This assumes we have called has_booted..
         if not self.hardware:
-          await self._hardware()
+            await self._hardware()
 
         return int(self.hardware.get("avd.api_level", "0"))
 
