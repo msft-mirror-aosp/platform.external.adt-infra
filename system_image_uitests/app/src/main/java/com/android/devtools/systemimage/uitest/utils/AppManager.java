@@ -33,6 +33,8 @@ import java.io.OutputStream;
 
 import junit.framework.Assert;
 
+import static org.junit.Assert.assertTrue;
+
 public class AppManager {
 
     private AppManager() {
@@ -153,9 +155,18 @@ public class AppManager {
             seeAllLabel.clickAndWaitForNewWindow();
         }
 
-        final UiObject allAppsLabel = device.findObject(new UiSelector()
+        final UiObject allAppsDescriptionLabel = device.findObject(new UiSelector()
                 .resourceId(Res.SETTINGS_COLLAPSING_TOOLBAR_RES).description("All apps"));
-        Assert.assertTrue("Application info not found", allAppsLabel.exists());
+
+        final UiObject allAppsTextLabel = device.findObject(new UiSelector()
+                .resourceId(Res.ANDROID_TITLE_RES).text("All apps"));
+
+        boolean allAppsLabelExists = new Wait(5000L).until(allAppsDescriptionLabel::exists);
+
+        if (!allAppsLabelExists) {
+            boolean allAppsTextExists = new Wait(5000L).until(allAppsTextLabel::exists);
+            assertTrue("Application info not found", allAppsTextExists);
+        }
     }
 
     /**

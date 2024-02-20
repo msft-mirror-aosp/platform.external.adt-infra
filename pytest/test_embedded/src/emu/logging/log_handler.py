@@ -85,7 +85,7 @@ class AsyncLogHandler:
                 try:
                     item = line.decode("utf-8").rstrip()
                 except UnicodeDecodeError:
-                    item = line
+                    item = str(line)
                 log_function(item)
                 while queue.full():
                     queue.get_nowait()

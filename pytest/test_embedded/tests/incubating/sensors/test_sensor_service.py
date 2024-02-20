@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-
 import pytest
 from aemu.proto.sensor_service_pb2 import ParameterValue, SensorValue
 from aemu.proto.sensor_service_pb2_grpc import SensorServiceStub
+from tests.test_utils import fmt_proto
 
 from emu.timing import eventually
 
@@ -73,7 +73,6 @@ async def set_and_get_sensor(sensor_service, sensor_value):
 
 
 @pytest.mark.e2e
-@pytest.mark.hardware
 @pytest.mark.fast
 @pytest.mark.parametrize(
     "test_name, sensor_value, x, y, z",
@@ -100,6 +99,10 @@ async def set_and_get_sensor(sensor_service, sensor_value):
             2,
             2,
         ),
+        ("Acceleration", SensorValue.SENSOR_SENSOR_TYPE_ACCELERATION, 10, 0, 0),
+        ("Acceleration_Uncalibrated", SensorValue.SENSOR_SENSOR_TYPE_ACCELERATION_UNCALIBRATED, 25, 0, 0),
+        ("Heart_Rate", SensorValue.SENSOR_SENSOR_TYPE_HEART_RATE, 60, 0, 10),
+        ("RGBC_Light", SensorValue.SENSOR_SENSOR_TYPE_RGBC_LIGHT, 255, 0, 0),
     ],
 )
 async def test_sensor_value(service, test_name, sensor_value, x, y, z):
@@ -160,13 +163,21 @@ async def test_sensor_value_events(service, test_name, sensor_value, x, y, z):
     stream = sensor_service.receiveSensorEvents(SensorValue(target=sensor_value))
 
     def receives_an_update_event(sensor_event):
-        logging.info("Received event %s", sensor_event)
+        logging.info(
+            "Received event %s == %s", fmt_proto(sensor_event), fmt_proto(expected)
+        )
 
         if sensor_event.target != expected.target:
             assert False, "This should never happen! Wronge event received!"
 
-        for i in range(len(expected.value.data)):
-            if pytest.approx(sensor_event.value.data[i]) != expected.value.data[i]:
+        # In gRPC land a missing value == 0
+        values = max(len(expected.value.data), len(sensor_event.value.data))
+        for i in range(values):
+            looking_for = expected.value.data[i] if i < len(expected.value.data) else 0
+            received = (
+                sensor_event.value.data[i] if i < len(sensor_event.value.data) else 0
+            )
+            if pytest.approx(received) != looking_for:
                 return False
 
         return True

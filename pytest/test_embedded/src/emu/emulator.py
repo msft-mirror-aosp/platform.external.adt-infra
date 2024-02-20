@@ -70,12 +70,16 @@ class BaseEmulator(object):
             self.android_home,
             self.android_avd_home,
         )
+        self.hardware = None
         self.cmd = None
         self.adb: Adb = None
         self.mobly_device: Mobly = None
         self.channel = None
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
+
+    def __str__(self):
+        return str(self.description)
 
     def _initialize_with_description(self, description: Optional[EmulatorDescription]):
         """Setup the emulator given the description
@@ -117,6 +121,7 @@ class BaseEmulator(object):
             self.description.get("avd.id"),
             self.description.name(),
             self.android_home / "platform-tools" / "adb",
+            self,
         )
         self.mobly_device = Mobly(self.description.name())
         self.logger.info(
@@ -128,6 +133,19 @@ class BaseEmulator(object):
         self.channel = self.description.get_async_grpc_channel(
             [("emulator.security", "token")]
         )
+
+    async def _hardware(self):
+        _EMPTY_ = empty_pb2.Empty()
+        emu = EmulatorControllerStub(self.channel)
+        status = await emu.getStatus(_EMPTY_)
+        self.hardware = dict([(x.key, x.value) for x in status.hardwareConfig.entry])
+
+    async def api_level(self) -> int:
+        # This assumes we have called has_booted..
+        if not self.hardware:
+            await self._hardware()
+
+        return int(self.hardware.get("avd.api_level", "0"))
 
     def mobly(self, name: str):
         return self.mobly_device.snippet(name)
@@ -160,6 +178,9 @@ class BaseEmulator(object):
             _EMPTY_ = empty_pb2.Empty()
             emu = EmulatorControllerStub(self.channel)
             status = await emu.getStatus(_EMPTY_)
+            self.hardware = dict(
+                [(x.key, x.value) for x in status.hardwareConfig.entry]
+            )
             online = await self.adb.online()
             return status.booted and online
         except (RpcError, AioRpcError) as exc:
@@ -234,12 +255,14 @@ class BaseEmulator(object):
             True if the package name is in `pm list packages`
         """
         count = 0
-        while not await self.adb.is_installed(package_name) and count < 10:
-            await self.adb.install(apk.absolute())
-            await asyncio.sleep(1)
-            count += 1
+        try:
+            while not await self.adb.is_installed(package_name) and count < 10:
+                await self.adb.install(apk.absolute())
+                await asyncio.sleep(1)
+                count += 1
 
-        return await self.adb.is_installed(package_name)
+        finally:
+            return await self.adb.is_installed(package_name)
 
     async def start_activity(self, activity: str, params=None) -> bool:
         """Attempts to start the given activity.
@@ -265,10 +288,10 @@ class BaseEmulator(object):
         if params:
             shell += f" {params}"
 
-        await self.adb.shell(shell)
+        await self.adb.shell(shell, timeout=2, retry=3)
         count = 0
         while count < 10:
-            await self.adb.shell(shell)
+            await self.adb.shell(shell, timeout=2, retry=3)
             await asyncio.sleep(1)
             if await activity_is_running():
                 return True
@@ -277,7 +300,7 @@ class BaseEmulator(object):
         return await activity_is_running()
 
     async def pgrep(self, process_name: str) -> bool:
-        shell = await self.adb.shell(f"ps -A | grep {process_name}")
+        shell = await self.adb.shell(f"ps -A | grep {process_name}", timeout=2, retry=3)
         return process_name in shell
 
     async def stop_activity(self, activity: str) -> bool:
@@ -299,11 +322,11 @@ class BaseEmulator(object):
             """Returns true if the given activity is running."""
             return await self.pgrep(activity)
 
-        await self.adb.shell(f"am force-stop {activity}")
+        await self.adb.shell(f"am force-stop {activity}", timeout=1, retry=3)
         count = 0
         running = await activity_is_running()
         while running and count < 10:
-            await self.adb.shell(f"am force-stop {activity}")
+            await self.adb.shell(f"am force-stop {activity}", timeout=1, retry=3)
             await asyncio.sleep(1)
             running = await activity_is_running()
             count += 1
@@ -432,7 +455,7 @@ class Emulator(BaseEmulator):
 
         self.cmd = Command(cmd, self.logger).with_environment(env)
         if sys.platform == "win32":
-            cmd.in_directory(self.exe.parent)
+            self.cmd.in_directory(self.exe.parent)
 
         proc = await self.cmd.run()
         self.log = proc.handler
@@ -505,8 +528,8 @@ class Emulator(BaseEmulator):
         """
         # Setup android sdk/avd etc.
         local_env = {
-            "ANDROID_AVD_HOME": self.android_avd_home,
-            "ANDROID_SDK_ROOT": self.android_home,
+            "ANDROID_AVD_HOME": str(self.android_avd_home),
+            "ANDROID_SDK_ROOT": str(self.android_home),
             "DISPLAY": os.environ.get("DISPLAY", ":0"),
         }
 

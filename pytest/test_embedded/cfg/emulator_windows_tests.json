@@ -288,22 +288,6 @@
         },
         "status": "disabled"
     },
-    "resizable_emulator_test_suite_api_33": {
-        "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
-        "launch_flags": [],
-        "pytest_flags": [
-            "-m graphics and not multidisplay or resizable"
-        ],
-        "avd_config": {
-            "api": "33",
-            "tag.id": "google_apis",
-            "hw.device.name": "resizable",
-            "hw.resizable.configs": "phone-0-1080-2340-420, foldable-1-1768-2208-420, tablet-2-1920-1200-240, desktop-3-1920-1080-160",
-            "skin.name": "1080x2340",
-            "skin.path": "no_skin"
-        },
-        "status": "enabled"
-    },
     "resizable_emulator_test_suite_api_34": {
         "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
         "launch_flags": [],
@@ -417,7 +401,7 @@
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "launch_flags": [],
         "pytest_flags": [
-            "-m sanity and not resizable"
+            "-m sanity and not resizable and not newresizable"
         ],
         "avd_config": {
             "api": "33",
@@ -429,7 +413,7 @@
         "description": "Set of tests we want to run as a part of emulator fast test suite",
         "launch_flags": [],
         "pytest_flags": [
-            "-m fast and not resizable"
+            "-m fast and not resizable and not newresizable"
         ],
         "avd_config": {
             "api": "33",
@@ -441,7 +425,7 @@
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "launch_flags": [],
         "pytest_flags": [
-            "-m sanity and not resizable"
+            "-m sanity and not resizable and not newresizable"
         ],
         "avd_config": {
             "api": "31",
@@ -453,7 +437,7 @@
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "launch_flags": [],
         "pytest_flags": [
-            "-m sanity and not resizable"
+            "-m sanity and not resizable and not newresizable"
         ],
         "avd_config": {
             "api": "34",

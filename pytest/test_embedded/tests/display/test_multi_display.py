@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import logging
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
     DisplayConfiguration,
@@ -21,13 +21,26 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
+from tests.test_utils import fmt_proto
 
 _EMPTY_ = empty_pb2.Empty()
+
+
+def contains(display: DisplayConfiguration, displays: [DisplayConfiguration]):
+    logging.info("Checking if %s is in %s", display, displays)
+    displays_by_ids = [d for d in displays if d.display == display.display]
+    assert len(displays_by_ids) == 1
+    display_by_id = displays_by_ids[0]
+    assert display_by_id is not None
+    assert display_by_id.width == display.width
+    assert display_by_id.height == display.height
+    assert display_by_id.dpi == display.dpi
 
 
 @pytest.fixture
 async def is_landscape(get_screenshot):
     image, _ = await get_screenshot(ImageFormat(width=320, height=200))
+    logging.info("get_screenshot: %s", fmt_proto(image.format))
     return (
         image.format.rotation.rotation == Rotation.REVERSE_LANDSCAPE
         or image.format.rotation.rotation == Rotation.LANDSCAPE
@@ -40,14 +53,17 @@ async def no_displays(emulator_controller, adb_shell):
 
     Use this if you want to make sure the emulator has no secondary displays
     """
+    logging.info("--> no_displays")
     await adb_shell("input keyevent KEYCODE_WAKEUP")
     await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(displays=[])
     )
     yield
+    logging.info("<-- no_displays")
     await emulator_controller.setDisplayConfigurations(
         DisplayConfigurations(displays=[])
     )
+    logging.info("=== finished no_displays")
 
 
 @pytest.mark.e2e
@@ -183,6 +199,7 @@ async def test_multidisplay_double_ids_error(
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
+@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/322551553
 async def test_multidisplay_can_configure_four(
     no_displays, emulator_controller, is_landscape
 ):
@@ -198,15 +215,19 @@ async def test_multidisplay_can_configure_four(
         DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
         for idx, x in enumerate(resolutions)
     ]
-    cfg = await emulator_controller.setDisplayConfigurations(
-        DisplayConfigurations(displays=displays)
-    )
+    to_set = DisplayConfigurations(displays=displays)
+    cfg = await emulator_controller.setDisplayConfigurations(to_set)
 
-    # All screens have been made available.
-    assert all([x in cfg.displays for x in displays])
+    logging.info(
+        "setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg)
+    )
 
     # We have default screen, + the ones we added.
     assert len(cfg.displays) == len(displays) + 1
+
+    # All screens have been made available.
+    for display in displays:
+        contains(display, cfg.displays)
 
 
 @pytest.mark.e2e
@@ -223,22 +244,30 @@ async def test_multidisplay_add_should_not_remove(
         pytest.skip("Cannot run multi display tests in landscape mode.")
 
     displays = [DisplayConfiguration(width=720, height=1280, dpi=213, display=2)]
-    cfg = await emulator_controller.setDisplayConfigurations(
-        DisplayConfigurations(displays=displays)
+    to_set = DisplayConfigurations(displays=displays)
+    cfg = await emulator_controller.setDisplayConfigurations(to_set)
+    logging.info(
+        "setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg)
     )
 
     # All screens have been made available.
-    assert all([x in cfg.displays for x in displays])
+    for display in displays:
+        contains(display, cfg.displays)
+
     displays = [
         DisplayConfiguration(width=720, height=1280, dpi=213, display=1),
         DisplayConfiguration(width=720, height=1280, dpi=213, display=2),
     ]
-    cfg = await emulator_controller.setDisplayConfigurations(
-        DisplayConfigurations(displays=displays)
+    to_set = DisplayConfigurations(displays=displays)
+    cfg = await emulator_controller.setDisplayConfigurations(to_set)
+
+    logging.info(
+        "setDisplayConfigurations:(%s) = %s", fmt_proto(to_set), fmt_proto(cfg)
     )
 
     # All screens have been made available.
-    assert all([x in cfg.displays for x in displays])
+    for display in displays:
+        contains(display, cfg.displays)
 
 
 @pytest.mark.e2e

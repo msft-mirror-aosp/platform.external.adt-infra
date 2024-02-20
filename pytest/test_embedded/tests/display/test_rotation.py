@@ -80,7 +80,6 @@ async def for_each_rotation(emulator_controller):
 @pytest.mark.async_timeout(10)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.graphics
-@pytest.mark.skipos("win", "reason: b/305268095 - error at setup.")
 async def test_rotation_observable_through_screenshot(
     emulator_controller, animation_app
 ):
@@ -88,6 +87,7 @@ async def test_rotation_observable_through_screenshot(
 
     async def image_rotated_correctly(coarse) -> bool:
         img = await emulator_controller.getScreenshot(ImageFormat())
+        logging.info("Current state: %s", img.format.rotation)
         return img.format.rotation.rotation == coarse
 
     async for fine, coarse in for_each_rotation(emulator_controller):
@@ -100,7 +100,6 @@ async def test_rotation_observable_through_screenshot(
 
 @pytest.mark.e2e
 @pytest.mark.graphics
-@pytest.mark.skipos("win", "reason: b/305269036 - error at setup.")
 async def test_rotation_observable_through_adbstream(
     avd, at_home, animation_app, emulator_controller
 ):
@@ -126,15 +125,19 @@ async def test_rotation_observable_through_adbstream(
 @pytest.mark.e2e
 @pytest.mark.async_timeout(10)
 @pytest.mark.graphics
-@pytest.mark.skipos("win", "reason: b/305270248 - error at setup.")
 async def test_rotation_observable_through_stream_screenshot(
     animation_app, emulator_controller, stream_screenshot
 ):
     """Test that setting the rotation, is observable through streaming screenshot."""
     async for angle, coarse in for_each_rotation(emulator_controller):
+
+        def is_rotated(img):
+            logging.info("img: %s - %s", img.seq, img.format.rotation)
+            return img.format.rotation.rotation == coarse
+
         stream = stream_screenshot(ImageFormat())
         assert await eventually(
-            lambda img: img.format.rotation.rotation == coarse, stream
+            is_rotated, stream
         ), f"Did not observe rotation to {angle}"
 
 
@@ -233,25 +236,22 @@ async def rotation_through_console_observable_through_stream_screenshot(
     for angle, coarse in ROTATION_MAPPING:
         await telnet.send("rotate")
 
-        def image_has_coarse_rotation(img: Image) -> bool:
+        async def image_has_coarse_rotation(img: Image) -> bool:
             """True if the rotation matches the coarse rotation."""
             return img.format.rotation.rotation == coarse
 
-        with stream_screenshot(ImageFormat(width=320, height=200)) as stream:
-            # Keep looking at the queue until we see what we need.
-            # if we never see it we will timeout.
-            assert eventually(
-                image_has_coarse_rotation, stream
-            ), f"Did not observe rotation to {angle} in time"
+        stream = stream_screenshot(ImageFormat(width=320, height=200))
+        # Keep looking at the queue until we see what we need.
+        # if we never see it we will timeout.
+        assert await eventually(
+            image_has_coarse_rotation, stream
+        ), f"Did not observe rotation to {angle} in time"
 
 
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.sanity
 @pytest.mark.fast
-@pytest.mark.skipos(
-    "win", "reason: b/305259781 - error at setup for params [-180-3] and [-90-4]"
-)
 @pytest.mark.async_timeout(10)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.parametrize(
@@ -277,6 +277,9 @@ async def test_rotation_pixels_in_the_right_place(
     )
 
     def find_square_in_image(img: Image) -> bool:
+        logging.info(
+            "Checking if %s (%s) is in the right quadrant", img.seq, img.timestampUs
+        )
         pillow_img = proto_to_pillow(img)
         return square_in_quadrant(pillow_img) == quadrant
 
@@ -290,7 +293,6 @@ async def test_rotation_pixels_in_the_right_place(
 @pytest.mark.async_timeout(10)
 @pytest.mark.graphics
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-# @pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
 async def test_rotation_through_console_observable_through_physical_model(
     emulator_controller, telnet, at_home
 ):
@@ -301,6 +303,9 @@ async def test_rotation_through_console_observable_through_physical_model(
     async def emulator_is_rotated_to(expected_angle):
         rotate = await emulator_controller.getPhysicalModel(
             PhysicalModelValue(target=PhysicalModelValue.ROTATION)
+        )
+        logging.info(
+            "emulator_is_rotated_to %s == %s", rotate.value.data[2], expected_angle
         )
         return rotate.value.data[2] == expected_angle
 
@@ -316,7 +321,6 @@ async def test_rotation_through_console_observable_through_physical_model(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.async_timeout(10)
-@pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
 async def test_rotation_through_console_observable_through_screenshot(
     at_home, emulator_controller, telnet
 ):
@@ -331,16 +335,15 @@ async def test_rotation_through_console_observable_through_screenshot(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.async_timeout(10)
-@pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
 async def test_rotation_through_console_observable_through_stream_screenshot(
-    at_home, animation_app, emulator_controller, telnet
+    at_home, animation_app, emulator_controller, telnet, stream_screenshot
 ):
     """Test that rotate through console, is observable through stream screenshot.
 
     bug: b/159635109, b/160171559
     """
-    rotation_through_console_observable_through_stream_screenshot(
-        emulator_controller, telnet
+    await rotation_through_console_observable_through_stream_screenshot(
+        stream_screenshot, telnet
     )
 
 
@@ -361,10 +364,9 @@ async def test_rotation_observable_through_screenshot_embedded_mode(
 @pytest.mark.embedded
 @pytest.mark.async_timeout(10)
 @pytest.mark.flaky(reruns=2, reruns_delay=2)
-@pytest.mark.skipos("all", "Real bug with adb emu rotate, need to fix it first.")
 async def test_rotation_observable_through_stream_screenshot_embedded_mode(
-    emulator_controller, telnet, emulator, at_home
+    emulator_controller, telnet, emulator, at_home, stream_screenshot
 ):
     await rotation_through_console_observable_through_stream_screenshot(
-        emulator_controller, telnet
+        stream_screenshot, telnet
     )

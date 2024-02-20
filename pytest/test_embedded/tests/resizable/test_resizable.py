@@ -87,6 +87,7 @@ async def test_resizable_changes_resolution(
     assert eventually(screenshot_is_sized_properly)
 
 
+@pytest.mark.resizable
 @pytest.mark.parametrize(
     "fmt, bpp",
     [
@@ -128,6 +129,7 @@ async def test_resizable_observable_from_streaming(
                 assert updated == mode
 
 
+@pytest.mark.resizable
 @pytest.mark.parametrize(
     "fmt, bpp",
     [

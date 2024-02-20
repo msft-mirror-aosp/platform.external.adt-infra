@@ -188,7 +188,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
             if timeout_win.args
             else timeout_win.kwargs.get("timeout")
         )
-        func_only = timeout_win.kwargs.get("func_only", True)
         # Remove existing timeout marker
         timeout = [
             m
@@ -198,9 +197,7 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
         if timeout:
             item.own_markers.pop(timeout[0])
 
-        item.add_marker(
-            pytest.mark.async_timeout(timeout=timeout_win_sec, func_only=func_only)
-        )
+        item.add_marker(pytest.mark.async_timeout([timeout_win_sec]))
 
     logging.info("=============== Setup: %s ===============", item.name)
 
@@ -226,16 +223,6 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
         logging.info(
             "-----------> %s completed: %s <-----------", report.nodeid, report.outcome
         )
-
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_fixture_setup(fixturedef, request):
-    logging.info(f">>>>>>>>>>>>>> Configuring fixture '{fixturedef}'")
-
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_fixture_post_finalizer(fixturedef, request):
-    logging.info(f"<<<<<<<<<<<<<< Tearing down fixture '{fixturedef}'")
 
 
 # Workaround for
@@ -318,9 +305,11 @@ async def crash_reporter(pytestconfig):
     """
     log_file = pytestconfig.getoption("--log-file")
     crash_report = get_crash_reporter(pytestconfig)
+    logging.info("--> seting up crash reporter")
     await crash_report.clear()
     yield crash_report
 
+    logging.info("<-- finishing crash reporter")
     # Write reports to file, reports can already be seen on the
     # log as part of process observation
     if log_file and Path(log_file).exists():
@@ -328,6 +317,7 @@ async def crash_reporter(pytestconfig):
         await crash_report.write_reports_to_disk(log_dir)
 
     await crash_report.clear()
+    logging.info("=== completed crash reporter")
 
 
 # -------------------------------
@@ -392,7 +382,7 @@ def emulator(request, pytestconfig) -> BaseEmulator:
     avd_config.update(avd_user_config)
 
     cfg = pytestconfig.getoption("avd_config")
-    logging.info("Using avd config:%s", cfg)
+    logging.info("--> Setting up emulator using avd config:%s", cfg)
     avd_param_config = json.loads(cfg)
     avd_config.update(avd_param_config)
     name = f"{avd_config['api']}_{avd_config['tag.id']}_{avd_config['cpu']}_{avd_config['device.name']}"
@@ -447,16 +437,31 @@ async def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     assert await emulator.wait_for_boot()
     logging.info("The emulator has finished booting")
 
-    assert await emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
-    assert await emulator.install_apk(
+    # Note install appears to fail at times, b/324920328
+    installed = await emulator.install_apk(
+        APP_DEBUG_APK.absolute(), "com.google.AnimateBox"
+    )
+    if not installed:
+        logging.warning(
+            "The animation app failed to install, this can cause unexpected failures"
+        )
+    installed = await emulator.install_apk(
         APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
     )
+    if not installed:
+        logging.warning(
+            "The mobly snippets failed to install, this can cause unexpected failures"
+        )
+
     await emulator.reset_state()
 
+    logging.info("--> yielding emulator")
     yield emulator
 
+    logging.info("<-- teardown emulator")
     # Stop the emulator.
     await emulator.stop()
+    logging.info("=== completed emulator")
 
 
 @pytest.fixture
@@ -472,6 +477,7 @@ async def emulator_log(avd: BaseEmulator):
         async for line in emulator_log:
            assert line == 'INFO    | Started GRPC server at 127.0.0.1:8554, security: Local, auth: none'
     """
+    logging.info("--> emulator_log")
     assert avd.is_alive()
 
     if avd.log:
@@ -494,21 +500,31 @@ async def launch_animiation_app(avd: BaseEmulator):
 
     It will wait for at most 20 seconds before continuing.
     """
+    logging.info("--> launch_animiation_app")
+    old_level = logging.getLogger("ppadb").level
+    logging.getLogger("ppadb").setLevel(logging.DEBUG)
     assert avd.is_alive()
     assert await avd.stop_activity("com.google.AnimateBox")
 
-    async with await avd.adb.logcat(tag="aemu", clear=True, timeout=20) as stream:
-        assert await avd.start_activity(
-            "com.google.AnimateBox/com.google.emu.MainActivity", params=None
-        )
-        async for line in stream:
-            if "--STARTED--" in line:
-                # Note: this cannot be relied on..
-                await avd.adb.shell("logcat -c")
-                return True
+    await avd.adb.clear_logcat()
+    assert await avd.start_activity(
+        "com.google.AnimateBox/com.google.emu.MainActivity", params=None
+    )
 
-    logging.warning("The animation app has not been launched.")
-    return False
+    async def wait_for_started():
+        async with await avd.adb.logcat(tag="aemu") as stream:
+            logging.info("Waiting for --STARTED-- in logcat stream.")
+            async for line in stream:
+                if "--STARTED--" in line:
+                    logging.getLogger("ppadb").setLevel(old_level)
+                    return True
+
+    try:
+        return await asyncio.wait_for(wait_for_started(), timeout=5)
+    except asyncio.TimeoutError:
+        logging.warning("No --STARTED-- tag seen.")
+        logging.getLogger("ppadb").setLevel(old_level)
+        return False
 
 
 @pytest.fixture
@@ -567,6 +583,7 @@ async def animation_app(avd: BaseEmulator):
         emulator_controller.getScreenshot(ImageFormat(format=ImageFormat.PNG, width=180, height=180))
 
     """
+    logging.info("--> animation_app")
     assert avd.is_alive()
 
     await avd.reset_state()
@@ -576,16 +593,20 @@ async def animation_app(avd: BaseEmulator):
         tries = tries - 1
 
     assert tries >= 0, "Unable to successfully launch the animation app."
+    logging.info("--> yielding animation_app")
     yield
 
+    logging.info("<-- teardown animation_app")
     await avd.stop_activity("com.google.AnimateBox")
     await avd.reset_state()
+    logging.info("=== finalized animation_app")
 
 
 @pytest.fixture
 @pytest.mark.async_timeout(200)
 async def coldboot_animation_app(avd: BaseEmulator):
     """Similar to animation_app, but do it with cold boot"""
+    logging.info("--> coldboot_animation_app")
     await avd.stop()
     assert await avd.launch(flags=["-no-snapshot-load"])
     assert await avd.wait_for_boot()
@@ -603,9 +624,11 @@ async def coldboot_animation_app(avd: BaseEmulator):
         tries = tries - 1
 
     assert tries >= 0, "Unable to successfully launch the animation app."
+    logging.info("--> yielding coldboot_animation_app")
     yield
-
+    logging.info("<-- teardown coldboot_animation_app")
     await avd.stop_activity("com.google.AnimateBox")
+    logging.info("== finalized coldboot_animation_app")
 
 
 @pytest.fixture
@@ -636,9 +659,14 @@ async def telnet(avd: BaseEmulator):
 
 @pytest.fixture
 async def at_home(avd: BaseEmulator):
+    logging.info("--> setup at_home")
     await avd.reset_state()
+    logging.info("--> yield at_home")
     yield
+    logging.info("<-- teardown at_home")
+
     await avd.reset_state()
+    logging.info("=== finalized at_home")
 
 
 @pytest.fixture

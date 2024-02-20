@@ -11,14 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 import platform
 from pathlib import Path
 
 from ppadb.client_async import ClientAsync as AdbClientAsync
+from ppadb import InstallError
 
 from emu.adb.async_device import AdbDeviceAsync, DeviceStream
+from emu.logging.logcat_parser import parse_logcat
 from emu.process.command import Command
+from emu.timing import eventually
 
 
 class AdbDeviceNotFound(Exception):
@@ -41,18 +45,19 @@ class Adb:
         adb (Path): Path to the adb executable.
     """
 
-    def __init__(self, avd_id: str, emulator: str, adb: Path) -> None:
+    def __init__(self, avd_id: str, name: str, adb: Path, emu=None) -> None:
         """Create an adb object that runs against the given emulator
 
         Args:
-            emulator (str): Name of the emulator, this will be passed in as the -s parameter when making
+            name (str): Name of the emulator, this will be passed in as the -s parameter when making
                             calls with the adb executable
             adb (Path): path to the adb executable.
         """
-        self.name = emulator
+        self.name = name
         self.avd_id = avd_id
         self.logger = logging.getLogger(f"{avd_id}-adb")
         self.client: AdbClientAsync = AdbClientAsync()
+        self.emulator = emu
 
         if not adb.exists() and platform.system() == "Windows":
             adb = adb.with_suffix(".exe")
@@ -93,15 +98,26 @@ class Adb:
                 "adb: %s(%s)", method.__name__, ", ".join([str(x) for x in params])
             )
             return await method(*params)
+        except InstallError as ierr:
+            logging.error(
+                "Encoutered an installation failure, propagating without retry (%s).",
+                ierr,
+            )
+            raise ierr
         except Exception as rerr:
             logging.error(
-                "Failed to invoke method due %s, retry after adb restart",
+                "Failed to invoke method due %s,  on (%s)",
                 rerr,
+                self.emulator,
                 exc_info=True,
             )
-            await self.stop_server()
-            await self.start_server()
-            return await method(*params)
+            if self.emulator.is_alive():
+                logging.error("Restarting adb and retrying.")
+                await self.stop_server()
+                await self.start_server()
+                return await method(*params)
+            else:
+                raise rerr
 
     async def stop_server(self) -> None:
         """Stops the adb server."""
@@ -181,19 +197,38 @@ class Adb:
         device = await self.device()
         return "device" in await self._with_adb_retry(device.get_state, [])
 
-    async def shell(self, cmd: str, timeout: int = 10) -> str:
+    async def shell(self, cmd: str, timeout: int = 10, retry: int = 1) -> str:
         """Runs the given shell command on the emulator
 
         Args:
             cmd (str): Command to execute
             timeout (int, optional): Timeout. Defaults to 10s.
+            retry (int, optional): Attempts that will be made to execute
+                     the shell command when encountering timeouts.
 
         Returns:
             str: Result of the shell command
         """
-        device = await self.device()
-        res = await device.shell(cmd, timeout=timeout)
-        return res
+        for attempts in range(retry):
+            try:
+                device = await self.device()
+                return await device.shell(cmd, timeout=timeout)
+            except (asyncio.TimeoutError, TimeoutError) as te:
+                if not self.emulator.is_alive():
+                    logging.error(
+                        "Emulator %s, appears to be dead.. giving up.", self.emulator
+                    )
+                    return ""
+
+                logging.error(
+                    "Timeout when calling shell command, attempt %s/%s (%s)",
+                    attempts,
+                    retry,
+                    self.emulator,
+                )
+                await self.restart()
+
+        return ""
 
     async def run(self, cmd: list[str], timeout: int = 10) -> (int, [str]):
         """Runs the given command on the emulator
@@ -236,6 +271,35 @@ class Adb:
         device = await self.device()
         return await device.shell_stream(cmd, timeout)
 
+    async def clear_logcat(self):
+        """
+        Clears the Android device's Logcat buffer and waits for a new log line to appear.
+
+        Returns:
+            True if the Logcat was successfully cleared, False if a timeout occurred (3s).
+        """
+        lines = await self.shell("logcat -d | tail")
+        old = parse_logcat(lines)
+        await self.shell("logcat -c")
+
+        async def logcat_cleared():
+            """
+            Checks if the logcat has been cleared by comparing timestamps.
+
+            Returns:
+                True if the logcat has a new entry with a later timestamp, False otherwise.
+            """
+
+            lines = await self.shell("logcat -d | tail")
+            now = parse_logcat(lines)
+            if len(now) == 0:
+                return False
+            if len(old) == 0:
+                return True
+            return now[0]["ts"] > old[0]["ts"]
+
+        return await eventually(logcat_cleared, timeout=3)
+
     async def logcat(
         self, clear: bool = False, tag: str = None, timeout=180
     ) -> DeviceStream:
@@ -258,8 +322,7 @@ class Adb:
             DeviceStream: An AsyncIterator with logcat lines
         """
         if clear:
-            # Note: This is really best effort!
-            await self.shell("logcat -c")
+            self.clear_logcat()
 
         cmd = "logcat"
         if tag:

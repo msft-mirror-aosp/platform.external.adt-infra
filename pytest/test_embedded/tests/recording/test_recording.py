@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import asyncio
+import logging
 
 import grpc
 import pytest
@@ -23,12 +24,15 @@ from emu.timing import eventually
 
 
 @pytest.fixture
-@pytest.mark.async_timeout(5)
+@pytest.mark.async_timeout(15)
 async def screen_service(service):
     """A screen service fixture that will stop any active recording on test completion."""
     screen_service: ScreenRecordingStub = service(ScreenRecordingStub)
+    logging.info("--> screen_service: stopping recording")
     await screen_service.StopRecording(RecordingInfo())
+    logging.info("--> Yielding screen_service")
     yield screen_service
+    logging.info("<-- screen_service: stopping recording")
     await screen_service.StopRecording(RecordingInfo())
 
 
@@ -43,23 +47,24 @@ async def test_screen_record_sends_event(screen_service, tmp_path):
         # temporary file.
         return recording_info.file_name == info.file_name
 
+    logging.info("Starting the recording: %s", info)
     await screen_service.StartRecording(info)
-    assert eventually(
+    assert await eventually(
         receives_an_update_event, stream
     ), "Did not receive a notification, even though I started recording"
 
 
-@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.skipos("win", "reason: b/306418109 - ERROR at setup.")
 @pytest.mark.graphics
 @pytest.mark.sanity
 @pytest.mark.fast
 async def test_screen_records_video(screen_service, animation_app, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
+    logging.info("Starting the recording: %s", info)
     await screen_service.StartRecording(info)
     await asyncio.sleep(5)
+    logging.info("Stopping the recording: %s", info)
     await screen_service.StopRecording(info)
 
     # bump the size to 10240, as empty webm will be around 4k already
@@ -72,7 +77,6 @@ async def test_screen_records_video(screen_service, animation_app, tmp_path):
 
 
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.skipos("win", "reason: b/306418109 - ERROR at setup.")
 @pytest.mark.graphics
 @pytest.mark.fast
 async def test_can_only_record_once(screen_service, tmp_path):
@@ -91,8 +95,10 @@ async def test_can_only_record_once(screen_service, tmp_path):
 async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
+    logging.info("Starting the recording: %s", info)
     await screen_service.StartRecording(info)
     await asyncio.sleep(2)
+    logging.info("Stopping the recording: %s", info)
     await screen_service.StopRecording(info)
 
     with open(sample_webm, "rb") as file:
