@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import asyncio
+import logging
 import mmap
 import os
 import time
@@ -163,6 +164,83 @@ async def test_screenshot_bytes_size(emulator_controller, fmt):
     )
     pixelSize = 4 if fmt == ImageFormat.RGBA8888 else 3
     assert image.format.width * image.format.height * pixelSize == len(image.image)
+
+
+@pytest.fixture
+async def power_down(adb_shell):
+    """
+    Sends a power-down command to the connected Android device using ADB. The device is powered
+    down by sending the KEYCODE_SLEEP key event (https://developer.android.com/reference/android/view/KeyEvent#KEYCODE_SLEEP).
+
+    Args:
+        adb (callable): A function or method that executes ADB commands.
+
+    Raises:
+        AssertionError: If the ADB command output contains the error message "adb: error".
+
+    Returns:
+        None
+    """
+    assert "adb: error" not in await adb_shell("input keyevent KEYCODE_SLEEP")
+
+
+def calculate_frame_rate(timestamp1, timestamp2):
+    """
+    Calculates the frame rate given two timestamps in microseconds.
+
+    Args:
+      timestamp1: The first timestamp in microseconds.
+      timestamp2: The second timestamp in microseconds.
+
+    Returns:
+      The frame rate in frames per second (FPS).
+    """
+
+    if timestamp2 <= timestamp1:
+        raise ValueError("Second timestamp must be greater than the first timestamp.")
+
+    time_difference_seconds = (timestamp2 - timestamp1) / 1000000
+    framerate = 1 / time_difference_seconds
+
+    return framerate
+
+
+@pytest.mark.graphics
+@pytest.mark.embedded
+async def test_stream_screenshot_has_min_fps(
+    at_home,
+    power_down,
+    emulator_controller,
+):
+    """
+    Verifies that the screenshot stream maintains a minimum frame rate (b/312136269).
+
+    We explicity turn down the device to make sure we have a "black" screen with 0 changes.
+    """
+    MIN_FPS = 1.5
+    MAX_FRAMES_TO_PROCESS = 10
+
+    stream = emulator_controller.streamScreenshot(
+        ImageFormat(
+            width=18,
+            height=18,
+            format=ImageFormat.RGBA8888,
+        ),
+    )
+
+    # Track initial timestamp for comparison
+    previous_timestamp = 0
+
+    async for img in stream:
+        logging.info("Received frame: %s", img.seq)
+        if previous_timestamp != 0:
+            assert (
+                calculate_frame_rate(previous_timestamp, img.timestampUs) > MIN_FPS
+            ), "Frame rate dropped below minimum FPS"
+
+        if img.seq > 10:
+            break
+        previous_timestamp = img.timestampUs
 
 
 @pytest.mark.graphics
