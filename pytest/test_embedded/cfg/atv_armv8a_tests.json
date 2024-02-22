@@ -1,0 +1,52 @@
+{
+    "sample_atv_34_test_suite": {
+        "description": "A simple example of an Android TV avd configuration that runs the clipboard test.",
+        "launch_flags": [
+            "-no-snapshot"
+        ],
+        "pytest_flags": [
+            "-k test_clipboard_data"
+        ],
+        "avd_config": {
+            "api": "34",
+            "abi": "arm64-v8a",
+            "AvdId": "AndroidTV34",
+            "PlayStore.enabled": "false",
+            "abi.type": "arm64-v8a",
+            "avd.ini.displayname": "AndroidTV34",
+            "avd.ini.encoding": "UTF-8",
+            "disk.dataPartition.size": "6442450944",
+            "hw.accelerometer": "no",
+            "hw.arc": "false",
+            "hw.audioInput": "yes",
+            "hw.battery": "no",
+            "hw.camera.back": "None",
+            "hw.camera.front": "emulated",
+            "hw.cpu.arch": "arm64",
+            "hw.cpu.ncore": "4",
+            "hw.dPad": "yes",
+            "hw.gps": "no",
+            "hw.gpu.enabled": "yes",
+            "hw.gpu.mode": "auto",
+            "hw.initialOrientation": "Landscape",
+            "hw.keyboard": "yes",
+            "hw.keyboard.lid": "yes",
+            "hw.lcd.density": "640",
+            "hw.lcd.height": "2160",
+            "hw.lcd.width": "3840",
+            "hw.mainKeys": "yes",
+            "hw.ramSize": "2048",
+            "hw.sdCard": "no",
+            "hw.sensors.orientation": "no",
+            "hw.sensors.proximity": "no",
+            "runtime.network.latency": "none",
+            "runtime.network.speed": "full",
+            "showDeviceFrame": "yes",
+            "skin.dynamic": "yes",
+            "tag.display": "Android TV",
+            "tag.id": "android-tv",
+            "vm.heapSize": "156"
+        },
+        "status": "enabled"
+    }
+}
