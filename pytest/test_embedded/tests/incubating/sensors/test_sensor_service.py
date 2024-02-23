@@ -73,6 +73,7 @@ async def set_and_get_sensor(sensor_service, sensor_value):
 
 
 @pytest.mark.e2e
+@pytest.mark.hardware
 @pytest.mark.fast
 @pytest.mark.parametrize(
     "test_name, sensor_value, x, y, z",

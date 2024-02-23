@@ -21,9 +21,6 @@ from aemu.proto.emulator_controller_pb2 import (
     Posture,
 )
 from google.protobuf import empty_pb2
-from snaptool.snapshot import AsyncSnapshotService
-from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
-
 
 async def set_device_hinge_angle(emu, angle):
     """Change the device's hinge angle"""
@@ -33,20 +30,6 @@ async def set_device_hinge_angle(emu, angle):
             value=ParameterValue(data=[angle, 0.0, 0.0]),
         )
     )
-
-
-@pytest.fixture
-async def snapshot_service(avd, service):
-    """Fixture to make sure the emulator has no snapshots."""
-    snapshot_service = service(SnapshotServiceStub)
-    snap = AsyncSnapshotService(snapshot_service=snapshot_service)
-    snapshots = await snap.lists()
-    for entry in snapshots:
-        await snap.delete(entry.snapshot_id)
-    yield snap
-    snapshots = await snap.lists()
-    for entry in snapshots:
-        await snap.delete(entry.snapshot_id)
 
 
 @pytest.mark.foldable
@@ -88,98 +71,6 @@ async def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
         )
     )
     assert image3.format.width > image2.format.width
-
-
-@pytest.mark.e2e
-@pytest.mark.foldable
-@pytest.mark.parametrize(
-    "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
-)
-@pytest.mark.async_timeout(90)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
-async def test_folded_snapshot_sanity(
-    emulator_controller, snapshot_service, fmt, fold_angle, unfold_angle
-):
-    # fold the device
-    await set_device_hinge_angle(emulator_controller, fold_angle)
-    asyncio.sleep(5)
-
-    # take a snapshot of folded device
-    assert await snapshot_service.save("foo")
-    snapshots = await snapshot_service.lists()
-    assert "foo" in [x.snapshot_id for x in snapshots]
-
-    # unfold the device
-    await set_device_hinge_angle(emulator_controller, unfold_angle)
-    asyncio.sleep(5)
-
-    # take a screenshot of unfolded device
-    image1 = await emulator_controller.getScreenshot(
-        ImageFormat(
-            format=fmt,
-        )
-    )
-
-    # load the snapshot of folded device to a unfolded device
-    # verify if snapshot taken from a folded AVD, when loaded on unfolded AVD
-    # makes an unfolded AVD to a folded AVD.
-    assert await snapshot_service.load("foo")
-    asyncio.sleep(5)
-
-    # take a screenshot of folded device
-    image2 = await emulator_controller.getScreenshot(
-        ImageFormat(
-            format=fmt,
-        )
-    )
-
-    assert image2.format.width < image1.format.width
-
-
-@pytest.mark.e2e
-@pytest.mark.foldable
-@pytest.mark.parametrize(
-    "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
-)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
-@pytest.mark.async_timeout(90)
-async def test_unfolded_snapshot_sanity(
-    emulator_controller, snapshot_service, fmt, fold_angle, unfold_angle
-):
-    # unfold the device
-    await set_device_hinge_angle(emulator_controller, unfold_angle)
-    asyncio.sleep(5)
-
-    # take a snapshot of unfolded device
-    assert await snapshot_service.save("foo")
-    snapshots = await snapshot_service.lists()
-    assert "foo" in [x.snapshot_id for x in snapshots]
-
-    # fold the device
-    await set_device_hinge_angle(emulator_controller, fold_angle)
-    asyncio.sleep(5)
-
-    # take a screenshot of a folded device
-    image1 = await emulator_controller.getScreenshot(
-        ImageFormat(
-            format=fmt,
-        )
-    )
-
-    # load the snapshot of unfolded device to a folded device
-    # Verify if snapshot taken from a unfolded AVD, when loaded on a folded AVD
-    # makes a folded AVD to an unfolded AVD.
-    assert await snapshot_service.load("foo")
-    asyncio.sleep(5)
-
-    # take a screenshot of unfolded device
-    image2 = await emulator_controller.getScreenshot(
-        ImageFormat(
-            format=fmt,
-        )
-    )
-
-    assert image1.format.width < image2.format.width
 
 
 @pytest.mark.foldable

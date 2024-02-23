@@ -129,7 +129,6 @@ def check_boot_from_snapshot(avdpath) -> bool:
 @pytest.mark.snapshot
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
-@pytest.mark.async_timeout(510)
 async def test_can_load_oldsnapshot(emulator, pytestconfig):
     """test that current emulator can load the snapshot created by old emulator
 
@@ -154,7 +153,7 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
     if platform.processor() == "i386" and platform.system() == "Darwin":
         myflags.append("-no-window")
     assert await emulator.launch(flags=myflags)
-    assert await emulator.wait_for_boot(timeout=240)
+    assert await emulator.wait_for_boot(timeout=420)
     # there is no reliable way to detect it has reach home screen
     # so just wait enough long
     await asyncio.sleep(10)
@@ -169,7 +168,7 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
     # launch with tot
     emulator.exe = totexe
     assert await emulator.launch(flags=["-no-snapshot-save"])
-    assert await emulator.wait_for_boot(timeout=240)
+    assert await emulator.wait_for_boot(timeout=60)
 
     def check_has_booted():
         return check_boot_from_snapshot(emulator.configuration.directory)

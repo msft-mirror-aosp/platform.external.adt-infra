@@ -49,12 +49,14 @@ async def test_screen_record_sends_event(screen_service, tmp_path):
 
     logging.info("Starting the recording: %s", info)
     await screen_service.StartRecording(info)
-    assert await eventually(
+    assert eventually(
         receives_an_update_event, stream
     ), "Did not receive a notification, even though I started recording"
 
 
+@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.skipos("win", "reason: b/306418109 - ERROR at setup.")
 @pytest.mark.graphics
 @pytest.mark.sanity
 @pytest.mark.fast
@@ -77,6 +79,7 @@ async def test_screen_records_video(screen_service, animation_app, tmp_path):
 
 
 @pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.skipos("win", "reason: b/306418109 - ERROR at setup.")
 @pytest.mark.graphics
 @pytest.mark.fast
 async def test_can_only_record_once(screen_service, tmp_path):

@@ -55,18 +55,15 @@ class EmulatorClient:
             await self.send(msg)
 
     async def send(self, command) -> (bool, [str]):
-        self.logger.info("-S-> %s", command)
-        self._writer.write(f"{command}\n".encode(encoding="utf-8"))
-
-        # Make sure we do not have any lingering bytes in our pipeline.
-        await self._writer.drain()
+        self.logger.info("--> %s", command)
+        self._writer.write(f"{command}\n".encode())
         return await self.read_until_ok_ko()
 
     async def read_until_ok_ko(self) -> (bool, [str]):
         lines = []
         async for line in self._reader:  # Async iteration over lines
             line = line.decode().strip()
-            self.logger.info("<-R- %s", line)
+            self.logger.info("<-- %s", line)
             lines.append(line)
             if line == "OK":
                 return lines

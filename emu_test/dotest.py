@@ -491,5 +491,5 @@ if __name__ == '__main__':
         logging.info("adb server killed")
     except CalledProcessError:
         logging.exception("Error shutting down adb")
-    logging.info("Test complete with exit code {int(not emuResult.wasSuccessful())}")
+    logging.info("Test complete")
     sys.exit(not emuResult.wasSuccessful())

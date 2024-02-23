@@ -50,7 +50,7 @@ class UnsupportedAbiOrCpu(Exception):
 
 class SystemImages:
     IMAGE = re.compile(
-        r".*android-(\d+)[\/\\](default|google_apis|android-desktop|android-wear|google_apis_playstore|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
+        r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
     )
 
     def __init__(self, sdk_root: Path = Path(os.environ.get("ANDROID_SDK_ROOT", "."))):
@@ -201,7 +201,7 @@ class SystemImages:
         if donwload.returncode != 0:
             logging.error("sdkmanager: %s", donwload.stderr.decode("UTF-8"))
             raise SystemImageDownloadFailed(
-                f"Failed to obtain image system-images;android-{api};{abi};{tag}"
+                f"Failed to obtain image for {api}-{abi}-{tag}"
             )
         return self.find(api, abi, tag)
 
