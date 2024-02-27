@@ -95,6 +95,23 @@ async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     assert await snapshot_service.load("foo")
 
 
+@pytest.mark.e2e
+@pytest.mark.snapshot
+@pytest.mark.sanity
+@pytest.mark.async_timeout(300)
+async def test_app_launch_after_snapshot_load(avd, snapshot_service):
+    assert await snapshot_service.save("foo")
+    snapshots = await snapshot_service.lists()
+    assert "foo" in [x.snapshot_id for x in snapshots]
+    assert await snapshot_service.load("foo")
+    assert await avd.wait_for_boot(timeout=120)
+    assert await avd.stop_activity("com.google.AnimateBox")
+    asyncio.sleep(5)
+    assert await avd.start_activity(
+        "com.google.AnimateBox/com.google.emu.MainActivity", params=None
+    )
+
+
 @pytest.mark.perf
 @pytest.mark.benchmark(group="snapshot")
 async def test_snapshot_list_perf(benchmark, snapshot_service, coldboot_animation_app):
