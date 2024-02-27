@@ -78,8 +78,9 @@ async def set_and_get_sensor(emu_controller, sensor_value):
         ("Gyroscope_Uncalibrated", SensorValue.GYROSCOPE_UNCALIBRATED, 2, 2, 2),
         ("Acceleration", SensorValue.ACCELERATION, 10, 0, 0),
         ("Acceleration_Uncalibrated", SensorValue.ACCELERATION_UNCALIBRATED, 25, 0, 0),
-        ("Heart_Rate", SensorValue.HEART_RATE, 60, 0, 10),
-        ("RGBC_Light", SensorValue.RGBC_LIGHT, 255, 0, 0),
+        # BUG: b/326662659 HEART_RATE and RGBC_LIGHT sensor values not available for phone AVD
+        # ("Heart_Rate", SensorValue.HEART_RATE, 60, 0, 10),
+        # ("RGBC_Light", SensorValue.RGBC_LIGHT, 255, 0, 0),
     ],
 )
 async def test_sensor_value(emulator_controller, test_name, sensor_value, x, y, z):
