@@ -188,7 +188,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
             if timeout_win.args
             else timeout_win.kwargs.get("timeout")
         )
-        func_only = timeout_win.kwargs.get("func_only", True)
         # Remove existing timeout marker
         timeout = [
             m
@@ -198,9 +197,7 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
         if timeout:
             item.own_markers.pop(timeout[0])
 
-        item.add_marker(
-            pytest.mark.async_timeout(timeout=timeout_win_sec, func_only=func_only)
-        )
+        item.add_marker(pytest.mark.async_timeout([timeout_win_sec]))
 
     logging.info("=============== Setup: %s ===============", item.name)
 
@@ -440,10 +437,22 @@ async def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     assert await emulator.wait_for_boot()
     logging.info("The emulator has finished booting")
 
-    assert await emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
-    assert await emulator.install_apk(
+    # Note install appears to fail at times, b/324920328
+    installed = await emulator.install_apk(
+        APP_DEBUG_APK.absolute(), "com.google.AnimateBox"
+    )
+    if not installed:
+        logging.warning(
+            "The animation app failed to install, this can cause unexpected failures"
+        )
+    installed = await emulator.install_apk(
         APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
     )
+    if not installed:
+        logging.warning(
+            "The mobly snippets failed to install, this can cause unexpected failures"
+        )
+
     await emulator.reset_state()
 
     logging.info("--> yielding emulator")

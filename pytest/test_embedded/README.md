@@ -66,30 +66,32 @@ Where xxx descibes a test as follows:
 
 ```json
  "landscape_test_suite": {
-       // This contains a human readable description of what this suite should do
+        // This contains a human readable description of what this suite should do
         "description": "Set of tests that verify that graphic related tests work well in a `landscape` emulator",
-        // Set of flags to pass to the emulator when it gets launched.
-        // If this case if the tests require an emulator to be
-        // launched it will add the `-qt-hide-window` flag.
+        //  Set of flags to pass to the emulator when it gets launched.
+        //  If this case if the tests require an emulator to be
+        //  launched it will add the `-qt-hide-window` flag.
         "launch_flags": ["-qt-window"],
-        // Set of flags to pass to the pytest launcher. These
-        // parameters are directly appended to the the pytest
-        // invocation.
-        // For example in this case we add `-m graphics`
-        // parameter.
+        //  Set of flags to pass to the pytest launcher. These
+        //  parameters are directly appended to the the pytest
+        //  invocation.
+        //  For example in this case we add `-m graphics`
+        //  parameter.
         "pytest_flags": [
             "-m graphics"
         ],
-        // The avd configuration that will be used when running these tests.
-        // These parameters are appended to the config.ini file of the
-        // avd that will be created. This allows you to define your own custom
-        // avd. The example below results in the creation of configuration
-        // that uses api 33.
+        //  The avd configuration that will be used when running these tests.
+        //  These parameters are appended to the config.ini file of the
+        //  avd that will be created. This allows you to define your own custom
+        //  avd. The example below results in the creation of configuration
+        //  that uses api 33.
         //
-        // Note that "abi.type" will be auto derived at the moment,
+        //  These properties will be appended to a default config.ini file overriding
+        //  any previously set values.
         "avd_config": {
-            "api": "33",
-            "tag.id": "google_apis",
+            "api": "33",   // <<-- Must be present, indicates you desired api level
+            "abi": "x86",  // <<-- Optional, can be auto derived
+            "tag.id": "google_apis",  // <<-- Must be presented, indicates system image type
             "hw.initialOrientation": "landscape",
             "skin.name" : "1280x720"
         }
@@ -101,6 +103,20 @@ You can select the suite to test by passing in the `--test_suite` flag to the ru
 ```sh
 run_tests.sh -e ~/src/emu-master-dev/external/qemu/objs/emulator --test_suite landscape_test_suite
 ```
+
+You can find a set of configuration files in the [cfg](cfg/) directory.
+
+### Providing your own avd configuration
+
+The `avd_config` object in the test configuration JSON file allows you to specify your own custom AVD configuration. The following properties are mandatory:
+
+* `api`: This determines the API level that should be used when obtaining the system image.
+* `tag.id`: A tag.id indicates the type of system image, which currently can be one of the following: `default|google_apis|android-desktop|android-wear|google_apis_playstore|android-tv`. You can run `$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list` to get detailed information on available system images.
+* `abi`: This contains the guest CPU that will be used. Make sure that `abi` matches the CPU you are currently running under. You cannot launch an ABI of `x86` on a Mac M1, for example.
+  * On X86 (Intel/AMD), `abi` can be `x86` or `x86_64`.
+  * On Mac M1 (and Linux ARM), `abi` can be `arm64-v8a` or `armeabi-v7a`.
+
+Adding key value pairs to `avd_config` will result in overriding the default values that are provided in the [template](/src/emu//templates//Pixel2.avd/config.ini).
 
 ## Development
 

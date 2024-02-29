@@ -13,7 +13,9 @@
 # limitations under the License.
 import asyncio
 import logging
+import re
 import time
+from collections import namedtuple
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
@@ -27,6 +29,8 @@ from google.protobuf import empty_pb2
 
 from emu.timing import eventually, wait_until
 
+# Define a namedtuple class for the device specifications
+DeviceSpec = namedtuple("DeviceSpec", ["formfactor", "mode", "width", "height", "dpi"])
 _EMPTY_ = empty_pb2.Empty()
 
 
@@ -38,6 +42,26 @@ async def set_device_hinge_angle(emu, angle):
             value=ParameterValue(data=[angle, 0.0, 0.0]),
         )
     )
+
+
+@pytest.fixture
+async def supported_resizable_resolutions(avd):
+    api_level = await avd.api_level()
+    if api_level < 34 or "hw.resizable.configs" not in avd.hardware:
+        return []
+
+    resolutions = []
+    resize = re.compile(r"(phone|foldable|tablet|desktop)-(\d+)-(\d+)-(\d+)-(\d+)")
+    cfg = avd.hardware["hw.resizable.configs"]
+
+    for match in resize.findall(cfg):
+        resolutions.append(
+            DeviceSpec(
+                match[0], int(match[1]), int(match[2]), int(match[3]), int(match[4])
+            )
+        )
+    logging.info("Supported resolutions: %s", resolutions)
+    return resolutions
 
 
 async def set_display_mode(emulator_controller, mode, timeout=5):
@@ -64,7 +88,7 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
     "width, height, mode",
     [
         (1080, 2340, DisplayModeValue.PHONE),
-        (1768, 2208, DisplayModeValue.FOLDABLE),
+        (2208, 1840, DisplayModeValue.FOLDABLE),
         (1920, 1200, DisplayModeValue.TABLET),
         (1920, 1080, DisplayModeValue.DESKTOP),
     ],
@@ -74,13 +98,29 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
 @pytest.mark.sanity
 # @pytest.mark.skipos("all", "reason: b/309463427")
 async def test_new_resizable_changes_resolution(
-    avd, animation_app, emulator_controller, width, height, mode, get_screenshot
+    supported_resizable_resolutions,
+    avd,
+    animation_app,
+    emulator_controller,
+    width,
+    height,
+    mode,
+    get_screenshot,
 ):
     api_level = await avd.api_level()
     if api_level < 34:
         pytest.skip(reason="Requires api level >=34!")
 
-    await emulator_controller.setDisplayMode(DisplayMode(value=mode))
+    if not any(
+        [
+            (d.width == width and d.height == height)
+            for d in supported_resizable_resolutions
+        ]
+    ):
+
+        pytest.skip(
+            reason=f"Display mode {width}x{height} not available in {supported_resizable_resolutions}"
+        )
 
     async def display_is_set_to_mode():
         updated = await emulator_controller.getDisplayMode(_EMPTY_)
@@ -89,6 +129,7 @@ async def test_new_resizable_changes_resolution(
 
     # Eventually the currentMode is equal to the one we have set.
     # If this is broken the test will timeout
+    await emulator_controller.setDisplayMode(DisplayMode(value=mode))
     assert await wait_until(display_is_set_to_mode, timeout=5)
 
     async def screenshot_is_sized_properly():
@@ -127,24 +168,24 @@ async def test_new_resizable_changes_resolution(
     ],
 )
 async def test_new_resizable_observable_from_streaming(
-    avd, at_home, animation_app, emulator_controller, stream_screenshot, fmt, bpp
+    avd,
+    supported_resizable_resolutions,
+    at_home,
+    animation_app,
+    emulator_controller,
+    stream_screenshot,
+    fmt,
+    bpp,
 ):
     api_level = await avd.api_level()
     if api_level < 34:
         pytest.skip(reason="Requires api level >=34!")
 
-    available_dimensions = iter(
-        [
-            (1080, 2340, DisplayModeValue.PHONE),
-            (2208, 1840, DisplayModeValue.FOLDABLE),
-            (1920, 1200, DisplayModeValue.TABLET),
-            (1920, 1080, DisplayModeValue.DESKTOP),
-        ]
-    )
+    available_dimensions = iter(supported_resizable_resolutions)
 
     # Start with moving to the intial dimension
-    w, h, mode = next(available_dimensions)
-    assert await set_display_mode(emulator_controller, mode) == mode
+    spec = next(available_dimensions)
+    assert await set_display_mode(emulator_controller, spec.mode) == spec.mode
 
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
@@ -153,13 +194,15 @@ async def test_new_resizable_observable_from_streaming(
     with pytest.raises(StopIteration):
         stream = stream_screenshot(ImageFormat(format=fmt))
         async for image in stream:
-            if image.format.width == w and image.format.height == h:
+            if image.format.width == spec.width and image.format.height == spec.height:
                 pixel_count = len(image.image)
-                assert pixel_count == w * h * bpp
+                assert pixel_count == spec.width * spec.height * bpp
 
                 # Transition to the next.
-                w, h, mode = next(available_dimensions)
-                assert await set_display_mode(emulator_controller, mode) == mode
+                spec = next(available_dimensions)
+                assert (
+                    await set_display_mode(emulator_controller, spec.mode) == spec.mode
+                )
 
 
 @pytest.mark.newresizable
@@ -171,20 +214,19 @@ async def test_new_resizable_observable_from_streaming(
     ],
 )
 async def test_new_resizable_folding_observable_from_streaming(
-    avd, animation_app, emulator_controller, stream_screenshot, fmt, bpp
+    avd,
+    supported_resizable_resolutions,
+    animation_app,
+    emulator_controller,
+    stream_screenshot,
+    fmt,
+    bpp,
 ):
     api_level = await avd.api_level()
     if api_level < 34:
         pytest.skip(reason="Requires api level >=34!")
 
-    available_dimensions = iter(
-        [
-            (1080, 2340, DisplayModeValue.PHONE),
-            (2208, 1840, DisplayModeValue.FOLDABLE),
-            (1920, 1200, DisplayModeValue.TABLET),
-            (1920, 1080, DisplayModeValue.DESKTOP),
-        ]
-    )
+    available_dimensions = iter(supported_resizable_resolutions)
 
     # start with unfold
     await set_device_hinge_angle(emulator_controller, 180)
@@ -193,14 +235,14 @@ async def test_new_resizable_folding_observable_from_streaming(
     foldedw = 1080
     foldedh = 2092
     # Start with moving to the intial dimension
-    w, h, mode = next(available_dimensions)
-    updated = await set_display_mode(emulator_controller, mode)
-    assert updated == mode
+    spec = next(available_dimensions)
+    updated = await set_display_mode(emulator_controller, spec.mode)
+    assert updated == spec.mode
     await asyncio.sleep(1)
 
     # Transition to the next.
-    w, h, mode = next(available_dimensions)
-    updated = await set_display_mode(emulator_controller, mode)
+    spec = next(available_dimensions)
+    updated = await set_display_mode(emulator_controller, spec.mode)
     assert updated == DisplayModeValue.FOLDABLE
     await asyncio.sleep(1)
 
