@@ -100,9 +100,16 @@ async def set_and_get_sensor(sensor_service, sensor_value):
             2,
         ),
         ("Acceleration", SensorValue.SENSOR_SENSOR_TYPE_ACCELERATION, 10, 0, 0),
-        ("Acceleration_Uncalibrated", SensorValue.SENSOR_SENSOR_TYPE_ACCELERATION_UNCALIBRATED, 25, 0, 0),
-        ("Heart_Rate", SensorValue.SENSOR_SENSOR_TYPE_HEART_RATE, 60, 0, 10),
-        ("RGBC_Light", SensorValue.SENSOR_SENSOR_TYPE_RGBC_LIGHT, 255, 0, 0),
+        (
+            "Acceleration_Uncalibrated",
+            SensorValue.SENSOR_SENSOR_TYPE_ACCELERATION_UNCALIBRATED,
+            25,
+            0,
+            0,
+        ),
+        # BUG: b/326662659 HEART_RATE and RGBC_LIGHT sensor values not available for phone AVD
+        # ("Heart_Rate", SensorValue.SENSOR_SENSOR_TYPE_HEART_RATE, 60, 0, 10), BUG: b/326662659 HEART_RATE not available for phone AVD
+        # ("RGBC_Light", SensorValue.SENSOR_SENSOR_TYPE_RGBC_LIGHT, 255, 0, 0),
     ],
 )
 async def test_sensor_value(service, test_name, sensor_value, x, y, z):
