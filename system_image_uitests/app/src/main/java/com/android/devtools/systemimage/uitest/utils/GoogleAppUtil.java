@@ -173,6 +173,9 @@ public class GoogleAppUtil {
         editInput.setText(getUserEmail());
         clickNext(device);
 
+        assertTrue("Forgot email link not dismissed.",
+                forgotEmailLink.waitUntilGone(90000L));
+
         UiObject forgotPasswordLink;
 
         if (api == 27 || api == 28) {
@@ -198,6 +201,9 @@ public class GoogleAppUtil {
         Log.i("Login", "enter password");
         editInput.setText(getUserPassword());
         clickNext(device);
+
+        assertTrue("Forgot password link not dismissed.",
+                forgotPasswordLink.waitUntilGone(90000L));
 
         boolean isSignedIn =
                 new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
