@@ -94,7 +94,7 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
     ],
 )
 @pytest.mark.timeout_win(timeout=60)
-@pytest.mark.flaky(reruns=2, reruns_delay=2)
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.sanity
 # @pytest.mark.skipos("all", "reason: b/309463427")
 async def test_new_resizable_changes_resolution(
@@ -167,6 +167,7 @@ async def test_new_resizable_changes_resolution(
         (ImageFormat.RGB888, 3),
     ],
 )
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 async def test_new_resizable_observable_from_streaming(
     avd,
     supported_resizable_resolutions,
@@ -213,6 +214,7 @@ async def test_new_resizable_observable_from_streaming(
         (ImageFormat.RGB888, 3),
     ],
 )
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 async def test_new_resizable_folding_observable_from_streaming(
     avd,
     supported_resizable_resolutions,

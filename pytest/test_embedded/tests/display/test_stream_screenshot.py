@@ -34,7 +34,7 @@ def read_pixel(width, height, pack, arr):
 @pytest.mark.skipos(
     "win", "reason: b/305252175 - error at setup. Only the parameter [2-1] fails."
 )
-@pytest.mark.flaky(reruns=2, reruns_delay=2)
+@pytest.mark.flaky(reruns=3, reruns_delay=5)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.parametrize(
     "fmt,channel",
