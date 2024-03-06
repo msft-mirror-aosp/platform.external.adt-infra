@@ -29,6 +29,7 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -65,6 +66,7 @@ public class AddGoogleAccountTest {
      */
     @Test
     @TestInfo(id = "14581151")
+    @Ignore("Covered by FAT")
     public void testAddAccountUsingContactsApp() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice mDevice = testFramework.getDevice();
