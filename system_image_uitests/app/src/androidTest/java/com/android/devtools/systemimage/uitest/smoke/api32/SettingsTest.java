@@ -435,9 +435,9 @@ public class SettingsTest {
      *   Example time on screen shows 13:00.
      *   </pre>
      */
-    @Ignore("24 hour format option has been removed from Settings.")
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
+    @Ignore("24 hour format option has been removed from Settings.")
     public void enableTwentyFourHourFormat() throws Exception {
         try {
             AppLauncher.launchPath(
@@ -594,9 +594,9 @@ public class SettingsTest {
      *   settings for Maps are cleared).
      *   </pre>
      */
-    @Ignore("Test is canceled on crash during app permission reset.")
     @Test
     @TestInfo(id = "d49facce-9be7-47e0-afde-2052d3c57a25")
+    @Ignore("Test is canceled on crash during app permission reset.")
     public void modifyAndResetAppPermissions() throws Exception {
         String appName = "Maps";
         String contactsText = "Contacts";
@@ -828,8 +828,8 @@ public class SettingsTest {
      *   3. Test file is deleted from the Download folder.
      *   </pre>
      */
-    @Ignore("Cannot access external storage without a runtime permissions implementation")
     @Test
+    @Ignore("Cannot access external storage without a runtime permissions implementation")
     public void filesDeleted() throws Exception {
         String[] testFileNames = {"test_text_01.txt", "test_text_02.txt", "test_text_03.txt"};
 
