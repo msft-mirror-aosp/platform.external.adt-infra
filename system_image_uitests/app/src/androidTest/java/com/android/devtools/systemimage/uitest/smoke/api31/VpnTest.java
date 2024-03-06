@@ -68,7 +68,6 @@ public class VpnTest {
      * <p/>
      */
     @Test
-    @TestInfo(id = "14578822")
     public void testVpn() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
