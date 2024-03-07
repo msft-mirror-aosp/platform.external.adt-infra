@@ -86,6 +86,7 @@ public class Res {
     public static final String SETTINGS_ACTION_BAR_RES = "com.android.settings:id/action_bar";
     public static final String SETTINGS_ACTION_BUTTON_RES = "com.android.settings:id/action_button";
     public static final String SETTINGS_COLLAPSING_TOOLBAR_RES = "com.android.settings:id/collapsing_toolbar";
+    public static final String GOOGLE_ACCOUNT_BUTTON_RES = "com.google.android.gms:id/clp_button";
     public static final String GOOGLE_ACCOUNT_POSITIVE_BUTTON_RES = "com.google.android.gms:id/button_positive";
     public static final String CAMERA_FRAME_RES = "com.android.camera2:id/camera_app_root";
     public static final String CAMERA_SHUTTER_BUTTON_RES = "com.android.camera2:id/shutter_button";
@@ -131,13 +132,12 @@ public class Res {
             "com.android.chrome:id/next_button";
     public static final String GOOGLE_SERVICES_ACCEPT_BUTTON_RES =
             "com.google.android.gms:id/next_button";
-
     public static final String GOOGLE_SERVICES_SKIP_BUTTON_RES =
             "com.google.android.gms:id/skip_button";
-
     public static final String GOOGLE_SERVICES_ACCOUNT_BUTTON_RES =
             "com.google.android.gms:id/account";
-
+    public static final String GOOGLE_SERVICES_DESCRIPTION_BUTTON_RES =
+            "com.google.android.gms:id/description";
     public static final String GOOGLE_SERVICES_LABEL_RES =
             "com.google.android.gms:id/suc_layout_title";
     public static final String GOOGLE_SERVICES_ACCOUNTS_CHIP_RES =
