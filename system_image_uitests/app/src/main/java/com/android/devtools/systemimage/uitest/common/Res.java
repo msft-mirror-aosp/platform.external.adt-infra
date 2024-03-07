@@ -136,8 +136,6 @@ public class Res {
             "com.google.android.gms:id/skip_button";
     public static final String GOOGLE_SERVICES_ACCOUNT_BUTTON_RES =
             "com.google.android.gms:id/account";
-    public static final String GOOGLE_SERVICES_DESCRIPTION_BUTTON_RES =
-            "com.google.android.gms:id/description";
     public static final String GOOGLE_SERVICES_LABEL_RES =
             "com.google.android.gms:id/suc_layout_title";
     public static final String GOOGLE_SERVICES_ACCOUNTS_CHIP_RES =
