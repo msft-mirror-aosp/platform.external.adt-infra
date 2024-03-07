@@ -40,13 +40,13 @@ import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -70,11 +70,6 @@ public class SettingsTest {
     // tests run on.
     @Rule
     public Timeout globalTimeout = Timeout.seconds(720);
-
-    @Before
-    public void activateDeviceAdmin() throws Exception {
-        ApiDemosInstaller.installApp("Security", "Device admin apps", false);
-    }
 
     /**
      * Verifies Location page opens on Google API images.
@@ -227,24 +222,31 @@ public class SettingsTest {
                 textMatches("(?i)accept\\s&\\scontinue"));
         if (acceptAndContinueButton.exists())
             acceptAndContinueButton.clickAndWaitForNewWindow();
+
         final UiObject skipButton;
         skipButton = device.findObject(new UiSelector().textMatches("(?i)skip"));
         if (skipButton.exists())
             skipButton.clickAndWaitForNewWindow();
+
         final UiObject gotItButton;
         gotItButton = device.findObject(new UiSelector().textMatches("(?i)got\\sit"));
         if (gotItButton.exists())
             gotItButton.clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION))
-                .clickAndWaitForNewWindow();
-        assertTrue("Did not prompt for lack of Maps permission.",
-                new Wait().until(() -> device.findObject(new UiSelector()
-                        .resourceId(Res.ANDROID_PERMISSIONS_MESSAGE)).exists())
-        );
+
+        final UiObject myLocation;
+        myLocation = device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION));
+        if (new Wait().until(myLocation::exists))
+            myLocation.clickAndWaitForNewWindow()
+            
+        final UiObject allowForegroundButton = device.findObject(
+                new UiSelector().resourceId(Res.PERMISSION_ALLOW_FOREGROUND_BUTTON));        
+        assertTrue("Did not prompt for lack of Maps permission.",  
+                new Wait(20000L).until(allowForegroundButton::exists));
+
+        device.pressHome();
 
         SettingsUtil.setAppPermissions_v3(instrumentation, appName, appName, true,
                 "Deny anyway", "Apps", "Permission manager");
-        device.pressHome();
     }
 
     /**
@@ -325,7 +327,7 @@ public class SettingsTest {
                     instrumentation, true, "Settings", "System", "Date & time");
 
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
         final UiObject timeButton = device.findObject(new UiSelector().text("Set time automatically"));
@@ -384,7 +386,7 @@ public class SettingsTest {
             AppLauncher.launchPath(
                     instrumentation, true, "Settings", "System", "Date & time");
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
         final UiObject autoTimeZoneButton = device.findObject(new UiSelector().text("Set time zone automatically"));
@@ -590,7 +592,7 @@ public class SettingsTest {
             AppLauncher.launchPath(
                     instrumentation, true, "Settings", "System", "Date & time");
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
         boolean autoTwentyFourWasEnabled = false;
@@ -637,9 +639,6 @@ public class SettingsTest {
      * Verify that activating and deactivating Device Administrators setting works.
      * <p>
      * This is run to qualify releases. Please involve the test team in substantial changes.
-     * <p>
-     * TR ID: C144630613
-     * <p>
      *   <pre>
      *   Test Steps:
      *   1. Start an emulator AVD.
@@ -653,7 +652,10 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @Ignore("Device admin apps are not supported on API 31")
     public void activateDeactivatePolicy() throws Exception {
+        ApiDemosInstaller.installApp("Security", "Device admin apps", false);
+
         try {
             SettingsUtil.launchDeviceAdminApps(instrumentation, "Security", "Device admin apps");
 
@@ -925,7 +927,7 @@ public class SettingsTest {
             AppLauncher.launchPath(
                     instrumentation, true, "Settings", "Connected devices");
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
         UiObject androidErrorClose = device.findObject(
