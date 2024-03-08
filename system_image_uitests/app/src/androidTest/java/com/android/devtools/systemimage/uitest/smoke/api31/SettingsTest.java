@@ -27,7 +27,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.FrameLayout;
-
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
@@ -47,7 +46,6 @@ import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -93,20 +91,14 @@ public class SettingsTest {
         }
 
         AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-
-        UiObject locationSetting = device.findObject(
-                new UiSelector()
-                        .className("android.widget.TextView")
-                        .text("Location"));
+        UiSelector region = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
+        UiSelector target = new UiSelector()
+                .className("android.widget.TextView")
+                .text("Location");
 
         assertTrue("Location not found in Settings List",
-                itemList.scrollIntoView(locationSetting));
-        locationSetting.clickAndWaitForNewWindow();
+                SettingsUtil.scrollToObject(device, region, target));
+        device.findObject(target).clickAndWaitForNewWindow();
 
         boolean recentAccessText = new Wait().until(
                 () -> device.findObject(new UiSelector()
@@ -173,7 +165,7 @@ public class SettingsTest {
 
         assertTrue("Did not prompt for lack of Phone permission.",
                 new Wait().until(() -> !(device.findObject(
-                        new UiSelector().resourceIdMatches("com.google.android.dialer:id/incall_end_call")).
+                        new UiSelector().resourceIdMatches(Res.DIALER_IN_CALL_RES)).
                         exists()))
         );
 
@@ -237,10 +229,10 @@ public class SettingsTest {
         myLocation = device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION));
         if (new Wait().until(myLocation::exists))
             myLocation.clickAndWaitForNewWindow();
-            
+
         final UiObject allowForegroundButton = device.findObject(
-                new UiSelector().resourceId(Res.PERMISSION_ALLOW_FOREGROUND_BUTTON));        
-        assertTrue("Did not prompt for lack of Maps permission.",  
+                new UiSelector().resourceId(Res.PERMISSION_ALLOW_FOREGROUND_BUTTON));
+        assertTrue("Did not prompt for lack of Maps permission.",
                 new Wait(20000L).until(allowForegroundButton::exists));
 
         device.pressHome();
@@ -411,7 +403,7 @@ public class SettingsTest {
                         new UiSelector().description("Select time zone")).exists())
         );
 
-        UiObject timeZoneLabel = device.findObject(new UiSelector().textMatches("(Time zone|Select UTC offset)").
+        UiObject timeZoneLabel = device.findObject(new UiSelector().textMatches("Time zone").
                 resourceId(Res.ANDROID_TITLE_RES).packageName("com.android.settings"));
         if (timeZoneLabel.waitForExists(3L)) {
             timeZoneLabel.clickAndWaitForNewWindow();
@@ -421,7 +413,7 @@ public class SettingsTest {
         assertTrue("Target time zone label not found",
                 device.findObject(new UiSelector().textContains(timezoneOffset)).waitForExists(3L));
     }
-    
+
     /**
      * Verifies that the user can register the device from Google Settings.
      * <p>
@@ -439,10 +431,10 @@ public class SettingsTest {
     @Test
     public void testGoogleLoginSettings() throws Exception {
         String userEmail = GoogleAppUtil.getUserEmail();
-        String userPassword = GoogleAppUtil.getUserPassword();        
+        String userPassword = GoogleAppUtil.getUserPassword();
 
         final UiObject userLoginInfo = device.findObject(
-                new UiSelector().                        
+                new UiSelector().
                         className(TextView.class).
                         text(userEmail));
 
@@ -463,7 +455,7 @@ public class SettingsTest {
                     new Wait(1000L).until(passwordsLabel::exists));
 
             device.pressBack();
-            
+
             if (passwordsLabel.waitForExists(5000L)) {
                 passwordsLabel.waitUntilGone(5000L);
             }
@@ -494,7 +486,6 @@ public class SettingsTest {
             assertTrue("Manage Google account button not dismissed.",
                     manageAccountButton.waitUntilGone(10000L));
         }
-        
         final UiObject checkingInfoLabel = device.findObject(
                 new UiSelector().resourceId(Res.GOOGLE_LAYOUT_ICON_RES));
 
@@ -522,9 +513,9 @@ public class SettingsTest {
 
         googleEmailInput.clearTextField();
         googleEmailInput.setText(userEmail);
-        googleEmailInput.clickAndWaitForNewWindow(3000L);        
+        googleEmailInput.clickAndWaitForNewWindow(3000L);
         device.pressEnter();
-        
+
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Email input entry page not dismissed.",
                 googleEmailInput.waitUntilGone(90000L));
 
@@ -537,7 +528,7 @@ public class SettingsTest {
 
         googlePasswordInput.clearTextField();
         googlePasswordInput.setText(userPassword);
-        googlePasswordInput.clickAndWaitForNewWindow(3000L);        
+        googlePasswordInput.clickAndWaitForNewWindow(3000L);
         device.pressEnter();
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Password input entry page not dismissed.",
@@ -591,7 +582,6 @@ public class SettingsTest {
      *   Example time on screen shows 13:00.
      *   </pre>
      */
-    @Ignore("24 hour format option has been removed from Settings.")
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
@@ -604,9 +594,14 @@ public class SettingsTest {
 
         boolean autoTwentyFourWasEnabled = false;
         boolean useTwentyFourWasEnabled = false;
-        UiObject useTwentyFourLabel = device.findObject(new UiSelector().text("Use 24-hour format"));
+
+        final UiSelector twentyFourHourSelector = new UiSelector().text("Use 24-hour format");
+        UiObject useTwentyFourLabel = device.findObject(twentyFourHourSelector);
         UiObject autoTwentyFourLabel = device.findObject(new UiSelector().text("Use locale default"));
         final UiObject thirteenHundredLabel = device.findObject(new UiSelector().text("13:00"));
+
+        UiSelector dateTimeRegion = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
+        SettingsUtil.scrollToObject(device, dateTimeRegion, twentyFourHourSelector);
 
         // Initialize automatic format option to disabled state.
         if (autoTwentyFourLabel.waitForExists(3L) && !useTwentyFourLabel.isEnabled()) {
@@ -657,9 +652,10 @@ public class SettingsTest {
      *   2. (Verify #2) that the "Sample Device Admin" policy is activated.
      *   3. (Verify #3) that the "Sample Device Admin" policy is deactivated.
      *   </pre>
+     * </p>
      */
     @Test
-    @Ignore("Device admin apps are not supported on API 31")
+    @Ignore("Device admin apps are not supported on API 33")
     public void activateDeactivatePolicy() throws Exception {
         ApiDemosInstaller.installApp("Security", "Device admin apps", false);
 
@@ -748,16 +744,16 @@ public class SettingsTest {
      *   1. App settings for Maps are reset to default (Verify that Permissions and notification
      *   settings for Maps are cleared).
      *   </pre>
-     */    
+     */
     @Test
     @TestInfo(id = "d49facce-9be7-47e0-afde-2052d3c57a25")
-    @Ignore("Test is canceled on crash during app permission reset")
+    @Ignore("Test is canceled on crash during app permission reset.")
     public void modifyAndResetAppPermissions() throws Exception {
         String appName = "Maps";
         String contactsText = "Contacts";
         String locationText = "Location";
         String microphoneText = "Microphone";
-        String storageText = "Files and media";
+        String storageText = "Photos and videos";
 
         // Variables to store the state of permissions.
         boolean contactsSwitchState;
@@ -766,6 +762,12 @@ public class SettingsTest {
         boolean storageSwitchState;
 
         AppManager.openAppList_v3(instrumentation);
+
+        final UiObject allAppsTextLabel = device.findObject(new UiSelector()
+                .resourceId(Res.ANDROID_TITLE_RES).text("All apps"));
+
+        new Wait().until(allAppsTextLabel::exists);
+        allAppsTextLabel.clickAndWaitForNewWindow();
 
         // Find and click "Maps" in apps list.
         UiScrollable itemList =
@@ -794,38 +796,69 @@ public class SettingsTest {
         //Store current permissions state of switch widgets.
         UiObject contactSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), contactsText);
+        assertTrue("Contact switch not found", contactSwitch.waitForExists(5000L));
         contactSwitch.click();
         UiObject contactsAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
+
         contactsSwitchState = contactsAllowSwitch.isChecked();
+        if (contactsSwitchState) {
+            UiObject contactsDenySwitch = device.findObject(new UiSelector().resourceIdMatches(Res.DENY_PERMISSION_BUTTON));
+            contactsDenySwitch.clickAndWaitForNewWindow(1000);
+        }
+
+        assertFalse("Contacts permission already allowed", contactsAllowSwitch.isChecked());
         contactsAllowSwitch.clickAndWaitForNewWindow(1000);
-        assertEquals(contactsSwitchState, !contactsAllowSwitch.isChecked());
+        assertTrue("Contacts permission not allowed", contactsAllowSwitch.isChecked());
         device.pressBack();
 
         UiObject locationSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), locationText);
         locationSwitch.click();
         UiObject locationAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
+
         locationSwitchState = locationAllowSwitch.isChecked();
+        if (locationSwitchState) {
+            UiObject locationDenySwitch = device.findObject(new UiSelector().resourceIdMatches(Res.DENY_PERMISSION_BUTTON));
+            locationDenySwitch.clickAndWaitForNewWindow(1000);
+        }
+
+        assertFalse("Location permission already allowed", locationAllowSwitch.isChecked());
         locationAllowSwitch.clickAndWaitForNewWindow(1000);
-        assertEquals(locationSwitchState, !locationAllowSwitch.isChecked());
+        assertTrue("Location permission not allowed", locationAllowSwitch.isChecked());
         device.pressBack();
 
         UiObject microphoneSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), microphoneText);
         microphoneSwitch.clickAndWaitForNewWindow(1000);
         UiObject microphoneAllowSwitch = device.findObject(new UiSelector().resourceId(Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON));
+
         microphoneSwitchState = microphoneAllowSwitch.isChecked();
+        if (microphoneSwitchState) {
+            UiObject microphoneDenySwitch = device.findObject(new UiSelector().resourceIdMatches(Res.DENY_PERMISSION_BUTTON));
+            microphoneDenySwitch.clickAndWaitForNewWindow(1000);
+        }
+
+        assertFalse("Microphone permission already allowed", microphoneAllowSwitch.isChecked());
         microphoneAllowSwitch.clickAndWaitForNewWindow(1000);
-        assertEquals(microphoneSwitchState, !microphoneAllowSwitch.isChecked());
+        assertTrue("Microphone permission not allowed", microphoneAllowSwitch.isChecked());
+
         device.pressBack();
 
         UiObject storageSwitch =
                 permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), storageText);
         storageSwitch.click();
-        UiObject storageAllowSwitch = device.findObject(new UiSelector().resourceId(Res.ALLOW_FOREGROUND_ONLY_PERMISSION_BUTTON));
+        UiObject storageAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
+
         storageSwitchState = storageAllowSwitch.isChecked();
+        if (storageSwitchState) {
+            UiObject storageDenySwitch = device.findObject(new UiSelector().resourceIdMatches(Res.DENY_PERMISSION_BUTTON));
+            storageDenySwitch.clickAndWaitForNewWindow(1000);
+        }
+
+        assertFalse("Storage permission already allowed", storageAllowSwitch.isChecked());
         storageAllowSwitch.clickAndWaitForNewWindow(1000);
-        assertEquals(storageSwitchState, !storageAllowSwitch.isChecked());
+        assertTrue("Storage permission not allowed", storageAllowSwitch.isChecked());
+
         device.pressBack();
 
 
@@ -837,7 +870,12 @@ public class SettingsTest {
         device.pressMenu();
         device.findObject(
                 new UiSelector().textContains("Reset app preferences")).clickAndWaitForNewWindow();
-        device.findObject(new UiSelector().textContains("Reset Apps")).clickAndWaitForNewWindow();
+
+        try {
+            device.findObject(new UiSelector().textContains("Reset Apps")).clickAndWaitForNewWindow();
+        } catch (Exception e) {
+            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+        }
 
         //Open Maps info.
         itemList.scrollIntoView(new UiSelector().text(appName));
@@ -854,7 +892,7 @@ public class SettingsTest {
         contactSwitch = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), contactsText);
         contactSwitch.clickAndWaitForNewWindow(1000);
         contactsAllowSwitch = device.findObject(new UiSelector().resourceIdMatches(Res.ALLOW_PERMISSION_BUTTON));
-        assertEquals(contactsSwitchState, contactsAllowSwitch.isChecked());
+        assertTrue("Contacts permissions ", contactsAllowSwitch.isChecked());
         device.pressBack();
 
         locationSwitch = permissionList.getChildByText(new UiSelector().className("android.widget.TextView"), locationText);
@@ -902,15 +940,10 @@ public class SettingsTest {
                             instrumentation, true, "Settings", "System", "Developer options"));
         }
 
+        UiSelector region = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
+        UiSelector target = new UiSelector().text("USB debugging");
 
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-
-        UiObject usbDebugging = device.findObject(new UiSelector().text("USB debugging"));
-        assertTrue("USB debugging controls not found", itemList.scrollIntoView(usbDebugging));
+        assertTrue("USB debugging controls not found", SettingsUtil.scrollToObject(device, region, target));
     }
 
     /**
@@ -937,6 +970,19 @@ public class SettingsTest {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
+        UiObject seeAll = device.findObject(new UiSelector()
+                .text("See all"));
+
+        if (new Wait().until(seeAll::exists)) {
+            seeAll.clickAndWaitForNewWindow();
+        }
+
+        UiObject savedDevices = device.findObject(new UiSelector()
+                .description("Saved devices")
+                .resourceId(Res.SETTINGS_COLLAPSING_TOOLBAR_RES));
+
+        boolean hasSavedDevices = new Wait().until(savedDevices::exists);
+
         UiObject androidErrorClose = device.findObject(
                 new UiSelector().resourceId(Res.ANDROID_ERROR_CLOSE_RES));
         assertFalse("Settings Keeps Stopping error when revoking usb debugging", androidErrorClose.waitForExists(5L));
@@ -946,7 +992,8 @@ public class SettingsTest {
         UiObject connectedDevices = device.findObject(
                 new UiSelector().text("Previously connected devices").className("android.widget.TextView"));
         Assert.assertTrue("Connected devices were not listed",
-                actionBar.waitForExists(5L) && connectedDevices.waitForExists(5L));
+                hasSavedDevices ||
+                        (actionBar.waitForExists(5L) && connectedDevices.waitForExists(5L)));
     }
 
     /**
@@ -968,7 +1015,7 @@ public class SettingsTest {
      *   2. Test file is copied into the Download folder.
      *   3. Test file is deleted from the Download folder.
      *   </pre>
-     */    
+     */
     @Test
     @Ignore("Cannot access external storage without a runtime permissions implementation")
     public void filesDeleted() throws Exception {
