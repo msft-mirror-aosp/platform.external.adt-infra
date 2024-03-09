@@ -121,7 +121,7 @@ public class CameraTest {
      */
     @Test
     @TestInfo(id = "61ba18b5-cfba-46a7-a3f2-abfc60e40303")
-    @Igbore("Covered by FAT")
+    @Ignore("Covered by FAT")
     public void launchARApp() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
