@@ -22,6 +22,8 @@ from aemu.proto.emulator_controller_pb2 import (
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
 from tests.test_utils import fmt_proto
+from snaptool.snapshot import AsyncSnapshotService
+from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -65,6 +67,19 @@ async def no_displays(emulator_controller, adb_shell):
     )
     logging.info("=== finished no_displays")
 
+@pytest.fixture
+async def emu_snapshot_service(avd, service):
+    """Fixture to make sure the emulator has no snapshots."""
+    snapshot_service = service(SnapshotServiceStub)
+    snap = AsyncSnapshotService(snapshot_service=snapshot_service)
+    snapshots = await snap.lists()
+    for entry in snapshots:
+        await snap.delete(entry.snapshot_id)
+    yield snap
+    snapshots = await snap.lists()
+    for entry in snapshots:
+        await snap.delete(entry.snapshot_id)
+
 
 @pytest.mark.e2e
 @pytest.mark.timeout_win(timeout=60)
@@ -105,6 +120,48 @@ async def test_multidisplay_multiple(no_displays, emulator_controller, is_landsc
     assert cfg.displays[1].dpi == 213
     assert cfg.displays[1].width == 720
     assert cfg.displays[1].height == 1280
+
+@pytest.mark.e2e
+@pytest.mark.graphics
+@pytest.mark.multidisplay
+@pytest.mark.sanity
+@pytest.mark.async_timeout(400)
+async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, emu_snapshot_service,  is_landscape):
+    """Snapshots on multiple display should work."""
+    if is_landscape:
+        pytest.skip("Cannot run multi display tests in landscape mode.")
+
+    # add two additional displays
+    resolutions = [(720, 1280), (1080, 1920)]
+    displays = [
+        DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
+        for idx, x in enumerate(resolutions)
+    ]
+    to_set = DisplayConfigurations(displays=displays)
+    cfg = await emulator_controller.setDisplayConfigurations(to_set)
+    assert len(cfg.displays) == 3
+
+    # take a snapshot of multiple displays
+    assert await emu_snapshot_service.save("foo")
+    snapshots = await emu_snapshot_service.lists()
+    assert "foo" in [x.snapshot_id for x in snapshots]
+
+    # change the display configuration, add just one additional display
+    resolutions = [ (3840, 2160)]
+    displays = [
+        DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
+        for idx, x in enumerate(resolutions)
+    ]
+    to_set = DisplayConfigurations(displays=displays)
+    cfg = await emulator_controller.setDisplayConfigurations(to_set)
+    assert len(cfg.displays) == 2
+
+    # load the snapshot and check the number of displays.
+    assert await emu_snapshot_service.load("foo")
+    assert await avd.wait_for_boot(timeout=180)
+
+    cfg2 = await emulator_controller.getDisplayConfigurations(_EMPTY_)
+    assert len(cfg2.displays) == 3
 
 
 @pytest.mark.e2e
