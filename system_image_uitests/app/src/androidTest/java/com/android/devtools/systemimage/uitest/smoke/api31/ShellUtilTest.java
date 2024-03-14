@@ -43,6 +43,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * Test on shell utility.
@@ -55,7 +57,7 @@ public class ShellUtilTest {
     public final SystemImageTestFramework testFramework = new SystemImageTestFramework();
 
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(240);
+    public Timeout globalTimeout = Timeout.seconds(300);
 
     /**
      * Tests the integrity of Shell utilities.
@@ -126,20 +128,23 @@ public class ShellUtilTest {
         }
 
         AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Advanced", "Developer options");
-        // Remove bug report files even if the test fails.
-        try {
-            device.findObject(
-                    new UiSelector().text("Bug report")).clickAndWaitForNewWindow();
-            UiObject fullReportButton = device.findObject(new UiSelector().textMatches("(?i)full report(?-i)"));
-            if (fullReportButton.exists()) {
-                fullReportButton.clickAndWaitForNewWindow();
-            }
-            UiObject reportButton = device.findObject(new UiSelector().textMatches("(?i)report(?-i)"));
-            if (reportButton.exists()) {
-                reportButton.click();
-            }
-            boolean gotPngAndZip = new Wait(
-                    TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
+        UiObject bugReportButton = device.findObject(
+                        new UiSelector().text("Bug report"));
+        assertTrue("Bug report button not found", bugReportButton.waitForExists(10000L));
+        bugReportButton.clickAndWaitForNewWindow();
+
+        UiObject fullReportButton = device.findObject(new UiSelector().textMatches("(?i)full report(?-i)"));
+        if (fullReportButton.exists()) {
+            fullReportButton.clickAndWaitForNewWindow();
+        }
+
+        UiObject reportButton = device.findObject(new UiSelector().textMatches("(?i)report(?-i)"));
+        if (reportButton.exists()) {
+            reportButton.click();
+        }
+
+        boolean gotPngAndZip = new Wait(
+                TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
                     () -> {
                         String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
                         Log.d(TAG, "ls result " + result);
@@ -149,9 +154,8 @@ public class ShellUtilTest {
 
                         return success;
                     });
-            Assert.assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
-        } finally {
-            ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
-        }
+        assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
+
+        ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
     }
 }

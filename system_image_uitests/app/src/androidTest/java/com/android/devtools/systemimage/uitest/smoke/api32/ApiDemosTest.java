@@ -35,6 +35,7 @@ import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -88,7 +89,7 @@ public class ApiDemosTest {
      *
      */
     @Test
-    @TestInfo(id = "T144630615")
+    @Ignore("Covered by CTS. Move to FAT")
     public void testPasswordQuality() throws Exception {
         AppLauncher.launch(instrumentation, "API Demos");
 

@@ -31,6 +31,7 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -69,6 +70,7 @@ public class CameraTest {
      */
     @Test
     @TestInfo(id = "ab5f9585-433b-4261-bd15-5c7136f6127b")
+    @Ignore("Covered by CTS. Move to FAT")
     public void testPhotoCapture() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         boolean photoTestSuccess = CameraTestUtil.useCamera(instrumentation, "Images", 3);
@@ -98,6 +100,7 @@ public class CameraTest {
      */
     @Test
     @TestInfo(id = "ab5f9585-433b-4261-bd15-5c7136f6127b")
+    @Ignore("Covered by CTS. Move to FAT")
     public void testVideoCapture() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         boolean videoTestSuccess = CameraTestUtil.useCamera(instrumentation, "Videos", 3);
@@ -118,6 +121,7 @@ public class CameraTest {
      */
     @Test
     @TestInfo(id = "61ba18b5-cfba-46a7-a3f2-abfc60e40303")
+    @Ignore("Covered by FAT")
     public void launchARApp() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         final UiDevice device = testFramework.getDevice();
