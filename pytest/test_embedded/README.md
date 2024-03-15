@@ -293,7 +293,8 @@ tests.
 - graphics: marks tests related to graphics operations
 - hardware: marks test as a low-level hardware test
 - linux: marks test as linux only, will only run if you are on linux.
-- perf: marks test as a performance test (deselect with '-m "not perf"')
+- hostperf: marks test as a host side performance test (deselect with '-m "not hostperf"')
+- guestperf: marks test as a guest side performance test
 - resizable: marks test that should run on a resizable emulator
 - slow: marks tests as slow (deselect with '-m "not slow"')
 - snapshot: marks tests related to snapshot operations

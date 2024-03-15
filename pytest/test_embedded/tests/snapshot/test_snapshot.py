@@ -112,7 +112,7 @@ async def test_app_launch_after_snapshot_load(avd, snapshot_service):
     )
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="snapshot")
 async def test_snapshot_list_perf(benchmark, snapshot_service, coldboot_animation_app):
     # create a 10 snapshots while we are running the animation app.

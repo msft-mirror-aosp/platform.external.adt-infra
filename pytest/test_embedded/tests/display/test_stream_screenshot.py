@@ -74,7 +74,7 @@ async def test_stream_screenshot_receives_frames(
     await asyncio.wait_for(count_10_images(), timeout=4)
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="animation")
 @pytest.mark.parametrize(
     "w,h",
@@ -100,7 +100,7 @@ async def test_stream_screenshot_perf(
         await asyncio.wait_for(frame_counter(), timeout=timeout)
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="animation")
 @pytest.mark.parametrize(
     "w,h",
