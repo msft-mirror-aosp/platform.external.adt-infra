@@ -124,8 +124,8 @@ To set up your development environment, follow these steps:
 
 1. **Create a Virtual Environment**: Execute the following command to establish a virtual environment and install all the necessary dependencies required for running the tests:
 
-```sh
-. ./configure.sh
+```bash
+source ./configure.sh
 ```
 
 2. **Running Specific Tests:** If you want to run a specific subset of tests with an already active emulator, follow these instructions:
@@ -133,9 +133,11 @@ To set up your development environment, follow these steps:
     - Ensure that you have launched the emulator with an Android Virtual Device (AVD) configuration that you intend to use for the tests.
 
     - Employ the following command to execute a particular test by specifying its name:
-          pytest --debug_emulator -k "name_of_the_test"
+```bash
+pytest --debug_emulator -k "name_of_the_test"
+```
 
-    Replace `name_of_the_test` with the actual name of the test you wish to run.
+    Replace `name_of_the_test` with the actual name of the test you wish to run. For printing out a list of available tests, run `pytest --co`.
 
 ### Running tests from Visual Studio Code
 
