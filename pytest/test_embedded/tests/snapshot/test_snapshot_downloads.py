@@ -127,7 +127,7 @@ def check_boot_from_snapshot(avdpath) -> bool:
 
 @pytest.mark.e2e
 @pytest.mark.snapshot
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 @pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
 @pytest.mark.async_timeout(510)
 async def test_can_load_oldsnapshot(emulator, pytestconfig):

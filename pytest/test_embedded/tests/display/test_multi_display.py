@@ -256,7 +256,7 @@ async def test_multidisplay_double_ids_error(
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
-@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/322551553
+@pytest.mark.flaky  # b/322551553
 async def test_multidisplay_can_configure_four(
     no_displays, emulator_controller, is_landscape
 ):

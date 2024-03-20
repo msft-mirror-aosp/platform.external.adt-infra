@@ -315,7 +315,8 @@ You can find all the markers, and the description, in the [pytest.ini](pytest.in
 
 ### Dealing with flaky tests and timeouts
 
-E2E tests are sometimes flaky. In order to combat the flakiness we make use of the [pytest-rerunfailures](https://github.com/pytest-dev/pytest-rerunfailures) plugin. This plugin allows you to mark individual tests as flaky, and have them automatically re-run when they fail, add the flaky mark with the maximum number of times you'd like the test to run and re-run delay time in the marker:
+CAUTION: Flaky tests are bad tests, and re-running them consumes valuable resources with minimal added value. If absolutely necessary, consider marking a test as flaky only as a short-term measure (for example to unblock the developement) while urgently investigating the root cause.
+In order to combat the flakiness we make use of the [pytest-rerunfailures](https://github.com/pytest-dev/pytest-rerunfailures) plugin. This plugin allows you to mark individual tests as flaky, and have them automatically re-run when they fail, add the flaky mark with the maximum number of times you'd like the test to run and re-run delay time in the marker:
 
 ```python
   @pytest.mark.flaky(reruns=5, reruns_delay=2)

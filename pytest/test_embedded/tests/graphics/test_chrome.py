@@ -239,7 +239,7 @@ async def test_launch_chrome_google_gets_page(avd, prepare_chrome, test_server):
 
 
 @pytest.mark.e2e
-@pytest.mark.flaky(reruns=1, reruns_delay=5)
+@pytest.mark.flaky
 @pytest.mark.skipos("all", "reason: chrome behaves differrent across api levels.")
 @pytest.mark.graphics
 @pytest.mark.xpass

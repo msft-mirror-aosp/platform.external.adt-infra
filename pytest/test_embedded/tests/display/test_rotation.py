@@ -80,7 +80,7 @@ async def for_each_rotation(emulator_controller):
 @pytest.mark.async_timeout(10)
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.graphics
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 async def test_rotation_observable_through_screenshot(
     emulator_controller, animation_app
 ):
@@ -101,7 +101,7 @@ async def test_rotation_observable_through_screenshot(
 
 @pytest.mark.e2e
 @pytest.mark.graphics
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 async def test_rotation_observable_through_adbstream(
     avd, at_home, animation_app, emulator_controller
 ):
@@ -127,7 +127,7 @@ async def test_rotation_observable_through_adbstream(
 @pytest.mark.e2e
 @pytest.mark.async_timeout(10)
 @pytest.mark.graphics
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 async def test_rotation_observable_through_stream_screenshot(
     animation_app, emulator_controller, stream_screenshot
 ):
@@ -261,7 +261,7 @@ async def rotation_through_console_observable_through_stream_screenshot(
     "rotation, quadrant",
     [(0, 1), (90, 2), (-180, 3), (-90, 4)],
 )
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 async def test_rotation_pixels_in_the_right_place(
     animation_app, emulator_controller, rotation, quadrant, stream_screenshot
 ):
@@ -296,7 +296,7 @@ async def test_rotation_pixels_in_the_right_place(
 @pytest.mark.e2e
 @pytest.mark.async_timeout(10)
 @pytest.mark.graphics
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 async def test_rotation_through_console_observable_through_physical_model(
     emulator_controller, telnet, at_home
 ):
@@ -325,7 +325,7 @@ async def test_rotation_through_console_observable_through_physical_model(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.async_timeout(10)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 async def test_rotation_through_console_observable_through_screenshot(
     at_home, emulator_controller, telnet
 ):
@@ -340,7 +340,7 @@ async def test_rotation_through_console_observable_through_screenshot(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.async_timeout(10)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 async def test_rotation_through_console_observable_through_stream_screenshot(
     at_home, animation_app, emulator_controller, telnet, stream_screenshot
 ):
@@ -357,7 +357,7 @@ async def test_rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.embedded
 @pytest.mark.sanity
 @pytest.mark.async_timeout(10)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 async def test_rotation_observable_through_screenshot_embedded_mode(
     emulator_controller, telnet, emulator, at_home
 ):
@@ -369,7 +369,7 @@ async def test_rotation_observable_through_screenshot_embedded_mode(
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.async_timeout(10)
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 async def test_rotation_observable_through_stream_screenshot_embedded_mode(
     emulator_controller, telnet, emulator, at_home, stream_screenshot
 ):
