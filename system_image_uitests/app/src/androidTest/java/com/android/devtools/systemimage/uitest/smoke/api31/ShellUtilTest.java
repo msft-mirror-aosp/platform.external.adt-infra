@@ -127,9 +127,10 @@ public class ShellUtilTest {
             DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
         }
 
-        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Advanced", "Developer options");
+        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Developer options");
+
         UiObject bugReportButton = device.findObject(
-                        new UiSelector().text("Bug report"));
+                new UiSelector().text("Bug report"));
         assertTrue("Bug report button not found", bugReportButton.waitForExists(10000L));
         bugReportButton.clickAndWaitForNewWindow();
 
@@ -145,15 +146,15 @@ public class ShellUtilTest {
 
         boolean gotPngAndZip = new Wait(
                 TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
-                    () -> {
-                        String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
-                        Log.d(TAG, "ls result " + result);
-                        boolean success =
-                                result.matches("(?s).*bugreport.*\\.png.*")
-                                        && result.matches("(?s).*bugreport.*\\.zip.*");
+                () -> {
+                    String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
+                    Log.d(TAG, "ls result " + result);
+                    boolean success =
+                            result.matches("(?s).*bugreport.*\\.png.*")
+                                    && result.matches("(?s).*bugreport.*\\.zip.*");
 
-                        return success;
-                    });
+                    return success;
+                });
         assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
 
         ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);

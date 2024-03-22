@@ -28,11 +28,15 @@ from ppadb.sync.stats import S_IFREG
 from ppadb.sync_async import SyncAsync
 
 from emu.logging.log_handler import AsyncLogHandler
-
+from emu.process.command import Command
 
 class AdbDeviceNotFound(Exception):
     pass
 
+_NO_PPADB = True
+async def _run_async_subprocess(cmd, timeout=10):
+    (exit_code, output) = await Command(cmd).run_until_finished(timeout)
+    return ' '.join(output)
 
 class DeviceStream:
     """A wrapper around the I/O adb stream between the emulator and this process"""
@@ -73,9 +77,10 @@ def _get_src_info(src):
 class AdbDeviceAsync:
     """This class is using the compose pattern to fix a series of bugs that we cannot fix in ppad.DeviceAsync"""
 
-    def __init__(self, device: DeviceAsync, host: ClientAsync, logger=logging):
+    def __init__(self, device: DeviceAsync, host: ClientAsync, adb, logger=logging):
         self.device = device
         self.host = host
+        self.adb = adb
         self.logger = logger
 
     async def _push(self, src, dest, mode, progress):
@@ -89,6 +94,12 @@ class AdbDeviceAsync:
             timestamp,
             total_size,
         ) = await asyncio.get_running_loop().run_in_executor(None, _get_src_info, src)
+
+        if _NO_PPADB:
+            await _run_async_subprocess([self.adb, "push", src, dest])
+            if progress is not None:
+                progress(src, 100, 100)
+            return
 
         # Create a new connection for file transfer
         sync_conn = await self.device.sync()
@@ -150,9 +161,15 @@ class AdbDeviceAsync:
                     )
 
     async def pull(self, src, dest):
+        if _NO_PPADB:
+            return await _run_async_subprocess([self.adb, "pull", src, dest])
+
         return await self.device.pull(src, dest)
 
     async def shell(self, cmd, timeout=None) -> str:
+        if _NO_PPADB:
+            return await _run_async_subprocess([self.adb, "shell", cmd], timeout)
+
         timestr = f" ({timeout}s)" if timeout else ""
         self.logger.info("shell%s: %s", timestr, cmd)
         device_stream = await self.shell_stream(cmd, timeout)

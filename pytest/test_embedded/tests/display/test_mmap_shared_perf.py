@@ -42,7 +42,7 @@ async def dimenisions(emulator_controller):
 
 
 @pytest.mark.skipos("all", "b/203787882")
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="shared_mem")
 async def test_mmap_grpc_perf(
     animation_app, emulator_controller, tmpdir, benchmark_stat, pytestconfig
@@ -84,7 +84,7 @@ async def test_mmap_grpc_perf(
 
 
 @pytest.mark.skipos("all", "b/203787882")
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="shared_mem")
 @pytest.mark.linux
 async def test_mmap_webrtc_perf(

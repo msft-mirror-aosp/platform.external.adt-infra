@@ -58,7 +58,7 @@ def send_mouse_over(tester):
     return tester.send_mouse_and_wait_until_recv(x, y, 1)
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="mouse-wall")
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
@@ -75,7 +75,7 @@ def test_mouse_perf_wall_grpc(avd, android_start_time, adb_event_stream, benchma
     benchmark(send_mouse_over, tester=tester)
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.hardware
 @pytest.mark.benchmark(group="mouse-wall")
 @pytest.mark.skipos(
@@ -95,7 +95,7 @@ def test_mouse_perf_wall_telnet(avd, android_start_time, adb_event_stream, bench
     benchmark(send_mouse_over, tester=tester)
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="mouse-host-guest")
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
@@ -121,7 +121,7 @@ def test_mouse_perf_host_guest_telnet(
         benchmark_stat.update(send_mouse_over(tester))
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="mouse-host-guest")
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
@@ -145,7 +145,7 @@ def test_mouse_perf_host_guest_grpc(
         benchmark_stat.update(send_mouse_over(tester))
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="mouse-host-host")
 def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over grpc.
@@ -166,7 +166,7 @@ def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
         benchmark_stat.update(send_mouse_over(tester))
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="mouse-host-host")
 def test_mouse_perf_host_host_telnet(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over telnet.

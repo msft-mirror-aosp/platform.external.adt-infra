@@ -177,7 +177,7 @@ async def test_snapshot_booted(emulator):
 @pytest.mark.boot
 @pytest.mark.e2e
 @pytest.mark.skipos("win", "will turn on later")
-@pytest.mark.flaky(reruns=3, reruns_delay=5)  # b/286570480
+@pytest.mark.flaky  # b/286570480
 @pytest.mark.async_timeout(400)
 async def test_emulator_should_idle(emulator):
     """check emulator use less than 25% single cpu when idle."""

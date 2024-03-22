@@ -78,7 +78,7 @@ class Adb:
             raise AdbDeviceNotFound(
                 f"Unable to find the device {self.name}, did it crash?"
             )
-        return AdbDeviceAsync(device, self.client, self.logger)
+        return AdbDeviceAsync(device, self.client, self.adb_binary, self.logger)
 
     async def _with_adb_retry(self, method, params):
         """Executes the given ADB method with retry logic in case of failure.

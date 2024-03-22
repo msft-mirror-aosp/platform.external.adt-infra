@@ -987,13 +987,10 @@ public class SettingsTest {
                 new UiSelector().resourceId(Res.ANDROID_ERROR_CLOSE_RES));
         assertFalse("Settings Keeps Stopping error when revoking usb debugging", androidErrorClose.waitForExists(5L));
 
-        UiObject actionBar = device.findObject(
-                new UiSelector().resourceId(Res.SETTINGS_ACTION_BAR_RES).className("android.view.ViewGroup"));
         UiObject connectedDevices = device.findObject(
-                new UiSelector().text("Previously connected devices").className("android.widget.TextView"));
+                new UiSelector().description("Previously connected"));
         Assert.assertTrue("Connected devices were not listed",
-                hasSavedDevices ||
-                        (actionBar.waitForExists(5L) && connectedDevices.waitForExists(5L)));
+                hasSavedDevices || connectedDevices.waitForExists(5L));
     }
 
     /**

@@ -124,8 +124,8 @@ To set up your development environment, follow these steps:
 
 1. **Create a Virtual Environment**: Execute the following command to establish a virtual environment and install all the necessary dependencies required for running the tests:
 
-```sh
-. ./configure.sh
+```bash
+source ./configure.sh
 ```
 
 2. **Running Specific Tests:** If you want to run a specific subset of tests with an already active emulator, follow these instructions:
@@ -133,9 +133,11 @@ To set up your development environment, follow these steps:
     - Ensure that you have launched the emulator with an Android Virtual Device (AVD) configuration that you intend to use for the tests.
 
     - Employ the following command to execute a particular test by specifying its name:
-          pytest --debug_emulator -k "name_of_the_test"
+```bash
+pytest --debug_emulator -k "name_of_the_test"
+```
 
-    Replace `name_of_the_test` with the actual name of the test you wish to run.
+    Replace `name_of_the_test` with the actual name of the test you wish to run. For printing out a list of available tests, run `pytest --co`.
 
 ### Running tests from Visual Studio Code
 
@@ -293,7 +295,8 @@ tests.
 - graphics: marks tests related to graphics operations
 - hardware: marks test as a low-level hardware test
 - linux: marks test as linux only, will only run if you are on linux.
-- perf: marks test as a performance test (deselect with '-m "not perf"')
+- hostperf: marks test as a host side performance test (deselect with '-m "not hostperf"')
+- guestperf: marks test as a guest side performance test
 - resizable: marks test that should run on a resizable emulator
 - slow: marks tests as slow (deselect with '-m "not slow"')
 - snapshot: marks tests related to snapshot operations
@@ -312,7 +315,8 @@ You can find all the markers, and the description, in the [pytest.ini](pytest.in
 
 ### Dealing with flaky tests and timeouts
 
-E2E tests are sometimes flaky. In order to combat the flakiness we make use of the [pytest-rerunfailures](https://github.com/pytest-dev/pytest-rerunfailures) plugin. This plugin allows you to mark individual tests as flaky, and have them automatically re-run when they fail, add the flaky mark with the maximum number of times you'd like the test to run and re-run delay time in the marker:
+CAUTION: Flaky tests are bad tests, and re-running them consumes valuable resources with minimal added value. If absolutely necessary, consider marking a test as flaky only as a short-term measure (for example to unblock the developement) while urgently investigating the root cause.
+In order to combat the flakiness we make use of the [pytest-rerunfailures](https://github.com/pytest-dev/pytest-rerunfailures) plugin. This plugin allows you to mark individual tests as flaky, and have them automatically re-run when they fail, add the flaky mark with the maximum number of times you'd like the test to run and re-run delay time in the marker:
 
 ```python
   @pytest.mark.flaky(reruns=5, reruns_delay=2)

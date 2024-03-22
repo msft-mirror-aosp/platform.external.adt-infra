@@ -125,7 +125,7 @@ def send_letter_over(send_fn, avd, log):
     return delivery_time - send_time
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="letter-host-host")
 def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over grpc.
@@ -145,7 +145,7 @@ def test_letter_perf_host_host_grpc(emulator_log, at_home, benchmark_stat):
         benchmark_stat.update(send_letter_over(send_grpc_letter, emulator_log))
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="letter-host-host")
 def test_letter_perf_host_host_telnet(avd, emulator_log, at_home, benchmark_stat):
     """Checks that we can send keyboard events over telnet.

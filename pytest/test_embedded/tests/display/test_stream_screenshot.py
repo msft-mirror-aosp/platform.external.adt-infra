@@ -34,7 +34,7 @@ def read_pixel(width, height, pack, arr):
 @pytest.mark.skipos(
     "win", "reason: b/305252175 - error at setup. Only the parameter [2-1] fails."
 )
-@pytest.mark.flaky(reruns=3, reruns_delay=5)
+@pytest.mark.flaky
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.parametrize(
     "fmt,channel",
@@ -74,7 +74,7 @@ async def test_stream_screenshot_receives_frames(
     await asyncio.wait_for(count_10_images(), timeout=4)
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="animation")
 @pytest.mark.parametrize(
     "w,h",
@@ -100,7 +100,7 @@ async def test_stream_screenshot_perf(
         await asyncio.wait_for(frame_counter(), timeout=timeout)
 
 
-@pytest.mark.perf
+@pytest.mark.hostperf
 @pytest.mark.benchmark(group="animation")
 @pytest.mark.parametrize(
     "w,h",

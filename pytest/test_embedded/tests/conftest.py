@@ -199,6 +199,8 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
 
         item.add_marker(pytest.mark.async_timeout([timeout_win_sec]))
 
+    item.user_properties.append(("flaky", "flaky" in item.keywords))
+
     logging.info("=============== Setup: %s ===============", item.name)
 
 
