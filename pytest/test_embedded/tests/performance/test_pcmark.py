@@ -14,13 +14,10 @@
 
 import asyncio
 import logging
-import os
 import pathlib
-import platform
 import pytest
 import shutil
-import subprocess
-import time
+import xml.etree.ElementTree as ET
 import zipfile
 
 
@@ -53,13 +50,27 @@ async def pull_results(avd, temp_path, log_directory):
     with zipfile.ZipFile(str(temp_path.joinpath("result.zip")), "r") as zip_ref:
         zip_ref.extract(member="Result.xml", path=temp_path)
 
-    temp_path.joinpath("Result.xml").replace(log_directory.joinpath("pcmark.xml"))
-    assert log_directory.joinpath("pcmark.xml").exists()
+    elements = [
+        "result_PcmaWritingV3ScoreForPass",
+        "result_PcmaVideoEditingV3ScoreForPass",
+        "result_PcmaDataManipulationV3ScoreForPass",
+        "result_PcmaWebV3ScoreForPass",
+        "result_PcmaPhotoEditingV3ScoreForPass",
+        "result_PcmaWorkv3ScoreForPass",
+    ]
 
+    results = []
+    xml_results = ET.parse(str(temp_path.joinpath("Result.xml"))).getroot().find("results")
+    for xml_result in xml_results.findall("result"):
+        if xml_result.find("passIndex").text != "0":
+            continue
+        for elem in elements:
+            results.append((elem, xml_result.find(elem).text))
+    return results
 
 @pytest.mark.guestperf
 @pytest.mark.async_timeout(60 * 15)
-async def test_pcmark(avd, log_directory):
+async def test_pcmark(avd, log_directory, record_property):
     bundle_path = pathlib.Path.home().joinpath("emu-perf-bundle/Pcmark")
     if not bundle_path.exists():
         logging.error(f"Could not find the Pcmark test bundle. path: {bundle_path}")
@@ -71,4 +82,7 @@ async def test_pcmark(avd, log_directory):
 
     await install_pcmark(avd, bundle_path)
     await run_pcmark(avd, bundle_path)
-    await pull_results(avd, temp_path, log_directory)
+
+    results = await pull_results(avd, temp_path, log_directory)
+    for (key, value) in results:
+        record_property(key, value)
