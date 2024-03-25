@@ -543,7 +543,7 @@
             "-no-snapshot"
         ],
         "pytest_flags": [
-            "-m guestpeft"
+            "-m guestperf"
         ],
         "avd_config": {
             "api": "34",
