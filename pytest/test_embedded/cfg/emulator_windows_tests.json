@@ -540,12 +540,12 @@
             "-no-snapshot"
         ],
         "pytest_flags": [
-            "-m guestpeft"
+            "-m guestperf"
         ],
         "avd_config": {
             "api": "34",
             "tag.id": "google_apis"
         },
-        "status": "disabled"
+        "status": "enabled"
     }
 }
