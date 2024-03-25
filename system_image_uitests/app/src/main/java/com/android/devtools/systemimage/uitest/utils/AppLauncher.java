@@ -194,23 +194,56 @@ public class AppLauncher {
             try {
                 UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
                 if (!scrollable.waitForExists(5L)) {
+                    Log.i(TAG, "Scrollable object does not exist");
                     continue;
-                }
-                else {
+                } else if (!scrollable.isScrollable()) {
+                    Log.i(TAG, "Scrollable cannot be scrolled");
+                    continue;
+                } else {
                     if (api == 31) {
-                        scrollable.setSwipeDeadZonePercentage(0);
+                        UiSelector scrollableSelector = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES).scrollable(true);
+                        UiObject scrollableObject = device.findObject(scrollableSelector);
+                        if (!scrollableObject.waitForExists(5L)) {
+                            Log.i(TAG, "Scrollable object does not exist");
+                            continue;
+                        } else if (!scrollableObject.isScrollable()) {
+                            Log.i(TAG, "Scrollable cannot be scrolled");
+                            continue;
+                        } else {
+                            boolean canScrollMore = true;
+                            while (canScrollMore) {
+                                int startX = scrollableObject.getBounds().centerX();
+                                int startY = scrollableObject.getBounds().bottom - 10;
+                                int endY = scrollableObject.getBounds().top + 10;
+                                canScrollMore = device.swipe(startX, startY, startX, endY, 50);
+                                if (appByRegex.waitForExists(1L)) {
+                                    Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");
+                                    appByRegex.click();
+                                    appByRegex.waitUntilGone(5L);
+                                    status = true;
+                                    break;
+                                }
+                            }
+                            if (!status) {
+                                Log.i(TAG, "Failed to scroll to " + appPath[i]);
+                                return false;
+                            }
+                            continue;
+                        }
                     }
                     if (scrollable.scrollIntoView(regexSelector)) {
+                        Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");
                         appByRegex.clickAndWaitForNewWindow();
                         status = true;
                         continue;
                     } else if (scrollable.scrollIntoView(textSelector)) {
+                        Log.i(TAG, "Scrolling to " + appPath[i] + " using textSelector");
                         appByText.clickAndWaitForNewWindow();
                         status = true;
                         continue;
                     }
                 }
-
+                Log.i(TAG, "Failed to scroll to " + appPath[i]);
                 return false;
             } catch (UiObjectNotFoundException e) {
                 Log.w(TAG, e.getMessage());
