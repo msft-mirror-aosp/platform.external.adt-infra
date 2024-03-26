@@ -89,21 +89,33 @@ async def test_can_only_record_once(screen_service, tmp_path):
         # Our second record attempt should result in an error
         await screen_service.StartRecording(info)
 
+@pytest.mark.flaky
+@pytest.mark.graphics
+@pytest.mark.sanity
+async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
+    sample_file = tmp_path / "sample.webm"
+    sample_file_header =  b"\x1A\x45\xDF\xA3"
+    screen_records_video(screen_service, sample_file, sample_file_header)
 
 @pytest.mark.flaky
 @pytest.mark.graphics
-async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
-    sample_webm = tmp_path / "sample.webm"
-    info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
+@pytest.mark.sanity
+async def test_screen_records_video_in_gif(screen_service, animation_app, tmp_path):
+    sample_file = tmp_path / "sample.gif"
+    sample_file_header = b"\x1aE\xdf\xa3"
+    screen_records_video(screen_service, sample_file, sample_file_header)
+
+async def screen_records_video(screen_service, sample_file, sample_file_header):
+    info = RecordingInfo(width=120, height=120, file_name=str(sample_file))
     logging.info("Starting the recording: %s", info)
     await screen_service.StartRecording(info)
     await asyncio.sleep(2)
     logging.info("Stopping the recording: %s", info)
     await screen_service.StopRecording(info)
 
-    with open(sample_webm, "rb") as file:
+    with open(sample_file, "rb") as file:
         header = file.read(4)
 
     assert (
-        header == b"\x1A\x45\xDF\xA3"
-    ), f'{header} != b"\x1A\x45\xDF\xA3", the magic WebM header'
+            header == sample_file_header
+    ), f'{header} != sample_file_header, the magic header'
