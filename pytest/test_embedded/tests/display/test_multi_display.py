@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import asyncio
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
     DisplayConfiguration,
@@ -125,7 +126,7 @@ async def test_multidisplay_multiple(no_displays, emulator_controller, is_landsc
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.sanity
-@pytest.mark.async_timeout(400)
+@pytest.mark.async_timeout(510)
 async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, emu_snapshot_service,  is_landscape):
     """Snapshots on multiple display should work."""
     if is_landscape:
@@ -158,7 +159,10 @@ async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, 
 
     # load the snapshot and check the number of displays.
     assert await emu_snapshot_service.load("foo")
-    assert await avd.wait_for_boot(timeout=180)
+    assert await avd.wait_for_boot(timeout=240)
+    # there is no reliable way to detect it has reach home screen
+    # so just wait long
+    await asyncio.sleep(10)
 
     cfg2 = await emulator_controller.getDisplayConfigurations(_EMPTY_)
     assert len(cfg2.displays) == 3
