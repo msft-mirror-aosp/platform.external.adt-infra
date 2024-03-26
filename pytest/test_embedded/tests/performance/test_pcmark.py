@@ -77,7 +77,8 @@ async def test_pcmark(avd, log_directory, record_property):
         return
 
     temp_path = bundle_path.joinpath("tmp")
-    shutil.rmtree(temp_path)
+    if temp_path.exists():
+        shutil.rmtree(temp_path)
     temp_path.mkdir()
 
     await install_pcmark(avd, bundle_path)
