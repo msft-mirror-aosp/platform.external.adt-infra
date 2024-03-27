@@ -19,6 +19,17 @@ async def test_avd_canonical_path(emulator, avd, telnet):
 
 @pytest.mark.boot
 @pytest.mark.console
+@pytest.mark.fast
+@pytest.mark.e2e
+@pytest.mark.async_timeout(10)
+async def test_avd_snapshots_path_has_no_dots(telnet):
+    """Exposes b/299320133, paths should be normalized."""
+    path = await telnet.send("avd snapshotspath")
+    assert ".." not in path[0]
+
+
+@pytest.mark.boot
+@pytest.mark.console
 @pytest.mark.e2e
 @pytest.mark.async_timeout(10)
 async def test_avd_tracing_is_mounted(emulator, avd, telnet):
