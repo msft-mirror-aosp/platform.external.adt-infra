@@ -42,7 +42,7 @@ async def run_pcmark(avd, bundle_path):
                              f" --es com.futuremark.android.BenchmarkFilePath {install_path}/benchmark_run.xml")
 
 
-async def pull_results(avd, temp_path, log_directory):
+async def pull_results(avd, temp_path, results):
     while "No such file" in await avd.adb.shell(f"ls {install_path}/result.zip"):
         await asyncio.sleep(5)
     await avd.adb.pull(f"{install_path}/result.zip", f"{temp_path}")
@@ -50,26 +50,23 @@ async def pull_results(avd, temp_path, log_directory):
     with zipfile.ZipFile(str(temp_path.joinpath("result.zip")), "r") as zip_ref:
         zip_ref.extract(member="Result.xml", path=temp_path)
 
-    elements = [
-        "result_PcmaWritingV3ScoreForPass",
-        "result_PcmaVideoEditingV3ScoreForPass",
-        "result_PcmaDataManipulationV3ScoreForPass",
-        "result_PcmaWebV3ScoreForPass",
-        "result_PcmaPhotoEditingV3ScoreForPass",
-        "result_PcmaWorkv3ScoreForPass",
-    ]
-
-    results = []
     xml_results = ET.parse(str(temp_path.joinpath("Result.xml"))).getroot().find("results")
     for xml_result in xml_results.findall("result"):
         if xml_result.find("passIndex").text != "0":
             continue
-        for elem in elements:
-            results.append((elem, xml_result.find(elem).text))
+        for elem in results:
+            results[elem].append(int(xml_result.find(elem).text))
+
     return results
 
+
+async def cool_down():
+    # Sleep for a few of minutes to let the host settle and cool down a bit.
+    await asyncio.sleep(60 * 2)
+
+
 @pytest.mark.guestperf
-@pytest.mark.async_timeout(60 * 15)
+@pytest.mark.async_timeout(60 * 30)
 async def test_pcmark(avd, log_directory, record_property):
     bundle_path = pathlib.Path.home().joinpath("emu-perf-bundle/Pcmark")
     if not bundle_path.exists():
@@ -81,8 +78,24 @@ async def test_pcmark(avd, log_directory, record_property):
     temp_path.mkdir()
 
     await install_pcmark(avd, bundle_path)
-    await run_pcmark(avd, bundle_path)
 
-    results = await pull_results(avd, temp_path, log_directory)
-    for (key, value) in results:
-        record_property(key, value)
+    elements = [
+        "result_PcmaWritingV3ScoreForPass",
+        "result_PcmaVideoEditingV3ScoreForPass",
+        "result_PcmaDataManipulationV3ScoreForPass",
+        "result_PcmaWebV3ScoreForPass",
+        "result_PcmaPhotoEditingV3ScoreForPass",
+        "result_PcmaWorkv3ScoreForPass",
+    ]
+    results = dict([(x, []) for x in elements])
+
+    # Performance tests are notoriously noisy. Re-run and report average.
+    repeats = 3
+    for i in range(repeats):
+        await cool_down()
+        await run_pcmark(avd, bundle_path)
+        await pull_results(avd, temp_path, results)
+
+    for elem in results:
+        avg = sum(results[elem]) / len(results[elem])
+        record_property(elem, int(avg))
