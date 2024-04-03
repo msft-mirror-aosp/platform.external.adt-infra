@@ -106,9 +106,6 @@ class AsyncLogHandler:
         except asyncio.CancelledError:
             pass
 
-    async def async_log_stream(self, stream):
-        await self._log_stream(stream, self.std_out_log, self.queue)
-
     def __aiter__(self):
         return self
 
