@@ -1,7 +1,7 @@
-# Configure Windows for Android Emulator Windows Development.
+# Configure non-gWindows for Android Emulator Windows Development.
 # Execute the script from Powershell with admin rights.
 
-# Stop on action error.
+#Requires -RunAsAdministrator
 $ErrorActionPreference = 'Stop'
 $ConfirmPreference = 'None'
 
