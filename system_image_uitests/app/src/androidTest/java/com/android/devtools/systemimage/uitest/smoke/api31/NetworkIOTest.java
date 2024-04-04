@@ -332,13 +332,30 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        String[] path = new String[]{"Settings", "Network & internet", "SIMs", "Preferred network type"};
+        String[] path = new String[]{"Settings", "Network & internet", "SIMs"};
         AppLauncher.launchPath(instrumentation, true, path);
 
-        UiObject dataSwitchLTE = device.findObject(new UiSelector().text("LTE (recommended)"));
-        UiObject dataSwitch3G = device.findObject(new UiSelector().text("3G"));
-        UiObject dataSwitch2G = device.findObject(new UiSelector().text("2G"));
+        UiObject appByRegex = device.findObject(new UiSelector().textMatches("SIMs"));
+        appByRegex.waitUntilGone(5L);
 
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        assertTrue("Scrollable view not found", new Wait().until(scrollable::exists));
+
+        UiSelector preferredNetworkTypeSelector = new UiSelector().text("Preferred network type");
+
+        try {
+            scrollable.scrollIntoView(preferredNetworkTypeSelector);
+        } catch (UiObjectNotFoundException e) {
+            fail("Preferred network type not found");
+        }
+
+        UiObject preferredNetworkType = device.findObject(preferredNetworkTypeSelector);
+
+        Wait wait = new Wait();
+        wait.until(preferredNetworkType::exists);
+        preferredNetworkType.clickAndWaitForNewWindow();
+
+        UiObject dataSwitchLTE = device.findObject(new UiSelector().text("LTE (recommended)"));
         if (dataSwitchLTE.waitForExists(5L)) {
             if (!dataSwitchLTE.isChecked()) {
                 dataSwitchLTE.clickAndWaitForNewWindow(5L);
@@ -347,8 +364,10 @@ public class NetworkIOTest {
             }
         }
         assertTrue("LTE data mode is not enabled.", new Wait().until(dataSwitchLTE::exists));
-        AppLauncher.launchPath(instrumentation, true, path);
+        new Wait().until(preferredNetworkType::exists);
+        preferredNetworkType.clickAndWaitForNewWindow();
 
+        UiObject dataSwitch3G = device.findObject(new UiSelector().text("3G"));
         if (dataSwitch3G.waitForExists(5L)) {
             if (!dataSwitch3G.isChecked()) {
                 dataSwitch3G.clickAndWaitForNewWindow(5L);
@@ -357,8 +376,11 @@ public class NetworkIOTest {
             }
         }
         assertTrue("3G data mode is not enabled.", new Wait().until(dataSwitch3G::exists));
-        AppLauncher.launchPath(instrumentation, true, path);
 
+        new Wait().until(preferredNetworkType::exists);
+        preferredNetworkType.clickAndWaitForNewWindow();
+
+        UiObject dataSwitch2G = device.findObject(new UiSelector().text("2G"));
         if (dataSwitch2G.waitForExists(5L)) {
             if (!dataSwitch2G.isChecked()) {
                 dataSwitch2G.clickAndWaitForNewWindow(5L);
@@ -368,7 +390,9 @@ public class NetworkIOTest {
             }
         }
         assertTrue("2G data mode is not enabled.", new Wait().until(dataSwitch2G::exists));
-        AppLauncher.launchPath(instrumentation, true, path);
+
+        new Wait().until(preferredNetworkType::exists);
+        preferredNetworkType.clickAndWaitForNewWindow();
 
         if (dataSwitchLTE.waitForExists(5L)) {
             if (!dataSwitchLTE.isChecked()) {
