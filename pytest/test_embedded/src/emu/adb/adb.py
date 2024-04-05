@@ -15,18 +15,12 @@ import asyncio
 import logging
 import platform
 from pathlib import Path
+import time
 
-from ppadb.client_async import ClientAsync as AdbClientAsync
-from ppadb import InstallError
-
-from emu.adb.async_device import AdbDeviceAsync, DeviceStream
+from emu.emulator_exceptions import EmulatorNotFoundException
 from emu.logging.logcat_parser import parse_logcat
 from emu.process.command import Command
 from emu.timing import eventually
-
-
-class AdbDeviceNotFound(Exception):
-    pass
 
 
 class Adb:
@@ -36,7 +30,6 @@ class Adb:
         name (str): Name of the emulator.
         avd_id (str): Identifier of the Android Virtual Device (AVD) associated with the emulator.
         logger (Logger): Logging object to handle logs for this ADB instance.
-        client (AdbClientAsync): An instance of the AdbClientAsync class for ADB communication.
         adb_binary (Path): Path to the ADB executable.
 
     Args:
@@ -53,84 +46,23 @@ class Adb:
                             calls with the adb executable
             adb (Path): path to the adb executable.
         """
+
         self.name = name
         self.avd_id = avd_id
         self.logger = logging.getLogger(f"{avd_id}-adb")
-        self.client: AdbClientAsync = AdbClientAsync()
         self.emulator = emu
 
         if not adb.exists() and platform.system() == "Windows":
             adb = adb.with_suffix(".exe")
-
         self.adb_binary = adb.absolute()
-
-    async def device(self) -> AdbDeviceAsync:
-        """Get the DeviceAsync object representing the Android emulator.
-
-        Returns:
-            DeviceAsync: An instance of the Device class representing the emulator.
-
-        Raises:
-            AdbDeviceNotFound: If the device with the specified name is not found or has crashed.
-        """
-        device = await self.client.device(self.name)
-        if not device:
-            raise AdbDeviceNotFound(
-                f"Unable to find the device {self.name}, did it crash?"
-            )
-        return AdbDeviceAsync(device, self.client, self.adb_binary, self.logger)
-
-    async def _with_adb_retry(self, method, params):
-        """Executes the given ADB method with retry logic in case of failure.
-
-        Args:
-            method: The ADB method to be executed.
-            params: List of parameters to be passed to the ADB method.
-
-        Returns:
-            The result of the ADB method.
-
-        Note:
-            This method is for internal use and should not be called directly.
-        """
-        try:
-            logging.info(
-                "adb: %s(%s)", method.__name__, ", ".join([str(x) for x in params])
-            )
-            return await method(*params)
-        except InstallError as ierr:
-            logging.error(
-                "Encoutered an installation failure, propagating without retry (%s).",
-                ierr,
-            )
-            raise ierr
-        except Exception as rerr:
-            logging.error(
-                "Failed to invoke method due %s,  on (%s)",
-                rerr,
-                self.emulator,
-                exc_info=True,
-            )
-            if self.emulator.is_alive():
-                logging.error("Restarting adb and retrying.")
-                await self.stop_server()
-                await self.start_server()
-                return await method(*params)
-            else:
-                raise rerr
-
-    async def stop_server(self) -> None:
-        """Stops the adb server."""
-        await Command([self.adb_binary, "kill-server"]).run_until_finished()
-
-    async def start_server(self) -> None:
-        """Starts the adb server."""
-        await Command([self.adb_binary, "start-server"]).run_until_finished()
 
     async def restart(self) -> None:
         """Restarts the adb server."""
-        await self.stop_server()
-        await self.start_server()
+
+        await Command([self.adb_binary, "kill-server"]).run_until_finished()
+        await asyncio.sleep(1)
+        await Command([self.adb_binary, "start-server"]).run_until_finished()
+        await asyncio.sleep(1)
 
     async def is_installed(self, package: str) -> bool:
         """Check if the given package is installed on the device.
@@ -141,8 +73,8 @@ class Adb:
         Returns:
             bool: True if the package is installed, False otherwise.
         """
-        device = await self.device()
-        return await self._with_adb_retry(device.is_installed, [package])
+
+        return "package:" in await self.shell(f"pm path {package}")
 
     async def install(self, apk: Path) -> None:
         """Install the given apk on the device.
@@ -150,8 +82,9 @@ class Adb:
         Args:
             apk (Path): The path to the APK file to be installed.
         """
-        device = await self.device()
-        await self._with_adb_retry(device.install, [apk])
+
+        await self._check_adb_and_raise()
+        await Command([self.adb_binary, "-s", self.name, "install", apk]).run_until_finished()
 
     async def pull(self, src: str, dest: str) -> None:
         """Pull a file from the device to the host.
@@ -160,8 +93,9 @@ class Adb:
             src (str): The path of the file on the device.
             dest (str): The destination path on the host.
         """
-        device = await self.device()
-        await self._with_adb_retry(device.pull, [src, dest])
+
+        await self._check_adb_and_raise()
+        await Command([self.adb_binary, "-s", self.name, "pull", src, dest]).run_until_finished()
 
     async def push(self, src: str, dest: str) -> None:
         """Push a file from the host to the device.
@@ -170,22 +104,40 @@ class Adb:
             src (str): The path of the file on the host.
             dest (str): The destination path on the device.
         """
-        device = await self.device()
-        await self._with_adb_retry(device.push, [src, dest])
+
+        await self._check_adb_and_raise()
+        await Command([self.adb_binary, "-s", self.name, "push", src, dest]).run_until_finished()
 
     async def wait_boot_complete(self, timeout=60, timedelta=1):
-        """Wait for the device to complete the boot process.
-
-        Args:
-            timeout (int, optional): Maximum time to wait for boot completion in seconds. Default is 60 seconds.
-            timedelta (int, optional): Time interval between boot status checks in seconds. Default is 1 second.
         """
-        device = await self.device()
-        return await self._with_adb_retry(
-            device.wait_boot_complete, [timeout, timedelta]
-        )
+        Asynchronously waits for boot completion (up to a timeout) by polling a shell command.
 
-    async def online(self):
+        :param timeout: Maximum time to wait in seconds (default: 60).
+        :param timedelta: Interval between polling attempts in seconds (default: 1).
+        """
+
+        cmd = "getprop sys.boot_completed"
+        end_time = time.time() + timeout
+
+        while True:
+            try:
+                # Execute shell command asynchronously
+                result = await self.shell(cmd)
+                if result.strip() == "1":
+                    return True
+
+            except RuntimeError as e:
+                logging.error(e)
+
+            # Check for timeout
+            if time.time() > end_time:
+                raise TimeoutError()
+
+            # Wait before next check (asynchronously)
+            if timedelta > 0:
+                await asyncio.sleep(timedelta)
+
+    async def online(self) -> bool:
         """Check if the device is connected and accessible.
 
         This state indicates that the device is ready for
@@ -194,46 +146,27 @@ class Adb:
         Returns:
             bool: True if the device is online, False otherwise.
         """
-        device = await self.device()
-        return "device" in await self._with_adb_retry(device.get_state, [])
 
-    async def shell(self, cmd: str, timeout: int = 10, retry: int = 1) -> str:
+        (exit_code, output) = await Command([self.adb_binary, "devices"]).run_until_finished()
+        splits = " ".join(output).split()
+        return self.name in splits and "device" in splits
+
+    async def shell(self, cmd: str, timeout: int = 10) -> str:
         """Runs the given shell command on the emulator
 
         Args:
             cmd (str): Command to execute
             timeout (int, optional): Timeout. Defaults to 10s.
-            retry (int, optional): Attempts that will be made to execute
-                     the shell command when encountering timeouts.
-
         Returns:
             str: Result of the shell command
         """
-        for attempts in range(retry):
-            try:
-                device = await self.device()
-                return await device.shell(cmd, timeout=timeout)
-            except (asyncio.TimeoutError, TimeoutError) as te:
-                if not self.emulator.is_alive():
-                    logging.error(
-                        "Emulator %s, appears to be dead.. giving up.", self.emulator
-                    )
-                    return ""
 
-                logging.error(
-                    "Timeout when calling shell command, attempt %s/%s (%s)",
-                    attempts,
-                    retry,
-                    self.emulator,
-                )
-                await self.restart()
-
-        return ""
+        await self._check_adb_and_raise()
+        (exit_code, output) = await Command([self.adb_binary, "-s", self.name, "shell", cmd]).run_until_finished(timeout)
+        return " ".join(output)
 
     async def run(self, cmd: list[str], timeout: int = 10) -> (int, [str]):
         """Runs the given command on the emulator
-
-        Please do not use this, it spawns an adb process.
 
         Args:
             cmd (list[str]): Command to execute
@@ -245,39 +178,18 @@ class Adb:
         Raises:
             subprocess.CalledProcessError
         """
-        return await Command(
-            [self.adb_binary, "-s", self.name] + cmd
-        ).run_until_finished(timeout)
 
-    async def stream(self, cmd: str, timeout: int = 10) -> DeviceStream:
-        """Runs the given command on the emulator asynchronously
-
-        You usually want to use this like this:
-
-        async with adb.stream("some shell cmd") as stream:
-            # do some things.
-            for line in stream
-                print(line)
-
-        Args:
-            cmd (str): Command to execute
-            timeout (int): Timeout in seconds for the iterator. The
-                 iterator will exit if shell cmd does not produce output in
-                 the given time.
-
-        Returns:
-            AdbStream: An observable stream with results from adb
-        """
-        device = await self.device()
-        return await device.shell_stream(cmd, timeout)
+        await self._check_adb_and_raise()
+        return await Command([self.adb_binary, "-s", self.name] + cmd).run_until_finished(timeout)
 
     async def clear_logcat(self):
-        """
-        Clears the Android device's Logcat buffer and waits for a new log line to appear.
+        """Clears the Android device's Logcat buffer and waits for a new log line to appear.
 
         Returns:
             True if the Logcat was successfully cleared, False if a timeout occurred (3s).
         """
+
+        await self._check_adb_and_raise()
         lines = await self.shell("logcat -d | tail")
         old = parse_logcat(lines)
         await self.shell("logcat -c")
@@ -300,33 +212,16 @@ class Adb:
 
         return await eventually(logcat_cleared, timeout=3)
 
-    async def logcat(
-        self, clear: bool = False, tag: str = None, timeout=180
-    ) -> DeviceStream:
-        """Obtains the current logcat stream
+    async def _check_adb_and_raise(self) -> None:
+        """Checks if the device is available and online. Raises if not.
 
-        You usually want to use it like this:
-
-        async with await adb.logcat(tag="my_tag) as stream:
-            async for line in stream:
-                print(f"Here's a logcat line: {line}")
-
-
-        Args:
-            tag (str): Tag to filter by
-            clear (bool, optional): Clear the logcat buffer. Defaults to True.
-            timeout (int, optional): Timeout in seconds, happens if no logcat line
-                          is produced with the given time
-
-        Returns:
-            DeviceStream: An AsyncIterator with logcat lines
+        Note:
+            This method is for internal use and should not be called directly.
         """
-        if clear:
-            self.clear_logcat()
 
-        cmd = "logcat"
-        if tag:
-            cmd += f" -s {tag}"
-
-        device = await self.device()
-        return await device.shell_stream(cmd, timeout)
+        if not self.emulator.is_alive():
+            self.logger.error(f"Emulator with id: {self.name} is not alive.")
+        elif not await self.online():
+            await self.restart()
+            if not await self.online():
+                self.logger.error(f"Emulator with id: {self.name} is not online.")
