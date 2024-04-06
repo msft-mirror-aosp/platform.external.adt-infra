@@ -503,8 +503,6 @@ async def launch_animiation_app(avd: BaseEmulator):
     It will wait for at most 20 seconds before continuing.
     """
     logging.info("--> launch_animiation_app")
-    old_level = logging.getLogger("ppadb").level
-    logging.getLogger("ppadb").setLevel(logging.DEBUG)
     assert avd.is_alive()
     assert await avd.stop_activity("com.google.AnimateBox")
 
@@ -518,14 +516,12 @@ async def launch_animiation_app(avd: BaseEmulator):
             logging.info("Waiting for --STARTED-- in logcat stream.")
             async for line in stream:
                 if "--STARTED--" in line:
-                    logging.getLogger("ppadb").setLevel(old_level)
                     return True
 
     try:
         return await asyncio.wait_for(wait_for_started(), timeout=5)
     except asyncio.TimeoutError:
         logging.warning("No --STARTED-- tag seen.")
-        logging.getLogger("ppadb").setLevel(old_level)
         return False
 
 
@@ -693,9 +689,9 @@ def log_adb_interactions():
     You can use this to analyze if there are strange things happening with ADB interactions.
 
     """
-    logging.getLogger("ppadb").setLevel(logging.DEBUG)
+    logging.getLogger("adb").setLevel(logging.DEBUG)
     yield
-    logging.getLogger("ppadb").setLevel(logging.CRITICAL)
+    logging.getLogger("adb").setLevel(logging.CRITICAL)
 
 
 @pytest.fixture(scope="session")
