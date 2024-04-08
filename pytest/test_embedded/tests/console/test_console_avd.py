@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from emu.timing import eventually
 
 
 @pytest.mark.boot
@@ -77,3 +78,36 @@ async def test_avd_dir_is_canonical_in_pid_xxx_ini(avd, telnet):
         avd.android_avd_home, f"{avd.configuration.name}.avd"
     ).absolute()
     assert props["avd.dir"] == str(expected_path)
+
+
+@pytest.mark.e2e
+@pytest.mark.sanity
+async def test_emulator_help_console_command(avd, telnet):
+    help_commands = [
+        "help-verbose",
+        "ping",
+        "avd",
+        "crash",
+        "fold",
+        "unfold",
+        "sms",
+        "sensor",
+        "multidisplay",
+        "rotate",
+        "debug",
+        "grpc",
+        "screenrecord",
+        "network",
+        "event",
+        "power",
+        "restart",
+        "geo",
+        "gsm",
+        "posture",
+        "kill",
+        "restart",
+    ]
+    result = await telnet.send("help")
+
+    for help_command in help_commands:
+        assert help_command in result, "console help command failed"
