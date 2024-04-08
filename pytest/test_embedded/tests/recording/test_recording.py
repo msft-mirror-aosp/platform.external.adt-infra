@@ -95,7 +95,7 @@ async def test_can_only_record_once(screen_service, tmp_path):
 async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
     sample_file = tmp_path / "sample.webm"
     sample_file_header =  b"\x1A\x45\xDF\xA3"
-    screen_records_video(screen_service, sample_file, sample_file_header)
+    await screen_records_video(screen_service, sample_file, sample_file_header)
 
 @pytest.mark.flaky
 @pytest.mark.graphics
@@ -103,7 +103,7 @@ async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_p
 async def test_screen_records_video_in_gif(screen_service, animation_app, tmp_path):
     sample_file = tmp_path / "sample.gif"
     sample_file_header = b"\x1aE\xdf\xa3"
-    screen_records_video(screen_service, sample_file, sample_file_header)
+    await screen_records_video(screen_service, sample_file, sample_file_header)
 
 async def screen_records_video(screen_service, sample_file, sample_file_header):
     info = RecordingInfo(width=120, height=120, file_name=str(sample_file))

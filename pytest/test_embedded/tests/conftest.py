@@ -614,11 +614,11 @@ async def coldboot_animation_app(avd: BaseEmulator):
     # sleep a few seconds so that system ui have updated
     # time, lte signal and so on; we are doing a cold boot
     # and this extra seconds seems reasonable
-    asyncio.sleep(10)
+    await asyncio.sleep(10)
 
     tries = 3
     while not await launch_animiation_app(avd) and tries > 0:
-        asyncio.sleep(1)
+        await asyncio.sleep(1)
         tries = tries - 1
 
     assert tries >= 0, "Unable to successfully launch the animation app."
