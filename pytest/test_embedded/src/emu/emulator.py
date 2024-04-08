@@ -115,8 +115,6 @@ class BaseEmulator(object):
                 f"No emulator with id: {avd_id} in [{found}], did the process terminate?"
             )
 
-        # Log spam!
-        # logging.getLogger("ppadb").setLevel(logging.DEBUG)
         self.adb = Adb(
             self.description.get("avd.id"),
             self.description.name(),

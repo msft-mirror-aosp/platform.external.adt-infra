@@ -20,6 +20,7 @@ import time
 from emu.emulator_exceptions import EmulatorNotFoundException
 from emu.logging.logcat_parser import parse_logcat
 from emu.process.command import Command
+from emu.process.command_stream import AsyncCommandStream
 from emu.timing import eventually
 
 
@@ -225,3 +226,48 @@ class Adb:
             await self.restart()
             if not await self.online():
                 self.logger.error(f"Emulator with id: {self.name} is not online.")
+
+    async def logcat(self, clear: bool=False, tag: str=None) -> AsyncCommandStream:
+        """Obtains the current logcat stream
+
+        You usually want to use it like this:
+
+        async with await adb.logcat(tag="my_tag) as stream:
+            async for line in stream:
+                print(f"Here's a logcat line: {line}")
+
+        Args:
+            tag (str): Tag to filter by
+            clear (bool, optional): Clear the logcat buffer. Defaults to False.
+
+        Returns:
+            AsyncCommandStream: An AsyncIterator with logcat lines
+        """
+
+        if clear:
+            await self.clear_logcat()
+
+        cmd = ["logcat"]
+        if tag:
+            cmd += f" -s {tag}"
+
+        return AsyncCommandStream([self.adb_binary, "-s", self.name] + cmd)
+
+    async def stream(self, cmd: str) -> AsyncCommandStream:
+        """Runs the given command on the emulator asynchronously
+
+        You usually want to use this like this:
+
+        async with adb.stream("some shell cmd") as stream:
+            # do some things.
+            for line in stream
+                print(line)
+
+        Args:
+            cmd (str): Command to execute
+
+        Returns:
+            AdbStream: An observable stream with results from adb
+        """
+
+        return AsyncCommandStream([self.adb_binary, "-s", self.name] + cmd)
