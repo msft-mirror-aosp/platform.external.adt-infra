@@ -138,11 +138,15 @@ class Adb:
             if timedelta > 0:
                 await asyncio.sleep(timedelta)
 
-    async def online(self) -> bool:
+    async def online(self, try_restart=True) -> bool:
         """Check if the device is connected and accessible.
 
         This state indicates that the device is ready for
         communication with ADB commands.
+
+        Args:
+            try_restart (bool): If true, we will try to restrat the adb
+            server once, if the device is not online.
 
         Returns:
             bool: True if the device is online, False otherwise.
@@ -150,7 +154,13 @@ class Adb:
 
         (exit_code, output) = await Command([self.adb_binary, "devices"]).run_until_finished()
         splits = " ".join(output).split()
-        return self.name in splits and "device" in splits
+        is_online = self.name in splits and "device" in splits
+
+        if not is_online and try_restart:
+            await self.restart()
+            return await self.online(False)
+
+        return is_online
 
     async def shell(self, cmd: str, timeout: int = 10) -> str:
         """Runs the given shell command on the emulator
@@ -223,9 +233,7 @@ class Adb:
         if not self.emulator.is_alive():
             self.logger.error(f"Emulator with id: {self.name} is not alive.")
         elif not await self.online():
-            await self.restart()
-            if not await self.online():
-                self.logger.error(f"Emulator with id: {self.name} is not online.")
+            self.logger.error(f"Emulator with id: {self.name} is not online.")
 
     async def logcat(self, clear: bool=False, tag: str=None) -> AsyncCommandStream:
         """Obtains the current logcat stream

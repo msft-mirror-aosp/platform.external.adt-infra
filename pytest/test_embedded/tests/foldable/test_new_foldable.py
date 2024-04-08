@@ -70,7 +70,7 @@ async def set_device_hinge_angle(emu, angle):
 @pytest.mark.async_timeout(60)
 async def test_new_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     await set_device_hinge_angle(emulator_controller, unfold_angle)
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
     image1 = await emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,

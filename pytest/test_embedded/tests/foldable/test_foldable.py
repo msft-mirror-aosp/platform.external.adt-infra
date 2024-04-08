@@ -56,7 +56,7 @@ async def snapshot_service(avd, service):
 @pytest.mark.async_timeout(30)
 async def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     set_device_hinge_angle(emulator_controller, unfold_angle)
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
     image1 = await emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
@@ -68,7 +68,7 @@ async def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     assert image1.format.foldedDisplay.height == 0
 
     await set_device_hinge_angle(emulator_controller, fold_angle)
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
     image2 = await emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
@@ -81,7 +81,7 @@ async def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     assert image2.format.foldedDisplay.width == image2.format.width
     assert image2.format.foldedDisplay.height == image2.format.height
     await set_device_hinge_angle(emulator_controller, unfold_angle)
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
     image3 = await emulator_controller.getScreenshot(
         ImageFormat(
             format=fmt,
@@ -102,7 +102,7 @@ async def test_folded_snapshot_sanity(
 ):
     # fold the device
     await set_device_hinge_angle(emulator_controller, fold_angle)
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
 
     # take a snapshot of folded device
     assert await snapshot_service.save("foo")
@@ -111,7 +111,7 @@ async def test_folded_snapshot_sanity(
 
     # unfold the device
     await set_device_hinge_angle(emulator_controller, unfold_angle)
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
 
     # take a screenshot of unfolded device
     image1 = await emulator_controller.getScreenshot(
@@ -124,7 +124,7 @@ async def test_folded_snapshot_sanity(
     # verify if snapshot taken from a folded AVD, when loaded on unfolded AVD
     # makes an unfolded AVD to a folded AVD.
     assert await snapshot_service.load("foo")
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
 
     # take a screenshot of folded device
     image2 = await emulator_controller.getScreenshot(
@@ -148,7 +148,7 @@ async def test_unfolded_snapshot_sanity(
 ):
     # unfold the device
     await set_device_hinge_angle(emulator_controller, unfold_angle)
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
 
     # take a snapshot of unfolded device
     assert await snapshot_service.save("foo")
@@ -157,7 +157,7 @@ async def test_unfolded_snapshot_sanity(
 
     # fold the device
     await set_device_hinge_angle(emulator_controller, fold_angle)
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
 
     # take a screenshot of a folded device
     image1 = await emulator_controller.getScreenshot(
@@ -170,7 +170,7 @@ async def test_unfolded_snapshot_sanity(
     # Verify if snapshot taken from a unfolded AVD, when loaded on a folded AVD
     # makes a folded AVD to an unfolded AVD.
     assert await snapshot_service.load("foo")
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
 
     # take a screenshot of unfolded device
     image2 = await emulator_controller.getScreenshot(
