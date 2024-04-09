@@ -52,9 +52,9 @@ async def wait_for_keyboard(event_stream: AsyncLogHandler, ev_code):
     return 0
 
 
-async def keypress_expects(emulator, log, jskey, expected_code):
+async def keypress_expects(avd, log, jskey, expected_code):
     """Sends a key press through grpc, and expecting the event on the emulator log."""
-    stub = EmulatorControllerStub(emulator.channel)
+    stub = EmulatorControllerStub(avd.channel)
 
     logging.info("Sending %s, expecting %d", jskey, expected_code)
     await stub.sendKey(KeyboardEvent(key=jskey, eventType=KeyboardEvent.keypress))

@@ -73,7 +73,7 @@ async def shutdown(emulator):
 
     # Maybe we didn't shutdown in time, if so try some other method.
     if emulator.is_alive():
-        emulator.stop(timeout=60)
+        await emulator.stop(timeout=60)
 
     assert not emulator.is_alive()
 
@@ -98,7 +98,8 @@ async def get_booted_notification_time(emulator):
 async def test_first_time_booted(emulator, record_property):
     """Make sure the emulator status is set to booted."""
 
-    await emulator.stop()
+    assert not emulator.is_alive()
+
     logging.info("Launching emulator ...")
     myflags = ["-wipe-data", "-no-snapshot-load"]
     if platform.processor() == "i386" and platform.system() == "Darwin":
@@ -149,7 +150,8 @@ async def test_snapshot_booted(emulator):
     is set to timeout in 60 seconds
     """
 
-    await emulator.stop()
+    assert not emulator.is_alive()
+
     logging.info("Launching emulator ...")
     myflags = ["-no-snapshot-save"]
     if platform.system() == "Windows":
@@ -182,7 +184,8 @@ async def test_snapshot_booted(emulator):
 async def test_emulator_should_idle(emulator):
     """check emulator use less than 25% single cpu when idle."""
 
-    await emulator.stop()
+    assert not emulator.is_alive()
+
     logging.info("Launching emulator ...")
     myflags = ["-no-snapshot-save"]
     if platform.system() == "Windows":
