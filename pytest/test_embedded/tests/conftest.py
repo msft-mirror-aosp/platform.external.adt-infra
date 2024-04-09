@@ -322,11 +322,8 @@ async def crash_reporter(pytestconfig):
     logging.info("=== completed crash reporter")
 
 
-# -------------------------------
-# Session wide fixtures are below
-# -------------------------------
-@pytest.fixture(scope="module")
-def emulator(request, pytestconfig) -> BaseEmulator:
+@pytest.fixture
+async def emulator(request, pytestconfig) -> BaseEmulator:
     """Makes a configured emulator available
 
     Note: You usually don't need fixture, as it will be automatically provided
@@ -411,10 +408,16 @@ def emulator(request, pytestconfig) -> BaseEmulator:
         emu.symbols = pytestconfig.getoption("symbols")
         pytest.emulators[name] = emu
 
-    return pytest.emulators[name]
+    emu = pytest.emulators[name]
+
+    if emu.is_alive():
+        await emu.stop()
+    assert not emu.is_alive()
+
+    return emu
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 @pytest.mark.async_timeout(200)
 async def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
