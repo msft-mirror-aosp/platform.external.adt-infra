@@ -359,7 +359,7 @@ async def test_rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.async_timeout(10)
 @pytest.mark.flaky
 async def test_rotation_observable_through_screenshot_embedded_mode(
-    emulator_controller, telnet, emulator, at_home
+    emulator_controller, telnet, avd, at_home
 ):
     await rotation_through_console_observable_through_screenshot(
         emulator_controller, telnet
@@ -371,7 +371,7 @@ async def test_rotation_observable_through_screenshot_embedded_mode(
 @pytest.mark.async_timeout(10)
 @pytest.mark.flaky
 async def test_rotation_observable_through_stream_screenshot_embedded_mode(
-    emulator_controller, telnet, emulator, at_home, stream_screenshot
+    emulator_controller, telnet, avd, at_home, stream_screenshot
 ):
     await rotation_through_console_observable_through_stream_screenshot(
         stream_screenshot, telnet

@@ -168,7 +168,7 @@ async def all_orientations(emulator_controller, request):
 @pytest.mark.timeout_win(timeout=120)
 @pytest.mark.flaky
 async def test_screenshot_valid_width_and_height(
-    emulator, get_screenshot, default_display_config
+    avd, get_screenshot, default_display_config
 ):
     """Make sure that screenshot returns valid w and h"""
 

@@ -108,6 +108,8 @@ async def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 
     Note, this test is placed in the z_crash directory to have it run last.
     """
+    assert not emulator.is_alive()
+
     if not crash_reporter.available():
         pytest.skip("No crash reporter available, let's not crash the emulator")
 
@@ -130,10 +132,12 @@ async def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     This makes sure that we produced symbols, so that if we have crash reports
     we can decode them on our crash server.
     """
+    assert not emulator.is_alive()
+
     if not crash_reporter.available():
         pytest.skip("No crash reporter available, let's not crash the emulator")
 
-    if not crash_reporter.has_symbols():
+    if not await crash_reporter.has_symbols():
         pytest.skip("No symbols available, let's not crash the emulator")
 
     crashes = await crash(emulator, crash_reporter)
