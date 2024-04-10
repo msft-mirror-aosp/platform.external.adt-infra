@@ -59,7 +59,7 @@ async def test_inbound_call(
     Verify:
       Phone call operation is successful.
     """
-    send_phone_call(
+    await send_phone_call(
         emulator_controller,
         PhoneCall(
             operation=phone_call_operation,

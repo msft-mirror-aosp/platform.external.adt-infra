@@ -106,7 +106,7 @@ async def test_app_launch_after_snapshot_load(avd, snapshot_service):
     assert await snapshot_service.load("foo")
     assert await avd.wait_for_boot(timeout=120)
     assert await avd.stop_activity("com.google.AnimateBox")
-    asyncio.sleep(5)
+    await asyncio.sleep(5)
     assert await avd.start_activity(
         "com.google.AnimateBox/com.google.emu.MainActivity", params=None
     )
@@ -118,7 +118,7 @@ async def test_snapshot_list_perf(benchmark, snapshot_service, coldboot_animatio
     # create a 10 snapshots while we are running the animation app.
     for i in range(0, 10):
         # Make sure the animation state is changing the state a bit.
-        asyncio.sleep(1.0)
+        await asyncio.sleep(1.0)
         await snapshot_service.save("test-{}".format(i))
 
     # And measure the lists service.

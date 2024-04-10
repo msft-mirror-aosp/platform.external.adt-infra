@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from emu.timing import eventually
 
 
 @pytest.mark.boot
@@ -8,10 +9,10 @@ import pytest
 @pytest.mark.fast
 @pytest.mark.e2e
 @pytest.mark.async_timeout(10)
-async def test_avd_canonical_path(emulator, avd, telnet):
+async def test_avd_canonical_path(avd, telnet):
     """Test adb emu avd path returns a canonical path"""
     expected_path = Path(
-        emulator.android_avd_home, f"{emulator.configuration.name}.avd"
+        avd.android_avd_home, f"{avd.configuration.name}.avd"
     ).absolute()
     path = await telnet.send("avd path")
     assert str(expected_path) in path
@@ -32,12 +33,12 @@ async def test_avd_snapshots_path_has_no_dots(telnet):
 @pytest.mark.console
 @pytest.mark.e2e
 @pytest.mark.async_timeout(10)
-async def test_avd_tracing_is_mounted(emulator, avd, telnet):
+async def test_avd_tracing_is_mounted(avd, telnet):
     """Test adb shell ls /sys/kernel/tracing/trace_marker valid"""
     no_file = "No such file or directory"
-    ls_file = await emulator.adb.shell("ls /sys/kernel/tracing/trace_marker")
+    ls_file = await avd.adb.shell("ls /sys/kernel/tracing/trace_marker")
     if no_file in ls_file:
-        ls_file = await emulator.adb.shell("ls /sys/kernel/debug/tracing/trace_marker")
+        ls_file = await avd.adb.shell("ls /sys/kernel/debug/tracing/trace_marker")
         assert no_file not in ls_file
 
 
@@ -77,3 +78,36 @@ async def test_avd_dir_is_canonical_in_pid_xxx_ini(avd, telnet):
         avd.android_avd_home, f"{avd.configuration.name}.avd"
     ).absolute()
     assert props["avd.dir"] == str(expected_path)
+
+
+@pytest.mark.e2e
+@pytest.mark.sanity
+async def test_emulator_help_console_command(avd, telnet):
+    help_commands = [
+        "help-verbose",
+        "ping",
+        "avd",
+        "crash",
+        "fold",
+        "unfold",
+        "sms",
+        "sensor",
+        "multidisplay",
+        "rotate",
+        "debug",
+        "grpc",
+        "screenrecord",
+        "network",
+        "event",
+        "power",
+        "restart",
+        "geo",
+        "gsm",
+        "posture",
+        "kill",
+        "restart",
+    ]
+    result = await telnet.send("help")
+
+    for help_command in help_commands:
+        assert help_command in result, "console help command failed"

@@ -322,11 +322,8 @@ async def crash_reporter(pytestconfig):
     logging.info("=== completed crash reporter")
 
 
-# -------------------------------
-# Session wide fixtures are below
-# -------------------------------
-@pytest.fixture(scope="module")
-def emulator(request, pytestconfig) -> BaseEmulator:
+@pytest.fixture
+async def emulator(request, pytestconfig) -> BaseEmulator:
     """Makes a configured emulator available
 
     Note: You usually don't need fixture, as it will be automatically provided
@@ -411,10 +408,16 @@ def emulator(request, pytestconfig) -> BaseEmulator:
         emu.symbols = pytestconfig.getoption("symbols")
         pytest.emulators[name] = emu
 
-    return pytest.emulators[name]
+    emu = pytest.emulators[name]
+
+    if emu.is_alive():
+        await emu.stop()
+    assert not emu.is_alive()
+
+    return emu
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 @pytest.mark.async_timeout(200)
 async def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
@@ -503,8 +506,6 @@ async def launch_animiation_app(avd: BaseEmulator):
     It will wait for at most 20 seconds before continuing.
     """
     logging.info("--> launch_animiation_app")
-    old_level = logging.getLogger("ppadb").level
-    logging.getLogger("ppadb").setLevel(logging.DEBUG)
     assert avd.is_alive()
     assert await avd.stop_activity("com.google.AnimateBox")
 
@@ -518,14 +519,12 @@ async def launch_animiation_app(avd: BaseEmulator):
             logging.info("Waiting for --STARTED-- in logcat stream.")
             async for line in stream:
                 if "--STARTED--" in line:
-                    logging.getLogger("ppadb").setLevel(old_level)
                     return True
 
     try:
         return await asyncio.wait_for(wait_for_started(), timeout=5)
     except asyncio.TimeoutError:
         logging.warning("No --STARTED-- tag seen.")
-        logging.getLogger("ppadb").setLevel(old_level)
         return False
 
 
@@ -618,11 +617,11 @@ async def coldboot_animation_app(avd: BaseEmulator):
     # sleep a few seconds so that system ui have updated
     # time, lte signal and so on; we are doing a cold boot
     # and this extra seconds seems reasonable
-    asyncio.sleep(10)
+    await asyncio.sleep(10)
 
     tries = 3
     while not await launch_animiation_app(avd) and tries > 0:
-        asyncio.sleep(1)
+        await asyncio.sleep(1)
         tries = tries - 1
 
     assert tries >= 0, "Unable to successfully launch the animation app."
@@ -693,9 +692,9 @@ def log_adb_interactions():
     You can use this to analyze if there are strange things happening with ADB interactions.
 
     """
-    logging.getLogger("ppadb").setLevel(logging.DEBUG)
+    logging.getLogger("adb").setLevel(logging.DEBUG)
     yield
-    logging.getLogger("ppadb").setLevel(logging.CRITICAL)
+    logging.getLogger("adb").setLevel(logging.CRITICAL)
 
 
 @pytest.fixture(scope="session")
