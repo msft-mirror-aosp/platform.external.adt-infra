@@ -322,7 +322,8 @@ async def crash_reporter(pytestconfig):
     logging.info("=== completed crash reporter")
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
+@pytest.mark.async_timeout(200)
 async def emulator(request, pytestconfig) -> BaseEmulator:
     """Makes a configured emulator available
 
@@ -417,7 +418,7 @@ async def emulator(request, pytestconfig) -> BaseEmulator:
     return emu
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
 async def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
