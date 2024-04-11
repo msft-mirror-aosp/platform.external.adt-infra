@@ -502,7 +502,6 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "T144630613")
     public void activateDeactivatePolicy() throws Exception {
         try {
             SettingsUtil.launchDeviceAdminApps(instrumentation, "Security", "Device admin apps");
@@ -589,10 +588,10 @@ public class SettingsTest {
      *   1. App settings for Maps are reset to default (Verify that Permissions and notification
      *   settings for Maps are cleared).
      *   </pre>
-     */
-    @Ignore("Test is canceled on crash during app permission reset.")
+     */    
     @Test
     @TestInfo(id = "d49facce-9be7-47e0-afde-2052d3c57a25")
+    @Ignore("Test is canceled on crash during app permission reset")
     public void modifyAndResetAppPermissions() throws Exception {
         String appName = "Maps";
         String contactsText = "Contacts";
@@ -809,9 +808,9 @@ public class SettingsTest {
      *   2. Test file is copied into the Download folder.
      *   3. Test file is deleted from the Download folder.
      *   </pre>
-     */
-    @Ignore("Cannot access external storage without a runtime permissions implementation")
+     */    
     @Test
+    @Ignore("Cannot access external storage without a runtime permissions implementation")
     public void filesDeleted() throws Exception {
         String[] testFileNames = {"test_text_01.txt", "test_text_02.txt", "test_text_03.txt"};
 

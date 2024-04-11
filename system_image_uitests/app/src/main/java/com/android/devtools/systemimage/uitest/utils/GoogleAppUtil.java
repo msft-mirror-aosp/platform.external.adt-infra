@@ -26,7 +26,8 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 import java.util.concurrent.TimeUnit;
 import android.util.Log;
-import android.view.KeyEvent;
+
+import org.junit.Assert;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -47,15 +48,17 @@ public class GoogleAppUtil {
     public static String getUserEmail() {
         return email;
     }
-
     public static String getUserPassword() {
         return password;
     }
 
     /**
      * Log a user into a Google application
-     *  @param instrumentation
-     *  @return boolean flag indicating success
+     *
+     * @param instrumentation the instrumentation instance
+     * @param firstAttempt indicates if it's the first attempt to log in
+     * @return boolean flag indicating success
+     * @throws Exception if an error occurs during the login process
      */
     public static boolean loginGoogleApp(Instrumentation instrumentation, boolean firstAttempt) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
@@ -173,6 +176,9 @@ public class GoogleAppUtil {
         editInput.setText(getUserEmail());
         clickNext(device);
 
+        assertTrue("Forgot email link not dismissed.",
+                forgotEmailLink.waitUntilGone(90000L));
+
         UiObject forgotPasswordLink;
 
         if (api == 27 || api == 28) {
@@ -198,6 +204,9 @@ public class GoogleAppUtil {
         Log.i("Login", "enter password");
         editInput.setText(getUserPassword());
         clickNext(device);
+
+        assertTrue("Forgot password link not dismissed.",
+                forgotPasswordLink.waitUntilGone(90000L));
 
         boolean isSignedIn =
                 new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
@@ -278,76 +287,102 @@ public class GoogleAppUtil {
         return true;
     }
 
+    /**
+     * Log a user out of the Google Chrome application
+     *
+     * @param instrumentation the instrumentation instance
+     * @return boolean flag indicating success
+     * @throws Exception if an error occurs during the logout process
+     */
     public static boolean logoutGoogleChrome(Instrumentation instrumentation) throws Exception {
-        final UiDevice device = UiDevice.getInstance(instrumentation);
+        boolean result = false;
 
-        GoogleAppUtil.openChromeSettings(instrumentation);
+        try {
+            final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        final UiObject androidIconButton = api == 31 ?
-                device.findObject(
-                        new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_BUTTON_RES)) :
-                device.findObject(
-                        new UiSelector().resourceId(Res.ANDROID_ICON_RES).
-                                className("android.widget.ImageView"));
+            GoogleAppUtil.openChromeSettings(instrumentation);
 
-        if (new Wait().until(androidIconButton::exists)) {
-            androidIconButton.clickAndWaitForNewWindow();
-        }
+            final UiObject androidIconButton = api == 31 ?
+                    device.findObject(
+                            new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_BUTTON_RES)) :
+                    device.findObject(
+                            new UiSelector().resourceId(Res.ANDROID_ICON_RES).
+                                    className("android.widget.ImageView"));
 
-        refuseSync(device);
-
-        if (api >= 31) {
-            final UiObject emailLabel = device.findObject(
-                    new UiSelector().text(getUserEmail()).resourceId(Res.ANDROID_SUMMARY_RES));
-            if (new Wait().until(emailLabel::exists)) {
-                emailLabel.clickAndWaitForNewWindow();
+            if (new Wait().until(androidIconButton::exists)) {
+                androidIconButton.clickAndWaitForNewWindow();
             }
-        }
 
-        final UiObject signOutLabel = api >= 31 ?
-                device.findObject(new UiSelector().text("Sign out and turn off sync")) :
-                device.findObject(new UiSelector().text("Sign out of Chrome"));
+            refuseSync(device);
 
-        if (new Wait().until(signOutLabel::exists)) {
-            signOutLabel.clickAndWaitForNewWindow();
-            new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
-        }
-
-        final UiObject signOutButton = device.findObject(new UiSelector().textMatches("(?i)(SIGN OUT)(?-i)"));
-
-        if (new Wait().until(signOutButton::exists)) {
-            signOutButton.clickAndWaitForNewWindow();
-        }
-
-
-        for (int i = 0; i < 3; i++) {
-            UiObject loggedInUser =
-                    device.findObject(new UiSelector().text(getUserEmail()));
-            if (new Wait().until(loggedInUser::exists)) {
-                loggedInUser.clickAndWaitForNewWindow();
+            if (api >= 31) {
+                final UiObject emailLabel = device.findObject(
+                        new UiSelector().text(getUserEmail()).resourceId(Res.ANDROID_SUMMARY_RES));
+                if (new Wait().until(emailLabel::exists)) {
+                    emailLabel.clickAndWaitForNewWindow();
+                    emailLabel.waitUntilGone(3000L);
+                }
             }
-        }
 
-        for (int i = 0; i < 2; i++) {
-            UiObject removeAccountButton = device.findObject(
-                    new UiSelector().textMatches("(?i)remove account(?-i)").className("android.widget.Button"));
-            if (new Wait().until(removeAccountButton::exists)) {
-                removeAccountButton.clickAndWaitForNewWindow();
+            final UiObject signOutLabel = api >= 31 ?
+                    device.findObject(new UiSelector().text("Sign out and turn off sync")) :
+                    device.findObject(new UiSelector().text("Sign out of Chrome"));
+
+            if (new Wait().until(signOutLabel::exists)) {
+                signOutLabel.clickAndWaitForNewWindow();
+                signOutLabel.waitUntilGone(3000L);
+                new watcher(device, Res.GOOGLE_APP_CONT_WATCHER_PATTERN).checkForCondition();
             }
+
+            final UiObject signOutButton = device.findObject(new UiSelector().textMatches("(?i)(SIGN OUT)(?-i)"));
+
+            if (new Wait().until(signOutButton::exists)) {
+                signOutButton.clickAndWaitForNewWindow();
+                signOutButton.waitUntilGone(3000L);
+            }
+
+            for (int i = 0; i < 3; i++) {
+                UiObject loggedInUser =
+                        device.findObject(new UiSelector().text(getUserEmail()));
+                if (new Wait().until(loggedInUser::exists)) {
+                    loggedInUser.clickAndWaitForNewWindow();
+                }
+            }
+
+            for (int i = 0; i < 2; i++) {
+                UiObject removeAccountButton = device.findObject(
+                        new UiSelector().textMatches("(?i)remove account(?-i)").className("android.widget.Button"));
+                if (new Wait().until(removeAccountButton::exists)) {
+                    removeAccountButton.clickAndWaitForNewWindow();
+                    removeAccountButton.waitUntilGone(3000L);
+                }
+            }
+
+
+            String signInText = api >= 30 ? "Turn on sync" : "Sign in to Chrome";
+            final UiObject signInLabel = device.findObject(new UiSelector().text(signInText));
+            final UiObject signInPromoCloseButton = device.findObject(
+                    new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_CLOSE_RES));
+            final UiObject addAccountButton = device.findObject(
+                    new UiSelector().text("Add account"));
+
+            result =  new Wait().until(signInLabel::exists) || new Wait().until(signInPromoCloseButton::exists)
+                    || new Wait().until(addAccountButton::exists);
+
+        } catch (Exception e) {
+            Assert.fail("Failed to logout from Google Chrome with exception: " + e);
         }
-
-
-        String signInText = api >= 30 ? "Turn on sync" : "Sign in to Chrome";
-        final UiObject signInLabel = device.findObject(new UiSelector().text(signInText));
-        final UiObject signInPromoCloseButton = device.findObject(
-                new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_CLOSE_RES));
-        final UiObject addAccountButton = device.findObject(
-                new UiSelector().text("Add account"));
-
-        return new Wait().until(signInLabel::exists) || new Wait().until(signInPromoCloseButton::exists)
-                || new Wait().until(addAccountButton::exists);
+        return result;
     }
 
+    /**
+     * Open the settings of the Google Chrome application.
+     * This method interacts with the UI of the Google Chrome app on an Android device
+     * and opens the settings menu.
+     *
+     * @param instrumentation the instrumentation instance
+     * @throws Exception if an error occurs during the operation
+     */
     private static void openChromeSettings(Instrumentation instrumentation) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
@@ -395,6 +430,13 @@ public class GoogleAppUtil {
         }
     }
 
+    /**
+     * Clicks on the "Next" button in the UI of the Android device.
+     * This method is used to automate UI interactions, specifically when a "Next" button needs to be clicked.
+     *
+     * @param device the UiDevice instance representing the device on which the test is currently running
+     * @throws UiObjectNotFoundException if the "Next" button is not found in the UI
+     */
     private static void clickNext(UiDevice device) throws UiObjectNotFoundException{
         UiObject nextButton = device.findObject(new UiSelector().textMatches(("(?i)next(?-i)")));
         if (!nextButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
@@ -414,6 +456,14 @@ public class GoogleAppUtil {
         }
     }
 
+    /**
+     * Refuses the sync operation in the Google Chrome application.
+     * This method interacts with the UI of the Google Chrome app on an Android device
+     * and clicks on the "No Thanks" button when the sync operation prompt appears.
+     *
+     * @param device the UiDevice instance representing the device on which the test is currently running
+     * @throws Exception if any error occurs during the operation
+    */
     public static void refuseSync(UiDevice device) throws Exception {
         UiObject noThanksButton = device.findObject(new UiSelector().
                 resourceIdMatches(Res.CHROME_NO_THANKS_BUTTON_RES));
