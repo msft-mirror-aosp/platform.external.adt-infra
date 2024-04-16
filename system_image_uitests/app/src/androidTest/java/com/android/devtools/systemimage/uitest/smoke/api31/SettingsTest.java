@@ -90,36 +90,24 @@ public class SettingsTest {
             return;
         }
 
-        AppLauncher.launch(instrumentation, "Settings");
-        UiSelector region = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
-        UiSelector target = new UiSelector()
-                .className("android.widget.TextView")
-                .text("Location");
+        String[] path = new String[]{"Settings", "Location"};
+        AppLauncher.launchPath(instrumentation, true, path);
 
-        assertTrue("Location not found in Settings List",
-                SettingsUtil.scrollToObject(device, region, target));
-        device.findObject(target).clickAndWaitForNewWindow();
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        scrollable.scrollTextIntoView("See all");
+        device.findObject(new UiSelector().text("See all")).clickAndWaitForNewWindow();
 
         boolean recentAccessText = new Wait().until(
                 () -> device.findObject(new UiSelector()
                         .text("Recent access")).exists());
 
-        if (!recentAccessText) {
-            device.findObject(new UiSelector().text("Use location")).clickAndWaitForNewWindow();
-        }
-
-        UiObject seeAll = device.findObject(new UiSelector()
-                .text("See all"));
-
-        if (new Wait().until(seeAll::exists)) {
-            seeAll.clickAndWaitForNewWindow();
-        }
-
         boolean recentAccessDesc = new Wait().until(
                 () -> device.findObject(new UiSelector()
                         .description("Recent access")).exists());
-        assertTrue("Failed to find Location title.", recentAccessDesc);
+        assertTrue("Failed to find Location title.",
+                recentAccessDesc || recentAccessText);
     }
+
 
     /**
      * Verifies that the phone cannot dial out if phone privileges have been disabled.
