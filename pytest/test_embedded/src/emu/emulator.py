@@ -471,7 +471,7 @@ class Emulator(BaseEmulator):
                 discovery.find_emulator("avd.id", self.configuration.name) is not None
             )
 
-        await eventually(discover_emulator, timeout=10)
+        await eventually(discover_emulator, timeout=30)
 
         self.kernel_start = 0
         self._discover(self.configuration.name)
