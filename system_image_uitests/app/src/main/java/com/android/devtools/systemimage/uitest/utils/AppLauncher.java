@@ -168,7 +168,11 @@ public class AppLauncher {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         boolean status = launch(instrumentation, appPath[0]);
 
-        if ( !status ) {
+        if (!status && api == 31) {
+            return launchPath_v2(instrumentation, firstAttempt, appPath);
+        }
+
+        if (!status) {
             return false;
         }
 
@@ -200,37 +204,6 @@ public class AppLauncher {
                     Log.i(TAG, "Scrollable cannot be scrolled");
                     continue;
                 } else {
-                    if (api == 31) {
-                        UiSelector scrollableSelector = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES).scrollable(true);
-                        UiObject scrollableObject = device.findObject(scrollableSelector);
-                        if (!scrollableObject.waitForExists(5L)) {
-                            Log.i(TAG, "Scrollable object does not exist");
-                            continue;
-                        } else if (!scrollableObject.isScrollable()) {
-                            Log.i(TAG, "Scrollable cannot be scrolled");
-                            continue;
-                        } else {
-                            boolean canScrollMore = true;
-                            while (canScrollMore) {
-                                int startX = scrollableObject.getBounds().centerX();
-                                int startY = scrollableObject.getBounds().bottom - 10;
-                                int endY = scrollableObject.getBounds().top + 10;
-                                canScrollMore = device.swipe(startX, startY, startX, endY, 50);
-                                if (appByRegex.waitForExists(1L)) {
-                                    Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");
-                                    appByRegex.click();
-                                    appByRegex.waitUntilGone(5L);
-                                    status = true;
-                                    break;
-                                }
-                            }
-                            if (!status) {
-                                Log.i(TAG, "Failed to scroll to " + appPath[i]);
-                                return false;
-                            }
-                            continue;
-                        }
-                    }
                     if (scrollable.scrollIntoView(regexSelector)) {
                         Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");
                         appByRegex.clickAndWaitForNewWindow();
@@ -244,6 +217,9 @@ public class AppLauncher {
                     }
                 }
                 Log.i(TAG, "Failed to scroll to " + appPath[i]);
+                if (api == 31) {
+                    return launchPath_v2(instrumentation, firstAttempt, appPath);
+                }
                 return false;
             } catch (UiObjectNotFoundException e) {
                 Log.w(TAG, e.getMessage());
@@ -251,9 +227,71 @@ public class AppLauncher {
             }
         }
 
-        if ( firstAttempt && !status ) {
-            return launchPath(instrumentation, false, appPath);
+        if (firstAttempt && !status && api == 31) {
+            return launchPath_v2(instrumentation, false, appPath);
         }
+
+        return status;
+    }
+
+    /**
+     * Launches a sequence of apps specified by the appPath array, specifically designed for API 31.
+     * This method attempts to launch each app in the array in order, starting from the second app.
+     * It uses a UiSelector to find a scrollable object with a specific resource ID, and then scrolls through
+     * this object to find and click on each app. If an app cannot be found after scrolling through the entire list,
+     * the method logs an error message and returns false.
+     *
+     * @param instrumentation the instrumentation instance used to interact with the UI
+     * @param firstAttempt a boolean indicating whether this is the first attempt to launch the apps
+     * @param appPath an array of Strings where each String is the name of an app to launch
+     * @return a boolean indicating whether the method was able to find and click on all the apps in the appPath array
+     * @throws Exception if an error occurs while interacting with the UI
+     */
+    public static boolean launchPath_v2(Instrumentation instrumentation, boolean firstAttempt, String... appPath)
+            throws Exception {
+        final UiDevice device = UiDevice.getInstance(instrumentation);
+        boolean status = launch(instrumentation, appPath[0]);
+
+        if (!status) {
+            return false;
+        }
+
+        for (int i = 1; i < appPath.length && status; ++i) {
+            status = false;
+            Log.i(TAG, "Open " + appPath[i]);
+            UiSelector regexSelector = new UiSelector().textMatches(appPath[i]);
+            UiObject appByRegex = device.findObject(regexSelector);
+
+            UiSelector scrollableSelector = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES).scrollable(true);
+            UiObject scrollableObject = device.findObject(scrollableSelector);
+            if (!scrollableObject.waitForExists(5L)) {
+                Log.i(TAG, "Scrollable object does not exist");
+                continue;
+            } else if (!scrollableObject.isScrollable()) {
+                Log.i(TAG, "Scrollable cannot be scrolled");
+                continue;
+            } else {
+                boolean canScrollMore = true;
+                while (canScrollMore) {
+                    int startX = scrollableObject.getBounds().centerX();
+                    int startY = scrollableObject.getBounds().bottom - 10;
+                    int endY = scrollableObject.getBounds().top + 10;
+                    canScrollMore = device.swipe(startX, startY, startX, endY, 50);
+                    if (appByRegex.waitForExists(1L)) {
+                        Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");
+                        appByRegex.click();
+                        appByRegex.waitUntilGone(5L);
+                        status = true;
+                        break;
+                    }
+                }
+                if (!status) {
+                    Log.i(TAG, "Failed to scroll to " + appPath[i]);
+                    return false;
+                }
+            }
+        }
+
         return status;
     }
 }
