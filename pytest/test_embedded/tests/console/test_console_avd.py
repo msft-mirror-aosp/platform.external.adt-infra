@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from emu.timing import eventually
+import emu.console.emulator_connection
 
 
 @pytest.mark.boot
@@ -111,3 +111,13 @@ async def test_emulator_help_console_command(avd, telnet):
 
     for help_command in help_commands:
         assert help_command in result, "console help command failed"
+
+
+@pytest.mark.e2e
+@pytest.mark.sanity
+async def test_emulator_exit_console_command(telnet):
+    try:
+        await telnet.send("exit")
+        assert False, "Emulator client connection did not close as expected"
+    except emu.console.emulator_connection.EmulatorClientEOF:
+        pass  # Connection closed successfully
