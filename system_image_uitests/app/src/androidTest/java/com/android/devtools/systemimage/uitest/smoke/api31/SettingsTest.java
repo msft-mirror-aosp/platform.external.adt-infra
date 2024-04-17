@@ -50,7 +50,7 @@ import java.util.Objects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
+import static org.junit.Assert.fail;
 /**
  * Test class for Android Settings page on Google API images.
  */
@@ -94,8 +94,22 @@ public class SettingsTest {
         AppLauncher.launchPath(instrumentation, true, path);
 
         UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-        scrollable.scrollTextIntoView("See all");
-        device.findObject(new UiSelector().text("See all")).clickAndWaitForNewWindow();
+        if (scrollable.waitForExists(3000L)) {
+            scrollable.scrollTextIntoView("See all");
+        }
+
+        UiObject seeAllText = device.findObject(new UiSelector().text("See all"));
+        if (new Wait().until(seeAllText::exists)) {
+            seeAllText.clickAndWaitForNewWindow();
+        }
+        else {
+            UiObject seeAllDesc = device.findObject(new UiSelector().description("See all"));
+            if (new Wait().until(seeAllDesc::exists)) {
+                seeAllDesc.clickAndWaitForNewWindow();
+            } else {
+                fail("Failed to find 'See all' button.");
+            }
+        }
 
         boolean recentAccessText = new Wait().until(
                 () -> device.findObject(new UiSelector()
