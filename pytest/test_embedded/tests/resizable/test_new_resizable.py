@@ -250,7 +250,6 @@ async def test_new_resizable_folding_observable_from_streaming(
 
     # Now fold it
     await set_device_hinge_angle(emulator_controller, 0)
-    await asyncio.sleep(1)
 
     # Wait until we observe the expected dimension in the stream of screenshots
     def image_is_properly_sized(image):
@@ -261,6 +260,8 @@ async def test_new_resizable_folding_observable_from_streaming(
             foldedw,
             foldedh,
         )
+        # cannot have empty frame
+        assert len(image.image) > 0
         return (
             image.format.width == foldedw
             and image.format.height == foldedh
