@@ -50,7 +50,7 @@ import java.util.Objects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
+import static org.junit.Assert.fail;
 /**
  * Test class for Android Settings page on Google API images.
  */
@@ -90,36 +90,38 @@ public class SettingsTest {
             return;
         }
 
-        AppLauncher.launch(instrumentation, "Settings");
-        UiSelector region = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
-        UiSelector target = new UiSelector()
-                .className("android.widget.TextView")
-                .text("Location");
+        String[] path = new String[]{"Settings", "Location"};
+        AppLauncher.launchPath(instrumentation, true, path);
 
-        assertTrue("Location not found in Settings List",
-                SettingsUtil.scrollToObject(device, region, target));
-        device.findObject(target).clickAndWaitForNewWindow();
+        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+        if (scrollable.waitForExists(3000L)) {
+            scrollable.scrollTextIntoView("See all");
+        }
+
+        UiObject seeAllText = device.findObject(new UiSelector().text("See all"));
+        if (new Wait().until(seeAllText::exists)) {
+            seeAllText.clickAndWaitForNewWindow();
+        }
+        else {
+            UiObject seeAllDesc = device.findObject(new UiSelector().description("See all"));
+            if (new Wait().until(seeAllDesc::exists)) {
+                seeAllDesc.clickAndWaitForNewWindow();
+            } else {
+                fail("Failed to find 'See all' button.");
+            }
+        }
 
         boolean recentAccessText = new Wait().until(
                 () -> device.findObject(new UiSelector()
                         .text("Recent access")).exists());
 
-        if (!recentAccessText) {
-            device.findObject(new UiSelector().text("Use location")).clickAndWaitForNewWindow();
-        }
-
-        UiObject seeAll = device.findObject(new UiSelector()
-                .text("See all"));
-
-        if (new Wait().until(seeAll::exists)) {
-            seeAll.clickAndWaitForNewWindow();
-        }
-
         boolean recentAccessDesc = new Wait().until(
                 () -> device.findObject(new UiSelector()
                         .description("Recent access")).exists());
-        assertTrue("Failed to find Location title.", recentAccessDesc);
+        assertTrue("Failed to find Location title.",
+                recentAccessDesc || recentAccessText);
     }
+
 
     /**
      * Verifies that the phone cannot dial out if phone privileges have been disabled.

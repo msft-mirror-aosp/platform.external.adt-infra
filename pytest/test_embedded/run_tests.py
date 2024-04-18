@@ -386,7 +386,7 @@ class PyRunner:
           bool: True if X is running, False otherwise
         """
         return (
-            subprocess.run(["xset", "-display", display, "-q"], check=True).returncode
+            subprocess.run(["xset", "-display", display, "-q"], check=False).returncode
             == 0
         )
 
