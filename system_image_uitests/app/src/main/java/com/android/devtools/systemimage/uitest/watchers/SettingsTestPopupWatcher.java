@@ -17,10 +17,10 @@
 package com.android.devtools.systemimage.uitest.watchers;
 
 
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.UiWatcher;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.UiWatcher;
 
 import java.util.concurrent.TimeUnit;
 

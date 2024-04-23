@@ -18,11 +18,11 @@ package com.android.devtools.systemimage.uitest.watchers;
 
 import org.junit.Assert;
 
-import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.UiWatcher;
+import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.UiWatcher;
 
 /**
  * Crash watcher that detects the dialog appearing when an app crashes.
