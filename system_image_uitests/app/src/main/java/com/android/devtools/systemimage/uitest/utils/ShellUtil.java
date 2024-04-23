@@ -17,7 +17,7 @@
 package com.android.devtools.systemimage.uitest.utils;
 
 import android.app.Instrumentation;
-import android.support.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiDevice;
 import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
