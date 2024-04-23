@@ -20,11 +20,11 @@ import com.android.devtools.systemimage.uitest.common.Res;
 
 import org.junit.Assert;
 
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.UiWatcher;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.UiWatcher;
 
 /**
  * Android launcher welcome cling watcher that dismisses a welcome cling
