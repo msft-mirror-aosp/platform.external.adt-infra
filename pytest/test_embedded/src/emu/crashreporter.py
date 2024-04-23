@@ -36,7 +36,7 @@ except:
         if status != 0:
             raise ValueError("Failed to execute %s", " ".join(params))
 
-        return stdout.strip()
+        return stdout.decode("utf-8").strip()
 
 
 class CrashReporter:
