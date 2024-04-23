@@ -17,7 +17,7 @@
 package com.android.devtools.systemimage.uitest.smoke.api18;
 
 import android.app.Instrumentation;
-import android.support.test.runner.AndroidJUnit4;
+import.androidx.test.runner.AndroidJUnit4;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;

@@ -21,10 +21,10 @@ import com.google.android.apps.common.testing.util.AndroidTestUtil;
 import com.android.devtools.systemimage.uitest.common.Res;
 
 import android.app.Instrumentation;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiObjectNotFoundException;
-import android.support.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
 import android.util.Log;
 
 import java.io.BufferedReader;

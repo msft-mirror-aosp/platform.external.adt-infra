@@ -27,7 +27,7 @@ import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import android.app.Instrumentation;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.runner.AndroidJUnit4;
 
 /**
  * Unit test on {@link TaskManager}.
