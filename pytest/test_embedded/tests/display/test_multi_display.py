@@ -127,7 +127,6 @@ async def test_multidisplay_multiple(no_displays, emulator_controller, is_landsc
 @pytest.mark.multidisplay
 @pytest.mark.sanity
 @pytest.mark.async_timeout(510)
-@pytest.mark.flaky # b/331456513
 async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, emu_snapshot_service,  is_landscape):
     """Snapshots on multiple display should work."""
     if is_landscape:
