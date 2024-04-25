@@ -14,6 +14,9 @@
 import asyncio
 import logging
 import platform
+import re
+import subprocess
+import tempfile
 from pathlib import Path
 
 import psutil
@@ -222,3 +225,53 @@ async def test_emulator_should_idle(emulator):
 async def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
     assert await avd.has_booted()
     assert await asyncio.wait_for(get_booted_notification_time(avd), timeout=10)
+
+@pytest.mark.boot
+@pytest.mark.fast
+@pytest.mark.async_timeout(180)
+async def test_emulator_debug_startup(avd):
+    """Ensure the emulator is able to launch with DEBUG messages.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to a booted emulator.
+
+    Test UUID: a5fb9248-8bc8-43b2-ae22-22594b7888ad
+
+    Test steps:
+        1. From a subprocess run: emulator -help-debug-tags" (Verify 1).
+        2. From a subprocess run: emulator -debug all (Verify 2).
+
+    Verify:
+        1. A list of available debug tags are displayed.
+        2. The emulator launches with debug messages (observed from a stdout file).
+    """
+    # Check if the emulator binary prints the debug tags.
+    cmd = ' '.join((str(avd.exe), '-help-debug-tags'))
+    try:
+        output = subprocess.check_output(cmd, shell=True)
+        assert "-debug" in output.decode(), "Emulator debug flags not found"
+    except subprocess.CalledProcessError as e:
+        raise AssertionError(f"Command '{' '.join(cmd)}' failed with error: {e.output}")
+
+    # Check if the emulator output contains debug messages.
+
+    logging.info("Launching emulator with option 'debug -all' ...")
+
+    # Sample debug message format: D0412 07:53:41.641776.
+    debug_pattern = r"D\d{4} \d{2}:\d{2}:\d{2}\.\d{6}.*"
+
+    # Redirect the emulator stdout/stderr to a temporary file.
+    with tempfile.NamedTemporaryFile() as emu_output:
+        flags = ["-debug",
+                "all",
+                "-stdouterr-file",
+                emu_output.name,
+               "-no-snapshot-save"]
+
+        await avd.restart(flags)
+        await asyncio.sleep(5)
+
+        contents = emu_output.read().decode()
+        has_debug_messages = re.search(debug_pattern, contents)
+        assert has_debug_messages, "DEBUG messages not found in the emulator output"
+        logging.info(f"Found the debug message '{has_debug_messages.group()}'")
