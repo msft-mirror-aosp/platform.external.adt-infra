@@ -1,20 +1,4 @@
 {
-    "landscape_test_suite_api_33": {
-        "description": "Set of tests that verify that graphic related tests work well in a `landscape` emulator",
-        "launch_flags": [
-            "-no-snapshot"
-        ],
-        "pytest_flags": [
-            "-m graphics and not multidisplay"
-        ],
-        "avd_config": {
-            "api": "33",
-            "tag.id": "google_apis",
-            "hw.initialOrientation": "landscape",
-            "skin.name": "1280x720"
-        },
-        "status": "disabled"
-    },
     "landscape_test_suite_api_31": {
         "description": "Set of tests that verify that graphic related tests work well in a `landscape` emulator",
         "launch_flags": [
@@ -47,20 +31,6 @@
         },
         "status": "enabled"
     },
-    "portrait_test_suite_api_33": {
-        "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
-        "launch_flags": [
-            "-no-snapshot"
-        ],
-        "pytest_flags": [
-            "-m graphics"
-        ],
-        "avd_config": {
-            "api": "33",
-            "tag.id": "google_apis"
-        },
-        "status": "disabled"
-    },
     "portrait_test_suite_api_31": {
         "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
         "launch_flags": [
@@ -88,24 +58,6 @@
             "tag.id": "google_apis"
         },
         "status": "enabled"
-    },
-    "embedded_test_suite_api_33": {
-        "description": "Set of tests that verify that the embedded emulator works when launched in portrait mode.",
-        "launch_flags": [
-            "-no-snapshot",
-            "-qt-hide-window",
-            "-grpc-use-token"
-        ],
-        "pytest_flags": [
-            "-m embedded or graphics"
-        ],
-        "avd_config": {
-            "api": "33",
-            "tag.id": "google_apis",
-            "hw.initialOrientation": "landscape",
-            "skin.name": "1280x720"
-        },
-        "status": "disabled"
     },
     "embedded_test_suite_api_31": {
         "description": "Set of tests that verify that the embedded emulator works when launched in portrait mode.",
@@ -143,24 +95,6 @@
         },
         "status": "enabled"
     },
-    "embedded_landscape_test_suite_api_33": {
-        "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
-        "launch_flags": [
-            "-no-snapshot",
-            "-qt-hide-window",
-            "-grpc-use-token"
-        ],
-        "pytest_flags": [
-            "-m graphics and not multidisplay or embedded"
-        ],
-        "avd_config": {
-            "api": "33",
-            "tag.id": "google_apis",
-            "hw.initialOrientation": "landscape",
-            "skin.name": "1280x720"
-        },
-        "status": "disabled"
-    },
     "embedded_landscape_test_suite_api_31": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
         "launch_flags": [
@@ -197,18 +131,6 @@
         },
         "status": "enabled"
     },
-    "snapshot_test_suite_api_33": {
-        "description": "Set of tests that verify that snapshots work for the default emulator.",
-        "launch_flags": [],
-        "pytest_flags": [
-            "-m snapshot"
-        ],
-        "avd_config": {
-            "api": "33",
-            "tag.id": "google_apis"
-        },
-        "status": "disabled"
-    },
     "snapshot_test_suite_api_31": {
         "description": "Set of tests that verify that snapshots work for the default emulator.",
         "launch_flags": [],
@@ -241,6 +163,8 @@
         ],
         "avd_config": {
             "api": "34",
+            "tag.id": "google_apis",
+            "hw.device.name": "pixel_fold",
             "hw.displayRegion.0.1.height": "2092",
             "hw.displayRegion.0.1.width": "1080",
             "hw.displayRegion.0.1.xOffset": "0",
@@ -259,39 +183,7 @@
             "hw.sensor.hinge_angles_posture_definitions": "0-30, 30-150, 150-180",
             "hw.sensor.posture_list": "1, 2, 3",
             "hw.sensors.orientation": "yes",
-            "hw.sensors.proximity": "yes",
-            "tag.id": "google_apis"
-        },
-        "status": "enabled"
-    },
-    "foldable_emulator_test_suite_api_33": {
-        "description": "Set of tests that verify that the foldable emulator works as expected.",
-        "launch_flags": [],
-        "pytest_flags": [
-            "-m foldable"
-        ],
-        "avd_config": {
-            "api": "33",
-            "hw.displayRegion.0.1.height": "2092",
-            "hw.displayRegion.0.1.width": "1080",
-            "hw.displayRegion.0.1.xOffset": "0",
-            "hw.displayRegion.0.1.yOffset": "0",
-            "hw.initialOrientation": "landscape",
-            "hw.lcd.density": "420",
-            "hw.lcd.height": "1840",
-            "hw.lcd.width": "2208",
-            "hw.sensor.hinge": "yes",
-            "hw.sensor.hinge.areas": "1080-0-0-1840",
-            "hw.sensor.hinge.count": "1",
-            "hw.sensor.hinge.defaults": "180",
-            "hw.sensor.hinge.ranges": "0-180",
-            "hw.sensor.hinge.sub_type": "1",
-            "hw.sensor.hinge.type": "1",
-            "hw.sensor.hinge_angles_posture_definitions": "0-30, 30-150, 150-180",
-            "hw.sensor.posture_list": "1, 2, 3",
-            "hw.sensors.orientation": "yes",
-            "hw.sensors.proximity": "yes",
-            "tag.id": "google_apis"
+            "hw.sensors.proximity": "yes"
         },
         "status": "enabled"
     },
@@ -303,6 +195,8 @@
         ],
         "avd_config": {
             "api": "31",
+            "tag.id": "google_apis",
+            "hw.device.name": "pixel_fold",
             "hw.displayRegion.0.1.height": "2092",
             "hw.displayRegion.0.1.width": "1080",
             "hw.displayRegion.0.1.xOffset": "0",
@@ -321,8 +215,7 @@
             "hw.sensor.hinge_angles_posture_definitions": "0-30, 30-150, 150-180",
             "hw.sensor.posture_list": "1, 2, 3",
             "hw.sensors.orientation": "yes",
-            "hw.sensors.proximity": "yes",
-            "tag.id": "google_apis"
+            "hw.sensors.proximity": "yes"
         },
         "status": "enabled"
     },
@@ -359,18 +252,6 @@
             "skin.path": "no_skin"
         },
         "status": "enabled"
-    },
-    "hardware_test_suite_api_33": {
-        "description": "Set of tests that validate hardware and console",
-        "launch_flags": [],
-        "pytest_flags": [
-            "-m hardware or console"
-        ],
-        "avd_config": {
-            "api": "33",
-            "tag.id": "google_apis"
-        },
-        "status": "disabled"
     },
     "hardware_test_suite_api_31": {
         "description": "Set of tests that validate hardware and console",
@@ -409,7 +290,7 @@
             "api": "33",
             "tag.id": "google_apis"
         },
-        "status": "disabled"
+        "status": "enabled"
     },
     "adb_test_suite_api_31": {
         "description": "Set of tests that validate adb",
@@ -509,18 +390,6 @@
             "tag.id": "google_apis"
         },
         "status": "enabled"
-    },
-    "presubmit_emulator_test_suite_api_33": {
-        "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
-        "launch_flags": [],
-        "pytest_flags": [
-            "-m boot and not slow"
-        ],
-        "avd_config": {
-            "api": "33",
-            "tag.id": "google_apis"
-        },
-        "status": "disabled"
     },
     "presubmit_emulator_test_suite_api_31": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",

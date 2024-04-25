@@ -18,7 +18,7 @@ package com.android.devtools.systemimage.uitest.framework;
 
 import android.content.pm.PackageManager;
 import android.os.Environment;
-import android.support.test.InstrumentationRegistry;
+import androidx.test.InstrumentationRegistry;
 
 import org.junit.Assert;
 import org.junit.Ignore;

@@ -18,10 +18,10 @@ package com.android.devtools.systemimage.uitest.watchers;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
-import android.support.test.uiautomator.UiWatcher;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.UiWatcher;
 
 /**
  * Lock screen watcher that unlocks the device (assuming no password or puzzle)

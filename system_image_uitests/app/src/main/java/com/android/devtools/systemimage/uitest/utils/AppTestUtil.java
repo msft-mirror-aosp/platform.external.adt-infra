@@ -16,9 +16,9 @@
 
 package com.android.devtools.systemimage.uitest.utils;
 
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiSelector;
 
 import java.util.concurrent.TimeUnit;
 
