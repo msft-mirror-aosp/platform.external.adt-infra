@@ -86,7 +86,7 @@ async def emu_snapshot_service(avd, service):
 @pytest.mark.timeout_win(timeout=60)
 @pytest.mark.graphics
 @pytest.mark.multidisplay
-async def test_multidisplay_none(no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_none(avd, no_displays, emulator_controller, is_landscape):
     """Erasing displays leaves nothing behind."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
@@ -103,7 +103,7 @@ async def test_multidisplay_none(no_displays, emulator_controller, is_landscape)
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.sanity
-async def test_multidisplay_multiple(no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_multiple(avd, no_displays, emulator_controller, is_landscape):
     """Adding a display should work."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
@@ -172,7 +172,7 @@ async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, 
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 async def test_multidisplay_multiple_error(
-    no_displays, emulator_controller, is_landscape
+    avd, no_displays, emulator_controller, is_landscape
 ):
     """A failure should not modify the status."""
     if is_landscape:
@@ -216,7 +216,7 @@ async def test_multidisplay_multiple_error(
 @pytest.mark.multidisplay
 @pytest.mark.fast
 async def test_multidisplay_get_after_set(
-    no_displays, emulator_controller, is_landscape
+    avd, no_displays, emulator_controller, is_landscape
 ):
     """Adding a display should work."""
     if is_landscape:
@@ -238,7 +238,7 @@ async def test_multidisplay_get_after_set(
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 async def test_multidisplay_double_ids_error(
-    no_displays, emulator_controller, is_landscape
+    avd, no_displays, emulator_controller, is_landscape
 ):
     """Adding the same display twice should result in an error."""
     if is_landscape:
@@ -262,7 +262,7 @@ async def test_multidisplay_double_ids_error(
 @pytest.mark.fast
 @pytest.mark.flaky  # b/322551553
 async def test_multidisplay_can_configure_four(
-    no_displays, emulator_controller, is_landscape
+    avd, no_displays, emulator_controller, is_landscape
 ):
     """This tests makes sure that a total of 4 displays can be configured.
 
@@ -295,7 +295,7 @@ async def test_multidisplay_can_configure_four(
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 async def test_multidisplay_add_should_not_remove(
-    no_displays, emulator_controller, is_landscape
+    avd, no_displays, emulator_controller, is_landscape
 ):
     """This tests makes sure that a total of 4 displays can be configured.
 
@@ -335,7 +335,7 @@ async def test_multidisplay_add_should_not_remove(
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 async def test_multidisplay_error_too_many(
-    no_displays, emulator_controller, is_landscape
+    avd, no_displays, emulator_controller, is_landscape
 ):
     """Adding too many displays should raise an exception."""
     if is_landscape:
