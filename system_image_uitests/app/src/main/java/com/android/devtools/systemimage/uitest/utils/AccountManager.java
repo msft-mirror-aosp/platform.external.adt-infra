@@ -16,7 +16,7 @@
 
 package com.android.devtools.systemimage.uitest.utils;
 
-import com.google.android.apps.common.testing.util.AndroidTestUtil;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 
@@ -25,6 +25,8 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
+
+import android.os.Bundle;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -58,10 +60,8 @@ public class AccountManager {
         // Note that the gaccountFilePath is under Android filesystem.
         // Use 'adb push' to upload a credential file before testing.
         if (username == null || password == null) {
-            String gaccountFilePath =
-                    AndroidTestUtil.getTestArg(
-                            instrumentation.getContext().getContentResolver(),
-                            "gaccount");
+            Bundle argsBundle = InstrumentationRegistry.getArguments();
+            String gaccountFilePath = argsBundle.getString("gaccount");
             BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
             username = br.readLine().trim();
             password = br.readLine().trim();
@@ -135,10 +135,8 @@ public class AccountManager {
     public static void removeAccount(Instrumentation instrumentation, String username)
             throws UiObjectNotFoundException, IOException {
         if (username == null) {
-            String gaccountFilePath =
-                    AndroidTestUtil.getTestArg(
-                            instrumentation.getContext().getContentResolver(),
-                            "gaccount");
+            Bundle argsBundle = InstrumentationRegistry.getArguments();
+            String gaccountFilePath = argsBundle.getString("gaccount");
             BufferedReader br = new BufferedReader(new FileReader(gaccountFilePath));
             username = br.readLine().trim();
             br.close();
