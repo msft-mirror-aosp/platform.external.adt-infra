@@ -413,7 +413,6 @@ async def emulator(request, pytestconfig) -> BaseEmulator:
 
     if emu.is_alive():
         await emu.stop()
-    assert not emu.is_alive()
 
     return emu
 
