@@ -55,7 +55,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             self.kill_proc_by_name(["crash-service", "adb"])
             os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
             if sys.platform == "win32":
-                rm_avd = "rmdir /s /q " + os.path.join(avd_dir, '%s.avd' % self.avd_config.name()) 
+                rm_avd = "rmdir /s /q " + os.path.join(avd_dir, '%s.avd' % self.avd_config.name())
                 os.system(rm_avd)
             else:
                 shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
@@ -81,9 +81,10 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             self.m_logger.info('Failed to find gradle XML reports.')
         else:
             xml_file = ''
-            for filename in os.listdir(gradle_report_path):
-                if filename.endswith('.xml'):
-                    xml_file = filename
+            for path, subdirs, files in os.walk(gradle_report_path):
+                for filename in files:
+                    if filename.endswith('.xml'):
+                      xml_file = os.path.join(path, filename)
             if not xml_file:
                 self.m_logger.info('Failed to find gradle XML report.')
                 return
@@ -91,7 +92,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             dst_file = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '.xml')
             if os.path.isfile(dst_file):
                 os.remove(dst_file)
-            shutil.copyfile(src_file, dst_file)
+            shutil.copyfile(xml_file, dst_file)
 
     def _save_adb_bug_report(self, test_method):
         adb_binary = path_utils.get_adb_binary()
@@ -195,7 +196,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         """
         self.launch_emu_and_wait(avd)
         self.m_logger.info('System image UI tests (%s) start.' % self._testMethodName)
-        if os.name is 'nt':
+        if os.name == 'nt':
             self.gradle = 'gradlew.bat'
             self.use_shell = True
         else:
