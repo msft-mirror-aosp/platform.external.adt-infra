@@ -106,7 +106,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.m_logger.info('Pull details from sdcard')
         dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_details')
         p = psutil.Popen([adb_binary, 'pull',
-                          '/sdcard/Logs', dst_path],
+                          '/sdcard/Documents/Logs', dst_path],
                          stdout=PIPE, stderr=PIPE)
         (out, err) = p.communicate()
         self.m_logger.info('adb_pull_stdout:\n' + out.decode())
