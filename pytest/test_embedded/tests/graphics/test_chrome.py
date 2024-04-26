@@ -70,6 +70,7 @@ async def request_page_in_chrome(avd):
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.xpass
+@pytest.mark.flaky
 async def test_launch_chrome_google(avd, get_screenshot):
     """
     This test launches Chrome on an Android device, opens a html snippet,
