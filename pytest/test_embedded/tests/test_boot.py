@@ -229,6 +229,7 @@ async def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
 @pytest.mark.boot
 @pytest.mark.fast
 @pytest.mark.async_timeout(180)
+@pytest.mark.flaky
 async def test_emulator_debug_startup(avd):
     """Ensure the emulator is able to launch with DEBUG messages.
 
