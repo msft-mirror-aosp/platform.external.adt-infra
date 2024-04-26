@@ -96,8 +96,9 @@ public class IgnoreAnnotationListener extends RunListener {
 
         checkStoragePermissions();
         String classSimpleName = ignoredTests.get(0).get("classSimpleName");
-        String externalStorageDir = Environment.getExternalStorageDirectory().getPath();
-        File logDir = new File(externalStorageDir, "Logs");
+        File externalStorageDocumentsDir =
+                new File(Environment.getExternalStorageDirectory().getPath(), "Documents");
+        File logDir = new File(externalStorageDocumentsDir, "Logs");
         if (!logDir.exists())
             logDir.mkdir();
         File classLogDir = new File(logDir.getPath(), classSimpleName);
