@@ -19,10 +19,10 @@ package com.android.devtools.systemimage.uitest.smoke.api32;
 import static org.junit.Assert.assertTrue;
 
 import android.app.Instrumentation;
-import.androidx.test.runner.AndroidJUnit4;
-import.androidx.test.uiautomator.UiDevice;
-import.androidx.test.uiautomator.UiObject;
-import.androidx.test.uiautomator.UiSelector;
+import androidx.test.runner.AndroidJUnit4;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiSelector;
 import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
