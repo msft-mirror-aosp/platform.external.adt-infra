@@ -18,8 +18,8 @@ package com.android.devtools.systemimage.uitest.utils;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 
-import.androidx.test.uiautomator.By;
-import.androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.UiDevice;
 import android.util.Log;
 
 import java.util.concurrent.TimeUnit;

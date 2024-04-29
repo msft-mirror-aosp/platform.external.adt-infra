@@ -17,11 +17,11 @@
 package com.android.devtools.systemimage.uitest.smoke.api33;
 
 import android.app.Instrumentation;
-import.androidx.test.runner.AndroidJUnit4;
-import.androidx.test.uiautomator.UiDevice;
-import.androidx.test.uiautomator.UiObject;
-import.androidx.test.uiautomator.UiScrollable;
-import.androidx.test.uiautomator.UiSelector;
+import androidx.test.runner.AndroidJUnit4;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiScrollable;
+import androidx.test.uiautomator.UiSelector;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;

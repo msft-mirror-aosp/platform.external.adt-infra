@@ -18,12 +18,12 @@ package com.android.devtools.systemimage.uitest.smoke.api23;
 
 import android.app.Instrumentation;
 import android.content.Context;
-import.androidx.test.runner.AndroidJUnit4;
-import.androidx.test.uiautomator.UiDevice;
-import.androidx.test.uiautomator.UiObject;
-import.androidx.test.uiautomator.UiObjectNotFoundException;
-import.androidx.test.uiautomator.UiScrollable;
-import.androidx.test.uiautomator.UiSelector;
+import androidx.test.runner.AndroidJUnit4;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiScrollable;
+import androidx.test.uiautomator.UiSelector;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
