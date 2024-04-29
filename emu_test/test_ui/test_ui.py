@@ -147,9 +147,9 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         test_ori = test_args_prefix + '.origin=' + avd.ori
         self.m_logger.info('Calling gradle with cwd %r params: %r', self.uitest_dir,
                            [self.gradle, 'cAT', test_class, test_api, test_abi, test_tag,
-                            test_ori, '--stacktrace'])
+                            test_ori, '--stacktrace', '--info'])
         return psutil.Popen([self.gradle, 'cAT', test_class, test_api, test_abi, test_tag,
-                             test_ori, '--stacktrace'], cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE,
+                             test_ori, '--stacktrace', '--info'], cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE,
                             shell=self.use_shell)
 
     def _launch_ui_test_with_avd_configs(self, avd):
