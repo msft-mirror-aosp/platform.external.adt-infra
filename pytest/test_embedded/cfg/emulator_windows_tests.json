@@ -323,6 +323,18 @@
         },
         "status": "enabled"
     },
+    "sanity_test_suite_api_25": {
+        "description": "Set of tests we want to run as a part of emulator sanity test suite",
+        "launch_flags": [],
+        "pytest_flags": [
+            "-m oldapiboot"
+        ],
+        "avd_config": {
+            "api": "25",
+            "tag.id": "google_apis"
+        },
+        "status": "enabled"
+    },
     "fast_test_suite_api_31": {
         "description": "Set of tests we want to run as a part of emulator fast test suite",
         "launch_flags": [],
