@@ -14,12 +14,17 @@
 import logging
 import asyncio
 import pytest
+import re
 from aemu.proto.emulator_controller_pb2 import (
     DisplayConfiguration,
     DisplayConfigurations,
     ImageFormat,
     Rotation,
 )
+from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
+from emu.emulator import Emulator
+from emu.timing import eventually
+from functools import partial
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
 from tests.test_utils import fmt_proto
@@ -350,3 +355,94 @@ async def test_multidisplay_error_too_many(
         await emulator_controller.setDisplayConfigurations(
             DisplayConfigurations(displays=displays)
         )
+
+
+@pytest.mark.graphics
+@pytest.mark.multidisplay
+@pytest.mark.fast
+@pytest.mark.async_timeout(120)
+async def test_disable_multidisplay(avd, is_landscape):
+    """Ensure an app is moved to the primary display when multidisplay is disabled.
+
+    Args:
+        emulator (BaseEmulator): Fixture that gives access to the running emulator.
+        is_landscape (bool): Fixture that indicates whether the emulator is in landscape orientation.
+        emulator_controller (EmulatorControllerStub): An instance of the emulator controller fixture.
+
+    Test UUID: d0114791-2781-45ee-b4fa-b496d767604e
+
+    Test Steps:
+        1. Configure the emulator to support multiple display resolutions.
+        2. Launch a dummy app (e.g., calendar) on the current display.
+        3. Disable multidisplay functionality
+        4. confirm the dummy app moved to the primary display (Verify).
+        5. Repeat the steps 2-4 for all display resolutions
+
+    Verify:
+        - Ensure that the secondary display is removed after disabling multidisplay.
+        - Verify that the app running on the secondary display is correctly moved to the primary display.
+    """
+    if is_landscape:
+        pytest.skip("Cannot run multi display tests in landscape mode.")
+
+    emulator_controller = EmulatorControllerStub(avd.channel)
+
+    # Displays configurations to be tested.
+    resolutions = [(720, 1280), (1080, 1920)]
+    displays = [
+        DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
+            for idx, x in enumerate(resolutions)
+    ]
+
+    async def disable_multidisplay():
+        # Ensure the device has only one display
+        cfg = await emulator_controller.setDisplayConfigurations(
+            DisplayConfigurations(displays=[])
+        )
+        logging.info('Disabling multidisplay mode')
+        assert len(cfg.displays) == 1
+        return cfg
+
+    async def enable_multidisplay(displays):
+        # Set the display configuration according to `displays`
+        to_set = DisplayConfigurations(displays=displays)
+        logging.info('Enabling multidisplay mode')
+        cfg = await emulator_controller.setDisplayConfigurations(to_set)
+        return cfg
+
+    async def get_display_id(package):
+        # Get the display id where `package` is running
+        windows_dump = await avd.adb.shell("dumpsys window", timeout=30)
+        display_lines = re.search(f"Window.*{package}.*mDisplayId=([0-9]*)", windows_dump)
+        return int(display_lines.groups()[0])
+
+    dummy_pkg = "com.android.contacts"
+    dummy_activity = f"{dummy_pkg}/.activities.PeopleActivity"
+
+    # Make sure we start with the primary display only.
+    cfg = await emulator_controller.getDisplayConfigurations(empty_pb2.Empty())
+    if len(cfg.displays) > 1:
+        await disable_multidisplay()
+
+    for idx in range(len(resolutions)):
+
+        # Enable multidisplay.
+        await enable_multidisplay(displays)
+        await asyncio.sleep(10)
+
+        # Start app on current display.
+        await avd.start_activity(dummy_activity, params=f"--display {idx + 1}")
+        await asyncio.sleep(10)
+
+        # Disable multidisplay.
+        logging.info(f'Disable multidisplay while contacts app is on display {idx + 1}')
+        cfg = await disable_multidisplay()
+        await asyncio.sleep(10)
+
+        # Verify if the app is present in the primary display.
+        display_id = await get_display_id(dummy_pkg)
+        assert display_id == 0, f"Contacts app was detected in display {display_id}"
+
+        # Stop the app.
+        await avd.stop_activity("com.android.contacts")
+        await asyncio.sleep(5)
