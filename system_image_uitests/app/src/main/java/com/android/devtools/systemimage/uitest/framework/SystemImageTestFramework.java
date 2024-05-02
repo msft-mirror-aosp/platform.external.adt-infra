@@ -97,11 +97,12 @@ public class SystemImageTestFramework implements TestRule {
     private File getLoggingDir(String testClassName, String testMethodName) {
         Assert.assertTrue("Failed to write to external storage.", isExternalStorageWritable());
         Assert.assertTrue("Failed to acquire permission.", checkWriteExternalPermission());
-        File externalStorageLogDir =
-                new File(Environment.getExternalStorageDirectory().getPath(), "Logs");
-        if (!externalStorageLogDir.exists())
-            externalStorageLogDir.mkdir();
-        File loggingDir = new File(new File(externalStorageLogDir.getPath(), testClassName),
+        File externalStorageDocumentsDir =
+                new File(Environment.getExternalStorageDirectory().getPath(), "Documents");
+        File externalStorageLogsDir = new File(externalStorageDocumentsDir, "Logs");
+        if (!externalStorageLogsDir.exists())
+            externalStorageLogsDir.mkdir();
+        File loggingDir = new File(new File(externalStorageLogsDir.getPath(), testClassName),
                 testMethodName);
         loggingDir.mkdirs();
         return loggingDir;

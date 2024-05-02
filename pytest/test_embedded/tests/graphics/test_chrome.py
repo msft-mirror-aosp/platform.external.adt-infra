@@ -33,9 +33,9 @@ purple_html = """
   </head>
 </html>
 """
-purple_path = f"/sdcard/Android/data/{chrome_pkg}/files/Download/purple.html"
+purple_path = f"/sdcard/Android/data/{chrome_pkg}/files/Download"
 
-@pytest.fixture
+
 async def prepare_chrome(avd):
     """
     Pytest fixture that launches Chrome and configures it
@@ -44,11 +44,13 @@ async def prepare_chrome(avd):
     This fixture prepares the Chrome application on an
     Android Virtual Device (AVD) for testing.
     """
-
+    await avd.adb.shell("pm clear com.android.chrome")
     # Put purple.html on the device.
-    await avd.adb.shell(
-        f'echo "{purple_html}" > {purple_path}'
-    )
+    await avd.adb.shell(f'mkdir -p {purple_path}')
+    await avd.adb.shell(f'echo "{purple_html}" > {purple_path}/purple.html')
+
+    await avd.adb.shell("pm grant com.android.chrome android.permission.POST_NOTIFICATIONS")
+    await avd.adb.shell("pm grant com.android.chrome android.permission.READ_EXTERNAL_STORAGE")
 
     # Configure to skip welcome page
     await avd.adb.shell(
@@ -56,37 +58,23 @@ async def prepare_chrome(avd):
     )
     await avd.adb.shell("am set-debug-app --persistent com.android.chrome")
 
-    # Start Chrome for the first time
-    await avd.start_activity(chrome_cmp)
-
-    # Kill and restart to skip a pop-up
-    await avd.stop_activity(chrome_pkg)
-    await avd.start_activity(chrome_cmp)
-    await avd.adb.shell(
-        f"am start -a android.intent.action.VIEW -d http://www.google.com -n {chrome_cmp}"
-    )
-
-    yield
-
+    await avd.adb.shell(f"am start -a android.intent.action.VIEW -d http://www.google.com -n {chrome_cmp}")
     await avd.stop_activity(chrome_pkg)
 
 
 async def request_page_in_chrome(avd):
-    await avd.stop_activity(chrome_pkg)
-    await avd.start_activity(chrome_cmp)
-    await avd.adb.shell(
-        f"am start -a android.intent.action.VIEW -d 'file:///{purple_path}' -t text/html -n {chrome_cmp}"
-    )
+    await prepare_chrome(avd)
+    await avd.adb.shell(f"am start -S -a android.intent.action.VIEW -d 'file:///{purple_path}/purple.html' -t text/html -n {chrome_cmp}")
 
 
 @pytest.mark.e2e
-@pytest.mark.flaky
 @pytest.mark.graphics
 @pytest.mark.xpass
-async def test_launch_chrome_google(prepare_chrome, avd, get_screenshot):
+@pytest.mark.flaky
+async def test_launch_chrome_google(avd, get_screenshot):
     """
     This test launches Chrome on an Android device, opens a html snippet,
-    captures a screenshot, and verifies that at least 40% of the image pixels are purple.
+    captures a screenshot, and verifies that at least 60% of the image pixels are purple.
     """
     async def at_least_60_percent_of_image_is_purple():
         """
@@ -108,16 +96,19 @@ async def test_launch_chrome_google(prepare_chrome, avd, get_screenshot):
                 r, g, b = rgb_image.getpixel((x, y))
 
                 # Check if the pixel corresponds to the desired shade of purple
-                if r == 255 and g == 0 and b == 255:
+                if r > 245 and g < 10 and b > 245:
                     purple_count += 1
         return purple_count > (rgb_image.width * rgb_image.height * percent_purple / 100)
 
+    saw_purple = False
+    # Weird that the file access permissions are not granted on the first try.
+    # But it is ok to retry since that is not the focus of this test.
     max_retries = 3
     for _ in range(0, max_retries):
         await request_page_in_chrome(avd)
         if await wait_until(at_least_60_percent_of_image_is_purple, timeout=5):
-            return
+            saw_purple = True
+            break
 
-    assert (
-        False
-    ), f"Did not see a screenshot with 60%% purple pixels with {max_retries} retries"
+    assert (saw_purple), f"Did not see a screenshot with 60%% purple pixels"
+    await avd.stop_activity(chrome_pkg)

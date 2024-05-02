@@ -55,7 +55,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             self.kill_proc_by_name(["crash-service", "adb"])
             os.remove(os.path.join(avd_dir, '%s.ini' % self.avd_config.name()))
             if sys.platform == "win32":
-                rm_avd = "rmdir /s /q " + os.path.join(avd_dir, '%s.avd' % self.avd_config.name()) 
+                rm_avd = "rmdir /s /q " + os.path.join(avd_dir, '%s.avd' % self.avd_config.name())
                 os.system(rm_avd)
             else:
                 shutil.rmtree(os.path.join(avd_dir, '%s.avd' % self.avd_config.name()), ignore_errors=True)
@@ -81,9 +81,10 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             self.m_logger.info('Failed to find gradle XML reports.')
         else:
             xml_file = ''
-            for filename in os.listdir(gradle_report_path):
-                if filename.endswith('.xml'):
-                    xml_file = filename
+            for path, subdirs, files in os.walk(gradle_report_path):
+                for filename in files:
+                    if filename.endswith('.xml'):
+                      xml_file = os.path.join(path, filename)
             if not xml_file:
                 self.m_logger.info('Failed to find gradle XML report.')
                 return
@@ -91,7 +92,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
             dst_file = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '.xml')
             if os.path.isfile(dst_file):
                 os.remove(dst_file)
-            shutil.copyfile(src_file, dst_file)
+            shutil.copyfile(xml_file, dst_file)
 
     def _save_adb_bug_report(self, test_method):
         adb_binary = path_utils.get_adb_binary()
@@ -106,7 +107,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         self.m_logger.info('Pull details from sdcard')
         dst_path = os.path.join(emu_args.session_dir, emu_args.test_dir, test_method + '_details')
         p = psutil.Popen([adb_binary, 'pull',
-                          '/sdcard/Logs', dst_path],
+                          '/sdcard/Documents/Logs', dst_path],
                          stdout=PIPE, stderr=PIPE)
         (out, err) = p.communicate()
         self.m_logger.info('adb_pull_stdout:\n' + out.decode())
@@ -146,9 +147,9 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         test_ori = test_args_prefix + '.origin=' + avd.ori
         self.m_logger.info('Calling gradle with cwd %r params: %r', self.uitest_dir,
                            [self.gradle, 'cAT', test_class, test_api, test_abi, test_tag,
-                            test_ori, '--stacktrace'])
+                            test_ori, '--stacktrace', '--info'])
         return psutil.Popen([self.gradle, 'cAT', test_class, test_api, test_abi, test_tag,
-                             test_ori, '--stacktrace'], cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE,
+                             test_ori, '--stacktrace', '--info'], cwd=self.uitest_dir, stdout=PIPE, stderr=PIPE,
                             shell=self.use_shell)
 
     def _launch_ui_test_with_avd_configs(self, avd):
@@ -195,7 +196,7 @@ class UiAutomatorBaseTestCase(EmuBaseTestCase):
         """
         self.launch_emu_and_wait(avd)
         self.m_logger.info('System image UI tests (%s) start.' % self._testMethodName)
-        if os.name is 'nt':
+        if os.name == 'nt':
             self.gradle = 'gradlew.bat'
             self.use_shell = True
         else:
