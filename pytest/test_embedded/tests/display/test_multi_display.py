@@ -432,8 +432,13 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
         return list(display_ids_list)
 
     async def start_on_display(activity, id_):
-        # Start an activity on a given display
+        # Start an activity on a given display.
         return await avd.start_activity(activity, params=f"--display {id_}")
+
+    async def app_is_on_primary_display(pkg):
+        # Return True if 'pkg' is detected on the primary display.
+        display_id = await get_display_id(pkg)
+        return display_id == 0
 
     dummy_pkg = "com.google.AnimateBox"
     dummy_activity = f"{dummy_pkg}/com.google.emu.MainActivity"
@@ -447,9 +452,9 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
         await asyncio.sleep(20)
 
         # Get the current displays list.
-        assert await eventually(get_displays_ids() is not None), \
+        assert await eventually(get_displays_ids,timeout=60), \
                      "Couldn't retrieve the displays Ids"
-        ids = get_displays_ids()
+        ids = await get_displays_ids()
 
         # Start app on the display 'ids[i + 1]'.
         assert await eventually(partial(start_on_display, dummy_activity, ids[i + 1]), timeout=60), \
@@ -458,12 +463,10 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
         # Disable multidisplay.
         logging.info(f'Disable multidisplay while app {pkg_name} is on display {ids[i + 1]}')
         await disable_multidisplay()
-        await asyncio.sleep(15)
 
         # Verify if the app is present in the primary display.
-        assert await eventually(get_display_id(dummy_pkg) == 0), \
+        assert await eventually(partial(app_is_on_primary_display, dummy_pkg)), \
                      f"App {pkg_name} was not found on display 0"
 
         # Stop the app.
         await avd.stop_activity(dummy_pkg)
-        await asyncio.sleep(5)
