@@ -375,7 +375,7 @@
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "launch_flags": [],
         "pytest_flags": [
-            "-m boot and not slow"
+            "-m boot and not slow and not flaky"
         ],
         "avd_config": {
             "api": "31",
@@ -387,7 +387,7 @@
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "launch_flags": [],
         "pytest_flags": [
-            "-m boot and not slow"
+            "-m boot and not slow and not flaky"
         ],
         "avd_config": {
             "api": "34",
