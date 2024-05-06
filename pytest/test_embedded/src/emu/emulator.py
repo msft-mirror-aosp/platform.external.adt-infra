@@ -254,13 +254,20 @@ class BaseEmulator(object):
         """
         count = 0
         try:
-            while not await self.adb.is_installed(package_name) and count < 10:
+            while not await self.adb.is_installed(package_name) and count < 3:
                 await self.adb.install(apk.absolute())
-                await asyncio.sleep(1)
+                await asyncio.sleep(2)
                 count += 1
-
         finally:
             return await self.adb.is_installed(package_name)
+
+    async def pgrep(self, process_name: str) -> bool:
+        shell = await self.adb.shell(f"ps -A | grep {process_name}")
+        return process_name in shell
+
+    async def activity_is_running(self, activity: str):
+        """Returns true if the given activity is running."""
+        return await self.pgrep(activity[: activity.find("/")])
 
     async def start_activity(self, activity: str, params=None) -> bool:
         """Attempts to start the given activity.
@@ -278,28 +285,19 @@ class BaseEmulator(object):
             True if the activity was started successfully, False otherwise.
         """
 
-        async def activity_is_running():
-            """Returns true if the given activity is running."""
-            return await self.pgrep(activity[: activity.find("/")])
-
         shell = f"am start -n {activity}"
         if params:
             shell += f" {params}"
 
-        await self.adb.shell(shell, timeout=2)
         count = 0
-        while count < 10:
-            await self.adb.shell(shell, timeout=2)
-            await asyncio.sleep(1)
-            if await activity_is_running():
+        while count < 3:
+            await self.adb.shell(shell)
+            await asyncio.sleep(2)
+            if await self.activity_is_running(activity):
                 return True
             count += 1
 
-        return await activity_is_running()
-
-    async def pgrep(self, process_name: str) -> bool:
-        shell = await self.adb.shell(f"ps -A | grep {process_name}", timeout=2)
-        return process_name in shell
+        return await self.activity_is_running(activity)
 
     async def stop_activity(self, activity: str) -> bool:
         """Attempts to stop the given activity.
@@ -316,20 +314,17 @@ class BaseEmulator(object):
             True if the activity is not running, False otherwise.
         """
 
-        async def activity_is_running():
-            """Returns true if the given activity is running."""
-            return await self.pgrep(activity)
+        shell = f"am force-stop {activity}"
 
-        await self.adb.shell(f"am force-stop {activity}", timeout=1)
         count = 0
-        running = await activity_is_running()
-        while running and count < 10:
-            await self.adb.shell(f"am force-stop {activity}", timeout=1)
-            await asyncio.sleep(1)
-            running = await activity_is_running()
+        while count < 3:
+            await self.adb.shell(shell)
+            await asyncio.sleep(2)
+            if not await self.activity_is_running(activity):
+                return True
             count += 1
 
-        return not running
+        return not await self.activity_is_running(activity)
 
     async def reset_state(self):
         """Resets this emulator to a well known state.
