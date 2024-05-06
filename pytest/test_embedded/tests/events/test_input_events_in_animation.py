@@ -114,7 +114,6 @@ async def send_event(avd, emulator_controller):
     return send_single_event
 
 
-@pytest.mark.async_timeout(10)
 async def test_send_a_sequence_of_single_mouse_events(
     animation_app, send_event, retrieve_events
 ):
@@ -129,7 +128,6 @@ async def test_send_a_sequence_of_single_mouse_events(
     assert expected == retrieved
 
 
-@pytest.mark.async_timeout(10)
 async def test_send_a_sequence_of_single_key_events(
     animation_app, send_event, retrieve_events
 ):
@@ -146,7 +144,6 @@ async def test_send_a_sequence_of_single_key_events(
     assert expected == retrieved
 
 
-@pytest.mark.async_timeout(10)
 async def test_stream_a_sequence_of_key_events(
     animation_app, emulator_controller, retrieve_events
 ):

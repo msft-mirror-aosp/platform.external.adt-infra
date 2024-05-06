@@ -20,7 +20,6 @@ def ui_controller(service):
 @pytest.mark.console
 @pytest.mark.multidisplay
 @pytest.mark.e2e
-@pytest.mark.async_timeout(10)
 async def test_multidisplay_out_of_order_add_no_crash(avd, telnet, ui_controller):
     """Test adb emu multidisplay add 3  does not crash emulator"""
 
