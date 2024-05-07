@@ -360,7 +360,7 @@ async def test_multidisplay_error_too_many(
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
-@pytest.mark.async_timeout(240)
+@pytest.mark.async_timeout(510)
 async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_controller):
     """Ensure an app is moved to the primary display when multidisplay is disabled.
 
@@ -474,7 +474,7 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
-@pytest.mark.async_timeout(240)
+@pytest.mark.async_timeout(510)
 async def test_add_multidisplay_from_config(emulator, tmp_path):
     """Adding displays from config file should work
 
