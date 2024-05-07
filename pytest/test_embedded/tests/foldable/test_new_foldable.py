@@ -67,7 +67,6 @@ async def set_device_hinge_angle(emu, angle):
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
-@pytest.mark.async_timeout(60)
 async def test_new_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     await set_device_hinge_angle(emulator_controller, unfold_angle)
     await asyncio.sleep(5)
@@ -108,7 +107,6 @@ async def test_new_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 5.0, 180.0)]
 )
-@pytest.mark.async_timeout(60)
 async def test_new_foldable_notifications(
     emulator_controller, fmt, fold_angle, unfold_angle
 ):

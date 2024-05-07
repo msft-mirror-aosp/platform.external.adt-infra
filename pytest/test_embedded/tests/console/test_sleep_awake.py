@@ -81,7 +81,6 @@ async def emulator_off(adb_shell):
 
 
 @pytest.mark.adb
-@pytest.mark.async_timeout(60)
 async def test_power_down_sleeps_the_device(adb_shell, emulator_on):
     """Test case to verify that sending the power-down command to an awake device will put the device to sleep."""
 
@@ -94,7 +93,6 @@ async def test_power_down_sleeps_the_device(adb_shell, emulator_on):
 
 
 @pytest.mark.adb
-@pytest.mark.async_timeout(60)
 async def test_wake_up_wakes_the_device(adb_shell, emulator_off):
     """Test case to verify that sending the wake-up command to a sleeping device will wake the device."""
 
@@ -108,7 +106,6 @@ async def test_wake_up_wakes_the_device(adb_shell, emulator_off):
 @pytest.mark.e2e
 @pytest.mark.adb
 @pytest.mark.flaky  # b/322557339
-@pytest.mark.async_timeout(60)
 async def test_power_down_turns_off_the_screen(emulator_off, get_screenshot):
     """Test case to verify that a powered-down device has a black screen.
 

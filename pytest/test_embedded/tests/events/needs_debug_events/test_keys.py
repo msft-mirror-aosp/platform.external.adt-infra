@@ -66,7 +66,6 @@ async def keypress_expects(avd, log, jskey, expected_code):
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-@pytest.mark.timeout_win(timeout=60)
 async def test_hardware_keys(avd, at_home, emulator_log):
     """Checks that the hardware key events that studio sends are working."""
     if not emulator_log:

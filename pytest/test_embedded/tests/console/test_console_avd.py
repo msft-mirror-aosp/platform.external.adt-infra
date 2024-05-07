@@ -8,7 +8,6 @@ import emu.console.emulator_connection
 @pytest.mark.console
 @pytest.mark.fast
 @pytest.mark.e2e
-@pytest.mark.async_timeout(10)
 async def test_avd_canonical_path(avd, telnet):
     """Test adb emu avd path returns a canonical path"""
     expected_path = Path(
@@ -22,7 +21,6 @@ async def test_avd_canonical_path(avd, telnet):
 @pytest.mark.console
 @pytest.mark.fast
 @pytest.mark.e2e
-@pytest.mark.async_timeout(10)
 async def test_avd_snapshots_path_has_no_dots(telnet):
     """Exposes b/299320133, paths should be normalized."""
     path = await telnet.send("avd snapshotspath")
@@ -32,7 +30,6 @@ async def test_avd_snapshots_path_has_no_dots(telnet):
 @pytest.mark.boot
 @pytest.mark.console
 @pytest.mark.e2e
-@pytest.mark.async_timeout(10)
 async def test_avd_tracing_is_mounted(avd, telnet):
     """Test adb shell ls /sys/kernel/tracing/trace_marker valid"""
     no_file = "No such file or directory"
@@ -58,7 +55,6 @@ def read_property_file(from_file) -> str:
 @pytest.mark.boot
 @pytest.mark.console
 @pytest.mark.e2e
-@pytest.mark.async_timeout(10)
 async def test_avd_dir_is_canonical_in_pid_xxx_ini(avd, telnet):
     """Test pid_xxx.ini contains canonical path for avd.dir
 

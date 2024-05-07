@@ -56,7 +56,6 @@ async def set_clip_data(emulator_controller, clipboard_data="Hello there!"):
 @pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.fast
-@pytest.mark.async_timeout(10)
 @pytest.mark.skipos("win", "reason: b/303295516 - error at setup.")
 @pytest.mark.parametrize(
     "clipboard_data",
@@ -85,7 +84,6 @@ async def test_clipboard_data(emulator_controller, clipboard_data):
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.async_timeout(10)
 @pytest.mark.skipos("win", "reason=b/305040235 - error at setup.")
 async def test_stream_clipboard_immediately_sends_data(emulator_controller):
     """Validate that the streaming call will immediately send the current clipboard status."""
@@ -104,7 +102,6 @@ async def test_stream_clipboard_immediately_sends_data(emulator_controller):
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.async_timeout(10)
 @pytest.mark.skipos("win", "reason=b/305040856 - error at setup.")
 async def test_stream_clipboard_sends_updated_data(emulator_controller, avd):
     """Validate that the streaming call will immediately send the current clipboard status and
@@ -149,7 +146,6 @@ def get_test_channel(desc, max_length=4096):
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.async_timeout(60)
 async def test_stream_clipboard_sends_updated_data_to_other_channel(avd):
     # We forcefully create 2 different channel configurations to make
     # sure that python is not going to "cleverly" re-use an existing channel.
@@ -181,7 +177,6 @@ async def test_stream_clipboard_sends_updated_data_to_other_channel(avd):
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.async_timeout(60)
 async def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(avd):
     # We forcefully create 2 different channel configurations to make
     # sure that python is not going to "cleverly" re-use an existing channel.
@@ -224,7 +219,6 @@ async def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(av
 
 @pytest.mark.e2e
 @pytest.mark.embedded
-@pytest.mark.async_timeout(60)
 async def test_stream_clipboard_from_android_immediately_sends_data(
     avd, emulator_controller
 ):

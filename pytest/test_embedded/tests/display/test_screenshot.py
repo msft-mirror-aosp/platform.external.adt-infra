@@ -169,7 +169,7 @@ async def all_orientations(emulator_controller, request):
 # bug 299344829
 @pytest.mark.graphics
 @pytest.mark.embedded
-@pytest.mark.timeout_win(timeout=120)
+@pytest.mark.async_timeout(120)
 @pytest.mark.flaky
 async def test_screenshot_valid_width_and_height(
     avd, get_screenshot, default_display_config

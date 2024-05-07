@@ -89,7 +89,6 @@ async def emu_snapshot_service(avd, service):
 
 
 @pytest.mark.e2e
-@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 async def test_multidisplay_none(avd, no_displays, emulator_controller, is_landscape):

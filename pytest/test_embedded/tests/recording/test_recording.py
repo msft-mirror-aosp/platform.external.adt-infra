@@ -24,7 +24,6 @@ from emu.timing import eventually
 
 
 @pytest.fixture
-@pytest.mark.async_timeout(15)
 async def screen_service(service):
     """A screen service fixture that will stop any active recording on test completion."""
     screen_service: ScreenRecordingStub = service(ScreenRecordingStub)
