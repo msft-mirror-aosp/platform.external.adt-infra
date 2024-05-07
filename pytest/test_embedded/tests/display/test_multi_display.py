@@ -469,3 +469,69 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
 
         # Stop the app.
         await avd.stop_activity(dummy_pkg)
+
+
+@pytest.mark.graphics
+@pytest.mark.multidisplay
+@pytest.mark.fast
+@pytest.mark.async_timeout(240)
+async def test_add_multidisplay_from_config(emulator, tmp_path):
+    """Adding displays from config file should work
+
+    Args:
+        emulator (BaseEmulator): Fixture that gives access to the running emulator.
+        tmp_path (Path): Fixture that provides a temporary working folder.
+
+    Test UUID: ea5ede9a-8cdf-4e56-bae1-1b56c2d7ae71
+
+    Test Steps:
+        1. Create an AVD with two secondary displays.
+        2. Launch a new emulator based on the newly created AVD (Verify).
+
+    Verify:
+        Three logical displays should appear in the emulator display dump.
+    """
+    if emulator.is_alive():
+        await emulator.stop()  # The test will configure its own emulator.
+
+    # Avd configuration containing two secondary displays.
+    config = {"abi": "x86",
+              "api": "29",
+              "tag.id":"google_apis",
+              "hw.display1.width": 800,
+              "hw.display1.height": 1200,
+              "hw.display1.density": 320,
+              "hw.display1.xOffset": -1,
+              "hw.display1.yOffset": -1,
+              "hw.display1.flag": 0,
+              "hw.display2.width": 800,
+              "hw.display2.height": 1200,
+              "hw.display2.density": 320,
+              "hw.display2.xOffset": -1,
+              "hw.display2.yOffset": -1,
+              "hw.display2.flag": 0}
+
+    n_displays = 3  # primary plus two secondary displays.
+
+    # Launch the emulator with the specificed multidisplay configuration.
+    logging.info("Launching emulator ...")
+    myflags = ["-no-snapshot-save"]
+    emulator = Emulator(
+        android_home=emulator.android_home,
+        android_avd_home=tmp_path,
+        exe=emulator.exe,
+        avd_config=config,
+    )
+    await emulator.launch(flags=myflags)
+    await emulator.wait_for_boot(timeout=180)
+
+    async def ensure_logical_displays(n_displays):
+        # Return True if 'n_displays' logical displays are present.
+        display_dump = await emulator.adb.shell("dumpsys display", timeout=30)
+        display_size_pattern = re.search('Logical Displays: size=([0-9]*).*', display_dump)
+        return display_size_pattern.groups()[0] == str(n_displays)
+
+    assert await eventually(partial(ensure_logical_displays, n_displays), timeout=180), \
+                 'Wrong number of displays detected'
+
+    await emulator.stop()
