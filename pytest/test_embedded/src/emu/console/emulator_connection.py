@@ -55,6 +55,10 @@ class EmulatorClient:
             await self.send(msg)
 
     async def send(self, command) -> (bool, [str]):
+        if self._writer.is_closing() or self._reader.at_eof():
+            self.logger.info("-- Disconnected.. attempting to reconnect")
+            await self.login()
+
         self.logger.info("-S-> %s", command)
         self._writer.write(f"{command}\n".encode(encoding="utf-8"))
 
@@ -78,6 +82,10 @@ class EmulatorClient:
         raise EmulatorClientEOF(
             f"EOF before receiving complete emulator response: {msg}"
         )
+
+    async def close(self):
+        self._writer.close()
+        await self._writer.wait_closed()
 
     @staticmethod
     async def connect(

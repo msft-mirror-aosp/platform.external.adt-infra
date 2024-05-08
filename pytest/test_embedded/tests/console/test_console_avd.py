@@ -117,3 +117,14 @@ async def test_emulator_exit_console_command(telnet):
         assert False, "Emulator client connection did not close as expected"
     except emu.console.emulator_connection.EmulatorClientEOF:
         pass  # Connection closed successfully
+
+
+@pytest.mark.e2e
+@pytest.mark.sanity
+async def test_telnet_will_reconnect_after_exit(telnet):
+    try:
+        await telnet.send("exit")
+        assert False, "Emulator client connection did not close as expected"
+    except emu.console.emulator_connection.EmulatorClientEOF:
+        hello = await telnet.send("ping")
+        assert hello == ["I am alive!", "OK"]
