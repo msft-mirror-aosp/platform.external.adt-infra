@@ -378,6 +378,7 @@ class AvdWriter:
             abi (str): The abi of the machine. Note that qemu must support this abi!
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv
             [optional] device.name (str): One of Pixel2|PixelFold, defaults to Pixel2.
+            [optional] AvdId (str): The name of the AVD to be created. Defaults to "{api}_{tag}_{abi}_{device_name}"
 
         Note, you will need to look at the actual templates (templates/Pixel2.avd/config.ini) to see
         which values you can actually pass in as config.
@@ -402,7 +403,7 @@ class AvdWriter:
                 f"Abi {abi} is not supported, please use one of: {', '.join(self.SUPPORTED_ABI)}"
             )
 
-        name = f"{api}_{tag}_{abi}_{device_name}"
+        name = config.get("AvdId", f"{api}_{tag}_{abi}_{device_name}")
         avd_cfg = {
             "AvdId": name,
             "tag.id": tag,
