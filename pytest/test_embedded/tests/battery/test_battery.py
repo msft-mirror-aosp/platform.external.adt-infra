@@ -43,8 +43,6 @@ async def set_and_get_battery(emu_controller, battery_state):
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-@pytest.mark.timeout_win(timeout=60)
-@pytest.mark.async_timeout(30)
 @pytest.mark.parametrize(
     "test_name, battery_status, battery_health",
     [

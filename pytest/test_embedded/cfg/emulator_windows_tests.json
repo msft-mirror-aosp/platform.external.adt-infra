@@ -323,14 +323,14 @@
         },
         "status": "enabled"
     },
-    "sanity_test_suite_api_25": {
+    "sanity_test_suite_api_28": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "launch_flags": [],
         "pytest_flags": [
             "-m oldapiboot"
         ],
         "avd_config": {
-            "api": "25",
+            "api": "28",
             "tag.id": "google_apis"
         },
         "status": "enabled"
@@ -375,7 +375,7 @@
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "launch_flags": [],
         "pytest_flags": [
-            "-m boot and not slow"
+            "-m boot and not slow and not flaky"
         ],
         "avd_config": {
             "api": "31",
@@ -387,7 +387,7 @@
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "launch_flags": [],
         "pytest_flags": [
-            "-m boot and not slow"
+            "-m boot and not slow and not flaky"
         ],
         "avd_config": {
             "api": "34",

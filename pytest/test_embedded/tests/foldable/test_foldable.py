@@ -53,7 +53,6 @@ async def snapshot_service(avd, service):
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
-@pytest.mark.async_timeout(30)
 async def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     set_device_hinge_angle(emulator_controller, unfold_angle)
     await asyncio.sleep(5)
@@ -186,7 +185,6 @@ async def test_unfolded_snapshot_sanity(
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 5.0, 180.0)]
 )
-@pytest.mark.async_timeout(30)
 async def test_foldable_notifications(
     emulator_controller, fmt, fold_angle, unfold_angle
 ):

@@ -58,7 +58,6 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
         (1920, 1080, DisplayModeValue.DESKTOP),
     ],
 )
-@pytest.mark.timeout_win(timeout=60)
 @pytest.mark.flaky
 @pytest.mark.sanity
 @pytest.mark.skipos("all", "reason: b/309463427")

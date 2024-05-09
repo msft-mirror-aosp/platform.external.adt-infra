@@ -38,6 +38,7 @@ function run_with_timeout () {
 TARGET="$(echo $DIST_DIR | sed "s/.*git_devtools-test-.*-\(api.*\)\/.*/\1/g")"
 export ADT_INFRA='/buildbot/src/android/emu-master-dev/external/adt-infra'
 export ANDROID_SDK_ROOT="$SDK_EMULATOR"
+export JAVA_HOME="$PWD/prebuilts/studio/jdk/jdk17/linux/"
 rm -rf "$ANDROID_SDK_ROOT/system-images"
 ln -sf "/buildbot/src/android/emu-master-dev/prebuilts/android-emulator-build/system-images/linux/system-images" "$ANDROID_SDK_ROOT"
 ls $SDK_EMULATOR

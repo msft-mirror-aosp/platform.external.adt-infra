@@ -180,25 +180,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
                 else:
                     pytest.skip()
 
-    # Process the 'timeout_win' marker
-    timeout_win = item.get_closest_marker("timeout_win")
-    if timeout_win and pytest.os == "win":
-        timeout_win_sec = (
-            timeout_win.args[0]
-            if timeout_win.args
-            else timeout_win.kwargs.get("timeout")
-        )
-        # Remove existing timeout marker
-        timeout = [
-            m
-            for m, marker in enumerate(item.iter_markers())
-            if marker.name == "timeout"
-        ]
-        if timeout:
-            item.own_markers.pop(timeout[0])
-
-        item.add_marker(pytest.mark.async_timeout([timeout_win_sec]))
-
     item.user_properties.append(("flaky", "flaky" in item.keywords))
 
     logging.info("=============== Setup: %s ===============", item.name)
@@ -257,11 +238,11 @@ def pytest_configure(config):
     # Current skipos platform
     pytest.os = os_map.get(pytest.system, "unknown")
 
-    # Register the 'timeout_win' marker
+    # Register the 'flaky' marker
     config.addinivalue_line(
         "markers",
-        "timeout_win(timeout): "
-        "Set a timeout for Windows platforms (overrides an existing timeout).",
+        "flaky: "
+        "Set a test as flaky, and exclude it from test failures on the dashboard.",
     )
 
 
@@ -284,7 +265,6 @@ def get_crash_reporter(pytestconfig):
 
 
 @pytest.fixture(autouse=True)
-@pytest.mark.async_timeout(5)
 async def crash_reporter(pytestconfig):
     """A fixture to handle crash reports in the emulator.
 
@@ -490,7 +470,6 @@ async def emulator_log(avd: BaseEmulator):
     return avd.log
 
 
-@pytest.mark.async_timeout(20)
 async def launch_animiation_app(avd: BaseEmulator):
     """Launches the debug animation app.
 
@@ -502,8 +481,6 @@ async def launch_animiation_app(avd: BaseEmulator):
     - Force stop any existing running animation app
     - Start the activity
     - Wait for the welcome message to appear on logcat.
-
-    It will wait for at most 20 seconds before continuing.
     """
     logging.info("--> launch_animiation_app")
     assert avd.is_alive()

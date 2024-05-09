@@ -145,8 +145,7 @@ def check_boot_from_snapshot(avdpath) -> bool:
 @pytest.mark.boot
 @pytest.mark.e2e
 @pytest.mark.sanity
-@pytest.mark.timeout_win(timeout=120)
-@pytest.mark.skipos("all", "Test fails in presubmit")
+@pytest.mark.async_timeout(120)
 async def test_snapshot_booted(emulator):
     """Make sure the emulator status is able to boot from snapshot.
 
@@ -222,7 +221,6 @@ async def test_emulator_should_idle(emulator):
 
 @pytest.mark.boot
 @pytest.mark.e2e
-@pytest.mark.timeout_win(timeout=60)
 async def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
     assert await avd.has_booted()
     assert await asyncio.wait_for(get_booted_notification_time(avd), timeout=10)
@@ -293,11 +291,9 @@ async def test_first_time_booted_old_api(emulator):
     assert await emulator.launch(flags=myflags)
 
     logging.info("Waiting for it to boot up ...")
-    logging.info("Booting up emulator ...")
-    assert await emulator.wait_for_boot(timeout=900)
-
-    # wait till it settle down a bit
-    await asyncio.sleep(30)
+    await asyncio.wait_for(
+        get_booted_notification_time(emulator), timeout=1080
+    )
 
     logging.info("Shutting down the emulator ...")
     if emulator.is_alive():

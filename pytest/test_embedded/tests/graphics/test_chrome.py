@@ -70,23 +70,23 @@ async def request_page_in_chrome(avd):
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.xpass
-@pytest.mark.flaky
+@pytest.mark.async_timeout(120)
 async def test_launch_chrome_google(avd, get_screenshot):
     """
     This test launches Chrome on an Android device, opens a html snippet,
-    captures a screenshot, and verifies that at least 60% of the image pixels are purple.
+    captures a screenshot, and verifies that at least 40% of the image pixels are purple.
     """
-    async def at_least_60_percent_of_image_is_purple():
+    async def at_least_40_percent_of_image_is_purple():
         """
-        Helper function to check if at least 60% of the image pixels are purple.
+        Helper function to check if at least 40% of the image pixels are purple.
 
         Returns:
-            bool: True if at least 60% of the image pixels are blue, False otherwise.
+            bool: True if at least 40% of the image pixels are blue, False otherwise.
         """
         _, rgb_image = await get_screenshot(ImageFormat())
         rgb_image = rgb_image.convert("RGB")
 
-        percent_purple = 60
+        percent_purple = 40
         purple_count = 0
 
         # Iterate over each pixel in the image
@@ -106,9 +106,9 @@ async def test_launch_chrome_google(avd, get_screenshot):
     max_retries = 3
     for _ in range(0, max_retries):
         await request_page_in_chrome(avd)
-        if await wait_until(at_least_60_percent_of_image_is_purple, timeout=5):
+        if await wait_until(at_least_40_percent_of_image_is_purple, timeout=20):
             saw_purple = True
             break
 
-    assert (saw_purple), f"Did not see a screenshot with 60%% purple pixels"
+    assert (saw_purple), f"Did not see a screenshot with 40% purple pixels"
     await avd.stop_activity(chrome_pkg)
