@@ -50,3 +50,22 @@ async def test_multidisplay_out_of_order_add_no_crash(avd, telnet, ui_controller
     assert avd.is_alive();
     assert "OK" in valid_del_result
 
+@pytest.mark.console
+@pytest.mark.multidisplay
+@pytest.mark.e2e
+async def test_multidisplay_del_empty_no_crash(avd):
+    """Test adb emu multidisplay del does not crash emulator"""
+
+    del_empty_result =await avd.adb.run(["emu", "multidisplay", "del"])
+    await asyncio.sleep(3)
+    assert avd.is_alive();
+
+@pytest.mark.console
+@pytest.mark.multidisplay
+@pytest.mark.e2e
+async def test_multidisplay_del_invalid_display_no_crash(avd):
+    """Test adb emu multidisplay del invalidid does not crash emulator"""
+
+    del_invalid_display_result =await avd.adb.run(["emu", "multidisplay", "del", "3"])
+    await asyncio.sleep(3)
+    assert avd.is_alive();
