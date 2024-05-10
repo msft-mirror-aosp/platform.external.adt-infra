@@ -40,3 +40,36 @@ async def test_wifi_has_connectivity(avd, pytestconfig, launch_flags):
         return False
 
     assert await wait_until(has_connectivity), "Unable to connect to dns 8.8.8.8"
+
+
+@pytest.mark.e2e
+@pytest.mark.boot
+@pytest.mark.sanity
+async def test_wifi_connectivity_without_mobile_data(avd):
+    """Checks internet connectivity via the wifi stack
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
+
+    Test UUID: 1f6a0e5a-958a-4a01-86f1-d926c2c39931
+
+    Test Steps:
+        1. Disable the mobile data connectivity
+
+    Verify:
+        Test internet connectivity via a ping command to www.google.com
+    """
+
+    # Disable the mobile data connectivity
+    await avd.adb.shell("svc data disable")
+
+    async def has_internet_access():
+        result = await avd.adb.shell("ping -c 3 www.google.com")
+        for line in result.rstrip().splitlines():
+            if "64 bytes from" in line and "icmp_seq" in line and "ttl" in line:
+                return True
+        return False
+
+    assert await wait_until(has_internet_access), "Failed to ping www.google.com"
+
+    # Enable the data connectivity, in case this avd is used for the next test
+    await avd.adb.shell("svc data enable")
