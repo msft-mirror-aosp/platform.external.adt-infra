@@ -14,6 +14,8 @@
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import ParameterValue, SensorValue
+from aemu.proto.emulator_controller_pb2 import PhysicalModelValue
+from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 
 from emu.timing import wait_until
 
@@ -99,3 +101,55 @@ async def test_sensor_value(emulator_controller, test_name, sensor_value, x, y, 
             value=ParameterValue(data=[x, y, z]),
         ),
     )
+
+
+@pytest.mark.fast
+@pytest.mark.graphics
+@pytest.mark.hardware
+async def test_accelerometer_updates_with_model_change(avd):
+    """Ensure the accelerometer values change when the 3D (rotation) model changes.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
+
+    Test steps:
+        1. Launch an emulator AVD.
+        2. Store current acceleration sensor data.
+        3. Changing the device's 3D model by applying a rotation (Verify).
+
+    Verify:
+        Acceleration data changes.
+    """
+    # Store initial orientation and acceleration data.
+    emulator_controller = EmulatorControllerStub(avd.channel)
+    initial_orientation = await emulator_controller.getSensor(
+        SensorValue(target=SensorValue.ORIENTATION)
+    )
+    initial_acceleration = await emulator_controller.getSensor(
+        SensorValue(target=SensorValue.ACCELERATION)
+    )
+
+    # Rotate the emulator (will propagate to the the extended controls ui).
+    await emulator_controller.setPhysicalModel(
+        PhysicalModelValue(
+            target=PhysicalModelValue.ROTATION,
+            value=ParameterValue(data=[-45, -45, -45]),
+        )
+    )
+
+    # Check new orientation data.
+    orientation = await emulator_controller.getSensor(
+        SensorValue(target=SensorValue.ORIENTATION)
+    )
+    assert initial_orientation.value.data \
+            != pytest.approx(orientation.value.data), \
+            "Orientation sensor data wasn't updated"
+
+    # Check new acceleration data.
+    acceleration = await emulator_controller.getSensor(
+        SensorValue(target=SensorValue.ACCELERATION)
+    )
+
+    assert initial_acceleration.value.data \
+            != pytest.approx(acceleration.value.data), \
+            "Acceleration sensor data didn't change after rotation"
