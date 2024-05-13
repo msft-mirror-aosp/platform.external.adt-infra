@@ -491,13 +491,10 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
     Verify:
         Three logical displays should appear in the emulator display dump.
     """
-    if emulator.is_alive():
-        await emulator.stop()  # The test will configure its own emulator.
-
     # Avd configuration containing two secondary displays.
-    config = {"abi": "x86",
-              "api": "29",
-              "tag.id":"google_apis",
+    config = {"abi": emulator.configuration.hardware.get('abi'),
+              "api": emulator.configuration.hardware.get('api'),
+              "tag.id": emulator.configuration.hardware.get('tag.id'),
               "hw.display1.width": 800,
               "hw.display1.height": 1200,
               "hw.display1.density": 320,
@@ -516,22 +513,25 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
     # Launch the emulator with the specificed multidisplay configuration.
     logging.info("Launching emulator ...")
     myflags = ["-no-snapshot-save"]
-    emulator = Emulator(
+    emu = Emulator(
         android_home=emulator.android_home,
         android_avd_home=tmp_path,
         exe=emulator.exe,
         avd_config=config,
     )
-    await emulator.launch(flags=myflags)
-    await emulator.wait_for_boot(timeout=180)
+    await emu.launch(flags=myflags)
+    await emu.wait_for_boot(timeout=180)
 
-    async def ensure_logical_displays(n_displays):
-        # Return True if 'n_displays' logical displays are present.
-        display_dump = await emulator.adb.shell("dumpsys display", timeout=30)
+    async def ensure_logical_displays(n, emu):
+        # Return True if the emulator has 'n' logical displays.
+        display_dump = await emu.adb.shell("dumpsys display", timeout=30)
         display_size_pattern = re.search('Logical Displays: size=([0-9]*).*', display_dump)
-        return display_size_pattern.groups()[0] == str(n_displays)
+        if display_size_pattern is None:
+            return False
+        return display_size_pattern.groups()[0] == str(n)
 
-    assert await eventually(partial(ensure_logical_displays, n_displays), timeout=180), \
-                 'Wrong number of displays detected'
+    assert await (
+        eventually(partial(ensure_logical_displays, n_displays, emu), timeout=180)
+    ), 'Wrong number of displays detected'
 
-    await emulator.stop()
+    await emu.stop()
