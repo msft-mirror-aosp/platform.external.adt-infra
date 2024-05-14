@@ -45,6 +45,7 @@ async def test_wifi_has_connectivity(avd, pytestconfig, launch_flags):
 @pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.sanity
+@pytest.mark.skipos("win", "reason: ping does not work on windows")
 async def test_wifi_connectivity_without_mobile_data(avd):
     """Checks internet connectivity via the wifi stack
     Args:
