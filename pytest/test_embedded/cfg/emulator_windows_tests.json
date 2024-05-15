@@ -419,10 +419,8 @@
         ],
         "avd_config": {
             "api": "33",
-            "abi": "arm64-v8a",
             "AvdId": "Wear",
             "PlayStore.enabled": "true",
-            "abi.type": "arm64-v8a",
             "avd.ini.displayname": "Wear",
             "avd.ini.encoding": "UTF-8",
             "disk.dataPartition.size": "6G",
@@ -432,7 +430,6 @@
             "hw.battery": "yes",
             "hw.camera.back": "None",
             "hw.camera.front": "None",
-            "hw.cpu.arch": "arm64",
             "hw.cpu.ncore": "4",
             "hw.dPad": "no",
             "hw.gps": "yes",
