@@ -95,7 +95,7 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
 )
 @pytest.mark.flaky
 @pytest.mark.sanity
-# @pytest.mark.skipos("all", "reason: b/309463427")
+@pytest.mark.embedded_newresizable
 async def test_new_resizable_changes_resolution(
     supported_resizable_resolutions,
     avd,
