@@ -266,9 +266,9 @@ class Adb:
 
         You usually want to use this like this:
 
-        async with adb.stream("some shell cmd") as stream:
+        async with await adb.stream("some shell cmd") as stream:
             # do some things.
-            for line in stream
+            async for line in stream
                 print(line)
 
         Args:

@@ -95,7 +95,7 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
 )
 @pytest.mark.flaky
 @pytest.mark.sanity
-# @pytest.mark.skipos("all", "reason: b/309463427")
+@pytest.mark.embedded_newresizable
 async def test_new_resizable_changes_resolution(
     supported_resizable_resolutions,
     avd,
@@ -129,6 +129,7 @@ async def test_new_resizable_changes_resolution(
     # Eventually the currentMode is equal to the one we have set.
     # If this is broken the test will timeout
     await emulator_controller.setDisplayMode(DisplayMode(value=mode))
+    await asyncio.sleep(3)
     assert await wait_until(display_is_set_to_mode, timeout=5)
 
     async def screenshot_is_sized_properly():
@@ -186,6 +187,7 @@ async def test_new_resizable_observable_from_streaming(
     # Start with moving to the intial dimension
     spec = next(available_dimensions)
     assert await set_display_mode(emulator_controller, spec.mode) == spec.mode
+    await asyncio.sleep(3)
 
     # Wait until we observe the expected dimension in the stream of screenshots
     # If we see it we move to the next dimension we are going to check
@@ -203,6 +205,7 @@ async def test_new_resizable_observable_from_streaming(
                 assert (
                     await set_display_mode(emulator_controller, spec.mode) == spec.mode
                 )
+                await asyncio.sleep(3)
 
 
 @pytest.mark.newresizable
@@ -231,7 +234,7 @@ async def test_new_resizable_folding_observable_from_streaming(
 
     # start with unfold
     await set_device_hinge_angle(emulator_controller, 180)
-    await asyncio.sleep(1)
+    await asyncio.sleep(3)
 
     foldedw = 1080
     foldedh = 2092
@@ -239,13 +242,13 @@ async def test_new_resizable_folding_observable_from_streaming(
     spec = next(available_dimensions)
     updated = await set_display_mode(emulator_controller, spec.mode)
     assert updated == spec.mode
-    await asyncio.sleep(1)
+    await asyncio.sleep(3)
 
     # Transition to the next.
     spec = next(available_dimensions)
     updated = await set_display_mode(emulator_controller, spec.mode)
     assert updated == DisplayModeValue.FOLDABLE
-    await asyncio.sleep(1)
+    await asyncio.sleep(3)
 
     # Now fold it
     await set_device_hinge_angle(emulator_controller, 0)
