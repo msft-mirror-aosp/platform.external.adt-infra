@@ -628,9 +628,8 @@ def run_single_suite(
     tmpdir: str,
     build_target: str,
     pyrun: PyRunner,
-    launch_flags: str,
-    pytest_flags: [str],
-    avd_config: str,
+    pytest_flags: list[str],
+    avd_configs: list[str],
     collect: bool,
     name: str,
 ):
@@ -650,10 +649,8 @@ def run_single_suite(
                 f"--log-file={logdir}/{name}.log",
                 f"--emulator={emulator}",
                 f"--symbols={symbol_path}",
-                "--avd_config",
-                avd_config,
-                "--emulator_launch_flags",
-                launch_flags,
+                "--avd_configs",
+                avd_configs,
                 f"--android_avd_home={tmpdir}",
                 f"--build_target={build_target}",
                 f"--android_home={ANDROID_SDK_ROOT}",
@@ -755,8 +752,7 @@ def run_tests(
         with AdbServer(pyrun):
             with tempfile.TemporaryDirectory() as tmpdir:
                 pytest_flags = cfg["pytest_flags"]
-                launch_flags = json.dumps(cfg["launch_flags"])
-                avd_config = json.dumps(cfg["avd_config"])
+                avd_configs = json.dumps(cfg["avd_configs"])
                 logging.info("Running %s (%s)", name, cfg["description"])
                 res = run_single_suite(
                     emulator,
@@ -766,9 +762,8 @@ def run_tests(
                     tmpdir,
                     build_target,
                     pyrun,
-                    launch_flags,
                     pytest_flags,
-                    avd_config,
+                    avd_configs,
                     collect,
                     name,
                 )
