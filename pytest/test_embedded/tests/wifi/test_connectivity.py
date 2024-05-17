@@ -25,8 +25,10 @@ from emu.timing import wait_until
 @pytest.mark.parametrize(
     "launch_flags", [["-no-snapshot"], ["-no-snapshot", "-feature", "WiFiPacketStream"]],
 )
-async def test_wifi_has_connectivity(avd, launch_flags):
-    assert await avd.restart(avd.launch_flags + launch_flags)
+async def test_wifi_has_connectivity(avd, pytestconfig, launch_flags):
+    all_flags = json.loads(pytestconfig.getoption("emulator_launch_flags"))
+    all_flags += launch_flags
+    assert await avd.restart(all_flags)
     assert await avd.wait_for_boot()
 
     async def has_connectivity():

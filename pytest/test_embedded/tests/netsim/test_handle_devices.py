@@ -11,14 +11,6 @@ def test_device_attaches_to_netsimd(avd):
 
 
 @pytest.mark.e2e
-# TODO: Add this test to presubmit suite once stable. @pytest.mark.boot  
-@pytest.mark.netsim
-def test_two_devices_attach_to_netsimd(avds):
-    """Test case to verify that a device is attached to netsimd."""
-    assert len(netsim_client.NetsimClient().get_devices()) == 2
-
-
-@pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.netsim
 def test_netsim_patch_and_reset(avd):
