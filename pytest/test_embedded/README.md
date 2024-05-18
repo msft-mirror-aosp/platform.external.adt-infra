@@ -108,7 +108,7 @@ You can find a set of configuration files in the [cfg](cfg/) directory.
 
 ### Providing your own avd configuration
 
-The `avd_config` object in the test configuration JSON file allows you to specify your own custom AVD configuration. The following properties are mandatory:
+The `avd_configs` object in the test configuration JSON file allows you to specify your own custom AVD configurations. The following properties are mandatory for each config:
 
 * `api`: This determines the API level that should be used when obtaining the system image.
 * `tag.id`: A tag.id indicates the type of system image, which currently can be one of the following: `default|google_apis|android-desktop|android-wear|google_apis_playstore|android-tv`. You can run `$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list` to get detailed information on available system images.
@@ -116,7 +116,9 @@ The `avd_config` object in the test configuration JSON file allows you to specif
   * On X86 (Intel/AMD), `abi` can be `x86` or `x86_64`.
   * On Mac M1 (and Linux ARM), `abi` can be `arm64-v8a` or `armeabi-v7a`.
 
-Adding key value pairs to `avd_config` will result in overriding the default values that are provided in the [template](/src/emu//templates//Pixel2.avd/config.ini).
+Adding key value pairs to a config will result in overriding the default values that are provided in the [template](/src/emu//templates//Pixel2.avd/config.ini).
+
+When specifying multiple AVD configurations the `AvdId` property is needed to distinguish between otherwise identical avds.
 
 ## Development
 
@@ -187,12 +189,15 @@ If you wish to run a test from a suite you will have to pass in the right parame
 
       pytest -m graphics and not multidisplay \
            --emulator=~/src/emu/external/qemu/objs/emulator \
-           --avd_config '{
+           --avd_configs '[{
+            "launch_flags": [
+              "-no-snapshot"
+            ],
             "api": "33",
             "tag.id": "google_apis",
             "hw.initialOrientation": "landscape",
             "skin.name": "1280x720"
-          }'  \
+          }]'  \
           --emulator_launch_flags '["-no-snapshot]'
 
 ## Obtaining new packages with devpi
