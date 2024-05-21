@@ -28,6 +28,8 @@ import androidx.test.uiautomator.UiSelector;
 import android.util.Log;
 import android.view.KeyEvent;
 
+import java.util.Objects;
+
 /**
  * Application launcher.
  */
@@ -169,7 +171,7 @@ public class AppLauncher {
         boolean status = launch(instrumentation, appPath[0]);
 
         if (!status && api == 31) {
-            return launchPath_v2(instrumentation, firstAttempt, appPath);
+            return launchPath_v2(instrumentation, appPath);
         }
 
         if (!status) {
@@ -218,17 +220,17 @@ public class AppLauncher {
                 }
                 Log.i(TAG, "Failed to scroll to " + appPath[i]);
                 if (api == 31) {
-                    return launchPath_v2(instrumentation, firstAttempt, appPath);
+                    return launchPath_v2(instrumentation, appPath);
                 }
                 return false;
             } catch (UiObjectNotFoundException e) {
-                Log.w(TAG, e.getMessage());
+                Log.w(TAG, Objects.requireNonNull(e.getMessage()));
                 Log.w(TAG, "Application " + appPath[i] + " could not be launched");
             }
         }
 
         if (firstAttempt && !status && api == 31) {
-            return launchPath_v2(instrumentation, false, appPath);
+            return launchPath_v2(instrumentation, appPath);
         }
 
         return status;
@@ -242,12 +244,11 @@ public class AppLauncher {
      * the method logs an error message and returns false.
      *
      * @param instrumentation the instrumentation instance used to interact with the UI
-     * @param firstAttempt a boolean indicating whether this is the first attempt to launch the apps
      * @param appPath an array of Strings where each String is the name of an app to launch
      * @return a boolean indicating whether the method was able to find and click on all the apps in the appPath array
      * @throws Exception if an error occurs while interacting with the UI
      */
-    public static boolean launchPath_v2(Instrumentation instrumentation, boolean firstAttempt, String... appPath)
+    public static boolean launchPath_v2(Instrumentation instrumentation, String... appPath)
             throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
         boolean status = launch(instrumentation, appPath[0]);
@@ -259,10 +260,11 @@ public class AppLauncher {
         for (int i = 1; i < appPath.length && status; ++i) {
             status = false;
             Log.i(TAG, "Open " + appPath[i]);
-            UiSelector regexSelector = new UiSelector().textMatches(appPath[i]);
+            String firstWord = appPath[i].split(" ")[0];
+            UiSelector regexSelector = new UiSelector().textStartsWith(firstWord);
             UiObject appByRegex = device.findObject(regexSelector);
 
-            UiSelector scrollableSelector = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES).scrollable(true);
+            UiSelector scrollableSelector = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
             UiObject scrollableObject = device.findObject(scrollableSelector);
             if (!scrollableObject.waitForExists(5L)) {
                 Log.i(TAG, "Scrollable object does not exist");
