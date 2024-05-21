@@ -64,6 +64,10 @@ async def prepare_chrome(avd):
 
 async def request_page_in_chrome(avd):
     await prepare_chrome(avd)
+
+    # SystemUI and launcher crash/ANR dialogs get in the way of screenshots, attempt to close them
+    await avd.adb.shell("am start -a android.intent.action.MAIN -c android.intent.category.HOME")
+
     await avd.adb.shell(f"am start -S -a android.intent.action.VIEW -d 'file:///{purple_path}/purple.html' -t text/html -n {chrome_cmp}")
 
 
