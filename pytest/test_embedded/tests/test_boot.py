@@ -98,6 +98,7 @@ async def get_booted_notification_time(emulator):
 @pytest.mark.sanity
 @pytest.mark.fast
 @pytest.mark.wear
+@pytest.mark.atv
 @pytest.mark.async_timeout(1080)
 async def test_first_time_booted(emulator, record_property):
     """Make sure the emulator status is set to booted."""
