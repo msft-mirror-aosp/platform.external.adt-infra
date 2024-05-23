@@ -172,6 +172,14 @@ async def test_emulator_controls_keys(avd):
         match = re.search(f'{stream_type}.*streamVolume:(\d+)', output)
         return int(match.groups()[0])
 
+    async def check_volume_raises(volume):
+        current_volume = await get_volume()
+        return current_volume > volume
+
+    async def check_volume_lowers(volume):
+        current_volume = await get_volume()
+        return current_volume < volume
+
     async def apply_user_rotation(rotation):
         # Apply user rotation (0: Portrait, 1: Landscape, 2: Portrait Reversed, 3: Landscape Rev).
         await avd.adb.shell(f"content insert --uri content://settings/system \
@@ -185,6 +193,12 @@ async def test_emulator_controls_keys(avd):
             return False
         current_rotation = int(match.groups()[0])
         return current_rotation == expected_rotation
+
+    async def check_screenshot_created():
+        # Return 'True' if a screenshot is present in the folder Screenshots/
+        return await avd.adb.shell(
+            "ls /storage/emulated/0/Pictures/Screenshots/Screenshot_* > /dev/null 2>&1; echo $?"
+        ) == '0'
 
     async def get_top_focused_root_task():
         # Return the name of the top focused root task
@@ -218,17 +232,20 @@ async def test_emulator_controls_keys(avd):
     ############ Step 3 - Volume keys ##
 
     # Click on Volume Up.
-    current_volume = await get_volume()
+    volume = await get_volume()
     await keypress("AudioVolumeUp", 2)
-    await asyncio.sleep(5)
-    volume_up = await get_volume()
-    assert volume_up > current_volume, "Volume was not raised"
+    assert (
+        await eventually(partial(check_volume_raises, volume)),
+        "Volume was not raised"
+    )
 
     # Click on Volume Down.
+    volume = await get_volume()
     await keypress("AudioVolumeDown", 2)
-    await asyncio.sleep(5)
-    volume_down = await get_volume()
-    assert volume_down < volume_up, "Volume was not lowered"
+    assert (
+        await eventually(partial(check_volume_lowers, volume)),
+        "Volume was not lowered"
+    )
 
     ############ Step 4 - Rotation keys ##
 
@@ -255,12 +272,9 @@ async def test_emulator_controls_keys(avd):
 
     # Send a screenshot key event.
     await avd.adb.shell("input keyevent 120")
-    await asyncio.sleep(5)
 
     # Verify a new screenshot is created.
-    assert await avd.adb.shell(
-        "ls /storage/emulated/0/Pictures/Screenshots/Screenshot_* > /dev/null 2>&1; echo $?") == '0', \
-        "A screenshot was not created"
+    assert await eventually(check_screenshot_created), "A screenshot was not created"
 
     ########## Step 6 - Back and Home button ##
 
