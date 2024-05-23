@@ -1,0 +1,19 @@
+{
+    "presubmit_with_custom_avd": {
+        "description": "An example that boots an avd from a system-image directory",
+        "pytest_flags": [
+            "-k test_first_time_booted"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "tag.id" : "google_apis",
+                "abi": "x86_64",
+                "api": "custom",
+                "image.sysdir.1": "/mnt/ssd/Android/Sdk/system-images/android-33/google_apis_playstore/x86_64"
+            }
+        ],
+        "status": "enabled"
+    }
+}
+

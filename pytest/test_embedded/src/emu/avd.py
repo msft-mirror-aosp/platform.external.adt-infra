@@ -334,7 +334,7 @@ class AvdWriter:
 
         cfg_file = f"{name}.avd/config.ini"
         dest = self.avd_home / cfg_file
-        logging.info("Writing config.ini to %s", dest)
+        logging.info("Writing config.ini to %s (%s)", dest, cfg)
         if not dest.parent.exists():
             os.makedirs(dest.parent)
 
@@ -351,15 +351,23 @@ class AvdWriter:
         device_name: str,
         custom_cfg: dict[str, str],
     ) -> AvdConfig:
-        avd = self.sys_imgs.find_and_unpack(api, abi, tag)
-        if not avd:
-            logging.warning(
-                "Installing api: %s, abi: %s, tag: %s, this is a very expensive operation, and can easily take up 10 minutes!",
-                api,
-                abi,
-                tag,
-            )
-            avd = self.sys_imgs.install(api, abi, tag)
+        if 'image.sysdir.1' in custom_cfg:
+            logging.warning("Using custom system image: %s", custom_cfg['image.sysdir.1'])
+            avd = {
+                    "api": api,
+                    "tag": tag,
+                    "abi": abi,
+                }
+        else:
+            avd = self.sys_imgs.find_and_unpack(api, abi, tag)
+            if not avd:
+                logging.warning(
+                    "Installing api: %s, abi: %s, tag: %s, this is a very expensive operation, and can easily take up 10 minutes!",
+                    api,
+                    abi,
+                    tag,
+                )
+                avd = self.sys_imgs.install(api, abi, tag)
 
         avd["name"] = name
         avd["avd_home"] = self.avd_home

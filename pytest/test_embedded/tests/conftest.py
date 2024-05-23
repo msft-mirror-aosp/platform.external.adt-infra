@@ -88,14 +88,9 @@ def pytest_addoption(parser):
         "Use this if you have launched you own emulator and want to run the tests against that instance.",
     )
     parser.addoption(
-        "--avd_config",
+        "--avd_configs",
         default="{}",
-        help="A JSON snippet that contains the avd configuration that should be used to run this test",
-    )
-    parser.addoption(
-        "--emulator_launch_flags",
-        default="[]",
-        help="A JSON snippet that contains the avd configuration that should be used to run this test",
+        help="A list of JSON snippets that contains the avd configuration that should be used to run this test",
     )
     parser.addoption(
         "--debug_emulator_log",
@@ -301,7 +296,6 @@ async def crash_reporter(pytestconfig):
     await crash_report.clear()
     logging.info("=== completed crash reporter")
 
-
 @pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
 async def emulator(request, pytestconfig) -> BaseEmulator:
@@ -350,7 +344,45 @@ async def emulator(request, pytestconfig) -> BaseEmulator:
 
     At the end of the test run all the created emulators, and associated avds
     will be deleted.
+
     """
+    avd_configs = json.loads(pytestconfig.getoption("avd_configs"))
+    return await manage_emulator(request, pytestconfig, avd_configs[0] if avd_configs else {})
+
+@pytest.fixture(scope="module")
+@pytest.mark.async_timeout(200)
+async def emulators(request, pytestconfig) -> list[BaseEmulator]:
+    """Makes multiple configured emulators available
+
+    This fixture supports using multiple emulators and launches all configs
+    inside avd_configs.
+
+    'AvdId' field in each avd_config is required to distinguish between identical avds.
+
+    Refer to emulator's docstring for implementation details on each emulator.
+    """
+    emulators = []
+    avd_configs = json.loads(pytestconfig.getoption("avd_configs"))
+    # Put a placeholder avd_config if none defined
+    if not avd_configs:
+        avd_configs.append({})
+    for avd_config in avd_configs:
+        emulators.append(await manage_emulator(request, pytestconfig, avd_config))
+    return emulators
+
+
+async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulator:
+    """Configure and launch an emulator
+
+    Args:
+        request: Provide information on the executing test function.
+        pytestconfig: pytest configuration information of the current test
+        avd_pram_config: avd_config of the emulator specified by cfg files
+
+    Returns:
+        BaseEmulator: A successfully booted emulator with the debug apk installed.  
+    """
+
     avd_config = {
         "api": "31",
         "tag.id": "google_apis",
@@ -361,11 +393,11 @@ async def emulator(request, pytestconfig) -> BaseEmulator:
     avd_user_config = getattr(request.module, "avd_config", {})
     avd_config.update(avd_user_config)
 
-    cfg = pytestconfig.getoption("avd_config")
-    logging.info("--> Setting up emulator using avd config:%s", cfg)
-    avd_param_config = json.loads(cfg)
     avd_config.update(avd_param_config)
     name = f"{avd_config['api']}_{avd_config['tag.id']}_{avd_config['cpu']}_{avd_config['device.name']}"
+    if 'AvdId' in avd_config:
+        name += f"_{avd_config['AvdId']}"
+    logging.info("--> Setting up emulator using avd config:%s", avd_config)
 
     if name not in pytest.emulators:
         if pytestconfig.getoption("debug_emulator") or not pytestconfig.getoption(
@@ -387,6 +419,7 @@ async def emulator(request, pytestconfig) -> BaseEmulator:
             )
 
         emu.symbols = pytestconfig.getoption("symbols")
+        emu.launch_flags = avd_config['launch_flags']
         pytest.emulators[name] = emu
 
     emu = pytest.emulators[name]
@@ -399,7 +432,7 @@ async def emulator(request, pytestconfig) -> BaseEmulator:
 
 @pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
-async def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
+async def avd(emulator: BaseEmulator) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
     Note that the following holds:
@@ -411,13 +444,43 @@ async def avd(emulator: BaseEmulator, request, pytestconfig) -> BaseEmulator:
 
     Args:
         emulator (BaseEmulator): Test fixture that provides the configured emulator.
-        request: Provide information on the executing test function.
 
     Returns:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
-    emulator_launch_flags = json.loads(pytestconfig.getoption("emulator_launch_flags"))
-    await emulator.restart(emulator_launch_flags)
+    return await anext(manage_avd(emulator))
+
+
+@pytest.fixture(scope="module")
+@pytest.mark.async_timeout(200)
+async def avds(emulators: list[BaseEmulator]) -> list[BaseEmulator]:
+    """Makes booted emulators accessible and with the animation apk installed.
+
+    Note that the following holds:
+
+    - This fixture has module scope, meaning an emulator will be launched only once
+      per package
+
+    - The emulator(s) will be (re-)started if needed.
+
+    Args:
+        emulators (list[BaseEmulator]): Test fixture that provides the configured emulator.
+
+    Returns:
+        List of BaseEmulator: Successfully booted emulators with the debug apk installed.
+    """
+    return await asyncio.gather(*[anext(manage_avd(emulator)) for emulator in emulators])
+
+async def manage_avd(emulator) -> BaseEmulator:
+    """Helper to manage a booted emulator and make it available for avd and avds fixtures.
+
+    Args:
+        emulator (BaseEmulator): Test fixture that provides the configured emulator.
+
+    Returns:
+        BaseEmulator: A successfully booted emulator with the debug apk installed.
+    """
+    await emulator.restart(emulator.launch_flags)
 
     assert await emulator.wait_for_boot()
     logging.info("The emulator has finished booting")
@@ -828,6 +891,7 @@ def add_junitxml_properties(request, record_testsuite_property):
     """
     if request.node.testsfailed > 0:
         return
-    avd_config = json.loads(request.config.getoption("avd_config"))
-    for key, property in avd_config.items():
-        record_testsuite_property(key, property)
+    avd_configs = json.loads(request.config.getoption("avd_configs"))
+    for avd_config in avd_configs:
+        for key, property in avd_config.items():
+            record_testsuite_property(key, property)
