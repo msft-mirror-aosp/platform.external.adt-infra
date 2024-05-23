@@ -123,3 +123,14 @@ async def test_snapshot_list_perf(benchmark, snapshot_service, coldboot_animatio
 
     # And measure the lists service.
     benchmark(snapshot_service.lists)
+
+
+@pytest.mark.e2e
+@pytest.mark.snapshot
+@pytest.mark.fast
+async def test_snapshot_can_save_and_list(telnet, snapshot_service):
+    await telnet.send("avd snapshot save foo1")
+    await asyncio.sleep(5.0)
+    snapshots = await telnet.send("avd snapshot list")
+    assert any("foo1" in sublist for sublist in snapshots)
+
