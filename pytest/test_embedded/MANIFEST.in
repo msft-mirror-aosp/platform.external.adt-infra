@@ -1,6 +1,12 @@
 include src/emu/apk/*.apk
-include src/emu/templates/Pixel2.ini
+include src/emu/templates/Nexus7_2013.avd/config.ini
+include src/emu/templates/Nexus7_2013.ini
 include src/emu/templates/Pixel2.avd/config.ini
-include src/emu/templates/PixelFold.ini
+include src/emu/templates/Pixel2.ini
 include src/emu/templates/PixelFold.avd/config.ini
+include src/emu/templates/PixelFold.ini
+include src/emu/templates/TV_1080p.avd/config.ini
+include src/emu/templates/TV_1080p.ini
+include src/emu/templates/WearOS_Square.avd/config.ini
+include src/emu/templates/WearOS_Square.ini
 include src/emu/templates/emulator_test_access.json
