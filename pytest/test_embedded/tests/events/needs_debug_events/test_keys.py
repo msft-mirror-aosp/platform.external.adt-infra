@@ -204,16 +204,22 @@ async def test_emulator_controls_keys(avd):
         # Return the name of the top focused root task
         activities = await avd.adb.shell('dumpsys activity activities')
         match = re.search("topDisplayFocusedRootTask=(Task{[^}]*})", activities)
+        if match is None:
+            return None
         return match.groups()[0]
 
     async def check_root_task_contains_name(name):
         # Return 'True' if the top focused root task contains 'name'.
         focused_task = await get_top_focused_root_task()
+        if focused_task is None:
+            return False
         return name in focused_task
 
     async def check_root_task_has_type(expected_type):
         # Return 'True' if the focused tasks has type equal to 'expected_type'.
         focused_task = await get_top_focused_root_task()
+        if focused_task is None:
+            return False
         type = re.search('type=(.*)}', focused_task).groups()[0]
         if type is None or type != expected_type:
             return False
