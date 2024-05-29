@@ -26,6 +26,8 @@ from google.protobuf import empty_pb2
 
 from emu.apk import APP_DEBUG_APK
 from emu.timing import eventually
+from emu.emulator import Emulator
+import json
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -301,3 +303,21 @@ async def test_first_time_booted_old_api(emulator):
     if emulator.is_alive():
         await emulator.stop()
     logging.info("emulator is shut down successfully")
+
+
+@pytest.mark.e2e
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+@pytest.mark.parametrize("core", [1, 2])
+async def test_multicore_startup(emulator, core):
+    """Verify emulator launches without issues on single and dual core CPUs."""
+
+    # Launch the emulator with the specificed multicore configuration.
+    myflags = ["-cores", core]
+    logging.info(f"Launching emulator with {core} core ...")
+
+    await emulator.restart(emu_flags=myflags)
+    assert (
+        await emulator.wait_for_boot(timeout=180)
+    ), f"The emulator couldn't be launched with {core} core"
+    await emulator.stop()
