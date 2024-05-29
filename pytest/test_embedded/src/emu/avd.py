@@ -404,6 +404,7 @@ class AvdWriter:
         """
         abi = config["abi"]
         tag = config["tag.id"]
+        abi = 'x86' if (tag == 'android-tv' and abi == 'x86_64') else abi
         api = config["api"]
         device_name = config.get("device.name", "Pixel2")
 
