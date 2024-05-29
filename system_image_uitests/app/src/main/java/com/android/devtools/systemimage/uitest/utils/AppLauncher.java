@@ -277,9 +277,9 @@ public class AppLauncher {
             } else {
                 boolean canScrollMore = true;
                 while (canScrollMore) {
-                    int startX = recycleView.getBounds().centerX();
-                    int startY = recycleView.getBounds().bottom - 10;
-                    int endY = recycleView.getBounds().top + 10;
+                    int startX = recyclerView.getBounds().centerX();
+                    int startY = recyclerView.getBounds().bottom - 10;
+                    int endY = recyclerView.getBounds().top + 10;
                     canScrollMore = device.swipe(startX, startY, startX, endY, 50);
                     if (appByRegex.waitForExists(1L)) {
                         Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");
