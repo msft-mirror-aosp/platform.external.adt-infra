@@ -167,10 +167,20 @@ async def test_emulator_controls_keys(avd):
         return "Awake" in await avd.adb.shell("dumpsys power | grep mWakefulness=")
 
     async def get_volume(stream_type='STREAM_MUSIC'):
-        # Return the current volume level of the stream 'stream_type'.
-        output = await avd.adb.shell("dumpsys audio")
-        match = re.search(f'{stream_type}.*streamVolume:(\d+)', output)
-        return int(match.groups()[0])
+        # Wait until 'stream_type' appears in dumpsys and return the current volume level.
+        async def get_stream_volume_dump(output: list):
+            # Return 'True' if the stream is observed in the system dump.
+            # Store the volume level in the 'output' list.
+            dumpsys = await avd.adb.shell("dumpsys audio")
+            match = re.search(f'{stream_type}.*streamVolume:(\d+)', dumpsys)
+            if match is None:
+                return False
+            output.append(int(match.groups()[0]))
+            return True
+        volume = []
+        assert await eventually(partial(get_stream_volume_dump, volume)), \
+            f"Coudn't detect the stream {stream_type} in the system dump"
+        return volume[0]
 
     async def check_volume_raises(volume):
         current_volume = await get_volume()
