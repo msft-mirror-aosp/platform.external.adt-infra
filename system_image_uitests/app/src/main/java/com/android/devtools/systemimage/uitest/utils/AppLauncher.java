@@ -218,10 +218,10 @@ public class AppLauncher {
                         continue;
                     }
                 }
-                Log.i(TAG, "Failed to scroll to " + appPath[i]);
                 if (api == 31) {
                     return launchPath_v2(instrumentation, appPath);
                 }
+                Log.i(TAG, "Failed to scroll to " + appPath[i]);
                 return false;
             } catch (UiObjectNotFoundException e) {
                 Log.w(TAG, Objects.requireNonNull(e.getMessage()));
@@ -251,33 +251,35 @@ public class AppLauncher {
     public static boolean launchPath_v2(Instrumentation instrumentation, String... appPath)
             throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
+
+        if (api != 31) {
+            Log.i(TAG, "LaunchPath_v2 is only supported on API 31.");
+            return false;
+        }
         boolean status = launch(instrumentation, appPath[0]);
 
         if (!status) {
+            Log.i(TAG, "Failed to launch " + appPath[0]);
             return false;
         }
+
+        UiObject recyclerView = device.findObject(new UiSelector().resourceId(Res.ANDROID_SETTING_LIST_RES));
 
         for (int i = 1; i < appPath.length && status; ++i) {
             status = false;
             Log.i(TAG, "Open " + appPath[i]);
-            String firstWord = appPath[i].split(" ")[0];
-            UiSelector regexSelector = new UiSelector().textStartsWith(firstWord);
+            UiSelector regexSelector = new UiSelector().textMatches(appPath[i]);
             UiObject appByRegex = device.findObject(regexSelector);
 
-            UiSelector scrollableSelector = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
-            UiObject scrollableObject = device.findObject(scrollableSelector);
-            if (!scrollableObject.waitForExists(5L)) {
-                Log.i(TAG, "Scrollable object does not exist");
-                continue;
-            } else if (!scrollableObject.isScrollable()) {
-                Log.i(TAG, "Scrollable cannot be scrolled");
+            if (!recyclerView.waitForExists(5L)) {
+                Log.i(TAG, "RecyclerView does not exist");
                 continue;
             } else {
                 boolean canScrollMore = true;
                 while (canScrollMore) {
-                    int startX = scrollableObject.getBounds().centerX();
-                    int startY = scrollableObject.getBounds().bottom - 10;
-                    int endY = scrollableObject.getBounds().top + 10;
+                    int startX = recyclerView.getBounds().centerX();
+                    int startY = recyclerView.getBounds().bottom - 10;
+                    int endY = recyclerView.getBounds().top + 10;
                     canScrollMore = device.swipe(startX, startY, startX, endY, 50);
                     if (appByRegex.waitForExists(1L)) {
                         Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");

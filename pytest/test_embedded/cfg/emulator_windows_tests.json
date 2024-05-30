@@ -534,5 +534,59 @@
             }
         ],
         "status": "enabled"
+     },
+    "atv_test_suite_api_31": {
+        "description": "Set of tests that run on a Android TV AVD (API 31)",
+        "pytest_flags": [
+            "-m atv"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [
+                    "-no-snapshot"
+                ],
+                "api": "31",
+                "device.name": "TV_1080p",
+                "tag.id": "android-tv",
+                "abi": "x86"
+            }
+        ],
+        "status": "enabled"
+    },
+    "atv_test_suite_api_33": {
+        "description": "Set of tests that run on a Android TV 1080p AVD (API 33)",
+        "pytest_flags": [
+            "-m atv"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [
+                    "-no-snapshot"
+                ],
+                "api": "33",
+                "device.name": "TV_1080p",
+                "tag.id": "android-tv",
+                "abi": "x86"
+            }
+        ],
+        "status": "enabled"
+    },
+    "atv_test_suite_api_34": {
+        "description": "Set of tests that run on a Android TV 1080p AVD  (API 34)",
+        "pytest_flags": [
+            "-m atv"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [
+                    "-no-snapshot"
+                ],
+                "api": "34",
+                "device.name": "TV_1080p",
+                "tag.id": "android-tv",
+                "abi": "x86"
+            }
+        ],
+        "status": "enabled"
     }
 }
