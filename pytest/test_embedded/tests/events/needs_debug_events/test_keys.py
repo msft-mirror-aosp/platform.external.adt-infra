@@ -241,17 +241,15 @@ async def test_emulator_controls_keys(avd):
     volume = await get_volume()
     await keypress("AudioVolumeUp", 2)
     assert (
-        await eventually(partial(check_volume_raises, volume)),
-        "Volume was not raised"
-    )
+        await eventually(partial(check_volume_raises, volume))
+    ), "Volume was not raised"
 
     # Click on Volume Down.
     volume = await get_volume()
     await keypress("AudioVolumeDown", 2)
     assert (
-        await eventually(partial(check_volume_lowers, volume)),
-        "Volume was not lowered"
-    )
+        await eventually(partial(check_volume_lowers, volume))
+    ), "Volume was not lowered"
 
     ############ Step 4 - Rotation keys ##
 
