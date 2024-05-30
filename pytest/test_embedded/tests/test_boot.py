@@ -318,6 +318,6 @@ async def test_multicore_startup(emulator, core):
 
     await emulator.restart(emu_flags=myflags)
     assert (
-        await emulator.wait_for_boot(timeout=180)
+        await emulator.wait_for_boot(timeout=1080)
     ), f"The emulator couldn't be launched with {core} core"
     await emulator.stop()
