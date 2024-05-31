@@ -14,6 +14,8 @@
 import asyncio
 import logging
 import re
+from xml.etree import ElementTree as ET
+import signal
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
@@ -329,3 +331,82 @@ async def test_emulator_controls_keys(avd):
     controlStatus = await ui_controller.showExtendedControls(empty_pb2.Empty())
     # Verify the extended controls window appeared.
     assert controlStatus.visibilityChanged
+
+
+@pytest.mark.e2e
+@pytest.mark.sanity
+@pytest.mark.async_timeout(1080)
+async def test_close_emulator(avd, telnet):
+    """Ensure the emulator windows closes cleanly.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
+        telnet (EmulatorConnection): Fixture that gives access to the emulator console.
+
+    Test Steps:
+        1. Launch an emulator AVD.
+        2. Send the kill command from the emulator console (Verify 1).
+        3. Repeat step 1.
+        4. Click and hold Power plus Volume Up buttons for a couple of seconds.
+        5. Tap on "Power off" on the emulator (Verify 2).
+        6. Restart the emulator.
+        7. Send the Control + C (SIGINT) event to the emulator process (Verify 3).
+
+    Verification:
+        1. Emulator window closes.
+        2. Emulator shuts down and window closes.
+        3. Emulator window closes.
+    """
+    def emulator_is_off():
+        return not avd.is_alive()
+
+    async def get_window_dump():
+        return await avd.adb.shell("uiautomator dump > /dev/null && cat /sdcard/window_dump.xml")
+
+    async def window_dump_contains(text: str):
+        # Return 'True' if the window dump contains the string <text>
+        window_dump = await get_window_dump()
+        return text in window_dump
+
+    def get_center_coords(bounds: str) -> tuple:
+        # Return the center coordinates (x, y) from element bounds string '[x0y0][x1 y1]'
+        coords = list(map(int, bounds[1:-1].replace('][',',').split(',')))
+        return ((coords[0] + coords[2]) / 2, (coords[1] + coords[3]) / 2)
+
+    async def click_button(text: str):
+        # Tap the center of the button containing the text <text>
+        window_dump = await get_window_dump()
+        xml = ET.fromstring(window_dump)
+        bounds = xml.find(f".//*[@text='{text}']/..").get('bounds')
+        center = get_center_coords(bounds)
+        await avd.adb.shell("input tap " + ' '.join([*map(str, center)]))
+
+    # Ensure the emulator goes off following a 'kill' event (emulator window closed)
+    console = await avd.console()
+    await console.send("kill")
+    await (
+        eventually(emulator_is_off)
+    ), "The emulator was not shut down after the window was closed."
+
+    await avd.restart(avd.launch_flags)
+    await avd.wait_for_boot()
+
+    # Ensure the emulator shuts down after the Power off button is tapped.
+    await avd.adb.shell("input keyevent KEYCODE_VOLUME_UP & input keyevent KEYCODE_POWER")
+    await eventually(
+        partial(window_dump_contains, "text=\"Power off\"")
+    ), "Power off button wasn't detected following keys combination."
+
+    await click_button("Power off")
+    await (
+        eventually(emulator_is_off)
+    ), "The emulator was not shut down after the Power off button was clicked."
+
+    await avd.restart(avd.launch_flags)
+    await avd.wait_for_boot()
+
+    # Ensure the emulator shuts down after the CTRL-C event is sent
+    avd.cmd.process.send_signal(signal.SIGINT)
+    await (
+        eventually(emulator_is_off)
+    ), "The emulator was not shut down after the CTRL-C event was sent."
