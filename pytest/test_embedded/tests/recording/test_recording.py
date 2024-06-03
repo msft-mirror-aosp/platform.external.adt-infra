@@ -21,7 +21,6 @@ from aemu.proto.screen_recording_service_pb2_grpc import ScreenRecordingStub
 from google.protobuf import empty_pb2
 
 from emu.timing import eventually
-from emu.emulator import Emulator
 
 
 @pytest.fixture
@@ -92,6 +91,8 @@ async def test_can_only_record_once(screen_service, tmp_path):
 @pytest.mark.flaky
 @pytest.mark.graphics
 @pytest.mark.sanity
+@pytest.mark.wear
+@pytest.mark.atv
 async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
     sample_file = tmp_path / "sample.webm"
     sample_file_header =  b"\x1A\x45\xDF\xA3"
@@ -119,59 +120,3 @@ async def screen_records_video(screen_service, sample_file, sample_file_header):
     assert (
             header == sample_file_header
     ), f'{header} != sample_file_header, the magic header'
-
-
-@pytest.mark.e2e
-@pytest.mark.fast
-@pytest.mark.wear
-@pytest.mark.atv
-@pytest.mark.async_timeout(1080)
-async def test_different_AVDs_can_record_in_webm(emulator, avd_config, tmp_path):
-    """Ensure screen recording works for different AVDs.
-
-    Args:
-        emulator (BaseEmulator): Fixture with the configured emulator.
-        avd_config (dict): AVD configuration.
-        tmp_path (pathlib.Path): temporary directory path to save the videos.
-
-    Test steps:
-        1. Create and launch a new AVD.
-        2. Perform Screen Recording
-        3. Wait for couple of seconds and stop the recording.
-        4. Save the recording to a WEBM file.(Verify 1).
-        5. Repeat Steps 1 to 4 for Tablets, Wear and TV.
-
-    Verification:
-    1. The video is recorded, and the webm file is saved correctly.
-    """
-    # Launch the emulator with the specificed AVD.
-    logging.info("Launching emulator ...")
-    myflags = ["-no-snapshot-save"]
-    emu = Emulator(android_home=emulator.android_home,
-                   android_avd_home=emulator.android_avd_home,
-                   exe=emulator.exe,
-                   avd_config=avd_config)
-
-    await emu.launch(flags=myflags)
-    await emu.wait_for_boot()
-
-    channel = emu.description.get_async_grpc_channel([("emulator.security", "token")])
-    screen_service = ScreenRecordingStub(channel)
-
-    # Ensure Screen Recording works for the specified AVD.
-    device = avd_config['device.name']
-    sample_webm = tmp_path / f"sample_{device}.webm"
-    info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
-
-    logging.info(f"Starting the recording: {info} ({device } AVD)")
-    await screen_service.StartRecording(info)
-    await asyncio.sleep(5)
-
-    logging.info(f"Stopping the recording: {info} ({device } AVD)")
-    await screen_service.StopRecording(info)
-
-    assert sample_webm.exists()
-    assert sample_webm.stat().st_size > 10240, \
-            f"We should have recorded a series of frames in the device {device}"
-
-    await emu.stop()
