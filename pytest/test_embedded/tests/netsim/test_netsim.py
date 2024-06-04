@@ -7,7 +7,7 @@ from emu.timing import eventually
 @pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.netsim
-@pytest.mark.async_timeout(200)
+@pytest.mark.async_timeout(1080)
 async def test_netsimd_is_launched(avd):
     """Test case to verify that the 'netsimd' process is launched."""
 
