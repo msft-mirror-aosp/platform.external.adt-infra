@@ -123,11 +123,12 @@ async def test_unicode_no_deadlock(at_home, emulator_controller):
 @pytest.mark.sanity
 @pytest.mark.embedded
 @pytest.mark.async_timeout(50000)
-async def test_emulator_controls_keys(avd):
+async def test_emulator_controls_keys(avd, emulator_controller):
     """Ensure the emulator controls keys and events work.
 
     Args:
         avd (BaseEmulator): Fixture that gives access to the running emulator.
+        emulator_controller (EmulatorControllerStub): Emulator controller fixture.
 
     Test Steps:
         1. Click on Power button (Verify 1).
@@ -147,14 +148,13 @@ async def test_emulator_controls_keys(avd):
         6. Back button, home and recents work as expected.
         7. Extended Controls window is displayed.
     """
-    controller = EmulatorControllerStub(avd.channel)
-
     async def keypress(key, n_times=1):
         # Send the keypress 'key' event 'n_time' times.
         for i in range(n_times):
             logging.info("Sending %s key", key)
-            await controller.sendKey(KeyboardEvent(key=key,
-                                                   eventType=KeyboardEvent.keypress))
+            await emulator_controller.sendKey(
+                KeyboardEvent(key=key, eventType=KeyboardEvent.keypress)
+            )
             if n_times > 1:
                 # Delay between successive key events.
                 await asyncio.sleep(1)
