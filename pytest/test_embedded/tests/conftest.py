@@ -380,7 +380,7 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
         avd_pram_config: avd_config of the emulator specified by cfg files
 
     Returns:
-        BaseEmulator: A successfully booted emulator with the debug apk installed.  
+        BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
 
     avd_config = {
@@ -749,16 +749,18 @@ def log_directory(pytestconfig):
 
 @pytest.fixture
 async def get_screenshot(emulator_controller, log_directory, request):
-    async def do_get_screenshot(image_format: ImageFormat):
+    async def do_get_screenshot(image_format: ImageFormat = None, screenshot_dir: str = ''):
         """Get a screenshot from the emulator and save it to a file.
 
         Args:
-            image_format: The format of the screenshot image.
+            image_format: The format of the screenshot image. Defaults to 'ImageFormat()'
+            screenshot_dir: Screenshot directory. Defaults to '<log_directory> / screenshots'
 
         Returns:
             A tuple of the raw screenshot image and the Pillow image object.
         """
-        screenshot_dir = Path(log_directory) / "screenshots"
+        image_format = image_format or ImageFormat()
+        screenshot_dir = Path(screenshot_dir) or Path(log_directory) / "screenshots"
         img = await emulator_controller.getScreenshot(image_format)
         test_name = request.node.nodeid.split("::")[-1]
         file_name = re.sub(r"[\\/\{\}:]", "_", test_name)
