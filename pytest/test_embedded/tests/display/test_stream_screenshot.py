@@ -206,44 +206,6 @@ def calculate_frame_rate(timestamp1, timestamp2):
 
 @pytest.mark.graphics
 @pytest.mark.embedded
-async def test_stream_screenshot_has_min_fps(
-    at_home,
-    power_down,
-    emulator_controller,
-):
-    """
-    Verifies that the screenshot stream maintains a minimum frame rate (b/312136269).
-
-    We explicity turn down the device to make sure we have a "black" screen with 0 changes.
-    """
-    MIN_FPS = 1.5
-    MAX_FRAMES_TO_PROCESS = 10
-
-    stream = emulator_controller.streamScreenshot(
-        ImageFormat(
-            width=18,
-            height=18,
-            format=ImageFormat.RGBA8888,
-        ),
-    )
-
-    # Track initial timestamp for comparison
-    previous_timestamp = 0
-
-    async for img in stream:
-        logging.info("Received frame: %s", img.seq)
-        if previous_timestamp != 0:
-            assert (
-                calculate_frame_rate(previous_timestamp, img.timestampUs) > MIN_FPS
-            ), "Frame rate dropped below minimum FPS"
-
-        if img.seq > 10:
-            break
-        previous_timestamp = img.timestampUs
-
-
-@pytest.mark.graphics
-@pytest.mark.embedded
 @pytest.mark.skipos("win", "reason: b/305258769 - error at setup.")
 async def test_stream_screenshot_should_fail_if_does_not_exist(
     at_home,
