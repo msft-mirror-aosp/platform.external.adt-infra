@@ -64,6 +64,8 @@ else:
     PYTHON = PYTHON_DIR / "python.exe"
     ADB = ADB.with_suffix(".exe")
 
+# Path to all the gRPC services
+GRPC_SERVICES = AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc"
 
 class NoXServer(Exception):
     pass
@@ -76,8 +78,10 @@ class BuildDirectoryNotFound(Exception):
 class JavaNotFound(Exception):
     pass
 
+
 class AdbNotFound(Exception):
     pass
+
 
 class NoTestResultsProduced(Exception):
     pass
@@ -607,7 +611,9 @@ def merge_results(python_exe: PyRunner, sources: [Path], dest: Path):
 
 async def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path):
     emulator_directory = Path(emulator).parent if emulator else None
-    crash_report = CrashReporter(emulator_directory, symbol_path)
+    crash_report = CrashReporter(
+        emulator_directory, symbol_path, GRPC_SERVICES
+    )
 
     # Write them to disk
     await crash_report.write_reports_to_disk(logdir)
