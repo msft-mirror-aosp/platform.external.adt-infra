@@ -53,6 +53,7 @@ SDK_EMULATOR = (
 # Path to all the gRPC services
 GRPC_SERVICES = AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc"
 
+
 def pytest_addoption(parser):
     """This parses the options that are passed in to pytest."""
     parser.addoption(
@@ -443,7 +444,7 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
 
 @pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
-async def avd(emulator: BaseEmulator) -> BaseEmulator:
+async def avd_launcher(emulator: BaseEmulator) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
     Note that the following holds:
@@ -460,6 +461,32 @@ async def avd(emulator: BaseEmulator) -> BaseEmulator:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
     return await anext(manage_avd(emulator))
+
+
+@pytest.fixture(scope="function")
+@pytest.mark.async_timeout(200)
+async def avd(avd_launcher: BaseEmulator) -> BaseEmulator:
+    """Makes a booted emulator accessible and with the animation apk installed.
+
+    This fixture has function scope, which will make sure the emulator will be
+    restarted if it has crashed. A new emulator will be brought up once for each
+    module.
+
+    The emulator will be (re-)started if needed.
+
+    Args:
+        avd_launcher (BaseEmulator): Test fixture that provides the configured emulator.
+
+    Returns:
+        BaseEmulator: A successfully booted emulator with the debug apk installed.
+    """
+    if not avd_launcher.is_alive():
+        logging.info("--> Restarting emulator")
+        await avd_launcher.restart(avd_launcher.launch_flags)
+        assert await emulator.wait_for_boot()
+    else:
+        logging.info("--> Reusing emulator")
+    return avd_launcher
 
 
 @pytest.fixture(scope="module")
@@ -763,7 +790,9 @@ def log_directory(pytestconfig):
 
 @pytest.fixture
 async def get_screenshot(emulator_controller, log_directory, request):
-    async def do_get_screenshot(image_format: ImageFormat = None, screenshot_dir: str = ''):
+    async def do_get_screenshot(
+        image_format: ImageFormat = None, screenshot_dir: str = ""
+    ):
         """Get a screenshot from the emulator and save it to a file.
 
         Args:
