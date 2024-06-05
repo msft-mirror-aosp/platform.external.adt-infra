@@ -500,41 +500,45 @@ public class SettingsTest {
         final UiObject signInLabel = device.findObject(
                 new UiSelector().
                         text("Sign in").
-                        resourceId("headingText").
                         className(TextView.class));
         assertTrue("Sign in label not found.",
                 new Wait(90000L).until(signInLabel::exists));
 
-        final UiObject googleEmailInput = device.findObject(
+        final UiObject googleLoginInput = device.findObject(
                 new UiSelector().
-                        resourceId("identifierId").
-                        className(EditText.class));
+                        className(EditText.class).
+                        index(0));
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account email input not found.",
-                new Wait(20000L).until(googleEmailInput::exists));
+                new Wait(20000L).until(googleLoginInput::exists));
 
-        googleEmailInput.clearTextField();
-        googleEmailInput.setText(userEmail);
-        googleEmailInput.clickAndWaitForNewWindow(3000L);
+        googleLoginInput.clearTextField();
+        googleLoginInput.setText(userEmail);
+        googleLoginInput.clickAndWaitForNewWindow(3000L);
         device.pressEnter();
+
+        final UiObject forgotEmailButton = device.findObject(
+                new UiSelector().
+                        text("Forgot email?").
+                        className(Button.class));
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Email input entry page not dismissed.",
-                googleEmailInput.waitUntilGone(90000L));
-
-        final UiObject googlePasswordInput = device.findObject(
-                new UiSelector().
-                        className(EditText.class));
+                forgotEmailButton.waitUntilGone(90000L));
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account password input not found.",
-                new Wait(20000L).until(googlePasswordInput::exists));
+                new Wait(20000L).until(googleLoginInput::exists));
 
-        googlePasswordInput.clearTextField();
-        googlePasswordInput.setText(userPassword);
-        googlePasswordInput.clickAndWaitForNewWindow(3000L);
+        googleLoginInput.clearTextField();
+        googleLoginInput.setText(userPassword);
+        googleLoginInput.clickAndWaitForNewWindow(3000L);
         device.pressEnter();
 
+        final UiObject forgotPasswordButton = device.findObject(
+                new UiSelector().
+                        text("Show password"));
+
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Password input entry page not dismissed.",
-                googlePasswordInput.waitUntilGone(90000L));
+                forgotPasswordButton.waitUntilGone(90000L));
 
         final UiObject iAgreeButton = device.findObject(
                 new UiSelector().

@@ -826,7 +826,7 @@ public class SettingsUtil {
 
         UiObject userAccount = device.findObject(new UiSelector().
                 text(accountName).
-                resourceId("android:id/title"));
+                resourceId(Res.ANDROID_TITLE_RES));
         if (userAccount.waitForExists(5000L)) {
             userAccount.click();
             userAccount.waitUntilGone(10000L);
@@ -836,7 +836,7 @@ public class SettingsUtil {
 
         UiObject removeAccount = device.findObject(new UiSelector().
                 text("Remove account").
-                resourceId("com.android.settings:id/button").
+                resourceIdMatches(Res.ANDROID_BUTTON + "|" + Res.ANDROID_BUTTON_ONE).
                 className(Button.class));
         if (removeAccount.waitForExists(5000L)) {
             removeAccount.click();
@@ -847,7 +847,7 @@ public class SettingsUtil {
 
         UiObject confirmRemove = device.findObject(new UiSelector().
                 text("Remove account").
-                resourceId("android:id/button1").
+                resourceId(Res.ANDROID_BUTTON_ONE).
                 className(Button.class));
         if (confirmRemove.waitForExists(5000L)) {
             confirmRemove.click();
