@@ -26,6 +26,8 @@ from google.protobuf import empty_pb2
 
 from emu.apk import APP_DEBUG_APK
 from emu.timing import eventually
+from emu.emulator import Emulator
+import json
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -301,3 +303,57 @@ async def test_first_time_booted_old_api(emulator):
     if emulator.is_alive():
         await emulator.stop()
     logging.info("emulator is shut down successfully")
+
+
+@pytest.mark.e2e
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+@pytest.mark.parametrize("core", [1, 2])
+async def test_multicore_startup(emulator, core):
+    """Verify emulator launches without issues on single and dual core CPUs."""
+
+    # Launch the emulator with the specificed multicore configuration.
+    myflags = ["-cores", core]
+    logging.info(f"Launching emulator with {core} core ...")
+
+    await emulator.restart(emu_flags=myflags)
+    assert (
+        await emulator.wait_for_boot(timeout=1080)
+    ), f"The emulator couldn't be launched with {core} core"
+    await emulator.stop()
+
+
+@pytest.mark.e2e
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_boot_without_internet(emulator):
+    """Verify emulator can boot with no internet.
+
+    Args:
+        emulator (BaseEmulator): Fixture that gives access to a configured emulator.
+
+    Notes:
+        To disable internet access at boot time, the 'restrict=on' option
+        is added to the wifi and radio (user mode) network settings.
+        This causes the emulator to be isolated, not being able to contact
+        the host. No IP packages should be routed over the host to the outside.
+    """
+    my_flags = ["-wifi-user-mode-options", "restrict=on",
+                "-network-user-mode-options", "restrict=on"]
+
+    # Launch the emulator.
+    await emulator.restart(emulator.launch_flags + my_flags)
+    assert (
+        await emulator.wait_for_boot(timeout=180)
+    ), f"The emulator wasn't able to boot without internet."
+
+    # Make sure the emulator launched without internet access.
+    async def emulator_has_no_internet_access(emulator):
+        result = await emulator.adb.shell("ping -c 3 www.google.com")
+        for line in result.rstrip().splitlines():
+            if "64 bytes from" in line and "icmp_seq" in line and "ttl" in line:
+                return False
+        return True
+
+    assert await emulator_has_no_internet_access(emulator), \
+        "The emulator was launched with internet access."

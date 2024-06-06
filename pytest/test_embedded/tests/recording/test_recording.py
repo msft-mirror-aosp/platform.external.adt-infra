@@ -91,6 +91,8 @@ async def test_can_only_record_once(screen_service, tmp_path):
 @pytest.mark.flaky
 @pytest.mark.graphics
 @pytest.mark.sanity
+@pytest.mark.wear
+@pytest.mark.atv
 async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
     sample_file = tmp_path / "sample.webm"
     sample_file_header =  b"\x1A\x45\xDF\xA3"

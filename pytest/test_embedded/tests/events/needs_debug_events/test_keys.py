@@ -14,6 +14,8 @@
 import asyncio
 import logging
 import re
+from xml.etree import ElementTree as ET
+import signal
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
@@ -121,11 +123,12 @@ async def test_unicode_no_deadlock(at_home, emulator_controller):
 @pytest.mark.sanity
 @pytest.mark.embedded
 @pytest.mark.async_timeout(50000)
-async def test_emulator_controls_keys(avd):
+async def test_emulator_controls_keys(avd, emulator_controller):
     """Ensure the emulator controls keys and events work.
 
     Args:
         avd (BaseEmulator): Fixture that gives access to the running emulator.
+        emulator_controller (EmulatorControllerStub): Emulator controller fixture.
 
     Test Steps:
         1. Click on Power button (Verify 1).
@@ -145,14 +148,13 @@ async def test_emulator_controls_keys(avd):
         6. Back button, home and recents work as expected.
         7. Extended Controls window is displayed.
     """
-    controller = EmulatorControllerStub(avd.channel)
-
     async def keypress(key, n_times=1):
         # Send the keypress 'key' event 'n_time' times.
         for i in range(n_times):
             logging.info("Sending %s key", key)
-            await controller.sendKey(KeyboardEvent(key=key,
-                                                   eventType=KeyboardEvent.keypress))
+            await emulator_controller.sendKey(
+                KeyboardEvent(key=key, eventType=KeyboardEvent.keypress)
+            )
             if n_times > 1:
                 # Delay between successive key events.
                 await asyncio.sleep(1)
@@ -167,10 +169,20 @@ async def test_emulator_controls_keys(avd):
         return "Awake" in await avd.adb.shell("dumpsys power | grep mWakefulness=")
 
     async def get_volume(stream_type='STREAM_MUSIC'):
-        # Return the current volume level of the stream 'stream_type'.
-        output = await avd.adb.shell("dumpsys audio")
-        match = re.search(f'{stream_type}.*streamVolume:(\d+)', output)
-        return int(match.groups()[0])
+        # Wait until 'stream_type' appears in dumpsys and return the current volume level.
+        async def get_stream_volume_dump(output: list):
+            # Return 'True' if the stream is observed in the system dump.
+            # Store the volume level in the 'output' list.
+            dumpsys = await avd.adb.shell("dumpsys audio")
+            match = re.search(f'{stream_type}.*streamVolume:(\d+)', dumpsys)
+            if match is None:
+                return False
+            output.append(int(match.groups()[0]))
+            return True
+        volume = []
+        assert await eventually(partial(get_stream_volume_dump, volume)), \
+            f"Coudn't detect the stream {stream_type} in the system dump"
+        return volume[0]
 
     async def check_volume_raises(volume):
         current_volume = await get_volume()
@@ -241,17 +253,15 @@ async def test_emulator_controls_keys(avd):
     volume = await get_volume()
     await keypress("AudioVolumeUp", 2)
     assert (
-        await eventually(partial(check_volume_raises, volume)),
-        "Volume was not raised"
-    )
+        await eventually(partial(check_volume_raises, volume))
+    ), "Volume was not raised"
 
     # Click on Volume Down.
     volume = await get_volume()
     await keypress("AudioVolumeDown", 2)
     assert (
-        await eventually(partial(check_volume_lowers, volume)),
-        "Volume was not lowered"
-    )
+        await eventually(partial(check_volume_lowers, volume))
+    ), "Volume was not lowered"
 
     ############ Step 4 - Rotation keys ##
 
@@ -321,3 +331,96 @@ async def test_emulator_controls_keys(avd):
     controlStatus = await ui_controller.showExtendedControls(empty_pb2.Empty())
     # Verify the extended controls window appeared.
     assert controlStatus.visibilityChanged
+
+
+@pytest.mark.e2e
+@pytest.mark.sanity
+@pytest.mark.async_timeout(1080)
+async def test_close_emulator(avd):
+    """Ensure the emulator windows closes cleanly.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
+
+    Test Steps:
+        1. Launch an emulator AVD.
+        2. Send the kill command from the emulator console (Verify 1).
+        3. Repeat step 1.
+        4. Click and hold Power plus Volume Up buttons for a couple of seconds.
+        5. Tap on "Power off" on the emulator (Verify 2).
+        6. Restart the emulator.
+        7. Send the Control + C (SIGINT) event to the emulator process (Verify 3).
+
+    Verification:
+        1. Emulator window closes.
+        2. Emulator shuts down and window closes.
+        3. Emulator window closes.
+    """
+    def emulator_is_off():
+        return not avd.is_alive()
+
+    async def get_window_dump():
+        dump = await avd.adb.shell("uiautomator dump /sdcard/window_dump.xml")
+        assert "uiautomator: inaccessible or not found" not in dump, \
+            "Uiautomator binary not found!"
+        return await avd.adb.shell("cat /sdcard/window_dump.xml")
+
+    def get_center_coords(bounds: str) -> tuple:
+        # Return the center coordinates (x, y) from element bounds string '[x0y0][x1 y1]'
+        coords = list(map(int, bounds[1:-1].replace('][',',').split(',')))
+        return ((coords[0] + coords[2]) / 2, (coords[1] + coords[3]) / 2)
+
+    async def open_power_menu():
+        # Triger the Power Options menu and return 'True' when it is opened.
+        # Send Volume Up and Power keystrokes.
+        await avd.adb.shell("input keyevent KEYCODE_VOLUME_UP & \
+                             input keyevent KEYCODE_POWER")
+        window_dump = await get_window_dump()
+        if "text=\"Power off\"" not in window_dump:
+            await asyncio.sleep(5)
+            return False
+        return True
+
+    async def click_button(text: str):
+        # Tap the center of the button containing the text <text>
+        # Return 'True' if the button is found and clicked.
+        window_dump = await get_window_dump()
+        if f"text=\"{text}\"" not in window_dump:
+            return False
+        xml = ET.fromstring(window_dump)
+        bounds = xml.find(f".//*[@text='{text}']/..").get('bounds')
+        center = get_center_coords(bounds)
+        await avd.adb.shell("input tap " + ' '.join([*map(str, center)]))
+        return True
+
+    # Ensure the emulator goes off following a 'kill' event (emulator window closed)
+    console = await avd.console()
+    await console.send("kill")
+    assert await (
+        eventually(emulator_is_off)
+    ), "The emulator was not shut down after the window was closed."
+
+    await avd.restart(avd.launch_flags)
+    await avd.wait_for_boot()
+
+    # Ensure the emulator shuts down after the Power off button is tapped.
+    assert await (
+        eventually(open_power_menu)
+    ), "Couldn't open the Power options menu."
+
+    assert await (
+        eventually(partial(click_button, "Power off"))
+    ), "Couldn't click the Power off button."
+
+    assert await (
+        eventually(emulator_is_off)
+    ), "The emulator was not shut down after the Power off button was clicked."
+
+    await avd.restart(avd.launch_flags)
+    await avd.wait_for_boot()
+
+    # Ensure the emulator shuts down after the CTRL-C event is sent
+    avd.cmd.process.send_signal(signal.SIGINT)
+    assert await (
+        eventually(emulator_is_off)
+    ), "The emulator was not shut down after the CTRL-C event was sent."

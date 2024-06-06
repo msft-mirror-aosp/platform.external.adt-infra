@@ -19,6 +19,8 @@ import tarfile
 import pytest
 from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
 from snaptool.snapshot import AsyncSnapshotService
+from emu.timing import eventually
+from functools import partial
 
 
 @pytest.fixture
@@ -134,3 +136,71 @@ async def test_snapshot_can_save_and_list(telnet, snapshot_service):
     snapshots = await telnet.send("avd snapshot list")
     assert any("foo1" in sublist for sublist in snapshots)
 
+
+@pytest.mark.e2e
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_avd_launch_after_wipe_data(avd, telnet):
+    """Verify AVD launch after data is wiped.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to a booted emulator.
+        telnet (EmulatorConnection): Fixture that gives access to thee mulator console.
+
+    Test Steps:
+        1. Launch the AVD.
+        2. Modify the "Auto-rotate" and "Airplane mode" system settings.
+        3. Restart the AVD (verify 1).
+        4. Repeat Step 3 with the launch option '-wipe-data' (verify 2).
+
+    Verification:
+        1. The AVD is loaded and the previously saved settings are kept.
+        2. The emulator loads and all settings are reverted to default.
+    """
+    async def get_system_key(key: str):
+        # Return the value of the system {key}
+        value = await avd.adb.shell(f"settings get system {key}")
+        return (0 if value == 'null' else int(value))
+
+    async def toggle_system_key(key: str):
+        # Toggle the integer valued system {key} and return its original value
+        initial_value = await get_system_key(key)
+        await avd.adb.shell(
+            f"settings put system {key} {initial_value ^ 1}"
+        )
+        return initial_value
+
+    async def key_has_value(key: str, expected_value: str):
+        # Return 'True' if the system {key} has its value equal to {expected_value}
+        return expected_value == await get_system_key(key)
+
+    # Toggle the "Auto-rotate" and "Airplane mode" settings.
+    initial_rotation_lock = await toggle_system_key("accelerometer_rotation")
+    initial_airplane_mode = await toggle_system_key("airplane_mode_on")
+
+    # Make the changes persistent.
+    await telnet.send("avd snapshot save default_boot")
+
+    # Restart the emulator and verify the changes persist.
+    await avd.restart(avd.launch_flags)
+    await avd.wait_for_boot()
+    rotation_lock = await get_system_key("accelerometer_rotation")
+    airplane_mode = await get_system_key("airplane_mode_on")
+    assert rotation_lock != initial_rotation_lock \
+            and airplane_mode != initial_airplane_mode, \
+            "System settings changed when launched from the saved snapshot."
+
+    # Restart the emulator with the '-wipe-data' launch option.
+    await avd.stop()
+    myflags = ["-wipe-data"]
+    await avd.launch(myflags)
+    await avd.wait_for_boot()
+
+    # Verify the "Auto-rotate" and "Airplane-mode" setttings reverted to the defaults.
+    assert await eventually(
+        partial(key_has_value, "accelerometer_rotation", initial_rotation_lock)
+    ),  "The key 'accelerometer_rotation' didn't revert to the default value."
+
+    assert await eventually(
+        partial(key_has_value, "airplane_mode_on", initial_airplane_mode)
+    ),  "The key 'airplane_mode_on' didn't revert to the default value."

@@ -249,12 +249,11 @@ async def test_screenshot_should_fail_if_does_not_exist(
 
 
 @pytest.mark.graphics
-async def test_screenshot_saved_to_other_folder(emulator_controller, request):
+async def test_screenshot_saved_to_other_folder(get_screenshot):
     """Ensure a screenshot can be saved to a non-default location.
 
     Args:
-        emulator_controller (EmulatorControllerStub): Emulator controller fixture.
-        request (FixtureRequest): information of the requesting test function.
+        get_screenshot: Screenshot fixture
 
     Test UUID: 2505c26f-0d87-4b2a-81c1-e504787cb5ac
 
@@ -265,15 +264,6 @@ async def test_screenshot_saved_to_other_folder(emulator_controller, request):
     Verify:
       Screen capture file should appear in the specified location.
     """
-    #Get the name of the current test being executed from the test collection tree.
-    test_name = re.sub(r"[\\/\{\}:]", "_", request.node.nodeid.split("::")[-1])
-
     with tempfile.TemporaryDirectory() as screenshot_dir:
-        received_image = await emulator_controller.getScreenshot(ImageFormat())
-        epoch_time_ms = int(time.time() * 1000)
-        image_path = Path(screenshot_dir) / f"screenshot-{test_name}-{epoch_time_ms}.png"
-
-        pillow_img = proto_to_pillow(received_image)
-        pillow_img.save(image_path, "PNG")
-
-        assert image_path.exists(), "Temporary screnshot not created."
+        _, pillow_image = await get_screenshot(screenshot_dir=screenshot_dir)
+        assert pillow_image.filename.exists(), "Temporary screenshot not created."

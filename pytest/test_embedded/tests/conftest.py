@@ -50,6 +50,8 @@ AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
 SDK_EMULATOR = (
     AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
 )
+# Path to all the gRPC services
+GRPC_SERVICES = AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc"
 
 
 def pytest_addoption(parser):
@@ -256,7 +258,11 @@ def pytest_sessionfinish(
 def get_crash_reporter(pytestconfig):
     exe = pytestconfig.getoption("emulator")
     emulator_directory = Path(exe).parent if exe else None
-    return CrashReporter(emulator_directory, pytestconfig.getoption("symbols"))
+    return CrashReporter(
+        emulator_directory,
+        pytestconfig.getoption("symbols"),
+        GRPC_SERVICES,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -292,9 +298,12 @@ async def crash_reporter(pytestconfig):
     if log_file and Path(log_file).exists():
         log_dir = Path(log_file).parent
         await crash_report.write_reports_to_disk(log_dir)
+    else:
+        await crash_report.list_crashes()
 
     await crash_report.clear()
     logging.info("=== completed crash reporter")
+
 
 @pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
@@ -347,7 +356,10 @@ async def emulator(request, pytestconfig) -> BaseEmulator:
 
     """
     avd_configs = json.loads(pytestconfig.getoption("avd_configs"))
-    return await manage_emulator(request, pytestconfig, avd_configs[0] if avd_configs else {})
+    return await manage_emulator(
+        request, pytestconfig, avd_configs[0] if avd_configs else {}
+    )
+
 
 @pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
@@ -380,7 +392,7 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
         avd_pram_config: avd_config of the emulator specified by cfg files
 
     Returns:
-        BaseEmulator: A successfully booted emulator with the debug apk installed.  
+        BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
 
     avd_config = {
@@ -395,7 +407,7 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
 
     avd_config.update(avd_param_config)
     name = f"{avd_config['api']}_{avd_config['tag.id']}_{avd_config['cpu']}_{avd_config['device.name']}"
-    if 'AvdId' in avd_config:
+    if "AvdId" in avd_config:
         name += f"_{avd_config['AvdId']}"
     logging.info("--> Setting up emulator using avd config:%s", avd_config)
 
@@ -419,7 +431,7 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
             )
 
         emu.symbols = pytestconfig.getoption("symbols")
-        emu.launch_flags = avd_config['launch_flags']
+        emu.launch_flags = avd_config.get("launch_flags", [])
         pytest.emulators[name] = emu
 
     emu = pytest.emulators[name]
@@ -432,7 +444,7 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
 
 @pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
-async def avd(emulator: BaseEmulator) -> BaseEmulator:
+async def avd_launcher(emulator: BaseEmulator) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
     Note that the following holds:
@@ -449,6 +461,32 @@ async def avd(emulator: BaseEmulator) -> BaseEmulator:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
     return await anext(manage_avd(emulator))
+
+
+@pytest.fixture(scope="function")
+@pytest.mark.async_timeout(200)
+async def avd(avd_launcher: BaseEmulator) -> BaseEmulator:
+    """Makes a booted emulator accessible and with the animation apk installed.
+
+    This fixture has function scope, which will make sure the emulator will be
+    restarted if it has crashed. A new emulator will be brought up once for each
+    module.
+
+    The emulator will be (re-)started if needed.
+
+    Args:
+        avd_launcher (BaseEmulator): Test fixture that provides the configured emulator.
+
+    Returns:
+        BaseEmulator: A successfully booted emulator with the debug apk installed.
+    """
+    if not avd_launcher.is_alive():
+        logging.info("--> Restarting emulator")
+        await avd_launcher.restart(avd_launcher.launch_flags)
+        assert await emulator.wait_for_boot()
+    else:
+        logging.info("--> Reusing emulator")
+    return avd_launcher
 
 
 @pytest.fixture(scope="module")
@@ -469,7 +507,10 @@ async def avds(emulators: list[BaseEmulator]) -> list[BaseEmulator]:
     Returns:
         List of BaseEmulator: Successfully booted emulators with the debug apk installed.
     """
-    return await asyncio.gather(*[anext(manage_avd(emulator)) for emulator in emulators])
+    return await asyncio.gather(
+        *[anext(manage_avd(emulator)) for emulator in emulators]
+    )
+
 
 async def manage_avd(emulator) -> BaseEmulator:
     """Helper to manage a booted emulator and make it available for avd and avds fixtures.
@@ -749,16 +790,20 @@ def log_directory(pytestconfig):
 
 @pytest.fixture
 async def get_screenshot(emulator_controller, log_directory, request):
-    async def do_get_screenshot(image_format: ImageFormat):
+    async def do_get_screenshot(
+        image_format: ImageFormat = None, screenshot_dir: str = ""
+    ):
         """Get a screenshot from the emulator and save it to a file.
 
         Args:
-            image_format: The format of the screenshot image.
+            image_format: The format of the screenshot image. Defaults to 'ImageFormat()'
+            screenshot_dir: Screenshot directory. Defaults to '<log_directory> / screenshots'
 
         Returns:
             A tuple of the raw screenshot image and the Pillow image object.
         """
-        screenshot_dir = Path(log_directory) / "screenshots"
+        image_format = image_format or ImageFormat()
+        screenshot_dir = Path(screenshot_dir) or Path(log_directory) / "screenshots"
         img = await emulator_controller.getScreenshot(image_format)
         test_name = request.node.nodeid.split("::")[-1]
         file_name = re.sub(r"[\\/\{\}:]", "_", test_name)
