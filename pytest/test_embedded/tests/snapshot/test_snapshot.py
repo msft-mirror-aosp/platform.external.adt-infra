@@ -127,14 +127,27 @@ async def test_snapshot_list_perf(benchmark, snapshot_service, coldboot_animatio
     benchmark(snapshot_service.lists)
 
 
+async def contains_snapshot(telnet):
+    snapshots = await telnet.send("avd snapshot list")
+    return any("foo1" in sublist for sublist in snapshots)
+
+
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.fast
 async def test_snapshot_can_save_and_list(telnet, snapshot_service):
     await telnet.send("avd snapshot save foo1")
-    await asyncio.sleep(5.0)
-    snapshots = await telnet.send("avd snapshot list")
-    assert any("foo1" in sublist for sublist in snapshots)
+    assert eventually(contains_snapshot, telnet, timeout=10.0), "foo1 snapshot not available"
+
+
+@pytest.mark.e2e
+@pytest.mark.snapshot
+@pytest.mark.fast
+async def test_snapshot_can_save_and_delete(telnet, snapshot_service):
+    await telnet.send("avd snapshot save foo1")
+    assert eventually(contains_snapshot, telnet, timeout=10.0), "foo1 snapshot not available"
+    await telnet.send("avd snapshot del foo1")
+    assert not await contains_snapshot(telnet), "foo1 snapshot not deleted"
 
 
 @pytest.mark.e2e
