@@ -71,7 +71,8 @@ async def test_inbound_call(
 
 @pytest.mark.e2e
 @pytest.mark.hardware
-def test_inbound_call_bad_operation(at_home, emulator_controller):
+@pytest.mark.async_timeout(1080)
+async def test_inbound_call_bad_operation(at_home, emulator_controller):
     """Sends invalid phone call operation to the emulator.
 
     Test steps:
