@@ -159,8 +159,18 @@ async def test_avd_launch_after_wipe_data(avd, telnet):
     """
     async def get_system_key(key: str):
         # Return the value of the system {key}
-        value = await avd.adb.shell(f"settings get system {key}")
-        return (0 if value == 'null' else int(value))
+        async def _get_system_key(key: str, output: list):
+            # Return 'False' if the settings service isn't running.
+            # Otherwise, store the value in the output list and return 'True'.
+            value = await avd.adb.shell(f"settings get system {key}")
+            if "Can't find service: settings" in value:
+                return False
+            output.append(0 if value == 'null' else int(value))
+            return True
+        output = []
+        assert await eventually (partial(_get_system_key, key, output)), \
+            f"Couldn't retrieve the system key {key}"
+        return output[0]
 
     async def toggle_system_key(key: str):
         # Toggle the integer valued system {key} and return its original value
