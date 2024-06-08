@@ -291,22 +291,33 @@ We have the following set of markers that can be used to annotate the various
 tests.
 
 - adb: marks test as adb test.
+- atv: marks tests that should run on Android TV.
 - boot: marks tests as boot test, these tests validate that something hold just after booting. (deselect with '-m "not boot"')
 - console: mark tests related to the emulator console
 - darwin: marks test as darwin only, will only run if you are on darwin.
 - e2e: marks test as end to end (deselect with '-m "not e2e"')
 - embedded: marks test as embedded only, will run on an embedded emulator.
 - foldable: marks test that operates on a foldable emulator
+- newfoldable: marks test that operates on a new foldable emulator api since 34
 - graphics: marks tests related to graphics operations
 - hardware: marks test as a low-level hardware test
 - linux: marks test as linux only, will only run if you are on linux.
 - hostperf: marks test as a host side performance test (deselect with '-m "not hostperf"')
 - guestperf: marks test as a guest side performance test
 - resizable: marks test that should run on a resizable emulator
+- newresizable: marks test that should run on a new resizable emulator api since 34
 - slow: marks tests as slow (deselect with '-m "not slow"')
 - snapshot: marks tests related to snapshot operations
 - multidisplay: mark tests related to multidisplay
 - win32: marks test as windows only, will only run on a windows machine.
+- sanity: set of emulator sanity tests
+- fast: set of emulator fast suite tests
+- xpass: chrome tests
+- netsim: Netsim emulator tests
+- oldapiboot: marks tests that should run on old api
+- wear: marks tests that should run on wear OS
+- tablet: marks tests taht should run on a tablet image
+- embedded_newresizable: marks test that should run on a new resizable embedded emulator api since 34
 
 For example the test below will only run on linux:
 
