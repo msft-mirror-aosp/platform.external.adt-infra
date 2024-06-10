@@ -227,3 +227,36 @@ async def test_avd_launch_after_wipe_data(avd, telnet):
     assert await eventually(
         partial(key_has_value, "airplane_mode_on", initial_airplane_mode)
     ),  "The key 'airplane_mode_on' didn't revert to the default value."
+
+
+@pytest.mark.e2e
+@pytest.mark.snapshot
+@pytest.mark.fast
+async def test_snapshot_can_edit(snapshot_service):
+    """Verify the snapshot name and description can be edited.
+
+    Args:
+        snapshot_service (AsyncSnapshotService): snapshot service.
+
+    Test Steps:
+        1. Save a new snapshot.
+        2. Update the snapshot logical name and description (verify).
+
+    Verification:
+        The original snapshot name and description changes.
+    """
+    assert await snapshot_service.save("snap")
+
+    # Update the snapshot details.
+    logical_name = "update_snap"
+    description = "Updated Snapshot"
+    await snapshot_service.update(snap_id="snap",
+                                  logical_name=logical_name,
+                                  description=description)
+    # Verify the changes.
+    snapshots = await snapshot_service.lists()
+    snapshot = next(iter([snap for snap in snapshots if snap.snapshot_id == "snap"]))
+    assert (
+        snapshot.details.logical_name == logical_name and
+        snapshot.details.description == description
+    ), "Coudn't update the snapshot name and description."
