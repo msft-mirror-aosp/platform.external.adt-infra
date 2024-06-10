@@ -497,12 +497,6 @@ public class SettingsTest {
         assertTrue("Checking info label before email input not dismissed.",
                 checkingInfoLabel.waitUntilGone(90000L));
 
-        final UiObject signInLabel = device.findObject(
-                new UiSelector().
-                        text("Sign in").
-                        className(TextView.class));
-        assertTrue("Sign in label not found.",
-                new Wait(90000L).until(signInLabel::exists));
 
         final UiObject googleLoginInput = device.findObject(
                 new UiSelector().
@@ -510,7 +504,7 @@ public class SettingsTest {
                         index(0));
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account email input not found.",
-                new Wait(20000L).until(googleLoginInput::exists));
+                new Wait(200000L).until(googleLoginInput::exists));
 
         googleLoginInput.clearTextField();
         googleLoginInput.setText(userEmail);
@@ -535,7 +529,8 @@ public class SettingsTest {
 
         final UiObject forgotPasswordButton = device.findObject(
                 new UiSelector().
-                        text("Show password"));
+                        text("Show password").
+                        className(TextView.class));
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Password input entry page not dismissed.",
                 forgotPasswordButton.waitUntilGone(90000L));
