@@ -537,36 +537,39 @@ class Emulator(BaseEmulator):
         # The security file.
         access_file = Path(__file__).parent / "templates" / "emulator_test_access.json"
 
+        default_flags = [
+            "-avd",
+            self.configuration.name,
+            "-verbose",
+            "-show-kernel",
+            "-no-location-ui",
+            "-no-boot-anim",
+            "-metrics-collection",
+            "-no-audio",
+            # "-idle-grpc-timeout", # We will explicitly shutdown the device.
+            # "300",
+            "-port",  # Bind to a known open port..
+            str(port),
+            "-grpc",
+            str(grpc_port),
+            "-grpc-allowlist",
+            str(access_file),
+            "-debug-log",
+            "-gpu",
+            "swiftshader_indirect",
+            "-debug-events",
+            "-debug-grpc",
+            "-debug",
+            "console,snapshot",
+        ]
+
+        if "Vulkan" not in flags:
+            # Vulkan will cause snapshot saving failure, disable it for now
+            default_flags = default_flags + [ "-feature", "-Vulkan"]
+
         return await self._launch(
-            [
-                self.exe,
-                "-avd",
-                self.configuration.name,
-                "-verbose",
-                "-show-kernel",
-                "-no-location-ui",
-                "-no-boot-anim",
-                "-metrics-collection",
-                "-no-audio",
-                # "-idle-grpc-timeout", # We will explicitly shutdown the device.
-                # "300",
-                "-port",  # Bind to a known open port..
-                str(port),
-                "-grpc",
-                str(grpc_port),
-                "-grpc-allowlist",
-                str(access_file),
-                "-debug-log",
-                "-gpu",
-                "swiftshader_indirect",
-                # Vulkan will cause snapshot saving failure, disable it for now
-                "-feature",
-                "-Vulkan",
-                "-debug-events",
-                "-debug-grpc",
-                "-debug",
-                "console,snapshot",
-            ]
+            [ self.exe ]
+            + default_flags
             + flags,
             local_env,
         )
