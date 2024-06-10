@@ -50,7 +50,7 @@ class UnsupportedAbiOrCpu(Exception):
 
 class SystemImages:
     IMAGE = re.compile(
-        r".*android-(\d+)[\/\\](default|google_apis|android-desktop|android-wear|google_apis_playstore|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
+        r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
     )
 
     def __init__(self, sdk_root: Path = Path(os.environ.get("ANDROID_SDK_ROOT", "."))):
@@ -118,7 +118,8 @@ class SystemImages:
         Args:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
-            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv
+            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
+                       google_apis_tablet|android-desktop|android-wear|android-tv
 
         Returns:
             Optional[dict[str, str]]:  A dictionary with api, tag, abi, and cpu.
@@ -148,7 +149,8 @@ class SystemImages:
         Args:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
-            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv
+            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
+                       google_apis_tablet|android-desktop|android-wear|android-tv
 
         Returns:
             Optional[dict[str, str]]:  A dictionary with api, tag, abi, and cpu.
@@ -181,7 +183,8 @@ class SystemImages:
         Args:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
-            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv
+            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
+                       google_apis_tablet|android-desktop|android-wear|android-tv
 
         Raises:
             SystemImageDownloadFailed: If we failed to obtain the given image
@@ -384,7 +387,8 @@ class AvdWriter:
 
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of the machine. Note that qemu must support this abi!
-            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv|android-wear
+            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
+                       google_apis_tablet|android-desktop|android-wear|android-tv
             [optional] device.name (str): One of: Pixel2|PixelFold|Nexus7_2013|TV_1080p|WearOS_Square
                                           Defaults to Pixel2.
             [optional] AvdId (str): The name of the AVD to be created. Defaults to "{api}_{tag}_{abi}_{device_name}"
@@ -431,7 +435,8 @@ class AvdWriter:
         Args:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
-            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|android-tv
+            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
+                       google_apis_tablet|android-desktop|android-wear|android-tv
 
         Returns:
             AvdConfig: The avd configuration that can be used to launch the emulator
