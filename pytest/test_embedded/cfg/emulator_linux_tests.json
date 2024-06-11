@@ -604,5 +604,23 @@
             }
         ],
         "status": "enabled"
+    },
+    "vulkan_test_suite_api_34": {
+        "description": "Set of tests that run with Vulkan enabled",
+        "pytest_flags": [
+            "-m xpass"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [
+                    "-no-snapshot",
+                    "-feature",
+                    "Vulkan"
+                ],
+                "api": "34",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "enabled"
     }
 }
