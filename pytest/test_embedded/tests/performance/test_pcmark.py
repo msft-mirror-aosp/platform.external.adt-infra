@@ -66,7 +66,7 @@ async def cool_down():
 
 
 @pytest.mark.guestperf
-@pytest.mark.async_timeout(60 * 30)
+@pytest.mark.async_timeout(1080)
 async def test_pcmark(avd, log_directory, record_property):
     bundle_path = pathlib.Path.home().joinpath("emu-perf-bundle/Pcmark")
     if not bundle_path.exists():
