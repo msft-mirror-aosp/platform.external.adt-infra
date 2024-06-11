@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import asyncio
+import logging
 import os
 import tarfile
 
@@ -260,3 +261,76 @@ async def test_snapshot_can_edit(snapshot_service):
         snapshot.details.logical_name == logical_name and
         snapshot.details.description == description
     ), "Coudn't update the snapshot name and description."
+
+
+@pytest.mark.e2e
+@pytest.mark.snapshot
+@pytest.mark.fast
+@pytest.mark.async_timeout(1200)
+async def test_invalid_snapshot(avd):
+    """Verify that invalid snapshot cannot be loadedi.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to a booted emulator.
+
+    Test Steps:
+        1. Launch an AVD.
+        2. Take a Snapshot.
+        3. Repeat step 2, 2-3 times.
+        4. Close the AVD and make a hardware like (front-camera mode).
+        5. Re-launch the AVD. (Verify 1).
+        6. List the snapshots (Verify 2).
+
+    Verification:
+        1. AVD is launched in cold boot mode.
+        2. The previously created snapshots are shown as invalid.
+    """
+    async def take_snapshot(snapshot_id):
+        console = await avd.console()
+        await console.send(f"avd snapshot save {snapshot_id}")
+
+    async def delete_snapshot(snapshot_id):
+        console = await avd.console()
+        await console.send(f"avd snapshot delete {snapshot_id}")
+
+    # Take 3 Snapshots.
+    await asyncio.gather(*[take_snapshot(f"foo_{i}") for i in range(3)])
+
+    # Change front-camera mode and update the AVD configuration.
+    hw_camera_front = avd.configuration.hardware['hw.camera.front']
+    avd.configuration.hardware['hw.camera.front'] = (
+        'emulated' if hw_camera_front == 'none' else 'none'
+    )
+    with open(avd.configuration.directory / "config.ini", "w") as config_file:
+        avd.configuration.hardware.parser.write(config_file)
+
+    # Re-launch the AVD.
+
+    ## Use a filter to check the cold boot message.
+    cold_boot_mode = False
+    def cold_boot_filter(record):
+        # Set 'cold_boot_mode' to 'True' if the cold boot text is detected in the log.
+        nonlocal cold_boot_mode
+        text = "Cold boot: different AVD configuration"
+        message = record.getMessage()
+        if text in message:
+            cold_boot_mode = True
+        return True
+    avd.logger.addFilter(cold_boot_filter)
+
+    await avd.restart(avd.launch_flags)
+    await avd.wait_for_boot()
+    assert cold_boot_mode == True, "The AVD wasn't launched in cold boot mode"
+
+    # Verify previous saved snapshots are invalid.
+    snap = AsyncSnapshotService(snapshot_service=SnapshotServiceStub(avd.channel))
+    snapshots = await snap.lists()
+    INCOMPATIBLE_STATUS = next(iter(snapshots)).LoadStatus.Value('Incompatible')
+
+    assert all(
+        [snapshot.status == INCOMPATIBLE_STATUS \
+         for snapshot in snapshots if "foo_" in snapshot.snapshot_id]
+    ), "The previously saved snapshots are not invalid!"
+
+    # Remove the created snapshots.
+    await asyncio.gather(*[delete_snapshot(f"foo_{i}") for i in range(3)])
