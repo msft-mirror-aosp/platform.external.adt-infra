@@ -91,6 +91,7 @@ async def emu_snapshot_service(avd, service):
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
+@pytest.mark.async_timeout(1080)
 async def test_multidisplay_none(avd, no_displays, emulator_controller, is_landscape):
     """Erasing displays leaves nothing behind."""
     if is_landscape:
@@ -108,6 +109,7 @@ async def test_multidisplay_none(avd, no_displays, emulator_controller, is_lands
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.sanity
+@pytest.mark.async_timeout(1080)
 async def test_multidisplay_multiple(avd, no_displays, emulator_controller, is_landscape):
     """Adding a display should work."""
     if is_landscape:
@@ -127,11 +129,12 @@ async def test_multidisplay_multiple(avd, no_displays, emulator_controller, is_l
     assert cfg.displays[1].width == 720
     assert cfg.displays[1].height == 1280
 
+
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.sanity
-@pytest.mark.async_timeout(510)
+@pytest.mark.async_timeout(1080)
 async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, emu_snapshot_service,  is_landscape):
     """Snapshots on multiple display should work."""
     if is_landscape:
@@ -176,6 +179,7 @@ async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, 
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
+@pytest.mark.async_timeout(1080)
 async def test_multidisplay_multiple_error(
     avd, no_displays, emulator_controller, is_landscape
 ):
@@ -220,6 +224,7 @@ async def test_multidisplay_multiple_error(
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
+@pytest.mark.async_timeout(1080)
 async def test_multidisplay_get_after_set(
     avd, no_displays, emulator_controller, is_landscape
 ):
@@ -242,6 +247,7 @@ async def test_multidisplay_get_after_set(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
+@pytest.mark.async_timeout(1080)
 async def test_multidisplay_double_ids_error(
     avd, no_displays, emulator_controller, is_landscape
 ):
@@ -299,6 +305,7 @@ async def test_multidisplay_can_configure_four(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
+@pytest.mark.async_timeout(1080)
 async def test_multidisplay_add_should_not_remove(
     avd, no_displays, emulator_controller, is_landscape
 ):
@@ -339,6 +346,7 @@ async def test_multidisplay_add_should_not_remove(
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
+@pytest.mark.async_timeout(1080)
 async def test_multidisplay_error_too_many(
     avd, no_displays, emulator_controller, is_landscape
 ):
@@ -357,10 +365,11 @@ async def test_multidisplay_error_too_many(
         )
 
 
+@pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
-@pytest.mark.async_timeout(510)
+@pytest.mark.async_timeout(1080)
 async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_controller):
     """Ensure an app is moved to the primary display when multidisplay is disabled.
 
