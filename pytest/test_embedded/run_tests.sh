@@ -23,6 +23,11 @@ AOSP_DIR=$(
     pwd
 )
 
+OS_NAME=$(get_build_os)
+if [ "$OS_NAME" == "linux" ]; then
+    export JAVA_HOME="$AOSP_DIR/prebuilts/studio/jdk/djk17/linux/"
+fi
+
 # Finds the python installation that is part of our repository
 aosp_find_python() {
     local AOSP_PREBUILTS_DIR=$AOSP_DIR/prebuilts
