@@ -276,8 +276,8 @@ async def test_invalid_snapshot(avd):
     Test Steps:
         1. Launch an AVD.
         2. Take a Snapshot.
-        3. Repeat step 2, 2-3 times.
-        4. Close the AVD and make a hardware like (front-camera mode).
+        3. Repeat Step 2, 2-3 times to verify if multiple snapshots are invalid.
+        4. Close the AVD and make a hardware change (front-camera mode).
         5. Re-launch the AVD. (Verify 1).
         6. List the snapshots (Verify 2).
 
