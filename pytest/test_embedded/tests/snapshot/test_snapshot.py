@@ -233,6 +233,7 @@ async def test_avd_launch_after_wipe_data(avd, telnet):
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.fast
+@pytest.mark.async_timeout(1080)
 async def test_snapshot_can_edit(snapshot_service):
     """Verify the snapshot name and description can be edited.
 
