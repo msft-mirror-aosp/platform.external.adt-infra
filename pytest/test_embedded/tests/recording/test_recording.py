@@ -15,6 +15,7 @@ import asyncio
 import logging
 
 import grpc
+import platform
 import pytest
 from aemu.proto.screen_recording_service_pb2 import RecordingInfo
 from aemu.proto.screen_recording_service_pb2_grpc import ScreenRecordingStub
@@ -120,3 +121,47 @@ async def screen_records_video(screen_service, sample_file, sample_file_header):
     assert (
             header == sample_file_header
     ), f'{header} != sample_file_header, the magic header'
+
+
+@pytest.mark.parametrize(
+    "gpu_mode",
+    ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
+)
+
+@pytest.mark.e2e
+@pytest.mark.graphics
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_screen_records_with_different_gpu_modes(
+    emulator, gpu_mode, tmp_path
+):
+    """Verify screen recording work with different gpu modes.
+
+    Args:
+        emulator (BaseEmulator): Fixture that gives access to the running emulator.
+        gpu_mode (str): gpu mode.
+        tmp_path (Path): Fixture that provides a temporary working directory.
+
+    Test Steps:
+        1. Launch an AVD with the option "-gpu auto".
+        2. Perform a Screen Recording.
+        3. Wait for couple of seconds and then Stop the Recording.
+        4. Save the video in "WEBM" format (Verify).
+        5. Repeat the process with other gpu modes:
+        host, swiftshader_indirect, angle_indirect (Windows), swangle.
+
+    Verification:
+        The saved WEBM recording should be a valid video file.
+    """
+    if gpu_mode == "angle_indirect" and platform.system != "Windows":
+        pytest.skip(f"gpu mode {gpu_mode} is only available on Windows.")
+
+    logging.info(f"Launching the emulator with the gpu mode '{gpu_mode}'.")
+    await emulator.launch(emulator.launch_flags + ["-no-snapshot-save",
+                                                   "-gpu", f"{gpu_mode}"])
+    await emulator.wait_for_boot()
+    screen_service = ScreenRecordingStub(channel=emulator.channel)
+
+    sample_file = tmp_path / "sample.webm"
+    sample_file_header =  b"\x1A\x45\xDF\xA3"
+    await screen_records_video(screen_service, sample_file, sample_file_header)
