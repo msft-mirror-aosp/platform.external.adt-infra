@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import asyncio
 import logging
 import re
 from functools import partial
@@ -120,6 +121,33 @@ async def test_rotation_observable_through_adbstream(
             assert await eventually(
                 partial(rotation_from_logcat, angle), stream
             ), f"Did not observe a rotation to {angle} in time"
+
+@pytest.mark.e2e
+@pytest.mark.embedded
+@pytest.mark.graphics
+@pytest.mark.flaky
+async def test_stream_update_should_be_fast_after_rotation(
+    emulator_controller, stream_screenshot
+):
+    """Test that the stream should be quickly updated after each rotation."""
+    # wait for guest to go quiet
+    await asyncio.sleep(5)
+    async for angle, coarse in for_each_rotation(emulator_controller):
+
+        def is_rotated(img):
+            logging.info("img: %s - %s", img.seq, img.format.rotation)
+            return img.format.rotation.rotation == coarse
+
+        stream = stream_screenshot(ImageFormat())
+        # new stream should be returnning screenshot within 500 ms
+        # after rotation
+        assert await eventually(
+            is_rotated, stream, 0.5
+        ), f"Did not observe rotation to {angle}"
+
+        # wait again for it to go quiet
+        await asyncio.sleep(5)
+
 
 
 @pytest.mark.e2e
