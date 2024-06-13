@@ -483,7 +483,7 @@ async def avd(avd_launcher: BaseEmulator) -> BaseEmulator:
     if not avd_launcher.is_alive():
         logging.info("--> Restarting emulator")
         await avd_launcher.restart(avd_launcher.launch_flags)
-        assert await emulator.wait_for_boot()
+        assert await avd_launcher.wait_for_boot()
     else:
         logging.info("--> Reusing emulator")
     return avd_launcher

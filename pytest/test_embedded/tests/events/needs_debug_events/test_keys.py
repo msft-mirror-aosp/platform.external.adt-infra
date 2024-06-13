@@ -26,6 +26,8 @@ from emu.logging.log_handler import AsyncLogHandler
 from emu.timing import eventually
 from functools import partial
 from google.protobuf import empty_pb2
+import platform
+
 
 # Parse emulator log.
 EMU_MANY_KEY_EVENT = re.compile(r".* (\d+): sendKeyCodes: \[([0-9a-fA-F ,]+)\]")
@@ -420,7 +422,8 @@ async def test_close_emulator(avd):
     await avd.wait_for_boot()
 
     # Ensure the emulator shuts down after the CTRL-C event is sent
-    avd.cmd.process.send_signal(signal.SIGINT)
+    CTRL_C = signal.SIGINT if platform.system() != "Windows" else signal.CTRL_C_EVENT
+    avd.cmd.process.send_signal(CTRL_C)
     assert await (
         eventually(emulator_is_off)
     ), "The emulator was not shut down after the CTRL-C event was sent."

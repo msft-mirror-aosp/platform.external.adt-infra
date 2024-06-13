@@ -35,3 +35,45 @@ async def test_send_inbound_sms_text_message(
     message = SmsMessage(srcAddress=phone_number, text=text_message)
     response = await emulator_controller.sendSms(message)
     assert response.response == response.OK
+
+
+@pytest.fixture
+async def allow_sms_messages(emulator):
+    """
+    This fixture grants necessary SMS permissions to mobly snippet.
+    """
+    emulator.adb.shell(
+        "pm grant com.google.android.mobly.snippet.bundled android.permission.READ_SMS"
+    )
+    emulator.adb.shell(
+        "pm grant com.google.android.mobly.snippet.bundled android.permission.RECEIVE_SMS"
+    )
+
+
+@pytest.mark.e2e
+@pytest.mark.hardware
+@pytest.mark.fast
+@pytest.mark.parametrize("phone_number,text_message", [("987654321", "Hello There")])
+async def test_send_inbound_sms_text_message_received_by_mobly(
+    emulator_controller, mbs, allow_sms_messages, phone_number, text_message
+):
+    """
+    This test verifies that an inbound SMS text message is received by Mobly.
+
+    Args:
+        emulator_controller: A controller for interacting with the emulator.
+        mbs: An object for interacting with the Mobly Snippet Binder.
+        allow_sms_messages: A fixture to grant SMS permissions (automatically applied).
+        phone_number: The phone number from which the SMS will be sent.
+        text_message: The text content of the SMS.
+    """
+
+    message = SmsMessage(srcAddress=phone_number, text=text_message)
+    response = await emulator_controller.sendSms(message)
+    assert response.response == response.OK
+
+    # We expect the message with a few 5 seconds, this will raise an exception
+    # in case of failure.
+    message = mbs.waitForSms(5000)["data"]
+    assert message["OriginatingAddress"] == phone_number
+    assert message["MessageBody"] == text_message
