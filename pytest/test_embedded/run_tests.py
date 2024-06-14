@@ -38,7 +38,7 @@ AOSP_ROOT = EMU_TEST_DIR.parents[3]
 SDK_EMULATOR = (
     AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
 )
-JDK_ROOT = AOSP_ROOT / "prebuilts" / "studio" / "jdk" / "jdk11"
+JDK_ROOT = AOSP_ROOT / "prebuilts" / "studio" / "jdk" / "jdk17"
 ANDROID_SDK_ROOT = SDK_EMULATOR
 
 AEMU_GRPC = (
