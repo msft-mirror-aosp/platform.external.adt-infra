@@ -165,3 +165,70 @@ async def test_screen_records_with_different_gpu_modes(
     sample_file = tmp_path / "sample.webm"
     sample_file_header =  b"\x1A\x45\xDF\xA3"
     await screen_records_video(screen_service, sample_file, sample_file_header)
+
+
+@pytest.mark.e2e
+@pytest.mark.graphics
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_screen_records_with_different_orientations(
+        screen_service, telnet, tmp_path):
+    """Verify the behavior of screen recording with different screen orientation.
+
+    Args:
+        screen_service (ScreenRecordingStub): screen recording service.
+        telnet (EmulatorConnection): Fixture that gives access to the emulator console.
+        tmp_path (Path): Fixture that provides a temporary directory.
+
+    Test Steps:
+        1. Create a new AVD.
+        2. Change device orientation to (reverse) landscape mode.
+        3. Start a Screen Recording in WEBM format.
+        4. Wait for couple of seconds and then stop the recording.
+        6. Start the Screen Recording.
+        7. Change device orientation from reverse landscape do portrait during the recording.
+
+    Verification:
+        Check the file size and signature to verify the video is recorded without any issues.
+    """
+    async def rotate():
+        # Rotate the emulator clockwise by 90 degrees.
+        await telnet.send("rotate")
+        await asyncio.sleep(2)
+
+    sample_file_header =  b"\x1A\x45\xDF\xA3"
+
+    # Ensure screen recording work in (reverse) landscape mode.
+    landscape_file = tmp_path / "sample_landscape.webm"
+    logging.info(f"Rotating the emulator to reverse landscape ...")
+    await rotate()
+    await screen_records_video(screen_service, landscape_file, sample_file_header)
+
+    # Ensure a valid recording is produced while the emulator is rotated.
+    landscape_portrait_file = tmp_path / "sample_landscape_portrait.webm"
+    info = RecordingInfo(file_name=str(landscape_portrait_file))
+    logging.info("Starting the recording: %s", info)
+    await screen_service.StartRecording(info)
+    await asyncio.sleep(2)
+
+    for angle in [-180, 90, 0]:
+        logging.info(f"Rotating the emulator to {angle} degrees ..")
+        await rotate()
+
+    logging.info("Stopping the recording: %s", info)
+    await screen_service.StopRecording(info)
+
+    async def check_webm(sample_webm, sample_file_header):
+        # Check file size.
+        assert sample_webm.exists()
+        assert (
+            sample_webm.stat().st_size > 10240
+        ), "We should have recorded a series of frames"
+        # Check file signature.
+        with open(sample_webm, "rb") as file:
+            header = file.read(4)
+        assert (
+                header == sample_file_header
+        ), f'{header} != sample_file_header, the magic header'
+
+    await check_webm(landscape_portrait_file, sample_file_header)
