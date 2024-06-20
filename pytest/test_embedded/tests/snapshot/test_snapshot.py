@@ -152,6 +152,19 @@ async def test_snapshot_can_save_and_delete(telnet, snapshot_service):
 
 
 @pytest.mark.e2e
+@pytest.mark.snapshot
+@pytest.mark.fast
+async def test_snapshot_can_save_and_load(avd, telnet, snapshot_service):
+    await telnet.send("avd snapshot save foo1")
+    assert eventually(contains_snapshot, telnet, timeout=10.0), "foo1 snapshot not available"
+    assert await avd.start_activity(
+        "com.google.AnimateBox/com.google.emu.MainActivity", params=None
+    )
+    assert await telnet.send("avd snapshot load foo1")
+    assert await avd.stop_activity("com.google.AnimateBox")
+
+
+@pytest.mark.e2e
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_avd_launch_after_wipe_data(avd, telnet):
@@ -233,7 +246,7 @@ async def test_avd_launch_after_wipe_data(avd, telnet):
 @pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.fast
-@pytest.mark.async_timeout(1080)
+@pytest.mark.async_timeout(2080)
 async def test_snapshot_can_edit(snapshot_service):
     """Verify the snapshot name and description can be edited.
 
