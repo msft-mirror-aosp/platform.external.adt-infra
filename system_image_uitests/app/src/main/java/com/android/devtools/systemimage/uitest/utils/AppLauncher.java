@@ -244,11 +244,12 @@ public class AppLauncher {
      * the method logs an error message and returns false.
      *
      * @param instrumentation the instrumentation instance used to interact with the UI
+     * @param swipesLimit the maximum number of swipes to attempt before giving up on scrolling to an app
      * @param appPath an array of Strings where each String is the name of an app to launch
      * @return a boolean indicating whether the method was able to find and click on all the apps in the appPath array
      * @throws Exception if an error occurs while interacting with the UI
      */
-    public static boolean launchPath_v2(Instrumentation instrumentation, String... appPath)
+    public static boolean launchPath_v2(Instrumentation instrumentation, Integer swipesLimit, String... appPath)
             throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
@@ -263,23 +264,26 @@ public class AppLauncher {
             return false;
         }
 
-        UiObject recyclerView = device.findObject(new UiSelector().resourceId(Res.ANDROID_SETTING_LIST_RES));
+        UiObject recyclerView = device.findObject(
+                new UiSelector().resourceId(Res.ANDROID_SETTING_LIST_RES));
 
-        for (int i = 1; i < appPath.length && status; ++i) {
+        if (!recyclerView.waitForExists(10000L)) {
+            Log.i(TAG, "RecyclerView does not exist");
+            return false;
+        }
+
+        int startX = recyclerView.getBounds().centerX();
+        int startY = recyclerView.getBounds().bottom - 10;
+        int endY = recyclerView.getBounds().top + 10;
+
+        for (int i = 1; i < appPath.length; ++i) {
             status = false;
             Log.i(TAG, "Open " + appPath[i]);
             UiSelector regexSelector = new UiSelector().textMatches(appPath[i]);
             UiObject appByRegex = device.findObject(regexSelector);
 
-            if (!recyclerView.waitForExists(5L)) {
-                Log.i(TAG, "RecyclerView does not exist");
-                continue;
-            } else {
-                boolean canScrollMore = true;
-                while (canScrollMore) {
-                    int startX = recyclerView.getBounds().centerX();
-                    int startY = recyclerView.getBounds().bottom - 10;
-                    int endY = recyclerView.getBounds().top + 10;
+            boolean canScrollMore = true;
+                while (canScrollMore && swipesLimit -- > 0) {
                     canScrollMore = device.swipe(startX, startY, startX, endY, 50);
                     if (appByRegex.waitForExists(1L)) {
                         Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");
@@ -291,11 +295,28 @@ public class AppLauncher {
                 }
                 if (!status) {
                     Log.i(TAG, "Failed to scroll to " + appPath[i]);
+                    // The values are screen coordinates, representing the beginning of where to swipe.
+                    startY = recyclerView.getBounds().top + 10;
+                    endY = recyclerView.getBounds().bottom - 10;
+                    device.swipe(startX, startY, startX, endY, 50);
                     return false;
                 }
             }
         }
 
         return status;
+    }
+
+     /**
+     * Launches application in path by launcher.
+     *
+     * @param instrumentation see {@link android.test.InstrumentationTestCase#getInstrumentation()
+     *                        getInstrumentation}
+     * @param appPath         the app path to launch
+     * @throws UiObjectNotFoundException if it fails to find a UI object.
+     */
+    public static boolean launchPath_v2(Instrumentation instrumentation, String... appPath)
+            throws Exception {
+        return launchPath_v2(instrumentation, 100, appPath);
     }
 }
