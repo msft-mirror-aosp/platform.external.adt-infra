@@ -256,13 +256,19 @@ class AvdConfig:
 
     def delete(self) -> None:
         """Deletes the created avd."""
-        self.avd_ini.unlink()
+        try:
+            self.avd_ini.unlink()
+        except FileNotFoundError:
+            logging.warning("avd_ini %s already removed", self.avd_ini)
 
         logging.debug("Removing %s", self.directory)
         try:
             if platform.system() == "Windows":
                 mycmd = "rmdir {} /s /q".format(self.directory.absolute())
-                subprocess.check_output(mycmd, shell=True)
+                try:
+                  subprocess.check_output(mycmd, shell=True)
+                except subprocess.CalledProcessError:
+                  logging.warning("Failed to delete %s", self.directory)
             else:
                 shutil.rmtree(self.directory.absolute())
         except OSError:
