@@ -933,12 +933,13 @@ public class SettingsTest {
      */
     @Test
     public void revokeDebugAuth() throws Exception {
-        if (!AppLauncher.launchPath(
-                instrumentation, true, "Settings", "System", "Developer options")) {
-            DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+        final int MAX_NUM_SWIPES = 15;
+        if (!AppLauncher.launchPath_v2(
+                instrumentation, MAX_NUM_SWIPES, "Settings", "System", "Developer options")) {
+            DeveloperOptionsManager.enableDeveloperOptions_v4(testFramework);
             Assert.assertTrue("Could not enable developer options",
-                    AppLauncher.launchPath(
-                            instrumentation, true, "Settings", "System", "Developer options"));
+                    AppLauncher.launchPath_v2(
+                            instrumentation, MAX_NUM_SWIPES, "Settings", "System", "Developer options"));
         }
 
         UiSelector region = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
