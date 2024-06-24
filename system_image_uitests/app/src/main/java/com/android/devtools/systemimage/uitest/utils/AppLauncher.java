@@ -302,7 +302,6 @@ public class AppLauncher {
                     return false;
                 }
             }
-        }
 
         return status;
     }
