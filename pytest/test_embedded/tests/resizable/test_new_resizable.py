@@ -275,6 +275,12 @@ async def test_new_resizable_folding_observable_from_streaming(
     assert await eventually(image_is_properly_sized, stream)
 
 
+async def assertDisplayMode(expected_mode, emulator_controller):
+    # Return 'True' if the current display mode is equal to 'expected_mode'
+    mode = await emulator_controller.getDisplayMode(_EMPTY_)
+    return mode.value == expected_mode
+
+
 @pytest.mark.parametrize(
     "index, name, expected_mode",
     [(0, "Phone", DisplayModeValue.PHONE),
@@ -309,14 +315,9 @@ async def test_new_resizable_changes_resolution_from_console(
                 2 = Tablet
                 3 = Desktop
     """
-    async def assertDisplayMode(expected_mode):
-        # Return 'True' if the current display mode is equal to 'expected_mode'
-        mode = await emulator_controller.getDisplayMode(_EMPTY_)
-        return mode.value == expected_mode
-
     logging.info(f"Resizing display to '{name}' ...")
     await telnet.send(f"resize-display {index}")
 
     assert await eventually(
-        partial(assertDisplayMode, expected_mode)
+        partial(assertDisplayMode, expected_mode, emulator_controller)
     ), "Couldn't set display to {name} mode"
