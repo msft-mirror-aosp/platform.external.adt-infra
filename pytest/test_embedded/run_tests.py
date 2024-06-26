@@ -325,14 +325,21 @@ class PyRunner:
             try:
                 display = self._get_X_Display()
             except NoXServer as xerr:
-                logging.warning(
-                    "No X server available (%s), attemtping to launch a vnc server",
-                    xerr,
-                )
-                subprocess.check_call("vncserver")
-                display = self._get_X_Display()
+                if "NO_VNC_LAUNCH" in os.environ:
+                    logging.warning(
+                        "No X server available (%s), skipping vnc launch since NO_VNC_LAUNCH is set",
+                        xerr,
+                    )
+                else:
+                    logging.warning(
+                        "No X server available (%s), attemtping to launch a vnc server",
+                        xerr,
+                    )
+                    subprocess.check_call("vncserver")
+                    display = self._get_X_Display()
 
-            self.env["DISPLAY"] = display
+            if display:
+                self.env["DISPLAY"] = display
 
         logging.info("Using environment: %s", self.env)
 
