@@ -16,6 +16,7 @@ import logging
 import re
 import time
 from collections import namedtuple
+from functools import partial
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
@@ -272,3 +273,51 @@ async def test_new_resizable_folding_observable_from_streaming(
 
     stream = stream_screenshot(ImageFormat(format=fmt))
     assert await eventually(image_is_properly_sized, stream)
+
+
+async def assertDisplayMode(expected_mode, emulator_controller):
+    # Return 'True' if the current display mode is equal to 'expected_mode'
+    mode = await emulator_controller.getDisplayMode(_EMPTY_)
+    return mode.value == expected_mode
+
+
+@pytest.mark.parametrize(
+    "index, name, expected_mode",
+    [(0, "Phone", DisplayModeValue.PHONE),
+     (1, "Foldable", DisplayModeValue.FOLDABLE),
+     (2, "Tablet", DisplayModeValue.TABLET),
+     (3, "Desktop", DisplayModeValue.DESKTOP)]
+)
+@pytest.mark.newresizable
+@pytest.mark.fast
+async def test_new_resizable_changes_resolution_from_console(
+    index, name, expected_mode,
+    telnet, emulator_controller
+):
+    """Verify the display mode can be changed from the emulator console.
+
+    Args:
+        index (int): Display mode index.
+        name (str): Display mode description.
+        expected_mode (DisplayModeValue): Display mode enumeration value.
+        telnet (EmulatorConnection): Fixture that gives access to the emulator console.
+        emulator_controller (EmulatorControllerStub): Emulator controller fixture.
+
+    Test Steps:
+        1. Launch a Resizable AVD.
+        2. Using the emulator console, run the command "resize-display <index>".
+
+    Verification:
+        1. The screen size (observed from the updated display mode) is adjusted in
+           accordance with the display mode selected, as following:
+                0 = Phone
+                1 = Foldable
+                2 = Tablet
+                3 = Desktop
+    """
+    logging.info(f"Resizing display to '{name}' ...")
+    await telnet.send(f"resize-display {index}")
+
+    assert await eventually(
+        partial(assertDisplayMode, expected_mode, emulator_controller)
+    ), "Couldn't set display to {name} mode"
