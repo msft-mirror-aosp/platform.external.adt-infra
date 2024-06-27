@@ -321,3 +321,53 @@ async def test_new_resizable_changes_resolution_from_console(
     assert await eventually(
         partial(assertDisplayMode, expected_mode, emulator_controller)
     ), "Couldn't set display to {name} mode"
+
+
+@pytest.mark.fast
+@pytest.mark.newresizable
+@pytest.mark.async_timeout(2020)
+async def test_new_resizable_snapshot_saves_display_mode(avd, emulator_controller):
+    """Verify display mode is saved when a snapshot is created and loaded.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
+        emulator_controller (EmulatorControllerStub): Emulator controller fixture.
+
+    Test Steps:
+        1. Launch a Resizable AVD.
+        2. Change the display mode to Phone.
+        3. Take a snapshot.
+        4. Change the display mode to Foldable
+        5. Load the snapshot created in step 3.
+        6. Repeat step  2-5 for Tablet and Desktop display mode.
+
+    Verification:
+        1. When the snapshot is loaded, the original ('Phone') display mode is loaded.
+    """
+    # Set the display mode to 'Phone' and take a snapshot.
+    console = await avd.console()
+    await console.send(f"resize-display 0")
+    await console.send("avd snapshot save phone_snapshot")
+
+    for index, name, expected_mode in [
+            (1, "Foldable", DisplayModeValue.FOLDABLE),
+            (2, "Tablet", DisplayModeValue.TABLET),
+            (3, "Desktop", DisplayModeValue.DESKTOP)]:
+
+        # Set a new display mode.
+        logging.info(f"Setting display mode to '{name}' ...")
+        await console.send(f"resize-display {index}")
+        assert await eventually(
+            partial(assertDisplayMode, expected_mode, emulator_controller)
+        ), "Couldn't set the display mode to {name}."
+
+        # Load the Phone snapshot.
+        await console.send("avd snapshot load phone_snapshot")
+        await avd.wait_for_boot()
+
+        # Make sure the display mode reverts back to 'Phone'.
+        assert await eventually(
+            partial(assertDisplayMode, 0, emulator_controller)
+        ), "The display mode didn't revert to {name} after the snapshot was loaded."
+
+    await console.send("avd snapshot delete phone_snapshot")
