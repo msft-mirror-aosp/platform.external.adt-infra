@@ -75,6 +75,7 @@ public class MapsTest {
      */
     @Test
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
+    @Ignore("Disabled due to app crash: b/350520274")
     public void testMapsApp() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice mDevice = testFramework.getDevice();
