@@ -34,6 +34,7 @@ import com.android.devtools.systemimage.uitest.utils.Wait;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
