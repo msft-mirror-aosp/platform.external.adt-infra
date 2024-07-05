@@ -89,6 +89,7 @@ async def test_can_only_record_once(screen_service, tmp_path):
         # Our second record attempt should result in an error
         await screen_service.StartRecording(info)
 
+
 @pytest.mark.flaky
 @pytest.mark.graphics
 @pytest.mark.sanity
@@ -96,8 +97,10 @@ async def test_can_only_record_once(screen_service, tmp_path):
 @pytest.mark.atv
 async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_path):
     sample_file = tmp_path / "sample.webm"
-    sample_file_header =  b"\x1A\x45\xDF\xA3"
-    await screen_records_video(screen_service, sample_file, sample_file_header)
+    sample_file_header = b"\x1A\x45\xDF\xA3"
+    await screen_records_video(screen_service, sample_file)
+    verify_recorded_file_header(sample_file, sample_file_header)
+
 
 @pytest.mark.flaky
 @pytest.mark.graphics
@@ -105,9 +108,31 @@ async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_p
 async def test_screen_records_video_in_gif(screen_service, animation_app, tmp_path):
     sample_file = tmp_path / "sample.gif"
     sample_file_header = b"\x1aE\xdf\xa3"
-    await screen_records_video(screen_service, sample_file, sample_file_header)
+    await screen_records_video(screen_service, sample_file)
+    verify_recorded_file_header(sample_file, sample_file_header)
 
-async def screen_records_video(screen_service, sample_file, sample_file_header):
+
+@pytest.mark.e2e
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_screen_records_video_telnet(emulator, animation_app, tmp_path, telnet):
+    myflags = ["-no-window"]
+    assert await emulator.launch(flags=myflags)
+
+    assert (
+     await emulator.wait_for_boot(timeout=1080)
+    ), f"The emulator couldn't be launched with no-window option"
+
+    sample_file = tmp_path / "sample_record.webm"
+    await telnet.send("screenrecord start {}".format(sample_file))
+    await asyncio.sleep(5)
+    await telnet.send("screenrecord stop")
+
+    sample_file_header = b"\x1A\x45\xDF\xA3"
+    verify_recorded_file_header(sample_file, sample_file_header)
+
+
+async def screen_records_video(screen_service, sample_file):
     info = RecordingInfo(width=120, height=120, file_name=str(sample_file))
     logging.info("Starting the recording: %s", info)
     await screen_service.StartRecording(info)
@@ -115,6 +140,8 @@ async def screen_records_video(screen_service, sample_file, sample_file_header):
     logging.info("Stopping the recording: %s", info)
     await screen_service.StopRecording(info)
 
+
+def verify_recorded_file_header(sample_file, sample_file_header):
     with open(sample_file, "rb") as file:
         header = file.read(4)
 
@@ -127,7 +154,6 @@ async def screen_records_video(screen_service, sample_file, sample_file_header):
     "gpu_mode",
     ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
 )
-
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.fast
@@ -163,8 +189,9 @@ async def test_screen_records_with_different_gpu_modes(
     screen_service = ScreenRecordingStub(channel=emulator.channel)
 
     sample_file = tmp_path / "sample.webm"
-    sample_file_header =  b"\x1A\x45\xDF\xA3"
-    await screen_records_video(screen_service, sample_file, sample_file_header)
+    sample_file_header = b"\x1A\x45\xDF\xA3"
+    await screen_records_video(screen_service, sample_file)
+    verify_recorded_file_header(sample_file, sample_file_header)
 
 
 @pytest.mark.e2e
@@ -196,13 +223,14 @@ async def test_screen_records_with_different_orientations(
         await telnet.send("rotate")
         await asyncio.sleep(2)
 
-    sample_file_header =  b"\x1A\x45\xDF\xA3"
+    sample_file_header = b"\x1A\x45\xDF\xA3"
 
     # Ensure screen recording work in (reverse) landscape mode.
     landscape_file = tmp_path / "sample_landscape.webm"
     logging.info(f"Rotating the emulator to reverse landscape ...")
     await rotate()
-    await screen_records_video(screen_service, landscape_file, sample_file_header)
+    await screen_records_video(screen_service, landscape_file)
+    verify_recorded_file_header(landscape_file, sample_file_header)
 
     # Ensure a valid recording is produced while the emulator is rotated.
     landscape_portrait_file = tmp_path / "sample_landscape_portrait.webm"

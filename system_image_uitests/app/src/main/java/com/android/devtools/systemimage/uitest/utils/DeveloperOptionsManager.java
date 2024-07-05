@@ -131,7 +131,7 @@ public class DeveloperOptionsManager {
     /**
      * Enables developer options.
      *
-     * Version 1 for api == 29
+     * Version 3 for api == 29
      *
      * @param testFramework see {
      *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
@@ -144,6 +144,26 @@ public class DeveloperOptionsManager {
             selectDeviceByType_v2(instrumentation,"phone");
         } catch (Exception e) {
             selectDeviceByType_v2(instrumentation,"emulated device");
+        }
+        enableOptions(instrumentation);
+    }
+
+    /**
+     * Enables developer options.
+     *
+     * Version 4 for api == 31
+     *
+     * @param testFramework see {
+     *   @link android.devtools.systemimage.uitest.framework.SystemImageTestFramework() }
+     * @throws Exception if it fails to find a UI widget.
+     */
+    public static void enableDeveloperOptions_v4(SystemImageTestFramework testFramework)
+            throws Exception {
+        Instrumentation instrumentation = testFramework.getInstrumentation();
+        try {
+            selectDeviceByType_v3(instrumentation,"emulated device");
+        } catch (Exception e) {
+            selectDeviceByType_v3(instrumentation,"phone");
         }
         enableOptions(instrumentation);
     }
@@ -192,6 +212,22 @@ public class DeveloperOptionsManager {
         } else {
             throw new UiObjectNotFoundException(deviceLabel + " not found");
         }
+    }
+
+    /**
+     * Attempt to enable developer options by trying both 'About phone' and
+     * 'About emulated device' links for api 31
+     *
+     * @param instrumentation
+     * @param type
+     * @throws Exception if it fails to find a UI widget.
+     */
+    private static void selectDeviceByType_v3(Instrumentation instrumentation, String type)
+            throws Exception {
+        String deviceLabel = "About " +  type;
+        AppLauncher.launchPath(
+                instrumentation, true, "Settings", deviceLabel);
+        enableOptions(instrumentation);
     }
 
     /**
