@@ -212,7 +212,10 @@ def run(cmd, cwd=None, extra_env=None, timeout=1200, check_output=True):
             " ".join(cmd),
             timeout_exception.timeout,
         )
-        proc.terminate()
+        if OS_NAME == "windows":
+            run(["taskkill.exe", "/F", "/T", "/PID", str(proc.pid)], check_output=False)
+        else:
+            proc.terminate()
         raise timeout_exception
 
 
