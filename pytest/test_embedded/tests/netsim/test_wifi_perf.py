@@ -16,7 +16,15 @@ import asyncio
 import logging
 import re
 import subprocess
+import threading
 import pytest
+
+
+def read_output(process, logger_name):
+  logger = logging.getLogger(logger_name)
+  for line in iter(process.stdout.readline, ""):
+    logger.info(line.rstrip())  # Print each line to the log
+  process.stdout.close()
 
 
 @pytest.mark.wifi_perf
@@ -25,14 +33,40 @@ async def test_iperf3(avd, record_property):
   """Test case to run iperf3 and record wifi performance."""
   # Disable cellular connection to make sure we are testing wifi
   await avd.adb.shell("svc data disable")
+  which_iperf3_res = subprocess.run(
+      ["which", "iperf3"], capture_output=True, text=True
+  )
+  if which_iperf3_res.returncode:
+    logging.info(f"which iperf3 stdout: {which_iperf3_res.stdout}")
+    logging.info(f"which iperf3 stderr: {which_iperf3_res.stderr}")
+    assert False
+
+  iperf3_version_res = subprocess.run(
+      ["iperf3", "--version"], capture_output=True, text=True
+  )
+  logging.info(f"iperf3 --version stdout: {iperf3_version_res.stdout}")
+
   # Run iperf server on host
-  subprocess.Popen(
-      ["iperf3", "-s"],
+  server_process = subprocess.Popen(
+      ["iperf3 -s"],
       shell=True,
       stdout=subprocess.PIPE,
-      stderr=subprocess.PIPE,
+      stderr=subprocess.STDOUT,
   )
+  threading.Thread(
+      target=read_output, args=(server_process, "iperf3_server"), daemon=True
+  ).start()
+
   await asyncio.sleep(5)  # Wait a few seconds for iperf3 server to start
+
+  # Run iperf client on host to make sure server is running
+  client_host_process = subprocess.run(
+      ["iperf3", "-c", "localhost", "-t", "3"], capture_output=True, text=True
+  )
+  if 'error' in client_host_process.stdout:
+    logging.info(f"client_host_process stdout: {client_host_process.stdout}")
+    logging.info(f"client_host_process stderr: {client_host_process.stderr}")
+    assert False
 
   # Run iperf client on guest
   result = await avd.adb.shell("iperf3 -c 10.0.2.2 -b 1000M -t 30", timeout=60)
