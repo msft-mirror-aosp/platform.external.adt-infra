@@ -27,4 +27,4 @@ async def test_netsimd_is_launched(avd):
 @pytest.mark.async_timeout(1080)
 async def test_netsimd_shutdown(avd):
     await avd.stop(timeout=60)
-    await eventually(lambda: not netsim_is_alive())
+    assert await eventually(lambda: not netsim_is_alive())
