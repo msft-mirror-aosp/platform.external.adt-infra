@@ -212,11 +212,20 @@ def run(cmd, cwd=None, extra_env=None, timeout=1200, check_output=True):
             " ".join(cmd),
             timeout_exception.timeout,
         )
-        if OS_NAME == "windows":
-            run(["taskkill.exe", "/F", "/T", "/PID", str(proc.pid)], check_output=False)
-        else:
-            proc.terminate()
+        _terminate_proc(proc)
         raise timeout_exception
+    except KeyboardInterrupt as exc:
+        logging.exception("Keyboard interrupt while running process")
+        _terminate_proc(proc)
+        raise exc
+
+
+def _terminate_proc(proc: subprocess.Popen):
+    if OS_NAME == 'windows':
+        run(['taskkill.exe', '/T', '/PID', str(proc.pid)], check_output=False)
+    else:
+        proc.terminate()
+
 
 
 def resolve_emulator(emulator: str) -> Path:
