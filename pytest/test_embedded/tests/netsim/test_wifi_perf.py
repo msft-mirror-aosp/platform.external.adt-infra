@@ -22,8 +22,10 @@ import pytest
 
 def read_output(process, logger_name):
   logger = logging.getLogger(logger_name)
-  for line in iter(process.stdout.readline, ""):
-    logger.info(line.rstrip())  # Print each line to the log
+  while process.poll() is None:  # Check if the process is still running
+    line = process.stdout.readline()
+    if line:
+      logger.info(line.rstrip())
   process.stdout.close()
 
 
