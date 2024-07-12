@@ -63,7 +63,8 @@ async def test_iperf3(avd, record_property):
   client_host_process = subprocess.run(
       ["iperf3", "-c", "localhost", "-t", "3"], capture_output=True, text=True
   )
-  if 'error' in client_host_process.stdout:
+
+  if "error" in client_host_process.stdout:
     logging.info(f"client_host_process stdout: {client_host_process.stdout}")
     logging.info(f"client_host_process stderr: {client_host_process.stderr}")
     assert False
@@ -71,6 +72,8 @@ async def test_iperf3(avd, record_property):
   # Run iperf client on guest
   result = await avd.adb.shell("iperf3 -c 10.0.2.2 -b 1000M -t 30", timeout=60)
   logging.info(f"iperf3 result: {result}")
+
+  server_process.terminate()
 
   # Extract speeds by parsing iperf3 result
   speeds = re.findall(
