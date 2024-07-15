@@ -221,8 +221,8 @@ def run(cmd, cwd=None, extra_env=None, timeout=1200, check_output=True):
 
 
 def _terminate_proc(proc: subprocess.Popen):
-    if OS_NAME == 'windows':
-        run(['taskkill.exe', '/T', '/PID', str(proc.pid)], check_output=False)
+    if OS_NAME == "windows":
+        run(["taskkill.exe", "/F", "/T", "/PID", str(proc.pid)], check_output=False)
     else:
         proc.terminate()
 
