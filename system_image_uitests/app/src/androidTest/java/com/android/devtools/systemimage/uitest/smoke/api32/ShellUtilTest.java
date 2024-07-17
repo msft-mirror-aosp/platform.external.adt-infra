@@ -122,36 +122,40 @@ public class ShellUtilTest {
         ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
 
         if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+            DeveloperOptionsManager.enableDeveloperOptions_v4(testFramework);
         }
 
-        AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Developer options");
-        // Remove bug report files even if the test fails.
-        try {
-            device.findObject(
-                    new UiSelector().text("Bug report")).clickAndWaitForNewWindow();
-            UiObject fullReportButton = device.findObject(new UiSelector().textMatches("(?i)full report(?-i)"));
-            if (fullReportButton.exists()) {
-                fullReportButton.clickAndWaitForNewWindow();
-            }
-            UiObject reportButton = device.findObject(new UiSelector().textMatches("(?i)report(?-i)"));
-            if (reportButton.exists()) {
-                reportButton.click();
-            }
-            boolean gotPngAndZip = new Wait(
-                    TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
-                    () -> {
-                        String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
-                        Log.d(TAG, "ls result " + result);
-                        boolean success =
-                                result.matches("(?s).*bugreport.*\\.png.*")
-                                        && result.matches("(?s).*bugreport.*\\.zip.*");
-
-                        return success;
-                    });
-            Assert.assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
-        } finally {
-            ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
+        for (int i = 0; i < 4; i++) {
+            device.pressBack();
         }
+
+        AppLauncher.launch(instrumentation, "Settings");
+        AppLauncher.scrollAndClick(device,"System","Developer options");
+        UiObject bugReportButton = device.findObject(
+                new UiSelector().text("Bug report"));
+        assertTrue("Bug report button not found", bugReportButton.waitForExists(10000L));
+        bugReportButton.clickAndWaitForNewWindow();
+
+        UiObject fullReportButton = device.findObject(new UiSelector().textMatches("(?i)full report(?-i)"));
+        if (fullReportButton.exists()) {
+            fullReportButton.clickAndWaitForNewWindow();
+        }
+
+        UiObject reportButton = device.findObject(new UiSelector().textMatches("(?i)report(?-i)"));
+        if (reportButton.exists()) {
+            reportButton.click();
+        }
+
+        boolean gotPngAndZip = new Wait(
+                TimeUnit.MILLISECONDS.convert(30L, TimeUnit.SECONDS)).until(
+                () -> {
+                    String result = device.executeShellCommand("ls " + BUG_REPORT_DIR);
+                    Log.d(TAG, "ls result " + result);
+                    return result.matches("(?s).*bugreport.*\\.png.*")
+                            && result.matches("(?s).*bugreport.*\\.zip.*");
+                });
+        assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
+
+        ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
     }
 }
