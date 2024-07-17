@@ -132,6 +132,24 @@ async def test_screen_records_video_telnet(emulator, animation_app, tmp_path, te
     verify_recorded_file_header(sample_file, sample_file_header)
 
 
+@pytest.mark.e2e
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_screen_recording_duration(animation_app, emulator, tmp_path):
+    screen_service = ScreenRecordingStub(channel=emulator.channel)
+    sample_file = tmp_path / "sample.gif"
+    sample_file_header = b"\x1aE\xdf\xa3"
+    info = RecordingInfo(width=120, height=120, file_name=str(sample_file))
+    logging.info("Starting the recording: %s", info)
+    await screen_service.StartRecording(info)
+    # Recording can be done to max of 180 secs. Once 180 secs are over, it will stop the recording
+    await asyncio.sleep(200)  # Wait for more than 180 secs
+    await screen_service.StartRecording(info)  # Recording can be started again after 180 secs
+    logging.info("Stopping the recording: %s", info)
+    await screen_service.StopRecording(info)
+    verify_recorded_file_header(sample_file, sample_file_header)
+
+
 async def screen_records_video(screen_service, sample_file):
     info = RecordingInfo(width=120, height=120, file_name=str(sample_file))
     logging.info("Starting the recording: %s", info)
