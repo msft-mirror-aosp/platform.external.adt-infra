@@ -365,6 +365,54 @@ async def test_multidisplay_error_too_many(
         )
 
 
+async def start_on_display(avd, activity, id, params=""):
+    """Start an activity on a given display
+    Args:
+        avd (BaseEmulator): Running emulator.
+        activity (str): Activity name
+        id (int): ID of the target display
+        params (str): Activity extra params. By default, "".
+    Returns:
+        True if the activity started successfully, False otherwise.
+    """
+    return await avd.start_activity(activity, params=params + f" --display {id}")
+
+
+async def get_package_display_id(avd, package):
+    """Get the ID of the display where 'package' is running.
+    Args:
+        avd (BaseEmulator): Running emulator.
+        package (str): package name
+    Returns:
+        The Display ID (int) where the package is running.
+        None if the package is not present in the window system dump.
+    """
+    windows_dump = await avd.adb.shell("dumpsys window", timeout=60)
+    display_lines = re.search(f"Window.*{package}.*mDisplayId=([0-9]*)", windows_dump)
+    if display_lines is None:
+        return None
+    return int(display_lines.groups()[0])
+
+
+async def get_displays_ids(avd):
+    """Retrieve the IDs of all displays
+    Args:
+        avd (BaseEmulator): Running emulator.
+    Returns:
+        list[int]: The list of display IDs.
+                   Return None if there are no displays avaiable or if
+                   there is a single display.
+    """
+    windows_dump = await avd.adb.shell("dumpsys window", timeout=60)
+    display_ids = re.findall('displayId=([0-9]+)', windows_dump)
+    if display_ids is None:
+        return None
+    display_ids_list = sorted(set(display_ids))
+    if len(display_ids_list) == 1:
+        return None
+    return [int(id_) for id_ in display_ids_list]
+
+
 @pytest.mark.e2e
 @pytest.mark.graphics
 @pytest.mark.multidisplay
@@ -418,34 +466,9 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
         cfg = await emulator_controller.setDisplayConfigurations(to_set)
         return cfg
 
-    async def get_display_id(package):
-        # Get the id of the display where 'package' is running.
-        # Return 'None' if the package is not present in the window system dump.
-        windows_dump = await avd.adb.shell("dumpsys window", timeout=60)
-        display_lines = re.search(f"Window.*{package}.*mDisplayId=([0-9]*)", windows_dump)
-        if display_lines is None:
-            return None
-        return int(display_lines.groups()[0])
-
-    async def get_displays_ids():
-        # Get the displays ID's.
-        # Return None if there are no displays avaiable or if there is a single display.
-        windows_dump = await avd.adb.shell("dumpsys window", timeout=60)
-        display_ids = re.findall('displayId=([0-9]+)', windows_dump)
-        if display_ids is None:
-            return None
-        display_ids_list = sorted(set(display_ids))
-        if len(display_ids_list) == 1:
-            return None
-        return list(display_ids_list)
-
-    async def start_on_display(activity, id_):
-        # Start an activity on a given display.
-        return await avd.start_activity(activity, params=f"--display {id_}")
-
     async def app_is_on_primary_display(pkg):
         # Return True if 'pkg' is detected on the primary display.
-        display_id = await get_display_id(pkg)
+        display_id = await get_package_display_id(avd, pkg)
         return display_id == 0
 
     dummy_pkg = "com.google.AnimateBox"
@@ -460,13 +483,14 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
         await asyncio.sleep(20)
 
         # Get the current displays list.
-        assert await eventually(get_displays_ids,timeout=60), \
+        assert await eventually(partial(get_displays_ids, avd), timeout=60), \
                      "Couldn't retrieve the displays Ids"
-        ids = await get_displays_ids()
+        ids = await get_displays_ids(avd)
 
         # Start app on the display 'ids[i + 1]'.
-        assert await eventually(partial(start_on_display, dummy_activity, ids[i + 1]), timeout=60), \
-                          f"Couldn't launch package '{pkg_name}' on display {ids[i + 1]}"
+        assert await eventually(
+            partial(start_on_display, avd, dummy_activity, ids[i + 1]), timeout=60
+        ), f"Couldn't launch package '{pkg_name}' on display {ids[i + 1]}"
 
         # Disable multidisplay.
         logging.info(f'Disable multidisplay while app {pkg_name} is on display {ids[i + 1]}')
