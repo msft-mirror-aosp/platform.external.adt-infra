@@ -33,6 +33,7 @@ dependencies = [
     "iterators==0.2.0",
     "aiofiles==23.2.1",
     "importlib-metadata; python_version<'3.8'",
+    "snippet-uiautomator==1.1.1",
 ]
 
 [tool.pytest.ini_options]
