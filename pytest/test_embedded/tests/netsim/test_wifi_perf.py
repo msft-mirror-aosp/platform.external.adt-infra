@@ -20,7 +20,44 @@ import threading
 import pytest
 
 
-def read_output(process, logger_name):
+def _check_and_kill_iperf3_server():
+  """Checks if port 5201 is in use and if an iperf3 server is running on localhost.
+
+  If so, it logs a warning and attempts to kill the existing iperf3 process.
+  """
+  # Check if port 5201 is in use
+  check_port_process = subprocess.run(
+      [
+          "lsof",
+          "-i",
+          "-P",
+          "-n",
+      ],
+      capture_output=True,
+      text=True,
+  )
+  for line in check_port_process.stdout.splitlines():
+    if "5201" in line and "LISTEN" in line:
+      logging.warning(f"Port 5201 is already in use:\n{line}")
+
+  # Check for existing iperf3 server
+  client_host_process = subprocess.run(
+      ["iperf3", "-c", "localhost", "-t", "1"],
+      capture_output=True,
+      text=True,
+      timeout=5,
+  )
+
+  if client_host_process.returncode == 0:
+    logging.warning("An existing iperf3 server is already running.")
+    pkill_process = subprocess.run(["pkill", "iperf3"])
+    if pkill_process.returncode == 0:
+      logging.info("Successfully killed existing iperf3 process.")
+    else:
+      logging.warning("Failed to kill existing iperf3 process.")
+
+
+def _read_output(process, logger_name):
   logger = logging.getLogger(logger_name)
   while process.poll() is None:  # Check if the process is still running
     line = process.stdout.readline()
@@ -48,6 +85,8 @@ async def test_iperf3(avd, record_property):
   )
   logging.info(f"iperf3 --version stdout: {iperf3_version_res.stdout}")
 
+  _check_and_kill_iperf3_server()
+
   # Run iperf server on host
   server_process = subprocess.Popen(
       ["iperf3 -s"],
@@ -56,7 +95,7 @@ async def test_iperf3(avd, record_property):
       stderr=subprocess.STDOUT,
   )
   threading.Thread(
-      target=read_output, args=(server_process, "iperf3_server"), daemon=True
+      target=_read_output, args=(server_process, "iperf3_server"), daemon=True
   ).start()
 
   await asyncio.sleep(5)  # Wait a few seconds for iperf3 server to start
