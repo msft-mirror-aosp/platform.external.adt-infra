@@ -318,4 +318,30 @@ public class AppLauncher {
             throws Exception {
         return launchPath_v2(instrumentation, 100, appPath);
     }
+
+    /**
+     * Scrolls through a UiScrollable object until a UiObject with a specified text is found, then clicks on it.
+     *
+     * @param device The UiDevice instance that represents an emulator or a connected device.
+     * @param appNames The text of the UiObject to find and click on.
+     * @throws UiObjectNotFoundException if the UiObject with the specified text is not found.
+     */
+    public static void scrollAndClick(UiDevice device, String... appNames) throws UiObjectNotFoundException {
+        for (String appName : appNames) {
+            UiSelector appSelector = new UiSelector().textMatches(appName);
+            UiObject appByRegex = device.findObject(appSelector);
+
+            UiScrollable recyclerView = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_SETTING_LIST_RES));
+            recyclerView.waitForExists(10000L);
+
+            boolean appFound = recyclerView.scrollIntoView(appSelector);
+            if (appFound) {
+                Log.i(TAG, "Scrolling to " + appName + " using regexSelector");
+                appByRegex.click();
+                appByRegex.waitUntilGone(5L);
+            } else {
+                Log.i(TAG, "Failed to scroll to " + appName);
+            }
+        }
+    }
 }

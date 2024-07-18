@@ -24,7 +24,7 @@ import sys
 import tempfile
 from pathlib import Path
 from queue import Queue
-from threading import Thread
+from threading import Lock, Thread, Timer
 from typing import Dict, List
 from zipfile import ZipFile, ZipInfo
 
@@ -196,24 +196,61 @@ def run(cmd, cwd=None, extra_env=None, timeout=1200, check_output=True):
         env=local_env,
         encoding="utf-8",
     )
+    # On windows, proc.wait() has been observed failing to ever timeout. To work around
+    # this we handle timeouts in a separate thread.
+    watcher = ProcWatcher(timeout, proc)
 
     _log_proc(proc)
     try:
-        proc.wait(timeout=timeout)
-        if proc.returncode != 0 and check_output:
-            raise CommandFailure(
-                f"Failed to run {' '.join(cmd)}, exit code: {proc.returncode}"
-            )
-        else:
-            return proc.returncode
-    except subprocess.TimeoutExpired as timeout_exception:
+        proc.wait()
+    finally:
+        timed_out = watcher.check_timeout()
+
+    if timed_out:
         logging.error(
             "The command %s timed out after %s seconds, terminating",
             " ".join(cmd),
-            timeout_exception.timeout,
+            timeout,
         )
-        proc.terminate()
-        raise timeout_exception
+        raise subprocess.TimeoutExpired(cmd, timeout)
+
+    if proc.returncode != 0 and check_output:
+        raise CommandFailure(
+            f"Failed to run {' '.join(cmd)}, exit code: {proc.returncode}"
+        )
+    else:
+        return proc.returncode
+
+
+class ProcWatcher:
+    """Process timeout watcher."""
+
+    def __init__(self, timeout: int, proc: subprocess.Popen):
+        self._lock = Lock()
+        self._proc = proc
+        self._timed_out = None
+        self._timer = Timer(timeout, self._handle_timeout)
+        self._timer.start()
+
+    def _handle_timeout(self):
+        with self._lock:
+            # Avoid a race between the process exiting and timeout triggering.
+            if self._timed_out is not None:
+                return
+            self._timed_out = True
+
+        if OS_NAME == "windows":
+            run(["taskkill.exe", "/F", "/T", "/PID", str(self._proc.pid)], check_output=False)
+        else:
+            self._proc.terminate()
+
+    def check_timeout(self):
+        """Cancels the internal timer and returns whether the timeout was reached."""
+        self._timer.cancel()
+        with self._lock:
+            if self._timed_out is None:
+                self._timed_out = False
+            return self._timed_out
 
 
 def resolve_emulator(emulator: str) -> Path:
