@@ -14,6 +14,8 @@
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import SmsMessage
+from emu.timing import eventually
+import time
 
 
 @pytest.mark.e2e
@@ -42,10 +44,10 @@ async def allow_sms_messages(emulator):
     """
     This fixture grants necessary SMS permissions to mobly snippet.
     """
-    emulator.adb.shell(
+    await emulator.adb.shell(
         "pm grant com.google.android.mobly.snippet.bundled android.permission.READ_SMS"
     )
-    emulator.adb.shell(
+    await emulator.adb.shell(
         "pm grant com.google.android.mobly.snippet.bundled android.permission.RECEIVE_SMS"
     )
 
