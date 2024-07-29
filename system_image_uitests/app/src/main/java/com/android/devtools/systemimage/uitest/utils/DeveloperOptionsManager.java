@@ -31,6 +31,7 @@ import org.junit.Assert;
 
 import java.util.concurrent.TimeUnit;
 
+
 /**
  * Developer options manager.
  */
@@ -40,33 +41,102 @@ public class DeveloperOptionsManager {
         throw new AssertionError();
     }
 
-    private static void enableOptions(Instrumentation instrumentation) throws Exception {
+
+    /**
+     * Interface for defining navigation strategies.
+     */
+    public interface NavigationStrategy {
+        /**
+         * Navigate to the target UiObject.
+         *
+         * @param device the UiDevice instance.
+         * @param target the target UiObject to navigate to.
+         * @throws UiObjectNotFoundException if the target UiObject is not found.
+         */
+        void navigate(UiDevice device, UiObject target) throws UiObjectNotFoundException;
+    }
+
+
+    /**
+     * Implementation of NavigationStrategy that uses scrolling.
+     */
+    public static class ScrollNavigationStrategy implements NavigationStrategy {
+        /**
+         * Scroll to the target UiObject.
+         *
+         * @param device the UiDevice instance.
+         * @param target the target UiObject to scroll to.
+         * @throws UiObjectNotFoundException if the target UiObject is not found.
+         */
+        @Override
+        public void navigate(UiDevice device, UiObject target) throws UiObjectNotFoundException {
+            UiScrollable itemList = new UiScrollable(new UiSelector().resourceIdMatches(Res.ABOUT_PHONE_LIST_CONTAINER_RES));
+            itemList.setAsVerticalList();
+            itemList.scrollIntoView(target);
+        }
+    }
+
+
+    /**
+     * Implementation of NavigationStrategy that uses swiping.
+     */
+    public static class SwipeNavigationStrategy implements NavigationStrategy {
+        /**
+         * Swipe to the target UiObject.
+         *
+         * @param device the UiDevice instance.
+         * @param target the target UiObject to swipe to.
+         * @throws UiObjectNotFoundException if the target UiObject is not found.
+         */
+        @Override
+        public void navigate(UiDevice device, UiObject target) throws UiObjectNotFoundException {
+            while (!target.exists()) {
+                device.swipe(device.getDisplayWidth() / 2, device.getDisplayHeight() / 2,
+                        device.getDisplayWidth() / 2, 0, 100);
+            }
+        }
+    }
+
+
+    /**
+     * Enables developer options using the default ScrollNavigationStrategy.
+     *
+     * @param instrumentation the Instrumentation instance.
+     * @throws Exception if an error occurs during the operation.
+     */
+    public static void enableOptions(Instrumentation instrumentation) throws Exception {
+        enableOptions(instrumentation, new ScrollNavigationStrategy());
+    }
+
+
+    /**
+     * Enables developer options using a specified NavigationStrategy.
+     *
+     * @param instrumentation the Instrumentation instance.
+     * @param strategy the NavigationStrategy to use for navigation.
+     * @throws Exception if an error occurs during the operation.
+     */
+    public static void enableOptions(Instrumentation instrumentation, NavigationStrategy strategy) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
         SettingsUtil.clickAdvancedMenu(device);
 
         // Click "Build number"
-        UiScrollable itemList =
-                new UiScrollable(
-                        new UiSelector().resourceIdMatches(Res.ABOUT_PHONE_LIST_CONTAINER_RES)
-                );
-        itemList.setAsVerticalList();
-
-        final UiObject buildNumberLabel =
-                itemList.getChildByText(
-                        new UiSelector().className("android.widget.TextView"),
-                        "Build number"
-                );
+        UiObject buildNumberLabel = device.findObject(
+                new UiSelector().className("android.widget.TextView").text("Build number"));
 
         boolean hasBuildNumberLabel = new Wait(TimeUnit.MILLISECONDS.convert(
                 10L, TimeUnit.SECONDS)).
                 until(new Wait.ExpectedCondition() {
                     @Override
                     public boolean isTrue() {
-                        return buildNumberLabel.waitForExists(10L);
+                        return buildNumberLabel.exists();
                     }
                 });
 
         Assert.assertTrue("Developer options could not be enabled.", hasBuildNumberLabel);
+
+        // Use the navigation strategy to navigate to the target
+        strategy.navigate(device, buildNumberLabel);
 
         // Currently, UiAutomator cannot catch toast messages (see b/26511336).
         // We simply repeat for 10 times without verification. Will improve if it causes flakiness.
@@ -74,6 +144,8 @@ public class DeveloperOptionsManager {
             buildNumberLabel.click();
         }
     }
+
+
     /**
      * Enables developer options.
      *
