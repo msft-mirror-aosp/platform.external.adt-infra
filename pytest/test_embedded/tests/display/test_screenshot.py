@@ -15,7 +15,6 @@ import asyncio
 import logging
 import re
 import tempfile
-import time
 
 import pytest
 from emu.images.convert import proto_to_pillow
@@ -28,6 +27,7 @@ from aemu.proto.emulator_controller_pb2 import (
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
+from hacks import load_tkinter
 
 from emu.timing import eventually
 from pathlib import Path
@@ -267,3 +267,50 @@ async def test_screenshot_saved_to_other_folder(get_screenshot):
     with tempfile.TemporaryDirectory() as screenshot_dir:
         _, pillow_image = await get_screenshot(screenshot_dir=screenshot_dir)
         assert pillow_image.filename.exists(), "Temporary screenshot not created."
+
+
+@pytest.mark.graphics
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_screenshot_capture_stress(avd):
+    """Verify screenshot task under repeated Ctrl-S usage.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access a booted emulator.
+
+    Test Steps:
+        1. Launch an AVD.
+        2. Use the keyboard shortcut Ctrl-S repeatedly (Verify 1 and 2).
+
+    Verification:
+        1. Screenshots appear in the default saved location.
+        2. Not every Ctrl+S keystroke generates a screenshot.
+    """
+    async def repeat_ctrl_s_screenshot(n):
+        # Take a screenshot using the Ctrl+S keystroke n times.
+        async def take_screenshot_ctrl_s():
+            pyautogui.hotkey('ctrl', 's')
+            await asyncio.sleep(0.2)
+        tasks = [take_screenshot_ctrl_s() for _ in range(n)]
+        await asyncio.gather(*tasks)
+
+    # Remove old Screenshots.
+    desktop = Path.home() / "Desktop"
+    screenshots = desktop.glob("Screenshot_*.png")
+    [screenshot.unlink() for screenshot in list(screenshots)]
+
+    # Repeatedly take screenshots.
+    num_requests = 20
+    await repeat_ctrl_s_screenshot(num_requests)
+    screenshots = list(desktop.glob("Screenshot_*.png"))
+
+    # Verify screenshots appear in the default save location.
+    assert len(screenshots) != 0, \
+        "Coudn't take screenshots using the Ctrl+S keyboard shortcut"
+
+    # Verify not every Ctrl+S screenshot keystroke generates a screenshot.
+    assert len(screenshots) != num_requests, \
+        f"All requested screenshots were saved (expected less than {num_requests})."
+
+    # Remove the created screenshots.
+    [screenshot.unlink() for screenshot in list(screenshots)]
