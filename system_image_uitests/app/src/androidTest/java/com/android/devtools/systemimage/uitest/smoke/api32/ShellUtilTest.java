@@ -133,7 +133,9 @@ public class ShellUtilTest {
                         AppLauncher.scrollAndClick(device,"About phone"));
             }
 
-            DeveloperOptionsManager.enableOptions(instrumentation, new DeveloperOptionsManager.SwipeNavigationStrategy());
+            DeveloperOptionsManager.enableOptions(instrumentation,
+                    new DeveloperOptionsManager.SwipeNavigationStrategy());
+        }
 
         for (int i = 0; i < 4; i++) {
             device.pressBack();
