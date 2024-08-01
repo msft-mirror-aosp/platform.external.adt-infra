@@ -318,6 +318,7 @@ tests.
 - wear: marks tests that should run on wear OS
 - tablet: marks tests taht should run on a tablet image
 - embedded_newresizable: marks test that should run on a new resizable embedded emulator api since 34
+- uiautomator: marks tests that perform UI actions
 
 For example the test below will only run on linux:
 
