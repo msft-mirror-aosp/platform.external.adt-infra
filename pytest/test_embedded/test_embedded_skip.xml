@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="test_embedded"><platforms><platform name="linux" fullname="Linux" /><platform name="win" fullname="Windows" /><platform name="mac" fullname="Mac Intel" /><platform name="m1" fullname="Mac M1" /><platform name="all" fullname="All platforms" /></platforms></testsuite>
