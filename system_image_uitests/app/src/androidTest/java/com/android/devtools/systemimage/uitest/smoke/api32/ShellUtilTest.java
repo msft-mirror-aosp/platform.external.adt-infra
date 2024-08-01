@@ -123,8 +123,18 @@ public class ShellUtilTest {
 
         ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
 
-        if (!DeveloperOptionsManager.isDeveloperOptionsEnabled_v2(testFramework)) {
-            DeveloperOptionsManager.enableDeveloperOptions_v4(testFramework);
+        AppLauncher.launch(instrumentation, "Settings");
+
+        if (!AppLauncher.scrollAndClick(device,"System","Developer options")) {
+            device.pressBack();
+            if (!AppLauncher.scrollAndClick(device,"About emulated device")) {
+                AppLauncher.launch(instrumentation, "Settings");
+                assertTrue("Information About Device not found",
+                        AppLauncher.scrollAndClick(device,"About phone"));
+            }
+
+            DeveloperOptionsManager.enableOptions(instrumentation,
+                    new DeveloperOptionsManager.SwipeNavigationStrategy());
         }
 
         for (int i = 0; i < 4; i++) {
@@ -132,7 +142,9 @@ public class ShellUtilTest {
         }
 
         AppLauncher.launch(instrumentation, "Settings");
-        AppLauncher.scrollAndClick(device,"System","Developer options");
+        assertTrue("Developer Options settings not found",
+                AppLauncher.scrollAndClick(device,"System","Developer options"));
+
         UiObject bugReportButton = device.findObject(
                 new UiSelector().text("Bug report"));
         assertTrue("Bug report button not found", bugReportButton.waitForExists(10000L));
