@@ -298,8 +298,8 @@ async def test_screenshot_capture_stress(avd):
 
     # Remove old Screenshots.
     desktop = Path.home() / "Desktop"
-    screenshots = desktop.glob("Screenshot_*.png")
-    [screenshot.unlink() for screenshot in list(screenshots)]
+    screenshots = list(desktop.glob("Screenshot_*.png"))
+    [screenshot.unlink() for screenshot in screenshots]
 
     # Repeatedly take screenshots.
     num_requests = 20
@@ -315,4 +315,4 @@ async def test_screenshot_capture_stress(avd):
         f"All requested screenshots were saved (expected less than {num_requests})."
 
     # Remove the created screenshots.
-    [screenshot.unlink() for screenshot in list(screenshots)]
+    [screenshot.unlink() for screenshot in screenshots]
