@@ -105,7 +105,7 @@ public class DeveloperOptionsManager {
      * @throws Exception if an error occurs during the operation.
      */
     public static void enableOptions(Instrumentation instrumentation) throws Exception {
-        enableOptions(instrumentation, new ScrollNavigationStrategy());
+        enableOptions(instrumentation, new ScrollNavigationStrategy(), true);
     }
 
 
@@ -114,29 +114,29 @@ public class DeveloperOptionsManager {
      *
      * @param instrumentation the Instrumentation instance.
      * @param strategy the NavigationStrategy to use for navigation.
+     *                 The strategy is used to navigate to the "Build number" label.
+     *                 The default strategy is ScrollNavigationStrategy.
+     * @param hasAdvancedMenu {@code true} if the device has an advanced menu, or {@code false} otherwise.
      * @throws Exception if an error occurs during the operation.
      */
-    public static void enableOptions(Instrumentation instrumentation, NavigationStrategy strategy) throws Exception {
+    public static void enableOptions(Instrumentation instrumentation, NavigationStrategy strategy, boolean hasAdvancedMenu) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
-        SettingsUtil.clickAdvancedMenu(device);
+        if (hasAdvancedMenu) {
+            SettingsUtil.clickAdvancedMenu(device);
+        }
 
         // Click "Build number"
         UiObject buildNumberLabel = device.findObject(
                 new UiSelector().className("android.widget.TextView").text("Build number"));
 
-        boolean hasBuildNumberLabel = new Wait(TimeUnit.MILLISECONDS.convert(
-                10L, TimeUnit.SECONDS)).
-                until(new Wait.ExpectedCondition() {
-                    @Override
-                    public boolean isTrue() {
-                        return buildNumberLabel.exists();
-                    }
-                });
-
-        Assert.assertTrue("Developer options could not be enabled.", hasBuildNumberLabel);
-
         // Use the navigation strategy to navigate to the target
         strategy.navigate(device, buildNumberLabel);
+
+        boolean hasBuildNumberLabel = new Wait(TimeUnit.MILLISECONDS.convert(
+                10L, TimeUnit.SECONDS)).
+                until(buildNumberLabel::exists);
+
+        Assert.assertTrue("Developer options could not be enabled.", hasBuildNumberLabel);
 
         // Currently, UiAutomator cannot catch toast messages (see b/26511336).
         // We simply repeat for 10 times without verification. Will improve if it causes flakiness.
