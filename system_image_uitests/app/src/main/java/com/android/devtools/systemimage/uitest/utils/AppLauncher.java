@@ -50,8 +50,8 @@ public class AppLauncher {
      * @param appName         the app name to launch
      * @throws UiObjectNotFoundException if it fails to find a UI object.
      */
-    public static boolean launch(Instrumentation instrumentation, String appName) throws Exception  {
-        Log.i(TAG, "Open "+ appName);
+    public static boolean launch(Instrumentation instrumentation, String appName) throws Exception {
+        Log.i(TAG, "Open " + appName);
         UiDevice device = UiDevice.getInstance(instrumentation);
         device.pressHome();
 
@@ -59,7 +59,7 @@ public class AppLauncher {
 
         UiObject scrollView = device.findObject(new UiSelector().resourceId("android:id/content"));
         int startY = new Wait().until(appsLabel::exists) ? appsLabel.getBounds().top : 1000;
-        int endY =  new Wait().until(scrollView::exists) ? scrollView.getBounds().top : 0;
+        int endY = new Wait().until(scrollView::exists) ? scrollView.getBounds().top : 0;
 
         // Scroll to the end to open app drawer.
         device.drag(
@@ -180,7 +180,7 @@ public class AppLauncher {
 
         for (int i = 1; i < appPath.length && status; ++i) {
             status = false;
-            Log.i(TAG, "Open "+appPath[i]);
+            Log.i(TAG, "Open " + appPath[i]);
             UiSelector regexSelector = new UiSelector().textMatches(appPath[i]);
             UiSelector textSelector = new UiSelector().textContains(appPath[i]);
 
@@ -244,8 +244,8 @@ public class AppLauncher {
      * the method logs an error message and returns false.
      *
      * @param instrumentation the instrumentation instance used to interact with the UI
-     * @param swipesLimit the maximum number of swipes to attempt before giving up on scrolling to an app
-     * @param appPath an array of Strings where each String is the name of an app to launch
+     * @param swipesLimit     the maximum number of swipes to attempt before giving up on scrolling to an app
+     * @param appPath         an array of Strings where each String is the name of an app to launch
      * @return a boolean indicating whether the method was able to find and click on all the apps in the appPath array
      * @throws Exception if an error occurs while interacting with the UI
      */
@@ -283,25 +283,24 @@ public class AppLauncher {
             UiObject appByRegex = device.findObject(regexSelector);
 
             boolean canScrollMore = true;
-                while (canScrollMore && swipesLimit -- > 0) {
-                    canScrollMore = device.swipe(startX, startY, startX, endY, 50);
-                    if (appByRegex.waitForExists(1L)) {
-                        Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");
-                        appByRegex.click();
-                        appByRegex.waitUntilGone(5L);
-                        status = true;
-                        break;
-                    }
-                }
-                if (!status) {
-                    Log.i(TAG, "Failed to scroll to " + appPath[i]);
-                    // The values are screen coordinates, representing the beginning of where to swipe.
-                    startY = recyclerView.getBounds().top + 10;
-                    endY = recyclerView.getBounds().bottom - 10;
-                    device.swipe(startX, startY, startX, endY, 50);
-                    return false;
+            while (canScrollMore && swipesLimit-- > 0) {
+                canScrollMore = device.swipe(startX, startY, startX, endY, 50);
+                if (appByRegex.waitForExists(1L)) {
+                    Log.i(TAG, "Scrolling to " + appPath[i] + " using regexSelector");
+                    appByRegex.click();
+                    appByRegex.waitUntilGone(5L);
+                    status = true;
+                    break;
                 }
             }
+            if (!status) {
+                Log.i(TAG, "Failed to scroll to " + appPath[i]);
+                startY = recyclerView.getBounds().top + 10;
+                endY = recyclerView.getBounds().bottom - 10;
+                device.swipe(startX, startY, startX, endY, 50);
+                return false;
+            }
+        }
 
         return status;
     }
@@ -322,20 +321,20 @@ public class AppLauncher {
     /**
      * Scrolls through a UiScrollable object until a UiObject with a specified text is found, then clicks on it.
      *
-     * @param device The UiDevice instance that represents an emulator or a connected device.
+     * @param device     The UiDevice instance that represents an emulator or a connected device.
+     * @param scrollable The UiScrollable object to scroll through.
+     * @param appNames   The text of the UiObject to find and click on.
      * @return true if the UiObject with the specified text is found and clicked on, false otherwise.
-     * @param appNames The text of the UiObject to find and click on.
      * @throws UiObjectNotFoundException if the UiObject with the specified text is not found.
      */
-    public static boolean scrollAndClick(UiDevice device, String... appNames) throws UiObjectNotFoundException {
+    public static boolean scrollAndClick(UiDevice device, UiScrollable scrollable, String... appNames) throws UiObjectNotFoundException {
         for (String appName : appNames) {
             UiSelector appSelector = new UiSelector().textMatches(appName);
             UiObject appByRegex = device.findObject(appSelector);
 
-            UiScrollable recyclerView = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_SETTING_LIST_RES));
-            recyclerView.waitForExists(10000L);
+            scrollable.waitForExists(10000L);
 
-            boolean appFound = recyclerView.scrollIntoView(appSelector);
+            boolean appFound = scrollable.scrollIntoView(appSelector);
             if (appFound) {
                 Log.i(TAG, "Scrolling to " + appName + " using regexSelector");
                 appByRegex.click();
