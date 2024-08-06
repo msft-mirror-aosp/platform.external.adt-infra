@@ -20,10 +20,13 @@ import android.app.Instrumentation;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 import android.util.Log;
 
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
+import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
@@ -124,26 +127,24 @@ public class ShellUtilTest {
         ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
 
         AppLauncher.launch(instrumentation, "Settings");
+        UiScrollable recyclerView = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_SETTING_LIST_RES));
 
-        if (!AppLauncher.scrollAndClick(device,"System","Developer options")) {
-            device.pressBack();
-            if (!AppLauncher.scrollAndClick(device,"About emulated device")) {
+        if (!AppLauncher.scrollAndClick(device, recyclerView,"System", "Developer options")) {
+            try {
                 AppLauncher.launch(instrumentation, "Settings");
-                assertTrue("Information About Device not found",
-                        AppLauncher.scrollAndClick(device,"About phone"));
+                AppLauncher.scrollAndClick(device, recyclerView,"About emulated device");
+            } catch (UiObjectNotFoundException e) {
+                AppLauncher.launch(instrumentation, "Settings");
+                assertTrue("Information About Device not found", AppLauncher.scrollAndClick(device, recyclerView,"About phone"));
             }
-
-            DeveloperOptionsManager.enableOptions(instrumentation,
-                    new DeveloperOptionsManager.SwipeNavigationStrategy());
+            DeveloperOptionsManager.enableOptions(instrumentation, new DeveloperOptionsManager.SwipeNavigationStrategy(), false);
+            AppLauncher.launch(instrumentation, "Settings");
+            assertTrue("Developer Options settings not found", AppLauncher.scrollAndClick(device, recyclerView,"System", "Developer options"));
         }
 
-        for (int i = 0; i < 4; i++) {
-            device.pressBack();
-        }
-
-        AppLauncher.launch(instrumentation, "Settings");
-        assertTrue("Developer Options settings not found",
-                AppLauncher.scrollAndClick(device,"System","Developer options"));
+        UiObject developerOptionsButton = device.findObject(
+                new UiSelector().text("Developer Option"));
+        developerOptionsButton.waitUntilGone(10000L);
 
         UiObject bugReportButton = device.findObject(
                 new UiSelector().text("Bug report"));
