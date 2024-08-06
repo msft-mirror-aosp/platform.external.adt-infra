@@ -31,6 +31,7 @@ from grpc import RpcError, StatusCode
 from tests.test_utils import fmt_proto
 from snaptool.snapshot import AsyncSnapshotService
 from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
+from aemu.proto.emulator_controller_pb2 import KeyboardEvent
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -568,3 +569,158 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
     ), 'Wrong number of displays detected'
 
     await emu.stop()
+
+
+async def get_focused_task(avd, id):
+    """Retrieve the name of the top focused task on display <id>
+    """
+    task = await avd.adb.shell('dumpsys window displays')
+    match = re.search(f"displayId={id}.*?mPreferredTopFocusableRootTask=(Task{{[^}}]*}})", task)
+    if match is None:
+        return None
+    return match.groups()[0]
+
+async def assert_focused_task_of_display(display_id, task, avd):
+    """Return True if the focused task on display <id> contains the string <task>
+    """
+    focused_task = await get_focused_task(avd, display_id)
+    if focused_task is None:
+        return False
+    return task in focused_task
+
+async def assert_focused_task_has_type(expected_type, display_id, avd):
+    """Return True if the focused task on display <id> has type <expected_type>
+    """
+    focused_task = await get_focused_task(avd, display_id)
+    if focused_task is None:
+        return False
+    type = re.search('type=(.*)}', focused_task).groups()[0]
+    if type is None or type != expected_type:
+        return False
+    return True
+
+async def get_multidisplays_ids(avd):
+    """Wait until two or more displays are configured and return the displays IDs
+    Returns:
+        list[int]: List of displays IDs
+    Raises:
+        asyncio.TimeoutError: If multiple displays are't configured.
+    """
+    async def _get_displays_ids(avd, output_list):
+        ids = await get_displays_ids(avd)
+        if ids is None:
+            return False
+        output_list.append(ids)
+        return True
+    ids = []
+    assert await eventually(
+        partial(_get_displays_ids, avd, ids)
+    ), "Couldn't enable multidisplay"
+    return ids[0]
+
+
+@pytest.mark.e2e
+@pytest.mark.graphics
+@pytest.mark.multidisplay
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_multidisplay_controls(avd, no_displays, emulator_controller):
+    """Verify the Home and Back controls work on primary and secondary displays.
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
+        no_displays (callable): Fixture that ensures the emulator has a single display.
+        emulator_controller (EmulatorControllerStub): Emulator controller fixture.
+    Steps:
+        1. Attach a secondary display.
+        2. Launch two random activities on each display.
+        3. Click on the Back and Home buttons on the primary display.(Verify 1)
+        4. Click on the Back and Home buttons on the secondary display.(Verify 2)
+    Verification:
+        1. Buttons work as intended on primary display. Secondary display is not affected.
+        2. Buttons work as intended on secondary display. Primary display is not affected.
+    """
+    async def keypress(key):
+        """ Send the keypress 'key' event.
+        """
+        logging.info("Sending %s key", key)
+        await emulator_controller.sendKey(
+            KeyboardEvent(key=key, eventType=KeyboardEvent.keypress)
+        )
+        await asyncio.sleep(1)
+
+    async def test_display_controls(main_display_id, main_display_activity1,
+                                    second_display_id, second_display_focused_activity):
+        """Test the Back and Home controls of a particular (main) display.
+           Make sure the secondary display is not affected by the key events.
+        Args:
+            main_display_id (int): The ID of the main display being tested.
+            main_display_activity1 (str): Name of the activity on the main display
+                                          launched before the focused activity.
+            second_display_id (int): The ID of the secondary display
+            second_display_focused_activity (str): Name of the top focused activity
+                                                   on the secondary display.
+        Notes:
+            Two running activies are assumed on the main display, acitivies 1 and 2,
+            where activity 2 is the top focused activity. When pressing the Back and
+            Home buttons, it makes sure activity 1 and the Home screen, respectively,
+            appear on the main display being tested.
+        """
+        logging.info(f'Testing the controls of display {main_display_id}')
+
+        # Press the Back button and verify the first task of the main display appears
+        await keypress("GoBack")
+        task1_name = main_display_activity1.split("/")[0]
+        assert await eventually(
+            partial(assert_focused_task_of_display, main_display_id, task1_name, avd)
+        ), f"The task '{task1_name}' didn't appear on display {main_display_id}" \
+            + " after pressing the Back button."
+
+        # Press the Home button and verify the Home screen appears on the main display
+        await keypress("GoHome")
+        assert await eventually(
+            partial(assert_focused_task_has_type, "home", main_display_id, avd)
+        ), f"The Home screen didn't appear on display {main_display_id}"
+
+        # Make sure the secondary display isn't affected by the key events
+        second_display_focused_task = second_display_focused_activity.split("/")[0]
+        assert await eventually(
+            partial(assert_focused_task_of_display, second_display_id,
+                    second_display_focused_task, avd)
+        ), f"The focused task of display {second_display_id} changed " \
+           "after pressing the Back and Home keys."
+
+    # Attach a 720x1280 secondary display
+    logging.info('Attaching a secondary display')
+    configurations = DisplayConfigurations(
+        displays=[DisplayConfiguration(width=720, height=1280, dpi=213, display=1)]
+    )
+    await emulator_controller.setDisplayConfigurations(configurations)
+    display1, display2 = await get_multidisplays_ids(avd)
+
+    # Define the activities
+    display1_activity1 = "com.google.android.apps.messaging/.ui.ConversationListActivity"
+    display1_activity2 = "com.android.chrome/com.google.android.apps.chrome.Main"
+
+    display2_activity1 = "com.android.dialer/com.android.dialer.main.impl.MainActivity"
+    display2_activity2 = "com.google.android.youtube/" + \
+                         "com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity"
+
+    # Launch activity 1 of display 2
+    await start_on_display(avd, display2_activity1, display2, params='-W')
+    # Launch activies 1 and 2 of display 1
+    await start_on_display(avd, display1_activity1, display1, params='-W')
+    await start_on_display(avd, display1_activity2, display1, params='-W')
+
+    # Test the controls of display 1
+    await test_display_controls(display1, display1_activity1,
+                                display2, display2_activity1)
+
+    # Relaunch activity 1 of display 1
+    await start_on_display(avd, display1_activity1, display1, params='-W')
+
+    # Launch activity 2 of display 2 (switch focus to display 2)
+    await start_on_display(avd, display2_activity2, display2, params='-W')
+
+    # Test the controls of display 2
+    await test_display_controls(display2, display2_activity1,
+                                display1, display1_activity1)
