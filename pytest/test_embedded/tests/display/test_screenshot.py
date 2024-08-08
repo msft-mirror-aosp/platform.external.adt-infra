@@ -28,6 +28,8 @@ from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
 from hacks import load_tkinter
+import mouseinfo
+import pyautogui
 
 from emu.timing import eventually
 from pathlib import Path
@@ -290,19 +292,43 @@ async def test_screenshot_capture_stress(avd):
         # Take a screenshot using the Ctrl+S keystroke n times.
         async def take_screenshot_ctrl_s():
             pyautogui.hotkey('ctrl', 's')
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.1)
         tasks = [take_screenshot_ctrl_s() for _ in range(n)]
         await asyncio.gather(*tasks)
 
-    # Remove old Screenshots.
-    desktop = Path.home() / "Desktop"
-    screenshots = desktop.glob("Screenshot_*.png")
-    [screenshot.unlink() for screenshot in list(screenshots)]
+    def get_screenshots_list():
+        desktop = Path.home() / "Desktop"
+        screenshots = list(desktop.glob("Screenshot_*.png"))
+        return screenshots
+
+    async def screenshots_completed():
+        # Wait until no screenshots are generated within a 5-seconds interval.
+        current_screenshots = get_screenshots_list()
+        await asyncio.sleep(5)
+        screenshots = get_screenshots_list()
+        return None if len(current_screenshots) != len(screenshots) else True
+
+    async def delete_screenshots():
+        # Remove all files named 'Screenshot_*' from ~/Desktop
+        async def no_screenshots():
+            screenshots = get_screenshots_list()
+            return None if len(screenshots) != 0 else True
+        screenshots = get_screenshots_list()
+        [screenshot.unlink() for screenshot in screenshots]
+        await eventually(no_screenshots, timeout=360)
+
+    # Remove existing Screenshots.
+    await delete_screenshots()
 
     # Repeatedly take screenshots.
-    num_requests = 20
+    num_requests = 200
     await repeat_ctrl_s_screenshot(num_requests)
-    screenshots = list(desktop.glob("Screenshot_*.png"))
+    await eventually(screenshots_completed, timeout=600)
+    screenshots = get_screenshots_list()
+    logging.info(f'{len(screenshots)} (out of {num_requests}) were generated.')
+
+    # Pre-remove the created screenshots.
+    await delete_screenshots()
 
     # Verify screenshots appear in the default save location.
     assert len(screenshots) != 0, \
@@ -311,6 +337,3 @@ async def test_screenshot_capture_stress(avd):
     # Verify not every Ctrl+S screenshot keystroke generates a screenshot.
     assert len(screenshots) != num_requests, \
         f"All requested screenshots were saved (expected less than {num_requests})."
-
-    # Remove the created screenshots.
-    [screenshot.unlink() for screenshot in list(screenshots)]

@@ -93,3 +93,11 @@ class Mobly:
 
         self._load_snippet(name, package[name])
         return getattr(self.ads, name)
+
+    def get_device(self):
+        """
+        Returns the Android device instance.
+        """
+        if self.ads is None:
+            self._connect()
+        return self.ads

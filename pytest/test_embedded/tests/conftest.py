@@ -44,6 +44,8 @@ from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.images.convert import save_image
 from emu.utils import system_cpu
+from snippet_uiautomator import uiautomator
+from mobly import asserts
 
 OS_NAME = platform.system().lower()
 AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
@@ -574,7 +576,7 @@ async def emulator_log(avd: BaseEmulator):
     return avd.log
 
 
-async def launch_animiation_app(avd: BaseEmulator):
+async def launch_animation_app(avd: BaseEmulator):
     """Launches the debug animation app.
 
     This launches the animation app that ships with this library and
@@ -586,7 +588,7 @@ async def launch_animiation_app(avd: BaseEmulator):
     - Start the activity
     - Wait for the welcome message to appear on logcat.
     """
-    logging.info("--> launch_animiation_app")
+    logging.info("--> launch_animation_app")
     assert avd.is_alive()
     assert await avd.stop_activity("com.google.AnimateBox")
 
@@ -670,7 +672,7 @@ async def animation_app(avd: BaseEmulator):
 
     await avd.reset_state()
     tries = 3
-    while not await launch_animiation_app(avd) and tries > 0:
+    while not await launch_animation_app(avd) and tries > 0:
         await asyncio.sleep(1)
         tries = tries - 1
 
@@ -701,7 +703,7 @@ async def coldboot_animation_app(avd: BaseEmulator):
     await asyncio.sleep(10)
 
     tries = 3
-    while not await launch_animiation_app(avd) and tries > 0:
+    while not await launch_animation_app(avd) and tries > 0:
         await asyncio.sleep(1)
         tries = tries - 1
 
@@ -763,6 +765,32 @@ def mobly(avd: BaseEmulator):
 def mbs(mobly):
     return mobly("mbs")
 
+@pytest.fixture(scope="function")
+async def ad_ui(avd: BaseEmulator):
+    """
+    Register the Snippet UiAutomator service and get the AndroidDevice ui.
+    This is used to operate UI actions on an Android device.
+
+    Usage:
+
+    def test_sample(ad_ui):
+        ad_ui(text='OK').click()
+    """
+    ad = avd.mobly_device.get_device()
+    ad.services.register(
+        uiautomator.ANDROID_SERVICE_NAME, uiautomator.UiAutomatorService
+    )
+    yield ad.ui
+
+    ad.services.unregister(uiautomator.ANDROID_SERVICE_NAME)
+    asserts.assert_false(
+        hasattr(ad, uiautomator.PUBLIC_SERVICE_NAME),
+        'Failed to remove Python wrapper',
+    )
+    asserts.assert_false(
+        hasattr(ad, uiautomator.HIDDEN_SERVICE_NAME),
+        'Failed to remove snippet client',
+    )
 
 @pytest.fixture
 def log_adb_interactions():
