@@ -30,6 +30,7 @@ from grpc import RpcError, StatusCode
 from hacks import load_tkinter
 import mouseinfo
 import pyautogui
+import platform
 
 from emu.timing import eventually
 from pathlib import Path
@@ -291,7 +292,8 @@ async def test_screenshot_capture_stress(avd):
     async def repeat_ctrl_s_screenshot(n):
         # Take a screenshot using the Ctrl+S keystroke n times.
         async def take_screenshot_ctrl_s():
-            pyautogui.hotkey('ctrl', 's')
+            control = 'command' if platform.system() == "Darwin" else 'ctrl'
+            pyautogui.hotkey(control, 's')
             await asyncio.sleep(0.1)
         tasks = [take_screenshot_ctrl_s() for _ in range(n)]
         await asyncio.gather(*tasks)
