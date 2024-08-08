@@ -1,8 +1,8 @@
 {
     "sample_desktop_33_test_suite": {
-        "description": "A simple example of a Desktop avd configuration that runs the clipboard test.",
+        "description": "Set of UI-related tests on a Desktop avd configuration",
         "pytest_flags": [
-            "-k test_clipboard_data"
+            "-k uiautomator"
         ],
         "avd_configs": [
             {
@@ -32,10 +32,8 @@
                 "hw.initialOrientation": "Landscape",
                 "hw.keyboard": "yes",
                 "hw.keyboard.lid": "yes",
-                "hw.lcd.density": "640",
-                "hw.lcd.height": "1080",
-                "hw.lcd.width": "1920",
-                "hw.mainKeys": "yes",
+                "hw.lcd.density": "240",
+                "hw.mainKeys": "no",
                 "hw.ramSize": "2048",
                 "hw.sdCard": "no",
                 "hw.sensors.orientation": "no",
@@ -43,7 +41,9 @@
                 "runtime.network.latency": "none",
                 "runtime.network.speed": "full",
                 "showDeviceFrame": "yes",
-                "skin.dynamic": "yes",
+                "skin.dynamic": "no",
+                "skin.name": "3000x2000",
+                "skin.path": "3000x2000",
                 "tag.display": "Desktop",
                 "tag.id": "android-desktop",
                 "vm.heapSize": "80"
