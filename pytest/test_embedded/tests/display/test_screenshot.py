@@ -32,6 +32,10 @@ import mouseinfo
 import pyautogui
 import platform
 
+if platform.system() == 'Windows':
+    # Disable pyautogui fail-safe feature on Windows.
+    pyautogui.FAILSAFE = False
+
 from emu.timing import eventually
 from pathlib import Path
 
