@@ -47,6 +47,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 /**
@@ -126,25 +127,16 @@ public class ShellUtilTest {
 
         ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
 
-        AppLauncher.launch(instrumentation, "Settings");
-        UiScrollable recyclerView = new UiScrollable(new UiSelector().resourceId(Res.ANDROID_SETTING_LIST_RES));
-
-        if (!AppLauncher.scrollAndClick(device, recyclerView,"System", "Developer options")) {
-            try {
-                AppLauncher.launch(instrumentation, "Settings");
-                AppLauncher.scrollAndClick(device, recyclerView,"About emulated device");
-            } catch (UiObjectNotFoundException e) {
-                AppLauncher.launch(instrumentation, "Settings");
-                assertTrue("Information About Device not found", AppLauncher.scrollAndClick(device, recyclerView,"About phone"));
+        if (!AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Developer options")) {
+            if (!(AppLauncher.launchPath(instrumentation, true, "Settings", "About emulated device") ||
+                    AppLauncher.launchPath(instrumentation, true,"Settings", "About phone"))) {
+                fail("Information about device not found");
+            } else {
+                DeveloperOptionsManager.enableOptions(instrumentation, new DeveloperOptionsManager.SwipeNavigationStrategy(), false);
+                assertTrue("Developer Options settings not found",
+                        AppLauncher.launchPath(instrumentation, true,"Settings", "System", "Developer options"));
             }
-            DeveloperOptionsManager.enableOptions(instrumentation, new DeveloperOptionsManager.SwipeNavigationStrategy(), false);
-            AppLauncher.launch(instrumentation, "Settings");
-            assertTrue("Developer Options settings not found", AppLauncher.scrollAndClick(device, recyclerView,"System", "Developer options"));
         }
-
-        UiObject developerOptionsButton = device.findObject(
-                new UiSelector().text("Developer Option"));
-        developerOptionsButton.waitUntilGone(10000L);
 
         UiObject bugReportButton = device.findObject(
                 new UiSelector().text("Bug report"));
