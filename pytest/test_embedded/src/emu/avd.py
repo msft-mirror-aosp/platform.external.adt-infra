@@ -48,6 +48,76 @@ class UnsupportedAbiOrCpu(Exception):
     pass
 
 
+class FetcherSystemImages:
+
+    def __init__(self, fetcher: Path):
+        """A Class that can be used to install system images.
+
+        Args:
+            fetcher: Path - Path to the fetcher utilitya.
+        """
+        self._fetcher = fetcher
+
+
+    def find_and_unpack(self, api: str, abi: str, tag: str) -> Optional[dict[str, str]]:
+        """Installs the system image using the fetcher binary.
+
+           The fetcher binary handles caching and clearing out older images.
+
+        Args:
+            api (str): Api level, usually a number, or first letter of desert
+            abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
+            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
+                       google_apis_tablet|android-desktop|android-wear|android-tv
+
+        Returns:
+            dict[str, str]:  A dictionary with api, tag, abi, and cpu.
+
+        Raises:
+            SystemImageDownloadFailed: If we failed to obtain the given image
+        """
+        return self.install(api, abi, tag)
+
+    def install(self, api: str, abi: str, tag: str = "google_apis") -> dict[str, str]:
+        """Installs the system image using the fetcher binary.
+
+           The fetcher binary handles caching and clearing out older images.
+
+        Args:
+            api (str): Api level, usually a number, or first letter of desert
+            abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
+            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
+                       google_apis_tablet|android-desktop|android-wear|android-tv
+
+        Raises:
+            SystemImageDownloadFailed: If we failed to obtain the given image
+
+        Returns:
+            dict[str, str]:  A dictionary with api, tag, abi, and cpu.
+        """
+        logging.info("Installing system-images;android-%s;%s;%s", api, tag, abi)
+        download = subprocess.run(
+            [
+                self._fetcher,
+                f"sdk,android-{api},{tag},{abi}",
+            ],
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            check=False,
+        )
+        if download.returncode != 0:
+            logging.error("fetcher: %s", download.stderr.decode("UTF-8"))
+            raise SystemImageDownloadFailed(
+                f"Failed to obtain image system-images;android-{api};{abi};{tag}"
+            )
+        return {
+            "api": api,
+            "tag": tag,
+            "abi": abi,
+            "image_dir": os.path.join(download.stdout.decode("UTF-8").strip(), abi),
+        }
+
+
 class SystemImages:
     IMAGE = re.compile(
         r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
@@ -303,6 +373,7 @@ class AvdWriter:
         avd_home: Path = Path(
             os.environ.get("ANDROID_AVD_HOME") or Path.home() / ".android" / "avd"
         ),
+        fetcher: Optional[Path] = None,
     ):
         """An AvdWriter can be used to dynamically create avds of a given abi, tag and api level
 
@@ -315,6 +386,7 @@ class AvdWriter:
         Args:
             sdk_root (Path, optional): The sdk root to use. Defaults to "$ANDROID_SDK_ROOT" environment.
             avd_home (Path, optional): The sdk root to use. Defaults to "$ANDROID_AVD_HOME" environment, or ~/.android/avd.
+            fetcher (Path, optional): Path to the fetcher binary.
 
         Raises:
             AndroidAvdHomeDoesNotExist: If the avd_home does not exist.
@@ -327,7 +399,10 @@ class AvdWriter:
             )
 
         self.avd_home = Path(avd_home).absolute()
-        self.sys_imgs = SystemImages(sdk_root)
+        if fetcher:
+            self.sys_imgs = FetcherSystemImages(fetcher)
+        else:
+            self.sys_imgs = SystemImages(sdk_root)
         self.writer = TemplateWriter(self.avd_home)
 
     def _write_config_ini(

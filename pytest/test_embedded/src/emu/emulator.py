@@ -387,6 +387,7 @@ class Emulator(BaseEmulator):
         android_avd_home: Path,
         exe: Path,
         avd_config: dict[str, str],
+        fetcher: Path | None,
     ) -> None:
         """Create and launches the emulator
 
@@ -399,7 +400,7 @@ class Emulator(BaseEmulator):
         if not shutil.which(str(exe)):
             raise EmulatorNotFoundException(f"The binary {exe} was not found")
 
-        avd_gen = AvdWriter(self.android_home, self.android_avd_home)
+        avd_gen = AvdWriter(self.android_home, self.android_avd_home, fetcher)
         if "abi" not in avd_config:
             avd_config["abi"] = self._default_abi()
         self.configuration = avd_gen.create_from_config(avd_config)
