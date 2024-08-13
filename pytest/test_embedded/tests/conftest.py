@@ -119,6 +119,11 @@ def pytest_addoption(parser):
         action="store",
         help="The build target name.",
     )
+    parser.addoption(
+        "--fetcher",
+        action="store",
+        help="Optional path to the fetcher binary. If set this will be used for fetching system images.",
+    )
 
 
 ALL_PLATFORMS = set("darwin linux win32".split())
@@ -425,11 +430,13 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
         else:
             logging.info("Launching %s", name)
             exe = Path(pytestconfig.getoption("emulator"))
+            fetcher = pytestconfig.getoption("fetcher")
             emu = Emulator(
                 android_home=Path(pytestconfig.getoption("android_home")),
                 android_avd_home=Path(pytestconfig.getoption("android_avd_home")),
                 exe=exe,
                 avd_config=avd_config,
+                fetcher=Path(fetcher) if fetcher else None,
             )
 
         emu.symbols = pytestconfig.getoption("symbols")
