@@ -25,7 +25,7 @@ import tempfile
 from pathlib import Path
 from queue import Queue
 from threading import Lock, Thread, Timer
-from typing import Dict, List
+from typing import Dict, List, Optional
 from zipfile import ZipFile, ZipInfo
 
 # Note we are not part of the package!
@@ -679,9 +679,12 @@ def run_single_suite(
     avd_configs: list[str],
     collect: bool,
     name: str,
+    fetcher: Optional[Path],
 ):
     if collect:
         pytest_flags.append("--setup-plan")
+    if fetcher:
+        pytest_flags.append(f"--fetcher={fetcher}")
 
     junit_test_results = Path(logdir) / f"{name}.xml"
     exit_code = 1
@@ -763,6 +766,7 @@ def run_tests(
     pyrun: PyRunner,
     tests_to_run,
     collect: bool,
+    fetcher: Optional[Path],
 ):
     """runs tests on an emulator. It installs necessary packages, restarts adb,
     runs pytest and converts the results to a junit xml and HTML files.
@@ -813,6 +817,7 @@ def run_tests(
                     avd_configs,
                     collect,
                     name,
+                    fetcher,
                 )
                 result_xmls.append(res)
                 skip_reports.append(test_log_dir.joinpath(name + "_skip.xml"))
@@ -980,6 +985,12 @@ def parse_arguments():
         help="collect the list of tests, but do not run them",
     )
 
+    parser.add_argument(
+        "--fetcher",
+        help="Optional path to the fetcher binary. If set this will be used "
+        "for fetching system images.",
+    )
+
     args = parser.parse_args()
     configure_logging(logging.DEBUG if args.verbose else logging.INFO)
     if args.build_dir and args.emulator:
@@ -1030,6 +1041,7 @@ def main(args):
                 pyrun=py_exe,
                 tests_to_run=tests_to_run,
                 collect=args.collect,
+                fetcher=args.fetcher,
             )
     else:
         run_tests(
@@ -1042,6 +1054,7 @@ def main(args):
             pyrun=py_exe,
             tests_to_run=tests_to_run,
             collect=args.collect,
+            fetcher=args.fetcher,
         )
 
 
