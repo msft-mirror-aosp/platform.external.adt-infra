@@ -226,7 +226,8 @@ def printHtml(emu_args):
         logger.info("Couldn't find the XML test suites report.")
         return
 
-    lxml_tree = LET.parse(xml_report_filepath)
+    parser = LET.XMLParser(huge_tree=True)
+    lxml_tree = LET.parse(xml_report_filepath, parser=parser)
     xslt = LET.parse(xslt_filepath)
     try:
         transform = LET.XSLT(xslt)
