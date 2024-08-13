@@ -863,6 +863,26 @@ async def stream_screenshot(emulator_controller, log_directory, request):
     return streaming_img_call
 
 
+@pytest.fixture
+async def qrcodes(avd):
+    """Pushes the QR codes mp4 video to /sdcard/Downloads.
+
+    The sample video displays a series of three images containing QR codes.
+    Each image is displayed for 5 seconds. The payloads of the QR codes
+    are:
+
+        QR Code 1: 'uzNYdXGMb0kW7qXDejO0niE6liaPm1m0'
+        QR Code 2: 'W6fEti4U7ImHU1mxBXkLpOehomty7mTM'
+        QR Code 3: 'tAdFTEYPzbOw6qXBR1jyvzFohsx1gfdz'
+
+    The deqr package along with pillow can be used to decode a screenshot
+    containing a QR code.
+    """
+    qrcodes_path = Path(__file__).parents[1] / "cfg" / "qrcodes.mp4"
+    logging.info("Pushing 'qrcodes.mp4' to '/sdcard/Downloads'")
+    await avd.adb.push(qrcodes_path, "/sdcard/Downloads/" + qrcodes_path.name)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def generate_skip_report(skipped_tests, log_directory):
     """Generate a xml report containing the tests currently skipped on each platform.
