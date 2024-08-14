@@ -28,7 +28,6 @@ from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
 from hacks import load_tkinter
-import mouseinfo
 import pyautogui
 import platform
 
