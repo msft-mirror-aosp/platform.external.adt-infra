@@ -119,6 +119,11 @@ def pytest_addoption(parser):
         action="store",
         help="The build target name.",
     )
+    parser.addoption(
+        "--fetcher",
+        action="store",
+        help="Optional path to the fetcher binary. If set this will be used for fetching system images.",
+    )
 
 
 ALL_PLATFORMS = set("darwin linux win32".split())
@@ -425,11 +430,13 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
         else:
             logging.info("Launching %s", name)
             exe = Path(pytestconfig.getoption("emulator"))
+            fetcher = pytestconfig.getoption("fetcher")
             emu = Emulator(
                 android_home=Path(pytestconfig.getoption("android_home")),
                 android_avd_home=Path(pytestconfig.getoption("android_avd_home")),
                 exe=exe,
                 avd_config=avd_config,
+                fetcher=Path(fetcher) if fetcher else None,
             )
 
         emu.symbols = pytestconfig.getoption("symbols")
@@ -854,6 +861,26 @@ async def stream_screenshot(emulator_controller, log_directory, request):
             yield img
 
     return streaming_img_call
+
+
+@pytest.fixture
+async def qrcodes(avd):
+    """Pushes the QR codes mp4 video to /sdcard/Downloads.
+
+    The sample video displays a series of three images containing QR codes.
+    Each image is displayed for 5 seconds. The payloads of the QR codes
+    are:
+
+        QR Code 1: 'uzNYdXGMb0kW7qXDejO0niE6liaPm1m0'
+        QR Code 2: 'W6fEti4U7ImHU1mxBXkLpOehomty7mTM'
+        QR Code 3: 'tAdFTEYPzbOw6qXBR1jyvzFohsx1gfdz'
+
+    The deqr package along with pillow can be used to decode a screenshot
+    containing a QR code.
+    """
+    qrcodes_path = Path(__file__).parents[1] / "cfg" / "qrcodes.mp4"
+    logging.info("Pushing 'qrcodes.mp4' to '/sdcard/Downloads'")
+    await avd.adb.push(qrcodes_path, "/sdcard/Downloads/" + qrcodes_path.name)
 
 
 @pytest.fixture(scope="session", autouse=True)
