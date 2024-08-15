@@ -278,11 +278,12 @@ async def test_screenshot_saved_to_other_folder(get_screenshot):
 @pytest.mark.graphics
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
-async def test_screenshot_capture_stress(avd):
+async def test_screenshot_capture_stress(emulator, tmp_path):
     """Verify screenshot task under repeated Ctrl-S usage.
 
     Args:
-        avd (BaseEmulator): Fixture that gives access a booted emulator.
+        emulator (BaseEmulator): Fixture that gives access to the configured emulator.
+        tmp_path (Path): Fixture that provides a temporary working directory.
 
     Test Steps:
         1. Launch an AVD.
@@ -301,39 +302,29 @@ async def test_screenshot_capture_stress(avd):
         tasks = [take_screenshot_ctrl_s() for _ in range(n)]
         await asyncio.gather(*tasks)
 
-    def get_screenshots_list():
-        desktop = Path.home() / "Desktop"
-        screenshots = list(desktop.glob("Screenshot_*.png"))
+    def _get_screenshots_list():
+        screenshots_dir = tmp_path
+        screenshots = list(screenshots_dir.glob("Screenshot_*.png"))
         return screenshots
 
     async def screenshots_completed():
         # Wait until no screenshots are generated within a 5-seconds interval.
-        current_screenshots = get_screenshots_list()
+        current_screenshots = _get_screenshots_list()
         await asyncio.sleep(5)
-        screenshots = get_screenshots_list()
+        screenshots = _get_screenshots_list()
         return None if len(current_screenshots) != len(screenshots) else True
 
-    async def delete_screenshots():
-        # Remove all files named 'Screenshot_*' from ~/Desktop
-        async def no_screenshots():
-            screenshots = get_screenshots_list()
-            return None if len(screenshots) != 0 else True
-        screenshots = get_screenshots_list()
-        [screenshot.unlink() for screenshot in screenshots]
-        await eventually(no_screenshots, timeout=360)
-
-    # Remove existing Screenshots.
-    await delete_screenshots()
+    # Configure the emulator to save the screenshots to tmp_path
+    myflags = ['-save-path', tmp_path]
+    await emulator.launch(emulator.launch_flags + myflags)
+    await emulator.wait_for_boot()
 
     # Repeatedly take screenshots.
     num_requests = 200
     await repeat_ctrl_s_screenshot(num_requests)
     await eventually(screenshots_completed, timeout=600)
-    screenshots = get_screenshots_list()
+    screenshots = _get_screenshots_list()
     logging.info(f'{len(screenshots)} (out of {num_requests}) were generated.')
-
-    # Pre-remove the created screenshots.
-    await delete_screenshots()
 
     # Verify screenshots appear in the default save location.
     assert len(screenshots) != 0, \
