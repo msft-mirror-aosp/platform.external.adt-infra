@@ -28,7 +28,6 @@ import android.util.Log;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
-import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.ShellUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
@@ -41,6 +40,7 @@ import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -127,14 +127,14 @@ public class ShellUtilTest {
 
         ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
 
-        if (!AppLauncher.launchPath(instrumentation, true, "Settings", "System", "Developer options")) {
-            if (!(AppLauncher.launchPath(instrumentation, true, "Settings", "About emulated device") ||
-                    AppLauncher.launchPath(instrumentation, true,"Settings", "About phone"))) {
+        if (!navigateToSettingsPath(device, "System", "Developer options")) {
+            if (!(navigateToSettingsPath(device, "About emulated device") ||
+                    navigateToSettingsPath(device, "About phone"))) {
                 fail("Information about device not found");
             } else {
                 DeveloperOptionsManager.enableOptions(instrumentation, new DeveloperOptionsManager.SwipeNavigationStrategy(), false);
                 assertTrue("Developer Options settings not found",
-                        AppLauncher.launchPath(instrumentation, true,"Settings", "System", "Developer options"));
+                        navigateToSettingsPath(device, "System", "Developer options"));
             }
         }
 
@@ -164,5 +164,53 @@ public class ShellUtilTest {
         assertTrue("Missing bug report files for png and zip.", gotPngAndZip);
 
         ShellUtil.deleteBugReportFiles(BUG_REPORT_DIR, testFramework);
+    }
+
+    /**
+     * Navigates to a specified path in the Settings app.
+     *
+     * This method launches the Settings app and then navigates to a specified path by clicking on the options
+     * in the order they are provided. The navigation is performed by scrolling through either the
+     * 'main_content_scrollable_container' or the 'content_frame' depending on the pass of the loop.
+     *
+     * @param device The UiDevice instance that represents an emulator or a connected device.
+     * @param path An array of Strings where each String is the name of an option in the Settings app.
+     * @return true if the method was able to find and click on all the options in the path array, false otherwise.
+     * @throws UiObjectNotFoundException if an option in the path array is not found.
+     */
+    private boolean navigateToSettingsPath(UiDevice device, String... path) throws UiObjectNotFoundException {
+        device.pressHome();
+
+        try {
+            device.executeShellCommand("am start -a android.settings.SETTINGS");
+        } catch (IOException e) {
+            Log.w(TAG, "Failed to launch Settings", e);
+            return false;
+        }
+
+        for (int i = 0; i < path.length; i++) {
+            String location = path[i];
+            UiScrollable scrollableContainer = i == 0 ?
+                    new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)) :
+                    new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+
+            UiSelector optionSelector = new UiSelector().text(location);
+            UiObject option = device.findObject(optionSelector);
+
+            if (!option.waitForExists(5000)) {
+                boolean scrolled = scrollableContainer.scrollIntoView(optionSelector);
+                if (!scrolled || !option.waitForExists(5000)) {
+                    Log.w(TAG, "Failed to navigate to " + location);
+                    return false;
+                }
+            }
+
+            if (!option.clickAndWaitForNewWindow()) {
+                Log.w(TAG, "Failed to click on " + location);
+                return false;
+            }
+        }
+
+        return true;
     }
 }
