@@ -165,7 +165,8 @@ async def avd_factory(emulator):
         avd = Emulator(android_home=emulator.android_home,
                            android_avd_home=emulator.android_avd_home,
                            exe=emulator.exe,
-                           avd_config=config)
+                           avd_config=config,
+                           fetcher=None)
         avds.append(avd)
         await avd.launch(['-no-snapshot-save'])
         await avd.wait_for_boot()
