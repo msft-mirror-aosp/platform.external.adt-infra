@@ -257,26 +257,29 @@ class CrashReporter:
             logging.info("No aosp available, skipping annotations")
             return decoded
 
-        decoder = GrpcDecoder.from_directory(self.aosp)
-        look_for = ["Module annotations:", "==================="]
-        lines = dump.splitlines()
-        lines = lines[lines.index(look_for[0]) + 2 :]
-        modules = json.loads("\n".join(lines))
-        for module in modules:
-            if "annotation_objects" in module:
-                annotations = module["annotation_objects"]
-                logging.info("Found %d annotations", len(annotations))
-                for annotation in annotations:
-                    name = annotation["name"]
-                    if name == "grpc" or re.match(r"\d+", name):
-                        values = annotation["value"]
-                        for value in values.split(" "):
-                            phase, method, timestamp = decoder.decode_snippet(
-                                value.strip()
-                            )
-                            call_info = f'{timestamp.strftime("%Y-%m-%d %H:%M:%S")} {phase} {method}'
-                            decoded.get(name, []).append(call_info)
-                            logging.info("Found %s -> %s", name, call_info)
+        try:
+            decoder = GrpcDecoder.from_directory(self.aosp)
+            look_for = ["Module annotations:", "==================="]
+            lines = dump.splitlines()
+            lines = lines[lines.index(look_for[0]) + 2 :]
+            modules = json.loads("\n".join(lines))
+            for module in modules:
+                if "annotation_objects" in module:
+                    annotations = module["annotation_objects"]
+                    logging.info("Found %d annotations", len(annotations))
+                    for annotation in annotations:
+                        name = annotation["name"]
+                        if name == "grpc" or re.match(r"\d+", name):
+                            values = annotation["value"]
+                            for value in values.split(" "):
+                                phase, method, timestamp = decoder.decode_snippet(
+                                    value.strip()
+                                )
+                                call_info = f'{timestamp.strftime("%Y-%m-%d %H:%M:%S")} {phase} {method}'
+                                decoded.get(name, []).append(call_info)
+                                logging.info("Found %s -> %s", name, call_info)
+        except Exception as err:
+            logging.info("No module annotations found due to: %s", err)
 
         return decoded
 
