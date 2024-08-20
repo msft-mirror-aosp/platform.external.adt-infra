@@ -22,21 +22,12 @@ from aemu.proto.emulator_controller_pb2 import (
     ImageFormat,
     KeyboardEvent,
     ParameterValue,
-    PhysicalModelValue,
+    PhysicalModelValue
 )
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
-from hacks import load_tkinter
-import pyautogui
-import platform
-
-if platform.system() == 'Windows':
-    # Disable pyautogui fail-safe feature on Windows.
-    pyautogui.FAILSAFE = False
-
 from emu.timing import eventually
-from pathlib import Path
 
 
 async def wait_for_regex(stream, regex, max_wait):
@@ -279,7 +270,7 @@ async def test_screenshot_saved_to_other_folder(get_screenshot):
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_screenshot_capture_stress(emulator, tmp_path):
-    """Verify screenshot task under repeated Ctrl-S usage.
+    """Verify screenshot task under repeated requests.
 
     Args:
         emulator (BaseEmulator): Fixture that gives access to the configured emulator.
@@ -287,20 +278,18 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
 
     Test Steps:
         1. Launch an AVD.
-        2. Use the keyboard shortcut Ctrl-S repeatedly (Verify 1 and 2).
+        2. Use the emulator console to take a screenshot (Verify 1 and 2).
 
     Verification:
-        1. Screenshots appear in the default saved location.
-        2. Not every Ctrl+S keystroke generates a screenshot.
+        1. Screenshots appear in the temporary path.
+        2. Not every screenshot requests generates an image.
     """
-    async def repeat_ctrl_s_screenshot(n):
-        # Take a screenshot using the Ctrl+S keystroke n times.
-        async def take_screenshot_ctrl_s():
-            control = 'command' if platform.system() == "Darwin" else 'ctrl'
-            pyautogui.hotkey(control, 's')
+    async def take_screenshots(n):
+        # Take n sequential screenshots using the emulator console.
+        console = await emulator.console()
+        for _ in range(n):
+            await console.send(f"screenrecord screenshot {tmp_path}")
             await asyncio.sleep(0.1)
-        tasks = [take_screenshot_ctrl_s() for _ in range(n)]
-        await asyncio.gather(*tasks)
 
     def _get_screenshots_list():
         screenshots_dir = tmp_path
@@ -308,7 +297,7 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
         return screenshots
 
     async def screenshots_completed():
-        # Wait until no screenshots are generated within a 5-seconds interval.
+        # Wait until no screenshots are saved within a 5-seconds interval.
         current_screenshots = _get_screenshots_list()
         await asyncio.sleep(5)
         screenshots = _get_screenshots_list()
@@ -320,15 +309,16 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
     await emulator.wait_for_boot()
 
     # Repeatedly take screenshots.
-    num_requests = 200
-    await repeat_ctrl_s_screenshot(num_requests)
+    num_requests = 250
+    awaittake_screenshots(num_requests)
+
     await eventually(screenshots_completed, timeout=600)
     screenshots = _get_screenshots_list()
-    logging.info(f'{len(screenshots)} (out of {num_requests}) were generated.')
+    logging.info(f'{len(screenshots)} (out of {num_requests}) screenshots were taken.')
 
     # Verify screenshots appear in the default save location.
     assert len(screenshots) != 0, \
-        "Coudn't take screenshots using the Ctrl+S keyboard shortcut"
+        "Coudn't take any screenshot using the emulator console."
 
     # Verify not every Ctrl+S screenshot keystroke generates a screenshot.
     assert len(screenshots) != num_requests, \
