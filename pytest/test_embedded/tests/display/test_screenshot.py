@@ -310,7 +310,7 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
 
     # Repeatedly take screenshots.
     num_requests = 250
-    awaittake_screenshots(num_requests)
+    await take_screenshots(num_requests)
 
     await eventually(screenshots_completed, timeout=600)
     screenshots = _get_screenshots_list()
