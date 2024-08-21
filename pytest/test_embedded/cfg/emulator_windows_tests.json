@@ -477,6 +477,20 @@
         ],
         "status": "enabled"
     },
+    "sanity_test_suite_api_35": {
+        "description": "Set of tests we want to run as a part of emulator sanity test suite",
+        "pytest_flags": [
+            "-m sanity and not resizable and not newresizable"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "35",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "enabled"
+    },
     "sanity_test_suite_api_28": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "pytest_flags": [
@@ -542,6 +556,20 @@
             {
                 "launch_flags": [],
                 "api": "34",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "enabled"
+    },
+    "fast_test_suite_api_35": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "35",
                 "tag.id": "google_apis"
             }
         ],
