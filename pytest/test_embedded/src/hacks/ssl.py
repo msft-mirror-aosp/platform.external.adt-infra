@@ -12,3 +12,5 @@ To circumvent this issue, we have added a directory to the Python path, which
 contains an unused SSL module. This workaround enables us to utilize virtual
 environments on Windows without encountering any complications.
 """
+CERT_REQUIRED = False
+CERT_NONE = 0
