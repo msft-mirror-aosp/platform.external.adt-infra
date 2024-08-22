@@ -319,6 +319,46 @@
         ],
         "status": "enabled"
     },
+    "embedded_resizable_test_suite_api_35": {
+        "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
+        "launch_flags": [
+            "-no-snapshot",
+            "-qt-hide-window",
+            "-grpc-use-token"
+        ],
+        "pytest_flags": [
+            "-m embedded_newresizable"
+        ],
+        "avd_configs": [
+            {
+                "api": "35",
+                "tag.id": "google_apis",
+                "hw.device.name": "resizable",
+                "hw.resizable.configs": "phone-0-1080-2340-420, foldable-1-2208-1840-420, tablet-2-1920-1200-240, desktop-3-1920-1080-160",
+                "hw.lcd.density": "420",
+                "hw.lcd.height": "2340",
+                "hw.lcd.width": "1080",
+                "hw.displayRegion.0.1.height": "2092",
+                "hw.displayRegion.0.1.width": "1080",
+                "hw.displayRegion.0.1.xOffset": "0",
+                "hw.displayRegion.0.1.yOffset": "0",
+                "hw.sensor.hinge": "yes",
+                "hw.sensor.hinge.areas": "1840-0-0-1840",
+                "hw.sensor.hinge.count": "1",
+                "hw.sensor.hinge.defaults": "180",
+                "hw.sensor.hinge.ranges": "0-180",
+                "hw.sensor.hinge.sub_type": "1",
+                "hw.sensor.hinge.type": "1",
+                "hw.sensor.hinge_angles_posture_definitions": "0-30, 30-150, 150-180",
+                "hw.sensor.posture_list": "1, 2, 3",
+                "hw.sensors.orientation": "yes",
+                "hw.sensors.proximity": "yes",
+                "skin.name": "1080x2340",
+                "skin.path": "no_skin"
+            }
+        ],
+        "status": "enabled"
+    },
     "hardware_test_suite_api_31": {
         "description": "Set of tests that validate hardware and console",
         "pytest_flags": [
@@ -437,6 +477,20 @@
         ],
         "status": "enabled"
     },
+    "sanity_test_suite_api_35": {
+        "description": "Set of tests we want to run as a part of emulator sanity test suite",
+        "pytest_flags": [
+            "-m sanity and not resizable and not newresizable"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "35",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "enabled"
+    },
     "sanity_test_suite_api_28": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "pytest_flags": [
@@ -502,6 +556,20 @@
             {
                 "launch_flags": [],
                 "api": "34",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "enabled"
+    },
+    "fast_test_suite_api_35": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "35",
                 "tag.id": "google_apis"
             }
         ],
