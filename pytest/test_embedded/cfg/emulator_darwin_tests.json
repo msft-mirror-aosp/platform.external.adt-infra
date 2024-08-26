@@ -578,7 +578,7 @@
     "presubmit_emulator_test_suite_api_31": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "pytest_flags": [
-            "-m boot and not slow and not flaky and not netsim"
+            "-m boot and not slow and not flaky"
         ],
         "avd_configs": [
             {
@@ -592,7 +592,7 @@
     "presubmit_emulator_test_suite_api_34": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "pytest_flags": [
-            "-m boot and not slow and not flaky and not netsim"
+            "-m boot and not slow and not flaky"
         ],
         "avd_configs": [
             {
