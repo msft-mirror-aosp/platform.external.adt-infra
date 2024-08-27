@@ -28,12 +28,10 @@ from emu.timing import eventually, wait_until
 from functools import partial
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
-from tests.test_utils import fmt_proto
+from tests.test_utils import fmt_proto, decode_qrcodes
 from snaptool.snapshot import AsyncSnapshotService
 from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
-from PIL import ImageGrab
-import deqr
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -767,39 +765,11 @@ async def test_multidisplay_video_playback(avd, no_displays, emulator_controller
             '-a android.intent.action.VIEW -d file:///sdcard/Downloads/qrcodes.mp4 -t "video/*"'
         )
 
-    async def detect_qrcodes(payloads: list[str]):
-        """Return True if all QR codes with <payloads> appear in the series of screenshots.
-        """
-        decoder = deqr.QuircDecoder()
-        async def detect_qrcode(payload: str):
-            """Take a screenshot and return True if a QR code with <payload> is detected.
-            """
-            screenshot = ImageGrab.grab()
-            data = decoder.decode(screenshot)
-            if data is None or len(data) == 0:
-                return False
-            qrcode = data[0]
-            data_payload = qrcode.data_entries[0].data
-            return payload == data_payload
-
-        logging.info(f"Starting the QR codes detection.")
-        for payload in payloads:
-            detected = False
-            try:
-                detected = await wait_until(partial(detect_qrcode, payload), timeout=15)
-            except asyncio.TimeoutError:
-                f"Couldn't detect payload {payload}"
-                return False
-            if not detected:
-                return False
-            logging.info(f"Detected payload {payload}.")
-        return True
-
     async def assert_secondary_display_playback(sec_display, payloads):
         """Make sure the test video on <sec_display> contains all QR codes' payloads
         """
         await launch_qr_test_video(sec_display)
-        return await detect_qrcodes(payloads)
+        return await decode_qrcodes(payloads)
 
     # Attach a secondary display
     logging.info('Attaching a secondary display')
