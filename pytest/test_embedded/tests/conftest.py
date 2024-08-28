@@ -863,6 +863,51 @@ async def stream_screenshot(emulator_controller, log_directory, request):
     return streaming_img_call
 
 
+pytest.fixture
+async def qrcode_png(avd):
+    """A fixture that access a PNG image with a pre-encoded QR code
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the configured emulator.
+    Returns:
+        An instance of the Qrcode class. The class attributes are:
+        src (str): The path of the source PNG image.
+        path (str): Destination path of the PNG image on the emulator.
+        payload (str): The pre-encoded payload of the QR code image.
+        The 'show' method can be used to display the image on the display
+        identified by the 'display_id' argument (by default, the primary display).
+    """
+    class Qrcode:
+        """A class to push a PNG QRcode with a given payload to /sdcard/Downloads
+        """
+        def __init__(self, src: str, payload: str):
+            self.src = src
+            self.payload = payload
+            self.path = Path("/sdcard/Downloads") / self.src.name
+
+        async def _push(self):
+            logging.info(f"Pushing '{self.src}' to '{self.path}'")
+            await avd.adb.push(self.src, self.path)
+
+        async def show(self, display_id=0):
+            """ Show the PNG image on display with id <display_id>
+            """
+            await avd.stop_activity("com.google.android.apps.photos")
+            await avd.start_activity(
+                "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
+                params=f'-a android.intent.action.VIEW -W -d file://{self.path} -t "image/PNG"'\
+                       + ( f" --display {display_id}" if display_id != 0 else "" )
+            )
+            logging.info(f"Launched the QR code PNG image on display '{display_id}'")
+
+    src = Path(__file__).parents[1] / "cfg" \
+                                    / "qrcode_uzNYdXGMb0kW7qXDejO0niE6liaPm1m0.png"
+    payload = "uzNYdXGMb0kW7qXDejO0niE6liaPm1m0"
+
+    qrcode = Qrcode(src, payload)
+    await qrcode._push()
+    return qrcode
+
+
 @pytest.fixture
 async def qrcodes_mp4(avd):
     """A fixture that gives access to a MP4 video containing a series of QR codes.
