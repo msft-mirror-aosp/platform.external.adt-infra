@@ -864,23 +864,59 @@ async def stream_screenshot(emulator_controller, log_directory, request):
 
 
 @pytest.fixture
-async def qrcodes(avd):
-    """Pushes the QR codes mp4 video to /sdcard/Downloads.
+async def qrcodes_mp4(avd):
+    """A fixture that gives access to a MP4 video containing a series of QR codes.
 
-    The sample video displays a series of three images containing QR codes.
-    Each image is displayed for 5 seconds. The payloads of the QR codes
-    are:
+    The fixture pushes a 15-second MP4 video to /sdcard/Downloads, displaying a
+    series of three images with QR codes, each one shown for 5 seconds.
 
-        QR Code 1: 'uzNYdXGMb0kW7qXDejO0niE6liaPm1m0'
-        QR Code 2: 'W6fEti4U7ImHU1mxBXkLpOehomty7mTM'
-        QR Code 3: 'tAdFTEYPzbOw6qXBR1jyvzFohsx1gfdz'
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the configured emulator.
 
-    The deqr package along with pillow can be used to decode a screenshot
-    containing a QR code.
+    Returns:
+        An instance of the Qrcodes class. The class attributes are:
+
+        src (str): The path of the source video file.
+        path (str): The path of the video on the emulator.
+        payloads (list): The pre-encoded payloads of the QR codes displayed
+                         in the video.
+
+        The 'play' method can be used to play the mp4 video on the display
+        identified by the 'display_id' argument (by default, the primary display).
+
+    Notes:
+        The deqr package along with pillow can be used to decode a screenshot
+        containing a QR code.
     """
-    qrcodes_path = Path(__file__).parents[1] / "cfg" / "qrcodes.mp4"
-    logging.info("Pushing 'qrcodes.mp4' to '/sdcard/Downloads'")
-    await avd.adb.push(qrcodes_path, "/sdcard/Downloads/" + qrcodes_path.name)
+    class Qrcodes():
+        """A class to handle a MP4 video with pre-encoded QRcodes
+        """
+        def __init__(self, src: str, payloads: list):
+            self.src = src
+            self.payloads = payloads
+            self.path = Path("/sdcard/Downloads") / self.src.name
+
+        async def _push(self):
+            logging.info(f"Pushing '{self.src}' to '{self.path}'")
+            await avd.adb.push(self.src, self.path)
+
+        async def play(self, display_id=0):
+            await avd.stop_activity("com.google.android.apps.photos")
+            await avd.start_activity(
+                "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
+                params=f'-a android.intent.action.VIEW -d file://{self.path} -t "video/*"'\
+                       + ( f" --display {display_id}" if display_id != 0 else "" )
+            )
+            logging.info(f"Started QR codes video on display '{display_id}'")
+
+    src_video = Path(__file__).parents[1] / "cfg" / "qrcodes.mp4"
+    payloads = ['uzNYdXGMb0kW7qXDejO0niE6liaPm1m0',
+                'W6fEti4U7ImHU1mxBXkLpOehomty7mTM',
+                'tAdFTEYPzbOw6qXBR1jyvzFohsx1gfdz']
+
+    qrcodes = Qrcodes(src_video, payloads)
+    await qrcodes._push()
+    return qrcodes
 
 
 @pytest.fixture(scope="session", autouse=True)
