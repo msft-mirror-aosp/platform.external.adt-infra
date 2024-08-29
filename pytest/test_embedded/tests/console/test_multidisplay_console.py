@@ -9,6 +9,9 @@ import emu.console.emulator_connection
 from aemu.proto.ui_controller_service_pb2 import PaneEntry, WindowPosition
 from aemu.proto.ui_controller_service_pb2_grpc import UiControllerStub
 from google.protobuf import empty_pb2
+from emu.timing import eventually
+from functools import partial
+import re
 
 __EMPTY__ = empty_pb2.Empty()
 
@@ -69,3 +72,31 @@ async def test_multidisplay_del_invalid_display_no_crash(avd):
     del_invalid_display_result =await avd.adb.run(["emu", "multidisplay", "del", "3"])
     await asyncio.sleep(3)
     assert avd.is_alive();
+
+
+async def ensure_logical_displays(n, emu):
+    # Return True if the emulator has 'n' logical displays.
+    display_dump = await emu.adb.shell("dumpsys display", timeout=30)
+    display_size_pattern = re.search('Logical Displays: size=([0-9]*).*', display_dump)
+    if display_size_pattern is None:
+        return False
+    return display_size_pattern.groups()[0] == str(n)
+
+
+@pytest.mark.graphics
+@pytest.mark.multidisplay
+@pytest.mark.fast
+@pytest.mark.async_timeout(510)
+async def test_add_multidisplay_from_telnet(avd, emulator_controller, telnet):
+    await telnet.send("multidisplay add 1 1200 800 240 0")
+    cfg = await emulator_controller.getDisplayConfigurations(__EMPTY__)
+
+    n_displays = 2  # primary plus one secondary display.
+
+    assert await (
+        eventually(partial(ensure_logical_displays, n_displays, avd), timeout=180)
+    ), 'Wrong number of displays detected'
+
+    assert cfg.displays[1].dpi == 240
+    assert cfg.displays[1].width == 1200
+    assert cfg.displays[1].height == 800
