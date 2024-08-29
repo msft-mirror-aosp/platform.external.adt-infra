@@ -807,7 +807,6 @@ def run_tests(
     pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
 
     logdir = Path(logdir)
-    logdir.mkdir(exist_ok=True, parents=True)
 
     result_xmls = []
     skip_reports = []
@@ -1007,10 +1006,12 @@ def parse_arguments():
     )
 
     args = parser.parse_args()
+    logdir = Path(args.logdir)
+    logdir.mkdir(exist_ok=True, parents=True)
     log_name = '.'.join((os.path.basename(sys.argv[0]),
                          datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), 'log'))
     configure_logging(logging.DEBUG if args.verbose else logging.INFO,
-                      log_path=Path(args.logdir, log_name))
+                      log_path=logdir.joinpath(log_name))
 
     if args.generate:
         if not args.virtual_env_dir:
