@@ -83,6 +83,7 @@ public class Res {
             "com.android.settings:id/list";  // Added in API 24.
     public static final String SETTINGS_LIST_CONTAINER_RES =
             "(com.android.settings|android):id/(dashboard|list|dashboard_container|apps_list|main_content_scrollable_container|list_container|content_parent)";
+    public static final String CONTENT_FRAME_CONTAINER_RES = "com.android.settings:id/content_frame";
     public static final String SETTINGS_ACTION_BAR_RES = "com.android.settings:id/action_bar";
     public static final String SETTINGS_ACTION_BUTTON_RES = "com.android.settings:id/action_button";
     public static final String SETTINGS_COLLAPSING_TOOLBAR_RES = "com.android.settings:id/collapsing_toolbar";
@@ -173,6 +174,7 @@ public class Res {
     public static final String ANDROID_SWITCH_WIDGET = "android:id/switch_widget";
     public static final String ANDROID_ICON_RES = "android:id/icon";
     public static final String ANDROID_ERROR_CLOSE_RES = "android:id/aerr_close";
+    public static final String ANDROID_ERROR_WAIT_RES = "android:id/aerr_wait";
     public static final String ANDROID_BUTTON_ONE = "android:id/button1";
     public static final String ANDROID_BUTTON_TWO = "android:id/button2";
     public static final String ANDROID_WIFI_SUMMARY_RES = "com.android.systemui:id/wifi_connected_summary";

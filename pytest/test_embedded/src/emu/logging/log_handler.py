@@ -29,7 +29,7 @@ class LogBelowLevel(logging.Filter):
         return True if record.levelno < self.max_level else False
 
 
-def configure_logging(logging_level, split_to_stderr=False):
+def configure_logging(logging_level, split_to_stderr=False, log_path=None):
     """Configures the logging system to log at the given level
 
     Args:
@@ -44,6 +44,12 @@ def configure_logging(logging_level, split_to_stderr=False):
     logging.root = logging.getLogger("root")
     logging.root.setLevel(logging_level)
     logging.root.addHandler(logging_handler_out)
+
+    if log_path:
+        logging_handler_file = logging.FileHandler(log_path)
+        logging_handler_file.setLevel(logging.DEBUG)
+        logging_handler_file.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
+        logging.root.addHandler(logging_handler_file)
 
     # Filter warning and above to stderr
     if split_to_stderr:

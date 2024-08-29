@@ -16,8 +16,12 @@ import time
 
 import google.protobuf.text_format
 
-from emu.timing import eventually
-
+from emu.timing import eventually, wait_until
+from functools import partial
+from PIL import ImageGrab
+import deqr
+import logging
+import asyncio
 
 def fmt_proto(msg):
     """Formats a protobuf message as a single line."""
@@ -40,3 +44,32 @@ def wait_for_regex(stream, regex, max_wait):
     """
     compiled = re.compile(regex)
     return eventually(compiled.match, stream, timeout=max_wait)
+
+
+async def decode_qrcodes(payloads: list[str]):
+    """Return True if all QR codes with <payloads> appear in the series of screenshots.
+    """
+    decoder = deqr.QuircDecoder()
+    async def detect_qrcode(payload: str):
+        """Take a screenshot and return True if a QR code with <payload> is detected.
+        """
+        screenshot = ImageGrab.grab()
+        data = decoder.decode(screenshot)
+        if data is None or len(data) == 0:
+            return False
+        qrcode = data[0]
+        data_payload = qrcode.data_entries[0].data
+        return payload == data_payload
+
+    logging.info(f"Starting the QR codes detection.")
+    for payload in payloads:
+        detected = False
+        try:
+            detected = await wait_until(partial(detect_qrcode, payload), timeout=15)
+        except asyncio.TimeoutError:
+            f"Couldn't detect payload {payload}"
+            return False
+        if not detected:
+            return False
+        logging.info(f"Detected payload {payload}.")
+    return True

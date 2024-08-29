@@ -24,11 +24,11 @@ from aemu.proto.emulator_controller_pb2 import (
 )
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from emu.emulator import Emulator
-from emu.timing import eventually
+from emu.timing import eventually, wait_until
 from functools import partial
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
-from tests.test_utils import fmt_proto
+from tests.test_utils import fmt_proto, decode_qrcodes
 from snaptool.snapshot import AsyncSnapshotService
 from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
@@ -552,6 +552,7 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
         android_avd_home=tmp_path,
         exe=emulator.exe,
         avd_config=config,
+        fetcher=None,
     )
     await emu.launch(flags=myflags)
     await emu.wait_for_boot(timeout=180)
@@ -724,3 +725,53 @@ async def test_multidisplay_controls(avd, no_displays, emulator_controller):
     # Test the controls of display 2
     await test_display_controls(display2, display2_activity1,
                                 display1, display1_activity1)
+
+
+@pytest.mark.multidisplay
+@pytest.mark.graphics
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+@pytest.mark.skipos("mac", "reason: screenrecord user permission should be given.")
+@pytest.mark.skipos("m1", "reason: screenrecord user permission should be given.")
+async def test_multidisplay_video_playback(avd, no_displays, emulator_controller, qrcodes_mp4):
+    """Verify video can be played in secondary display without any rendering issues.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
+        no_displays (callable): Fixture that ensures the emulator has a single display.
+        emulator_controller (EmulatorControllerStub): Emulator controller fixture.
+        qrcodes_mp4 (Qrcodes): Gives access to the Qrcodes mp4 video fixture.
+
+    Steps:
+        1. Launch an AVD.
+        2. Attach a secondary display.
+        3. Launch the default player and play the sample video containing the QR codes
+           on the secondary display. (Verify 1)
+
+    Verification:
+        1. The video is played without any rendering issues, observed from successfully
+           decoding the video QR codes through a series of screenshots of the sample video.
+
+    Notes:
+        The Screenshots are taken using Pillow, since the screenshots from the emulator
+        controller don't include the secondary display.
+    """
+    async def assert_secondary_display_playback(sec_display):
+        """Make sure the test video on <sec_display> contains all QR codes' payloads
+        """
+        await qrcodes_mp4.play(sec_display)
+        return await decode_qrcodes(qrcodes_mp4.payloads)
+
+    # Attach a secondary display
+    logging.info('Attaching a secondary display')
+    configurations = DisplayConfigurations(
+        displays=[DisplayConfiguration(width=1080, height=1920, dpi=213, display=1)]
+    )
+    await emulator_controller.setDisplayConfigurations(configurations)
+    _, sec_display = await get_multidisplays_ids(avd)
+
+    # Make sure the qrcodes video plays and is decoded correctly.
+    assert await wait_until(
+        partial(assert_secondary_display_playback, sec_display),
+        timeout=120
+    ), "Couldn't play the test video on the secondary display."
