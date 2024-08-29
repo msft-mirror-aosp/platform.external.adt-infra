@@ -63,13 +63,14 @@ async def decode_qrcodes(payloads: list[str]):
 
     logging.info(f"Starting the QR codes detection.")
     for payload in payloads:
+        timeout = False
         detected = False
         try:
             detected = await wait_until(partial(detect_qrcode, payload), timeout=15)
         except asyncio.TimeoutError:
-            f"Couldn't detect payload {payload}"
-            return False
-        if not detected:
+            timeout = True
+        if not detected or timeout:
+            logging.info(f"Couldn't detect payload {payload}.")
             return False
         logging.info(f"Detected payload {payload}.")
     return True
