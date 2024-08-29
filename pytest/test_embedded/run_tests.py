@@ -13,6 +13,7 @@
 # limitations under the License.
 import argparse
 import asyncio
+import datetime
 import json
 import logging
 import os
@@ -1006,7 +1007,10 @@ def parse_arguments():
     )
 
     args = parser.parse_args()
-    configure_logging(logging.DEBUG if args.verbose else logging.INFO)
+    log_name = '.'.join((os.path.basename(sys.argv[0]),
+                         datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), 'log'))
+    configure_logging(logging.DEBUG if args.verbose else logging.INFO,
+                      log_path=Path(args.logdir, log_name))
 
     if args.generate:
         if not args.virtual_env_dir:
