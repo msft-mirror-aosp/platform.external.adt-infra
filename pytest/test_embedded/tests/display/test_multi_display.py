@@ -728,7 +728,6 @@ async def test_multidisplay_controls(avd, no_displays, emulator_controller):
 
 
 @pytest.mark.multidisplay
-@pytest.mark.graphics
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 @pytest.mark.skipos("mac", "reason: screenrecord user permission should be given.")
