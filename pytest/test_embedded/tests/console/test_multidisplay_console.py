@@ -83,7 +83,6 @@ async def ensure_logical_displays(n, emu):
     return display_size_pattern.groups()[0] == str(n)
 
 
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(510)
