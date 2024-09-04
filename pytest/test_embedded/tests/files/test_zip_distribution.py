@@ -47,7 +47,6 @@ def get_expected_files():
         "mksdcard",
         "nimble_bridge",
         "emulator",
-        "netsim",
     ]
 
     exp_files_win = [
@@ -65,7 +64,6 @@ def get_expected_files():
         "mksdcard.exe",
         "nimble_bridge.exe",
         "emulator.exe",
-        "netsim.exe",
         "android-emu-agents.lib",
         "concrt140.dll",
         "libandroid-emu-agents.dll",
@@ -135,7 +133,6 @@ def get_exp_sub_dirs():
             "qt",
             "vulkan",
         ],
-        "netsim-ui": ["assets", "index.html", "js", "node_modules"],
         "resources": [
             "Toren1BD.mtl",
             "Toren1BD.posters",
@@ -212,7 +209,6 @@ def get_exp_sub_dirs():
             "vcruntime140.dll",
             "vulkan",
         ],
-        "netsim-ui": ["assets", "index.html", "js", "node_modules"],
         "resources": [
             "Toren1BD.mtl",
             "Toren1BD.posters",
