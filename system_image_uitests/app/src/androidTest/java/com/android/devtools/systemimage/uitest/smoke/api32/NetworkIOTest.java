@@ -169,55 +169,65 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        String[] path = new String[]{"Settings", "Network & internet", "SIMs"};
-        AppLauncher.launchPath(instrumentation, true, path);
-        UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
-        final UiObject mobileData = device.findObject(new UiSelector().text("Mobile data"));
-        final UiObject dataWarning = device.findObject(new UiSelector().text("Data warning & limit"));
-
-        assertTrue("Scrollable view not found", new Wait().until(scrollable::exists));
+        SettingsIdlingResource idlingResource = null;
         try {
-            scrollable.scrollIntoView(mobileData);
-        } catch (UiObjectNotFoundException e) {
-            fail("Mobile data switch not found initially.");
-        }
+            UiScrollable scrollableContainer = new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+            new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+            idlingResource = new SettingsIdlingResource(scrollableContainer);
+            IdlingRegistry.getInstance().register(idlingResource);
+            String mobileDataSwitch = "Mobile data";
+            String mobileDataWarning = "Data warning & limit";
 
-        try {
-            scrollable.scrollIntoView(dataWarning);
-            if (!new Wait().until(dataWarning::isEnabled)) {
-                scrollable.scrollIntoView(mobileData);
-                mobileData.click();
-                assertTrue("Data warning label cannot be enabled at the beginning.",
-                        new Wait().until(dataWarning::isEnabled));
+            if (!(navigateToSettingsPath(device, "Network & internet", "SIMs"))) {
+                fail("Failed to navigate to Network & internet > SIMs settings.");
             }
-        } catch (UiObjectNotFoundException e) {
-            fail("Enabled data warning label not found at the end.");
+
+            UiScrollable scrollable = new UiScrollable(new UiSelector().scrollable(true));
+            final UiObject dataWarning = device.findObject(new UiSelector().text(mobileDataWarning));
+
+            boolean isCellularDataEnabled = false;
+            try {
+                scrollable.scrollIntoView(dataWarning);
+                isCellularDataEnabled = new Wait().until(dataWarning::isEnabled);
+            } catch (UiObjectNotFoundException e) {
+                fail("Data warning & limit setting not found.");
+            }
+
+            if (!isCellularDataEnabled) {
+                assertTrue("Mobile data switch not enabled.", clickAndConfirmSwitch(device, mobileDataSwitch));
+                assertTrue("Scrollable view not found", new Wait().until(scrollable::exists));
+                try {
+                    scrollable.scrollIntoView(dataWarning);
+                    assertTrue("Data warning label cannot be enabled at the beginning.",
+                            new Wait().until(dataWarning::isEnabled));
+                } catch (UiObjectNotFoundException e) {
+                    fail("Enabled data warning label not found at the end.");
+                }
+            }
+
+            assertTrue("Mobile data switch not disabled.", clickAndConfirmSwitch(device, mobileDataSwitch));
+            try {
+                scrollable.scrollIntoView(dataWarning);
+                assertFalse("Data warning label cannot be disabled.",
+                        new Wait().until(dataWarning::isEnabled));
+            } catch (UiObjectNotFoundException e) {
+                fail("Disabled data warning label not found.");
+            }
+            assertTrue("Mobile data switch not reset.", clickAndConfirmSwitch(device, mobileDataSwitch));
+            try {
+                scrollable.scrollIntoView(dataWarning);
+                assertTrue("Data warning label cannot be enabled at the end",
+                        new Wait().until(dataWarning::isEnabled));
+            } catch (UiObjectNotFoundException e) {
+                fail("Disabled data warning label not found at the end.");
+            }
         }
 
-        // Disable Cellular data.
-        try {
-            scrollable.scrollIntoView(mobileData);
-            mobileData.click();
-            scrollable.scrollIntoView(dataWarning);
-            assertFalse("Data warning label cannot be disabled.",
-                    new Wait().until(dataWarning::isEnabled));
-            TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
-        } catch (UiObjectNotFoundException e) {
-            fail("Disabled data warning label not found.");
+        finally {
+            if (idlingResource != null) {
+                IdlingRegistry.getInstance().unregister(idlingResource);
+            }
         }
-
-        // Enable Cellular data.
-        try {
-            scrollable.scrollIntoView(mobileData);
-            mobileData.click();
-            scrollable.scrollIntoView(dataWarning);
-            assertTrue("Data warning label cannot be enabled at the end",
-                    new Wait().until(dataWarning::isEnabled));
-            TimeUnit.SECONDS.sleep(3); //  Require a sleep to avoid flakiness on buildbot.
-        } catch (UiObjectNotFoundException e) {
-            fail("Disabled data warning label not found at the end.");
-        }
-
     }
 
     /**
@@ -238,29 +248,42 @@ public class NetworkIOTest {
     @TestInfo(id = "14581152")
     public void enableAirplaneMode() throws Exception {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
+
         UiDevice device = UiDevice.getInstance(instrumentation);
+        SettingsIdlingResource idlingResource = null;
+        try {
+            UiScrollable scrollableContainer = new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+            new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+            idlingResource = new SettingsIdlingResource(scrollableContainer);
+            IdlingRegistry.getInstance().register(idlingResource);
+            UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v3(device);
 
-        String[] path = new String[]{"Settings", "Network & internet"};
-        AppLauncher.launchPath(instrumentation, true, path);
+            if (!(navigateToSettingsPath(device, "Network & internet"))) {
+                fail("Failed to navigate to Network & internet settings.");
+            }
 
-        UiObject airplaneModeIcon = NetworkUtil.getAirplaneModeIcon_v3(device);
+            // Test requires "Airplane mode" switch widget to start in the off state.
+            if (NetworkUtil.isAirplaneModeEnabled_v3(device, airplaneModeIcon)) {
+                navigateToSettingsPath(device, "Network & internet", "Airplane mode");
+            }
+            assertFalse("Airplane mode is not disabled.",
+                    NetworkUtil.isAirplaneModeEnabled_v3(device, airplaneModeIcon));
 
-        // Test requires "Airplane mode" switch widget to start in the off state.
-        if (NetworkUtil.isAirplaneModeEnabled_v3(device, airplaneModeIcon)) {
-            AppLauncher.launchPath(instrumentation, true, path);
-            NetworkIOTestUtil.toggleAirplaneMode(device);
+            // Enable airplane mode.
+            navigateToSettingsPath(device, "Network & internet", "Airplane mode");
+            assertTrue("Airplane mode is not enabled.",
+                    NetworkUtil.isAirplaneModeEnabled_v3(device, airplaneModeIcon));
+
+            // Disable airplane mode.
+            navigateToSettingsPath(device, "Network & internet", "Airplane mode");
+            assertFalse("Airplane mode is not disabled.",
+                    NetworkUtil.isAirplaneModeEnabled_v3(device, airplaneModeIcon));
         }
-        assertFalse("Airplane mode is not disabled.",
-                NetworkUtil.isAirplaneModeEnabled_v3(device, airplaneModeIcon));
-
-        AppLauncher.launchPath(instrumentation, true, path);
-        NetworkIOTestUtil.toggleAirplaneMode(device);
-        assertTrue("Airplane mode is not enabled.",
-                NetworkUtil.isAirplaneModeEnabled_v3(device, airplaneModeIcon));
-
-        // Disable airplane mode.
-        AppLauncher.launchPath(instrumentation, true, path);
-        NetworkIOTestUtil.toggleAirplaneMode(device);
+        finally {
+            if (idlingResource != null) {
+                IdlingRegistry.getInstance().unregister(idlingResource);
+            }
+        }
     }
 
     /**
@@ -421,7 +444,6 @@ public class NetworkIOTest {
      * @param switchLabel The label of the switch that this method will click on.
      * @param previousSwitchLabels The labels of the switches that this method will check for existence before clicking on the target switch.
      * @return true if all switches exist and the target switch is clicked successfully, false otherwise.
-     * @throws UiObjectNotFoundException if an option in the path array is not found.
      */
     private boolean clickAndConfirmSwitch(UiDevice device, String switchLabel, String ...previousSwitchLabels) {
         UiScrollable scrollableContainer = new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
@@ -431,20 +453,19 @@ public class NetworkIOTest {
         try {
             dismissUnresponsivePopup(device);
 
-            if (previousSwitchLabels.length > 0) {
-                for (String previousSwitchLabel : previousSwitchLabels) {
-                    UiObject previousSwitchObject = device.findObject(new UiSelector().text(previousSwitchLabel));
-                    if (!previousSwitchObject.waitForExists(10000L)) {
-                        Log.w(TAG, "Failed to find previous switch object" + previousSwitchLabel);
-                        IdlingRegistry.getInstance().unregister(idlingResource);
-                        return false;
-                    }
+            for (String previousSwitchLabel : previousSwitchLabels) {
+                UiObject previousSwitchObject = device.findObject(new UiSelector().text(previousSwitchLabel));
+                if (!previousSwitchObject.waitForExists(10000L)) {
+                    Log.w(TAG, "Failed to find previous switch object" + previousSwitchLabel);
+                    IdlingRegistry.getInstance().unregister(idlingResource);
+                    return false;
                 }
             }
 
             UiObject switchObject = device.findObject(new UiSelector().text(switchLabel));
-            switchObject.waitForExists(10000L);
-            switchObject.clickAndWaitForNewWindow(10000L);
+            if (switchObject.waitForExists(10000L)) {
+                switchObject.clickAndWaitForNewWindow(10000L);
+            }
             IdlingRegistry.getInstance().unregister(idlingResource);
 
             return true;
