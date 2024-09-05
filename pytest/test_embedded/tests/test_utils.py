@@ -98,7 +98,11 @@ async def click_button(text: str, avd: BaseEmulator):
     if f"text=\"{text}\"" not in window_dump:
         return False
     xml = ET.fromstring(window_dump)
-    bounds = xml.find(f".//*[@text='{text}']/..").get('bounds')
+    element = xml.find(f".//*[@text='{text}']")
+    # Get the element bounds if clickable, else get the parent bounds.
+    bounds = element.get('bounds') \
+                if element.get('clickable') == 'true' \
+                else xml.find(f".//*[@text='{text}']/..").get('bounds')
     center = get_center_coords(bounds)
     await avd.adb.shell("input tap " + ' '.join([*map(str, center)]))
     return True
