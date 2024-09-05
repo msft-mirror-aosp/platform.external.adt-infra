@@ -174,6 +174,7 @@ public class Res {
     public static final String ANDROID_SWITCH_WIDGET = "android:id/switch_widget";
     public static final String ANDROID_ICON_RES = "android:id/icon";
     public static final String ANDROID_ERROR_CLOSE_RES = "android:id/aerr_close";
+    public static final String ANDROID_ERROR_WAIT_RES = "android:id/aerr_wait";
     public static final String ANDROID_BUTTON_ONE = "android:id/button1";
     public static final String ANDROID_BUTTON_TWO = "android:id/button2";
     public static final String ANDROID_WIFI_SUMMARY_RES = "com.android.systemui:id/wifi_connected_summary";

@@ -13,6 +13,7 @@
 # limitations under the License.
 import argparse
 import asyncio
+import datetime
 import json
 import logging
 import os
@@ -66,6 +67,7 @@ else:
 
 # Path to all the gRPC services
 GRPC_SERVICES = AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc"
+
 
 class NoXServer(Exception):
     pass
@@ -240,7 +242,10 @@ class ProcWatcher:
             self._timed_out = True
 
         if OS_NAME == "windows":
-            run(["taskkill.exe", "/F", "/T", "/PID", str(self._proc.pid)], check_output=False)
+            run(
+                ["taskkill.exe", "/F", "/T", "/PID", str(self._proc.pid)],
+                check_output=False,
+            )
         else:
             self._proc.terminate()
 
@@ -558,6 +563,17 @@ class AospPyRunner(PyRunner):
             extra_env=self.env,
         )
 
+        with open(tmpdir / ".venv" / "pip.ini", "w", encoding="utf-8") as fp:
+            fp.write(
+                f"""
+[global]
+index-url = {repo}
+extra-index-url = http://localhost:3141/packages/staging
+timeout = 2
+retries = 0
+"""
+            )
+
         if platform.system() == "Windows":
             self.py_exe = tmpdir / ".venv" / "Scripts" / "python"
         else:
@@ -652,9 +668,7 @@ def merge_results(python_exe: PyRunner, sources: [Path], dest: Path):
 
 async def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path):
     emulator_directory = Path(emulator).parent if emulator else None
-    crash_report = CrashReporter(
-        emulator_directory, symbol_path, GRPC_SERVICES
-    )
+    crash_report = CrashReporter(emulator_directory, symbol_path, GRPC_SERVICES)
 
     # Write them to disk
     await crash_report.write_reports_to_disk(logdir)
@@ -932,9 +946,10 @@ def parse_arguments():
         default=False,
         action="store_true",
         dest="generate",
-        help="Use the devpi server to obtain all required packages. "
+        help="Create a virtual environment."
         + "This requires you to launch the devpi server found in "
-        + f"{AOSP_ROOT / 'external' / 'adt_infra' / 'devpi'}",
+        + f"{AOSP_ROOT / 'external' / 'adt_infra' / 'devpi'}."
+        + "You can use this to obtain additional dependencies through pip download.",
     )
 
     parser.add_argument(
@@ -992,7 +1007,24 @@ def parse_arguments():
     )
 
     args = parser.parse_args()
-    configure_logging(logging.DEBUG if args.verbose else logging.INFO)
+    log_name = '.'.join((os.path.basename(sys.argv[0]),
+                         datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), 'log'))
+    configure_logging(logging.DEBUG if args.verbose else logging.INFO,
+                      log_path=Path(args.logdir, log_name))
+
+    if args.generate:
+        if not args.virtual_env_dir:
+            raise ValueError(
+                "You must provide a virtual environment directory (-d/--directory)"
+            )
+        py_exe = AospPyRunner(
+            "http://localhost:3141/packages/stable", args.virtual_env_dir
+        )
+        venv = Path(args.virtual_env_dir) / ".venv"
+        print(f"Virtal environment installed in {venv}. Please run the activate script.")
+        print("Note that you might have to run `pip download <package>` multiple times.")
+        sys.exit(0)
+
     if args.build_dir and args.emulator:
         raise ValueError("Use either --build_dir or --emulator flag, not both.")
 

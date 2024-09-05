@@ -17,6 +17,10 @@
 package com.android.devtools.systemimage.uitest.smoke.api32;
 
 import android.app.Instrumentation;
+import android.util.Log;
+
+import androidx.test.espresso.IdlingResource;
+import androidx.test.espresso.IdlingRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -39,6 +43,7 @@ import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertFalse;
@@ -55,6 +60,8 @@ public class NetworkIOTest {
 
     @Rule
     public Timeout globalTimeout = Timeout.seconds(1000);
+
+    private final String TAG = "NetworkIOTest";
 
     /**
      * Verifies test browser successfully loads a web page.
@@ -329,51 +336,194 @@ public class NetworkIOTest {
         final Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        String[] path = new String[]{"Settings", "Network & internet", "SIMs", "Preferred network type"};
-        AppLauncher.launchPath(instrumentation, true, path);
+        String dataSwitchLTE = "LTE (recommended)";
+        String dataSwitch3G = "3G";
+        String dataSwitch2G = "2G";
 
-        UiObject dataSwitchLTE = device.findObject(new UiSelector().text("LTE (recommended)"));
-        UiObject dataSwitch3G = device.findObject(new UiSelector().text("3G"));
-        UiObject dataSwitch2G = device.findObject(new UiSelector().text("2G"));
-
-        if (dataSwitchLTE.waitForExists(5L)) {
-            if (!dataSwitchLTE.isChecked()) {
-                dataSwitchLTE.clickAndWaitForNewWindow(5L);
-            } else {
-                device.pressBack();
-            }
+        if (!(navigateToSettingsPath(device, "Network & internet", "SIMs", "Preferred network type"))) {
+            fail("Failed to navigate to Network & internet > SIMs settings > Preferred network type.");
         }
-        assertTrue("LTE data mode is not enabled.", new Wait().until(dataSwitchLTE::exists));
-        AppLauncher.launchPath(instrumentation, true, path);
+        clickAndConfirmSwitch(device, dataSwitchLTE);
 
-        if (dataSwitch3G.waitForExists(5L)) {
-            if (!dataSwitch3G.isChecked()) {
-                dataSwitch3G.clickAndWaitForNewWindow(5L);
-            } else {
-                device.pressBack();
-            }
-        }
-        assertTrue("3G data mode is not enabled.", new Wait().until(dataSwitch3G::exists));
-        AppLauncher.launchPath(instrumentation, true, path);
+        navigateToSettingsPath(device, "Network & internet", "SIMs", "Preferred network type");
+        clickAndConfirmSwitch(device, dataSwitch3G, dataSwitchLTE);
 
-        if (dataSwitch2G.waitForExists(5L)) {
-            if (!dataSwitch2G.isChecked()) {
-                dataSwitch2G.clickAndWaitForNewWindow(5L);
-            }
-            else {
-                device.pressBack();
-            }
-        }
-        assertTrue("2G data mode is not enabled.", new Wait().until(dataSwitch2G::exists));
-        AppLauncher.launchPath(instrumentation, true, path);
+        navigateToSettingsPath(device, "Network & internet", "SIMs", "Preferred network type");
+        clickAndConfirmSwitch(device, dataSwitch2G, dataSwitch3G);
 
-        if (dataSwitchLTE.waitForExists(5L)) {
-            if (!dataSwitchLTE.isChecked()) {
-                dataSwitchLTE.clickAndWaitForNewWindow(5L);
-            } else {
-                device.pressBack();
-            }
+        navigateToSettingsPath(device, "Network & internet", "SIMs", "Preferred network type");
+        assertTrue("LTE switch not reset.", clickAndConfirmSwitch(device, dataSwitchLTE, dataSwitch2G));
+    }
+
+    /**
+     * Navigates to a specified path in the Settings app.
+     *
+     * This method launches the Settings app and then navigates to a specified path by clicking on the options
+     * in the order they are provided. The navigation is performed by scrolling through either the
+     * 'main_content_scrollable_container' or the 'content_frame' depending on the pass of the loop.
+     *
+     * @param device The UiDevice instance that represents an emulator or a connected device.
+     * @param path An array of Strings where each String is the name of an option in the Settings app.
+     * @return true if the method was able to find and click on all the options in the path array, false otherwise.
+     * @throws UiObjectNotFoundException if an option in the path array is not found.
+     */
+    private boolean navigateToSettingsPath(UiDevice device, String... path) throws UiObjectNotFoundException {
+        device.pressHome();
+
+        try {
+            device.executeShellCommand("am start -a android.settings.SETTINGS");
+        } catch (IOException e) {
+            Log.w(TAG, "Failed to launch Settings", e);
+            return false;
         }
-        assertTrue("LTE data mode is not re-enabled.", new Wait().until(dataSwitchLTE::exists));
+        for (int i = 0; i < path.length; i++) {
+            String location = path[i];
+            UiScrollable scrollableContainer = i == 0 ?
+                    new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)) :
+                    new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+            SettingsIdlingResource idlingResource = new SettingsIdlingResource(scrollableContainer);
+            IdlingRegistry.getInstance().register(idlingResource);
+            assertTrue("Scrollable view not found", scrollableContainer.waitForExists(15000));
+            UiSelector optionSelector = new UiSelector().text(location);
+            UiObject option = device.findObject(optionSelector);
+
+            dismissUnresponsivePopup(device);
+
+            if (!option.waitForExists(10000L)) {
+                boolean scrolled = scrollableContainer.scrollIntoView(optionSelector);
+                if (!scrolled) {
+                    Log.w(TAG, "Failed to navigate to " + location);
+                    IdlingRegistry.getInstance().unregister(idlingResource);
+
+                    return false;
+                }
+            }
+            if (!option.clickAndWaitForNewWindow(15000L)) {
+                Log.w(TAG, "Failed to click on " + location);
+                IdlingRegistry.getInstance().unregister(idlingResource);
+
+                return false;
+            }
+
+            IdlingRegistry.getInstance().unregister(idlingResource);
+        }
+
+        return true;
+    }
+
+    /**
+     * This method is used to click on a switch in the Settings app and confirm that the switch has been clicked.
+     * It first checks if the previous switches (if any) exist and then clicks on the target switch.
+     * If any of the previous switches or the target switch do not exist, it logs a warning and returns false.
+     * If all switches exist and the target switch is clicked successfully, it returns true.
+     *
+     * @param device The UiDevice instance that represents an emulator or a connected device.
+     * @param switchLabel The label of the switch that this method will click on.
+     * @param previousSwitchLabels The labels of the switches that this method will check for existence before clicking on the target switch.
+     * @return true if all switches exist and the target switch is clicked successfully, false otherwise.
+     * @throws UiObjectNotFoundException if an option in the path array is not found.
+     */
+    private boolean clickAndConfirmSwitch(UiDevice device, String switchLabel, String ...previousSwitchLabels) {
+        UiScrollable scrollableContainer = new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+        SettingsIdlingResource idlingResource = new SettingsIdlingResource(scrollableContainer);
+        IdlingRegistry.getInstance().register(idlingResource);
+
+        try {
+            dismissUnresponsivePopup(device);
+
+            if (previousSwitchLabels.length > 0) {
+                for (String previousSwitchLabel : previousSwitchLabels) {
+                    UiObject previousSwitchObject = device.findObject(new UiSelector().text(previousSwitchLabel));
+                    if (!previousSwitchObject.waitForExists(10000L)) {
+                        Log.w(TAG, "Failed to find previous switch object" + previousSwitchLabel);
+                        IdlingRegistry.getInstance().unregister(idlingResource);
+                        return false;
+                    }
+                }
+            }
+
+            UiObject switchObject = device.findObject(new UiSelector().text(switchLabel));
+            switchObject.waitForExists(10000L);
+            switchObject.clickAndWaitForNewWindow(10000L);
+            IdlingRegistry.getInstance().unregister(idlingResource);
+
+            return true;
+        } catch (UiObjectNotFoundException e) {
+            Log.w(TAG, "Failed to find switch object" + switchLabel, e);
+            IdlingRegistry.getInstance().unregister(idlingResource);
+
+            return false;
+        }
+    }
+
+    /**
+     * This method is used to dismiss any unresponsive popup that might appear during the execution of the tests.
+     * It first tries to find the unresponsive popup by its resource id. If the popup exists, it clicks on it to dismiss it.
+     *
+     * @param device The UiDevice instance that represents an emulator or a connected device.
+     * @throws UiObjectNotFoundException if the unresponsive popup is not found.
+     */
+    private void dismissUnresponsivePopup(UiDevice device) throws UiObjectNotFoundException {
+        UiObject notRespondingError = device.findObject(
+                new UiSelector().resourceId(Res.ANDROID_ERROR_WAIT_RES));
+        if (notRespondingError.waitForExists(5000L)) {
+            notRespondingError.click();
+            notRespondingError.waitUntilGone(5000L);
+        }
+    }
+
+    /**
+     * An implementation of the IdlingResource interface. This class is used to notify Espresso that the app is idle or busy.
+     * An instance of this class is created with a UiObject.
+     * The UiObject is the object that this idling resource will be waiting on (i.e., it will wait until this object exists).
+     */
+    private class SettingsIdlingResource implements IdlingResource {
+        private ResourceCallback resourceCallback;
+        private final UiObject idleTarget;
+
+        /**
+         * Constructs a SettingsIdlingResource with the given UiDevice and UiObject.
+         *
+         * @param idleTarget The object that this idling resource will be waiting on.
+         */
+        public SettingsIdlingResource(UiObject idleTarget) {
+            this.idleTarget = idleTarget;
+        }
+
+        /**
+         * Returns the name of the idling resource.
+         *
+         * @return The name of the idling resource.
+         */
+        @Override
+        public String getName() {
+            return SettingsIdlingResource.class.getName();
+        }
+
+        /**
+         * Checks if the app is idle. In this case, the app is considered idle if the idleTarget exists.
+         *
+         * @return true if the app is idle, false otherwise.
+         */
+        @Override
+        public boolean isIdleNow() {
+            boolean isIdle = idleTarget.exists();
+
+            if (isIdle && resourceCallback != null) {
+                resourceCallback.onTransitionToIdle();
+            }
+
+            return isIdle;
+        }
+
+        /**
+         * Registers the callback to be invoked when the app transitions from busy to idle.
+         *
+         * @param resourceCallback The callback to be invoked when the app transitions from busy to idle.
+         */
+        @Override
+        public void registerIdleTransitionCallback(ResourceCallback resourceCallback) {
+            this.resourceCallback = resourceCallback;
+        }
     }
 }
