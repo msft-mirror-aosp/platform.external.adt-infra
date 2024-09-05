@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import asyncio
-import logging
+import re
 import os
 import tarfile
 
@@ -278,11 +278,11 @@ async def test_snapshot_can_edit(snapshot_service):
 
 
 @pytest.mark.e2e
-@pytest.mark.snapshot
-@pytest.mark.fast
 @pytest.mark.async_timeout(1200)
-async def test_invalid_snapshot(avd):
-    """Verify that invalid snapshot cannot be loadedi.
+@pytest.mark.embedded
+async def test_invalid_snapshot_notifies_user(avd):
+    """Verify that invalid snapshot cannot be loaded, and that the user will be
+       properly notified.
 
     Args:
         avd (BaseEmulator): Fixture that gives access to a booted emulator.
@@ -325,9 +325,9 @@ async def test_invalid_snapshot(avd):
     def cold_boot_filter(record):
         # Set 'cold_boot_mode' to 'True' if the cold boot text is detected in the log.
         nonlocal cold_boot_mode
-        text = "Cold boot: different AVD configuration"
+        text = r"USER_INFO\s+\|\s+Emulator is performing a full startup."
         message = record.getMessage()
-        if text in message:
+        if re.match(text, message):
             cold_boot_mode = True
         return True
     avd.logger.addFilter(cold_boot_filter)
