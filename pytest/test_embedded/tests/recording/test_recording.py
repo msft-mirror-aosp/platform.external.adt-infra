@@ -150,11 +150,12 @@ async def test_screen_recording_duration(animation_app, emulator, tmp_path):
     verify_recorded_file_header(sample_file, sample_file_header)
 
 
-async def screen_records_video(screen_service, sample_file):
-    info = RecordingInfo(width=120, height=120, file_name=str(sample_file))
+async def screen_records_video(screen_service, sample_file,
+                               width=140, height=140, duration=2):
+    info = RecordingInfo(width=width, height=height, file_name=str(sample_file))
     logging.info("Starting the recording: %s", info)
     await screen_service.StartRecording(info)
-    await asyncio.sleep(2)
+    await asyncio.sleep(duration)
     logging.info("Stopping the recording: %s", info)
     await screen_service.StopRecording(info)
 
