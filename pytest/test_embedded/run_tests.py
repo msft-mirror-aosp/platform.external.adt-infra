@@ -634,7 +634,8 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
     try:
         python_exe.run(
             [
-                f"{HERE}/src/xml/transform.py",
+                "-m",
+                "emuxml.transform",
                 "--xml",
                 source,
                 "--xsl",
@@ -652,7 +653,8 @@ def merge_results(python_exe: PyRunner, sources: [Path], dest: Path):
     try:
         python_exe.run(
             [
-                f"{HERE}/src/xml/merge_results.py",
+                "-m",
+                "emuxml.merge_results",
                 "--single",
                 "--out",
                 dest,
@@ -873,9 +875,12 @@ def merge_skip_reports(python_exe: PyRunner, sources: [Path], dest: Path):
     try:
         python_exe.run(
             [
-                f"{HERE}/src/xml/merge_skip_reports.py",
+                "-m",
+                f"emuxml.merge_skip_reports",
                 "--out",
                 dest,
+                "--cfg",
+                HERE / "cfg",
             ]
             + [str(x) for x in sources],
             timeout=10,
