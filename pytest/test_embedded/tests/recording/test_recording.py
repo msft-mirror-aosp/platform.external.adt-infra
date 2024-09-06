@@ -21,7 +21,10 @@ from aemu.proto.screen_recording_service_pb2 import RecordingInfo
 from aemu.proto.screen_recording_service_pb2_grpc import ScreenRecordingStub
 from google.protobuf import empty_pb2
 
-from emu.timing import eventually
+from emu.timing import eventually, wait_until
+
+from tests.test_utils import decode_qrcodes, get_window_dump, click_button
+from pathlib import Path
 
 
 @pytest.fixture
@@ -169,6 +172,36 @@ def verify_recorded_file_header(sample_file, sample_file_header):
     ), f'{header} != sample_file_header, the magic header'
 
 
+async def play_webm(emulator, file):
+    """Play a .webm video using the default video player.
+    """
+    async def dismiss_fullscreen_popup():
+        # Dismiss fullscreen mode if needed.
+        status = await click_button("Got it", emulator)
+        return None if not status else True
+
+    await emulator.stop_activity("com.google.android.apps.photos")
+    await emulator.start_activity(
+        "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
+        params=f'-a android.intent.action.VIEW -W -d file://{file} -t "video/*"'
+    )
+    await eventually(dismiss_fullscreen_popup)
+    logging.info(f"Launched recording file '{file}'")
+
+
+async def verify_qrcode(emulator, webm_recording, payload):
+    """ Play a .webm recording in the emulator and check if a QR code exists
+    """
+    video_path = Path('/sdcard/Downloads/') / webm_recording.name
+    await emulator.adb.push(webm_recording, video_path)
+    async def _play_and_decode():
+        await play_webm(emulator, video_path)
+        return await decode_qrcodes([payload])
+    assert await wait_until(
+        _play_and_decode, timeout=240
+    ), "Unable to decode the QR code from video '{sample_file}'."
+
+
 @pytest.mark.parametrize(
     "gpu_mode",
     ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
@@ -178,7 +211,7 @@ def verify_recorded_file_header(sample_file, sample_file_header):
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_screen_records_with_different_gpu_modes(
-    emulator, gpu_mode, tmp_path
+    emulator, gpu_mode, tmp_path, qrcode_png
 ):
     """Verify screen recording work with different gpu modes.
 
@@ -189,14 +222,18 @@ async def test_screen_records_with_different_gpu_modes(
 
     Test Steps:
         1. Launch an AVD with the option "-gpu auto".
-        2. Perform a Screen Recording.
-        3. Wait for couple of seconds and then Stop the Recording.
-        4. Save the video in "WEBM" format (Verify).
-        5. Repeat the process with other gpu modes:
+        2. Launch a PNG image with a pre-encoded QR code.
+        3. Perform a Screen Recording.
+        4. Wait for couple of seconds and then Stop the Recording.
+        5. Save the video in "WEBM" format (Verify 1).
+        6. Play the video in the default video player (Verify 2).
+        7. Repeat the process with other gpu modes:
         host, swiftshader_indirect, angle_indirect (Windows), swangle.
 
     Verification:
-        The saved WEBM recording should be a valid video file.
+        1. The saved WEBM recording should be a valid video file.
+        2. The video is played without any rendering issues, observed from the
+           decoding of the embedded QR code through a series of screenshots.
     """
     if gpu_mode == "angle_indirect" and platform.system != "Windows":
         pytest.skip(f"gpu mode {gpu_mode} is only available on Windows.")
@@ -209,8 +246,10 @@ async def test_screen_records_with_different_gpu_modes(
 
     sample_file = tmp_path / "sample.webm"
     sample_file_header = b"\x1A\x45\xDF\xA3"
-    await screen_records_video(screen_service, sample_file)
+    await qrcode_png.show()
+    await screen_records_video(screen_service, sample_file, 270, 480, 15)
     verify_recorded_file_header(sample_file, sample_file_header)
+    await verify_qrcode(emulator, sample_file, qrcode_png.payload)
 
 
 @pytest.mark.e2e
