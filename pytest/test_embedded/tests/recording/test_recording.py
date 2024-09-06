@@ -257,10 +257,11 @@ async def test_screen_records_with_different_gpu_modes(
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_screen_records_with_different_orientations(
-        screen_service, telnet, tmp_path):
+        avd, screen_service, telnet, tmp_path, qrcode_png):
     """Verify the behavior of screen recording with different screen orientation.
 
     Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
         screen_service (ScreenRecordingStub): screen recording service.
         telnet (EmulatorConnection): Fixture that gives access to the emulator console.
         tmp_path (Path): Fixture that provides a temporary directory.
@@ -269,40 +270,21 @@ async def test_screen_records_with_different_orientations(
         1. Create a new AVD.
         2. Change device orientation to (reverse) landscape mode.
         3. Start a Screen Recording in WEBM format.
-        4. Wait for couple of seconds and then stop the recording.
+        4. Wait for couple of seconds and then stop the recording. (Verify 1 and 2)
         6. Start the Screen Recording.
-        7. Change device orientation from reverse landscape do portrait during the recording.
+        7. Change device orientation from reverse landscape do portrait during
+           the recording. (Verify 1 and 2)
 
     Verification:
-        Check the file size and signature to verify the video is recorded without any issues.
+        1. The video is recorded without any issues, verified by checking the recording
+           file size and header.
+        2. The video is played without any rendering issues, observed from the decoding
+           of the embedded QR code through a series of screenshots.
     """
     async def rotate():
         # Rotate the emulator clockwise by 90 degrees.
         await telnet.send("rotate")
-        await asyncio.sleep(2)
-
-    sample_file_header = b"\x1A\x45\xDF\xA3"
-
-    # Ensure screen recording work in (reverse) landscape mode.
-    landscape_file = tmp_path / "sample_landscape.webm"
-    logging.info(f"Rotating the emulator to reverse landscape ...")
-    await rotate()
-    await screen_records_video(screen_service, landscape_file)
-    verify_recorded_file_header(landscape_file, sample_file_header)
-
-    # Ensure a valid recording is produced while the emulator is rotated.
-    landscape_portrait_file = tmp_path / "sample_landscape_portrait.webm"
-    info = RecordingInfo(file_name=str(landscape_portrait_file))
-    logging.info("Starting the recording: %s", info)
-    await screen_service.StartRecording(info)
-    await asyncio.sleep(2)
-
-    for angle in [-180, 90, 0]:
-        logging.info(f"Rotating the emulator to {angle} degrees ..")
-        await rotate()
-
-    logging.info("Stopping the recording: %s", info)
-    await screen_service.StopRecording(info)
+        await asyncio.sleep(7)
 
     async def check_webm(sample_webm, sample_file_header):
         # Check file size.
@@ -310,11 +292,35 @@ async def test_screen_records_with_different_orientations(
         assert (
             sample_webm.stat().st_size > 10240
         ), "We should have recorded a series of frames"
-        # Check file signature.
+        # Check file header.
         with open(sample_webm, "rb") as file:
             header = file.read(4)
         assert (
                 header == sample_file_header
         ), f'{header} != sample_file_header, the magic header'
 
+    sample_file_header = b"\x1A\x45\xDF\xA3"
+
+    # Ensure screen recording work in (reverse) landscape mode.
+    landscape_file = tmp_path / "sample_landscape.webm"
+    logging.info(f"Rotating the emulator to reverse landscape ...")
+    await rotate()
+    await qrcode_png.show()
+    await screen_records_video(screen_service, landscape_file, 270, 480, 20)
+    verify_recorded_file_header(landscape_file, sample_file_header)
+    await verify_qrcode(avd, landscape_file, qrcode_png.payload)
+
+    # Ensure a valid recording is produced while the emulator is rotated.
+    landscape_portrait_file = tmp_path / "sample_landscape_portrait.webm"
+    info = RecordingInfo(width=270, height=480, file_name=str(landscape_portrait_file))
+    logging.info("Starting the recording: %s", info)
+    await screen_service.StartRecording(info)
+    for angle in [-180, 90, 0]:
+        logging.info(f"Rotating the emulator to {angle} degrees ..")
+        await rotate()
+
+    logging.info("Stopping the recording: %s", info)
+    await screen_service.StopRecording(info)
+
     await check_webm(landscape_portrait_file, sample_file_header)
+    await verify_qrcode(avd, landscape_portrait_file, qrcode_png.payload)
