@@ -810,7 +810,7 @@ async def stream_screenshot(emulator_controller, log_directory, request):
     return streaming_img_call
 
 
-pytest.fixture
+@pytest.fixture
 async def qrcode_png(avd):
     """A fixture that access a PNG image with a pre-encoded QR code
     Args:
