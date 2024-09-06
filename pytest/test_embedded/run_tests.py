@@ -806,7 +806,9 @@ def run_tests(
         os.getenv("PYTEST_ADDOPTS"),
     )
 
-    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
+    crash_retry = HERE.parent / "crash_retry"
+
+    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE, crash_retry])
 
     logdir = Path(logdir)
 
