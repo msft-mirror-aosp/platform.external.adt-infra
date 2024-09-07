@@ -187,7 +187,7 @@ def pytest_runtest_makereport(
     original_report: pytest.TestReport = outcome.get_result()
     retry_manager.record_node_stats(original_report)
 
-    if not should_handle_retry(item, call):
+    if not should_handle_retry(call):
         return
 
     # Set dynamic outcome for each stage until runtest protocol has completed
