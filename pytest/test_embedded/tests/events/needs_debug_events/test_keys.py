@@ -366,7 +366,7 @@ async def test_close_emulator(avd):
         # Send Volume Up and Power keystrokes.
         await avd.adb.shell("input keyevent KEYCODE_VOLUME_UP & \
                              input keyevent KEYCODE_POWER")
-        window_dump = await get_window_dump()
+        window_dump = await get_window_dump(avd)
         if "text=\"Power off\"" not in window_dump:
             await asyncio.sleep(5)
             return False
