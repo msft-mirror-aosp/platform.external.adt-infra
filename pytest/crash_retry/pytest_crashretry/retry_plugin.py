@@ -27,10 +27,23 @@ PASS = 3
 
 
 class Reporter:
+    """
+    Temporarily stores retry report contents in memory for later output
+    """
+
     def __init__(self) -> None:
+        """
+        Initializes the Reporter with an empty StringIO stream.
+        """
         self.stream = StringIO()
 
     def record_attempt(self, lines: list[str]) -> None:
+        """
+        Appends the given lines to the internal stream.
+
+        Args:
+            lines: A list of strings representing the lines to be added to the report.
+        """
         self.stream.writelines(lines)
 
 
@@ -45,6 +58,12 @@ class RetryManager:
     """
 
     def __init__(self, config: pytest.Config) -> None:
+        """
+        Initializes the RetryManager with the given pytest configuration.
+
+        Args:
+            config: The pytest configuration object.
+        """
         self.reporter: Reporter = Reporter()
         self.trace_limit: Optional[int] = 1
         self.node_stats: dict[str, dict] = {}
@@ -58,14 +77,38 @@ class RetryManager:
         self.log_file = config.getoption("--log-file")
 
     def get_crash_reporter(self, config: pytest.Config) -> CrashReporter:
+        """
+        Initializes a CrashReporter instance based on the pytest configuration.
+
+        Args:
+            config: The pytest configuration object.
+
+        Returns:
+            A CrashReporter instance.
+        """
         exe = config.getoption("emulator")
         emulator_directory = Path(exe).parent if exe else None
         return CrashReporter(emulator_directory, config.getoption("symbols"), None)
 
     def crash_reports(self) -> List[str]:
+        """
+        Returns a list of crash reports from the CrashReporter.
+
+        Returns:
+            A list of crash report strings.
+        """
         return self.crash_reporter.list_crashes()
 
-    def write_crash_reports(self):
+    def clear(self) -> None:
+        """
+        Clears all crash reports from the CrashReporter.
+        """
+        self.crash_reporter.clear()
+
+    def write_crash_reports(self) -> None:
+        """
+        Writes crash reports to disk if a log file is specified in the configuration.
+        """
         if not self.log_file or not Path(self.log_file).exists():
             return
 
@@ -75,6 +118,15 @@ class RetryManager:
     def log_attempt(
         self, attempt: int, name: str, exc: Optional[pytest.ExceptionInfo], result: int
     ) -> None:
+        """
+        Logs a retry attempt to the internal reporter.
+
+        Args:
+            attempt: The attempt number.
+            name: The name of the test or fixture.
+            exc: An optional pytest.ExceptionInfo object if an exception occurred.
+            result: An integer representing the result of the attempt (RETRY, FAIL, EXIT, PASS).
+        """
         message = self.messages[result].format(attempt=attempt)
         formatted_trace = ""
         if exc:
@@ -87,6 +139,12 @@ class RetryManager:
         self.reporter.record_attempt([f"\t{name}", message, formatted_trace, "\n\n"])
 
     def build_retry_report(self, terminal_reporter: TerminalReporter) -> None:
+        """
+        Builds and writes a retry report to the terminal reporter.
+
+        Args:
+            terminal_reporter: The pytest terminal reporter object.
+        """
         contents = self.reporter.stream.getvalue()
         if not contents:
             return
@@ -100,13 +158,24 @@ class RetryManager:
         terminal_reporter.write("\n")
 
     def record_node_stats(self, report: pytest.TestReport) -> None:
+        """
+        Records statistics for a test node.
+
+        Args:
+            report: The pytest test report object.
+        """
         self.node_stats[report.nodeid]["outcomes"][report.when].append(report.outcome)
         self.node_stats[report.nodeid]["durations"][report.when].append(report.duration)
 
     def simple_outcome(self, item: pytest.Item) -> str:
         """
-        Return failed if setup, teardown, or final call outcome is 'failed'
-        Return skipped if test was skipped
+        Returns a simplified outcome for a test item.
+
+        Args:
+            item: The pytest test item object.
+
+        Returns:
+            A string representing the simplified outcome ("failed", "skipped", or "passed").
         """
         test_outcomes = self.node_stats[item.nodeid]["outcomes"]
         for outcome in ("skipped", "failed"):
@@ -121,11 +190,26 @@ class RetryManager:
 
     def simple_duration(self, item: pytest.Item) -> float:
         """
-        Return total duration for test summing setup, teardown, and final call
+        Returns the total duration for a test item, including setup, call, and teardown.
+
+        Args:
+            item: The pytest test item object.
+
+        Returns:
+            The total duration in seconds.
         """
         return sum(self.node_stats[item.nodeid]["durations"][stage][-1] for stage in stages)
 
     def sum_attempts(self, item: pytest.Item) -> int:
+        """
+        Returns the total number of attempts for a test item.
+
+        Args:
+            item: The pytest test item object.
+
+        Returns:
+            The total number of attempts.
+        """
         return len(self.node_stats[item.nodeid]["outcomes"]["call"])
 
 
