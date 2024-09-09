@@ -388,7 +388,7 @@ async def test_close_emulator(avd):
     ), "Couldn't open the Power options menu."
 
     assert await (
-        eventually(partial(click_button, "Power off"))
+        eventually(partial(click_button, "Power off", avd))
     ), "Couldn't click the Power off button."
 
     assert await (
