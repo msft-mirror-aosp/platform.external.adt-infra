@@ -24,9 +24,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from queue import Queue
 from threading import Lock, Thread, Timer
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 from zipfile import ZipFile, ZipInfo
 
 # Note we are not part of the package!
@@ -34,8 +33,8 @@ from src.emu.crashreporter import CrashReporter
 from src.emu.logging.log_handler import configure_logging
 
 OS_NAME = platform.system().lower()
-EMU_TEST_DIR = Path(os.path.dirname(__file__)).absolute()
-AOSP_ROOT = EMU_TEST_DIR.parents[3]
+HERE = Path(os.path.dirname(__file__)).absolute()
+AOSP_ROOT = HERE.parents[3]
 SDK_EMULATOR = (
     AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
 )
@@ -55,15 +54,12 @@ SNAPTOOL = (
     AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc" / "python" / "snaptool"
 )
 NETSIM_GRPC = AOSP_ROOT / "tools" / "netsim" / "testing" / "netsim-grpc"
-HERE = AOSP_ROOT / "external" / "adt-infra" / "pytest" / "test_embedded"
-ADB = ANDROID_SDK_ROOT / "platform-tools" / "adb"
 
 PYTHON_DIR = AOSP_ROOT / "prebuilts" / "python" / f"{OS_NAME}-x86"
 if OS_NAME != "windows":
     PYTHON = PYTHON_DIR / "bin" / "python3"
 else:
     PYTHON = PYTHON_DIR / "python.exe"
-    ADB = ADB.with_suffix(".exe")
 
 # Path to all the gRPC services
 GRPC_SERVICES = AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc"
@@ -113,18 +109,19 @@ class ZipFileWithAttr(ZipFile):
 
 
 class AdbServer:
-    def __init__(self, pyrun):
+    def __init__(self, pyrun, adb):
         self.pyrun = pyrun
+        self.adb = adb
 
     def __enter__(self):
-        self.pyrun.run(
+        self.pyrun(
             ["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False
         )
-        run([ADB, "start-server"], timeout=60)
+        run([self.adb, "start-server"], timeout=60)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        run([ADB, "kill-server"], timeout=60)
-        self.pyrun.run(
+        run([self.adb, "kill-server"], timeout=60)
+        self.pyrun(
             ["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False
         )
 
@@ -142,7 +139,6 @@ def _reader(pipe, logfn):
 
 def _log_proc(proc):
     """Logs the output of the given process."""
-    q = Queue()
     for args in [[proc.stdout, logging.info], [proc.stderr, logging.error]]:
         Thread(target=_reader, args=args).start()
 
@@ -432,7 +428,7 @@ class PyRunner:
         Args:
           display (str): the display name
 
-        Return:
+        Returns:
           bool: True if X is running, False otherwise
         """
         return (
@@ -475,7 +471,7 @@ class PyRunner:
     def run(
         self,
         args: List[str],
-        env: Dict[str, str] = {},
+        env: Optional[Dict[str, str]] = None,
         timeout: int = 300,
         cwd: str = os.getcwd(),
         check_output: bool = True,
@@ -493,8 +489,8 @@ class PyRunner:
             int: The exit code of the process.
         """
         emu_env = self.env.copy()
-        emu_env.update(env)
         if env:
+            emu_env.update(env)
             logging.info("Using %s from %s", emu_env, self.env)
         return run(
             [self.py_exe] + args,
@@ -616,13 +612,13 @@ retries = 0
         super().pip_install(["--index-url", f"{self.repo}"] + packages)
 
 
-def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
+def apply_xslt(python_exe: Callable, source: Path, xslt: Path, dest: Path):
     """Applies a specified XSLT file to an XML file and saves the result to a specified
     destination.
 
 
     Args:
-        python_exe (PyRunner): The path to the Python executable that will be used
+        python_exe (Callable): Callable that runs Python that will be used
                 to run the transform script.
         source (Path): The path to the Python executable that will be used to run
                 the transform script.
@@ -632,7 +628,7 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
                 transformation will be saved.
     """
     try:
-        python_exe.run(
+        python_exe(
             [
                 "-m",
                 "emuxml.transform",
@@ -649,9 +645,9 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
         logging.warning("Failed to apply xslt: %s to %s due to (%s)", xslt, source, err)
 
 
-def merge_results(python_exe: PyRunner, sources: [Path], dest: Path):
+def merge_results(python_exe: Callable, sources: [Path], dest: Path):
     try:
-        python_exe.run(
+        python_exe(
             [
                 "-m",
                 "emuxml.merge_results",
@@ -668,9 +664,10 @@ def merge_results(python_exe: PyRunner, sources: [Path], dest: Path):
         )
 
 
-async def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path):
+async def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path,
+                                grpc_services: Path):
     emulator_directory = Path(emulator).parent if emulator else None
-    crash_report = CrashReporter(emulator_directory, symbol_path, GRPC_SERVICES)
+    crash_report = CrashReporter(emulator_directory, symbol_path, grpc_services)
 
     # Write them to disk
     await crash_report.write_reports_to_disk(logdir)
@@ -690,12 +687,15 @@ def run_single_suite(
     symbol_path: Path,
     tmpdir: str,
     build_target: str,
-    pyrun: PyRunner,
+    pyrun: Callable,
     pytest_flags: list[str],
     avd_configs: list[str],
     collect: bool,
     name: str,
     fetcher: Optional[Path],
+    android_home: Path,
+    adb: Path,
+    grpc_services: Path,
 ):
     if collect:
         pytest_flags.append("--setup-plan")
@@ -705,7 +705,7 @@ def run_single_suite(
     junit_test_results = Path(logdir) / f"{name}.xml"
     exit_code = 1
     try:
-        exit_code = pyrun.run(
+        exit_code = pyrun(
             [
                 "-m",
                 "pytest",
@@ -719,7 +719,7 @@ def run_single_suite(
                 avd_configs,
                 f"--android_avd_home={tmpdir}",
                 f"--build_target={build_target}",
-                f"--android_home={ANDROID_SDK_ROOT}",
+                f"--android_home={android_home}",
             ]
             + pytest_flags,
             cwd=HERE,
@@ -739,14 +739,14 @@ def run_single_suite(
             timeout_exception.timeout,
         )
         # Force the emulator to crash when the test suite timesout.
-        run([ADB, "emu", "crash"], timeout=300)
+        run([adb, "emu", "crash"], timeout=300)
 
     finally:
         # Let's see if we can collect crash reports..
-        asyncio.run(collect_crash_reports(emulator, symbol_path, logdir))
+        asyncio.run(collect_crash_reports(emulator, symbol_path, logdir, grpc_services))
 
         # Forcefully terminate all emulator processess
-        pyrun.run(["-m", "emu.process.kill_emulator"], check_output=False)
+        pyrun(["-m", "emu.process.kill_emulator"], check_output=False)
 
         if not junit_test_results.exists():
             raise NoTestResultsProduced(
@@ -776,48 +776,51 @@ def run_tests(
     emulator: str,
     use_exceptions: bool,
     logdir: Path,
-    verbose: bool,
     symbol_path: Path,
     build_target: str,
-    pyrun: PyRunner,
+    pyrun: Callable,
     tests_to_run,
     collect: bool,
     fetcher: Optional[Path],
+    android_home: Path,
+    grpc_services: Path,
 ):
     """runs tests on an emulator. It installs necessary packages, restarts adb,
     runs pytest and converts the results to a junit xml and HTML files.
 
     Args:
 
-        emulator (str):       Path to the emulator binary
-        use_exceptions(bool): True if an excpetion should be raised on pytest failures.
-        symbol_path(Path):    Optional path to the symbols that belong with this emulator.
-        logdir (Path):        The directory where all the logs will be written to
-        verbose: (bool):      True if we should be (very) verbose.
-        pyrun (PyRunner):     The python runner used to run python.
+        emulator (str):        Path to the emulator binary
+        use_exceptions(bool):  True if an excpetion should be raised on pytest failures.
+        logdir (Path):         The directory where all the logs will be written to
+        symbol_path(Path):     Optional path to the symbols that belong with this emulator.
+        build_target: (str):   The name of the build target.
+        pyrun (Callable):      The callable used to run python.
         tests_to_run (str, dict):
-        collect: (bool):      True if the list of tests should be collected, not run.
+        collect: (bool):       True if the list of tests should be collected, not run.
+        fetcher: (Path):       Optional path to the fetcher binary.
+        android_home: (Path):  Path to ANDROID_HOME (previously ANDROID_SDK_ROOT).
+        grpc_services: (Path): Path to GRPC services protos.
     """
     # sanity checks
-    verbose = ["-vvv"] if verbose else []
     emulator = str(resolve_emulator(emulator))
     logging.info(
         "Checking to see if PYTEST_ADDOPTS is available for running tests: %s",
         os.getenv("PYTEST_ADDOPTS"),
     )
 
-    crash_retry = HERE.parent / "crash_retry"
-
-    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE, crash_retry])
 
     logdir = Path(logdir)
+    adb = android_home / "platform-tools" / "adb"
+    if OS_NAME == "windows":
+        adb = adb.with_suffix(".exe")
 
     result_xmls = []
     skip_reports = []
     for name, cfg in tests_to_run:
         test_log_dir = logdir / name
         test_log_dir.mkdir(exist_ok=True, parents=True)
-        with AdbServer(pyrun):
+        with AdbServer(pyrun, adb):
             with tempfile.TemporaryDirectory() as tmpdir:
                 pytest_flags = cfg["pytest_flags"]
                 avd_configs = json.dumps(cfg["avd_configs"])
@@ -835,6 +838,9 @@ def run_tests(
                     collect,
                     name,
                     fetcher,
+                    android_home,
+                    adb,
+                    grpc_services,
                 )
                 result_xmls.append(res)
                 skip_reports.append(test_log_dir.joinpath(name + "_skip.xml"))
@@ -866,19 +872,19 @@ def run_tests(
     )
 
 
-def merge_skip_reports(python_exe: PyRunner, sources: [Path], dest: Path):
+def merge_skip_reports(python_exe: Callable, sources: [Path], dest: Path):
     """Run the standalone skip report module
 
     Args:
-        python_exe (PyRunner): The python runner used to run python.
+        python_exe (Callable): The callable used to run python.
         sources ([Path]): List of xml skip reports that are to be merged.
         dest (Path): The (optional) output file where the result will be written to.
     """
     try:
-        python_exe.run(
+        python_exe(
             [
                 "-m",
-                f"emuxml.merge_skip_reports",
+                "emuxml.merge_skip_reports",
                 "--out",
                 dest,
                 "--cfg",
@@ -987,7 +993,7 @@ def parse_arguments():
 
     parser.add_argument(
         "--test_config",
-        default=EMU_TEST_DIR / "cfg" / f"emulator_{OS_NAME}_tests.json",
+        default=HERE / "cfg" / f"emulator_{OS_NAME}_tests.json",
         help="The test configuration file that describes which tests"
         + " should be run for each configuration",
     )
@@ -1015,8 +1021,8 @@ def parse_arguments():
     args = parser.parse_args()
     logdir = Path(args.logdir)
     logdir.mkdir(exist_ok=True, parents=True)
-    log_name = '.'.join((os.path.basename(sys.argv[0]),
-                         datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), 'log'))
+    log_name = ".".join((os.path.basename(sys.argv[0]),
+                         datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), "log"))
     configure_logging(logging.DEBUG if args.verbose else logging.INFO,
                       log_path=logdir.joinpath(log_name))
 
@@ -1025,7 +1031,7 @@ def parse_arguments():
             raise ValueError(
                 "You must provide a virtual environment directory (-d/--directory)"
             )
-        py_exe = AospPyRunner(
+        AospPyRunner(
             "http://localhost:3141/packages/stable", args.virtual_env_dir
         )
         venv = Path(args.virtual_env_dir) / ".venv"
@@ -1056,6 +1062,9 @@ def main(args):
     py_exe = (
         PyRunner() if args.local_python else AospPyRunner(repo, args.virtual_env_dir)
     )
+    verbose = ["-vvv"] if args.verbose else []
+    crash_retry = HERE.parent / "crash_retry"
+    py_exe.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE, crash_retry])
 
     with open(args.test_config, "r", encoding="utf-8") as file:
         test_cfg = json.load(file)
@@ -1075,26 +1084,28 @@ def main(args):
                 emulator=emulator,
                 use_exceptions=args.use_exceptions,
                 logdir=args.logdir,
-                verbose=args.verbose,
                 symbol_path=symbols,
                 build_target=args.build_target,
-                pyrun=py_exe,
+                pyrun=py_exe.run,
                 tests_to_run=tests_to_run,
                 collect=args.collect,
                 fetcher=args.fetcher,
+                android_home=ANDROID_SDK_ROOT,
+                grpc_services=GRPC_SERVICES,
             )
     else:
         run_tests(
             emulator=args.emulator,
             use_exceptions=args.use_exceptions,
             logdir=args.logdir,
-            verbose=args.verbose,
             symbol_path=args.symbols,
             build_target=args.build_target,
-            pyrun=py_exe,
+            pyrun=py_exe.run,
             tests_to_run=tests_to_run,
             collect=args.collect,
             fetcher=args.fetcher,
+            android_home=ANDROID_SDK_ROOT,
+            grpc_services=GRPC_SERVICES,
         )
 
 
