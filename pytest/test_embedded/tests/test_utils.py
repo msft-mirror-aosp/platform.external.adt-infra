@@ -21,6 +21,8 @@ from emu.timing import eventually, wait_until
 from functools import partial
 from PIL import ImageGrab
 from emu.emulator import BaseEmulator
+from emu.images.convert import proto_to_pillow
+from aemu.proto.emulator_controller_pb2 import ImageFormat
 import deqr
 import logging
 import asyncio
@@ -48,14 +50,24 @@ def wait_for_regex(stream, regex, max_wait):
     return eventually(compiled.match, stream, timeout=max_wait)
 
 
-async def decode_qrcodes(payloads: list[str]):
+async def decode_qrcodes(payloads: list[str], emulator_controller=None):
     """Return True if all QR codes with <payloads> appear in the series of screenshots.
+
+     Note:
+        If 'emulator controller' is None (default), screenshots of the entire screen
+        are taken (using PIL).
     """
     decoder = deqr.QuircDecoder()
+
     async def detect_qrcode(payload: str):
         """Take a screenshot and return True if a QR code with <payload> is detected.
         """
-        screenshot = ImageGrab.grab()
+        if emulator_controller is not None:
+            img = await emulator_controller.getScreenshot(ImageFormat())
+            screenshot = proto_to_pillow(img)
+        else:
+            screenshot = ImageGrab.grab()
+
         data = decoder.decode(screenshot)
         if data is None or len(data) == 0:
             return False
