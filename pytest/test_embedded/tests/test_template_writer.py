@@ -21,8 +21,11 @@ import os
 import shutil
 import tempfile
 import unittest
+import pytest
 
 from emu.template_writer import TemplateWriter
+
+pytestmark = pytest.mark.std
 
 
 class TemplateTest(unittest.TestCase):

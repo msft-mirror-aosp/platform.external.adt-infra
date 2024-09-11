@@ -36,7 +36,7 @@ async def show_status_bar(avd):
     yield
     await avd.stop_activity('com.google.AnimateBox')
 
-@pytest.mark.e2e
+
 @pytest.mark.uiautomator
 async def test_launch_app(ad_ui, show_status_bar):
     asserts.assert_true(
@@ -44,7 +44,7 @@ async def test_launch_app(ad_ui, show_status_bar):
         'Failed to see animation app'
     )
 
-@pytest.mark.e2e
+
 @pytest.mark.uiautomator
 async def test_close_window(ad_ui, show_status_bar):
     # Click the close button and verify that the app disappears
@@ -58,7 +58,7 @@ async def test_close_window(ad_ui, show_status_bar):
         'App did not disappear'
     )
 
-@pytest.mark.e2e
+
 @pytest.mark.uiautomator
 async def test_minimize_and_restore_window(ad_ui, show_status_bar):
     # Click the minimize button and verify that the app is hidden
@@ -84,7 +84,7 @@ async def test_minimize_and_restore_window(ad_ui, show_status_bar):
         'App did not appear'
     )
 
-@pytest.mark.e2e
+
 @pytest.mark.uiautomator
 async def test_maximize_and_restore_window(ad_ui, show_status_bar):
     content = ad_ui(desc=_TEST_APP_CONTENT_DESC).parent

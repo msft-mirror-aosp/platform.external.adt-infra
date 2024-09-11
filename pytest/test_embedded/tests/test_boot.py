@@ -96,7 +96,6 @@ async def get_booted_notification_time(emulator):
 
 
 @pytest.mark.boot
-@pytest.mark.e2e
 @pytest.mark.sanity
 @pytest.mark.fast
 @pytest.mark.wear
@@ -148,7 +147,6 @@ def check_boot_from_snapshot(avdpath) -> bool:
 
 
 @pytest.mark.boot
-@pytest.mark.e2e
 @pytest.mark.sanity
 @pytest.mark.async_timeout(120)
 async def test_snapshot_booted(emulator):
@@ -185,7 +183,6 @@ async def test_snapshot_booted(emulator):
 
 
 @pytest.mark.boot
-@pytest.mark.e2e
 @pytest.mark.skipos("win", "will turn on later")
 @pytest.mark.flaky  # b/286570480
 @pytest.mark.async_timeout(400)
@@ -225,10 +222,10 @@ async def test_emulator_should_idle(emulator):
 
 
 @pytest.mark.boot
-@pytest.mark.e2e
 async def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
     assert await avd.has_booted()
     assert await asyncio.wait_for(get_booted_notification_time(avd), timeout=10)
+
 
 @pytest.mark.boot
 @pytest.mark.fast
@@ -251,7 +248,7 @@ async def test_emulator_debug_startup(avd):
         2. The emulator launches with debug messages (observed from a stdout file).
     """
     # Check if the emulator binary prints the debug tags.
-    cmd = ' '.join((str(avd.exe), '-help-debug-tags'))
+    cmd = " ".join((str(avd.exe), "-help-debug-tags"))
     try:
         output = subprocess.check_output(cmd, shell=True)
         assert "-debug" in output.decode(), "Emulator debug flags not found"
@@ -267,11 +264,13 @@ async def test_emulator_debug_startup(avd):
 
     # Redirect the emulator stdout/stderr to a temporary file.
     with tempfile.NamedTemporaryFile() as emu_output:
-        flags = ["-debug",
-                "all",
-                "-stdouterr-file",
-                emu_output.name,
-               "-no-snapshot-save"]
+        flags = [
+            "-debug",
+            "all",
+            "-stdouterr-file",
+            emu_output.name,
+            "-no-snapshot-save",
+        ]
 
         await avd.restart(flags)
         await asyncio.sleep(5)
@@ -283,7 +282,6 @@ async def test_emulator_debug_startup(avd):
 
 
 @pytest.mark.oldapiboot
-@pytest.mark.e2e
 @pytest.mark.async_timeout(1080)
 async def test_first_time_booted_old_api(emulator):
     """Make sure the emulator status is set to booted."""
@@ -296,9 +294,7 @@ async def test_first_time_booted_old_api(emulator):
     assert await emulator.launch(flags=myflags)
 
     logging.info("Waiting for it to boot up ...")
-    await asyncio.wait_for(
-        get_booted_notification_time(emulator), timeout=1080
-    )
+    await asyncio.wait_for(get_booted_notification_time(emulator), timeout=1080)
 
     logging.info("Shutting down the emulator ...")
     if emulator.is_alive():
@@ -306,7 +302,6 @@ async def test_first_time_booted_old_api(emulator):
     logging.info("emulator is shut down successfully")
 
 
-@pytest.mark.e2e
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 @pytest.mark.parametrize("core", [1, 2])
@@ -318,13 +313,12 @@ async def test_multicore_startup(emulator, core):
     logging.info(f"Launching emulator with {core} core ...")
 
     await emulator.restart(emu_flags=myflags)
-    assert (
-        await emulator.wait_for_boot(timeout=1080)
+    assert await emulator.wait_for_boot(
+        timeout=1080
     ), f"The emulator couldn't be launched with {core} core"
     await emulator.stop()
 
 
-@pytest.mark.e2e
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_boot_without_internet(emulator):
@@ -339,13 +333,17 @@ async def test_boot_without_internet(emulator):
         This causes the emulator to be isolated, not being able to contact
         the host. No IP packages should be routed over the host to the outside.
     """
-    my_flags = ["-wifi-user-mode-options", "restrict=on",
-                "-network-user-mode-options", "restrict=on"]
+    my_flags = [
+        "-wifi-user-mode-options",
+        "restrict=on",
+        "-network-user-mode-options",
+        "restrict=on",
+    ]
 
     # Launch the emulator.
     await emulator.restart(emulator.launch_flags + my_flags)
-    assert (
-        await emulator.wait_for_boot(timeout=180)
+    assert await emulator.wait_for_boot(
+        timeout=180
     ), f"The emulator wasn't able to boot without internet."
 
     # Make sure the emulator launched without internet access.
@@ -356,5 +354,6 @@ async def test_boot_without_internet(emulator):
                 return False
         return True
 
-    assert await emulator_has_no_internet_access(emulator), \
-        "The emulator was launched with internet access."
+    assert await emulator_has_no_internet_access(
+        emulator
+    ), "The emulator was launched with internet access."

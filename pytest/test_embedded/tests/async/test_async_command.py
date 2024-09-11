@@ -18,6 +18,8 @@ import pytest
 
 from emu.process.command import Command
 
+# These are all non emulator tests.
+pytestmark = pytest.mark.std
 
 @pytest.fixture()
 @pytest.mark.async_timeout(1.1)
@@ -35,6 +37,7 @@ async def test_my_amazing_fixture(my_amazing_fixture):
 
 @pytest.mark.xfail
 @pytest.mark.async_timeout(1)
+@pytest.mark.std
 @pytest.mark.skipos("win", "reason: no sleep cmd")
 async def test_sleep_times_out():
     cmd = Command(["sleep", "10"])

@@ -71,7 +71,7 @@ async def request_page_in_chrome(avd):
     await avd.adb.shell(f"am start -S -a android.intent.action.VIEW -d 'file:///{purple_path}/purple.html' -t text/html -n {chrome_cmp}")
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.xpass
 @pytest.mark.async_timeout(1080)

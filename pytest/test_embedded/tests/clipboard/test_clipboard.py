@@ -53,7 +53,7 @@ async def set_clip_data(emulator_controller, clipboard_data="Hello there!"):
     assert await eventually(clipboard_matches_set_clip), "Clipboard data doesn't match"
 
 
-@pytest.mark.e2e
+
 @pytest.mark.embedded
 @pytest.mark.fast
 @pytest.mark.skipos("win", "reason: b/303295516 - error at setup.")
@@ -82,7 +82,7 @@ async def test_clipboard_data(emulator_controller, clipboard_data):
     assert await eventually(expected_clip), "Clipboard data doesn't match"
 
 
-@pytest.mark.e2e
+
 @pytest.mark.embedded
 @pytest.mark.skipos("win", "reason=b/305040235 - error at setup.")
 async def test_stream_clipboard_immediately_sends_data(emulator_controller):
@@ -100,7 +100,7 @@ async def test_stream_clipboard_immediately_sends_data(emulator_controller):
     assert False
 
 
-@pytest.mark.e2e
+
 @pytest.mark.embedded
 @pytest.mark.skipos("win", "reason=b/305040856 - error at setup.")
 async def test_stream_clipboard_sends_updated_data(emulator_controller, avd):
@@ -144,7 +144,7 @@ def get_test_channel(desc, max_length=4096):
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.embedded
 async def test_stream_clipboard_sends_updated_data_to_other_channel(avd):
     # We forcefully create 2 different channel configurations to make
@@ -175,7 +175,7 @@ async def test_stream_clipboard_sends_updated_data_to_other_channel(avd):
     assert clip.text == "Hello world"
 
 
-@pytest.mark.e2e
+
 @pytest.mark.embedded
 async def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(avd):
     # We forcefully create 2 different channel configurations to make
@@ -217,7 +217,7 @@ async def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(av
         clip = await asyncio.wait_for(stream.read(), timeout=1)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.embedded
 async def test_stream_clipboard_from_android_immediately_sends_data(
     avd, emulator_controller

@@ -103,7 +103,7 @@ async def test_wake_up_wakes_the_device(adb_shell, emulator_off):
     assert await eventually(is_awake)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.adb
 @pytest.mark.flaky  # b/322557339
 async def test_power_down_turns_off_the_screen(emulator_off, get_screenshot):

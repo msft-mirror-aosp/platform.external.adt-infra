@@ -70,7 +70,6 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 }
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.fast
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
@@ -98,7 +97,6 @@ async def test_screenshot_all_formats_are_equal(
         last_pixels == pixels
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.sanity
 @pytest.mark.parametrize(
@@ -164,7 +162,6 @@ async def all_orientations(emulator_controller, request):
 
 
 # bug 299344829
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.async_timeout(120)
 @pytest.mark.flaky
@@ -181,7 +178,6 @@ async def test_screenshot_valid_width_and_height(
     ), "The width and height should be equal to the device width and height"
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.flaky
 async def test_screenshot_gets_default_resolution(
@@ -200,7 +196,6 @@ async def test_screenshot_gets_default_resolution(
     ), "The height should be equal to the device height (portrait), or device width (landscape)"
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.flaky
 async def test_screenshot_never_scales_up(
@@ -226,7 +221,6 @@ async def test_screenshot_never_scales_up(
     ), "The height should be equal to the device height (portrait), or device width (landscape)"
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.flaky
 async def test_screenshot_should_fail_if_does_not_exist(

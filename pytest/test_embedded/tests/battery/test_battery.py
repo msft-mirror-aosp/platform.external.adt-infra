@@ -41,7 +41,6 @@ async def set_and_get_battery(emu_controller, battery_state):
     ), "Battery chargeLevel doesn't match"
 
 
-@pytest.mark.e2e
 @pytest.mark.hardware
 @pytest.mark.parametrize(
     "test_name, battery_status, battery_health",
