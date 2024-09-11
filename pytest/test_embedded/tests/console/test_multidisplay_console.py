@@ -99,3 +99,23 @@ async def test_add_multidisplay_from_telnet(avd, emulator_controller, telnet):
     assert cfg.displays[1].dpi == 240
     assert cfg.displays[1].width == 1200
     assert cfg.displays[1].height == 800
+
+
+@pytest.mark.multidisplay
+@pytest.mark.fast
+@pytest.mark.async_timeout(510)
+async def test_remove_multidisplay_from_telnet(avd, emulator_controller, telnet):
+    await telnet.send("multidisplay add 1 1200 800 240 0")
+    n_displays = 2  # primary plus one secondary display.
+    assert await (
+        eventually(partial(ensure_logical_displays, n_displays, avd), timeout=180)
+    ), 'Wrong number of displays detected'
+
+    await telnet.send("multidisplay del 1")
+
+    n_displays = 1  # since display is deleted
+
+    assert await (
+        eventually(partial(ensure_logical_displays, n_displays, avd), timeout=180)
+    ), 'Wrong number of displays detected'
+
