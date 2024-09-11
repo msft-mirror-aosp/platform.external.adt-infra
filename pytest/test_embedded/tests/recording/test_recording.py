@@ -19,6 +19,7 @@ import platform
 import pytest
 from aemu.proto.screen_recording_service_pb2 import RecordingInfo
 from aemu.proto.screen_recording_service_pb2_grpc import ScreenRecordingStub
+from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 
 from emu.timing import eventually, wait_until
@@ -194,9 +195,10 @@ async def verify_qrcode(emulator, webm_recording, payload):
     """
     video_path = Path('/sdcard/Downloads/') / webm_recording.name
     await emulator.adb.push(webm_recording, video_path)
+    emulator_controller = EmulatorControllerStub(emulator.channel)
     async def _play_and_decode():
         await play_webm(emulator, video_path)
-        return await decode_qrcodes([payload])
+        return await decode_qrcodes([payload], emulator_controller=emulator_controller)
     assert await wait_until(
         _play_and_decode, timeout=240
     ), "Unable to decode the QR code from video '{sample_file}'."
