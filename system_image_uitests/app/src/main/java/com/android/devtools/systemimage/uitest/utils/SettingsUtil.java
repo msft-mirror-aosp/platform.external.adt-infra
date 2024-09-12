@@ -20,6 +20,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -856,5 +857,108 @@ public class SettingsUtil {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Navigates to a specified path in the Settings app.
+     *
+     * This method launches the Settings app and then navigates to a specified path by clicking on the options
+     * in the order they are provided. The navigation is performed by scrolling through either the
+     * 'main_content_scrollable_container' or the 'content_frame' depending on the pass of the loop.
+     *
+     * @param device The UiDevice instance that represents an emulator or a connected device.
+     * @param path An array of Strings where each String is the name of an option in the Settings app.
+     * @return true if the method was able to find and click on all the options in the path array, false otherwise.
+     * @throws UiObjectNotFoundException if an option in the path array is not found.
+     */
+    public static boolean navigateToSettingsPath(UiDevice device, String... path) throws UiObjectNotFoundException {
+        device.pressHome();
+
+        try {
+            device.executeShellCommand("am start -a android.settings.SETTINGS");
+        } catch (IOException e) {
+            Log.w(TAG, "Failed to launch Settings", e);
+            return false;
+        }
+
+        for (int i = 0; i < path.length; i++) {
+            String location = path[i];
+            UiScrollable scrollableContainer = i == 0 ?
+                    new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)) :
+                    new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+            assertTrue("Scrollable view not found", scrollableContainer.waitForExists(15000));
+            UiSelector optionSelector = new UiSelector().text(location);
+            UiObject option = device.findObject(optionSelector);
+
+            dismissUnresponsivePopup(device);
+
+            if (!option.waitForExists(10000L)) {
+                boolean scrolled = scrollableContainer.scrollIntoView(optionSelector);
+                if (!scrolled) {
+                    Log.w(TAG, "Failed to navigate to " + location);
+                    return false;
+                }
+            }
+
+            if (!option.clickAndWaitForNewWindow(15000L)) {
+                Log.w(TAG, "Failed to click on " + location);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * This method is used to click on a switch in the Settings app and confirm that the switch has been clicked.
+     *
+     * It first checks if the previous switches (if any) exist and then clicks on the target switch.
+     * If any of the previous switches or the target switch do not exist, it logs a warning and returns false.
+     * If all switches exist and the target switch is clicked successfully, it returns true.
+     *
+     * @param device The UiDevice instance that represents an emulator or a connected device.
+     * @param switchLabel The label of the switch that this method will click on.
+     * @param previousSwitchLabels The labels of the switches that this method will check for existence before clicking on the target switch.
+     * @return true if all switches exist and the target switch is clicked successfully, false otherwise.
+     */
+    public static boolean clickAndConfirmSwitch(UiDevice device, String switchLabel, String... previousSwitchLabels) {
+        try {
+            dismissUnresponsivePopup(device);
+
+            for (String previousSwitchLabel : previousSwitchLabels) {
+                UiObject previousSwitchObject = device.findObject(new UiSelector().text(previousSwitchLabel));
+                if (!previousSwitchObject.waitForExists(10000L)) {
+                    Log.w(TAG, "Failed to find previous switch object" + previousSwitchLabel);
+                    return false;
+                }
+            }
+
+            UiObject switchObject = device.findObject(new UiSelector().text(switchLabel));
+            if (switchObject.waitForExists(10000L)) {
+                switchObject.clickAndWaitForNewWindow(10000L);
+            }
+
+            return true;
+        } catch (UiObjectNotFoundException e) {
+            Log.w(TAG, "Failed to find switch object" + switchLabel, e);
+            return false;
+        }
+    }
+
+    /**
+     * This method is used to dismiss any unresponsive popup that might appear during the execution of the tests.
+     *
+     * It first tries to find the unresponsive popup by its resource id. If the popup exists, it clicks on it to dismiss it.
+     *
+     * @param device The UiDevice instance that represents an emulator or a connected device.
+     * @throws UiObjectNotFoundException if the unresponsive popup is not found.
+     */
+    public static void dismissUnresponsivePopup(UiDevice device) throws UiObjectNotFoundException {
+        UiObject notRespondingError = device.findObject(
+                new UiSelector().resourceId(Res.ANDROID_ERROR_WAIT_RES));
+        if (notRespondingError.waitForExists(5000L)) {
+            notRespondingError.click();
+            notRespondingError.waitUntilGone(5000L);
+        }
     }
 }
