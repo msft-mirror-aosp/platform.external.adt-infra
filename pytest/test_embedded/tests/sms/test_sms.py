@@ -55,6 +55,8 @@ async def allow_sms_messages(emulator):
 @pytest.mark.e2e
 @pytest.mark.hardware
 @pytest.mark.fast
+@pytest.mark.skipos("mac", "reason: timeout on mac.")
+@pytest.mark.skipos("m1", "reason: timeout on m1.")
 @pytest.mark.parametrize("phone_number,text_message", [("987654321", "Hello There")])
 async def test_send_inbound_sms_text_message_received_by_mobly(
     emulator_controller, mbs, allow_sms_messages, phone_number, text_message

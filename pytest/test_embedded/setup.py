@@ -72,8 +72,10 @@ class ApkBuild(build_py):
 
 
 if __name__ == "__main__":
+    local_path: str = (Path(__file__).parent).absolute()
     try:
         setup(
+        dependency_links=[str(local_path)],
             cmdclass={"build_py": ApkBuild, "sdist": ApkSource},
         )
     except Exception as e:

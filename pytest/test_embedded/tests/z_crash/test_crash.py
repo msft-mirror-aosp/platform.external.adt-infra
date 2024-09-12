@@ -12,14 +12,67 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
+import os
 import re
 from typing import List
 
 import pytest
+import asyncio
+from hacks import load_tkinter
+import pyautogui
+import platform
+from emu.timing import eventually
 
+from emu.process.command import Command
 from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator
 from emu.timing import wait_until
+from functools import partial
+from emu.emulator_exceptions import EmulatorNotFoundException
+
+
+AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[5]
+# Path to all the gRPC services
+GRPC_SERVICES = AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc"
+
+
+def get_crash_reporter(pytestconfig):
+    exe = pytestconfig.getoption("emulator")
+    emulator_directory = Path(exe).parent if exe else None
+    return CrashReporter(
+        emulator_directory,
+        pytestconfig.getoption("symbols"),
+        GRPC_SERVICES,
+    )
+
+
+@pytest.fixture
+async def crash_reporter(pytestconfig):
+    """A fixture to handle crash reports in the emulator.
+
+    This fixture returns the crash reporter associated with the emulator,
+    which can be used to list, print, upload, and delete crash reports.
+    The scope of the fixture is session and it is
+    automatically used in all test functions.
+
+    The fixture also writes the crash reports to disk if the `log_file` option is
+    provided. If not, it lists all the crashes instead.
+
+    Note: This fixtures is automatically attached to every test
+    that is running.
+
+    Args:
+        pytestconfig (object): Pytest configuration object
+
+    Yields:
+        CrashReporter: An instance of the CrashReporter class
+    """
+    log_file = pytestconfig.getoption("--log-file")
+    crash_report = get_crash_reporter(pytestconfig)
+    logging.info("--> seting up crash reporter")
+    await crash_report.clear()
+    yield crash_report
+    # await crash_report.clear()
 
 
 def is_sublist(minidump: List[str], compiled_regexes: List[re.Pattern]) -> bool:
@@ -144,3 +197,96 @@ async def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     assert any(
         [minidump_has_symbols(await crash_reporter.dump_crash(c)) for c in crashes]
     ), "None of the crash reports have decoded symbols"
+
+
+@pytest.mark.async_timeout(600)
+@pytest.mark.e2e
+@pytest.mark.fast
+@pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
+async def test_crash_dont_send_report(avd, crash_reporter):
+    """Verify user can reject/cancel sending emulator crash report.
+
+    Args:
+        avd (BaseEmulator): booted emulator fixture.
+        crash_reporter: fixture to handle crash reports.
+
+    Test Steps:
+        1. Launch a new AVD.
+        2. Cause a crash, by sending the console command 'adb emu crash'.
+        3. Relaunch the AVD (Verify 1).
+        4. Click "Show details."
+        5. Click "Hide details", type some user comments.
+        6. Press "Don’t Send" (Verify 2).
+
+    Verification:
+        1. Crash Report Dialogue Window should show up before relaunching the AVD,
+           observed by the presence of crashpad annotations in the emulator log.
+        2. The dialog disappears immediately, with the event being observed
+           in the emulator log.
+    """
+    async def nav_back(n):
+        """Send the Shift+Tab (navigate back) hotkey 'n' times
+        """
+        while n > 0:
+            pyautogui.hotkey('Shift', 'Tab')
+            asyncio.sleep(1)
+            n -= 1
+
+    async def string_in_emulator_log(string, matched_line=[]):
+        """Return 'True' if 'string' appears is observed in the emulator log.
+        """
+        async for line in avd.log:
+            if string in line:
+                matched_line.append(line)
+                return True
+
+    crashes = await crash(avd, crash_reporter)
+    assert len(crashes) >= 1, "Couldn't crash the emulator."
+
+    # Restart the emulator and check the log for crashpad annotations
+    try:
+        await avd.restart(avd.launch_flags + ["-no-metrics"])
+    except EmulatorNotFoundException as err:
+        logging.info("EmulatorNotFoundException exception was ignored.")
+
+    # Crashpad annotations indicate the crash report dialogue appeared
+    matched_line = []
+    assert await eventually(
+        partial(string_in_emulator_log, "crashpad_annotations", matched_line), timeout=300
+    ), "Couldn't verify the crash report dialogue opening."
+
+    logging.info(f'The following crashpad annotation was matched: {matched_line[0]}')
+
+    # Click “Show details”
+    await nav_back(3)
+    pyautogui.press('enter')
+    await asyncio.sleep(2)
+
+    # Click “Hide details”
+    pyautogui.press('enter')
+
+    # Type some user comments
+    await nav_back(2)
+    pyautogui.write('Emulator E2E testing: test_crash.py::test_crash_dont_send_report')
+    await asyncio.sleep(2)
+
+    async def dismiss_and_verify():
+        # Press button “Don’t Send”
+        async def _dismiss():
+            await nav_back(1)
+            if platform.system() == "Darwin":
+                # Dialogue buttons are in reversed postion on macOS
+                await nav_back(1)
+            pyautogui.press('enter')
+        # Check stdout for the 'No consent' message
+        async def _verify():
+            return await eventually(
+                partial(string_in_emulator_log, "No consent for crashreport"), timeout=120
+            )
+        res = await asyncio.gather(_dismiss(), _verify())
+        return res[1]
+
+    assert await dismiss_and_verify(), "Coudn't confirm the crash report rejection."
+
+    logging.info("Dialogue window successfully dismissed.")
+

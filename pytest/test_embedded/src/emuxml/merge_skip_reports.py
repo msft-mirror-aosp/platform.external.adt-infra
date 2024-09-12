@@ -19,11 +19,8 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-AOSP_ROOT = Path(__file__).parents[6]
-CFG = AOSP_ROOT / "external" / "adt-infra" / "pytest" / "test_embedded" / "cfg"
 
-
-def merge_skip_reports(xml_files):
+def merge_skip_reports(xml_files, cfg_dir):
     """Merge all testsuites skip reports into a single xml report.
 
     Args:
@@ -80,7 +77,7 @@ def merge_skip_reports(xml_files):
     )
     skipped_testsuites = {}
     for plat in platforms:
-        emulator_config = Path(CFG / f"emulator_{plat.lower()}_tests.json")
+        emulator_config = Path(cfg_dir / f"emulator_{plat.lower()}_tests.json")
         with open(emulator_config, "r", encoding="utf-8") as file:
             config_json = json.load(file)
             for name, testsuite in config_json.items():
@@ -111,6 +108,9 @@ def launch():
         "--out", help="The (optional) output file where the result will be written to"
     )
     parser.add_argument(
+        "--cfg", help="Directory containing the configuration files"
+    )
+    parser.add_argument(
         "xml", nargs="*", help="The list of xml skip reports that are to be merged"
     )
 
@@ -120,7 +120,7 @@ def launch():
     if args.out:
         out = open(args.out, "wb")
 
-    new_tree = merge_skip_reports(args.xml)
+    new_tree = merge_skip_reports(args.xml, Path(args.cfg))
     new_tree.write(
         out,
         encoding="utf-8",

@@ -16,9 +16,13 @@ import time
 
 import google.protobuf.text_format
 
+from xml.etree import ElementTree as ET
 from emu.timing import eventually, wait_until
 from functools import partial
 from PIL import ImageGrab
+from emu.emulator import BaseEmulator
+from emu.images.convert import proto_to_pillow
+from aemu.proto.emulator_controller_pb2 import ImageFormat
 import deqr
 import logging
 import asyncio
@@ -46,14 +50,24 @@ def wait_for_regex(stream, regex, max_wait):
     return eventually(compiled.match, stream, timeout=max_wait)
 
 
-async def decode_qrcodes(payloads: list[str]):
+async def decode_qrcodes(payloads: list[str], emulator_controller=None):
     """Return True if all QR codes with <payloads> appear in the series of screenshots.
+
+     Note:
+        If 'emulator controller' is None (default), screenshots of the entire screen
+        are taken (using PIL).
     """
     decoder = deqr.QuircDecoder()
+
     async def detect_qrcode(payload: str):
         """Take a screenshot and return True if a QR code with <payload> is detected.
         """
-        screenshot = ImageGrab.grab()
+        if emulator_controller is not None:
+            img = await emulator_controller.getScreenshot(ImageFormat())
+            screenshot = proto_to_pillow(img)
+        else:
+            screenshot = ImageGrab.grab()
+
         data = decoder.decode(screenshot)
         if data is None or len(data) == 0:
             return False
@@ -63,13 +77,44 @@ async def decode_qrcodes(payloads: list[str]):
 
     logging.info(f"Starting the QR codes detection.")
     for payload in payloads:
+        timeout = False
         detected = False
         try:
             detected = await wait_until(partial(detect_qrcode, payload), timeout=15)
         except asyncio.TimeoutError:
-            f"Couldn't detect payload {payload}"
-            return False
-        if not detected:
+            timeout = True
+        if not detected or timeout:
+            logging.info(f"Couldn't detect payload {payload}.")
             return False
         logging.info(f"Detected payload {payload}.")
+    return True
+
+
+async def get_window_dump(avd: BaseEmulator):
+    dump = await avd.adb.shell("uiautomator dump /sdcard/window_dump.xml")
+    assert "uiautomator: inaccessible or not found" not in dump, \
+        "Uiautomator binary not found!"
+    return await avd.adb.shell("cat /sdcard/window_dump.xml")
+
+
+def get_center_coords(bounds: str) -> tuple:
+    # Return the center coordinates (x, y) from element bounds string '[x0y0][x1 y1]'
+    coords = list(map(int, bounds[1:-1].replace('][',',').split(',')))
+    return ((coords[0] + coords[2]) / 2, (coords[1] + coords[3]) / 2)
+
+
+async def click_button(text: str, avd: BaseEmulator):
+    # Tap the center of the button containing the text <text>
+    # Return 'True' if the button is found and clicked.
+    window_dump = await get_window_dump(avd)
+    if f"text=\"{text}\"" not in window_dump:
+        return False
+    xml = ET.fromstring(window_dump)
+    element = xml.find(f".//*[@text='{text}']")
+    # Get the element bounds if clickable, else get the parent bounds.
+    bounds = element.get('bounds') \
+                if element.get('clickable') == 'true' \
+                else xml.find(f".//*[@text='{text}']/..").get('bounds')
+    center = get_center_coords(bounds)
+    await avd.adb.shell("input tap " + ' '.join([*map(str, center)]))
     return True

@@ -14,7 +14,6 @@
 import asyncio
 import logging
 import re
-from xml.etree import ElementTree as ET
 import signal
 
 import pytest
@@ -26,6 +25,7 @@ from emu.logging.log_handler import AsyncLogHandler
 from emu.timing import eventually
 from functools import partial
 from google.protobuf import empty_pb2
+from tests.test_utils import get_window_dump, click_button
 import platform
 
 
@@ -361,38 +361,15 @@ async def test_close_emulator(avd):
     def emulator_is_off():
         return not avd.is_alive()
 
-    async def get_window_dump():
-        dump = await avd.adb.shell("uiautomator dump /sdcard/window_dump.xml")
-        assert "uiautomator: inaccessible or not found" not in dump, \
-            "Uiautomator binary not found!"
-        return await avd.adb.shell("cat /sdcard/window_dump.xml")
-
-    def get_center_coords(bounds: str) -> tuple:
-        # Return the center coordinates (x, y) from element bounds string '[x0y0][x1 y1]'
-        coords = list(map(int, bounds[1:-1].replace('][',',').split(',')))
-        return ((coords[0] + coords[2]) / 2, (coords[1] + coords[3]) / 2)
-
     async def open_power_menu():
         # Triger the Power Options menu and return 'True' when it is opened.
         # Send Volume Up and Power keystrokes.
         await avd.adb.shell("input keyevent KEYCODE_VOLUME_UP & \
                              input keyevent KEYCODE_POWER")
-        window_dump = await get_window_dump()
+        window_dump = await get_window_dump(avd)
         if "text=\"Power off\"" not in window_dump:
             await asyncio.sleep(5)
             return False
-        return True
-
-    async def click_button(text: str):
-        # Tap the center of the button containing the text <text>
-        # Return 'True' if the button is found and clicked.
-        window_dump = await get_window_dump()
-        if f"text=\"{text}\"" not in window_dump:
-            return False
-        xml = ET.fromstring(window_dump)
-        bounds = xml.find(f".//*[@text='{text}']/..").get('bounds')
-        center = get_center_coords(bounds)
-        await avd.adb.shell("input tap " + ' '.join([*map(str, center)]))
         return True
 
     # Ensure the emulator goes off following a 'kill' event (emulator window closed)
@@ -411,7 +388,7 @@ async def test_close_emulator(avd):
     ), "Couldn't open the Power options menu."
 
     assert await (
-        eventually(partial(click_button, "Power off"))
+        eventually(partial(click_button, "Power off", avd))
     ), "Couldn't click the Power off button."
 
     assert await (

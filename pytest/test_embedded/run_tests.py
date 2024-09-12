@@ -634,7 +634,8 @@ def apply_xslt(python_exe: PyRunner, source: Path, xslt: Path, dest: Path):
     try:
         python_exe.run(
             [
-                f"{HERE}/src/xml/transform.py",
+                "-m",
+                "emuxml.transform",
                 "--xml",
                 source,
                 "--xsl",
@@ -652,7 +653,8 @@ def merge_results(python_exe: PyRunner, sources: [Path], dest: Path):
     try:
         python_exe.run(
             [
-                f"{HERE}/src/xml/merge_results.py",
+                "-m",
+                "emuxml.merge_results",
                 "--single",
                 "--out",
                 dest,
@@ -727,7 +729,7 @@ def run_single_suite(
                 "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or "",
             },
             # Give pytest a chance to "nicely" terminate everything.
-            timeout=2800 if platform.system() != "Windows" else 3200,
+            timeout=7200,
             check_output=False,
         )
     except subprocess.TimeoutExpired as timeout_exception:
@@ -804,10 +806,11 @@ def run_tests(
         os.getenv("PYTEST_ADDOPTS"),
     )
 
-    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
+    crash_retry = HERE.parent / "crash_retry"
+
+    pyrun.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE, crash_retry])
 
     logdir = Path(logdir)
-    logdir.mkdir(exist_ok=True, parents=True)
 
     result_xmls = []
     skip_reports = []
@@ -874,9 +877,12 @@ def merge_skip_reports(python_exe: PyRunner, sources: [Path], dest: Path):
     try:
         python_exe.run(
             [
-                f"{HERE}/src/xml/merge_skip_reports.py",
+                "-m",
+                f"emuxml.merge_skip_reports",
                 "--out",
                 dest,
+                "--cfg",
+                HERE / "cfg",
             ]
             + [str(x) for x in sources],
             timeout=10,
@@ -1007,10 +1013,12 @@ def parse_arguments():
     )
 
     args = parser.parse_args()
+    logdir = Path(args.logdir)
+    logdir.mkdir(exist_ok=True, parents=True)
     log_name = '.'.join((os.path.basename(sys.argv[0]),
                          datetime.datetime.now().strftime('%Y%m%d-%H%M%S'), 'log'))
     configure_logging(logging.DEBUG if args.verbose else logging.INFO,
-                      log_path=Path(args.logdir, log_name))
+                      log_path=logdir.joinpath(log_name))
 
     if args.generate:
         if not args.virtual_env_dir:
