@@ -22,6 +22,7 @@ import asyncio
 from hacks import load_tkinter
 import pyautogui
 import platform
+import shutil
 from emu.timing import eventually
 
 from emu.process.command import Command
@@ -291,3 +292,78 @@ async def test_crash_dont_send_report(avd, crash_reporter):
 
     logging.info("Dialogue window successfully dismissed.")
 
+
+@pytest.mark.fast
+@pytest.mark.async_timeout(600)
+@pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
+@pytest.mark.skipos("mac", "reason: unshare not available.")
+async def test_crash_without_internet(avd, crash_reporter):
+    """Verify no exceptions are raised when sending a crash report without internet connectivity.
+
+    Args:
+        avd (BaseEmulator): booted emulator fixture.
+        crash_reporter: fixture to handle crash reports.
+
+    Test Steps:
+        1. Launch a new AVD.
+        2. Cause a crash, by sending the console command 'adb emu crash'.
+        3. Disconnect internet access from host machine.
+        3. Relaunch the AVD (Verify 1 and 2).
+
+    Verification:
+        1. No exceptions should be raised.
+        2. The emulator loads details, dialog then disappears, indicated
+           by a failure message in the emulator log.
+    """
+    crashes = await crash(avd, crash_reporter)
+    assert len(crashes) >= 1, "Couldn't crash the emulator."
+
+    # Unshare is used to launch an emulator process within an isolated network stack
+    unshare_exec = shutil.which("unshare")
+    if not unshare_exec:
+        pytest.fail("unshare binary not found in PATH.")
+
+    logging.info('Launching an emulator process in its own network namespace ...')
+    args = [arg for arg in avd.cmd.cmd if arg != "-metrics-collection"]
+    args = [unshare_exec, "--user", "-n"] + args + ["-no-snapshot-save"]
+    cmd = await Command(args).run()
+    await asyncio.sleep(5)
+
+    async def send_and_verify():
+        # Press button "Send report"
+        async def _send_report():
+            logging.info("Attempting to click the 'Send report' button.")
+            await nav_back(1)
+            if platform.system() != "Darwin":
+                # Dialogue buttons are in reversed order on macOS
+                await nav_back(1)
+            pyautogui.press('enter')
+
+        # Verify the crash report upload fails.
+        async def _verify():
+            # Verify attempt to send the crash report.
+            res_attempt = await eventually(
+                partial(string_in_emulator_log, cmd.handler,
+                        "Attempting to send crashreport."),
+                timeout=120
+            )
+            # Check crash report failure.
+            res_verify = await eventually(
+                partial(string_in_emulator_log, cmd.handler,
+                        "Failed to send report."),
+                timeout=120
+            )
+            return res_attempt, res_verify
+
+        await _send_report()
+        return await _verify()
+
+    try:
+        res_attempt, res_verify = await send_and_verify()
+    except Exception as e:
+        pytest.fail(f"An exception occurred: {e}")
+
+    logging.info("Attempting to kill the emulator process.")
+    await cmd.cancel()
+    assert res_attempt, "There was no attempt to send the crash report."
+    assert res_verify, "The crash report failure couldn't be verified."
