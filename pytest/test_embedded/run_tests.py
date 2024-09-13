@@ -729,7 +729,7 @@ def run_single_suite(
                 "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or "",
             },
             # Give pytest a chance to "nicely" terminate everything.
-            timeout=7200,
+            timeout=2800 if platform.system() != "Windows" else 3200,
             check_output=False,
         )
     except subprocess.TimeoutExpired as timeout_exception:
