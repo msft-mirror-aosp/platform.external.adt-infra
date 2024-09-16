@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
-import asyncio
 import datetime
 import json
 import logging
@@ -24,13 +23,13 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from threading import Lock, Thread, Timer
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 from zipfile import ZipFile, ZipInfo
 
 # Note we are not part of the package!
-from src.emu.crashreporter import CrashReporter
 from src.emu.logging.log_handler import configure_logging
+
+import test_runner
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -81,18 +80,6 @@ class AdbNotFound(Exception):
     pass
 
 
-class NoTestResultsProduced(Exception):
-    pass
-
-
-class CommandFailure(Exception):
-    pass
-
-
-class UnitTestFailure(Exception):
-    pass
-
-
 class ZipFileWithAttr(ZipFile):
     """Python does not set the file attributes properly."""
 
@@ -106,169 +93,6 @@ class ZipFileWithAttr(ZipFile):
         if attr != 0:
             os.chmod(targetpath, attr)
         return targetpath
-
-
-class AdbServer:
-    def __init__(self, pyrun, adb):
-        self.pyrun = pyrun
-        self.adb = adb
-
-    def __enter__(self):
-        self.pyrun(
-            ["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False
-        )
-        run([self.adb, "start-server"], timeout=60)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        run([self.adb, "kill-server"], timeout=60)
-        self.pyrun(
-            ["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False
-        )
-
-
-def _reader(pipe, logfn):
-    try:
-        for line in iter(pipe.readline, ""):
-            try:
-                logfn(line[:-1].strip())
-            except Exception as err:
-                logfn("Unable to log line due to: %s", err)
-    finally:
-        pass
-
-
-def _log_proc(proc):
-    """Logs the output of the given process."""
-    for args in [[proc.stdout, logging.info], [proc.stderr, logging.error]]:
-        Thread(target=_reader, args=args).start()
-
-
-def run(cmd, cwd=None, extra_env=None, timeout=1200, check_output=True):
-    """Runs a command in the shell. It takes in a command to execute,
-    a working directory where the command will be executed,
-    environment variables and a timeout value.
-
-    Args:
-        cmd (_type_): A list of strings representing the command and its arguments
-                that will be executed in the shell.
-        cwd (_type_, optional):  The working directory where the command will be
-                executed. If not provided, the current working directory will be used.
-        extra_env (_type_, optional): A dictionary of extra environment variables that
-                will be added to the environment before running the command.
-        timeout (int, optional): The maximum time (in seconds) to wait for the command
-                to finish before it is terminated. Defaults to 1200.
-        check_output (bool): True if an exception should be raised of the return code != 0
-
-    Returns:
-        exitcode
-
-    Raises:
-        Exception: Raises an exception if the command fails to execute.
-    """
-    if not cwd:
-        cwd = os.getcwd()
-    cwd = os.path.abspath(cwd)
-
-    cmd = [str(c) for c in cmd]
-
-    # We need to use a shell under windows, to set environment parameters.
-    # otherwise we don't, since we will experience cmake invocation errors.
-    use_shell = platform.system() == "Windows"
-    local_env = os.environ.copy()
-    if extra_env:
-        local_env.update(extra_env)
-
-    logging.info(
-        "Running: %s in %s for at most %s seconds with %s",
-        " ".join(cmd),
-        cwd,
-        timeout,
-        extra_env,
-    )
-    proc = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        cwd=cwd,
-        shell=use_shell,  # Needed on windows
-        env=local_env,
-        encoding="utf-8",
-    )
-    # On windows, proc.wait() has been observed failing to ever timeout. To work around
-    # this we handle timeouts in a separate thread.
-    watcher = ProcWatcher(timeout, proc)
-
-    _log_proc(proc)
-    try:
-        proc.wait()
-    finally:
-        timed_out = watcher.check_timeout()
-
-    if timed_out:
-        logging.error(
-            "The command %s timed out after %s seconds, terminating",
-            " ".join(cmd),
-            timeout,
-        )
-        raise subprocess.TimeoutExpired(cmd, timeout)
-
-    if proc.returncode != 0 and check_output:
-        raise CommandFailure(
-            f"Failed to run {' '.join(cmd)}, exit code: {proc.returncode}"
-        )
-    else:
-        return proc.returncode
-
-
-class ProcWatcher:
-    """Process timeout watcher."""
-
-    def __init__(self, timeout: int, proc: subprocess.Popen):
-        self._lock = Lock()
-        self._proc = proc
-        self._timed_out = None
-        self._timer = Timer(timeout, self._handle_timeout)
-        self._timer.start()
-
-    def _handle_timeout(self):
-        with self._lock:
-            # Avoid a race between the process exiting and timeout triggering.
-            if self._timed_out is not None:
-                return
-            self._timed_out = True
-
-        if OS_NAME == "windows":
-            run(
-                ["taskkill.exe", "/F", "/T", "/PID", str(self._proc.pid)],
-                check_output=False,
-            )
-        else:
-            self._proc.terminate()
-
-    def check_timeout(self):
-        """Cancels the internal timer and returns whether the timeout was reached."""
-        self._timer.cancel()
-        with self._lock:
-            if self._timed_out is None:
-                self._timed_out = False
-            return self._timed_out
-
-
-def resolve_emulator(emulator: str) -> Path:
-    """Tries to resolve the emulator path."""
-    emu = Path(emulator)
-    if emu.exists():
-        return emu
-
-    # Ok, maybe we are missing an extension?
-    emu = emu.with_suffix(".exe")
-    if emu.exists():
-        return emu
-
-    assert False, (
-        f"{emulator} points to a non existent path (are you passing the right path to"
-        + " the --emulator flag?"
-    )
 
 
 class TemporaryEmulatorDeploy:
@@ -492,7 +316,7 @@ class PyRunner:
         if env:
             emu_env.update(env)
             logging.info("Using %s from %s", emu_env, self.env)
-        return run(
+        return test_runner.run(
             [self.py_exe] + args,
             timeout=timeout,
             extra_env=emu_env,
@@ -521,7 +345,7 @@ class AospPyRunner(PyRunner):
 
         if platform.system() == "Windows":
             self._fixup_windows_py3_dll()
-            run(
+            test_runner.run(
                 [
                     PYTHON,
                     AOSP_ROOT / "external" / "adt-infra" / "devpi" / "get-pip.py",
@@ -549,7 +373,7 @@ class AospPyRunner(PyRunner):
             virtualenv = "venv"
 
         tmpdir = Path(self.in_directory)
-        run(
+        test_runner.run(
             [
                 PYTHON,
                 "-m",
@@ -610,293 +434,6 @@ retries = 0
             packages ([str]): The set of packages to install
         """
         super().pip_install(["--index-url", f"{self.repo}"] + packages)
-
-
-def apply_xslt(python_exe: Callable, source: Path, xslt: Path, dest: Path):
-    """Applies a specified XSLT file to an XML file and saves the result to a specified
-    destination.
-
-
-    Args:
-        python_exe (Callable): Callable that runs Python that will be used
-                to run the transform script.
-        source (Path): The path to the Python executable that will be used to run
-                the transform script.
-        xslt (Path): The path to the XSLT file that will be used to transform
-                the XML file.
-        dest (Path): The path to the destination file where the result of the
-                transformation will be saved.
-    """
-    try:
-        python_exe(
-            [
-                "-m",
-                "emuxml.transform",
-                "--xml",
-                source,
-                "--xsl",
-                xslt,
-                "--out",
-                dest,
-            ],
-            timeout=10,
-        )
-    except Exception as err:
-        logging.warning("Failed to apply xslt: %s to %s due to (%s)", xslt, source, err)
-
-
-def merge_results(python_exe: Callable, sources: [Path], dest: Path):
-    try:
-        python_exe(
-            [
-                "-m",
-                "emuxml.merge_results",
-                "--single",
-                "--out",
-                dest,
-            ]
-            + [str(x) for x in sources],
-            timeout=10,
-        )
-    except Exception as err:
-        logging.warning(
-            "Failed to merge results: %s to %s due to (%s)", sources, dest, err
-        )
-
-
-async def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path,
-                                grpc_services: Path):
-    emulator_directory = Path(emulator).parent if emulator else None
-    crash_report = CrashReporter(emulator_directory, symbol_path, grpc_services)
-
-    # Write them to disk
-    await crash_report.write_reports_to_disk(logdir)
-
-    # And report them..
-    await crash_report.report_crashes()
-
-    # After reporting them we will have ids, lets print them and remove them.
-    await crash_report.report_crashes()
-    await crash_report.clear()
-
-
-def run_single_suite(
-    emulator: str,
-    use_exceptions: bool,
-    logdir: Path,
-    symbol_path: Path,
-    tmpdir: str,
-    build_target: str,
-    pyrun: Callable,
-    pytest_flags: list[str],
-    avd_configs: list[str],
-    collect: bool,
-    name: str,
-    fetcher: Optional[Path],
-    android_home: Path,
-    adb: Path,
-    grpc_services: Path,
-):
-    if collect:
-        pytest_flags.append("--setup-plan")
-    if fetcher:
-        pytest_flags.append(f"--fetcher={fetcher}")
-
-    junit_test_results = Path(logdir) / f"{name}.xml"
-    exit_code = 1
-    try:
-        exit_code = pyrun(
-            [
-                "-m",
-                "pytest",
-                "-vv",
-                "-x" if use_exceptions else "",
-                f"--junitxml={junit_test_results}",
-                f"--log-file={logdir}/{name}.log",
-                f"--emulator={emulator}",
-                f"--symbols={symbol_path}",
-                "--avd_configs",
-                avd_configs,
-                f"--android_avd_home={tmpdir}",
-                f"--build_target={build_target}",
-                f"--android_home={android_home}",
-            ]
-            + pytest_flags,
-            cwd=HERE,
-            env={
-                "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
-                "ANDROID_AVD_HOME": str(tmpdir),
-                "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or "",
-            },
-            # Give pytest a chance to "nicely" terminate everything.
-            timeout=2800 if platform.system() != "Windows" else 3200,
-            check_output=False,
-        )
-    except subprocess.TimeoutExpired as timeout_exception:
-        logging.info(
-            "The test suite %s timed out after %s seconds",
-            name,
-            timeout_exception.timeout,
-        )
-        # Force the emulator to crash when the test suite timesout.
-        run([adb, "emu", "crash"], timeout=300)
-
-    finally:
-        # Let's see if we can collect crash reports..
-        asyncio.run(collect_crash_reports(emulator, symbol_path, logdir, grpc_services))
-
-        # Forcefully terminate all emulator processess
-        pyrun(["-m", "emu.process.kill_emulator"], check_output=False)
-
-        if not junit_test_results.exists():
-            raise NoTestResultsProduced(
-                f"We expected a junit report in {junit_test_results}."
-            )
-
-        # Let's exit with a message that contains the first failure
-        # This way we can have it show up as part of the snippet we display
-        # on our build bots
-        # See https://docs.pytest.org/en/7.1.x/reference/exit-codes.html for
-        # the status codes.
-        if exit_code == 1 and use_exceptions:
-            failure_file = Path(logdir) / "fail.txt"
-            apply_xslt(
-                python_exe=pyrun,
-                source=junit_test_results,
-                xslt=HERE / "cfg" / "asFirstFailureText.xslt",
-                dest=failure_file,
-            )
-            with open(failure_file, "r", encoding="utf-8") as failure:
-                raise UnitTestFailure(failure.read())
-
-    return junit_test_results
-
-
-def run_tests(
-    emulator: str,
-    use_exceptions: bool,
-    logdir: Path,
-    symbol_path: Path,
-    build_target: str,
-    pyrun: Callable,
-    tests_to_run,
-    collect: bool,
-    fetcher: Optional[Path],
-    android_home: Path,
-    grpc_services: Path,
-):
-    """runs tests on an emulator. It installs necessary packages, restarts adb,
-    runs pytest and converts the results to a junit xml and HTML files.
-
-    Args:
-
-        emulator (str):        Path to the emulator binary
-        use_exceptions(bool):  True if an excpetion should be raised on pytest failures.
-        logdir (Path):         The directory where all the logs will be written to
-        symbol_path(Path):     Optional path to the symbols that belong with this emulator.
-        build_target: (str):   The name of the build target.
-        pyrun (Callable):      The callable used to run python.
-        tests_to_run (str, dict):
-        collect: (bool):       True if the list of tests should be collected, not run.
-        fetcher: (Path):       Optional path to the fetcher binary.
-        android_home: (Path):  Path to ANDROID_HOME (previously ANDROID_SDK_ROOT).
-        grpc_services: (Path): Path to GRPC services protos.
-    """
-    # sanity checks
-    emulator = str(resolve_emulator(emulator))
-    logging.info(
-        "Checking to see if PYTEST_ADDOPTS is available for running tests: %s",
-        os.getenv("PYTEST_ADDOPTS"),
-    )
-
-
-    logdir = Path(logdir)
-    adb = android_home / "platform-tools" / "adb"
-    if OS_NAME == "windows":
-        adb = adb.with_suffix(".exe")
-
-    result_xmls = []
-    skip_reports = []
-    for name, cfg in tests_to_run:
-        test_log_dir = logdir / name
-        test_log_dir.mkdir(exist_ok=True, parents=True)
-        with AdbServer(pyrun, adb):
-            with tempfile.TemporaryDirectory() as tmpdir:
-                pytest_flags = cfg["pytest_flags"]
-                avd_configs = json.dumps(cfg["avd_configs"])
-                logging.info("Running %s (%s)", name, cfg["description"])
-                res = run_single_suite(
-                    emulator,
-                    use_exceptions,
-                    test_log_dir,
-                    symbol_path,
-                    tmpdir,
-                    build_target,
-                    pyrun,
-                    pytest_flags,
-                    avd_configs,
-                    collect,
-                    name,
-                    fetcher,
-                    android_home,
-                    adb,
-                    grpc_services,
-                )
-                result_xmls.append(res)
-                skip_reports.append(test_log_dir.joinpath(name + "_skip.xml"))
-
-    if collect:
-        result = Path(logdir) / "COLLECT-embedded_test.xml"
-    else:
-        result = Path(logdir) / "TEST-embedded_test.xml"
-    merge_results(python_exe=pyrun, sources=result_xmls, dest=result)
-    xml_skip_report = Path(logdir) / "skipped_tests.xml"
-    merge_skip_reports(python_exe=pyrun, sources=skip_reports, dest=xml_skip_report)
-    apply_xslt(
-        python_exe=pyrun,
-        source=result,
-        xslt=HERE / "cfg" / "asHtml.xslt",
-        dest=Path(logdir) / "test_report.html",
-    )
-    apply_xslt(
-        python_exe=pyrun,
-        source=result,
-        xslt=HERE / "cfg" / "liftSystemOut.xslt",
-        dest=result,
-    )
-    apply_xslt(
-        python_exe=pyrun,
-        source=xml_skip_report,
-        xslt=HERE / "cfg" / "skippedTests.xslt",
-        dest=xml_skip_report.with_suffix(".html"),
-    )
-
-
-def merge_skip_reports(python_exe: Callable, sources: [Path], dest: Path):
-    """Run the standalone skip report module
-
-    Args:
-        python_exe (Callable): The callable used to run python.
-        sources ([Path]): List of xml skip reports that are to be merged.
-        dest (Path): The (optional) output file where the result will be written to.
-    """
-    try:
-        python_exe(
-            [
-                "-m",
-                "emuxml.merge_skip_reports",
-                "--out",
-                dest,
-                "--cfg",
-                HERE / "cfg",
-            ]
-            + [str(x) for x in sources],
-            timeout=10,
-        )
-    except Exception as err:
-        logging.warning(
-            "Failed to merge skip reports: %s to %s due to (%s)", sources, dest, err
-        )
 
 
 def parse_arguments():
@@ -1075,12 +612,12 @@ def main(args):
         if (re.match(args.test_suite, name) and test_cfg[name]["status"] == "enabled")
     ]
     if not tests_to_run:
-        raise NoTestResultsProduced(f"No enabled test suite matching {args.test_suite}")
+        raise test_runner.NoTestResultsProduced(f"No enabled test suite matching {args.test_suite}")
 
     logging.info("Scheduling %d suites", len(tests_to_run))
     if args.build_dir:
         with TemporaryEmulatorDeploy(args.build_dir) as (emulator, symbols):
-            run_tests(
+            test_runner.run_tests(
                 emulator=emulator,
                 use_exceptions=args.use_exceptions,
                 logdir=args.logdir,
@@ -1094,7 +631,7 @@ def main(args):
                 grpc_services=GRPC_SERVICES,
             )
     else:
-        run_tests(
+        test_runner.run_tests(
             emulator=args.emulator,
             use_exceptions=args.use_exceptions,
             logdir=args.logdir,
@@ -1116,7 +653,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logging.critical("Terminated by user")
         sys.exit(1)
-    except UnitTestFailure as utf:
+    except test_runner.UnitTestFailure as utf:
         logging.error("Test failure: %s", str(utf))
         sys.exit(1)
     except Exception as exc:
