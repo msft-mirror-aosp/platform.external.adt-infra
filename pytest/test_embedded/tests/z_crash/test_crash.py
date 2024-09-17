@@ -237,7 +237,6 @@ async def restart_and_verify_crash_dialogue(avd):
 
 @pytest.mark.async_timeout(600)
 @pytest.mark.crash_flake(retries=0)
-@pytest.mark.e2e
 @pytest.mark.fast
 @pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
 async def test_crash_dont_send_report(avd, crash_reporter):
@@ -302,6 +301,7 @@ async def test_crash_dont_send_report(avd, crash_reporter):
 
 
 @pytest.mark.fast
+@pytest.mark.crash_flake(retries=0)
 @pytest.mark.async_timeout(600)
 @pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
 @pytest.mark.skipos("mac", "reason: unshare not available.")
