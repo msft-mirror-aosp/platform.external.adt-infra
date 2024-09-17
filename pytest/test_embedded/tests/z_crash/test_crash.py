@@ -201,7 +201,42 @@ async def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     ), "None of the crash reports have decoded symbols"
 
 
+async def nav_back(n):
+    """Send the Shift+Tab (navigate back) hotkey 'n' times
+    """
+    while n > 0:
+        pyautogui.hotkey('Shift', 'Tab')
+        asyncio.sleep(1)
+        n -= 1
+
+async def string_in_emulator_log(avd, string, matched_line=[]):
+    """Return 'True' if 'string' is observed in the emulator log
+    """
+    async for line in avd.log:
+        if string in line:
+            matched_line.append(line)
+            return True
+
+async def restart_and_verify_crash_dialogue(avd):
+    """ Restart the emulator and verify the crash report dialogue opened
+    """
+    try:
+        await avd.restart(avd.launch_flags + ["-no-metrics"])
+    except EmulatorNotFoundException as err:
+        logging.info("EmulatorNotFoundException exception was ignored")
+
+    # Crashpad annotations indicate the crash report dialogue appeared
+    matched_line = []
+    assert await eventually(
+        partial(string_in_emulator_log, avd, "crashpad_annotations", matched_line),
+        timeout=300
+    ), "Couldn't verify the crash report dialogue opening."
+
+    logging.info(f'The following crashpad annotation was matched: {matched_line[0]}')
+
+
 @pytest.mark.async_timeout(600)
+@pytest.mark.crash_flake(retries=0)
 @pytest.mark.e2e
 @pytest.mark.fast
 @pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
@@ -226,38 +261,10 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         2. The dialog disappears immediately, with the event being observed
            in the emulator log.
     """
-    async def nav_back(n):
-        """Send the Shift+Tab (navigate back) hotkey 'n' times
-        """
-        while n > 0:
-            pyautogui.hotkey('Shift', 'Tab')
-            asyncio.sleep(1)
-            n -= 1
-
-    async def string_in_emulator_log(string, matched_line=[]):
-        """Return 'True' if 'string' appears is observed in the emulator log.
-        """
-        async for line in avd.log:
-            if string in line:
-                matched_line.append(line)
-                return True
-
     crashes = await crash(avd, crash_reporter)
     assert len(crashes) >= 1, "Couldn't crash the emulator."
 
-    # Restart the emulator and check the log for crashpad annotations
-    try:
-        await avd.restart(avd.launch_flags + ["-no-metrics"])
-    except EmulatorNotFoundException as err:
-        logging.info("EmulatorNotFoundException exception was ignored.")
-
-    # Crashpad annotations indicate the crash report dialogue appeared
-    matched_line = []
-    assert await eventually(
-        partial(string_in_emulator_log, "crashpad_annotations", matched_line), timeout=300
-    ), "Couldn't verify the crash report dialogue opening."
-
-    logging.info(f'The following crashpad annotation was matched: {matched_line[0]}')
+    await restart_and_verify_crash_dialogue(avd)
 
     # Click “Show details”
     await nav_back(3)
@@ -283,7 +290,8 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         # Check stdout for the 'No consent' message
         async def _verify():
             return await eventually(
-                partial(string_in_emulator_log, "No consent for crashreport"), timeout=120
+                partial(string_in_emulator_log, avd, "No consent for crashreport"),
+                timeout=120
             )
         res = await asyncio.gather(_dismiss(), _verify())
         return res[1]
