@@ -296,6 +296,79 @@ async def test_crash_dont_send_report(avd, crash_reporter):
     logging.info("Dialogue window successfully dismissed")
 
 
+@pytest.mark.async_timeout(600)
+@pytest.mark.crash_flake(retries=0)
+@pytest.mark.fast
+@pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
+async def test_crash_send_report(avd, crash_reporter):
+    """Verify user can proceed with sending emulator crash report.
+
+    Args:
+        avd (BaseEmulator): booted emulator fixture.
+        crash_reporter: fixture to handle crash reports.
+
+    Test Steps:
+        1. Launch a new AVD.
+        2. Cause a crash, by sending the console command 'adb emu crash'.
+        3. Relaunch the AVD (Verify 1).
+        4. Click "Show details"
+        5. Click "Hide details", type some user comments.
+        6. Press "Send report" (Verify 2).
+
+    Verification:
+        1. Crash Report Dialogue Window should show up before relaunching the AVD,
+           observed by the presence of crashpad annotations in the emulator log.
+        2. The emulator loads details, uploads data, shows report id.
+    """
+    crashes = await crash(avd, crash_reporter)
+    assert len(crashes) >= 1, "Couldn't crash the emulator."
+
+    await restart_and_verify_crash_dialogue(avd)
+
+    # Click “Show details”
+    await nav_back(3)
+    pyautogui.press('enter')
+    await asyncio.sleep(2)
+
+    # Click “Hide details”
+    pyautogui.press('enter')
+
+    # Type some user comments
+    await nav_back(2)
+    pyautogui.write('Emulator E2E testing: test_crash.py::test_crash_dont_send_report')
+    await asyncio.sleep(2)
+
+    async def confirm_and_verify():
+        # Press button "Send report"
+        async def _confirm():
+            await nav_back(1)
+            if platform.system() != "Darwin":
+                # Dialogue buttons are in reversed order on macOS
+                await nav_back(1)
+            pyautogui.press('enter')
+
+        # Verify the crash report submission.
+        async def _verify():
+            # Check attempt to send the crash report.
+            assert await eventually(
+                partial(string_in_emulator_log, avd.log, "Attempting to send crashreport"),
+                timeout=120
+            ), "There was no attempt to send the crash report."
+            # Check crashr eport upload message.
+            matched_line = []
+            assert await eventually(
+                partial(string_in_emulator_log, avd.log,
+                        "is available remotely as", matched_line),
+                timeout=120
+            ), "The crash report upload couldn't be verified."
+            report_id_message = re.sub(".*(Report.*)", "\\1", matched_line[0])
+            logging.info(report_id_message)
+
+        return await asyncio.gather(_confirm(), _verify())
+
+    await confirm_and_verify()
+
+
 @pytest.mark.fast
 @pytest.mark.crash_flake(retries=0)
 @pytest.mark.async_timeout(600)
