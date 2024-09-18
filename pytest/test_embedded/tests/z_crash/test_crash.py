@@ -12,25 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import os
-from pathlib import Path
 import re
 from typing import List
 
+from emu.crashreporter import CrashReporter
+from pathlib import Path
 import pytest
+import os
 import asyncio
 from hacks import load_tkinter
 import pyautogui
 import platform
-import shutil
-from emu.timing import eventually
 
 from emu.process.command import Command
 from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator
+from emu.timing import eventually
 from emu.timing import wait_until
 from functools import partial
 from emu.emulator_exceptions import EmulatorNotFoundException
+from emu.logging.log_handler import AsyncLogHandler
 
 
 AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[5]
@@ -206,13 +207,13 @@ async def nav_back(n):
     """
     while n > 0:
         pyautogui.hotkey('Shift', 'Tab')
-        asyncio.sleep(1)
+        await asyncio.sleep(1)
         n -= 1
 
-async def string_in_emulator_log(avd, string, matched_line=[]):
+async def string_in_emulator_log(log: AsyncLogHandler, string, matched_line=[]):
     """Return 'True' if 'string' is observed in the emulator log
     """
-    async for line in avd.log:
+    async for line in log:
         if string in line:
             matched_line.append(line)
             return True
@@ -228,7 +229,7 @@ async def restart_and_verify_crash_dialogue(avd):
     # Crashpad annotations indicate the crash report dialogue appeared
     matched_line = []
     assert await eventually(
-        partial(string_in_emulator_log, avd, "crashpad_annotations", matched_line),
+        partial(string_in_emulator_log, avd.log, "crashpad_annotations", matched_line),
         timeout=300
     ), "Couldn't verify the crash report dialogue opening."
 
@@ -250,7 +251,7 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         1. Launch a new AVD.
         2. Cause a crash, by sending the console command 'adb emu crash'.
         3. Relaunch the AVD (Verify 1).
-        4. Click "Show details."
+        4. Click "Show details"
         5. Click "Hide details", type some user comments.
         6. Press "Don’t Send" (Verify 2).
 
@@ -289,7 +290,7 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         # Check stdout for the 'No consent' message
         async def _verify():
             return await eventually(
-                partial(string_in_emulator_log, avd, "No consent for crashreport"),
+                partial(string_in_emulator_log, avd.log, "No consent for crashreport"),
                 timeout=120
             )
         res = await asyncio.gather(_dismiss(), _verify())
@@ -297,7 +298,7 @@ async def test_crash_dont_send_report(avd, crash_reporter):
 
     assert await dismiss_and_verify(), "Coudn't confirm the crash report rejection."
 
-    logging.info("Dialogue window successfully dismissed.")
+    logging.info("Dialogue window successfully dismissed")
 
 
 @pytest.mark.fast
