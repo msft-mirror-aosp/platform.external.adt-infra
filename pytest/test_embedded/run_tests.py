@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
-import datetime
-import json
 import logging
 import os
 import platform
@@ -53,6 +51,7 @@ SNAPTOOL = (
     AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc" / "python" / "snaptool"
 )
 NETSIM_GRPC = AOSP_ROOT / "tools" / "netsim" / "testing" / "netsim-grpc"
+CRASH_RETRY = HERE.parent / "crash_retry"
 
 PYTHON_DIR = AOSP_ROOT / "prebuilts" / "python" / f"{OS_NAME}-x86"
 if OS_NAME != "windows":
@@ -556,12 +555,8 @@ def parse_arguments():
     )
 
     args = parser.parse_args()
-    logdir = Path(args.logdir)
-    logdir.mkdir(exist_ok=True, parents=True)
-    log_name = ".".join((os.path.basename(sys.argv[0]),
-                         datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), "log"))
     configure_logging(logging.DEBUG if args.verbose else logging.INFO,
-                      log_path=logdir.joinpath(log_name))
+                      log_path=test_runner.get_log_path(Path(args.logdir)))
 
     if args.generate:
         if not args.virtual_env_dir:
@@ -585,34 +580,24 @@ def parse_arguments():
     return args
 
 
+def create_pyrunner(local_python: bool, virtual_env_dir: str, verbose: bool) -> PyRunner:
+    """Creates a PyRunner object, installing the needed pip packages."""
+    repo = AOSP_ROOT / "external" / "adt-infra" / "devpi" / "repo" / "simple"
+
+    # Windows cannot handle the file:// url prefix properly (Due to C:\), so
+    # we omit it
+    if platform.system() != "Windows":
+        repo = f"file://{repo}"
+
+    py_exe = PyRunner() if local_python else AospPyRunner(repo, virtual_env_dir)
+    verbose = ["-vvv"] if verbose else []
+    py_exe.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE, CRASH_RETRY])
+    return py_exe
+
+
 def main(args):
-    if args.generate:
-        repo = "http://localhost:3141/packages/stable"
-    else:
-        repo = AOSP_ROOT / "external" / "adt-infra" / "devpi" / "repo" / "simple"
-
-        # Windows cannot handle the file:// url prefix properly (Due to C:\), so
-        # we omit it
-        if platform.system() != "Windows":
-            repo = f"file://{repo}"
-
-    py_exe = (
-        PyRunner() if args.local_python else AospPyRunner(repo, args.virtual_env_dir)
-    )
-    verbose = ["-vvv"] if args.verbose else []
-    crash_retry = HERE.parent / "crash_retry"
-    py_exe.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE, crash_retry])
-
-    with open(args.test_config, "r", encoding="utf-8") as file:
-        test_cfg = json.load(file)
-
-    tests_to_run = [
-        (name, test_cfg[name])
-        for name in test_cfg
-        if (re.match(args.test_suite, name) and test_cfg[name]["status"] == "enabled")
-    ]
-    if not tests_to_run:
-        raise test_runner.NoTestResultsProduced(f"No enabled test suite matching {args.test_suite}")
+    py_exe = create_pyrunner(args.local_python, args.virtual_env_dir, args.verbose)
+    tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite)
 
     logging.info("Scheduling %d suites", len(tests_to_run))
     if args.build_dir:
