@@ -12,18 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import asyncio
+import datetime
 import json
 import logging
 import os
 import platform
+import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from threading import Lock, Thread, Timer
-from typing import Callable, Optional
+from typing import Callable, Dict, List, Optional, Tuple
 
-# Note we are not part of the package!
-from src.emu.crashreporter import CrashReporter
+# Allow running from either in or out of the virtualenv.
+try:
+    from emu.crashreporter import CrashReporter
+except ImportError:
+    from src.emu.crashreporter import CrashReporter
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -180,6 +186,7 @@ def run_single_suite(
                 f"--android_avd_home={tmpdir}",
                 f"--build_target={build_target}",
                 f"--android_home={android_home}",
+                f"--grpc_services={grpc_services}",
             ]
             + pytest_flags,
             cwd=HERE,
@@ -230,6 +237,29 @@ def run_single_suite(
                 raise UnitTestFailure(failure.read())
 
     return junit_test_results
+
+
+def get_tests_to_run(test_config: str, test_suite: str) -> List[Tuple[str, Dict]]:
+    """Gets the list of tests to run."""
+    with open(test_config, "r", encoding="utf-8") as file:
+        test_cfg = json.load(file)
+
+    tests_to_run = [
+        (name, test_cfg[name])
+        for name in test_cfg
+        if (re.match(test_suite, name) and test_cfg[name]["status"] == "enabled")
+    ]
+    if not tests_to_run:
+        raise NoTestResultsProduced(f"No enabled test suite matching {test_suite}")
+    return tests_to_run
+
+
+def get_log_path(logdir: Path) -> Path:
+    """Returns the path to the log file, creating any needed directories."""
+    logdir.mkdir(exist_ok=True, parents=True)
+    log_name = ".".join((os.path.basename(sys.argv[0]),
+                         datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), "log"))
+    return logdir.joinpath(log_name)
 
 
 class AdbServer:

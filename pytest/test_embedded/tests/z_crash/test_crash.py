@@ -33,18 +33,13 @@ from functools import partial
 from emu.emulator_exceptions import EmulatorNotFoundException
 
 
-AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[5]
-# Path to all the gRPC services
-GRPC_SERVICES = AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc"
-
-
 def get_crash_reporter(pytestconfig):
     exe = pytestconfig.getoption("emulator")
     emulator_directory = Path(exe).parent if exe else None
     return CrashReporter(
         emulator_directory,
         pytestconfig.getoption("symbols"),
-        GRPC_SERVICES,
+        pytestconfig.getoption("grpc_services"),
     )
 
 
