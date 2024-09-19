@@ -12,28 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import os
 import re
 from typing import List
 
+from emu.crashreporter import CrashReporter
+from pathlib import Path
 import pytest
+import os
 import asyncio
 from hacks import load_tkinter
 import pyautogui
 import platform
-from emu.timing import eventually
 
 from emu.process.command import Command
 from emu.crashreporter import CrashReporter
 from emu.emulator import BaseEmulator
+from emu.timing import eventually
 from emu.timing import wait_until
 from functools import partial
 from emu.emulator_exceptions import EmulatorNotFoundException
-
-
-AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[5]
-# Path to all the gRPC services
-GRPC_SERVICES = AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc"
+from emu.logging.log_handler import AsyncLogHandler
 
 
 def get_crash_reporter(pytestconfig):
@@ -42,7 +40,7 @@ def get_crash_reporter(pytestconfig):
     return CrashReporter(
         emulator_directory,
         pytestconfig.getoption("symbols"),
-        GRPC_SERVICES,
+        pytestconfig.getoption("grpc_services"),
     )
 
 
@@ -199,8 +197,42 @@ async def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     ), "None of the crash reports have decoded symbols"
 
 
+async def nav_back(n):
+    """Send the Shift+Tab (navigate back) hotkey 'n' times
+    """
+    while n > 0:
+        pyautogui.hotkey('Shift', 'Tab')
+        await asyncio.sleep(1)
+        n -= 1
+
+async def string_in_emulator_log(log: AsyncLogHandler, string, matched_line=[]):
+    """Return 'True' if 'string' is observed in the emulator log
+    """
+    async for line in log:
+        if string in line:
+            matched_line.append(line)
+            return True
+
+async def restart_and_verify_crash_dialogue(avd):
+    """ Restart the emulator and verify the crash report dialogue opened
+    """
+    try:
+        await avd.restart(avd.launch_flags + ["-no-metrics"])
+    except EmulatorNotFoundException as err:
+        logging.info("EmulatorNotFoundException exception was ignored")
+
+    # Crashpad annotations indicate the crash report dialogue appeared
+    matched_line = []
+    assert await eventually(
+        partial(string_in_emulator_log, avd.log, "crashpad_annotations", matched_line),
+        timeout=300
+    ), "Couldn't verify the crash report dialogue opening."
+
+    logging.info(f'The following crashpad annotation was matched: {matched_line[0]}')
+
+
 @pytest.mark.async_timeout(600)
-@pytest.mark.e2e
+@pytest.mark.crash_flake(retries=0)
 @pytest.mark.fast
 @pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
 async def test_crash_dont_send_report(avd, crash_reporter):
@@ -214,7 +246,7 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         1. Launch a new AVD.
         2. Cause a crash, by sending the console command 'adb emu crash'.
         3. Relaunch the AVD (Verify 1).
-        4. Click "Show details."
+        4. Click "Show details"
         5. Click "Hide details", type some user comments.
         6. Press "Don’t Send" (Verify 2).
 
@@ -224,38 +256,10 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         2. The dialog disappears immediately, with the event being observed
            in the emulator log.
     """
-    async def nav_back(n):
-        """Send the Shift+Tab (navigate back) hotkey 'n' times
-        """
-        while n > 0:
-            pyautogui.hotkey('Shift', 'Tab')
-            asyncio.sleep(1)
-            n -= 1
-
-    async def string_in_emulator_log(string, matched_line=[]):
-        """Return 'True' if 'string' appears is observed in the emulator log.
-        """
-        async for line in avd.log:
-            if string in line:
-                matched_line.append(line)
-                return True
-
     crashes = await crash(avd, crash_reporter)
     assert len(crashes) >= 1, "Couldn't crash the emulator."
 
-    # Restart the emulator and check the log for crashpad annotations
-    try:
-        await avd.restart(avd.launch_flags + ["-no-metrics"])
-    except EmulatorNotFoundException as err:
-        logging.info("EmulatorNotFoundException exception was ignored.")
-
-    # Crashpad annotations indicate the crash report dialogue appeared
-    matched_line = []
-    assert await eventually(
-        partial(string_in_emulator_log, "crashpad_annotations", matched_line), timeout=300
-    ), "Couldn't verify the crash report dialogue opening."
-
-    logging.info(f'The following crashpad annotation was matched: {matched_line[0]}')
+    await restart_and_verify_crash_dialogue(avd)
 
     # Click “Show details”
     await nav_back(3)
@@ -281,12 +285,162 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         # Check stdout for the 'No consent' message
         async def _verify():
             return await eventually(
-                partial(string_in_emulator_log, "No consent for crashreport"), timeout=120
+                partial(string_in_emulator_log, avd.log, "No consent for crashreport"),
+                timeout=120
             )
         res = await asyncio.gather(_dismiss(), _verify())
         return res[1]
 
     assert await dismiss_and_verify(), "Coudn't confirm the crash report rejection."
 
-    logging.info("Dialogue window successfully dismissed.")
+    logging.info("Dialogue window successfully dismissed")
 
+
+@pytest.mark.async_timeout(600)
+@pytest.mark.crash_flake(retries=0)
+@pytest.mark.fast
+@pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
+async def test_crash_send_report(avd, crash_reporter):
+    """Verify user can proceed with sending emulator crash report.
+
+    Args:
+        avd (BaseEmulator): booted emulator fixture.
+        crash_reporter: fixture to handle crash reports.
+
+    Test Steps:
+        1. Launch a new AVD.
+        2. Cause a crash, by sending the console command 'adb emu crash'.
+        3. Relaunch the AVD (Verify 1).
+        4. Click "Show details"
+        5. Click "Hide details", type some user comments.
+        6. Press "Send report" (Verify 2).
+
+    Verification:
+        1. Crash Report Dialogue Window should show up before relaunching the AVD,
+           observed by the presence of crashpad annotations in the emulator log.
+        2. The emulator loads details, uploads data, shows report id.
+    """
+    crashes = await crash(avd, crash_reporter)
+    assert len(crashes) >= 1, "Couldn't crash the emulator."
+
+    await restart_and_verify_crash_dialogue(avd)
+
+    # Click “Show details”
+    await nav_back(3)
+    pyautogui.press('enter')
+    await asyncio.sleep(2)
+
+    # Click “Hide details”
+    pyautogui.press('enter')
+
+    # Type some user comments
+    await nav_back(2)
+    pyautogui.write('Emulator E2E testing: test_crash.py::test_crash_dont_send_report')
+    await asyncio.sleep(2)
+
+    async def confirm_and_verify():
+        # Press button "Send report"
+        async def _confirm():
+            await nav_back(1)
+            if platform.system() != "Darwin":
+                # Dialogue buttons are in reversed order on macOS
+                await nav_back(1)
+            pyautogui.press('enter')
+
+        # Verify the crash report submission.
+        async def _verify():
+            # Check attempt to send the crash report.
+            assert await eventually(
+                partial(string_in_emulator_log, avd.log, "Attempting to send crashreport"),
+                timeout=120
+            ), "There was no attempt to send the crash report."
+            # Check crashr eport upload message.
+            matched_line = []
+            assert await eventually(
+                partial(string_in_emulator_log, avd.log,
+                        "is available remotely as", matched_line),
+                timeout=120
+            ), "The crash report upload couldn't be verified."
+            report_id_message = re.sub(".*(Report.*)", "\\1", matched_line[0])
+            logging.info(report_id_message)
+
+        return await asyncio.gather(_confirm(), _verify())
+
+    await confirm_and_verify()
+
+
+@pytest.mark.fast
+@pytest.mark.crash_flake(retries=0)
+@pytest.mark.async_timeout(600)
+@pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
+@pytest.mark.skipos("mac", "reason: unshare not available.")
+async def test_crash_without_internet(avd, crash_reporter):
+    """Verify no exceptions are raised when sending a crash report without internet connectivity.
+
+    Args:
+        avd (BaseEmulator): booted emulator fixture.
+        crash_reporter: fixture to handle crash reports.
+
+    Test Steps:
+        1. Launch a new AVD.
+        2. Cause a crash, by sending the console command 'adb emu crash'.
+        3. Disconnect internet access from host machine.
+        3. Relaunch the AVD (Verify 1 and 2).
+
+    Verification:
+        1. No exceptions should be raised.
+        2. The emulator loads details, dialog then disappears, indicated
+           by a failure message in the emulator log.
+    """
+    crashes = await crash(avd, crash_reporter)
+    assert len(crashes) >= 1, "Couldn't crash the emulator."
+
+    # Unshare is used to launch an emulator process within an isolated network stack
+    unshare_exec = shutil.which("unshare")
+    if not unshare_exec:
+        pytest.fail("unshare binary not found in PATH.")
+
+    logging.info('Launching an emulator process in its own network namespace ...')
+    args = [arg for arg in avd.cmd.cmd if arg != "-metrics-collection"]
+    args = [unshare_exec, "--user", "-n"] + args + ["-no-snapshot-save"]
+    cmd = await Command(args).run()
+    await asyncio.sleep(5)
+
+    async def send_and_verify():
+        # Press button "Send report"
+        async def _send_report():
+            logging.info("Attempting to click the 'Send report' button.")
+            await nav_back(1)
+            if platform.system() != "Darwin":
+                # Dialogue buttons are in reversed order on macOS
+                await nav_back(1)
+            pyautogui.press('enter')
+
+        # Verify the crash report upload fails.
+        async def _verify():
+            # Verify attempt to send the crash report.
+            res_attempt = await eventually(
+                partial(string_in_emulator_log, cmd.handler,
+                        "Attempting to send crashreport."),
+                timeout=120
+            )
+            # Check crash report failure.
+            res_verify = await eventually(
+                partial(string_in_emulator_log, cmd.handler,
+                        "Failed to send report."),
+                timeout=120
+            )
+            return res_attempt, res_verify
+
+        await _send_report()
+        return await _verify()
+
+    try:
+        res_attempt, res_verify = await send_and_verify()
+    except Exception as e:
+        pytest.fail(f"An exception occurred: {e}")
+
+    logging.info("Attempting to kill the emulator process.")
+    await cmd.cancel()
+    assert res_attempt, "There was no attempt to send the crash report."
+    assert res_verify, "The crash report failure couldn't be verified."

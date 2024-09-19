@@ -17,6 +17,8 @@
 package com.android.devtools.systemimage.uitest.smoke.api32;
 
 import android.app.Instrumentation;
+
+import androidx.test.espresso.IdlingRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -35,10 +37,13 @@ import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
 import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
+import com.android.devtools.systemimage.uitest.utils.IdlingResourceUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,6 +74,21 @@ public class SettingsTest {
     @Rule
     public Timeout globalTimeout = Timeout.seconds(1000);
 
+    private IdlingResourceUtil idlingResource;
+
+    @Before
+    public void setUp() {
+        UiScrollable scrollableContainer = new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+        idlingResource = new IdlingResourceUtil(scrollableContainer);
+        IdlingRegistry.getInstance().register(idlingResource);
+    }
+
+    @After
+    public void tearDown() {
+        if (idlingResource != null) {
+            IdlingRegistry.getInstance().unregister(idlingResource);
+        }
+    }
     /**
      * Verifies Location page opens on Google API images.
      * <p>
@@ -315,9 +335,7 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
         try {
-            AppLauncher.launchPath(
-                    instrumentation, true, "Settings", "System", "Date & time");
-
+            SettingsUtil.navigateToSettingsPath(device, "System", "Date & time");
         } catch (Exception e) {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
@@ -375,8 +393,7 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
         try {
-            AppLauncher.launchPath(
-                    instrumentation, true, "Settings", "System", "Date & time");
+            SettingsUtil.navigateToSettingsPath(device, "System", "Date & time");
         } catch (Exception e) {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
@@ -586,8 +603,7 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
         try {
-            AppLauncher.launchPath(
-                    instrumentation, true, "Settings", "System", "Date & time");
+            SettingsUtil.navigateToSettingsPath(device, "System", "Date & time");
         } catch (Exception e) {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }

@@ -47,10 +47,15 @@ from snippet_uiautomator import uiautomator
 from mobly import asserts
 
 OS_NAME = platform.system().lower()
-AOSP_ROOT = Path(os.path.dirname(__file__)).absolute().parents[4]
-SDK_EMULATOR = (
-    AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
-)
+HERE = Path(os.path.dirname(__file__)).absolute()
+if len(HERE.parents) > 4:
+    AOSP_ROOT = HERE.parents[4]
+    SDK_EMULATOR = (
+        AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
+    )
+else:
+    SDK_EMULATOR = ''
+
 
 def pytest_addoption(parser):
     """This parses the options that are passed in to pytest."""
@@ -119,6 +124,11 @@ def pytest_addoption(parser):
         "--fetcher",
         action="store",
         help="Optional path to the fetcher binary. If set this will be used for fetching system images.",
+    )
+    parser.addoption(
+        "--grpc_services",
+        action="store",
+        help="The path to all the grpc services.",
     )
 
 
