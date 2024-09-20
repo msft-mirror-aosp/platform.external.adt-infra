@@ -231,6 +231,7 @@ async def restart_and_verify_crash_dialogue(avd):
     logging.info(f'The following crashpad annotation was matched: {matched_line[0]}')
 
 
+@pytest.mark.skipos("all", "issue with crash retry_plugin. b/368319883")
 @pytest.mark.async_timeout(600)
 @pytest.mark.crash_flake(retries=0)
 @pytest.mark.fast
