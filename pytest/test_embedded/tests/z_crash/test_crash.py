@@ -297,6 +297,7 @@ async def test_crash_dont_send_report(avd, crash_reporter):
     logging.info("Dialogue window successfully dismissed")
 
 
+@pytest.mark.skipos("all", "issue with crash retry_plugin. b/369204765")
 @pytest.mark.async_timeout(600)
 @pytest.mark.crash_flake(retries=0)
 @pytest.mark.fast
