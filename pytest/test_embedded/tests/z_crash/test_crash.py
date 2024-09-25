@@ -453,9 +453,10 @@ async def test_crash_without_internet(avd, crash_reporter):
     try:
         res_attempt, res_verify = await send_and_verify()
     except Exception as e:
-        pytest.fail(f"An exception occurred: {e}")
+        logging.error(f"An exception occurred: {e}")
+    finally:
+        logging.info("Attempting to kill the emulator process.")
+        await cmd.cancel()
 
-    logging.info("Attempting to kill the emulator process.")
-    await cmd.cancel()
     assert res_attempt, "There was no attempt to send the crash report."
     assert res_verify, "The crash report failure couldn't be verified."
