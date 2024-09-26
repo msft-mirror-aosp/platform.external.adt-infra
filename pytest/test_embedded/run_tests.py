@@ -289,7 +289,7 @@ class PyRunner:
         Args:
             packages ([str]): The set of packages to install
         """
-        self.run(["-m", "pip", "install", "-v", "--upgrade"] + packages)
+        self.run(["-m", "pip", "install", "-v", "--upgrade"] + packages, timeout=600)
 
     def run(
         self,
