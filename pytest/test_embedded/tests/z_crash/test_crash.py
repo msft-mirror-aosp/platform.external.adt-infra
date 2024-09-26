@@ -13,6 +13,7 @@
 # limitations under the License.
 import logging
 import re
+import shutil
 from typing import List
 
 from emu.crashreporter import CrashReporter
