@@ -32,6 +32,8 @@ from tests.test_utils import fmt_proto, decode_qrcodes
 from snaptool.snapshot import AsyncSnapshotService
 from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
+from tests.test_utils import click_button, get_window_dump
+import lxml.etree as ET
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -774,3 +776,99 @@ async def test_multidisplay_video_playback(avd, no_displays, emulator_controller
         partial(assert_secondary_display_playback, sec_display),
         timeout=120
     ), "Couldn't play the test video on the secondary display."
+
+
+@pytest.mark.multidisplay
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_multidisplay_avd_features_work(avd, no_displays, emulator_controller):
+    """Verify AVD specific features such as app. shortcut work correctly.
+
+    Notes:
+        Test requires API 31+.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
+        no_displays (callable): Fixture that ensures the emulator has a single display.
+        emulator_controller (EmulatorControllerStub): Emulator controller fixture.
+
+    Test Steps:
+        1. Launch a new AVD.
+        2. Attach a secondary display.
+        3. Click on the apps. list icon in the secondary display.
+        4. Long-click any app. whose shortcut can be added, such as Contacts.
+        5. Click 'Add to home screen'.i
+
+    Verification: App shortcut is added to secondary display only.
+    """
+    api = await avd.api_level()
+    if api <= 31:
+        pytest.skip(reason="Requires api level > 31!")
+
+    # Attach a secondary display.
+    logging.info('Attaching a secondary display')
+    configurations = DisplayConfigurations(
+        displays=[DisplayConfiguration(width=720, height=1280, dpi=213, display=1)])
+    cfg = await emulator_controller.setDisplayConfigurations(configurations)
+    main_display_id, secondary_display_id = await get_multidisplays_ids(avd)
+
+    # Tap the 'apps list' icon.
+    assert await click_button(
+        avd,
+        resource_id="com.google.android.apps.nexuslauncher:id/all_apps_button",
+        display_id=secondary_display_id
+    ), "Couldn't open the Apps list."
+    await asyncio.sleep(2)
+
+    # Long-tap 'shortcut_app' to open the detailed options menu.
+    shortcut_app = "Contacts"
+    assert await click_button(
+        avd,
+        text=shortcut_app,
+        resource_id="com.google.android.apps.nexuslauncher:id/icon",
+        parent_resource_id="com.google.android.apps.nexuslauncher:id/apps_list_view",
+        display_id=secondary_display_id,
+        long_click=True
+    ), f"Couldn't open '{shortcut_app}' short menu."
+
+    # Tap 'Add to home screen'.
+    await asyncio.sleep(2)
+    assert await click_button(
+        avd,
+        text="Add to home screen" if api >= 34 else None,
+        content_desc="Add to home screen" if api < 34 else None,
+        display_id=secondary_display_id
+    ), f"Couldn't click 'Add to home screen' button."
+
+    # Verify the shortcut is created in the secondary display's home screen.
+    async def app_shorcut_in_secondary_display():
+        window_dump = await get_window_dump(avd)
+        xml_hierarchy = ET.fromstring(window_dump.encode('UTF-8'))
+        # Check if we are really in display 2
+        display2_bounds = xml_hierarchy.find('node').get('bounds')
+        display2 = cfg.displays[1]
+        assert display2_bounds == f"[0,0][{display2.width},{display2.height}]"
+        # Verify app shortcut exists in the xml hierarchy
+        workspace_id = "com.google.android.apps.nexuslauncher:id/workspace_grid"
+        shortcut = xml_hierarchy.xpath(
+            f"//node[@resource-id='{workspace_id}']//node[@text='{shortcut_app}']")
+        assert len(shortcut) == 1, "Couldn't detect the app shortcut in display 2."
+
+    # Verify the main display's home screen has not the app shortcut.
+    async def app_shorcut_not_in_main_display():
+        window_dump = await get_window_dump(avd)
+        # Tap display 1 to change focus
+        display1 = cfg.displays[0]
+        await avd.adb.shell(
+            f"input -d {main_display_id} tap {display1.width/2} {display1.height/2}")
+        # Confirm we are in display 1
+        window_dump = await get_window_dump(avd)
+        xml_hierarchy = ET.fromstring(window_dump.encode('UTF-8'))
+        display1_bounds = xml_hierarchy.find('node').get('bounds')
+        assert display1_bounds == f"[0,0][{display1.width},{display1.height}]", \
+            "Couldn't change focus to the primary display"
+        assert shortcut_app not in xml_hierarchy, \
+            f"A shortcut for '{shortcut_app}' was found in the main display."
+
+    await app_shorcut_in_secondary_display()
+    await app_shorcut_not_in_main_display()
