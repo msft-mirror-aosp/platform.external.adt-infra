@@ -235,6 +235,7 @@ async def restart_and_verify_crash_dialogue(avd):
         raise
 
 
+@pytest.mark.skipos("all", "issue with crash retry_plugin. b/368319883")
 @pytest.mark.async_timeout(600)
 @pytest.mark.crash_flake(retries=0)
 @pytest.mark.fast
@@ -305,6 +306,7 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         raise
 
 
+@pytest.mark.skipos("all", "issue with crash retry_plugin. b/369204765")
 @pytest.mark.async_timeout(600)
 @pytest.mark.crash_flake(retries=0)
 @pytest.mark.fast
