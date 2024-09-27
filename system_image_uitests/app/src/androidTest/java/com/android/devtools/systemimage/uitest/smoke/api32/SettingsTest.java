@@ -35,7 +35,6 @@ import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramewor
 import com.android.devtools.systemimage.uitest.utils.ApiDemosInstaller;
 import com.android.devtools.systemimage.uitest.utils.AppLauncher;
 import com.android.devtools.systemimage.uitest.utils.AppManager;
-import com.android.devtools.systemimage.uitest.utils.DeveloperOptionsManager;
 import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.IdlingResourceUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
@@ -52,6 +51,7 @@ import org.junit.runner.RunWith;
 
 import java.util.Objects;
 
+import static com.android.devtools.systemimage.uitest.utils.SettingsUtil.enableDeveloperOptions;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -110,30 +110,11 @@ public class SettingsTest {
             return;
         }
 
-        AppLauncher.launch(instrumentation, "Settings");
-        UiSelector region = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
-        UiSelector target = new UiSelector()
-                .className("android.widget.TextView")
-                .text("Location");
-
         assertTrue("Location not found in Settings List",
-                SettingsUtil.scrollToObject(device, region, target));
-        device.findObject(target).clickAndWaitForNewWindow();
-
-        boolean recentAccessText = new Wait().until(
-                () -> device.findObject(new UiSelector()
-                        .text("Recent access")).exists());
-
-        if (!recentAccessText) {
-            device.findObject(new UiSelector().text("Use location")).clickAndWaitForNewWindow();
-        }
+                SettingsUtil.navigateToSettingsPath(device, "Location", "See all"));
 
         UiObject seeAll = device.findObject(new UiSelector()
                 .text("See all"));
-
-        if (new Wait().until(seeAll::exists)) {
-            seeAll.clickAndWaitForNewWindow();
-        }
 
         boolean recentAccessDesc = new Wait().until(
                 () -> device.findObject(new UiSelector()
@@ -307,10 +288,9 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
-        DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+        assertTrue("Developer options could not be enabled", enableDeveloperOptions(instrumentation));
         assertTrue("Failed to enable Developer options.",
-                AppLauncher.launchPath(
-                        instrumentation, true, "Settings", "System", "Developer options"));
+                SettingsUtil.navigateToSettingsPath(device, "System", "Developer options"));
     }
 
     /**
@@ -948,12 +928,10 @@ public class SettingsTest {
      */
     @Test
     public void revokeDebugAuth() throws Exception {
-        if (!AppLauncher.launchPath(
-                instrumentation, true, "Settings", "System", "Developer options")) {
-            DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+        if (!SettingsUtil.navigateToSettingsPath(device, "System", "Developer options")) {
+            SettingsUtil.enableDeveloperOptions(instrumentation);
             Assert.assertTrue("Could not enable developer options",
-                    AppLauncher.launchPath(
-                            instrumentation, true, "Settings", "System", "Developer options"));
+                    SettingsUtil.navigateToSettingsPath(device, "System", "Developer options"));
         }
 
         UiSelector region = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
@@ -980,8 +958,7 @@ public class SettingsTest {
     @Test
     public void listConnectedDevices() throws Exception {
         try {
-            AppLauncher.launchPath(
-                    instrumentation, true, "Settings", "Connected devices");
+            SettingsUtil.navigateToSettingsPath(device, "Connected devices");
         } catch (Exception e) {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
@@ -1006,7 +983,7 @@ public class SettingsTest {
         UiObject actionBar = device.findObject(
                 new UiSelector().resourceId(Res.SETTINGS_ACTION_BAR_RES).className("android.view.ViewGroup"));
         UiObject connectedDevices = device.findObject(
-                new UiSelector().text("Previously connected devices").className("android.widget.TextView"));
+                new UiSelector().description("Previously connected"));
         Assert.assertTrue("Connected devices were not listed",
                 hasSavedDevices ||
                         (actionBar.waitForExists(5L) && connectedDevices.waitForExists(5L)));

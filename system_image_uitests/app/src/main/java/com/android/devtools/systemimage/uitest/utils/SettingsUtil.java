@@ -961,4 +961,34 @@ public class SettingsUtil {
             notRespondingError.waitUntilGone(5000L);
         }
     }
+
+
+    /**
+     * Enables the Developer Options in the Android settings.
+     *
+     * This method navigates to the Developer Options in the Android settings and enables it.
+     * If the Developer Options is not initially found, it tries to navigate to "About emulated device" or "About phone"
+     * and enables the Developer Options from there.
+     *
+     * @param instrumentation The instrumentation instance used to interact with the UI.
+     * @return true if the Developer Options was successfully enabled, false otherwise.
+     * @throws Exception if an error occurs during the process.
+     */
+    public static boolean enableDeveloperOptions(Instrumentation instrumentation) throws Exception {
+        UiDevice device = UiDevice.getInstance(instrumentation);
+        boolean result;
+        if (navigateToSettingsPath(device, "System", "Developer options")) {
+            result = true;
+        } else {
+            if (navigateToSettingsPath(device, "About emulated device") ||
+                    navigateToSettingsPath(device, "About phone")) {
+                DeveloperOptionsManager.enableOptions(instrumentation, new DeveloperOptionsManager.SwipeNavigationStrategy(), false);
+                result = navigateToSettingsPath(device, "System", "Developer options");
+            } else {
+                result = false;
+            }
+        }
+        dismissUnresponsivePopup(device);
+        return result;
+    }
 }

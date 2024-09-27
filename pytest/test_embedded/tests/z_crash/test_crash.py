@@ -223,12 +223,16 @@ async def restart_and_verify_crash_dialogue(avd):
 
     # Crashpad annotations indicate the crash report dialogue appeared
     matched_line = []
-    assert await eventually(
-        partial(string_in_emulator_log, avd.log, "crashpad_annotations", matched_line),
-        timeout=300
-    ), "Couldn't verify the crash report dialogue opening."
-
-    logging.info(f'The following crashpad annotation was matched: {matched_line[0]}')
+    try:
+        assert await eventually(
+            partial(string_in_emulator_log, avd.log, "crashpad_annotations", matched_line),
+            timeout=300
+        ), "Couldn't verify the crash report dialogue opening."
+        logging.info(f'The following crashpad annotation was matched: {matched_line[0]}')
+    except AssertionError as e:
+        logging.info("Attempting to close the crash report dialogue ...")
+        await avd.stop()
+        raise
 
 
 @pytest.mark.async_timeout(600)
@@ -291,9 +295,14 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         res = await asyncio.gather(_dismiss(), _verify())
         return res[1]
 
-    assert await dismiss_and_verify(), "Coudn't confirm the crash report rejection."
-
-    logging.info("Dialogue window successfully dismissed")
+    try:
+        assert await dismiss_and_verify(), \
+            "Couldn't confirm the crash report rejection."
+        logging.info("Dialogue window successfully dismissed")
+    except AssertionError as e:
+        logging.info("Attempting to close the crash report dialogue ...")
+        await avd.stop()
+        raise
 
 
 @pytest.mark.async_timeout(600)
@@ -353,8 +362,8 @@ async def test_crash_send_report(avd, crash_reporter):
             assert await eventually(
                 partial(string_in_emulator_log, avd.log, "Attempting to send crashreport"),
                 timeout=120
-            ), "There was no attempt to send the crash report."
-            # Check crashr eport upload message.
+            ), "The attempt to send the crash report wasn't observed."
+            # Check crash report upload message.
             matched_line = []
             assert await eventually(
                 partial(string_in_emulator_log, avd.log,
@@ -366,7 +375,13 @@ async def test_crash_send_report(avd, crash_reporter):
 
         return await asyncio.gather(_confirm(), _verify())
 
-    await confirm_and_verify()
+    try:
+        await confirm_and_verify(), "Couldn't confirm the crash report submission."
+        logging.info("Dialogue window successfully dismissed")
+    except AssertionError as e:
+        logging.info("Attempting to close the crash report dialogue ...")
+        await avd.stop()
+        raise
 
 
 @pytest.mark.fast
@@ -438,9 +453,10 @@ async def test_crash_without_internet(avd, crash_reporter):
     try:
         res_attempt, res_verify = await send_and_verify()
     except Exception as e:
-        pytest.fail(f"An exception occurred: {e}")
+        logging.error(f"An exception occurred: {e}")
+    finally:
+        logging.info("Attempting to kill the emulator process.")
+        await cmd.cancel()
 
-    logging.info("Attempting to kill the emulator process.")
-    await cmd.cancel()
     assert res_attempt, "There was no attempt to send the crash report."
     assert res_verify, "The crash report failure couldn't be verified."
