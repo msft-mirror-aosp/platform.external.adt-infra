@@ -36,6 +36,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
+from emu.process.command import Command
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 
@@ -488,6 +489,11 @@ async def manage_avd(emulator) -> BaseEmulator:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
     await emulator.restart(emulator.launch_flags)
+    adb_log_cmd = Command(
+        [emulator.adb.adb_binary, "-s", emulator.adb.name, "logcat"],
+        logging.getLogger(emulator.configuration.name + "-logcat"),
+    )
+    await adb_log_cmd.run()
 
     assert await emulator.wait_for_boot()
     logging.info("The emulator has finished booting")
@@ -515,6 +521,7 @@ async def manage_avd(emulator) -> BaseEmulator:
 
     logging.info("<-- teardown emulator")
     # Stop the emulator.
+    adb_log_cmd.cancel()
     await emulator.stop()
     logging.info("=== completed emulator")
 
@@ -729,6 +736,7 @@ def mobly(avd: BaseEmulator):
 def mbs(mobly):
     return mobly("mbs")
 
+
 @pytest.fixture(scope="function")
 async def ad_ui(avd: BaseEmulator):
     """
@@ -749,12 +757,13 @@ async def ad_ui(avd: BaseEmulator):
     ad.services.unregister(uiautomator.ANDROID_SERVICE_NAME)
     asserts.assert_false(
         hasattr(ad, uiautomator.PUBLIC_SERVICE_NAME),
-        'Failed to remove Python wrapper',
+        "Failed to remove Python wrapper",
     )
     asserts.assert_false(
         hasattr(ad, uiautomator.HIDDEN_SERVICE_NAME),
-        'Failed to remove snippet client',
+        "Failed to remove snippet client",
     )
+
 
 @pytest.fixture
 def log_adb_interactions():
@@ -833,9 +842,10 @@ async def qrcode_png(avd):
         The 'show' method can be used to display the image on the display
         identified by the 'display_id' argument (by default, the primary display).
     """
+
     class Qrcode:
-        """A class to push a PNG QRcode with a given payload to /sdcard/Downloads
-        """
+        """A class to push a PNG QRcode with a given payload to /sdcard/Downloads"""
+
         def __init__(self, src: str, payload: str):
             self.src = src
             self.payload = payload
@@ -846,18 +856,20 @@ async def qrcode_png(avd):
             await avd.adb.push(self.src, self.path)
 
         async def show(self, display_id=0):
-            """ Show the PNG image on display with id <display_id>
-            """
+            """Show the PNG image on display with id <display_id>"""
             await avd.stop_activity("com.google.android.apps.photos")
             await avd.start_activity(
                 "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
-                params=f'-a android.intent.action.VIEW -W -d file://{self.path} -t "image/PNG"'\
-                       + ( f" --display {display_id}" if display_id != 0 else "" )
+                params=f'-a android.intent.action.VIEW -W -d file://{self.path} -t "image/PNG"'
+                + (f" --display {display_id}" if display_id != 0 else ""),
             )
             logging.info(f"Launched the QR code PNG image on display '{display_id}'")
 
-    src = Path(__file__).parents[1] / "cfg" \
-                                    / "qrcode_uzNYdXGMb0kW7qXDejO0niE6liaPm1m0.png"
+    src = (
+        Path(__file__).parents[1]
+        / "cfg"
+        / "qrcode_uzNYdXGMb0kW7qXDejO0niE6liaPm1m0.png"
+    )
     payload = "uzNYdXGMb0kW7qXDejO0niE6liaPm1m0"
 
     qrcode = Qrcode(src, payload)
@@ -890,9 +902,10 @@ async def qrcodes_mp4(avd):
         The deqr package along with pillow can be used to decode a screenshot
         containing a QR code.
     """
-    class Qrcodes():
-        """A class to handle a MP4 video with pre-encoded QRcodes
-        """
+
+    class Qrcodes:
+        """A class to handle a MP4 video with pre-encoded QRcodes"""
+
         def __init__(self, src: str, payloads: list):
             self.src = src
             self.payloads = payloads
@@ -906,15 +919,17 @@ async def qrcodes_mp4(avd):
             await avd.stop_activity("com.google.android.apps.photos")
             await avd.start_activity(
                 "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
-                params=f'-a android.intent.action.VIEW -d file://{self.path} -t "video/*"'\
-                       + ( f" --display {display_id}" if display_id != 0 else "" )
+                params=f'-a android.intent.action.VIEW -d file://{self.path} -t "video/*"'
+                + (f" --display {display_id}" if display_id != 0 else ""),
             )
             logging.info(f"Started QR codes video on display '{display_id}'")
 
     src_video = Path(__file__).parents[1] / "cfg" / "qrcodes.mp4"
-    payloads = ['uzNYdXGMb0kW7qXDejO0niE6liaPm1m0',
-                'W6fEti4U7ImHU1mxBXkLpOehomty7mTM',
-                'tAdFTEYPzbOw6qXBR1jyvzFohsx1gfdz']
+    payloads = [
+        "uzNYdXGMb0kW7qXDejO0niE6liaPm1m0",
+        "W6fEti4U7ImHU1mxBXkLpOehomty7mTM",
+        "tAdFTEYPzbOw6qXBR1jyvzFohsx1gfdz",
+    ]
 
     qrcodes = Qrcodes(src_video, payloads)
     await qrcodes._push()
