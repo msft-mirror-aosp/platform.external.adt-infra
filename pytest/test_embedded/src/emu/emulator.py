@@ -64,7 +64,7 @@ class BaseEmulator(object):
         self.apk_installed = set()
         self.proc = None
         self.executable = None
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("emulator")
         self.logger.info(
             "Using android_home: %s, android_avd_home: %s",
             self.android_home,
@@ -75,6 +75,7 @@ class BaseEmulator(object):
         self.adb: Adb = None
         self.mobly_device: Mobly = None
         self.channel = None
+        self.log_id = "emu-0"
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
 
@@ -226,7 +227,7 @@ class BaseEmulator(object):
         """
         return await EmulatorClient.connect(
             self.description.get("port.serial"),
-            self.description.get("avd.id"),
+            self.log_id
         )
 
     def is_alive(self) -> bool:
@@ -366,6 +367,7 @@ class DebugEmulator(BaseEmulator):
             self.log = LogObserver(logfile)
         self._discover(None)
         self.logger = logging.getLogger(self.description.get("avd.id"))
+        self.log_id = self.description.get("avd.id")
 
     async def launch(self, flags: List[str] = []) -> bool:
         self.logger.info("Debug emulators cannot be launched.")
@@ -388,6 +390,7 @@ class Emulator(BaseEmulator):
         exe: Path,
         avd_config: dict[str, str],
         fetcher: Path | None,
+        log_id: str | None,
     ) -> None:
         """Create and launches the emulator
 
@@ -407,6 +410,7 @@ class Emulator(BaseEmulator):
         self.exe = Path(exe)
         self.proc = None
         self.kernel_start = 0
+        self.log_id = log_id or "emu-1"
 
     async def restart(self, emu_flags: List[str]) -> bool:
         """Restarts the emulator, disabling snapshot save if a default snapshot exists.
@@ -445,7 +449,7 @@ class Emulator(BaseEmulator):
         return "x86_64"
 
     async def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
-        self.logger = logging.getLogger(self.configuration.name)
+        self.logger = logging.getLogger(self.log_id)
 
         self.cmd = Command(cmd, self.logger).with_environment(env)
         if sys.platform == "win32":
