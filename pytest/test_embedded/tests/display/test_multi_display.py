@@ -58,9 +58,30 @@ async def is_landscape(get_screenshot):
         or image.format.rotation.rotation == Rotation.LANDSCAPE
     )
 
+@pytest.fixture
+async def ensure_multidisplay_service_ready(emulator_controller):
+    max_retries = 5
+    retry_delay = 1  # Initial delay in seconds
+
+    for attempt in range(max_retries):
+        try:
+            await emulator_controller.getDisplayConfigurations(_EMPTY_)
+            return  # Success, exit the loop
+        except RpcError as exc_info:
+            if exc_info.value.code() != StatusCode.UNAVAILABLE:
+                raise  # Unexpected error, re-raise
+        except Exception:
+            raise  # Unexpected error, re-raise
+
+        # Exponential backoff
+        await asyncio.sleep(retry_delay)
+        retry_delay *= 2  # Double the delay for the next attempt
+
+    raise TimeoutError(f"Failed to get display configurations after {max_retries} attempts")
+
 
 @pytest.fixture
-async def no_displays(emulator_controller, adb_shell):
+async def no_displays(ensure_multidisplay_service_ready, emulator_controller, adb_shell):
     """Fixture to make sure the emulator has no multi displays configured.
 
     Use this if you want to make sure the emulator has no secondary displays
@@ -94,7 +115,7 @@ async def emu_snapshot_service(avd, service):
 
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_none(avd, no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_none(ensure_multidisplay_service_ready, avd, no_displays, emulator_controller, is_landscape):
     """Erasing displays leaves nothing behind."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
@@ -111,7 +132,7 @@ async def test_multidisplay_none(avd, no_displays, emulator_controller, is_lands
 @pytest.mark.multidisplay
 @pytest.mark.sanity
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_multiple(avd, no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_multiple(ensure_multidisplay_service_ready, avd, no_displays, emulator_controller, is_landscape):
     """Adding a display should work."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
@@ -135,7 +156,7 @@ async def test_multidisplay_multiple(avd, no_displays, emulator_controller, is_l
 @pytest.mark.multidisplay
 @pytest.mark.sanity
 @pytest.mark.async_timeout(1080)
-async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, emu_snapshot_service,  is_landscape):
+async def test_multiple_display_snapshot(ensure_multidisplay_service_ready, avd, no_displays, emulator_controller, emu_snapshot_service,  is_landscape):
     """Snapshots on multiple display should work."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
@@ -179,7 +200,7 @@ async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, 
 
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_multiple_error(
+async def test_multidisplay_multiple_error(ensure_multidisplay_service_ready,
     avd, no_displays, emulator_controller, is_landscape
 ):
     """A failure should not modify the status."""
@@ -222,7 +243,7 @@ async def test_multidisplay_multiple_error(
 
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_get_after_set(
+async def test_multidisplay_get_after_set(ensure_multidisplay_service_ready,
     avd, no_displays, emulator_controller, is_landscape
 ):
     """Adding a display should work."""
@@ -244,7 +265,7 @@ async def test_multidisplay_get_after_set(
 
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_double_ids_error(
+async def test_multidisplay_double_ids_error(ensure_multidisplay_service_ready,
     avd, no_displays, emulator_controller, is_landscape
 ):
     """Adding the same display twice should result in an error."""
@@ -266,7 +287,7 @@ async def test_multidisplay_double_ids_error(
 
 @pytest.mark.multidisplay
 @pytest.mark.flaky  # b/322551553
-async def test_multidisplay_can_configure_four(
+async def test_multidisplay_can_configure_four(ensure_multidisplay_service_ready,
     avd, no_displays, emulator_controller, is_landscape
 ):
     """This tests makes sure that a total of 4 displays can be configured.
@@ -299,7 +320,7 @@ async def test_multidisplay_can_configure_four(
 
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_add_should_not_remove(
+async def test_multidisplay_add_should_not_remove(ensure_multidisplay_service_ready,
     avd, no_displays, emulator_controller, is_landscape
 ):
     """This tests makes sure that a total of 4 displays can be configured.
@@ -339,7 +360,7 @@ async def test_multidisplay_add_should_not_remove(
 
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_error_too_many(
+async def test_multidisplay_error_too_many(ensure_multidisplay_service_ready,
     avd, no_displays, emulator_controller, is_landscape
 ):
     """Adding too many displays should raise an exception."""
@@ -409,7 +430,7 @@ async def get_displays_ids(avd):
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
-async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_controller):
+async def test_disable_multidisplay(ensure_multidisplay_service_ready, avd, no_displays, is_landscape, emulator_controller):
     """Ensure an app is moved to the primary display when multidisplay is disabled.
 
     Args:
@@ -612,7 +633,7 @@ async def get_multidisplays_ids(avd):
 
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_controls(avd, no_displays, emulator_controller):
+async def test_multidisplay_controls(ensure_multidisplay_service_ready, avd, no_displays, emulator_controller):
     """Verify the Home and Back controls work on primary and secondary displays.
     Args:
         avd (BaseEmulator): Fixture that gives access to the running emulator.
@@ -719,7 +740,7 @@ async def test_multidisplay_controls(avd, no_displays, emulator_controller):
 @pytest.mark.async_timeout(1080)
 @pytest.mark.skipos("mac", "reason: screenrecord user permission should be given.")
 @pytest.mark.skipos("m1", "reason: screenrecord user permission should be given.")
-async def test_multidisplay_video_playback(avd, no_displays, emulator_controller, qrcodes_mp4):
+async def test_multidisplay_video_playback(ensure_multidisplay_service_ready, avd, no_displays, emulator_controller, qrcodes_mp4):
     """Verify video can be played in secondary display without any rendering issues.
 
     Args:
