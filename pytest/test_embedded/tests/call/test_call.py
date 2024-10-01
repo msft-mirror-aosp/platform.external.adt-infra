@@ -30,7 +30,7 @@ async def send_phone_call(emu_controller, phone_call, expected_phone_response):
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 @pytest.mark.parametrize(
     "test_name, phone_call_operation",
@@ -69,7 +69,7 @@ async def test_inbound_call(
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 @pytest.mark.async_timeout(1080)
 async def test_inbound_call_bad_operation(at_home, emulator_controller):
@@ -92,7 +92,7 @@ async def test_inbound_call_bad_operation(at_home, emulator_controller):
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 @pytest.mark.skipos("win", "reason: b/305810509 - test timeout.")
 def test_inbound_call_bad_number(at_home, emulator_controller):

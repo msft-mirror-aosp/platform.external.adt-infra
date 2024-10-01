@@ -72,7 +72,7 @@ async def set_and_get_sensor(sensor_service, sensor_value):
     ), f"Data for sensor doesn't match {sensor_value} != {retrieved}"
 
 
-@pytest.mark.e2e
+
 @pytest.mark.fast
 @pytest.mark.parametrize(
     "test_name, sensor_value, x, y, z",
@@ -130,7 +130,7 @@ async def test_sensor_value(service, test_name, sensor_value, x, y, z):
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 @pytest.mark.parametrize(
     "test_name, sensor_value, x, y, z",

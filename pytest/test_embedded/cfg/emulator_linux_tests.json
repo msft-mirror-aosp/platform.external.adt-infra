@@ -2,7 +2,7 @@
     "landscape_test_suite_api_31": {
         "description": "Set of tests that verify that graphic related tests work well in a `landscape` emulator",
         "pytest_flags": [
-            "-m graphics and not multidisplay"
+            "-m graphics and not sanity and not fast"
         ],
         "avd_configs": [
             {
@@ -20,7 +20,7 @@
     "landscape_test_suite_api_34": {
         "description": "Set of tests that verify that graphic related tests work well in a `landscape` emulator",
         "pytest_flags": [
-            "-m graphics and not multidisplay"
+            "-m graphics and not sanity and not fast"
         ],
         "avd_configs": [
             {
@@ -38,7 +38,7 @@
     "portrait_test_suite_api_31": {
         "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
         "pytest_flags": [
-            "-m graphics"
+            "-m graphics and not sanity and not fast"
         ],
         "avd_configs": [
             {
@@ -54,7 +54,7 @@
     "portrait_test_suite_api_34": {
         "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
         "pytest_flags": [
-            "-m graphics"
+            "-m graphics and not sanity and not fast"
         ],
         "avd_configs": [
             {
@@ -110,7 +110,7 @@
     "embedded_landscape_test_suite_api_31": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
         "pytest_flags": [
-            "-m not multidisplay or embedded"
+            "-m embedded"
         ],
         "avd_configs": [
             {
@@ -130,7 +130,7 @@
     "embedded_landscape_test_suite_api_34": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
         "pytest_flags": [
-            "-m not multidisplay or embedded"
+            "-m embedded"
         ],
         "avd_configs": [
             {
@@ -230,7 +230,7 @@
     "snapshot_test_suite_api_31": {
         "description": "Set of tests that verify that snapshots work for the default emulator.",
         "pytest_flags": [
-            "-m snapshot"
+            "-m snapshot and not fast and not sanity"
         ],
         "avd_configs": [
             {
@@ -244,7 +244,7 @@
     "snapshot_test_suite_api_34": {
         "description": "Set of tests that verify that snapshots work for the default emulator.",
         "pytest_flags": [
-            "-m snapshot"
+            "-m snapshot and not fast and not sanity"
         ],
         "avd_configs": [
             {
@@ -326,7 +326,7 @@
     "resizable_emulator_test_suite_api_34": {
         "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
         "pytest_flags": [
-            "-m graphics and not multidisplay or newresizable"
+            "-m graphics or newresizable"
         ],
         "avd_configs": [
             {
@@ -362,7 +362,7 @@
     "hardware_test_suite_api_31": {
         "description": "Set of tests that validate hardware and console",
         "pytest_flags": [
-            "-m hardware or console"
+            "-m hardware or console and not fast and not sanity"
         ],
         "avd_configs": [
             {
@@ -376,7 +376,7 @@
     "hardware_test_suite_api_34": {
         "description": "Set of tests that validate hardware and console",
         "pytest_flags": [
-            "-m hardware or console"
+            "-m hardware or console and not fast and not sanity"
         ],
         "avd_configs": [
             {
@@ -438,7 +438,7 @@
     "sanity_test_suite_api_33": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "pytest_flags": [
-            "-m sanity and not resizable and not newresizable"
+            "-m sanity"
         ],
         "avd_configs": [
             {
@@ -452,7 +452,7 @@
     "sanity_test_suite_api_31": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "pytest_flags": [
-            "-m sanity and not resizable and not newresizable"
+            "-m sanity"
         ],
         "avd_configs": [
             {
@@ -466,7 +466,7 @@
     "sanity_test_suite_api_34": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "pytest_flags": [
-            "-m sanity and not resizable and not newresizable"
+            "-m sanity"
         ],
         "avd_configs": [
             {
@@ -480,7 +480,7 @@
     "sanity_test_suite_api_35": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
         "pytest_flags": [
-            "-m sanity and not resizable and not newresizable"
+            "-m sanity"
         ],
         "avd_configs": [
             {
@@ -519,66 +519,10 @@
         ],
         "status": "enabled"
     },
-    "fast_test_suite_api_31": {
-        "description": "Set of tests we want to run as a part of emulator fast test suite",
-        "pytest_flags": [
-            "-m fast and not resizable and not newresizable"
-        ],
-        "avd_configs": [
-            {
-                "launch_flags": [],
-                "api": "31",
-                "tag.id": "google_apis"
-            }
-        ],
-        "status": "enabled"
-    },
-    "fast_test_suite_api_33": {
-        "description": "Set of tests we want to run as a part of emulator fast test suite",
-        "pytest_flags": [
-            "-m fast and not resizable and not newresizable"
-        ],
-        "avd_configs": [
-            {
-                "launch_flags": [],
-                "api": "33",
-                "tag.id": "google_apis"
-            }
-        ],
-        "status": "enabled"
-    },
-    "fast_test_suite_api_34": {
-        "description": "Set of tests we want to run as a part of emulator fast test suite",
-        "pytest_flags": [
-            "-m fast and not resizable and not newresizable"
-        ],
-        "avd_configs": [
-            {
-                "launch_flags": [],
-                "api": "34",
-                "tag.id": "google_apis"
-            }
-        ],
-        "status": "enabled"
-    },
-    "fast_test_suite_api_35": {
-        "description": "Set of tests we want to run as a part of emulator fast test suite",
-        "pytest_flags": [
-            "-m fast and not resizable and not newresizable"
-        ],
-        "avd_configs": [
-            {
-                "launch_flags": [],
-                "api": "35",
-                "tag.id": "google_apis"
-            }
-        ],
-        "status": "enabled"
-    },
     "presubmit_emulator_test_suite_api_31": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "pytest_flags": [
-            "-m boot and not slow and not flaky"
+            "-m boot and not flaky"
         ],
         "avd_configs": [
             {
@@ -592,7 +536,7 @@
     "presubmit_emulator_test_suite_api_34": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
         "pytest_flags": [
-            "-m boot and not slow and not flaky"
+            "-m boot and not flaky"
         ],
         "avd_configs": [
             {
@@ -714,7 +658,7 @@
     "vulkan_test_suite_api_34": {
         "description": "Set of tests that run with Vulkan enabled",
         "pytest_flags": [
-            "-m xpass"
+            "-m xpass", "xpass will always succeed, no need to run these for"
         ],
         "avd_configs": [
             {
@@ -727,6 +671,6 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     }
 }

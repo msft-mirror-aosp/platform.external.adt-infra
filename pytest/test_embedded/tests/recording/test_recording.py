@@ -59,9 +59,9 @@ async def test_screen_record_sends_event(screen_service, tmp_path):
 
 
 @pytest.mark.flaky
+@pytest.mark.fast
 @pytest.mark.graphics
 @pytest.mark.sanity
-@pytest.mark.fast
 async def test_screen_records_video(screen_service, animation_app, tmp_path):
     sample_webm = tmp_path / "sample.webm"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_webm))
@@ -107,8 +107,8 @@ async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_p
 
 
 @pytest.mark.flaky
-@pytest.mark.graphics
 @pytest.mark.sanity
+@pytest.mark.graphics
 async def test_screen_records_video_in_gif(screen_service, animation_app, tmp_path):
     sample_file = tmp_path / "sample.gif"
     sample_file_header = b"\x1aE\xdf\xa3"
@@ -116,7 +116,8 @@ async def test_screen_records_video_in_gif(screen_service, animation_app, tmp_pa
     verify_recorded_file_header(sample_file, sample_file_header)
 
 
-@pytest.mark.e2e
+
+@pytest.mark.console
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_screen_records_video_telnet(emulator, animation_app, tmp_path, telnet):
@@ -136,7 +137,8 @@ async def test_screen_records_video_telnet(emulator, animation_app, tmp_path, te
     verify_recorded_file_header(sample_file, sample_file_header)
 
 
-@pytest.mark.e2e
+
+@pytest.mark.embedded
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_screen_recording_duration(animation_app, emulator, tmp_path):
@@ -208,7 +210,7 @@ async def verify_qrcode(emulator, webm_recording, payload):
     "gpu_mode",
     ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
 )
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
@@ -254,7 +256,7 @@ async def test_screen_records_with_different_gpu_modes(
     await verify_qrcode(emulator, sample_file, qrcode_png.payload)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)

@@ -38,24 +38,24 @@ async def snapshot_service(avd, service):
         await snap.delete(entry.snapshot_id)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.snapshot
 @pytest.mark.skipos("win", "reason: b/305017763 - error at setup.")
 async def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
     assert not await snapshot_service.load("foo")
 
 
-@pytest.mark.e2e
+
 @pytest.mark.snapshot
 @pytest.mark.sanity
-async def test_snapshot_can_save_and_load(snapshot_service):
+async def test_snapshot_can_save_and_load_through_service(snapshot_service):
     assert await snapshot_service.save("foo")
     snapshots = await snapshot_service.lists()
     assert "foo" in [x.snapshot_id for x in snapshots]
     assert await snapshot_service.load("foo")
 
 
-@pytest.mark.e2e
+
 @pytest.mark.snapshot
 @pytest.mark.sanity
 @pytest.mark.fast
@@ -70,7 +70,6 @@ async def test_snapshot_delete_removes(snapshot_service):
 
 @pytest.mark.skipos("all")
 @pytest.mark.snapshot
-@pytest.mark.e2e
 async def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     assert await snapshot_service.save("foo")
@@ -82,9 +81,8 @@ async def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
 
 
 @pytest.mark.skipos("all")
-@pytest.mark.snapshot
-@pytest.mark.e2e
 @pytest.mark.sanity
+@pytest.mark.snapshot
 async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     assert await snapshot_service.save("foo")
@@ -98,7 +96,7 @@ async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     assert await snapshot_service.load("foo")
 
 
-@pytest.mark.e2e
+
 @pytest.mark.snapshot
 @pytest.mark.sanity
 @pytest.mark.async_timeout(300)
@@ -133,15 +131,14 @@ async def contains_snapshot(telnet):
     return any("foo1" in sublist for sublist in snapshots)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.snapshot
-@pytest.mark.fast
 async def test_snapshot_can_save_and_list(telnet, snapshot_service):
     await telnet.send("avd snapshot save foo1")
     assert eventually(contains_snapshot, telnet, timeout=10.0), "foo1 snapshot not available"
 
 
-@pytest.mark.e2e
+
 @pytest.mark.snapshot
 @pytest.mark.fast
 async def test_snapshot_can_save_and_delete(telnet, snapshot_service):
@@ -151,7 +148,7 @@ async def test_snapshot_can_save_and_delete(telnet, snapshot_service):
     assert not await contains_snapshot(telnet), "foo1 snapshot not deleted"
 
 
-@pytest.mark.e2e
+
 @pytest.mark.snapshot
 @pytest.mark.fast
 async def test_snapshot_can_save_and_load(avd, telnet, snapshot_service):
@@ -164,8 +161,8 @@ async def test_snapshot_can_save_and_load(avd, telnet, snapshot_service):
     assert await avd.stop_activity("com.google.AnimateBox")
 
 
-@pytest.mark.e2e
-@pytest.mark.fast
+
+@pytest.mark.snapshot
 @pytest.mark.async_timeout(1080)
 async def test_avd_launch_after_wipe_data(avd, telnet):
     """Verify AVD launch after data is wiped.
@@ -243,7 +240,7 @@ async def test_avd_launch_after_wipe_data(avd, telnet):
     ),  "The key 'airplane_mode_on' didn't revert to the default value."
 
 
-@pytest.mark.e2e
+
 @pytest.mark.snapshot
 @pytest.mark.fast
 @pytest.mark.async_timeout(2080)
@@ -277,7 +274,7 @@ async def test_snapshot_can_edit(snapshot_service):
     ), "Coudn't update the snapshot name and description."
 
 
-@pytest.mark.e2e
+
 @pytest.mark.async_timeout(1200)
 @pytest.mark.embedded
 async def test_invalid_snapshot_notifies_user(avd):

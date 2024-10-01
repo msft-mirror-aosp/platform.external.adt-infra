@@ -3,12 +3,12 @@ import pytest
 from emu.timing import eventually
 
 
-@pytest.mark.e2e
+
 def test_can_invoke_a_simple_snippet(mobly):
     mobly("animation").getFoo(5) == "foo 5"
 
 
-@pytest.mark.e2e
+
 async def test_can_use_standard_mobly_snippets(avd, mbs):
     message = "test_can_use_standard_snippets"
     mbs.logI(message)

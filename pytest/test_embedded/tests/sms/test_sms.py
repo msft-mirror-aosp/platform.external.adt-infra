@@ -18,7 +18,7 @@ from emu.timing import eventually
 import time
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 @pytest.mark.fast
 @pytest.mark.parametrize("phone_number,text_message", [("987654321", "Hello There")])
@@ -52,7 +52,7 @@ async def allow_sms_messages(emulator):
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 @pytest.mark.fast
 @pytest.mark.skipos("mac", "reason: timeout on mac.")

@@ -20,7 +20,7 @@ from aemu.proto.emulator_controller_pb2 import ImageFormat
 from emu.timing import eventually
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_android_app_dialog_has_dimmed_background(avd, get_screenshot, log_adb_interactions):

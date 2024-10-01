@@ -91,8 +91,7 @@ async def emu_snapshot_service(avd, service):
         await snap.delete(entry.snapshot_id)
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_none(avd, no_displays, emulator_controller, is_landscape):
@@ -108,8 +107,7 @@ async def test_multidisplay_none(avd, no_displays, emulator_controller, is_lands
     assert len(cfg.displays) == 1
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
 @pytest.mark.sanity
 @pytest.mark.async_timeout(1080)
@@ -133,8 +131,7 @@ async def test_multidisplay_multiple(avd, no_displays, emulator_controller, is_l
     assert cfg.displays[1].height == 1280
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
 @pytest.mark.sanity
 @pytest.mark.async_timeout(1080)
@@ -179,8 +176,7 @@ async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, 
     assert len(cfg2.displays) == 3
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_multiple_error(
@@ -223,10 +219,8 @@ async def test_multidisplay_multiple_error(
     assert cfg.displays[1].height == 1280
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
-@pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_get_after_set(
     avd, no_displays, emulator_controller, is_landscape
@@ -247,8 +241,7 @@ async def test_multidisplay_get_after_set(
     assert cfg == cfg2
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_double_ids_error(
@@ -270,10 +263,8 @@ async def test_multidisplay_double_ids_error(
     assert exc_info.value.code() == StatusCode.INVALID_ARGUMENT
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
-@pytest.mark.fast
 @pytest.mark.flaky  # b/322551553
 async def test_multidisplay_can_configure_four(
     avd, no_displays, emulator_controller, is_landscape
@@ -305,8 +296,7 @@ async def test_multidisplay_can_configure_four(
         contains(display, cfg.displays)
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_add_should_not_remove(
@@ -346,8 +336,7 @@ async def test_multidisplay_add_should_not_remove(
         contains(display, cfg.displays)
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_error_too_many(
@@ -416,8 +405,7 @@ async def get_displays_ids(avd):
     return [int(id_) for id_ in display_ids_list]
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
@@ -507,7 +495,6 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
         await avd.stop_activity(dummy_pkg)
 
 
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(510)
@@ -622,10 +609,8 @@ async def get_multidisplays_ids(avd):
     return ids[0]
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
+
 @pytest.mark.multidisplay
-@pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_controls(avd, no_displays, emulator_controller):
     """Verify the Home and Back controls work on primary and secondary displays.

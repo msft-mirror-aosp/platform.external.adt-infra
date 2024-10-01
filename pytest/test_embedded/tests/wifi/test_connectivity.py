@@ -18,13 +18,14 @@ import pytest
 from emu.timing import wait_until
 
 
-@pytest.mark.e2e
+
 @pytest.mark.boot
 @pytest.mark.async_timeout(500)
 # Consider adding separate test suites with launch flags, instead of test parameters,
 @pytest.mark.parametrize(
     "launch_flags", [["-no-snapshot"], ["-no-snapshot", "-feature", "WiFiPacketStream"]],
 )
+@pytest.mark.flaky
 async def test_wifi_has_connectivity(avd, launch_flags):
     assert await avd.restart(avd.launch_flags + launch_flags)
     assert await avd.wait_for_boot()
@@ -40,7 +41,7 @@ async def test_wifi_has_connectivity(avd, launch_flags):
     assert await wait_until(has_connectivity), "Unable to connect to dns 8.8.8.8"
 
 
-@pytest.mark.e2e
+
 @pytest.mark.boot
 @pytest.mark.sanity
 @pytest.mark.skipos("all", "reason: test is flaky b/346612104")
