@@ -401,7 +401,6 @@ async def test_crash_send_report(avd, crash_reporter):
 @pytest.mark.crash_flake(retries=0)
 @pytest.mark.async_timeout(600)
 @pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
-@pytest.mark.skipos("mac", "reason: unshare not available.")
 async def test_crash_without_internet(avd, crash_reporter):
     """Verify no exceptions are raised when sending a crash report without internet connectivity.
 
@@ -419,19 +418,28 @@ async def test_crash_without_internet(avd, crash_reporter):
         1. No exceptions should be raised.
         2. The emulator loads details, dialog then disappears, indicated
            by a failure message in the emulator log.
+
+    Notes:
+        Unshare (on Linux) or sandbox-exec (on macOS) are used to launch
+        the emulator in an isolated network stack, disallowing internet
+        connection requests.
     """
     crashes = await crash(avd, crash_reporter)
     assert len(crashes) >= 1, "Couldn't crash the emulator."
 
-    # Unshare is used to launch an emulator process within an isolated network stack
-    unshare_exec = shutil.which("unshare")
-    if not unshare_exec:
-        pytest.fail("unshare binary not found in PATH.")
+    if platform.system() == "Darwin":
+        exec = "sandbox-exec"
+        params = ["-p", "(version 1)(allow default)(deny network*)"]
+    else:
+        exec = "unshare"
+        params = ["--user", "-n"]
+    exec_path = shutil.which(exec)
+    if not exec_path:
+        pytest.fail(f"{exec} binary not found in PATH.")
 
-    logging.info("Launching an emulator process in its own network namespace ...")
-    args = [arg for arg in avd.cmd.cmd if arg != "-metrics-collection"]
-    args = [unshare_exec, "--user", "-n"] + args + ["-no-snapshot-save"]
-    cmd = await Command(args).run()
+    logging.info('Launching the emulator with no host internet connectivity ...')
+    emulator_args = [arg for arg in avd.cmd.cmd if arg != "-metrics-collection"]
+    cmd = await Command([exec_path] + params + emulator_args + ["-no-snapshot-save"]).run()
     await asyncio.sleep(5)
 
     async def send_and_verify():
