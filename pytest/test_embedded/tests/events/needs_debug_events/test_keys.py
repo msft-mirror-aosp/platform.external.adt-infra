@@ -72,7 +72,7 @@ async def keypress_expects(avd, log, jskey, expected_code):
     asyncio.wait_for(wait_for_keyboard(log, expected_code), 2)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 async def test_hardware_keys(avd, at_home, emulator_log):
     """Checks that the hardware key events that studio sends are working."""
@@ -93,7 +93,7 @@ async def test_hardware_keys(avd, at_home, emulator_log):
         await keypress_expects(avd, emulator_log, key, expect)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 async def test_whitespace_chrs(avd, at_home, emulator_log):
     """Checks that the whitespace characters that studio sends are working."""
@@ -112,7 +112,7 @@ async def test_whitespace_chrs(avd, at_home, emulator_log):
         await keypress_expects(avd, emulator_log, key, expect)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 async def test_unicode_no_deadlock(at_home, emulator_controller):
     """Tests that we properly handle unicode characters."""
@@ -121,7 +121,7 @@ async def test_unicode_no_deadlock(at_home, emulator_controller):
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.sanity
 @pytest.mark.embedded
 @pytest.mark.async_timeout(50000)
@@ -335,7 +335,7 @@ async def test_emulator_controls_keys(avd, emulator_controller):
     assert controlStatus.visibilityChanged
 
 
-@pytest.mark.e2e
+
 @pytest.mark.sanity
 @pytest.mark.async_timeout(2080)
 async def test_close_emulator(avd):

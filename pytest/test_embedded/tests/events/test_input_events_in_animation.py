@@ -167,6 +167,7 @@ async def test_stream_a_sequence_of_key_events(
     assert expected == retrieved
 
 
+@pytest.mark.embedded
 async def test_stream_a_sequence_of_mouse_events(
     animation_app, emulator_controller, retrieve_events
 ):

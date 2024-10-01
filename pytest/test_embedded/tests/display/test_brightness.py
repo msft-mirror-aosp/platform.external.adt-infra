@@ -32,7 +32,7 @@ async def set_and_get_brightness(emu_controller, brightness_value):
     ), "Target value for Brightness doesn't match"
 
 
-@pytest.mark.e2e
+
 @pytest.mark.hardware
 @pytest.mark.parametrize(
     "test_name, brightness_value",

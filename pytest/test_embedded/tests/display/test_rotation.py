@@ -77,7 +77,7 @@ async def for_each_rotation(emulator_controller):
         yield fine, coarse
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_rotation_observable_through_screenshot(
@@ -98,7 +98,7 @@ async def test_rotation_observable_through_screenshot(
         assert await eventually(is_properly_rotated, timeout=2)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_rotation_observable_through_adbstream(
@@ -122,8 +122,7 @@ async def test_rotation_observable_through_adbstream(
                 partial(rotation_from_logcat, angle), stream
             ), f"Did not observe a rotation to {angle} in time"
 
-@pytest.mark.e2e
-@pytest.mark.embedded
+
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_stream_update_should_be_fast_after_rotation(
@@ -150,7 +149,7 @@ async def test_stream_update_should_be_fast_after_rotation(
 
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_rotation_observable_through_stream_screenshot(
@@ -276,10 +275,10 @@ async def rotation_through_console_observable_through_stream_screenshot(
         ), f"Did not observe rotation to {angle} in time"
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
-@pytest.mark.sanity
 @pytest.mark.fast
+@pytest.mark.sanity
 @pytest.mark.parametrize(
     "rotation, quadrant",
     [(0, 1), (90, 2), (-180, 3), (-90, 4)],
@@ -316,7 +315,7 @@ async def test_rotation_pixels_in_the_right_place(
     ), f"Did not see the rotation to {rotation} in time."
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_rotation_through_console_observable_through_physical_model(
@@ -344,7 +343,7 @@ async def test_rotation_through_console_observable_through_physical_model(
         assert await eventually(emulator_is_rotated)
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_rotation_through_console_observable_through_screenshot(
@@ -358,7 +357,7 @@ async def test_rotation_through_console_observable_through_screenshot(
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_rotation_through_console_observable_through_stream_screenshot(
@@ -373,7 +372,7 @@ async def test_rotation_through_console_observable_through_stream_screenshot(
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.embedded
 @pytest.mark.sanity
 @pytest.mark.flaky
@@ -385,7 +384,7 @@ async def test_rotation_observable_through_screenshot_embedded_mode(
     )
 
 
-@pytest.mark.e2e
+
 @pytest.mark.embedded
 @pytest.mark.flaky
 async def test_rotation_observable_through_stream_screenshot_embedded_mode(
