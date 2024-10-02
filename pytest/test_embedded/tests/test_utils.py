@@ -27,6 +27,7 @@ import deqr
 import logging
 import asyncio
 
+
 def fmt_proto(msg):
     """Formats a protobuf message as a single line."""
     return google.protobuf.text_format.MessageToString(msg, as_one_line=True)
@@ -60,8 +61,7 @@ async def decode_qrcodes(payloads: list[str], emulator_controller=None):
     decoder = deqr.QuircDecoder()
 
     async def detect_qrcode(payload: str):
-        """Take a screenshot and return True if a QR code with <payload> is detected.
-        """
+        """Take a screenshot and return True if a QR code with <payload> is detected."""
         if emulator_controller is not None:
             img = await emulator_controller.getScreenshot(ImageFormat())
             screenshot = proto_to_pillow(img)
@@ -92,28 +92,28 @@ async def decode_qrcodes(payloads: list[str], emulator_controller=None):
 
 async def get_window_dump(avd: BaseEmulator) -> str:
     # Use uiautomator to return an XML dump of current UI hierarchy
-    window_dump_file = "/sdcard/window_dump.xml"
-    await avd.adb.shell(f"rm -rf {window_dump_file}")
-    async def _get_window_dump():
-        window_dump = await avd.adb.shell(f"uiautomator dump {window_dump_file}")
-        assert "uiautomator: inaccessible or not found" not in window_dump, \
-               "Uiautomator binary not found!"
-        return 'yes' in await avd.adb.shell(f"[ -f {window_dump_file} ] && echo 'yes'")
-
-    assert await eventually(
-        _get_window_dump, timeout=20
-    ), f"File '{window_dump_file}' not found on the device."
-    return await avd.adb.shell("cat /sdcard/window_dump.xml")
+    window_dump = await avd.adb.exec_out(f"uiautomator dump /dev/tty > /dev/null")
+    assert (
+        "uiautomator: inaccessible or not found" not in window_dump
+    ), "Uiautomator binary not found!"
+    return window_dump
 
 
 def get_center_coords(bounds: str) -> tuple:
     # Return the center coordinates (x, y) from element bounds string '[x0y0][x1 y1]'
-    coords = list(map(int, bounds[1:-1].replace('][',',').split(',')))
+    coords = list(map(int, bounds[1:-1].replace("][", ",").split(",")))
     return ((coords[0] + coords[2]) / 2, (coords[1] + coords[3]) / 2)
 
 
-async def click_button(avd, resource_id=None, text=None, parent_resource_id=None,
-                       content_desc=None, display_id=-1, long_click=False):
+async def click_button(
+    avd,
+    resource_id=None,
+    text=None,
+    parent_resource_id=None,
+    content_desc=None,
+    display_id=-1,
+    long_click=False,
+):
     """Locate a UI button and tap its center
 
     Args:
@@ -132,11 +132,16 @@ async def click_button(avd, resource_id=None, text=None, parent_resource_id=None
               False otherwise.
     """
     node_list = []
+
     async def _locate_button():
-        """Locate the button and return True if a clickable bound is found
-        """
+        """Locate the button and return True if a clickable bound is found"""
         window_dump = await get_window_dump(avd)
-        xml = ET.fromstring(window_dump.encode('UTF-8'))
+        try:
+            xml = ET.fromstring(window_dump.encode("UTF-8"))
+        except ET.XMLSyntaxError:
+            logging.error("Unable to parse: %s", window_dump)
+            return False
+
         # Construct a xpath expression to locate the button node
         xpath_expression = ""
         properties = []
@@ -151,9 +156,8 @@ async def click_button(avd, resource_id=None, text=None, parent_resource_id=None
         xpath_expression += f"//node[{' and '.join(properties)}]"
         node = xml.xpath(xpath_expression)
         # Find a clickable bound (iterate back to the parent node if needed)
-        clickable = 'clickable' if not long_click else 'long-clickable'
-        while (node is not None and len(node) == 1
-               and node[0].get(clickable) == 'false'):
+        clickable = "clickable" if not long_click else "long-clickable"
+        while node is not None and len(node) == 1 and node[0].get(clickable) == "false":
             node[0] = node[0].getparent()
         if node is not None and len(node) == 1:
             node_list.append(node[0])
@@ -163,21 +167,20 @@ async def click_button(avd, resource_id=None, text=None, parent_resource_id=None
     if not button_located:
         logging.error("Couldn't locate button.")
         return False
-    logging.info('The button node was located.')
+    logging.info("The button node was located.")
 
-    bounds = node_list[0].get('bounds')
+    bounds = node_list[0].get("bounds")
     if bounds is None:
         logging.error("Didn't find a clickable bound.")
         return False
 
-    logging.info('Attempting to tap the button ...')
+    logging.info("Attempting to tap the button ...")
     center_coords = get_center_coords(bounds)
     if not long_click:
         cmd = ["input", "-d", display_id, "tap"] + list(center_coords)
     else:
-        cmd = ["input", "-d", display_id, "swipe"] \
-              + list(center_coords)*2 + ["2000"]
+        cmd = ["input", "-d", display_id, "swipe"] + list(center_coords) * 2 + ["2000"]
 
-    await avd.adb.shell(' '.join([*map(str, cmd)]))
+    await avd.adb.shell(" ".join([*map(str, cmd)]))
     logging.info(f"Sent the adb shell command '{' '.join(map(str, cmd))}'")
     return True
