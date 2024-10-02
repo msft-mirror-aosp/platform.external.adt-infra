@@ -18,7 +18,6 @@ from emu.timing import eventually
 import time
 
 
-
 @pytest.mark.hardware
 @pytest.mark.fast
 @pytest.mark.parametrize("phone_number,text_message", [("987654321", "Hello There")])
@@ -50,7 +49,6 @@ async def allow_sms_messages(emulator):
     await emulator.adb.shell(
         "pm grant com.google.android.mobly.snippet.bundled android.permission.RECEIVE_SMS"
     )
-
 
 
 @pytest.mark.hardware

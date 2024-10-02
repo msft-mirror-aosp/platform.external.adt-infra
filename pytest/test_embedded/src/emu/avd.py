@@ -49,7 +49,6 @@ class UnsupportedAbiOrCpu(Exception):
 
 
 class FetcherSystemImages:
-
     def __init__(self, fetcher: Path):
         """A Class that can be used to install system images.
 
@@ -57,7 +56,6 @@ class FetcherSystemImages:
             fetcher: Path - Path to the fetcher utilitya.
         """
         self._fetcher = fetcher
-
 
     def find_and_unpack(self, api: str, abi: str, tag: str) -> Optional[dict[str, str]]:
         """Installs the system image using the fetcher binary.
@@ -336,9 +334,9 @@ class AvdConfig:
             if platform.system() == "Windows":
                 mycmd = "rmdir {} /s /q".format(self.directory.absolute())
                 try:
-                  subprocess.check_output(mycmd, shell=True)
+                    subprocess.check_output(mycmd, shell=True)
                 except subprocess.CalledProcessError:
-                  logging.warning("Failed to delete %s", self.directory)
+                    logging.warning("Failed to delete %s", self.directory)
             else:
                 shutil.rmtree(self.directory.absolute())
         except OSError:
@@ -435,13 +433,15 @@ class AvdWriter:
         device_name: str,
         custom_cfg: dict[str, str],
     ) -> AvdConfig:
-        if 'image.sysdir.1' in custom_cfg:
-            logging.warning("Using custom system image: %s", custom_cfg['image.sysdir.1'])
+        if "image.sysdir.1" in custom_cfg:
+            logging.warning(
+                "Using custom system image: %s", custom_cfg["image.sysdir.1"]
+            )
             avd = {
-                    "api": api,
-                    "tag": tag,
-                    "abi": abi,
-                }
+                "api": api,
+                "tag": tag,
+                "abi": abi,
+            }
         else:
             avd = self.sys_imgs.find_and_unpack(api, abi, tag)
             if not avd:
@@ -489,7 +489,7 @@ class AvdWriter:
         """
         abi = config["abi"]
         tag = config["tag.id"]
-        abi = 'x86' if (tag == 'android-tv' and abi == 'x86_64') else abi
+        abi = "x86" if (tag == "android-tv" and abi == "x86_64") else abi
         api = config["api"]
         device_name = config.get("device.name", "Pixel2")
 

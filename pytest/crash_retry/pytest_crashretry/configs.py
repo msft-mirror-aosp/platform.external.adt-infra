@@ -26,7 +26,9 @@ class _Defaults:
         raise UnknownDefaultError(f"{name} is not a valid default option!")
 
     def __setattr__(self, name: str, value: Any) -> None:
-        raise ValueError("Defaults cannot be overwritten manually! Please use `configure()`")
+        raise ValueError(
+            "Defaults cannot be overwritten manually! Please use `configure()`"
+        )
 
     def add(self, name: str, value: Any) -> None:
         if name in self._opts:
@@ -40,7 +42,9 @@ class _Defaults:
         """
         self._opts[CRASH_RETRIES] = int(config.getini(CRASH_RETRIES.lower()))
         self._opts[CRASH_RETRY_DELAY] = float(config.getini(CRASH_RETRY_DELAY.lower()))
-        self._opts[CRASH_CUMULATIVE_TIMING] = config.getini(CRASH_CUMULATIVE_TIMING.lower())
+        self._opts[CRASH_CUMULATIVE_TIMING] = config.getini(
+            CRASH_CUMULATIVE_TIMING.lower()
+        )
 
     def configure(self, config: pytest.Config) -> None:
         if config.getini("crash_retries"):

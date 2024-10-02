@@ -15,7 +15,6 @@ import pytest
 from aemu.proto.emulator_controller_pb2 import Touch, TouchEvent
 
 
-
 @pytest.mark.hardware
 async def test_touch_event_identifier_ranges(at_home, emulator_controller):
     """Tests that we properly handle identifiers."""
@@ -37,7 +36,6 @@ async def test_touch_event_identifier_ranges(at_home, emulator_controller):
     await emulator_controller.sendTouch(
         TouchEvent(touches=[Touch(x=801, y=1281, identifier=-23122)])
     )
-
 
 
 @pytest.mark.hardware

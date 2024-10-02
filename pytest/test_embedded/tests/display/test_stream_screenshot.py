@@ -28,7 +28,6 @@ def read_pixel(width, height, pack, arr):
     return arr[(width - 1) * (height - 1) * pack]
 
 
-
 @pytest.mark.embedded
 @pytest.mark.skipos(
     "win", "reason: b/305252175 - error at setup. Only the parameter [2-1] fails."
@@ -141,7 +140,6 @@ async def test_stream_screenshot_perf_mmap(
     timeout = pytestconfig.getoption("stream_test_time")
     with pytest.raises(asyncio.exceptions.TimeoutError):
         await asyncio.wait_for(frame_counter_mmap(), timeout=timeout)
-
 
 
 @pytest.mark.embedded

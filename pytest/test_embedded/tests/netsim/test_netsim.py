@@ -4,6 +4,7 @@ import pytest
 
 from emu.timing import eventually
 
+
 def netsim_is_alive():
     for process in psutil.process_iter(["name"]):
         try:

@@ -22,7 +22,7 @@ from aemu.proto.emulator_controller_pb2 import (
     ImageFormat,
     KeyboardEvent,
     ParameterValue,
-    PhysicalModelValue
+    PhysicalModelValue,
 )
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
@@ -278,6 +278,7 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
         1. Screenshots appear in the temporary path.
         2. Not every screenshot requests generates an image.
     """
+
     async def take_screenshots(n):
         # Take n sequential screenshots using the emulator console.
         console = await emulator.console()
@@ -298,7 +299,7 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
         return None if len(current_screenshots) != len(screenshots) else True
 
     # Configure the emulator to save the screenshots to tmp_path
-    myflags = ['-save-path', tmp_path]
+    myflags = ["-save-path", tmp_path]
     await emulator.launch(emulator.launch_flags + myflags)
     await emulator.wait_for_boot()
 
@@ -308,12 +309,14 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
 
     await eventually(screenshots_completed, timeout=600)
     screenshots = _get_screenshots_list()
-    logging.info(f'{len(screenshots)} (out of {num_requests}) screenshots were taken.')
+    logging.info(f"{len(screenshots)} (out of {num_requests}) screenshots were taken.")
 
     # Verify screenshots appear in the default save location.
-    assert len(screenshots) != 0, \
-        "Coudn't take any screenshot using the emulator console."
+    assert (
+        len(screenshots) != 0
+    ), "Coudn't take any screenshot using the emulator console."
 
     # Verify not every Ctrl+S screenshot keystroke generates a screenshot.
-    assert len(screenshots) != num_requests, \
-        f"All requested screenshots were saved (expected less than {num_requests})."
+    assert (
+        len(screenshots) != num_requests
+    ), f"All requested screenshots were saved (expected less than {num_requests})."

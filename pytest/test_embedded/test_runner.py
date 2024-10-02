@@ -257,8 +257,13 @@ def get_tests_to_run(test_config: str, test_suite: str) -> List[Tuple[str, Dict]
 def get_log_path(logdir: Path) -> Path:
     """Returns the path to the log file, creating any needed directories."""
     logdir.mkdir(exist_ok=True, parents=True)
-    log_name = ".".join((os.path.basename(sys.argv[0]),
-                         datetime.datetime.now().strftime("%Y%m%d-%H%M%S"), "log"))
+    log_name = ".".join(
+        (
+            os.path.basename(sys.argv[0]),
+            datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
+            "log",
+        )
+    )
     return logdir.joinpath(log_name)
 
 
@@ -268,16 +273,12 @@ class AdbServer:
         self.adb = adb
 
     def __enter__(self):
-        self.pyrun(
-            ["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False
-        )
+        self.pyrun(["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False)
         run([self.adb, "start-server"], timeout=60)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         run([self.adb, "kill-server"], timeout=60)
-        self.pyrun(
-            ["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False
-        )
+        self.pyrun(["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False)
 
 
 def merge_results(python_exe: Callable, sources: [Path], dest: Path):
@@ -359,8 +360,9 @@ def apply_xslt(python_exe: Callable, source: Path, xslt: Path, dest: Path):
         logging.warning("Failed to apply xslt: %s to %s due to (%s)", xslt, source, err)
 
 
-async def collect_crash_reports(emulator: str, symbol_path: Path, logdir: Path,
-                                grpc_services: Path):
+async def collect_crash_reports(
+    emulator: str, symbol_path: Path, logdir: Path, grpc_services: Path
+):
     emulator_directory = Path(emulator).parent if emulator else None
     crash_report = CrashReporter(emulator_directory, symbol_path, grpc_services)
 

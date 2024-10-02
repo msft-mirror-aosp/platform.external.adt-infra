@@ -15,6 +15,7 @@ import re
 
 __EMPTY__ = empty_pb2.Empty()
 
+
 @pytest.fixture
 def ui_controller(service):
     yield service(UiControllerStub)
@@ -43,15 +44,16 @@ async def test_multidisplay_out_of_order_add_no_crash(avd, telnet, ui_controller
     # We became visible.
     assert controlStatus.visibilityChanged
 
-    out_of_order_add_result =await telnet.send("multidisplay add 3 720 1280 240 0")
+    out_of_order_add_result = await telnet.send("multidisplay add 3 720 1280 240 0")
     await asyncio.sleep(2)
-    assert avd.is_alive();
+    assert avd.is_alive()
     assert "OK" in out_of_order_add_result
 
     valid_del_result = await telnet.send("multidisplay del 3")
     await asyncio.sleep(2)
-    assert avd.is_alive();
+    assert avd.is_alive()
     assert "OK" in valid_del_result
+
 
 @pytest.mark.console
 @pytest.mark.multidisplay
@@ -59,9 +61,10 @@ async def test_multidisplay_out_of_order_add_no_crash(avd, telnet, ui_controller
 async def test_multidisplay_del_empty_no_crash(avd):
     """Test adb emu multidisplay del does not crash emulator"""
 
-    del_empty_result =await avd.adb.run(["emu", "multidisplay", "del"])
+    del_empty_result = await avd.adb.run(["emu", "multidisplay", "del"])
     await asyncio.sleep(3)
-    assert avd.is_alive();
+    assert avd.is_alive()
+
 
 @pytest.mark.console
 @pytest.mark.multidisplay
@@ -69,15 +72,15 @@ async def test_multidisplay_del_empty_no_crash(avd):
 async def test_multidisplay_del_invalid_display_no_crash(avd):
     """Test adb emu multidisplay del invalidid does not crash emulator"""
 
-    del_invalid_display_result =await avd.adb.run(["emu", "multidisplay", "del", "3"])
+    del_invalid_display_result = await avd.adb.run(["emu", "multidisplay", "del", "3"])
     await asyncio.sleep(3)
-    assert avd.is_alive();
+    assert avd.is_alive()
 
 
 async def ensure_logical_displays(n, emu):
     # Return True if the emulator has 'n' logical displays.
     display_dump = await emu.adb.shell("dumpsys display", timeout=30)
-    display_size_pattern = re.search('Logical Displays: size=([0-9]*).*', display_dump)
+    display_size_pattern = re.search("Logical Displays: size=([0-9]*).*", display_dump)
     if display_size_pattern is None:
         return False
     return display_size_pattern.groups()[0] == str(n)
@@ -94,7 +97,7 @@ async def test_add_multidisplay_from_telnet(avd, emulator_controller, telnet):
 
     assert await (
         eventually(partial(ensure_logical_displays, n_displays, avd), timeout=180)
-    ), 'Wrong number of displays detected'
+    ), "Wrong number of displays detected"
 
     assert cfg.displays[1].dpi == 240
     assert cfg.displays[1].width == 1200
@@ -109,7 +112,7 @@ async def test_remove_multidisplay_from_telnet(avd, emulator_controller, telnet)
     n_displays = 2  # primary plus one secondary display.
     assert await (
         eventually(partial(ensure_logical_displays, n_displays, avd), timeout=180)
-    ), 'Wrong number of displays detected'
+    ), "Wrong number of displays detected"
 
     await telnet.send("multidisplay del 1")
 
@@ -117,5 +120,4 @@ async def test_remove_multidisplay_from_telnet(avd, emulator_controller, telnet)
 
     assert await (
         eventually(partial(ensure_logical_displays, n_displays, avd), timeout=180)
-    ), 'Wrong number of displays detected'
-
+    ), "Wrong number of displays detected"

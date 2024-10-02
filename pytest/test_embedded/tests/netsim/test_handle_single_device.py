@@ -2,14 +2,12 @@ import pytest
 from netsim_grpc import netsim_client
 
 
-
 @pytest.mark.boot
 @pytest.mark.netsim
 @pytest.mark.async_timeout(1080)
 def test_device_attaches_to_netsimd(avd):
     """Test case to verify that a device is attached to netsimd."""
     assert len(netsim_client.NetsimClient().get_devices()) != 0
-
 
 
 @pytest.mark.boot
@@ -41,7 +39,6 @@ def test_netsim_patch_and_reset(avd):
     assert post_reset_device.orientation == netsim_client.model.Orientation(
         yaw=0, pitch=0, roll=0
     )
-
 
 
 @pytest.mark.boot

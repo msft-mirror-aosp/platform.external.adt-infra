@@ -116,7 +116,6 @@ async def test_screen_records_video_in_gif(screen_service, animation_app, tmp_pa
     verify_recorded_file_header(sample_file, sample_file_header)
 
 
-
 @pytest.mark.console
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
@@ -124,8 +123,8 @@ async def test_screen_records_video_telnet(emulator, animation_app, tmp_path, te
     myflags = ["-no-window"]
     assert await emulator.launch(flags=myflags)
 
-    assert (
-     await emulator.wait_for_boot(timeout=1080)
+    assert await emulator.wait_for_boot(
+        timeout=1080
     ), f"The emulator couldn't be launched with no-window option"
 
     sample_file = tmp_path / "sample_record.webm"
@@ -135,7 +134,6 @@ async def test_screen_records_video_telnet(emulator, animation_app, tmp_path, te
 
     sample_file_header = b"\x1A\x45\xDF\xA3"
     verify_recorded_file_header(sample_file, sample_file_header)
-
 
 
 @pytest.mark.embedded
@@ -150,14 +148,17 @@ async def test_screen_recording_duration(animation_app, emulator, tmp_path):
     await screen_service.StartRecording(info)
     # Recording can be done to max of 180 secs. Once 180 secs are over, it will stop the recording
     await asyncio.sleep(200)  # Wait for more than 180 secs
-    await screen_service.StartRecording(info)  # Recording can be started again after 180 secs
+    await screen_service.StartRecording(
+        info
+    )  # Recording can be started again after 180 secs
     logging.info("Stopping the recording: %s", info)
     await screen_service.StopRecording(info)
     verify_recorded_file_header(sample_file, sample_file_header)
 
 
-async def screen_records_video(screen_service, sample_file,
-                               width=140, height=140, duration=2):
+async def screen_records_video(
+    screen_service, sample_file, width=140, height=140, duration=2
+):
     info = RecordingInfo(width=width, height=height, file_name=str(sample_file))
     logging.info("Starting the recording: %s", info)
     await screen_service.StartRecording(info)
@@ -171,13 +172,13 @@ def verify_recorded_file_header(sample_file, sample_file_header):
         header = file.read(4)
 
     assert (
-            header == sample_file_header
-    ), f'{header} != sample_file_header, the magic header'
+        header == sample_file_header
+    ), f"{header} != sample_file_header, the magic header"
 
 
 async def play_webm(emulator, file):
-    """Play a .webm video using the default video player.
-    """
+    """Play a .webm video using the default video player."""
+
     async def dismiss_fullscreen_popup():
         # Dismiss fullscreen mode if needed.
         status = await click_button(emulator, text="Got it")
@@ -186,31 +187,30 @@ async def play_webm(emulator, file):
     await emulator.stop_activity("com.google.android.apps.photos")
     await emulator.start_activity(
         "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
-        params=f'-a android.intent.action.VIEW -W -d file://{file} -t "video/*"'
+        params=f'-a android.intent.action.VIEW -W -d file://{file} -t "video/*"',
     )
     await eventually(dismiss_fullscreen_popup)
     logging.info(f"Launched recording file '{file}'")
 
 
 async def verify_qrcode(emulator, webm_recording, payload):
-    """ Play a .webm recording in the emulator and check if a QR code exists
-    """
-    video_path = Path('/sdcard/Downloads/') / webm_recording.name
+    """Play a .webm recording in the emulator and check if a QR code exists"""
+    video_path = Path("/sdcard/Downloads/") / webm_recording.name
     await emulator.adb.push(webm_recording, video_path)
     emulator_controller = EmulatorControllerStub(emulator.channel)
+
     async def _play_and_decode():
         await play_webm(emulator, video_path)
         return await decode_qrcodes([payload], emulator_controller=emulator_controller)
+
     assert await wait_until(
         _play_and_decode, timeout=240
     ), "Unable to decode the QR code from video '{sample_file}'."
 
 
 @pytest.mark.parametrize(
-    "gpu_mode",
-    ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
+    "gpu_mode", ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
 )
-
 @pytest.mark.graphics
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
@@ -243,8 +243,9 @@ async def test_screen_records_with_different_gpu_modes(
         pytest.skip(f"gpu mode {gpu_mode} is only available on Windows.")
 
     logging.info(f"Launching the emulator with the gpu mode '{gpu_mode}'.")
-    await emulator.launch(emulator.launch_flags + ["-no-snapshot-save",
-                                                   "-gpu", f"{gpu_mode}"])
+    await emulator.launch(
+        emulator.launch_flags + ["-no-snapshot-save", "-gpu", f"{gpu_mode}"]
+    )
     await emulator.wait_for_boot()
     screen_service = ScreenRecordingStub(channel=emulator.channel)
 
@@ -256,12 +257,12 @@ async def test_screen_records_with_different_gpu_modes(
     await verify_qrcode(emulator, sample_file, qrcode_png.payload)
 
 
-
 @pytest.mark.graphics
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_screen_records_with_different_orientations(
-        avd, screen_service, telnet, tmp_path, qrcode_png):
+    avd, screen_service, telnet, tmp_path, qrcode_png
+):
     """Verify the behavior of screen recording with different screen orientation.
 
     Args:
@@ -285,6 +286,7 @@ async def test_screen_records_with_different_orientations(
         2. The video is played without any rendering issues, observed from the decoding
            of the embedded QR code through a series of screenshots.
     """
+
     async def rotate():
         # Rotate the emulator clockwise by 90 degrees.
         await telnet.send("rotate")
@@ -300,8 +302,8 @@ async def test_screen_records_with_different_orientations(
         with open(sample_webm, "rb") as file:
             header = file.read(4)
         assert (
-                header == sample_file_header
-        ), f'{header} != sample_file_header, the magic header'
+            header == sample_file_header
+        ), f"{header} != sample_file_header, the magic header"
 
     sample_file_header = b"\x1A\x45\xDF\xA3"
 

@@ -8,27 +8,31 @@ import types
 import platform
 
 if platform.system() != "Windows":
-  try:
-      import tkinter
-  except ImportError:
-      # Tkinter may not be available on some Python distributions
-      sys.modules['tkinter'] = types.ModuleType('tkinter')
-      # Make the pymsgbox methods dependent on tkinter unavailable
-      def _couldNotImportPyMsgBox(*unused_args, **unused_kwargs):
-          raise ImportError(
-              "PyAutoGUI was unable to import pymsgbox. " + \
-              "Please install tkinter in order to use this function."
-          )
-      pymsgbox = types.ModuleType('pymsgbox')
-      pymsgbox.alert = pymsgbox.confirm = pymsgbox.prompt = pymsgbox.password = _couldNotImportPyMsgBox
-      sys.modules['pymsgbox'] = pymsgbox
+    try:
+        import tkinter
+    except ImportError:
+        # Tkinter may not be available on some Python distributions
+        sys.modules["tkinter"] = types.ModuleType("tkinter")
+        # Make the pymsgbox methods dependent on tkinter unavailable
+        def _couldNotImportPyMsgBox(*unused_args, **unused_kwargs):
+            raise ImportError(
+                "PyAutoGUI was unable to import pymsgbox. "
+                + "Please install tkinter in order to use this function."
+            )
 
-      # Mouseinfo also depends on tkinter
-      def _MouseInfoWindow():
-          raise ImportError(
-              "Mouseinfo was unable to import tkinter. " + \
-              "Please install tkinter in order to use this function."
-          )
-      mouseinfo = types.ModuleType('mouseinfo')
-      mouseinfo.MouseInfoWindow = _MouseInfoWindow
-      sys.modules['mouseinfo'] = mouseinfo
+        pymsgbox = types.ModuleType("pymsgbox")
+        pymsgbox.alert = (
+            pymsgbox.confirm
+        ) = pymsgbox.prompt = pymsgbox.password = _couldNotImportPyMsgBox
+        sys.modules["pymsgbox"] = pymsgbox
+
+        # Mouseinfo also depends on tkinter
+        def _MouseInfoWindow():
+            raise ImportError(
+                "Mouseinfo was unable to import tkinter. "
+                + "Please install tkinter in order to use this function."
+            )
+
+        mouseinfo = types.ModuleType("mouseinfo")
+        mouseinfo.MouseInfoWindow = _MouseInfoWindow
+        sys.modules["mouseinfo"] = mouseinfo

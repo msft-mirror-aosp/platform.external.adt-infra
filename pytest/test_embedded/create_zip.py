@@ -26,11 +26,12 @@ import run_tests
 from src.emu.logging.log_handler import configure_logging
 
 
-COPY_PATHS = (run_tests.HERE / "tests",
-              run_tests.HERE / "cfg",
-              run_tests.HERE / "test_runner.py",
-              run_tests.HERE / "run_from_zip.py",
-              )
+COPY_PATHS = (
+    run_tests.HERE / "tests",
+    run_tests.HERE / "cfg",
+    run_tests.HERE / "test_runner.py",
+    run_tests.HERE / "run_from_zip.py",
+)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -57,8 +58,12 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _handle_symlink(zipf: zipfile.ZipFile, base: pathlib.Path, path: pathlib.Path,
-                    symlink_src: pathlib.Path) -> None:
+def _handle_symlink(
+    zipf: zipfile.ZipFile,
+    base: pathlib.Path,
+    path: pathlib.Path,
+    symlink_src: pathlib.Path,
+) -> None:
     """Handles adding a symlink to the zipfile.
 
     If path is an absolute symlink that is relative to symlink_src, it will be altered to be
@@ -85,18 +90,22 @@ def _handle_symlink(zipf: zipfile.ZipFile, base: pathlib.Path, path: pathlib.Pat
     zi.external_attr = 2716663808
 
     if link.is_absolute():
-      # Relative path to the top of the zip.
-      to_parent = pathlib.Path(*[".."] * len(rel_path.parent.parts))
-      zip_link = to_parent.joinpath(symlink_src.name, link.relative_to(symlink_src))
+        # Relative path to the top of the zip.
+        to_parent = pathlib.Path(*[".."] * len(rel_path.parent.parts))
+        zip_link = to_parent.joinpath(symlink_src.name, link.relative_to(symlink_src))
     else:
-      zip_link = link  # Relative links do not need an update.
+        zip_link = link  # Relative links do not need an update.
     zipf.writestr(zi, str(zip_link))
 
     logging.info("Archiving symlink: %s -> %s", path, zip_link)
 
 
-def _zip_files(zipf: zipfile.ZipFile, base: pathlib.Path, paths: Iterable[pathlib.Path],
-               symlink_src: Optional[pathlib.Path]) -> None:
+def _zip_files(
+    zipf: zipfile.ZipFile,
+    base: pathlib.Path,
+    paths: Iterable[pathlib.Path],
+    symlink_src: Optional[pathlib.Path],
+) -> None:
     """Add all the files in paths to zipf with archive paths relative to base."""
     for path in paths:
         if ".git" in path.parts:
@@ -110,8 +119,9 @@ def _zip_files(zipf: zipfile.ZipFile, base: pathlib.Path, paths: Iterable[pathli
             zipf.write(path, arcname=str(path.relative_to(base)))
 
 
-def zip_path(zipf: zipfile.ZipFile, path: pathlib.Path, glob_match="**/*",
-             symlink_src=None) -> None:
+def zip_path(
+    zipf: zipfile.ZipFile, path: pathlib.Path, glob_match="**/*", symlink_src=None
+) -> None:
     """Add the given path and any children to zipf."""
     paths = [path] if path.is_file() else path.glob(glob_match)
     _zip_files(zipf, path.parent, paths, symlink_src)
@@ -120,8 +130,9 @@ def zip_path(zipf: zipfile.ZipFile, path: pathlib.Path, glob_match="**/*",
 def main(args: argparse.Namespace) -> None:
     configure_logging(logging.DEBUG if args.verbose else logging.INFO)
 
-    with zipfile.ZipFile(args.dest, "w", compression=zipfile.ZIP_DEFLATED,
-                         compresslevel=9) as zipf:
+    with zipfile.ZipFile(
+        args.dest, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+    ) as zipf:
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_dir = pathlib.Path(tmp_dir)

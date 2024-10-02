@@ -21,6 +21,7 @@ from emu.process.command import Command
 # These are all non emulator tests.
 pytestmark = pytest.mark.std
 
+
 @pytest.fixture()
 @pytest.mark.async_timeout(1.1)
 async def my_amazing_fixture():

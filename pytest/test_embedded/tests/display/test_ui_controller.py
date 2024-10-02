@@ -47,7 +47,6 @@ async def test_ui_controller_clean(avd):
     ), "The emulator already has an initial configuration, which implies the extended window has been displayed at least once!"
 
 
-
 @pytest.mark.embedded
 @pytest.mark.dependency(depends=["test_ui_controller_clean"])
 async def test_ui_controller_first_position_works(avd, ui_controller):
@@ -90,7 +89,6 @@ async def test_ui_controller_first_position_works(avd, ui_controller):
     assert controlStatus.visibilityChanged
 
 
-
 @pytest.mark.embedded
 @pytest.mark.dependency(depends=["test_ui_controller_first_position_works"])
 async def test_ui_controller_position_does_not_change(avd, ui_controller):
@@ -124,7 +122,6 @@ async def test_ui_controller_position_does_not_change(avd, ui_controller):
     # We become invisible.
     controlStatus = await ui_controller.closeExtendedControls(__EMPTY__)
     assert controlStatus.visibilityChanged
-
 
 
 @pytest.mark.embedded

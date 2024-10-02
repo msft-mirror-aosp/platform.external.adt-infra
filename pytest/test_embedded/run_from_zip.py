@@ -59,7 +59,7 @@ PLATFORM_TOOLS_RESOURCE = f"sdk-repo-{OS_NAME}-platform-tools-{PLATFORM_TOOLS_BI
 if OS_NAME == "windows":
     PYTHON = BASE_DIR / ".venv" / "Scripts" / "python3.exe"
 else:
-    PYTHON = BASE_DIR / ".venv"/ "bin" / "python3"
+    PYTHON = BASE_DIR / ".venv" / "bin" / "python3"
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -190,11 +190,16 @@ def create_android_home(fetcher: Path) -> Path:
         return android_home
     clt_resource = COMMAND_LINE_TOOLS_RESOURCE_MAP[OS_NAME]
     pt_target = PLATFORM_TOOLS_TARGET_MAP[OS_NAME]
-    proc = subprocess.run([
-        fetcher,
-        f"ab,{COMMAND_LINE_TOOLS_BID},{COMMAND_LINE_TOOLS_TARGET},{clt_resource}",
-        f"ab,{PLATFORM_TOOLS_BID},{pt_target},{PLATFORM_TOOLS_RESOURCE}"],
-        check=True, capture_output=True, encoding="utf-8")
+    proc = subprocess.run(
+        [
+            fetcher,
+            f"ab,{COMMAND_LINE_TOOLS_BID},{COMMAND_LINE_TOOLS_TARGET},{clt_resource}",
+            f"ab,{PLATFORM_TOOLS_BID},{pt_target},{PLATFORM_TOOLS_RESOURCE}",
+        ],
+        check=True,
+        capture_output=True,
+        encoding="utf-8",
+    )
     clt_out, pt_out = proc.stdout.strip().splitlines()
     tmp_dir = Path(tempfile.mkdtemp(dir=BASE_DIR))
     tmp_dir.joinpath("cmdline-tools").symlink_to(Path(clt_out) / "cmdline-tools")
@@ -205,8 +210,10 @@ def create_android_home(fetcher: Path) -> Path:
 
 
 def main(args: argparse.Namespace) -> None:
-    configure_logging(logging.DEBUG if args.verbose else logging.INFO,
-                      log_path=test_runner.get_log_path(Path(args.logdir)))
+    configure_logging(
+        logging.DEBUG if args.verbose else logging.INFO,
+        log_path=test_runner.get_log_path(Path(args.logdir)),
+    )
 
     fetcher = Path(args.fetcher)
     android_home = create_android_home(fetcher)
@@ -217,18 +224,18 @@ def main(args: argparse.Namespace) -> None:
     logging.info("Scheduling %d suites", len(tests_to_run))
 
     test_runner.run_tests(
-            emulator=args.emulator,
-            use_exceptions=False,
-            logdir=args.logdir,
-            symbol_path=args.symbols,
-            build_target=args.build_target,
-            pyrun=pyrun.run,
-            tests_to_run=tests_to_run,
-            collect=args.collect,
-            fetcher=fetcher,
-            android_home=android_home,
-            grpc_services=BASE_DIR.joinpath("android-grpc"),
-        )
+        emulator=args.emulator,
+        use_exceptions=False,
+        logdir=args.logdir,
+        symbol_path=args.symbols,
+        build_target=args.build_target,
+        pyrun=pyrun.run,
+        tests_to_run=tests_to_run,
+        collect=args.collect,
+        fetcher=fetcher,
+        android_home=android_home,
+        grpc_services=BASE_DIR.joinpath("android-grpc"),
+    )
 
 
 if __name__ == "__main__":

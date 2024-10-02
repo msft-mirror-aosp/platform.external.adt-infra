@@ -125,7 +125,6 @@ def check_boot_from_snapshot(avdpath) -> bool:
     return False
 
 
-
 @pytest.mark.snapshot
 @pytest.mark.flaky
 @pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
@@ -175,7 +174,6 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
         return check_boot_from_snapshot(emulator.configuration.directory)
 
     assert await eventually(check_has_booted)
-
 
 
 @pytest.mark.skipos("all", "Flaky and not needed for now.")

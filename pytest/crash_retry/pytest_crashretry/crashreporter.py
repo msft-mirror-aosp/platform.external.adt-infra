@@ -25,7 +25,9 @@ import subprocess
 
 
 def check_run(cmd):
-    return subprocess.check_output([str(x) for x in cmd], text=True, encoding="utf-8").strip()
+    return subprocess.check_output(
+        [str(x) for x in cmd], text=True, encoding="utf-8"
+    ).strip()
 
 
 class GrpcDecoder(object):
@@ -59,7 +61,9 @@ class GrpcDecoder(object):
 
     def __init__(self, expired=360):
         # We interpret deleted metrics for 180 days.
-        self.keep_after_date = datetime.datetime.now() - datetime.timedelta(days=expired)
+        self.keep_after_date = datetime.datetime.now() - datetime.timedelta(
+            days=expired
+        )
         self.methods = {}  # crc32 -> method name
         self.full_methods = {}  # crc32 -> complete name
         self.deprecated = {}
@@ -209,7 +213,9 @@ class CrashReporter:
             return ""
 
         params = [str(x) for x in params]
-        logging.info("Running crashreporter: %s %s", self.crashreporter, " ".join(params))
+        logging.info(
+            "Running crashreporter: %s %s", self.crashreporter, " ".join(params)
+        )
 
         return check_run([self.crashreporter] + params)
 
@@ -248,10 +254,10 @@ class CrashReporter:
                         if name == "grpc" or re.match(r"\d+", name):
                             values = annotation["value"]
                             for value in values.split(" "):
-                                phase, method, timestamp = decoder.decode_snippet(value.strip())
-                                call_info = (
-                                    f'{timestamp.strftime("%Y-%m-%d %H:%M:%S")} {phase} {method}'
+                                phase, method, timestamp = decoder.decode_snippet(
+                                    value.strip()
                                 )
+                                call_info = f'{timestamp.strftime("%Y-%m-%d %H:%M:%S")} {phase} {method}'
                                 decoded.get(name, []).append(call_info)
                                 logging.info("Found %s -> %s", name, call_info)
         except Exception as err:
@@ -279,7 +285,9 @@ class CrashReporter:
         for report in reports.splitlines():
             dest = dest_dir / Path(report).name
             dump = self.report(["-d", report, self.symbol_path])
-            logging.critical("Writing crash report %s to %s", report, dest.with_suffix(".log"))
+            logging.critical(
+                "Writing crash report %s to %s", report, dest.with_suffix(".log")
+            )
             annotations = self.analyze_annnotations(dump)
             annotations_str = json.dumps(annotations, indent=4)
             with open(dest.with_suffix(".log"), "w", encoding="utf-8") as dmp:
