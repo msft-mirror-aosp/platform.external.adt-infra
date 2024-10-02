@@ -272,3 +272,36 @@ async def test_concurrent_avds(avd, avd_factory, tmp_path):
         assert await eventually(
             partial(check_phone_response, controller)
         ), f"Phone response is {phone_response.response}, expected {PhoneResponse.OK}"
+
+
+@pytest.mark.fast
+async def test_avd_commands(avd, telnet):
+    avd_commands = [
+        "avd start",
+        "avd stop",
+        "avd status",
+        "avd heartbeat",
+        "avd name",
+        "avd id",
+        "avd resume",
+        "avd pause",
+        "avd resume",
+        "avd windowtype",
+        "avd path",
+        "avd discoverypath",
+        "avd snapshotspath",
+    ]
+    avd_result = await telnet.send("help avd")
+    for avd_command in avd_commands:
+        assert any([avd_command in item.strip() for item in avd_result])
+
+    response = await telnet.send("avd name")
+    assert response is not None and response != ""
+    response = await telnet.send("avd status")
+    assert any(['running' in element for element in response])
+    response = await telnet.send("avd path")
+    assert any(['.avd' in element for element in response])
+    response = await telnet.send("avd discoverypath")
+    assert any(['.ini' in element for element in response])
+    response = await telnet.send("avd snapshotspath")
+    assert any(['snapshots' in element for element in response])
