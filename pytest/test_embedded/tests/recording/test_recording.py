@@ -180,7 +180,7 @@ async def play_webm(emulator, file):
     """
     async def dismiss_fullscreen_popup():
         # Dismiss fullscreen mode if needed.
-        status = await click_button("Got it", emulator)
+        status = await click_button(emulator, text="Got it")
         return None if not status else True
 
     await emulator.stop_activity("com.google.android.apps.photos")
