@@ -19,6 +19,8 @@ import subprocess
 import threading
 import pytest
 
+from emu.timing import wait_until
+
 
 def _check_and_kill_iperf3_server():
     """Checks if port 5201 is in use and if an iperf3 server is running on localhost.
@@ -48,13 +50,16 @@ def _check_and_kill_iperf3_server():
         timeout=5,
     )
 
-    if client_host_process.returncode == 0:
+    # Kill all existing iperf3 processes
+    pkill_process = subprocess.run(["pkill", "iperf3"])
+    if client_host_process.returncode == 0:  # Client succeeded means server is running
         logging.warning("An existing iperf3 server is already running.")
-        pkill_process = subprocess.run(["pkill", "iperf3"])
         if pkill_process.returncode == 0:
             logging.info("Successfully killed existing iperf3 process.")
         else:
             logging.warning("Failed to kill existing iperf3 process.")
+    elif pkill_process.returncode == 0:  # Client test failed but still killed server
+        logging.warning("Killed existing iperf3 even though client test failed.")
 
 
 def _read_output(process, logger_name):
@@ -68,10 +73,26 @@ def _read_output(process, logger_name):
 
 @pytest.mark.wifi_perf
 @pytest.mark.async_timeout(60 * 30)
+@pytest.mark.flaky(reruns=3)  # b/366316511
 async def test_iperf3(avd, record_property):
     """Test case to run iperf3 and record wifi performance."""
     # Disable cellular connection to make sure we are testing wifi
     await avd.adb.shell("svc data disable")
+
+    # Wait for Wifi connectivity for up to 30s after boot
+    async def has_connectivity():
+        # Check that AVD can connect to Google Public DNS 8.8.8.8.
+        result = await avd.adb.shell("dumpsys connectivity --diag")
+        # New line inside output string is indicated by 3 spaces
+        for line in result.split("   "):
+            if "DNS UDP dst{8.8.8.8}" in line and "SUCCEEDED" in line:
+                return True
+        logging.warning("DNS UDP 8.8.8.8 not succeeded")
+        return False
+
+    assert await wait_until(has_connectivity, 30), "Unable to connect to dns 8.8.8.8"
+
+    #  Check iperf3 is available
     which_iperf3_res = subprocess.run(
         ["which", "iperf3"], capture_output=True, text=True
     )
@@ -89,8 +110,7 @@ async def test_iperf3(avd, record_property):
 
     # Run iperf server on host
     server_process = subprocess.Popen(
-        ["iperf3 -s"],
-        shell=True,
+        ["iperf3", "-s"],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -98,17 +118,19 @@ async def test_iperf3(avd, record_property):
         target=_read_output, args=(server_process, "iperf3_server"), daemon=True
     ).start()
 
-    await asyncio.sleep(5)  # Wait a few seconds for iperf3 server to start
+    await asyncio.sleep(3)  # Wait a few seconds for iperf3 server to start
 
     # Run iperf client on host to make sure server is running
     client_host_process = subprocess.run(
-        ["iperf3", "-c", "localhost", "-t", "3"], capture_output=True, text=True
+        ["iperf3", "-c", "localhost", "-t", "1"], capture_output=True, text=True
     )
 
     if "error" in client_host_process.stdout:
         logging.info(f"client_host_process stdout: {client_host_process.stdout}")
         logging.info(f"client_host_process stderr: {client_host_process.stderr}")
         assert False
+
+    await asyncio.sleep(3)  # Wait a few seconds for iperf3 host connection to close
 
     # Run iperf client on guest
     result = await avd.adb.shell("iperf3 -c 10.0.2.2 -b 1000M -t 30", timeout=60)
