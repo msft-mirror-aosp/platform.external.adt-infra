@@ -16,6 +16,7 @@ import asyncio
 import re
 import os
 import tarfile
+import logging
 
 import pytest
 from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
@@ -322,14 +323,17 @@ async def test_invalid_snapshot_notifies_user(avd):
     def cold_boot_filter(record):
         # Set 'cold_boot_mode' to 'True' if the cold boot text is detected in the log.
         nonlocal cold_boot_mode
-        text = r"USER_INFO\s+\|\s+Emulator is performing a full startup."
         message = record.getMessage()
-        if re.match(text, message):
+        if (
+            "USER_INFO" in message
+            and "The emulator is starting from scratch" in message
+        ):
             cold_boot_mode = True
         return True
 
     avd.logger.addFilter(cold_boot_filter)
 
+    logging.info("Restart the emulator to look for the cold boot message.")
     await avd.restart(avd.launch_flags)
     await avd.wait_for_boot()
     assert cold_boot_mode == True, "The AVD wasn't launched in cold boot mode"
