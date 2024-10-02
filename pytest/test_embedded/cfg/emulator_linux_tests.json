@@ -658,7 +658,8 @@
     "vulkan_test_suite_api_34": {
         "description": "Set of tests that run with Vulkan enabled",
         "pytest_flags": [
-            "-m xpass", "xpass will always succeed, no need to run these for"
+            "-m xpass",
+            "xpass will always succeed, no need to run these for"
         ],
         "avd_configs": [
             {
@@ -672,5 +673,61 @@
             }
         ],
         "status": "disabled"
+    },
+    "fast_test_suite_api_31": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "31",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "enabled"
+    },
+    "fast_test_suite_api_33": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "33",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "enabled"
+    },
+    "fast_test_suite_api_34": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "34",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "enabled"
+    },
+    "fast_test_suite_api_35": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "35",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "enabled"
     }
 }
