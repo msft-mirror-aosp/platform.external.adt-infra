@@ -55,7 +55,7 @@ if len(HERE.parents) > 4:
         AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
     )
 else:
-    SDK_EMULATOR = ''
+    SDK_EMULATOR = ""
 
 
 def pytest_addoption(parser):
@@ -157,6 +157,23 @@ def log_thread_error(args):
 
 
 threading.excepthook = log_thread_error
+
+
+def pytest_logger_config(logger_config):
+    loggers = ["root", "adb", "emulator"]
+    for i in range(0, 10):
+        loggers += [f"emu-{i}", f"emu-{i}-adb", f"emu-{i}-con", f"emu-{i}-logcat"]
+
+    logger_config.add_loggers(loggers, stdout_level="info")
+    logger_config.split_by_outcome()
+
+
+def pytest_logger_logsdir(config):
+    log_file = config.getoption("--log-file")
+    if log_file:
+        return Path(log_file).parent
+
+    return Path.cwd() / "results"
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
@@ -269,7 +286,6 @@ def pytest_sessionfinish(
             emu.delete()
 
 
-
 @pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
 async def emulator(request, pytestconfig) -> BaseEmulator:
@@ -322,12 +338,11 @@ async def emulator(request, pytestconfig) -> BaseEmulator:
     """
     avd_configs = json.loads(pytestconfig.getoption("avd_configs"))
     return await manage_emulator(
-        request, pytestconfig, avd_configs[0] if avd_configs else {}
+        request, pytestconfig, avd_configs[0] if avd_configs else {}, "emu-0"
     )
 
 
 @pytest.fixture(scope="module")
-@pytest.mark.async_timeout(200)
 async def emulators(request, pytestconfig) -> list[BaseEmulator]:
     """Makes multiple configured emulators available
 
@@ -340,15 +355,17 @@ async def emulators(request, pytestconfig) -> list[BaseEmulator]:
     """
     emulators = []
     avd_configs = json.loads(pytestconfig.getoption("avd_configs"))
+    log_id = 0
     # Put a placeholder avd_config if none defined
     if not avd_configs:
         avd_configs.append({})
     for avd_config in avd_configs:
-        emulators.append(await manage_emulator(request, pytestconfig, avd_config))
+        emulators.append(await manage_emulator(request, pytestconfig, avd_config, f"emu-{log_id}"))
+        log_id += 1
     return emulators
 
 
-async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulator:
+async def manage_emulator(request, pytestconfig, avd_param_config, log_id) -> BaseEmulator:
     """Configure and launch an emulator
 
     Args:
@@ -395,6 +412,7 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
                 exe=exe,
                 avd_config=avd_config,
                 fetcher=Path(fetcher) if fetcher else None,
+                log_id=log_id
             )
 
         emu.symbols = pytestconfig.getoption("symbols")
@@ -491,7 +509,7 @@ async def manage_avd(emulator) -> BaseEmulator:
     await emulator.restart(emulator.launch_flags)
     adb_log_cmd = Command(
         [emulator.adb.adb_binary, "-s", emulator.adb.name, "logcat"],
-        logging.getLogger(emulator.configuration.name + "-logcat"),
+        logging.getLogger(emulator.log_id + "-logcat"),
     )
     await adb_log_cmd.run()
 

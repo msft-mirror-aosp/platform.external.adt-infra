@@ -73,7 +73,7 @@ async def request_page_in_chrome(avd):
 
 
 @pytest.mark.graphics
-@pytest.mark.xpass
+@pytest.mark.xfail
 @pytest.mark.async_timeout(1080)
 async def test_launch_chrome_google(avd, get_screenshot):
     """

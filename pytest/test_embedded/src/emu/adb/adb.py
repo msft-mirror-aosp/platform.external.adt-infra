@@ -50,7 +50,7 @@ class Adb:
 
         self.name = name
         self.avd_id = avd_id
-        self.logger = logging.getLogger(f"{avd_id}-adb")
+        self.logger = logging.getLogger(f"{emu.log_id}-adb")
         self.emulator = emu
 
         if not adb.exists() and platform.system() == "Windows":
