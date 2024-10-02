@@ -17,7 +17,7 @@ import re
 import signal
 
 import pytest
-from aemu.proto.emulator_controller_pb2 import KeyboardEvent
+from aemu.proto.emulator_controller_pb2 import KeyboardEvent, InputEvent
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from aemu.proto.ui_controller_service_pb2_grpc import UiControllerStub
 
@@ -72,7 +72,6 @@ async def keypress_expects(avd, log, jskey, expected_code):
     asyncio.wait_for(wait_for_keyboard(log, expected_code), 2)
 
 
-
 @pytest.mark.hardware
 async def test_hardware_keys(avd, at_home, emulator_log):
     """Checks that the hardware key events that studio sends are working."""
@@ -93,7 +92,6 @@ async def test_hardware_keys(avd, at_home, emulator_log):
         await keypress_expects(avd, emulator_log, key, expect)
 
 
-
 @pytest.mark.hardware
 async def test_whitespace_chrs(avd, at_home, emulator_log):
     """Checks that the whitespace characters that studio sends are working."""
@@ -112,14 +110,12 @@ async def test_whitespace_chrs(avd, at_home, emulator_log):
         await keypress_expects(avd, emulator_log, key, expect)
 
 
-
 @pytest.mark.hardware
 async def test_unicode_no_deadlock(at_home, emulator_controller):
     """Tests that we properly handle unicode characters."""
     await emulator_controller.sendKey(
         KeyboardEvent(text="\xc6\x80 <-- Used to deadlock")
     )
-
 
 
 @pytest.mark.sanity
@@ -150,6 +146,7 @@ async def test_emulator_controls_keys(avd, emulator_controller):
         6. Back button, home and recents work as expected.
         7. Extended Controls window is displayed.
     """
+
     async def keypress(key, n_times=1):
         # Send the keypress 'key' event 'n_time' times.
         for i in range(n_times):
@@ -170,20 +167,22 @@ async def test_emulator_controls_keys(avd, emulator_controller):
     async def is_awake():
         return "Awake" in await avd.adb.shell("dumpsys power | grep mWakefulness=")
 
-    async def get_volume(stream_type='STREAM_MUSIC'):
+    async def get_volume(stream_type="STREAM_MUSIC"):
         # Wait until 'stream_type' appears in dumpsys and return the current volume level.
         async def get_stream_volume_dump(output: list):
             # Return 'True' if the stream is observed in the system dump.
             # Store the volume level in the 'output' list.
             dumpsys = await avd.adb.shell("dumpsys audio")
-            match = re.search(f'{stream_type}.*streamVolume:(\d+)', dumpsys)
+            match = re.search(f"{stream_type}.*streamVolume:(\d+)", dumpsys)
             if match is None:
                 return False
             output.append(int(match.groups()[0]))
             return True
+
         volume = []
-        assert await eventually(partial(get_stream_volume_dump, volume)), \
-            f"Coudn't detect the stream {stream_type} in the system dump"
+        assert await eventually(
+            partial(get_stream_volume_dump, volume)
+        ), f"Coudn't detect the stream {stream_type} in the system dump"
         return volume[0]
 
     async def check_volume_raises(volume):
@@ -196,12 +195,14 @@ async def test_emulator_controls_keys(avd, emulator_controller):
 
     async def apply_user_rotation(rotation):
         # Apply user rotation (0: Portrait, 1: Landscape, 2: Portrait Reversed, 3: Landscape Rev).
-        await avd.adb.shell(f"content insert --uri content://settings/system \
-                             --bind name:s:user_rotation --bind value:i:{rotation}")
+        await avd.adb.shell(
+            f"content insert --uri content://settings/system \
+                             --bind name:s:user_rotation --bind value:i:{rotation}"
+        )
 
     async def check_display_rotation(expected_rotation):
         # Check if the current display rotation matches the expected rotation.
-        displays_lines = await avd.adb.shell('dumpsys window displays')
+        displays_lines = await avd.adb.shell("dumpsys window displays")
         match = re.search("DisplayRotation.*mRotation=([0-9])\s", displays_lines)
         if match is None:
             return False
@@ -210,13 +211,16 @@ async def test_emulator_controls_keys(avd, emulator_controller):
 
     async def check_screenshot_created():
         # Return 'True' if a screenshot is present in the folder Screenshots/
-        return await avd.adb.shell(
-            "ls /storage/emulated/0/Pictures/Screenshots/Screenshot_* > /dev/null 2>&1; echo $?"
-        ) == '0'
+        return (
+            await avd.adb.shell(
+                "ls /storage/emulated/0/Pictures/Screenshots/Screenshot_* > /dev/null 2>&1; echo $?"
+            )
+            == "0"
+        )
 
     async def get_top_focused_root_task():
         # Return the name of the top focused root task
-        activities = await avd.adb.shell('dumpsys activity activities')
+        activities = await avd.adb.shell("dumpsys activity activities")
         match = re.search("topDisplayFocusedRootTask=(Task{[^}]*})", activities)
         if match is None:
             return None
@@ -234,7 +238,7 @@ async def test_emulator_controls_keys(avd, emulator_controller):
         focused_task = await get_top_focused_root_task()
         if focused_task is None:
             return False
-        type = re.search('type=(.*)}', focused_task).groups()[0]
+        type = re.search("type=(.*)}", focused_task).groups()[0]
         if type is None or type != expected_type:
             return False
         return True
@@ -254,22 +258,24 @@ async def test_emulator_controls_keys(avd, emulator_controller):
     # Click on Volume Up.
     volume = await get_volume()
     await keypress("AudioVolumeUp", 2)
-    assert (
-        await eventually(partial(check_volume_raises, volume))
+    assert await eventually(
+        partial(check_volume_raises, volume)
     ), "Volume was not raised"
 
     # Click on Volume Down.
     volume = await get_volume()
     await keypress("AudioVolumeDown", 2)
-    assert (
-        await eventually(partial(check_volume_lowers, volume))
+    assert await eventually(
+        partial(check_volume_lowers, volume)
     ), "Volume was not lowered"
 
     ############ Step 4 - Rotation keys ##
 
     # Disable auto-rotation.
-    await avd.adb.shell("content insert --uri content://settings/system \
-                        --bind name:s:accelerometer_rotation --bind value:i:0")
+    await avd.adb.shell(
+        "content insert --uri content://settings/system \
+                        --bind name:s:accelerometer_rotation --bind value:i:0"
+    )
     # Launch the Animation APK.
     assert await avd.start_activity(
         "com.google.AnimateBox/com.google.emu.MainActivity", params=None
@@ -298,31 +304,30 @@ async def test_emulator_controls_keys(avd, emulator_controller):
 
     # Launch the dialer app.
     await avd.start_activity(
-        "com.google.android.dialer/.extensions.GoogleDialtactsActivity",
-        params='-W'
+        "com.google.android.dialer/.extensions.GoogleDialtactsActivity", params="-W"
     )
     # Launch the messaging app.
     await avd.start_activity(
-        "com.google.android.apps.messaging/.ui.ConversationListActivity",
-        params='-W'
+        "com.google.android.apps.messaging/.ui.ConversationListActivity", params="-W"
     )
     # Check if the messaging app has the focus.
-    assert await eventually(partial(check_root_task_contains_name,
-                                    'com.google.android.apps.messaging')), \
-                            "Couldn't launch the messaging app"
+    assert await eventually(
+        partial(check_root_task_contains_name, "com.google.android.apps.messaging")
+    ), "Couldn't launch the messaging app"
 
     # Click on the Back button.
     await keypress("GoBack")
     # Check if the focus went back to the dialler app.
     assert await eventually(
-        partial(check_root_task_contains_name, 'com.google.android.dialer')
+        partial(check_root_task_contains_name, "com.google.android.dialer")
     ), "Couldn't go Back"
 
     # Click on Home button.
     await keypress("GoHome")
 
     # Check if the Home screen appears.
-    assert await eventually(partial(check_root_task_has_type, 'home')
+    assert await eventually(
+        partial(check_root_task_has_type, "home")
     ), "Couldn't go Home"
 
     ##########  Step 7 - Extended Controls grpc event ##
@@ -333,7 +338,6 @@ async def test_emulator_controls_keys(avd, emulator_controller):
     controlStatus = await ui_controller.showExtendedControls(empty_pb2.Empty())
     # Verify the extended controls window appeared.
     assert controlStatus.visibilityChanged
-
 
 
 @pytest.mark.sanity
@@ -358,16 +362,30 @@ async def test_close_emulator(avd):
         2. Emulator shuts down and window closes.
         3. Emulator window closes.
     """
+
     def emulator_is_off():
         return not avd.is_alive()
 
     async def open_power_menu():
         # Triger the Power Options menu and return 'True' when it is opened.
         # Send Volume Up and Power keystrokes.
-        await avd.adb.shell("input keyevent KEYCODE_VOLUME_UP & \
-                             input keyevent KEYCODE_POWER")
+        # await avd.adb.shell(
+        #     "input keyevent KEYCODE_VOLUME_UP & \
+        #                      input keyevent KEYCODE_POWER"
+        # )
+        stub = EmulatorControllerStub(avd.channel)
+        events = [
+            InputEvent(key_event=x)
+            for x in [
+                KeyboardEvent(key="AudioVolumeUp", eventType=KeyboardEvent.keydown),
+                KeyboardEvent(key="Power", eventType=KeyboardEvent.keydown),
+                KeyboardEvent(key="AudioVolumeUp", eventType=KeyboardEvent.keyup),
+                KeyboardEvent(key="Power", eventType=KeyboardEvent.keyup),
+            ]
+        ]
+        stub.streamInputEvent(events)
         window_dump = await get_window_dump(avd)
-        if "text=\"Power off\"" not in window_dump:
+        if 'text="Power off"' not in window_dump:
             await asyncio.sleep(5)
             return False
         return True
@@ -375,24 +393,22 @@ async def test_close_emulator(avd):
     # Ensure the emulator goes off following a 'kill' event (emulator window closed)
     console = await avd.console()
     await console.send("kill")
-    assert await (
-        eventually(emulator_is_off)
+    assert await eventually(
+        emulator_is_off
     ), "The emulator was not shut down after the window was closed."
 
     await avd.restart(avd.launch_flags)
     await avd.wait_for_boot()
 
     # Ensure the emulator shuts down after the Power off button is tapped.
-    assert await (
-        eventually(open_power_menu)
-    ), "Couldn't open the Power options menu."
+    assert await eventually(open_power_menu), "Couldn't open the Power options menu."
 
     assert await click_button(
         avd, text="Power off"
     ), "Couldn't click the Power off button."
 
-    assert await (
-        eventually(emulator_is_off)
+    assert await eventually(
+        emulator_is_off
     ), "The emulator was not shut down after the Power off button was clicked."
 
     await avd.restart(avd.launch_flags)
@@ -401,6 +417,6 @@ async def test_close_emulator(avd):
     # Ensure the emulator shuts down after the CTRL-C event is sent
     CTRL_C = signal.SIGINT if platform.system() != "Windows" else signal.CTRL_C_EVENT
     avd.cmd.process.send_signal(CTRL_C)
-    assert await (
-        eventually(emulator_is_off)
+    assert await eventually(
+        emulator_is_off
     ), "The emulator was not shut down after the CTRL-C event was sent."
