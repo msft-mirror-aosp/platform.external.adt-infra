@@ -25,6 +25,10 @@ from aemu.proto.emulator_controller_pb2 import (
 from google.protobuf import empty_pb2
 from PIL import Image
 
+from grpc import RpcError, StatusCode
+from grpc.aio import AioRpcError
+
+
 from emu.timing import eventually
 
 avd_config = {
@@ -63,19 +67,45 @@ async def set_device_hinge_angle(emu, angle):
     )
 
 
+@pytest.fixture
+async def get_safe_screenshot(emulator_controller):
+    """Gets a screenshot that handles the case where the emulator return
+    FAILED_PRECONDITION The guest has not posted new frame yet"""
+
+    async def get_safe_screenshot_impl(fmt: ImageFormat):
+        # We are willing to wait up to 5 seconds for a valid screenshot.
+        for i in range(0, 50):
+            try:
+                return await emulator_controller.getScreenshot(
+                    ImageFormat(
+                        format=fmt,
+                    )
+                )
+            except AioRpcError as exc:
+                if exc.code() == StatusCode.FAILED_PRECONDITION:
+                    logging.error(
+                        "Screenshot is not ready, will retry in 100ms, (%s)",
+                        exc.details,
+                    )
+                    asyncio.sleep(0.1)
+                else:
+                    raise
+
+    return get_safe_screenshot_impl
+
+
 @pytest.mark.newfoldable
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
 @pytest.mark.async_timeout(1080)
-async def test_new_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
+async def test_new_foldable(
+    emulator_controller, get_safe_screenshot, fmt, fold_angle, unfold_angle
+):
     await set_device_hinge_angle(emulator_controller, unfold_angle)
     await asyncio.sleep(5)
-    image1 = await emulator_controller.getScreenshot(
-        ImageFormat(
-            format=fmt,
-        )
-    )
+    image1 = await get_safe_screenshot(fmt)
+
     # Since the device is unfolded, we should have
     # returned foldedDisplay with unset value 0.
     assert image1.format.foldedDisplay.width == 0
@@ -83,11 +113,8 @@ async def test_new_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
 
     await set_device_hinge_angle(emulator_controller, fold_angle)
     await asyncio.sleep(5)
-    image2 = await emulator_controller.getScreenshot(
-        ImageFormat(
-            format=fmt,
-        )
-    )
+    image2 = await get_safe_screenshot(fmt)
+
     assert image1.format.width > image2.format.width
     # Since we don't specify the width and height
     # in the request, the retruned imageFormat size
@@ -96,11 +123,7 @@ async def test_new_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     assert image2.format.foldedDisplay.height == image2.format.height
     await set_device_hinge_angle(emulator_controller, unfold_angle)
     await asyncio.sleep(5)
-    image3 = await emulator_controller.getScreenshot(
-        ImageFormat(
-            format=fmt,
-        )
-    )
+    image3 = await get_safe_screenshot(fmt)
     assert image3.format.width > image2.format.width
 
 
