@@ -72,7 +72,6 @@ async def set_and_get_sensor(sensor_service, sensor_value):
     ), f"Data for sensor doesn't match {sensor_value} != {retrieved}"
 
 
-
 @pytest.mark.fast
 @pytest.mark.parametrize(
     "test_name, sensor_value, x, y, z",
@@ -128,7 +127,6 @@ async def test_sensor_value(service, test_name, sensor_value, x, y, z):
             value=ParameterValue(data=[x, y, z]),
         ),
     )
-
 
 
 @pytest.mark.hardware

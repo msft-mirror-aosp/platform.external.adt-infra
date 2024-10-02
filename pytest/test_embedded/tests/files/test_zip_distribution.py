@@ -7,7 +7,6 @@ import pytest
 from emu.emulator import BaseEmulator
 
 
-
 @pytest.mark.boot
 def test_zip_file_contains_all_expected_files(emulator: BaseEmulator):
     emu_root = Path(emulator.exe).parent

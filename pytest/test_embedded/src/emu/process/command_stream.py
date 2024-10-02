@@ -15,6 +15,7 @@
 import asyncio
 import subprocess
 
+
 class AsyncCommandStream:
     """
     A utility class to run a command asyncronously and return the output as a stream
@@ -35,14 +36,12 @@ class AsyncCommandStream:
 
     async def __anext__(self):
         line = await self._process.stdout.readline()
-        return line.decode('utf-8').rstrip()
+        return line.decode("utf-8").rstrip()
 
     async def __aenter__(self):
         # Start the command asynchronously
         self._process = await asyncio.create_subprocess_exec(
-            *self._command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
+            *self._command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         )
         return self
 

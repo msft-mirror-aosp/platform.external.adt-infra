@@ -127,7 +127,6 @@ async def test_physical_rotation_around_axis_will_update_magneto_meter(
         ), f"{pytest.approx(host_magnetic_field(), abs=1)} != {guest_magnetic_field()} ({model_value.value.data}) in a timely fashion."
 
 
-
 @pytest.mark.hardware
 @pytest.mark.parametrize(
     "test_name, physical_type_value, x, y, z",
@@ -162,7 +161,6 @@ def test_physical_model_value(
             value=ParameterValue(data=[x, y, z]),
         ),
     )
-
 
 
 @pytest.mark.hardware

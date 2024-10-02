@@ -360,12 +360,16 @@ async def emulators(request, pytestconfig) -> list[BaseEmulator]:
     if not avd_configs:
         avd_configs.append({})
     for avd_config in avd_configs:
-        emulators.append(await manage_emulator(request, pytestconfig, avd_config, f"emu-{log_id}"))
+        emulators.append(
+            await manage_emulator(request, pytestconfig, avd_config, f"emu-{log_id}")
+        )
         log_id += 1
     return emulators
 
 
-async def manage_emulator(request, pytestconfig, avd_param_config, log_id) -> BaseEmulator:
+async def manage_emulator(
+    request, pytestconfig, avd_param_config, log_id
+) -> BaseEmulator:
     """Configure and launch an emulator
 
     Args:
@@ -412,7 +416,7 @@ async def manage_emulator(request, pytestconfig, avd_param_config, log_id) -> Ba
                 exe=exe,
                 avd_config=avd_config,
                 fetcher=Path(fetcher) if fetcher else None,
-                log_id=log_id
+                log_id=log_id,
             )
 
         emu.symbols = pytestconfig.getoption("symbols")

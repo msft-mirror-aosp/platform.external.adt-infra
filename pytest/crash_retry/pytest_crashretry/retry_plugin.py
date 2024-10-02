@@ -154,7 +154,9 @@ class RetryManager:
             "the following tests were retried", sep="=", bold=True, yellow=True
         )
         terminal_reporter.write(contents)
-        terminal_reporter.section("end of test retry report", sep="=", bold=True, yellow=True)
+        terminal_reporter.section(
+            "end of test retry report", sep="=", bold=True, yellow=True
+        )
         terminal_reporter.write("\n")
 
     def record_node_stats(self, report: pytest.TestReport) -> None:
@@ -198,7 +200,9 @@ class RetryManager:
         Returns:
             The total duration in seconds.
         """
-        return sum(self.node_stats[item.nodeid]["durations"][stage][-1] for stage in stages)
+        return sum(
+            self.node_stats[item.nodeid]["durations"][stage][-1] for stage in stages
+        )
 
     def sum_attempts(self, item: pytest.Item) -> int:
         """
@@ -259,7 +263,9 @@ def pytest_runtest_protocol(item: pytest.Item) -> Optional[object]:
     }
     yield
     item.stash[outcome_key] = retry_manager.simple_outcome(item)
-    item.stash[duration_key] = retry_manager.simple_duration(item)  # always overwrite, for now
+    item.stash[duration_key] = retry_manager.simple_duration(
+        item
+    )  # always overwrite, for now
     item.stash[attempts_key] = retry_manager.sum_attempts(item)
 
 
@@ -313,19 +319,27 @@ def pytest_runtest_makereport(
             original_report.outcome = "retried"  # type: ignore
             hook.pytest_runtest_logreport(report=original_report)
             original_report.outcome = "failed"
-        retry_manager.log_attempt(attempt=attempts, name=item.name, exc=call.excinfo, result=RETRY)
+        retry_manager.log_attempt(
+            attempt=attempts, name=item.name, exc=call.excinfo, result=RETRY
+        )
         sleep(delay)
         # Calling _initrequest() is required to reset fixtures for a retry. Make public pls?
         item._initrequest()  # type: ignore[attr-defined]
 
-        pytest.CallInfo.from_call(lambda: hook.pytest_runtest_setup(item=item), when="setup")
-        call = pytest.CallInfo.from_call(lambda: hook.pytest_runtest_call(item=item), when="call")
+        pytest.CallInfo.from_call(
+            lambda: hook.pytest_runtest_setup(item=item), when="setup"
+        )
+        call = pytest.CallInfo.from_call(
+            lambda: hook.pytest_runtest_call(item=item), when="call"
+        )
         retry_report = pytest.TestReport.from_item_and_call(item, call)
         retry_manager.record_node_stats(retry_report)
 
         attempts += 1
         should_keep_retrying = (
-            not retry_report.passed and attempts <= retries and retry_manager.crash_reports()
+            not retry_report.passed
+            and attempts <= retries
+            and retry_manager.crash_reports()
         )
 
         if not should_keep_retrying:
@@ -335,7 +349,9 @@ def pytest_runtest_makereport(
                 original_report.duration = retry_report.duration
             else:
                 original_report.duration = sum(
-                    retry_manager.node_stats[original_report.nodeid]["durations"]["call"]
+                    retry_manager.node_stats[original_report.nodeid]["durations"][
+                        "call"
+                    ]
                 )
 
             retry_manager.log_attempt(
@@ -378,7 +394,9 @@ def pytest_configure(config: pytest.Config) -> None:
 
 CRASH_RETRIES_HELP_TEXT = "number of times to retry failed tests. Defaults to 0."
 DELAY_HELP_TEXT = "configure a delay (in seconds) between retries."
-TIMING_HELP_TEXT = "if True, retry duration will be included in overall reported test duration"
+TIMING_HELP_TEXT = (
+    "if True, retry duration will be included in overall reported test duration"
+)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -409,10 +427,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
     parser.addini("crash_retries", CRASH_RETRIES_HELP_TEXT, default=0, type="string")
     parser.addini("crash_retry_delay", DELAY_HELP_TEXT, default=0, type="string")
-    parser.addini("crash_cumulative_timing", TIMING_HELP_TEXT, default=False, type="bool")
+    parser.addini(
+        "crash_cumulative_timing", TIMING_HELP_TEXT, default=False, type="bool"
+    )
 
 
-def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
     retries = None
     retries = config.getoption("--crash-retries")
     if retries is None:

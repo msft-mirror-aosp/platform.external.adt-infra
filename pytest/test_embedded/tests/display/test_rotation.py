@@ -77,7 +77,6 @@ async def for_each_rotation(emulator_controller):
         yield fine, coarse
 
 
-
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_rotation_observable_through_screenshot(
@@ -96,7 +95,6 @@ async def test_rotation_observable_through_screenshot(
             return await image_rotated_correctly(coarse)
 
         assert await eventually(is_properly_rotated, timeout=2)
-
 
 
 @pytest.mark.graphics
@@ -146,8 +144,6 @@ async def test_stream_update_should_be_fast_after_rotation(
 
         # wait again for it to go quiet
         await asyncio.sleep(5)
-
-
 
 
 @pytest.mark.graphics
@@ -275,7 +271,6 @@ async def rotation_through_console_observable_through_stream_screenshot(
         ), f"Did not observe rotation to {angle} in time"
 
 
-
 @pytest.mark.graphics
 @pytest.mark.fast
 @pytest.mark.sanity
@@ -315,7 +310,6 @@ async def test_rotation_pixels_in_the_right_place(
     ), f"Did not see the rotation to {rotation} in time."
 
 
-
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_rotation_through_console_observable_through_physical_model(
@@ -343,7 +337,6 @@ async def test_rotation_through_console_observable_through_physical_model(
         assert await eventually(emulator_is_rotated)
 
 
-
 @pytest.mark.graphics
 @pytest.mark.flaky
 async def test_rotation_through_console_observable_through_screenshot(
@@ -355,7 +348,6 @@ async def test_rotation_through_console_observable_through_screenshot(
     await rotation_through_console_observable_through_screenshot(
         emulator_controller, telnet
     )
-
 
 
 @pytest.mark.graphics
@@ -372,7 +364,6 @@ async def test_rotation_through_console_observable_through_stream_screenshot(
     )
 
 
-
 @pytest.mark.embedded
 @pytest.mark.sanity
 @pytest.mark.flaky
@@ -382,7 +373,6 @@ async def test_rotation_observable_through_screenshot_embedded_mode(
     await rotation_through_console_observable_through_screenshot(
         emulator_controller, telnet
     )
-
 
 
 @pytest.mark.embedded

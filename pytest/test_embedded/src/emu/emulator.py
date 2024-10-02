@@ -226,8 +226,7 @@ class BaseEmulator(object):
             EmulatorConnection: A connection to the emulator.
         """
         return await EmulatorClient.connect(
-            self.description.get("port.serial"),
-            self.log_id
+            self.description.get("port.serial"), self.log_id
         )
 
     def is_alive(self) -> bool:
@@ -569,16 +568,14 @@ class Emulator(BaseEmulator):
 
         if "Vulkan" not in flags:
             # Vulkan will cause snapshot saving failure, disable it for now
-            default_flags = default_flags + [ "-feature", "-Vulkan"]
+            default_flags = default_flags + ["-feature", "-Vulkan"]
 
         if "-no-metrics" not in flags:
             # The option '-no-metrics' is ignored if used alongside "-metrics-collection"
-            default_flags = default_flags + [ "-metrics-collection"]
+            default_flags = default_flags + ["-metrics-collection"]
 
         return await self._launch(
-            [ self.exe ]
-            + default_flags
-            + flags,
+            [self.exe] + default_flags + flags,
             local_env,
         )
 

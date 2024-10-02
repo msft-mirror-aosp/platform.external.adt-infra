@@ -437,9 +437,11 @@ async def test_crash_without_internet(avd, crash_reporter):
     if not exec_path:
         pytest.fail(f"{exec} binary not found in PATH.")
 
-    logging.info('Launching the emulator with no host internet connectivity ...')
+    logging.info("Launching the emulator with no host internet connectivity ...")
     emulator_args = [arg for arg in avd.cmd.cmd if arg != "-metrics-collection"]
-    cmd = await Command([exec_path] + params + emulator_args + ["-no-snapshot-save"]).run()
+    cmd = await Command(
+        [exec_path] + params + emulator_args + ["-no-snapshot-save"]
+    ).run()
     await asyncio.sleep(5)
 
     async def send_and_verify():

@@ -178,9 +178,7 @@ class GrpcDecoder(object):
             )
         except Exception as e:
             logging.error("Error decoding log line: %s", e)
-            return ('?', "?Failed to decode", datetime.datetime.now())
-
-
+            return ("?", "?Failed to decode", datetime.datetime.now())
 
     def __str__(self):
         return "\n".join(

@@ -27,19 +27,33 @@ install_path = f"/storage/emulated/0/Android/data/{pcmark_package}/files"
 
 
 async def install_pcmark(avd, bundle_path):
-    await avd.install_apk(bundle_path.joinpath("pcmark-android-v3-0-4061.apk"), pcmark_package)
+    await avd.install_apk(
+        bundle_path.joinpath("pcmark-android-v3-0-4061.apk"), pcmark_package
+    )
     await avd.adb.shell(f"mkdir -p {install_path}")
     await avd.adb.push(f"{bundle_path.joinpath('key.txt')}", install_path)
-    await avd.adb.push(f"{bundle_path.joinpath('pcmark-for-android-v3-0-4061-pcma-storagev2-data-v1-0-0.dlc')}", install_path)
-    await avd.adb.push(f"{bundle_path.joinpath('pcmark-for-android-v3-0-4061-pcma-workv3-data-v1-0-1.dlc')}", install_path)
+    await avd.adb.push(
+        f"{bundle_path.joinpath('pcmark-for-android-v3-0-4061-pcma-storagev2-data-v1-0-0.dlc')}",
+        install_path,
+    )
+    await avd.adb.push(
+        f"{bundle_path.joinpath('pcmark-for-android-v3-0-4061-pcma-workv3-data-v1-0-1.dlc')}",
+        install_path,
+    )
 
 
 async def run_pcmark(avd, bundle_path):
     # A subset of PCMark which runs very quickly and is suitable for testing.
-    await avd.adb.push(f"{bundle_path.joinpath('Work_v3_test_xmls/pcma_work_v3_photoediting.xml')}", f"{install_path}/benchmark_run.xml"),
+    await avd.adb.push(
+        f"{bundle_path.joinpath('Work_v3_test_xmls/pcma_work_v3_photoediting.xml')}",
+        f"{install_path}/benchmark_run.xml",
+    ),
     await avd.adb.shell(f"rm -f {install_path}/result.zip")
-    await avd.start_activity(pcmark_activity, params="-e com.futuremark.android.InstallDLC true"
-                             f" --es com.futuremark.android.BenchmarkFilePath {install_path}/benchmark_run.xml")
+    await avd.start_activity(
+        pcmark_activity,
+        params="-e com.futuremark.android.InstallDLC true"
+        f" --es com.futuremark.android.BenchmarkFilePath {install_path}/benchmark_run.xml",
+    )
 
 
 async def pull_results(avd, temp_path, results):
@@ -50,7 +64,9 @@ async def pull_results(avd, temp_path, results):
     with zipfile.ZipFile(str(temp_path.joinpath("result.zip")), "r") as zip_ref:
         zip_ref.extract(member="Result.xml", path=temp_path)
 
-    xml_results = ET.parse(str(temp_path.joinpath("Result.xml"))).getroot().find("results")
+    xml_results = (
+        ET.parse(str(temp_path.joinpath("Result.xml"))).getroot().find("results")
+    )
     for xml_result in xml_results.findall("result"):
         if xml_result.find("passIndex").text != "0":
             continue

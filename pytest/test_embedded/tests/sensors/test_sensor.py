@@ -57,7 +57,6 @@ async def set_and_get_sensor(emu_controller, sensor_value):
     ), f"Data for sensor doesn't match {sensor_value} != {retrieved}"
 
 
-
 @pytest.mark.hardware
 @pytest.mark.sanity
 @pytest.mark.parametrize(
@@ -141,15 +140,15 @@ async def test_accelerometer_updates_with_model_change(avd):
     orientation = await emulator_controller.getSensor(
         SensorValue(target=SensorValue.ORIENTATION)
     )
-    assert initial_orientation.value.data \
-            != pytest.approx(orientation.value.data), \
-            "Orientation sensor data wasn't updated"
+    assert initial_orientation.value.data != pytest.approx(
+        orientation.value.data
+    ), "Orientation sensor data wasn't updated"
 
     # Check new acceleration data.
     acceleration = await emulator_controller.getSensor(
         SensorValue(target=SensorValue.ACCELERATION)
     )
 
-    assert initial_acceleration.value.data \
-            != pytest.approx(acceleration.value.data), \
-            "Acceleration sensor data didn't change after rotation"
+    assert initial_acceleration.value.data != pytest.approx(
+        acceleration.value.data
+    ), "Acceleration sensor data didn't change after rotation"

@@ -18,7 +18,6 @@ from emu.timing import wait_until
 from emu.emulator import BaseEmulator
 
 
-
 @pytest.mark.embedded
 @pytest.mark.async_timeout(60)
 async def test_user_messages_on_logs(emulator: BaseEmulator):
