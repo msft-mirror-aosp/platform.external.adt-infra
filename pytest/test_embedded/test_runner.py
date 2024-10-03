@@ -129,7 +129,7 @@ def run_tests(
     apply_xslt(
         python_exe=pyrun,
         source=result,
-        xslt=HERE / "cfg" / "asHtml.xslt",
+        xslt=HERE / "cfg" / "asMaterialHtml.xslt",
         dest=Path(logdir) / "test_report.html",
     )
     apply_xslt(
