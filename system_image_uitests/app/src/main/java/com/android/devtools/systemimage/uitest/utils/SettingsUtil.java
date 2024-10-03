@@ -871,7 +871,7 @@ public class SettingsUtil {
      * @return true if the method was able to find and click on all the options in the path array, false otherwise.
      * @throws UiObjectNotFoundException if an option in the path array is not found.
      */
-    public static boolean navigateToSettingsPath(UiDevice device, String... path) throws UiObjectNotFoundException {
+    public static boolean navigateToSettingsPath(UiDevice device, String... path) throws Exception {
         device.pressHome();
 
         try {
@@ -886,13 +886,16 @@ public class SettingsUtil {
             UiScrollable scrollableContainer = i == 0 ?
                     new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)) :
                     new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
-            assertTrue("Scrollable view not found", scrollableContainer.waitForExists(15000));
+            if (!new Wait(10000).until(scrollableContainer::exists)) {
+                Log.w(TAG, "Scrollable view not found");
+                return false;
+            }
             UiSelector optionSelector = new UiSelector().text(location);
             UiObject option = device.findObject(optionSelector);
 
             dismissUnresponsivePopup(device);
 
-            if (!option.waitForExists(10000L)) {
+            if (!new Wait().until(option::exists)) {
                 boolean scrolled = scrollableContainer.scrollIntoView(optionSelector);
                 if (!scrolled) {
                     Log.w(TAG, "Failed to navigate to " + location);
@@ -900,7 +903,13 @@ public class SettingsUtil {
                 }
             }
 
-            if (!option.clickAndWaitForNewWindow(15000L)) {
+            if (!new Wait().until(() -> {
+                try {
+                    return option.clickAndWaitForNewWindow(15000L);
+                } catch (UiObjectNotFoundException e) {
+                    return false;
+                }
+            })) {
                 Log.w(TAG, "Failed to click on " + location);
                 return false;
             }
@@ -911,7 +920,6 @@ public class SettingsUtil {
 
     /**
      * This method is used to click on a switch in the Settings app and confirm that the switch has been clicked.
-     *
      * It first checks if the previous switches (if any) exist and then clicks on the target switch.
      * If any of the previous switches or the target switch do not exist, it logs a warning and returns false.
      * If all switches exist and the target switch is clicked successfully, it returns true.
@@ -947,7 +955,6 @@ public class SettingsUtil {
 
     /**
      * This method is used to dismiss any unresponsive popup that might appear during the execution of the tests.
-     *
      * It first tries to find the unresponsive popup by its resource id. If the popup exists, it clicks on it to dismiss it.
      *
      * @param device The UiDevice instance that represents an emulator or a connected device.
@@ -977,6 +984,7 @@ public class SettingsUtil {
     public static boolean enableDeveloperOptions(Instrumentation instrumentation) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
         boolean result;
+
         if (navigateToSettingsPath(device, "System", "Developer options")) {
             result = true;
         } else {
@@ -988,6 +996,7 @@ public class SettingsUtil {
                 result = false;
             }
         }
+
         dismissUnresponsivePopup(device);
         return result;
     }
