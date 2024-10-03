@@ -163,6 +163,7 @@ async def avd_factory(emulator):
             android_avd_home=emulator.android_avd_home,
             exe=emulator.exe,
             avd_config=config,
+            log_id=f"emu-{len(avds)}",
             fetcher=None,
         )
         avds.append(avd)
