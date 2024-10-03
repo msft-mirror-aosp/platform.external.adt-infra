@@ -15,7 +15,7 @@
                 "skin.name": "1280x720"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "landscape_test_suite_api_34": {
         "description": "Set of tests that verify that graphic related tests work well in a `landscape` emulator",
@@ -33,7 +33,7 @@
                 "skin.name": "1280x720"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "portrait_test_suite_api_31": {
         "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
@@ -49,7 +49,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "portrait_test_suite_api_34": {
         "description": "Set of tests that verify that graphic related tests work well in a `portrait` emulator",
@@ -65,7 +65,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "embedded_test_suite_api_31": {
         "description": "Set of tests that verify that the embedded emulator works when launched in portrait mode.",
@@ -85,7 +85,7 @@
                 "skin.name": "1280x720"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "embedded_test_suite_api_34": {
         "description": "Set of tests that verify that the embedded emulator works when launched in portrait mode.",
@@ -125,7 +125,7 @@
                 "skin.name": "1280x720"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "embedded_landscape_test_suite_api_34": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
@@ -145,7 +145,7 @@
                 "skin.name": "1280x720"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
      "embedded_resizable_test_suite_api_34": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
@@ -185,7 +185,7 @@
                 "skin.path": "no_skin"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "snapshot_test_suite_api_31": {
         "description": "Set of tests that verify that snapshots work for the default emulator.",
@@ -199,7 +199,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "snapshot_test_suite_api_34": {
         "description": "Set of tests that verify that snapshots work for the default emulator.",
@@ -213,7 +213,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "foldable_emulator_test_suite_api_34": {
         "description": "Set of tests that verify that the new foldable emulator works as expected.",
@@ -247,7 +247,7 @@
                 "hw.sensors.proximity": "yes"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "foldable_emulator_test_suite_api_35": {
         "description": "Set of tests that verify that the new foldable emulator works as expected.",
@@ -281,7 +281,7 @@
                 "hw.sensors.proximity": "yes"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "resizable_emulator_test_suite_api_34": {
         "description": "Set of tests related to a resizable avd. Uses a resizable avd configuration.",
@@ -317,7 +317,7 @@
                 "skin.path": "no_skin"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "embedded_resizable_test_suite_api_35": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
@@ -357,7 +357,7 @@
                 "skin.path": "no_skin"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "hardware_test_suite_api_31": {
         "description": "Set of tests that validate hardware and console",
@@ -402,7 +402,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "adb_test_suite_api_31": {
         "description": "Set of tests that validate adb",
@@ -416,7 +416,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "adb_test_suite_api_34": {
         "description": "Set of tests that validate adb",
@@ -433,7 +433,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "sanity_test_suite_api_33": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
@@ -447,7 +447,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "sanity_test_suite_api_31": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
@@ -461,7 +461,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "sanity_test_suite_api_34": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
@@ -475,7 +475,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "sanity_test_suite_api_35": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
@@ -489,7 +489,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "sanity_test_suite_api_28": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
@@ -503,7 +503,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "sanity_test_suite_api_30": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",
@@ -517,7 +517,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "fast_test_suite_api_31": {
         "description": "Set of tests we want to run as a part of emulator fast test suite",
@@ -531,7 +531,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "fast_test_suite_api_33": {
         "description": "Set of tests we want to run as a part of emulator fast test suite",
@@ -545,7 +545,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "fast_test_suite_api_34": {
         "description": "Set of tests we want to run as a part of emulator fast test suite",
@@ -559,7 +559,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "fast_test_suite_api_35": {
         "description": "Set of tests we want to run as a part of emulator fast test suite",
@@ -573,7 +573,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "presubmit_emulator_test_suite_api_31": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
@@ -587,7 +587,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "enabled  "
     },
     "presubmit_emulator_test_suite_api_34": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
@@ -601,7 +601,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "performance_test_suite_api_34": {
         "description": "Set of tests that benchmark the general guest side performance of emulator",
@@ -617,7 +617,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "wear_test_suite_api_33": {
         "description": "Set of tests that run on a wear AVD",
@@ -639,7 +639,7 @@
                 "tag.id": "android-wear"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
      },
     "atv_test_suite_api_31": {
         "description": "Set of tests that run on a Android TV AVD (API 31)",
@@ -657,7 +657,7 @@
                 "abi": "x86"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "atv_test_suite_api_33": {
         "description": "Set of tests that run on a Android TV 1080p AVD (API 33)",
@@ -675,7 +675,7 @@
                 "abi": "x86"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "atv_test_suite_api_34": {
         "description": "Set of tests that run on a Android TV 1080p AVD  (API 34)",
@@ -693,7 +693,7 @@
                 "abi": "x86"
             }
         ],
-        "status": "enabled"
+        "status": "disabled"
     },
     "tablet_test_suite_api_34": {
         "description": "Set of tests that run on a tablet AVD",
