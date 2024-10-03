@@ -13,6 +13,7 @@
 # limitations under the License.
 import asyncio
 import time
+import logging
 
 import pytest
 from aemu.proto.emulator_controller_pb2 import (
