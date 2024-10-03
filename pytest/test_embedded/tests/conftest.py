@@ -159,23 +159,6 @@ def log_thread_error(args):
 threading.excepthook = log_thread_error
 
 
-def pytest_logger_config(logger_config):
-    loggers = ["root", "adb", "emulator"]
-    for i in range(0, 10):
-        loggers += [f"emu-{i}", f"emu-{i}-adb", f"emu-{i}-con", f"emu-{i}-logcat"]
-
-    logger_config.add_loggers(loggers, stdout_level="info")
-    logger_config.split_by_outcome()
-
-
-def pytest_logger_logsdir(config):
-    log_file = config.getoption("--log-file")
-    if log_file:
-        return Path(log_file).parent
-
-    return Path.cwd() / "results"
-
-
 def pytest_runtest_setup(item: pytest.Item) -> None:
     """
     Check whether the test is supported on the platform, handle
