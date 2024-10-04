@@ -511,12 +511,6 @@ async def manage_avd(emulator) -> BaseEmulator:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
     await emulator.restart(emulator.launch_flags)
-    adb_log_cmd = Command(
-        [emulator.adb.adb_binary, "-s", emulator.adb.name, "logcat"],
-        logging.getLogger(emulator.log_id + "-logcat"),
-    )
-    await adb_log_cmd.run()
-
     assert await emulator.wait_for_boot()
     logging.info("The emulator has finished booting")
 
@@ -543,9 +537,19 @@ async def manage_avd(emulator) -> BaseEmulator:
 
     logging.info("<-- teardown emulator")
     # Stop the emulator.
-    adb_log_cmd.cancel()
     await emulator.stop()
     logging.info("=== completed emulator")
+
+
+@pytest.fixture
+async def logcat(avd: BaseEmulator):
+    adb_log_cmd = Command(
+        [avd.adb.adb_binary, "-s", avd.adb.name, "logcat"],
+        logging.getLogger(avd.log_id + "-logcat"),
+    )
+    await adb_log_cmd.run()
+    yield adb_log_cmd.handler
+    adb_log_cmd.cancel()
 
 
 @pytest.fixture
