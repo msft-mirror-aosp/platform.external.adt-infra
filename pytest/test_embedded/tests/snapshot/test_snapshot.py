@@ -333,10 +333,13 @@ async def test_invalid_snapshot_notifies_user(avd):
 
     avd.logger.addFilter(cold_boot_filter)
 
-    logging.info("Restart the emulator to look for the cold boot message.")
-    await avd.restart(avd.launch_flags)
-    await avd.wait_for_boot()
-    assert cold_boot_mode == True, "The AVD wasn't launched in cold boot mode"
+    try:
+        logging.info("Restart the emulator to look for the cold boot message.")
+        await avd.restart(avd.launch_flags)
+        await avd.wait_for_boot()
+        assert cold_boot_mode == True, "The AVD wasn't launched in cold boot mode"
+    finally:
+        avd.logger.removeFilter(cold_boot_filter)
 
     # Verify previous saved snapshots are invalid.
     snap = AsyncSnapshotService(snapshot_service=SnapshotServiceStub(avd.channel))

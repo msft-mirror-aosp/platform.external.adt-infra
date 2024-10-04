@@ -410,6 +410,7 @@ class Emulator(BaseEmulator):
         self.proc = None
         self.kernel_start = 0
         self.log_id = log_id or "emu-1"
+        self.logger = logging.getLogger(self.log_id)
 
     async def restart(self, emu_flags: List[str]) -> bool:
         """Restarts the emulator, disabling snapshot save if a default snapshot exists.
@@ -448,8 +449,6 @@ class Emulator(BaseEmulator):
         return "x86_64"
 
     async def _launch(self, cmd: list[str], env: dict[str, str]) -> None:
-        self.logger = logging.getLogger(self.log_id)
-
         self.cmd = Command(cmd, self.logger).with_environment(env)
         if sys.platform == "win32":
             self.cmd.in_directory(self.exe.parent)
