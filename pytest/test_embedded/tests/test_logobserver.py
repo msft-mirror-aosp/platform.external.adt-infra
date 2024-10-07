@@ -7,6 +7,8 @@ import pytest
 
 from emu.utils import LogObserver
 
+pytestmark = pytest.mark.std
+
 
 def data_writer(log_file: Path, text: List[str]):
     for line in text:

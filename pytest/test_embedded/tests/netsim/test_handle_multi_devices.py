@@ -2,8 +2,6 @@ import pytest
 from netsim_grpc import netsim_client
 
 # TODO: Add this test to pre/postsubmit suites once stable.
-# @pytest.mark.e2e
-# @pytest.mark.boot
 @pytest.mark.netsim
 @pytest.mark.multi
 @pytest.mark.async_timeout(1080)

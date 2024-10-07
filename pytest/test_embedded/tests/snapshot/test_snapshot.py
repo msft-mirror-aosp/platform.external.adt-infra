@@ -16,6 +16,7 @@ import asyncio
 import re
 import os
 import tarfile
+import logging
 
 import pytest
 from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
@@ -38,24 +39,21 @@ async def snapshot_service(avd, service):
         await snap.delete(entry.snapshot_id)
 
 
-@pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.skipos("win", "reason: b/305017763 - error at setup.")
 async def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
     assert not await snapshot_service.load("foo")
 
 
-@pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.sanity
-async def test_snapshot_can_save_and_load(snapshot_service):
+async def test_snapshot_can_save_and_load_through_service(snapshot_service):
     assert await snapshot_service.save("foo")
     snapshots = await snapshot_service.lists()
     assert "foo" in [x.snapshot_id for x in snapshots]
     assert await snapshot_service.load("foo")
 
 
-@pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.sanity
 @pytest.mark.fast
@@ -70,7 +68,6 @@ async def test_snapshot_delete_removes(snapshot_service):
 
 @pytest.mark.skipos("all")
 @pytest.mark.snapshot
-@pytest.mark.e2e
 async def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     assert await snapshot_service.save("foo")
@@ -82,9 +79,8 @@ async def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
 
 
 @pytest.mark.skipos("all")
-@pytest.mark.snapshot
-@pytest.mark.e2e
 @pytest.mark.sanity
+@pytest.mark.snapshot
 async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
     assert await snapshot_service.save("foo")
@@ -98,7 +94,6 @@ async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     assert await snapshot_service.load("foo")
 
 
-@pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.sanity
 @pytest.mark.async_timeout(300)
@@ -133,30 +128,32 @@ async def contains_snapshot(telnet):
     return any("foo1" in sublist for sublist in snapshots)
 
 
-@pytest.mark.e2e
 @pytest.mark.snapshot
-@pytest.mark.fast
 async def test_snapshot_can_save_and_list(telnet, snapshot_service):
     await telnet.send("avd snapshot save foo1")
-    assert eventually(contains_snapshot, telnet, timeout=10.0), "foo1 snapshot not available"
+    assert eventually(
+        contains_snapshot, telnet, timeout=10.0
+    ), "foo1 snapshot not available"
 
 
-@pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.fast
 async def test_snapshot_can_save_and_delete(telnet, snapshot_service):
     await telnet.send("avd snapshot save foo1")
-    assert eventually(contains_snapshot, telnet, timeout=10.0), "foo1 snapshot not available"
+    assert eventually(
+        contains_snapshot, telnet, timeout=10.0
+    ), "foo1 snapshot not available"
     await telnet.send("avd snapshot del foo1")
     assert not await contains_snapshot(telnet), "foo1 snapshot not deleted"
 
 
-@pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.fast
 async def test_snapshot_can_save_and_load(avd, telnet, snapshot_service):
     await telnet.send("avd snapshot save foo1")
-    assert eventually(contains_snapshot, telnet, timeout=10.0), "foo1 snapshot not available"
+    assert eventually(
+        contains_snapshot, telnet, timeout=10.0
+    ), "foo1 snapshot not available"
     assert await avd.start_activity(
         "com.google.AnimateBox/com.google.emu.MainActivity", params=None
     )
@@ -164,8 +161,7 @@ async def test_snapshot_can_save_and_load(avd, telnet, snapshot_service):
     assert await avd.stop_activity("com.google.AnimateBox")
 
 
-@pytest.mark.e2e
-@pytest.mark.fast
+@pytest.mark.snapshot
 @pytest.mark.async_timeout(1080)
 async def test_avd_launch_after_wipe_data(avd, telnet):
     """Verify AVD launch after data is wiped.
@@ -184,6 +180,7 @@ async def test_avd_launch_after_wipe_data(avd, telnet):
         1. The AVD is loaded and the previously saved settings are kept.
         2. The emulator loads and all settings are reverted to default.
     """
+
     async def get_system_key(key: str):
         # Return the value of the system {key}
         async def _get_system_key(key: str, output: list):
@@ -192,19 +189,19 @@ async def test_avd_launch_after_wipe_data(avd, telnet):
             value = await avd.adb.shell(f"settings get system {key}")
             if "Can't find service: settings" in value:
                 return False
-            output.append(0 if value == 'null' else int(value))
+            output.append(0 if value == "null" else int(value))
             return True
+
         output = []
-        assert await eventually (partial(_get_system_key, key, output)), \
-            f"Couldn't retrieve the system key {key}"
+        assert await eventually(
+            partial(_get_system_key, key, output)
+        ), f"Couldn't retrieve the system key {key}"
         return output[0]
 
     async def toggle_system_key(key: str):
         # Toggle the integer valued system {key} and return its original value
         initial_value = await get_system_key(key)
-        await avd.adb.shell(
-            f"settings put system {key} {initial_value ^ 1}"
-        )
+        await avd.adb.shell(f"settings put system {key} {initial_value ^ 1}")
         return initial_value
 
     async def key_has_value(key: str, expected_value: str):
@@ -223,9 +220,10 @@ async def test_avd_launch_after_wipe_data(avd, telnet):
     await avd.wait_for_boot()
     rotation_lock = await get_system_key("accelerometer_rotation")
     airplane_mode = await get_system_key("airplane_mode_on")
-    assert rotation_lock != initial_rotation_lock \
-            and airplane_mode != initial_airplane_mode, \
-            "System settings changed when launched from the saved snapshot."
+    assert (
+        rotation_lock != initial_rotation_lock
+        and airplane_mode != initial_airplane_mode
+    ), "System settings changed when launched from the saved snapshot."
 
     # Restart the emulator with the '-wipe-data' launch option.
     await avd.stop()
@@ -236,14 +234,13 @@ async def test_avd_launch_after_wipe_data(avd, telnet):
     # Verify the "Auto-rotate" and "Airplane-mode" setttings reverted to the defaults.
     assert await eventually(
         partial(key_has_value, "accelerometer_rotation", initial_rotation_lock)
-    ),  "The key 'accelerometer_rotation' didn't revert to the default value."
+    ), "The key 'accelerometer_rotation' didn't revert to the default value."
 
     assert await eventually(
         partial(key_has_value, "airplane_mode_on", initial_airplane_mode)
-    ),  "The key 'airplane_mode_on' didn't revert to the default value."
+    ), "The key 'airplane_mode_on' didn't revert to the default value."
 
 
-@pytest.mark.e2e
 @pytest.mark.snapshot
 @pytest.mark.fast
 @pytest.mark.async_timeout(2080)
@@ -265,19 +262,18 @@ async def test_snapshot_can_edit(snapshot_service):
     # Update the snapshot details.
     logical_name = "update_snap"
     description = "Updated Snapshot"
-    await snapshot_service.update(snap_id="snap",
-                                  logical_name=logical_name,
-                                  description=description)
+    await snapshot_service.update(
+        snap_id="snap", logical_name=logical_name, description=description
+    )
     # Verify the changes.
     snapshots = await snapshot_service.lists()
     snapshot = next(iter([snap for snap in snapshots if snap.snapshot_id == "snap"]))
     assert (
-        snapshot.details.logical_name == logical_name and
-        snapshot.details.description == description
+        snapshot.details.logical_name == logical_name
+        and snapshot.details.description == description
     ), "Coudn't update the snapshot name and description."
 
 
-@pytest.mark.e2e
 @pytest.mark.async_timeout(1200)
 @pytest.mark.embedded
 async def test_invalid_snapshot_notifies_user(avd):
@@ -299,6 +295,7 @@ async def test_invalid_snapshot_notifies_user(avd):
         1. AVD is launched in cold boot mode.
         2. The previously created snapshots are shown as invalid.
     """
+
     async def take_snapshot(snapshot_id):
         console = await avd.console()
         await console.send(f"avd snapshot save {snapshot_id}")
@@ -311,9 +308,9 @@ async def test_invalid_snapshot_notifies_user(avd):
     await asyncio.gather(*[take_snapshot(f"foo_{i}") for i in range(3)])
 
     # Change front-camera mode and update the AVD configuration.
-    hw_camera_front = avd.configuration.hardware['hw.camera.front']
-    avd.configuration.hardware['hw.camera.front'] = (
-        'emulated' if hw_camera_front == 'none' else 'none'
+    hw_camera_front = avd.configuration.hardware["hw.camera.front"]
+    avd.configuration.hardware["hw.camera.front"] = (
+        "emulated" if hw_camera_front == "none" else "none"
     )
     with open(avd.configuration.directory / "config.ini", "w") as config_file:
         avd.configuration.hardware.parser.write(config_file)
@@ -322,16 +319,21 @@ async def test_invalid_snapshot_notifies_user(avd):
 
     ## Use a filter to check the cold boot message.
     cold_boot_mode = False
+
     def cold_boot_filter(record):
         # Set 'cold_boot_mode' to 'True' if the cold boot text is detected in the log.
         nonlocal cold_boot_mode
-        text = r"USER_INFO\s+\|\s+Emulator is performing a full startup."
         message = record.getMessage()
-        if re.match(text, message):
+        if (
+            "USER_INFO" in message
+            and "The emulator is starting from scratch" in message
+        ):
             cold_boot_mode = True
         return True
+
     avd.logger.addFilter(cold_boot_filter)
 
+    logging.info("Restart the emulator to look for the cold boot message.")
     await avd.restart(avd.launch_flags)
     await avd.wait_for_boot()
     assert cold_boot_mode == True, "The AVD wasn't launched in cold boot mode"
@@ -339,11 +341,14 @@ async def test_invalid_snapshot_notifies_user(avd):
     # Verify previous saved snapshots are invalid.
     snap = AsyncSnapshotService(snapshot_service=SnapshotServiceStub(avd.channel))
     snapshots = await snap.lists()
-    INCOMPATIBLE_STATUS = next(iter(snapshots)).LoadStatus.Value('Incompatible')
+    INCOMPATIBLE_STATUS = next(iter(snapshots)).LoadStatus.Value("Incompatible")
 
     assert all(
-        [snapshot.status == INCOMPATIBLE_STATUS \
-         for snapshot in snapshots if "foo_" in snapshot.snapshot_id]
+        [
+            snapshot.status == INCOMPATIBLE_STATUS
+            for snapshot in snapshots
+            if "foo_" in snapshot.snapshot_id
+        ]
     ), "The previously saved snapshots are not invalid!"
 
     # Remove the created snapshots.

@@ -22,7 +22,7 @@ from aemu.proto.emulator_controller_pb2 import (
     ImageFormat,
     KeyboardEvent,
     ParameterValue,
-    PhysicalModelValue
+    PhysicalModelValue,
 )
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
@@ -70,7 +70,6 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 }
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.fast
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
@@ -98,7 +97,6 @@ async def test_screenshot_all_formats_are_equal(
         last_pixels == pixels
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.sanity
 @pytest.mark.parametrize(
@@ -164,7 +162,6 @@ async def all_orientations(emulator_controller, request):
 
 
 # bug 299344829
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.async_timeout(120)
 @pytest.mark.flaky
@@ -181,7 +178,6 @@ async def test_screenshot_valid_width_and_height(
     ), "The width and height should be equal to the device width and height"
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.flaky
 async def test_screenshot_gets_default_resolution(
@@ -200,7 +196,6 @@ async def test_screenshot_gets_default_resolution(
     ), "The height should be equal to the device height (portrait), or device width (landscape)"
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.flaky
 async def test_screenshot_never_scales_up(
@@ -226,7 +221,6 @@ async def test_screenshot_never_scales_up(
     ), "The height should be equal to the device height (portrait), or device width (landscape)"
 
 
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.flaky
 async def test_screenshot_should_fail_if_does_not_exist(
@@ -284,6 +278,7 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
         1. Screenshots appear in the temporary path.
         2. Not every screenshot requests generates an image.
     """
+
     async def take_screenshots(n):
         # Take n sequential screenshots using the emulator console.
         console = await emulator.console()
@@ -304,7 +299,7 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
         return None if len(current_screenshots) != len(screenshots) else True
 
     # Configure the emulator to save the screenshots to tmp_path
-    myflags = ['-save-path', tmp_path]
+    myflags = ["-save-path", tmp_path]
     await emulator.launch(emulator.launch_flags + myflags)
     await emulator.wait_for_boot()
 
@@ -314,12 +309,14 @@ async def test_screenshot_capture_stress(emulator, tmp_path):
 
     await eventually(screenshots_completed, timeout=600)
     screenshots = _get_screenshots_list()
-    logging.info(f'{len(screenshots)} (out of {num_requests}) screenshots were taken.')
+    logging.info(f"{len(screenshots)} (out of {num_requests}) screenshots were taken.")
 
     # Verify screenshots appear in the default save location.
-    assert len(screenshots) != 0, \
-        "Coudn't take any screenshot using the emulator console."
+    assert (
+        len(screenshots) != 0
+    ), "Coudn't take any screenshot using the emulator console."
 
     # Verify not every Ctrl+S screenshot keystroke generates a screenshot.
-    assert len(screenshots) != num_requests, \
-        f"All requested screenshots were saved (expected less than {num_requests})."
+    assert (
+        len(screenshots) != num_requests
+    ), f"All requested screenshots were saved (expected less than {num_requests})."

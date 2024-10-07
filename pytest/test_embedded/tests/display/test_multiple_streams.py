@@ -18,8 +18,6 @@ import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.embedded
 @pytest.mark.async_timeout(40)
 async def test_multiple_streams_do_not_block(animation_app, emulator_controller):

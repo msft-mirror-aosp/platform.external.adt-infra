@@ -50,7 +50,7 @@ class Adb:
 
         self.name = name
         self.avd_id = avd_id
-        self.logger = logging.getLogger(f"{avd_id}-adb")
+        self.logger = logging.getLogger(f"{emu.log_id}-adb")
         self.emulator = emu
 
         if not adb.exists() and platform.system() == "Windows":
@@ -85,7 +85,9 @@ class Adb:
         """
 
         await self._check_adb_and_raise()
-        await Command([self.adb_binary, "-s", self.name, "install", apk]).run_until_finished()
+        await Command(
+            [self.adb_binary, "-s", self.name, "install", apk]
+        ).run_until_finished()
 
     async def pull(self, src: str, dest: str) -> None:
         """Pull a file from the device to the host.
@@ -96,7 +98,9 @@ class Adb:
         """
 
         await self._check_adb_and_raise()
-        await Command([self.adb_binary, "-s", self.name, "pull", src, dest]).run_until_finished()
+        await Command(
+            [self.adb_binary, "-s", self.name, "pull", src, dest]
+        ).run_until_finished()
 
     async def push(self, src: str, dest: str) -> None:
         """Push a file from the host to the device.
@@ -107,7 +111,9 @@ class Adb:
         """
 
         await self._check_adb_and_raise()
-        await Command([self.adb_binary, "-s", self.name, "push", src, dest]).run_until_finished()
+        await Command(
+            [self.adb_binary, "-s", self.name, "push", src, dest]
+        ).run_until_finished()
 
     async def wait_boot_complete(self, timeout=60, timedelta=1):
         """
@@ -152,7 +158,9 @@ class Adb:
             bool: True if the device is online, False otherwise.
         """
 
-        (exit_code, output) = await Command([self.adb_binary, "devices"]).run_until_finished()
+        (exit_code, output) = await Command(
+            [self.adb_binary, "devices"]
+        ).run_until_finished()
         splits = " ".join(output).split()
         is_online = self.name in splits and "device" in splits
 
@@ -173,7 +181,25 @@ class Adb:
         """
 
         await self._check_adb_and_raise()
-        (exit_code, output) = await Command([self.adb_binary, "-s", self.name, "shell", cmd]).run_until_finished(timeout)
+        (exit_code, output) = await Command(
+            [self.adb_binary, "-s", self.name, "shell", cmd]
+        ).run_until_finished(timeout)
+        return " ".join(output)
+
+    async def exec_out(self, cmd: str, timeout: int = 10) -> str:
+        """Runs the given command using exec-out on the emulator
+
+        Args:
+            cmd (str): Command to execute
+            timeout (int, optional): Timeout. Defaults to 10s.
+        Returns:
+            str: Result of the shell command
+        """
+
+        await self._check_adb_and_raise()
+        (exit_code, output) = await Command(
+            [self.adb_binary, "-s", self.name, "exec-out", cmd]
+        ).run_until_finished(timeout)
         return " ".join(output)
 
     async def run(self, cmd: list[str], timeout: int = 10) -> (int, [str]):
@@ -191,7 +217,9 @@ class Adb:
         """
 
         await self._check_adb_and_raise()
-        return await Command([self.adb_binary, "-s", self.name] + cmd).run_until_finished(timeout)
+        return await Command(
+            [self.adb_binary, "-s", self.name] + cmd
+        ).run_until_finished(timeout)
 
     async def clear_logcat(self):
         """Clears the Android device's Logcat buffer and waits for a new log line to appear.
@@ -235,7 +263,7 @@ class Adb:
         elif not await self.online():
             self.logger.error(f"Emulator with id: {self.name} is not online.")
 
-    async def logcat(self, clear: bool=False, tag: str=None) -> AsyncCommandStream:
+    async def logcat(self, clear: bool = False, tag: str = None) -> AsyncCommandStream:
         """Obtains the current logcat stream
 
         You usually want to use it like this:

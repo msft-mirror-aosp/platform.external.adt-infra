@@ -18,7 +18,6 @@ from google.protobuf import empty_pb2
 __EMPTY__ = empty_pb2.Empty()
 
 
-@pytest.mark.e2e
 @pytest.mark.hardware
 async def test_avd_info_is_constant(service):
     avd_info_service = service(AvdServiceStub)
@@ -28,7 +27,6 @@ async def test_avd_info_is_constant(service):
     assert avd_info == avd_info2
 
 
-@pytest.mark.e2e
 @pytest.mark.hardware
 async def test_avd_info_status_is_as_expected(avd, service):
     avd_info_service = service(AvdServiceStub)

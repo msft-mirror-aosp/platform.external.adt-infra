@@ -32,6 +32,8 @@ from tests.test_utils import fmt_proto, decode_qrcodes
 from snaptool.snapshot import AsyncSnapshotService
 from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
 from aemu.proto.emulator_controller_pb2 import KeyboardEvent
+from tests.test_utils import click_button, get_window_dump
+import lxml.etree as ET
 
 _EMPTY_ = empty_pb2.Empty()
 
@@ -58,7 +60,33 @@ async def is_landscape(get_screenshot):
 
 
 @pytest.fixture
-async def no_displays(emulator_controller, adb_shell):
+async def ensure_multidisplay_service_ready(emulator_controller):
+    max_retries = 5
+    retry_delay = 1  # Initial delay in seconds
+
+    for attempt in range(max_retries):
+        try:
+            await emulator_controller.getDisplayConfigurations(_EMPTY_)
+            return  # Success, exit the loop
+        except RpcError as exc_info:
+            if exc_info.value.code() != StatusCode.UNAVAILABLE:
+                raise  # Unexpected error, re-raise
+        except Exception:
+            raise  # Unexpected error, re-raise
+
+        # Exponential backoff
+        await asyncio.sleep(retry_delay)
+        retry_delay *= 2  # Double the delay for the next attempt
+
+    raise TimeoutError(
+        f"Failed to get display configurations after {max_retries} attempts"
+    )
+
+
+@pytest.fixture
+async def no_displays(
+    ensure_multidisplay_service_ready, emulator_controller, adb_shell
+):
     """Fixture to make sure the emulator has no multi displays configured.
 
     Use this if you want to make sure the emulator has no secondary displays
@@ -75,6 +103,7 @@ async def no_displays(emulator_controller, adb_shell):
     )
     logging.info("=== finished no_displays")
 
+
 @pytest.fixture
 async def emu_snapshot_service(avd, service):
     """Fixture to make sure the emulator has no snapshots."""
@@ -89,11 +118,15 @@ async def emu_snapshot_service(avd, service):
         await snap.delete(entry.snapshot_id)
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_none(avd, no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_none(
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    is_landscape,
+):
     """Erasing displays leaves nothing behind."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
@@ -106,12 +139,16 @@ async def test_multidisplay_none(avd, no_displays, emulator_controller, is_lands
     assert len(cfg.displays) == 1
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.sanity
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_multiple(avd, no_displays, emulator_controller, is_landscape):
+async def test_multidisplay_multiple(
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    is_landscape,
+):
     """Adding a display should work."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
@@ -131,12 +168,17 @@ async def test_multidisplay_multiple(avd, no_displays, emulator_controller, is_l
     assert cfg.displays[1].height == 1280
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.sanity
 @pytest.mark.async_timeout(1080)
-async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, emu_snapshot_service,  is_landscape):
+async def test_multiple_display_snapshot(
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    emu_snapshot_service,
+    is_landscape,
+):
     """Snapshots on multiple display should work."""
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
@@ -157,7 +199,7 @@ async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, 
     assert "foo" in [x.snapshot_id for x in snapshots]
 
     # change the display configuration, add just one additional display
-    resolutions = [ (3840, 2160)]
+    resolutions = [(3840, 2160)]
     displays = [
         DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
         for idx, x in enumerate(resolutions)
@@ -177,12 +219,14 @@ async def test_multiple_display_snapshot(avd, no_displays, emulator_controller, 
     assert len(cfg2.displays) == 3
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_multiple_error(
-    avd, no_displays, emulator_controller, is_landscape
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    is_landscape,
 ):
     """A failure should not modify the status."""
     if is_landscape:
@@ -221,13 +265,14 @@ async def test_multidisplay_multiple_error(
     assert cfg.displays[1].height == 1280
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
-@pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_get_after_set(
-    avd, no_displays, emulator_controller, is_landscape
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    is_landscape,
 ):
     """Adding a display should work."""
     if is_landscape:
@@ -245,12 +290,14 @@ async def test_multidisplay_get_after_set(
     assert cfg == cfg2
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_double_ids_error(
-    avd, no_displays, emulator_controller, is_landscape
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    is_landscape,
 ):
     """Adding the same display twice should result in an error."""
     if is_landscape:
@@ -268,13 +315,14 @@ async def test_multidisplay_double_ids_error(
     assert exc_info.value.code() == StatusCode.INVALID_ARGUMENT
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
-@pytest.mark.fast
 @pytest.mark.flaky  # b/322551553
 async def test_multidisplay_can_configure_four(
-    avd, no_displays, emulator_controller, is_landscape
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    is_landscape,
 ):
     """This tests makes sure that a total of 4 displays can be configured.
 
@@ -303,12 +351,14 @@ async def test_multidisplay_can_configure_four(
         contains(display, cfg.displays)
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_add_should_not_remove(
-    avd, no_displays, emulator_controller, is_landscape
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    is_landscape,
 ):
     """This tests makes sure that a total of 4 displays can be configured.
 
@@ -344,12 +394,14 @@ async def test_multidisplay_add_should_not_remove(
         contains(display, cfg.displays)
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.async_timeout(1080)
 async def test_multidisplay_error_too_many(
-    avd, no_displays, emulator_controller, is_landscape
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    is_landscape,
 ):
     """Adding too many displays should raise an exception."""
     if is_landscape:
@@ -405,7 +457,7 @@ async def get_displays_ids(avd):
                    there is a single display.
     """
     windows_dump = await avd.adb.shell("dumpsys window", timeout=60)
-    display_ids = re.findall('displayId=([0-9]+)', windows_dump)
+    display_ids = re.findall("displayId=([0-9]+)", windows_dump)
     if display_ids is None:
         return None
     display_ids_list = sorted(set(display_ids))
@@ -414,12 +466,16 @@ async def get_displays_ids(avd):
     return [int(id_) for id_ in display_ids_list]
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
-async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_controller):
+async def test_disable_multidisplay(
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    is_landscape,
+    emulator_controller,
+):
     """Ensure an app is moved to the primary display when multidisplay is disabled.
 
     Args:
@@ -448,7 +504,7 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
     resolutions = [(720, 1280), (1080, 1920)]
     displays = [
         DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
-            for idx, x in enumerate(resolutions)
+        for idx, x in enumerate(resolutions)
     ]
 
     async def disable_multidisplay():
@@ -456,14 +512,14 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
         cfg = await emulator_controller.setDisplayConfigurations(
             DisplayConfigurations(displays=[])
         )
-        logging.info('Disabling multidisplay mode')
+        logging.info("Disabling multidisplay mode")
         assert len(cfg.displays) == 1
         return cfg
 
     async def enable_multidisplay(displays):
         # Set the display configuration from 'displays'.
         to_set = DisplayConfigurations(displays=displays)
-        logging.info('Enabling multidisplay mode')
+        logging.info("Enabling multidisplay mode")
         cfg = await emulator_controller.setDisplayConfigurations(to_set)
         return cfg
 
@@ -474,7 +530,7 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
 
     dummy_pkg = "com.google.AnimateBox"
     dummy_activity = f"{dummy_pkg}/com.google.emu.MainActivity"
-    pkg_name = dummy_pkg.split('.')[-1]
+    pkg_name = dummy_pkg.split(".")[-1]
     await avd.stop_activity(dummy_pkg)
 
     for i in range(len(resolutions)):
@@ -484,8 +540,9 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
         await asyncio.sleep(20)
 
         # Get the current displays list.
-        assert await eventually(partial(get_displays_ids, avd), timeout=60), \
-                     "Couldn't retrieve the displays Ids"
+        assert await eventually(
+            partial(get_displays_ids, avd), timeout=60
+        ), "Couldn't retrieve the displays Ids"
         ids = await get_displays_ids(avd)
 
         # Start app on the display 'ids[i + 1]'.
@@ -494,18 +551,20 @@ async def test_disable_multidisplay(avd, no_displays, is_landscape, emulator_con
         ), f"Couldn't launch package '{pkg_name}' on display {ids[i + 1]}"
 
         # Disable multidisplay.
-        logging.info(f'Disable multidisplay while app {pkg_name} is on display {ids[i + 1]}')
+        logging.info(
+            f"Disable multidisplay while app {pkg_name} is on display {ids[i + 1]}"
+        )
         await disable_multidisplay()
 
         # Verify if the app is present in the primary display.
-        assert await eventually(partial(app_is_on_primary_display, dummy_pkg)), \
-                     f"App {pkg_name} was not found on display 0"
+        assert await eventually(
+            partial(app_is_on_primary_display, dummy_pkg)
+        ), f"App {pkg_name} was not found on display 0"
 
         # Stop the app.
         await avd.stop_activity(dummy_pkg)
 
 
-@pytest.mark.graphics
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(510)
@@ -526,21 +585,23 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
         Three logical displays should appear in the emulator display dump.
     """
     # Avd configuration containing two secondary displays.
-    config = {"abi": emulator.configuration.hardware.get('abi'),
-              "api": emulator.configuration.hardware.get('api'),
-              "tag.id": emulator.configuration.hardware.get('tag.id'),
-              "hw.display1.width": 800,
-              "hw.display1.height": 1200,
-              "hw.display1.density": 320,
-              "hw.display1.xOffset": -1,
-              "hw.display1.yOffset": -1,
-              "hw.display1.flag": 0,
-              "hw.display2.width": 800,
-              "hw.display2.height": 1200,
-              "hw.display2.density": 320,
-              "hw.display2.xOffset": -1,
-              "hw.display2.yOffset": -1,
-              "hw.display2.flag": 0}
+    config = {
+        "abi": emulator.configuration.hardware.get("abi"),
+        "api": emulator.configuration.hardware.get("api"),
+        "tag.id": emulator.configuration.hardware.get("tag.id"),
+        "hw.display1.width": 800,
+        "hw.display1.height": 1200,
+        "hw.display1.density": 320,
+        "hw.display1.xOffset": -1,
+        "hw.display1.yOffset": -1,
+        "hw.display1.flag": 0,
+        "hw.display2.width": 800,
+        "hw.display2.height": 1200,
+        "hw.display2.density": 320,
+        "hw.display2.xOffset": -1,
+        "hw.display2.yOffset": -1,
+        "hw.display2.flag": 0,
+    }
 
     n_displays = 3  # primary plus two secondary displays.
 
@@ -560,45 +621,49 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
     async def ensure_logical_displays(n, emu):
         # Return True if the emulator has 'n' logical displays.
         display_dump = await emu.adb.shell("dumpsys display", timeout=30)
-        display_size_pattern = re.search('Logical Displays: size=([0-9]*).*', display_dump)
+        display_size_pattern = re.search(
+            "Logical Displays: size=([0-9]*).*", display_dump
+        )
         if display_size_pattern is None:
             return False
         return display_size_pattern.groups()[0] == str(n)
 
     assert await (
         eventually(partial(ensure_logical_displays, n_displays, emu), timeout=180)
-    ), 'Wrong number of displays detected'
+    ), "Wrong number of displays detected"
 
     await emu.stop()
 
 
 async def get_focused_task(avd, id):
-    """Retrieve the name of the top focused task on display <id>
-    """
-    task = await avd.adb.shell('dumpsys window displays')
-    match = re.search(f"displayId={id}.*?mPreferredTopFocusableRootTask=(Task{{[^}}]*}})", task)
+    """Retrieve the name of the top focused task on display <id>"""
+    task = await avd.adb.shell("dumpsys window displays")
+    match = re.search(
+        f"displayId={id}.*?mPreferredTopFocusableRootTask=(Task{{[^}}]*}})", task
+    )
     if match is None:
         return None
     return match.groups()[0]
 
+
 async def assert_focused_task_of_display(display_id, task, avd):
-    """Return True if the focused task on display <id> contains the string <task>
-    """
+    """Return True if the focused task on display <id> contains the string <task>"""
     focused_task = await get_focused_task(avd, display_id)
     if focused_task is None:
         return False
     return task in focused_task
 
+
 async def assert_focused_task_has_type(expected_type, display_id, avd):
-    """Return True if the focused task on display <id> has type <expected_type>
-    """
+    """Return True if the focused task on display <id> has type <expected_type>"""
     focused_task = await get_focused_task(avd, display_id)
     if focused_task is None:
         return False
-    type = re.search('type=(.*)}', focused_task).groups()[0]
+    type = re.search("type=(.*)}", focused_task).groups()[0]
     if type is None or type != expected_type:
         return False
     return True
+
 
 async def get_multidisplays_ids(avd):
     """Wait until two or more displays are configured and return the displays IDs
@@ -607,12 +672,14 @@ async def get_multidisplays_ids(avd):
     Raises:
         asyncio.TimeoutError: If multiple displays are't configured.
     """
+
     async def _get_displays_ids(avd, output_list):
         ids = await get_displays_ids(avd)
         if ids is None:
             return False
         output_list.append(ids)
         return True
+
     ids = []
     assert await eventually(
         partial(_get_displays_ids, avd, ids)
@@ -620,12 +687,11 @@ async def get_multidisplays_ids(avd):
     return ids[0]
 
 
-@pytest.mark.e2e
-@pytest.mark.graphics
 @pytest.mark.multidisplay
-@pytest.mark.fast
 @pytest.mark.async_timeout(1080)
-async def test_multidisplay_controls(avd, no_displays, emulator_controller):
+async def test_multidisplay_controls(
+    ensure_multidisplay_service_ready, avd, no_displays, emulator_controller
+):
     """Verify the Home and Back controls work on primary and secondary displays.
     Args:
         avd (BaseEmulator): Fixture that gives access to the running emulator.
@@ -640,17 +706,21 @@ async def test_multidisplay_controls(avd, no_displays, emulator_controller):
         1. Buttons work as intended on primary display. Secondary display is not affected.
         2. Buttons work as intended on secondary display. Primary display is not affected.
     """
+
     async def keypress(key):
-        """ Send the keypress 'key' event.
-        """
+        """Send the keypress 'key' event."""
         logging.info("Sending %s key", key)
         await emulator_controller.sendKey(
             KeyboardEvent(key=key, eventType=KeyboardEvent.keypress)
         )
         await asyncio.sleep(1)
 
-    async def test_display_controls(main_display_id, main_display_activity1,
-                                    second_display_id, second_display_focused_activity):
+    async def test_display_controls(
+        main_display_id,
+        main_display_activity1,
+        second_display_id,
+        second_display_focused_activity,
+    ):
         """Test the Back and Home controls of a particular (main) display.
            Make sure the secondary display is not affected by the key events.
         Args:
@@ -666,15 +736,17 @@ async def test_multidisplay_controls(avd, no_displays, emulator_controller):
             Home buttons, it makes sure activity 1 and the Home screen, respectively,
             appear on the main display being tested.
         """
-        logging.info(f'Testing the controls of display {main_display_id}')
+        logging.info(f"Testing the controls of display {main_display_id}")
 
         # Press the Back button and verify the first task of the main display appears
         await keypress("GoBack")
         task1_name = main_display_activity1.split("/")[0]
         assert await eventually(
             partial(assert_focused_task_of_display, main_display_id, task1_name, avd)
-        ), f"The task '{task1_name}' didn't appear on display {main_display_id}" \
+        ), (
+            f"The task '{task1_name}' didn't appear on display {main_display_id}"
             + " after pressing the Back button."
+        )
 
         # Press the Home button and verify the Home screen appears on the main display
         await keypress("GoHome")
@@ -685,13 +757,19 @@ async def test_multidisplay_controls(avd, no_displays, emulator_controller):
         # Make sure the secondary display isn't affected by the key events
         second_display_focused_task = second_display_focused_activity.split("/")[0]
         assert await eventually(
-            partial(assert_focused_task_of_display, second_display_id,
-                    second_display_focused_task, avd)
-        ), f"The focused task of display {second_display_id} changed " \
-           "after pressing the Back and Home keys."
+            partial(
+                assert_focused_task_of_display,
+                second_display_id,
+                second_display_focused_task,
+                avd,
+            )
+        ), (
+            f"The focused task of display {second_display_id} changed "
+            "after pressing the Back and Home keys."
+        )
 
     # Attach a 720x1280 secondary display
-    logging.info('Attaching a secondary display')
+    logging.info("Attaching a secondary display")
     configurations = DisplayConfigurations(
         displays=[DisplayConfiguration(width=720, height=1280, dpi=213, display=1)]
     )
@@ -699,32 +777,38 @@ async def test_multidisplay_controls(avd, no_displays, emulator_controller):
     display1, display2 = await get_multidisplays_ids(avd)
 
     # Define the activities
-    display1_activity1 = "com.google.android.apps.messaging/.ui.ConversationListActivity"
+    display1_activity1 = (
+        "com.google.android.apps.messaging/.ui.ConversationListActivity"
+    )
     display1_activity2 = "com.android.chrome/com.google.android.apps.chrome.Main"
 
     display2_activity1 = "com.android.dialer/com.android.dialer.main.impl.MainActivity"
-    display2_activity2 = "com.google.android.youtube/" + \
-                         "com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity"
+    display2_activity2 = (
+        "com.google.android.youtube/"
+        + "com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity"
+    )
 
     # Launch activity 1 of display 2
-    await start_on_display(avd, display2_activity1, display2, params='-W')
+    await start_on_display(avd, display2_activity1, display2, params="-W")
     # Launch activies 1 and 2 of display 1
-    await start_on_display(avd, display1_activity1, display1, params='-W')
-    await start_on_display(avd, display1_activity2, display1, params='-W')
+    await start_on_display(avd, display1_activity1, display1, params="-W")
+    await start_on_display(avd, display1_activity2, display1, params="-W")
 
     # Test the controls of display 1
-    await test_display_controls(display1, display1_activity1,
-                                display2, display2_activity1)
+    await test_display_controls(
+        display1, display1_activity1, display2, display2_activity1
+    )
 
     # Relaunch activity 1 of display 1
-    await start_on_display(avd, display1_activity1, display1, params='-W')
+    await start_on_display(avd, display1_activity1, display1, params="-W")
 
     # Launch activity 2 of display 2 (switch focus to display 2)
-    await start_on_display(avd, display2_activity2, display2, params='-W')
+    await start_on_display(avd, display2_activity2, display2, params="-W")
 
     # Test the controls of display 2
-    await test_display_controls(display2, display2_activity1,
-                                display1, display1_activity1)
+    await test_display_controls(
+        display2, display2_activity1, display1, display1_activity1
+    )
 
 
 @pytest.mark.multidisplay
@@ -732,7 +816,13 @@ async def test_multidisplay_controls(avd, no_displays, emulator_controller):
 @pytest.mark.async_timeout(1080)
 @pytest.mark.skipos("mac", "reason: screenrecord user permission should be given.")
 @pytest.mark.skipos("m1", "reason: screenrecord user permission should be given.")
-async def test_multidisplay_video_playback(avd, no_displays, emulator_controller, qrcodes_mp4):
+async def test_multidisplay_video_playback(
+    ensure_multidisplay_service_ready,
+    avd,
+    no_displays,
+    emulator_controller,
+    qrcodes_mp4,
+):
     """Verify video can be played in secondary display without any rendering issues.
 
     Args:
@@ -755,14 +845,14 @@ async def test_multidisplay_video_playback(avd, no_displays, emulator_controller
         The Screenshots are taken using Pillow, since the screenshots from the emulator
         controller don't include the secondary display.
     """
+
     async def assert_secondary_display_playback(sec_display):
-        """Make sure the test video on <sec_display> contains all QR codes' payloads
-        """
+        """Make sure the test video on <sec_display> contains all QR codes' payloads"""
         await qrcodes_mp4.play(sec_display)
         return await decode_qrcodes(qrcodes_mp4.payloads)
 
     # Attach a secondary display
-    logging.info('Attaching a secondary display')
+    logging.info("Attaching a secondary display")
     configurations = DisplayConfigurations(
         displays=[DisplayConfiguration(width=1080, height=1920, dpi=213, display=1)]
     )
@@ -771,6 +861,106 @@ async def test_multidisplay_video_playback(avd, no_displays, emulator_controller
 
     # Make sure the qrcodes video plays and is decoded correctly.
     assert await wait_until(
-        partial(assert_secondary_display_playback, sec_display),
-        timeout=120
+        partial(assert_secondary_display_playback, sec_display), timeout=120
     ), "Couldn't play the test video on the secondary display."
+
+
+@pytest.mark.multidisplay
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_multidisplay_avd_features_work(avd, no_displays, emulator_controller):
+    """Verify AVD specific features such as app. shortcut work correctly.
+
+    Notes:
+        Test requires API 31+.
+
+    Args:
+        avd (BaseEmulator): Fixture that gives access to the running emulator.
+        no_displays (callable): Fixture that ensures the emulator has a single display.
+        emulator_controller (EmulatorControllerStub): Emulator controller fixture.
+
+    Test Steps:
+        1. Launch a new AVD.
+        2. Attach a secondary display.
+        3. Click on the apps. list icon in the secondary display.
+        4. Long-click any app. whose shortcut can be added, such as Contacts.
+        5. Click 'Add to home screen'.i
+
+    Verification: App shortcut is added to secondary display only.
+    """
+    api = await avd.api_level()
+    if api <= 31:
+        pytest.skip(reason="Requires api level > 31!")
+
+    # Attach a secondary display.
+    logging.info("Attaching a secondary display")
+    configurations = DisplayConfigurations(
+        displays=[DisplayConfiguration(width=720, height=1280, dpi=213, display=1)]
+    )
+    cfg = await emulator_controller.setDisplayConfigurations(configurations)
+    main_display_id, secondary_display_id = await get_multidisplays_ids(avd)
+
+    # Tap the 'apps list' icon.
+    assert await click_button(
+        avd,
+        resource_id="com.google.android.apps.nexuslauncher:id/all_apps_button",
+        display_id=secondary_display_id,
+    ), "Couldn't open the Apps list."
+    await asyncio.sleep(2)
+
+    # Long-tap 'shortcut_app' to open the detailed options menu.
+    shortcut_app = "Contacts"
+    assert await click_button(
+        avd,
+        text=shortcut_app,
+        resource_id="com.google.android.apps.nexuslauncher:id/icon",
+        parent_resource_id="com.google.android.apps.nexuslauncher:id/apps_list_view",
+        display_id=secondary_display_id,
+        long_click=True,
+    ), f"Couldn't open '{shortcut_app}' short menu."
+
+    # Tap 'Add to home screen'.
+    await asyncio.sleep(2)
+    assert await click_button(
+        avd,
+        text="Add to home screen" if api >= 34 else None,
+        content_desc="Add to home screen" if api < 34 else None,
+        display_id=secondary_display_id,
+    ), f"Couldn't click 'Add to home screen' button."
+
+    # Verify the shortcut is created in the secondary display's home screen.
+    async def app_shorcut_in_secondary_display():
+        window_dump = await get_window_dump(avd)
+        xml_hierarchy = ET.fromstring(window_dump.encode("UTF-8"))
+        # Check if we are really in display 2
+        display2_bounds = xml_hierarchy.find("node").get("bounds")
+        display2 = cfg.displays[1]
+        assert display2_bounds == f"[0,0][{display2.width},{display2.height}]"
+        # Verify app shortcut exists in the xml hierarchy
+        workspace_id = "com.google.android.apps.nexuslauncher:id/workspace_grid"
+        shortcut = xml_hierarchy.xpath(
+            f"//node[@resource-id='{workspace_id}']//node[@text='{shortcut_app}']"
+        )
+        assert len(shortcut) == 1, "Couldn't detect the app shortcut in display 2."
+
+    # Verify the main display's home screen has not the app shortcut.
+    async def app_shorcut_not_in_main_display():
+        window_dump = await get_window_dump(avd)
+        # Tap display 1 to change focus
+        display1 = cfg.displays[0]
+        await avd.adb.shell(
+            f"input -d {main_display_id} tap {display1.width/2} {display1.height/2}"
+        )
+        # Confirm we are in display 1
+        window_dump = await get_window_dump(avd)
+        xml_hierarchy = ET.fromstring(window_dump.encode("UTF-8"))
+        display1_bounds = xml_hierarchy.find("node").get("bounds")
+        assert (
+            display1_bounds == f"[0,0][{display1.width},{display1.height}]"
+        ), "Couldn't change focus to the primary display"
+        assert (
+            shortcut_app not in xml_hierarchy
+        ), f"A shortcut for '{shortcut_app}' was found in the main display."
+
+    await app_shorcut_in_secondary_display()
+    await app_shorcut_not_in_main_display()

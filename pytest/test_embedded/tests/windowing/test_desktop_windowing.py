@@ -15,76 +15,77 @@
 import pytest
 from mobly import asserts
 
-_MINIMIZE_BUTTON_CONTENT_DESC = 'Minimize'
-_MAXIMIZE_BUTTON_CONTENT_DESC = 'Maximize'
-_CLOSE_BUTTON_CONTENT_DESC = 'Close'
-_TEST_APP_ICON_CONTENT_DESC = 'Predicted app: AnimateBox'
-_TEST_APP_CONTENT_DESC = 'Caption bar of AnimateBox.'
+_MINIMIZE_BUTTON_CONTENT_DESC = "Minimize"
+_MAXIMIZE_BUTTON_CONTENT_DESC = "Maximize"
+_CLOSE_BUTTON_CONTENT_DESC = "Close"
+_TEST_APP_ICON_CONTENT_DESC = "Predicted app: AnimateBox"
+_TEST_APP_CONTENT_DESC = "Caption bar of AnimateBox."
 _TIMEOUT_MS = 8000
 
 """
 End-to-end tests that change windowing mode with caption bar buttons (minimize, maximize, close).
 """
 
+
 @pytest.fixture
 async def show_status_bar(avd):
     """
     This fixture starts the StatusBarActivity which keeps its status bar visible.
     """
-    await avd.stop_activity('com.google.AnimateBox')
-    await avd.start_activity('com.google.AnimateBox/com.google.emu.StatusBarActivity')
+    await avd.stop_activity("com.google.AnimateBox")
+    await avd.start_activity("com.google.AnimateBox/com.google.emu.StatusBarActivity")
     yield
-    await avd.stop_activity('com.google.AnimateBox')
+    await avd.stop_activity("com.google.AnimateBox")
 
-@pytest.mark.e2e
+
 @pytest.mark.uiautomator
 async def test_launch_app(ad_ui, show_status_bar):
     asserts.assert_true(
         ad_ui(desc=_TEST_APP_CONTENT_DESC).wait.exists(_TIMEOUT_MS),
-        'Failed to see animation app'
+        "Failed to see animation app",
     )
 
-@pytest.mark.e2e
+
 @pytest.mark.uiautomator
 async def test_close_window(ad_ui, show_status_bar):
     # Click the close button and verify that the app disappears
     asserts.assert_true(
         ad_ui(desc=_CLOSE_BUTTON_CONTENT_DESC).wait.exists(_TIMEOUT_MS),
-        'Close button did not appear'
+        "Close button did not appear",
     )
     ad_ui(desc=_CLOSE_BUTTON_CONTENT_DESC).click()
     asserts.assert_true(
         ad_ui(desc=_TEST_APP_CONTENT_DESC).wait.gone(_TIMEOUT_MS),
-        'App did not disappear'
+        "App did not disappear",
     )
 
-@pytest.mark.e2e
+
 @pytest.mark.uiautomator
 async def test_minimize_and_restore_window(ad_ui, show_status_bar):
     # Click the minimize button and verify that the app is hidden
     asserts.assert_true(
-        ad_ui(desc='Minimize').wait.exists(_TIMEOUT_MS),
-        'Minimize button did not appear'
+        ad_ui(desc="Minimize").wait.exists(_TIMEOUT_MS),
+        "Minimize button did not appear",
     )
-    ad_ui(desc='Minimize').click()
+    ad_ui(desc="Minimize").click()
     asserts.assert_true(
         ad_ui(desc=_TEST_APP_CONTENT_DESC).wait.gone(_TIMEOUT_MS),
-        'App did not disappear'
+        "App did not disappear",
     )
 
     # Click on the app icon and verify that the app appears
     ad_ui.dump(file=True)
     asserts.assert_true(
         ad_ui(desc=_TEST_APP_ICON_CONTENT_DESC).wait.exists(_TIMEOUT_MS),
-        'App icon did not appear'
+        "App icon did not appear",
     )
     ad_ui(desc=_TEST_APP_ICON_CONTENT_DESC).click()
     asserts.assert_true(
         ad_ui(desc=_TEST_APP_CONTENT_DESC).wait.exists(_TIMEOUT_MS),
-        'App did not appear'
+        "App did not appear",
     )
 
-@pytest.mark.e2e
+
 @pytest.mark.uiautomator
 async def test_maximize_and_restore_window(ad_ui, show_status_bar):
     content = ad_ui(desc=_TEST_APP_CONTENT_DESC).parent

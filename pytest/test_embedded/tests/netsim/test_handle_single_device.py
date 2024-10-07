@@ -2,7 +2,6 @@ import pytest
 from netsim_grpc import netsim_client
 
 
-@pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.netsim
 @pytest.mark.async_timeout(1080)
@@ -11,7 +10,6 @@ def test_device_attaches_to_netsimd(avd):
     assert len(netsim_client.NetsimClient().get_devices()) != 0
 
 
-@pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.netsim
 @pytest.mark.async_timeout(1080)
@@ -43,7 +41,6 @@ def test_netsim_patch_and_reset(avd):
     )
 
 
-@pytest.mark.e2e
 @pytest.mark.boot
 @pytest.mark.netsim
 @pytest.mark.async_timeout(1080)

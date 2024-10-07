@@ -46,11 +46,15 @@ async def prepare_chrome(avd):
     """
     await avd.adb.shell("pm clear com.android.chrome")
     # Put purple.html on the device.
-    await avd.adb.shell(f'mkdir -p {purple_path}')
+    await avd.adb.shell(f"mkdir -p {purple_path}")
     await avd.adb.shell(f'echo "{purple_html}" > {purple_path}/purple.html')
 
-    await avd.adb.shell("pm grant com.android.chrome android.permission.POST_NOTIFICATIONS")
-    await avd.adb.shell("pm grant com.android.chrome android.permission.READ_EXTERNAL_STORAGE")
+    await avd.adb.shell(
+        "pm grant com.android.chrome android.permission.POST_NOTIFICATIONS"
+    )
+    await avd.adb.shell(
+        "pm grant com.android.chrome android.permission.READ_EXTERNAL_STORAGE"
+    )
 
     # Configure to skip welcome page
     await avd.adb.shell(
@@ -58,7 +62,9 @@ async def prepare_chrome(avd):
     )
     await avd.adb.shell("am set-debug-app --persistent com.android.chrome")
 
-    await avd.adb.shell(f"am start -a android.intent.action.VIEW -d http://www.google.com -n {chrome_cmp}")
+    await avd.adb.shell(
+        f"am start -a android.intent.action.VIEW -d http://www.google.com -n {chrome_cmp}"
+    )
     await avd.stop_activity(chrome_pkg)
 
 
@@ -66,20 +72,24 @@ async def request_page_in_chrome(avd):
     await prepare_chrome(avd)
 
     # SystemUI and launcher crash/ANR dialogs get in the way of screenshots, attempt to close them
-    await avd.adb.shell("am start -a android.intent.action.MAIN -c android.intent.category.HOME")
+    await avd.adb.shell(
+        "am start -a android.intent.action.MAIN -c android.intent.category.HOME"
+    )
 
-    await avd.adb.shell(f"am start -S -a android.intent.action.VIEW -d 'file:///{purple_path}/purple.html' -t text/html -n {chrome_cmp}")
+    await avd.adb.shell(
+        f"am start -S -a android.intent.action.VIEW -d 'file:///{purple_path}/purple.html' -t text/html -n {chrome_cmp}"
+    )
 
 
-@pytest.mark.e2e
 @pytest.mark.graphics
-@pytest.mark.xpass
+@pytest.mark.xfail
 @pytest.mark.async_timeout(1080)
 async def test_launch_chrome_google(avd, get_screenshot):
     """
     This test launches Chrome on an Android device, opens a html snippet,
     captures a screenshot, and verifies that at least 40% of the image pixels are purple.
     """
+
     async def at_least_40_percent_of_image_is_purple():
         """
         Helper function to check if at least 40% of the image pixels are purple.
@@ -102,7 +112,9 @@ async def test_launch_chrome_google(avd, get_screenshot):
                 # Check if the pixel corresponds to the desired shade of purple
                 if r > 245 and g < 10 and b > 245:
                     purple_count += 1
-        return purple_count > (rgb_image.width * rgb_image.height * percent_purple / 100)
+        return purple_count > (
+            rgb_image.width * rgb_image.height * percent_purple / 100
+        )
 
     saw_purple = False
     # Weird that the file access permissions are not granted on the first try.
@@ -114,5 +126,5 @@ async def test_launch_chrome_google(avd, get_screenshot):
             saw_purple = True
             break
 
-    assert (saw_purple), f"Did not see a screenshot with 40% purple pixels"
+    assert saw_purple, f"Did not see a screenshot with 40% purple pixels"
     await avd.stop_activity(chrome_pkg)

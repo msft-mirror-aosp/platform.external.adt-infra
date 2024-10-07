@@ -1,7 +1,6 @@
 import pytest
 
 
-@pytest.mark.e2e
 @pytest.mark.boot
 def test_discovery_contains_display_name(avd):
     """Make sure the discovery file contains the proper display name with utf-8."""

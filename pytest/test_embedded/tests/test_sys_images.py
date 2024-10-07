@@ -2,6 +2,8 @@ import pytest
 
 from emu.avd import SystemImageDownloadFailed, SystemImages
 
+pytestmark = pytest.mark.std
+
 
 @pytest.fixture
 def default_image():

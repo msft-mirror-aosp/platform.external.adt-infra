@@ -283,16 +283,17 @@ async def assertDisplayMode(expected_mode, emulator_controller):
 
 @pytest.mark.parametrize(
     "index, name, expected_mode",
-    [(0, "Phone", DisplayModeValue.PHONE),
-     (1, "Foldable", DisplayModeValue.FOLDABLE),
-     (2, "Tablet", DisplayModeValue.TABLET),
-     (3, "Desktop", DisplayModeValue.DESKTOP)]
+    [
+        (0, "Phone", DisplayModeValue.PHONE),
+        (1, "Foldable", DisplayModeValue.FOLDABLE),
+        (2, "Tablet", DisplayModeValue.TABLET),
+        (3, "Desktop", DisplayModeValue.DESKTOP),
+    ],
 )
 @pytest.mark.newresizable
 @pytest.mark.fast
 async def test_new_resizable_changes_resolution_from_console(
-    index, name, expected_mode,
-    telnet, emulator_controller
+    index, name, expected_mode, telnet, emulator_controller
 ):
     """Verify the display mode can be changed from the emulator console.
 
@@ -350,9 +351,10 @@ async def test_new_resizable_snapshot_saves_display_mode(avd, emulator_controlle
     await console.send("avd snapshot save phone_snapshot")
 
     for index, name, expected_mode in [
-            (1, "Foldable", DisplayModeValue.FOLDABLE),
-            (2, "Tablet", DisplayModeValue.TABLET),
-            (3, "Desktop", DisplayModeValue.DESKTOP)]:
+        (1, "Foldable", DisplayModeValue.FOLDABLE),
+        (2, "Tablet", DisplayModeValue.TABLET),
+        (3, "Desktop", DisplayModeValue.DESKTOP),
+    ]:
 
         # Set a new display mode.
         logging.info(f"Setting display mode to '{name}' ...")

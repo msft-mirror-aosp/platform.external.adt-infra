@@ -47,7 +47,6 @@ async def test_ui_controller_clean(avd):
     ), "The emulator already has an initial configuration, which implies the extended window has been displayed at least once!"
 
 
-@pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.dependency(depends=["test_ui_controller_clean"])
 async def test_ui_controller_first_position_works(avd, ui_controller):
@@ -90,7 +89,6 @@ async def test_ui_controller_first_position_works(avd, ui_controller):
     assert controlStatus.visibilityChanged
 
 
-@pytest.mark.e2e
 @pytest.mark.embedded
 @pytest.mark.dependency(depends=["test_ui_controller_first_position_works"])
 async def test_ui_controller_position_does_not_change(avd, ui_controller):
@@ -126,7 +124,6 @@ async def test_ui_controller_position_does_not_change(avd, ui_controller):
     assert controlStatus.visibilityChanged
 
 
-@pytest.mark.e2e
 @pytest.mark.embedded
 async def test_ui_controller_fast_switch_should_work(ui_controller):
     """Make sure we can open and close the window quickly.

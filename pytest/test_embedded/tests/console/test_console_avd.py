@@ -19,7 +19,6 @@ import asyncio
 @pytest.mark.boot
 @pytest.mark.console
 @pytest.mark.fast
-@pytest.mark.e2e
 async def test_avd_canonical_path(avd, telnet):
     """Test adb emu avd path returns a canonical path"""
     expected_path = Path(
@@ -32,7 +31,6 @@ async def test_avd_canonical_path(avd, telnet):
 @pytest.mark.boot
 @pytest.mark.console
 @pytest.mark.fast
-@pytest.mark.e2e
 async def test_avd_snapshots_path_has_no_dots(telnet):
     """Exposes b/299320133, paths should be normalized."""
     path = await telnet.send("avd snapshotspath")
@@ -41,7 +39,7 @@ async def test_avd_snapshots_path_has_no_dots(telnet):
 
 @pytest.mark.boot
 @pytest.mark.console
-@pytest.mark.e2e
+@pytest.mark.sanity
 async def test_avd_tracing_is_mounted(avd, telnet):
     """Test adb shell ls /sys/kernel/tracing/trace_marker valid"""
     no_file = "No such file or directory"
@@ -66,7 +64,7 @@ def read_property_file(from_file) -> str:
 
 @pytest.mark.boot
 @pytest.mark.console
-@pytest.mark.e2e
+@pytest.mark.sanity
 async def test_avd_dir_is_canonical_in_pid_xxx_ini(avd, telnet):
     """Test pid_xxx.ini contains canonical path for avd.dir
 
@@ -88,7 +86,6 @@ async def test_avd_dir_is_canonical_in_pid_xxx_ini(avd, telnet):
     assert props["avd.dir"] == str(expected_path)
 
 
-@pytest.mark.e2e
 @pytest.mark.sanity
 async def test_emulator_help_console_command(avd, telnet):
     help_commands = [
@@ -121,7 +118,6 @@ async def test_emulator_help_console_command(avd, telnet):
         assert help_command in result, "console help command failed"
 
 
-@pytest.mark.e2e
 @pytest.mark.sanity
 async def test_emulator_exit_console_command(telnet):
     try:
@@ -131,7 +127,6 @@ async def test_emulator_exit_console_command(telnet):
         pass  # Connection closed successfully
 
 
-@pytest.mark.e2e
 @pytest.mark.sanity
 async def test_telnet_will_reconnect_after_exit(telnet):
     try:
@@ -156,19 +151,22 @@ async def avd_factory(emulator):
           At the test teardown, all AVDs created are deleted.
     """
     avds = []
+
     async def _create_avd_from():
-        tag = emulator.configuration.hardware['tag.id']
-        abi = emulator.configuration.hardware['abi']
-        api = emulator.configuration.hardware['api']
-        name = emulator.configuration.name + '_' + str(len(avds) + 1)
+        tag = emulator.configuration.hardware["tag.id"]
+        abi = emulator.configuration.hardware["abi"]
+        api = emulator.configuration.hardware["api"]
+        name = emulator.configuration.name + "_" + str(len(avds) + 1)
         config = {"tag.id": tag, "abi": abi, "api": api, "AvdId": name}
-        avd = Emulator(android_home=emulator.android_home,
-                           android_avd_home=emulator.android_avd_home,
-                           exe=emulator.exe,
-                           avd_config=config,
-                           fetcher=None)
+        avd = Emulator(
+            android_home=emulator.android_home,
+            android_avd_home=emulator.android_avd_home,
+            exe=emulator.exe,
+            avd_config=config,
+            fetcher=None,
+        )
         avds.append(avd)
-        await avd.launch(['-no-snapshot-save'])
+        await avd.launch(["-no-snapshot-save"])
         await avd.wait_for_boot()
         return avd
 
@@ -180,7 +178,6 @@ async def avd_factory(emulator):
         avd.delete()
 
 
-@pytest.mark.e2e
 @pytest.mark.sanity
 @pytest.mark.async_timeout(2500)
 async def test_concurrent_avds(avd, avd_factory, tmp_path):
@@ -215,22 +212,29 @@ async def test_concurrent_avds(avd, avd_factory, tmp_path):
 
     # Ensure Youtube launches on both AVDs.
     youtube_pkg = "com.google.android.youtube"
-    youtube_activity = "com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity"
-    assert await avd1.start_activity('/'.join((youtube_pkg, youtube_activity)),
-                                     params="-W"), "Couldn't launch Youtube on AVD1"
-    assert await avd2.start_activity('/'.join((youtube_pkg, youtube_activity)),
-                                     params="-W"), "Couldn't launch Youtube on AVD2"
+    youtube_activity = (
+        "com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity"
+    )
+    assert await avd1.start_activity(
+        "/".join((youtube_pkg, youtube_activity)), params="-W"
+    ), "Couldn't launch Youtube on AVD1"
+    assert await avd2.start_activity(
+        "/".join((youtube_pkg, youtube_activity)), params="-W"
+    ), "Couldn't launch Youtube on AVD2"
 
     # Ensure snapshots are saved and loaded on both AVDs.
-    snapshot_services = [AsyncSnapshotService(snapshot_service=SnapshotServiceStub(channel1)),
-                         AsyncSnapshotService(snapshot_service=SnapshotServiceStub(channel2))]
+    snapshot_services = [
+        AsyncSnapshotService(snapshot_service=SnapshotServiceStub(channel1)),
+        AsyncSnapshotService(snapshot_service=SnapshotServiceStub(channel2)),
+    ]
 
     for i, snapshot_service in enumerate(snapshot_services):
-        snapshot_name = tmp_path.stem + '_' + str(i + 1)
+        snapshot_name = tmp_path.stem + "_" + str(i + 1)
         assert await snapshot_service.save(snapshot_name)
         snapshots = await snapshot_service.lists()
-        assert snapshot_name in [x.snapshot_id for x in snapshots], \
-               f"Couldn't save a snapshot on AVD {i+1}"
+        assert snapshot_name in [
+            x.snapshot_id for x in snapshots
+        ], f"Couldn't save a snapshot on AVD {i+1}"
         assert await snapshot_service.delete(snapshot_name)
 
     # Ensure screen recording work on both AVDs.
@@ -248,15 +252,16 @@ async def test_concurrent_avds(avd, avd_factory, tmp_path):
         await screen_service.StopRecording(info)
 
         assert sample_webm.exists()
-        assert sample_webm.stat().st_size > 10240, \
-               f"We should have recorded a series of frames from AVD {i + 1}"
-
+        assert (
+            sample_webm.stat().st_size > 10240
+        ), f"We should have recorded a series of frames from AVD {i + 1}"
 
     # Ensure both AVDs can receive calls.
-    phone_call = PhoneCall(operation=PhoneCall.InitCall,
-                           number="1234567890")
-    emulator_controllers = [EmulatorControllerStub(channel1),
-                            EmulatorControllerStub(channel2)]
+    phone_call = PhoneCall(operation=PhoneCall.InitCall, number="1234567890")
+    emulator_controllers = [
+        EmulatorControllerStub(channel1),
+        EmulatorControllerStub(channel2),
+    ]
 
     async def check_phone_response(controller):
         phone_response = await controller.sendPhone(phone_call)
@@ -264,6 +269,39 @@ async def test_concurrent_avds(avd, avd_factory, tmp_path):
 
     for controller in emulator_controllers:
         phone_response = await controller.sendPhone(phone_call)
-        assert (
-            await eventually(partial(check_phone_response, controller))
+        assert await eventually(
+            partial(check_phone_response, controller)
         ), f"Phone response is {phone_response.response}, expected {PhoneResponse.OK}"
+
+
+@pytest.mark.fast
+async def test_avd_commands(avd, telnet):
+    avd_commands = [
+        "avd start",
+        "avd stop",
+        "avd status",
+        "avd heartbeat",
+        "avd name",
+        "avd id",
+        "avd resume",
+        "avd pause",
+        "avd resume",
+        "avd windowtype",
+        "avd path",
+        "avd discoverypath",
+        "avd snapshotspath",
+    ]
+    avd_result = await telnet.send("help avd")
+    for avd_command in avd_commands:
+        assert any([avd_command in item.strip() for item in avd_result])
+
+    response = await telnet.send("avd name")
+    assert response is not None and response != ""
+    response = await telnet.send("avd status")
+    assert any(['running' in element for element in response])
+    response = await telnet.send("avd path")
+    assert any(['.avd' in element for element in response])
+    response = await telnet.send("avd discoverypath")
+    assert any(['.ini' in element for element in response])
+    response = await telnet.send("avd snapshotspath")
+    assert any(['snapshots' in element for element in response])

@@ -67,7 +67,7 @@ def save_image(received_image, image_dir, test_name):
             image_file.absolute(),
         )
         img.save(image_file, "PNG")
-        img.filename = image_file # needed, otherwise this field will be empty
+        img.filename = image_file  # needed, otherwise this field will be empty
         return img
     except Exception as e:
         logging.warning("An error occurred while saving the image: %s", str(e))

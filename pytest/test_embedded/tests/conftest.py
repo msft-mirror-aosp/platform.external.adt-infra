@@ -36,6 +36,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
+from emu.process.command import Command
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 
@@ -54,7 +55,7 @@ if len(HERE.parents) > 4:
         AOSP_ROOT / "prebuilts" / "android-emulator-build" / "system-images" / OS_NAME
     )
 else:
-    SDK_EMULATOR = ''
+    SDK_EMULATOR = ""
 
 
 def pytest_addoption(parser):
@@ -156,6 +157,23 @@ def log_thread_error(args):
 
 
 threading.excepthook = log_thread_error
+
+
+def pytest_logger_config(logger_config):
+    loggers = ["root", "adb", "emulator"]
+    for i in range(0, 10):
+        loggers += [f"emu-{i}", f"emu-{i}-adb", f"emu-{i}-con", f"emu-{i}-logcat"]
+
+    logger_config.add_loggers(loggers, stdout_level="info")
+    logger_config.split_by_outcome()
+
+
+def pytest_logger_logsdir(config):
+    log_file = config.getoption("--log-file")
+    if log_file:
+        return Path(log_file).parent
+
+    return Path.cwd() / "results"
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
@@ -268,7 +286,6 @@ def pytest_sessionfinish(
             emu.delete()
 
 
-
 @pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
 async def emulator(request, pytestconfig) -> BaseEmulator:
@@ -321,12 +338,11 @@ async def emulator(request, pytestconfig) -> BaseEmulator:
     """
     avd_configs = json.loads(pytestconfig.getoption("avd_configs"))
     return await manage_emulator(
-        request, pytestconfig, avd_configs[0] if avd_configs else {}
+        request, pytestconfig, avd_configs[0] if avd_configs else {}, "emu-0"
     )
 
 
 @pytest.fixture(scope="module")
-@pytest.mark.async_timeout(200)
 async def emulators(request, pytestconfig) -> list[BaseEmulator]:
     """Makes multiple configured emulators available
 
@@ -339,15 +355,21 @@ async def emulators(request, pytestconfig) -> list[BaseEmulator]:
     """
     emulators = []
     avd_configs = json.loads(pytestconfig.getoption("avd_configs"))
+    log_id = 0
     # Put a placeholder avd_config if none defined
     if not avd_configs:
         avd_configs.append({})
     for avd_config in avd_configs:
-        emulators.append(await manage_emulator(request, pytestconfig, avd_config))
+        emulators.append(
+            await manage_emulator(request, pytestconfig, avd_config, f"emu-{log_id}")
+        )
+        log_id += 1
     return emulators
 
 
-async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulator:
+async def manage_emulator(
+    request, pytestconfig, avd_param_config, log_id
+) -> BaseEmulator:
     """Configure and launch an emulator
 
     Args:
@@ -394,6 +416,7 @@ async def manage_emulator(request, pytestconfig, avd_param_config) -> BaseEmulat
                 exe=exe,
                 avd_config=avd_config,
                 fetcher=Path(fetcher) if fetcher else None,
+                log_id=log_id,
             )
 
         emu.symbols = pytestconfig.getoption("symbols")
@@ -488,6 +511,11 @@ async def manage_avd(emulator) -> BaseEmulator:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
     await emulator.restart(emulator.launch_flags)
+    adb_log_cmd = Command(
+        [emulator.adb.adb_binary, "-s", emulator.adb.name, "logcat"],
+        logging.getLogger(emulator.log_id + "-logcat"),
+    )
+    await adb_log_cmd.run()
 
     assert await emulator.wait_for_boot()
     logging.info("The emulator has finished booting")
@@ -515,6 +543,7 @@ async def manage_avd(emulator) -> BaseEmulator:
 
     logging.info("<-- teardown emulator")
     # Stop the emulator.
+    adb_log_cmd.cancel()
     await emulator.stop()
     logging.info("=== completed emulator")
 
@@ -729,6 +758,7 @@ def mobly(avd: BaseEmulator):
 def mbs(mobly):
     return mobly("mbs")
 
+
 @pytest.fixture(scope="function")
 async def ad_ui(avd: BaseEmulator):
     """
@@ -749,12 +779,13 @@ async def ad_ui(avd: BaseEmulator):
     ad.services.unregister(uiautomator.ANDROID_SERVICE_NAME)
     asserts.assert_false(
         hasattr(ad, uiautomator.PUBLIC_SERVICE_NAME),
-        'Failed to remove Python wrapper',
+        "Failed to remove Python wrapper",
     )
     asserts.assert_false(
         hasattr(ad, uiautomator.HIDDEN_SERVICE_NAME),
-        'Failed to remove snippet client',
+        "Failed to remove snippet client",
     )
+
 
 @pytest.fixture
 def log_adb_interactions():
@@ -833,9 +864,10 @@ async def qrcode_png(avd):
         The 'show' method can be used to display the image on the display
         identified by the 'display_id' argument (by default, the primary display).
     """
+
     class Qrcode:
-        """A class to push a PNG QRcode with a given payload to /sdcard/Downloads
-        """
+        """A class to push a PNG QRcode with a given payload to /sdcard/Downloads"""
+
         def __init__(self, src: str, payload: str):
             self.src = src
             self.payload = payload
@@ -846,18 +878,20 @@ async def qrcode_png(avd):
             await avd.adb.push(self.src, self.path)
 
         async def show(self, display_id=0):
-            """ Show the PNG image on display with id <display_id>
-            """
+            """Show the PNG image on display with id <display_id>"""
             await avd.stop_activity("com.google.android.apps.photos")
             await avd.start_activity(
                 "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
-                params=f'-a android.intent.action.VIEW -W -d file://{self.path} -t "image/PNG"'\
-                       + ( f" --display {display_id}" if display_id != 0 else "" )
+                params=f'-a android.intent.action.VIEW -W -d file://{self.path} -t "image/PNG"'
+                + (f" --display {display_id}" if display_id != 0 else ""),
             )
             logging.info(f"Launched the QR code PNG image on display '{display_id}'")
 
-    src = Path(__file__).parents[1] / "cfg" \
-                                    / "qrcode_uzNYdXGMb0kW7qXDejO0niE6liaPm1m0.png"
+    src = (
+        Path(__file__).parents[1]
+        / "cfg"
+        / "qrcode_uzNYdXGMb0kW7qXDejO0niE6liaPm1m0.png"
+    )
     payload = "uzNYdXGMb0kW7qXDejO0niE6liaPm1m0"
 
     qrcode = Qrcode(src, payload)
@@ -890,9 +924,10 @@ async def qrcodes_mp4(avd):
         The deqr package along with pillow can be used to decode a screenshot
         containing a QR code.
     """
-    class Qrcodes():
-        """A class to handle a MP4 video with pre-encoded QRcodes
-        """
+
+    class Qrcodes:
+        """A class to handle a MP4 video with pre-encoded QRcodes"""
+
         def __init__(self, src: str, payloads: list):
             self.src = src
             self.payloads = payloads
@@ -906,15 +941,17 @@ async def qrcodes_mp4(avd):
             await avd.stop_activity("com.google.android.apps.photos")
             await avd.start_activity(
                 "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
-                params=f'-a android.intent.action.VIEW -d file://{self.path} -t "video/*"'\
-                       + ( f" --display {display_id}" if display_id != 0 else "" )
+                params=f'-a android.intent.action.VIEW -d file://{self.path} -t "video/*"'
+                + (f" --display {display_id}" if display_id != 0 else ""),
             )
             logging.info(f"Started QR codes video on display '{display_id}'")
 
     src_video = Path(__file__).parents[1] / "cfg" / "qrcodes.mp4"
-    payloads = ['uzNYdXGMb0kW7qXDejO0niE6liaPm1m0',
-                'W6fEti4U7ImHU1mxBXkLpOehomty7mTM',
-                'tAdFTEYPzbOw6qXBR1jyvzFohsx1gfdz']
+    payloads = [
+        "uzNYdXGMb0kW7qXDejO0niE6liaPm1m0",
+        "W6fEti4U7ImHU1mxBXkLpOehomty7mTM",
+        "tAdFTEYPzbOw6qXBR1jyvzFohsx1gfdz",
+    ]
 
     qrcodes = Qrcodes(src_video, payloads)
     await qrcodes._push()

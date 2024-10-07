@@ -107,9 +107,7 @@ def launch():
     parser.add_argument(
         "--out", help="The (optional) output file where the result will be written to"
     )
-    parser.add_argument(
-        "--cfg", help="Directory containing the configuration files"
-    )
+    parser.add_argument("--cfg", help="Directory containing the configuration files")
     parser.add_argument(
         "xml", nargs="*", help="The list of xml skip reports that are to be merged"
     )

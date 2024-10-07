@@ -289,7 +289,7 @@ class PyRunner:
         Args:
             packages ([str]): The set of packages to install
         """
-        self.run(["-m", "pip", "install", "-v", "--upgrade"] + packages)
+        self.run(["-m", "pip", "install", "-v", "--upgrade"] + packages, timeout=600)
 
     def run(
         self,
@@ -555,20 +555,24 @@ def parse_arguments():
     )
 
     args = parser.parse_args()
-    configure_logging(logging.DEBUG if args.verbose else logging.INFO,
-                      log_path=test_runner.get_log_path(Path(args.logdir)))
+    configure_logging(
+        logging.DEBUG if args.verbose else logging.INFO,
+        log_path=test_runner.get_log_path(Path(args.logdir)),
+    )
 
     if args.generate:
         if not args.virtual_env_dir:
             raise ValueError(
                 "You must provide a virtual environment directory (-d/--directory)"
             )
-        AospPyRunner(
-            "http://localhost:3141/packages/stable", args.virtual_env_dir
-        )
+        AospPyRunner("http://localhost:3141/packages/stable", args.virtual_env_dir)
         venv = Path(args.virtual_env_dir) / ".venv"
-        print(f"Virtal environment installed in {venv}. Please run the activate script.")
-        print("Note that you might have to run `pip download <package>` multiple times.")
+        print(
+            f"Virtal environment installed in {venv}. Please run the activate script."
+        )
+        print(
+            "Note that you might have to run `pip download <package>` multiple times."
+        )
         sys.exit(0)
 
     if args.build_dir and args.emulator:
@@ -580,7 +584,9 @@ def parse_arguments():
     return args
 
 
-def create_pyrunner(local_python: bool, virtual_env_dir: str, verbose: bool) -> PyRunner:
+def create_pyrunner(
+    local_python: bool, virtual_env_dir: str, verbose: bool
+) -> PyRunner:
     """Creates a PyRunner object, installing the needed pip packages."""
     repo = AOSP_ROOT / "external" / "adt-infra" / "devpi" / "repo" / "simple"
 

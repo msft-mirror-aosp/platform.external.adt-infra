@@ -38,8 +38,6 @@ def dumpAvdConent(mypath):
         logging.info("Found: %s", f)
 
 
-@pytest.mark.e2e
-@pytest.mark.slow
 @pytest.mark.snapshot
 @pytest.mark.skipos("win", "Windows takes >2700 seconds to boot")
 async def test_snapshot_create(emulator):
