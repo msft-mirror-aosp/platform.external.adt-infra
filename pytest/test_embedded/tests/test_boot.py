@@ -27,6 +27,7 @@ from google.protobuf import empty_pb2
 from emu.apk import APP_DEBUG_APK
 from emu.timing import eventually
 from emu.emulator import Emulator
+from tests.test_utils import check_boot_from_snapshot
 import json
 
 # This will run the tests in this module using this
@@ -132,18 +133,6 @@ async def test_first_time_booted(emulator, record_property):
     assert await emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
 
     await shutdown(emulator)
-
-
-def check_boot_from_snapshot(avdpath) -> bool:
-    mypath = Path(avdpath, "snapshot.trace")
-    with open(mypath) as fp:
-        for line in fp:
-            line.rstrip()
-            logging.info("reading line '%s'", line)
-            if "load_succeeded" in line:
-                return True
-
-    return False
 
 
 @pytest.mark.boot
