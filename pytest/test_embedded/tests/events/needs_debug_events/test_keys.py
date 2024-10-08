@@ -342,7 +342,7 @@ async def test_emulator_controls_keys(avd, emulator_controller):
 
 @pytest.mark.sanity
 @pytest.mark.async_timeout(2080)
-async def test_close_emulator(avd):
+async def test_close_emulator(avd, logcat, screen_recorder):
     """Ensure the emulator windows closes cleanly.
 
     Args:

@@ -15,8 +15,17 @@
                 "--emulator=/Users/jansene/src/emu-master-dev/external/qemu/objs/emulator",
                 // This should be the test you wish to run
                 "-k",
-                "test_invalid_snapshot_notifies_user",
+                "test_the_screenrec",
             ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": false

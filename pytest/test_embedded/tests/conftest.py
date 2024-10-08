@@ -42,6 +42,7 @@ from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 
 from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
+from emu.recording.screen_recorder import AsyncScreenRecorder
 from emu.images.convert import save_image
 from emu.utils import system_cpu
 from snippet_uiautomator import uiautomator
@@ -532,7 +533,7 @@ async def logcat(avd: BaseEmulator):
     )
     await adb_log_cmd.run()
     yield adb_log_cmd.handler
-    adb_log_cmd.cancel()
+    await adb_log_cmd.cancel()
 
 
 @pytest.fixture
@@ -1057,3 +1058,21 @@ def add_junitxml_properties(request, record_testsuite_property):
     for avd_config in avd_configs:
         for key, property in avd_config.items():
             record_testsuite_property(key, property)
+
+
+@pytest.fixture
+async def screen_recorder(request, log_directory):
+    screenrecorder_dir = Path(log_directory) / "screenrecording"
+    screenrecorder_dir.mkdir(parents=True, exist_ok=True)
+    test_name = request.node.nodeid.split("::")[-1]
+    file_name = re.sub(r"[\\/\{\}:]", "_", test_name)
+
+    output_filename = screenrecorder_dir / f"{file_name}.mp4"
+    if output_filename.exists():
+        output_filename.unlink()
+    recorder = AsyncScreenRecorder(output_filename=output_filename)
+    await recorder.start_recording()
+
+    yield recorder
+
+    await recorder.stop_recording()
