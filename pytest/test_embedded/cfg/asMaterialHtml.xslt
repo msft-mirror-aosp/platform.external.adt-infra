@@ -129,6 +129,13 @@
                             </span>
                         </div>
                     </xsl:if>
+                    <!-- Conditionally display the failure chip -->
+                    <xsl:if test="@errors > 0">
+                        <div class="mdc-chip error" role="row">
+                            <span class="mdc-chip__text">Failed: <xsl:value-of select="@failures" />
+                            </span>
+                        </div>
+                    </xsl:if>
                     <!-- Conditionally display the skipped chip -->
                     <xsl:if test="@skipped > 0">
                         <div class="mdc-chip skip" role="row">
@@ -138,8 +145,7 @@
                     </xsl:if>
                 </div>
             </div>
-            <xsl:if test="@failures > 0">
-
+            <xsl:if test="@errors > 0 or @failures > 0">
                 <div class="mdc-card__actions">
                     <button class="mdc-button mdc-card__action mdc-card__action--button"
                         onclick="toggleDetails('suite-{generate-id()}')">
@@ -173,9 +179,7 @@
             name="identity" select="concat('test-', $parent-type, '-', generate-id())" />
 
         <!-- Only display error or failed tests, no value in showing successfuk tessts-->
-        <xsl:if
-            test="failure or error">
-
+        <xsl:if test="failure or error">
             <li class="mdc-list-item mdc-list-item--with-two-lines" tabindex="0">
                 <span class="mdc-list-item__ripple"></span>
                 <span class="mdc-list-item__start">
@@ -203,11 +207,8 @@
                     </button>
                 </span>
             </li>
-
-            <li
-                id="test-{generate-id()}" style="display: none;">
+            <li id="test-{generate-id()}" style="display: none;">
                 <div class="mdc-card" style="margin: 16px;">
-
                     <div class="mdc-card__content" style="padding: 16px;">
                         <button class="mdc-button mdc-button--raised" onclick="copyErrorLog('error-log-{generate-id()}')"
                             data-target="error-log-{generate-id()}">
@@ -218,11 +219,12 @@
                         <pre id="error-log-{generate-id()}" class="mdc-typography--body2"
                             style="white-space: pre-wrap; word-break: break-word; margin: 0;">
                       <xsl:value-of select="failure/@message"/>
+                      <xsl:value-of select="error/@message"/>
+                      <xsl:value-of select="system-out"/>
                     </pre>
                     </div>
                 </div>
             </li>
-
         </xsl:if>
     </xsl:template>
 </xsl:stylesheet>
