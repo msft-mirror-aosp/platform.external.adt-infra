@@ -23,6 +23,7 @@ from PIL import ImageGrab
 from emu.emulator import BaseEmulator
 from emu.images.convert import proto_to_pillow
 from aemu.proto.emulator_controller_pb2 import ImageFormat
+from pathlib import Path
 import deqr
 import logging
 import asyncio
@@ -184,3 +185,15 @@ async def click_button(
     await avd.adb.shell(" ".join([*map(str, cmd)]))
     logging.info(f"Sent the adb shell command '{' '.join(map(str, cmd))}'")
     return True
+
+
+def check_boot_from_snapshot(avdpath) -> bool:
+    mypath = Path(avdpath, "snapshot.trace")
+    with open(mypath) as fp:
+        for line in fp:
+            line.rstrip()
+            logging.info("reading line '%s'", line)
+            if "load_succeeded" in line:
+                return True
+
+    return False

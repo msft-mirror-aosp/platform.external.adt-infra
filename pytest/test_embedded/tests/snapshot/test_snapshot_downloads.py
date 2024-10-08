@@ -11,6 +11,7 @@ import requests
 
 from emu.process.command import Command
 from emu.timing import eventually
+from tests.test_utils import check_boot_from_snapshot
 
 # This will run the tests in this module using this
 # user configuration. This will fetch an image with api 33 and
@@ -111,18 +112,6 @@ async def download_emulator_zip(build_id):
     return Path(
         mydownloaded_emulator_path, f"{build_id}", "emulator", "emulator"
     ).absolute()
-
-
-def check_boot_from_snapshot(avdpath) -> bool:
-    mypath = Path(avdpath, "snapshot.trace")
-    with open(mypath) as fp:
-        for line in fp:
-            line.rstrip()
-            logging.info("reading line '%s'", line)
-            if "load_succeeded" in line:
-                return True
-
-    return False
 
 
 @pytest.mark.snapshot
