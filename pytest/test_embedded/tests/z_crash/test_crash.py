@@ -199,9 +199,37 @@ async def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
 async def nav_back(n):
     """Send the Shift+Tab (navigate back) hotkey 'n' times"""
     while n > 0:
-        pyautogui.hotkey("Shift", "Tab")
+        if pytest.system == "Darwin":
+            exec = "osascript"
+            params = [
+                "-e",
+                "tell application \"System Events\" to keystroke tab using shift down"
+            ]
+            exit_code, output = await Command([exec] + params).run_until_finished()
+            assert exit_code == 0, f"Couldn't send Shift+Tab keystroke: {output}"
+        else:
+            pyautogui.hotkey("Shift", "Tab")
         await asyncio.sleep(1)
         n -= 1
+
+async def send_keystroke(keystroke: str):
+    logging.info(f"Attempting to send keystroke {keystroke} ..")
+    if pytest.system == "Darwin":
+        exec = "osascript"
+        params = [
+            "-e",
+            f"tell application \"System Events\" to keystroke {keystroke}"
+        ]
+        exit_code, output = await Command([exec] + params).run_until_finished()
+        assert exit_code == 0, f"Couldn't send keystroke {keystroke}: {output}"
+    else:
+        pyautogui.press(keystroke)
+
+async def send_text(text: str):
+    if pytest.system == "Darwin":
+        await send_keystroke("\"" + text + "\"")
+    else:
+        pyautogui.write(text)
 
 
 async def string_in_emulator_log(log: AsyncLogHandler, string, matched_line=[]):
@@ -232,15 +260,14 @@ async def restart_and_verify_crash_dialogue(avd):
             f"The following crashpad annotation was matched: {matched_line[0]}"
         )
     except AssertionError as e:
-        logging.info("Attempting to close the crash report dialogue ...")
+        logging.error("Attempting to close the crash report dialogue ...")
         await avd.stop()
         raise
 
 
-@pytest.mark.skipos("all", "issue with crash retry_plugin. b/368319883")
 @pytest.mark.async_timeout(600)
-@pytest.mark.crash_flake(retries=0)
 @pytest.mark.fast
+@pytest.mark.skipos("linux", "reason: Issue with pyautogui.")
 @pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
 async def test_crash_dont_send_report(avd, crash_reporter):
     """Verify user can reject/cancel sending emulator crash report.
@@ -255,7 +282,7 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         3. Relaunch the AVD (Verify 1).
         4. Click "Show details"
         5. Click "Hide details", type some user comments.
-        6. Press "Don’t Send" (Verify 2).
+        6. Press "Don't Send" (Verify 2).
 
     Verification:
         1. Crash Report Dialogue Window should show up before relaunching the AVD,
@@ -263,58 +290,59 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         2. The dialog disappears immediately, with the event being observed
            in the emulator log.
     """
-    crashes = await crash(avd, crash_reporter)
-    assert len(crashes) >= 1, "Couldn't crash the emulator."
-
-    await restart_and_verify_crash_dialogue(avd)
-
-    # Click “Show details”
-    await nav_back(3)
-    pyautogui.press("enter")
-    await asyncio.sleep(2)
-
-    # Click “Hide details”
-    pyautogui.press("enter")
-
-    # Type some user comments
-    await nav_back(2)
-    pyautogui.write("Emulator E2E testing: test_crash.py::test_crash_dont_send_report")
-    await asyncio.sleep(2)
-
-    async def dismiss_and_verify():
-        # Press button “Don’t Send”
-        async def _dismiss():
-            await nav_back(1)
-            if platform.system() == "Darwin":
-                # Dialogue buttons are in reversed postion on macOS
-                await nav_back(1)
-            pyautogui.press("enter")
-
-        # Check stdout for the 'No consent' message
-        async def _verify():
-            return await eventually(
-                partial(string_in_emulator_log, avd.log, "No consent for crashreport"),
-                timeout=120,
-            )
-
-        res = await asyncio.gather(_dismiss(), _verify())
-        return res[1]
-
     try:
+        crashes = await crash(avd, crash_reporter)
+        assert len(crashes) >= 1, "Couldn't crash the emulator."
+
+        await restart_and_verify_crash_dialogue(avd)
+
+        # Click “Show details”
+        await nav_back(3)
+        await send_keystroke("return")
+        await asyncio.sleep(2)
+
+        # Click “Hide details”
+        await send_keystroke("return")
+
+        # Type some user comments
+        await nav_back(2)
+        await send_text("Emulator E2E testing: test_crash.py::test_crash_dont_send_report")
+        await asyncio.sleep(2)
+
+        async def dismiss_and_verify():
+            # Press button “Don't Send”
+            async def _dismiss():
+                await nav_back(1)
+                if platform.system() == "Darwin":
+                    # Dialogue buttons are in reversed postion on macOS
+                    await nav_back(1)
+                await send_keystroke("return")
+
+            # Check stdout for the 'No consent' message
+            async def _verify():
+                return await eventually(
+                    partial(string_in_emulator_log, avd.log, "No consent for crashreport"),
+                    timeout=120,
+                )
+
+            res = await asyncio.gather(_dismiss(), _verify())
+            return res[1]
+
         assert (
             await dismiss_and_verify()
         ), "Couldn't confirm the crash report rejection."
         logging.info("Dialogue window successfully dismissed")
-    except AssertionError as e:
-        logging.info("Attempting to close the crash report dialogue ...")
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        logging.error("Attempting to close the crash report dialogue ...")
         await avd.stop()
         raise
 
 
-@pytest.mark.skipos("all", "issue with crash retry_plugin. b/369204765")
 @pytest.mark.async_timeout(600)
-@pytest.mark.crash_flake(retries=0)
 @pytest.mark.fast
+@pytest.mark.skipos("linux", "reason: Issue with pyautogui.")
 @pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
 async def test_crash_send_report(avd, crash_reporter):
     """Verify user can proceed with sending emulator crash report.
@@ -343,15 +371,15 @@ async def test_crash_send_report(avd, crash_reporter):
 
     # Click “Show details”
     await nav_back(3)
-    pyautogui.press("enter")
+    await send_keystroke("return")
     await asyncio.sleep(2)
 
     # Click “Hide details”
-    pyautogui.press("enter")
+    await send_keystroke("return")
 
     # Type some user comments
     await nav_back(2)
-    pyautogui.write("Emulator E2E testing: test_crash.py::test_crash_dont_send_report")
+    await send_text("Emulator E2E testing: test_crash.py::test_crash_send_report")
     await asyncio.sleep(2)
 
     async def confirm_and_verify():
@@ -361,7 +389,7 @@ async def test_crash_send_report(avd, crash_reporter):
             if platform.system() != "Darwin":
                 # Dialogue buttons are in reversed order on macOS
                 await nav_back(1)
-            pyautogui.press("enter")
+            await send_keystroke("return")
 
         # Verify the crash report submission.
         async def _verify():
@@ -398,8 +426,8 @@ async def test_crash_send_report(avd, crash_reporter):
 
 
 @pytest.mark.fast
-@pytest.mark.crash_flake(retries=0)
 @pytest.mark.async_timeout(600)
+@pytest.mark.skipos("linux", "reason: Issue with pyautogui.")
 @pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
 async def test_crash_without_internet(avd, crash_reporter):
     """Verify no exceptions are raised when sending a crash report without internet connectivity.
@@ -440,48 +468,44 @@ async def test_crash_without_internet(avd, crash_reporter):
     logging.info("Launching the emulator with no host internet connectivity ...")
     emulator_args = [arg for arg in avd.cmd.cmd if arg != "-metrics-collection"]
     cmd = await Command(
-        [exec_path] + params + emulator_args + ["-no-snapshot-save"]
+        [exec_path] + params + emulator_args + ["-no-snapshot-save", "-no-metrics"]
     ).run()
     await asyncio.sleep(5)
 
-    async def send_and_verify():
-        # Press button "Send report"
-        async def _send_report():
-            logging.info("Attempting to click the 'Send report' button.")
+    # Press button "Send report"
+    async def _send_report():
+        await nav_back(1)
+        if platform.system() != "Darwin":
+            # Dialogue buttons are in reversed order on macOS
             await nav_back(1)
-            if platform.system() != "Darwin":
-                # Dialogue buttons are in reversed order on macOS
-                await nav_back(1)
-            pyautogui.press("enter")
+        await send_keystroke("return")
 
-        # Verify the crash report upload fails.
-        async def _verify():
-            # Verify attempt to send the crash report.
-            res_attempt = await eventually(
-                partial(
-                    string_in_emulator_log,
-                    cmd.handler,
-                    "Attempting to send crashreport.",
-                ),
-                timeout=120,
-            )
-            # Check crash report failure.
-            res_verify = await eventually(
-                partial(string_in_emulator_log, cmd.handler, "Failed to send report."),
-                timeout=120,
-            )
-            return res_attempt, res_verify
-
-        await _send_report()
-        return await _verify()
+    # Verify the crash report upload fails.
+    async def verify_crash_report_failure():
+        logging.info("Attempting to verify the crash report submission ..")
+        res_attempt = await eventually(
+            partial(
+                string_in_emulator_log,
+                cmd.handler,
+                "Attempting to send crashreport",
+            ),
+            timeout=120,
+        )
+        logging.info("Attempting to verify the crash report failure ..")
+        res_verify = await eventually(
+            partial(string_in_emulator_log, cmd.handler, "Failed to send report."),
+            timeout=120,
+        )
+        return res_attempt, res_verify
 
     try:
-        res_attempt, res_verify = await send_and_verify()
+        await send_report()
+        res_attempt, res_verify = await verify_crash_report_failure()
+        assert res_attempt, "There was no attempt to send the crash report."
+        assert res_verify, "The crash report failure couldn't be verified."
     except Exception as e:
         logging.error(f"An exception occurred: {e}")
+        raise
     finally:
         logging.info("Attempting to kill the emulator process.")
         await cmd.cancel()
-
-    assert res_attempt, "There was no attempt to send the crash report."
-    assert res_verify, "The crash report failure couldn't be verified."
