@@ -356,3 +356,55 @@ async def test_invalid_snapshot_notifies_user(avd):
 
     # Remove the created snapshots.
     await asyncio.gather(*[delete_snapshot(f"foo_{i}") for i in range(3)])
+
+
+@pytest.mark.snapshot
+@pytest.mark.fast
+@pytest.mark.async_timeout(1080)
+async def test_on_demand_ram_loading(emulator):
+    """Verify AVD stability with on-demand RAM loading.
+
+    Args:
+        emulator (BaseEmulator): Fixture that gives access to the configured emulator.
+
+    Test Steps:
+        1. Launch a new AVD.
+        2. Reboot the AVD by using adb reboot.
+        3. Create and launch a quickboot snapshot.
+        4. Repeat Step 2.
+
+    Verification:
+        1. There are no crashes. AVD should reboot and work normally.
+    """
+    await emulator.restart(emulator.launch_flags + ["-snapshot", "snap"])
+    await emulator.wait_for_boot()
+
+    logging.info("Attempting to reboot the emulator ...")
+    await emulator.adb.run(["reboot"])
+    assert await (
+        emulator.wait_for_boot()
+    ), "Emulator didn't come online after adb reboot."
+    await asyncio.sleep(5)
+    console = await emulator.console()
+
+    logging.info("Attempting to save quickboot snapshot ...")
+    await console.send("avd snapshot save snap")
+
+    logging.info("Attempting to load the quickboot snapshot")
+    await console.send("avd snapshot load snap")
+    try:
+        assert await emulator.wait_for_boot()
+        response = await console.send("avd snapshot get")
+        assert any(
+            ['snap' in element for element in response]
+        ), "Couldn't load the quickboot snapshot"
+        await emulator.adb.run(["reboot"])
+        assert await (
+            emulator.wait_for_boot()
+        ), "Emulator didn't come online after adb reboot."
+
+    except AssertionError as e:
+        logging.error("Couldn't boot from the quickboot snapshot.")
+        raise
+    finally:
+        await console.send("avd snapshot del snap")
