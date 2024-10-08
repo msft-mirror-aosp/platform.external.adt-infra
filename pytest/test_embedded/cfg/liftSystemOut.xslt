@@ -3,7 +3,22 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     <xsl:output method="xml" version="1.0" encoding="UTF-8" indent="yes"/>
     <xsl:strip-space elements="*"/>
+
     <!-- identity transform -->
+    <xsl:template match="/">
+        <xsl:processing-instruction  name="xml-stylesheet">
+            type="text/xsl" href="https://android.googlesource.com/platform/external/adt-infra/+/refs/heads/emu-master-dev/pytest/test_embedded/cfg/asMaterialHtml.xslt"
+        </xsl:processing-instruction>
+        <xsl:apply-templates />
+    </xsl:template>
+
+    <xsl:template match="@*|node()">
+        <xsl:copy>
+            <xsl:apply-templates select="@*|node()"/>
+        </xsl:copy>
+    </xsl:template>
+
+
     <xsl:template match="@*|node()">
         <xsl:copy>
             <xsl:apply-templates select="@*|node()"/>
