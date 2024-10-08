@@ -324,9 +324,9 @@ async def test_invalid_snapshot_notifies_user(avd):
         # Set 'cold_boot_mode' to 'True' if the cold boot text is detected in the log.
         nonlocal cold_boot_mode
         message = record.getMessage()
-        if (
-            "USER_INFO" in message
-            and "The emulator is starting from scratch" in message
+        if "USER_INFO" in message and (
+            "The emulator is starting from scratch" in message
+            or "Emulator is performing a full startup." in message
         ):
             cold_boot_mode = True
         return True
