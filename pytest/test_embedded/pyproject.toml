@@ -25,7 +25,7 @@ dependencies = [
     "PyAutoGUI==0.9.54",
     "protobuf==4.25.2",
     "grpcio==1.60.0",
-    "opencv_python>=4.9",
+    "opencv_python>=4.10",
     "pytest==8.3.3",
     "pytest-benchmark==4.0.0",
     "pytest-dependency==0.5.1",
