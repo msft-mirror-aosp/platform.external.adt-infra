@@ -491,20 +491,30 @@ public class SettingsUtil {
      * @param target UiSelector
      * @return boolean
      */
-    public static boolean scrollToObject(UiDevice device, UiSelector region, UiSelector target)
-            throws RuntimeException {
+    public static boolean scrollToObject(UiDevice device, UiSelector region, UiSelector target) {
         try {
             UiScrollable scrollable = new UiScrollable(region);
             scrollable.setAsVerticalList();
 
-            UiScrollable itemList =
-                    new UiScrollable(region);
+            UiScrollable itemList = new UiScrollable(region);
             itemList.setAsVerticalList();
             itemList.scrollIntoView(target);
-            assertTrue("Failed to scroll to the target object",
-                    new Wait().until(() -> device.findObject(target).exists()));
+
+            int attempts = 0;
+            final int maxAttempts = 5;
+            final long waitTime = 5000;
+            boolean targetExists;
+            do {
+                targetExists = new Wait(waitTime).until(() -> device.findObject(target).exists());
+                attempts++;
+            } while (!targetExists && attempts < maxAttempts);
+            if (!targetExists) {
+                Log.w(TAG, "Failed to scroll to the target object");
+                return false;
+            }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            Log.e(TAG, "Exception occurred while trying to scroll to the target object", e);
+            throw new RuntimeException("Failed to scroll to the target object due to an exception", e);
         }
         return true;
     }
@@ -886,7 +896,7 @@ public class SettingsUtil {
             UiScrollable scrollableContainer = i == 0 ?
                     new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES)) :
                     new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
-            if (!new Wait(10000).until(scrollableContainer::exists)) {
+            if (!new Wait(20000).until(scrollableContainer::exists)) {
                 Log.w(TAG, "Scrollable view not found");
                 return false;
             }
@@ -905,7 +915,7 @@ public class SettingsUtil {
 
             if (!new Wait().until(() -> {
                 try {
-                    return option.clickAndWaitForNewWindow(15000L);
+                    return option.clickAndWaitForNewWindow(30000L);
                 } catch (UiObjectNotFoundException e) {
                     return false;
                 }

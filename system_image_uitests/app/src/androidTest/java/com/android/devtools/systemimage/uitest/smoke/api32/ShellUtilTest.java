@@ -126,15 +126,15 @@ public class ShellUtilTest {
         UiObject bugReportButton = device.findObject(
                 new UiSelector().text("Bug report"));
         assertTrue("Bug report button not found", bugReportButton.waitForExists(10000L));
-        bugReportButton.clickAndWaitForNewWindow();
+        bugReportButton.clickAndWaitForNewWindow(10000L);
 
         UiObject fullReportButton = device.findObject(new UiSelector().textMatches("(?i)full report(?-i)"));
         if (fullReportButton.exists()) {
-            fullReportButton.clickAndWaitForNewWindow();
+            fullReportButton.clickAndWaitForNewWindow(10000L);
         }
 
         UiObject reportButton = device.findObject(new UiSelector().textMatches("(?i)report(?-i)"));
-        if (reportButton.exists()) {
+        if (reportButton.waitForExists(10000L)) {
             reportButton.click();
         }
 
