@@ -5,10 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
-            "type": "python",
+            "name": "Python: Pytest",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-vvv",
+                // This should be the path to your emulator
+                "--emulator=/Users/jansene/src/emu-master-dev/external/qemu/objs/emulator",
+                // This should be the test you wish to run
+                "-k",
+                "test_the_screenrec",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: File",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
+            "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": false
         }

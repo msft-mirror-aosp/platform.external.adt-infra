@@ -42,6 +42,7 @@ from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 
 from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
+from emu.recording.screen_recorder import AsyncScreenRecorder
 from emu.images.convert import save_image
 from emu.utils import system_cpu
 from snippet_uiautomator import uiautomator
@@ -157,23 +158,6 @@ def log_thread_error(args):
 
 
 threading.excepthook = log_thread_error
-
-
-def pytest_logger_config(logger_config):
-    loggers = ["root", "adb", "emulator"]
-    for i in range(0, 10):
-        loggers += [f"emu-{i}", f"emu-{i}-adb", f"emu-{i}-con", f"emu-{i}-logcat"]
-
-    logger_config.add_loggers(loggers, stdout_level="info")
-    logger_config.split_by_outcome()
-
-
-def pytest_logger_logsdir(config):
-    log_file = config.getoption("--log-file")
-    if log_file:
-        return Path(log_file).parent
-
-    return Path.cwd() / "results"
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:
@@ -511,12 +495,6 @@ async def manage_avd(emulator) -> BaseEmulator:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
     await emulator.restart(emulator.launch_flags)
-    adb_log_cmd = Command(
-        [emulator.adb.adb_binary, "-s", emulator.adb.name, "logcat"],
-        logging.getLogger(emulator.log_id + "-logcat"),
-    )
-    await adb_log_cmd.run()
-
     assert await emulator.wait_for_boot()
     logging.info("The emulator has finished booting")
 
@@ -543,9 +521,19 @@ async def manage_avd(emulator) -> BaseEmulator:
 
     logging.info("<-- teardown emulator")
     # Stop the emulator.
-    adb_log_cmd.cancel()
     await emulator.stop()
     logging.info("=== completed emulator")
+
+
+@pytest.fixture
+async def logcat(avd: BaseEmulator):
+    adb_log_cmd = Command(
+        [avd.adb.adb_binary, "-s", avd.adb.name, "logcat"],
+        logging.getLogger(avd.log_id + "-logcat"),
+    )
+    await adb_log_cmd.run()
+    yield adb_log_cmd.handler
+    await adb_log_cmd.cancel()
 
 
 @pytest.fixture
@@ -1070,3 +1058,21 @@ def add_junitxml_properties(request, record_testsuite_property):
     for avd_config in avd_configs:
         for key, property in avd_config.items():
             record_testsuite_property(key, property)
+
+
+@pytest.fixture
+async def screen_recorder(request, log_directory):
+    screenrecorder_dir = Path(log_directory) / "screenrecording"
+    screenrecorder_dir.mkdir(parents=True, exist_ok=True)
+    test_name = request.node.nodeid.split("::")[-1]
+    file_name = re.sub(r"[\\/\{\}:]", "_", test_name)
+
+    output_filename = screenrecorder_dir / f"{file_name}.mp4"
+    if output_filename.exists():
+        output_filename.unlink()
+    recorder = AsyncScreenRecorder(output_filename=output_filename)
+    await recorder.start_recording()
+
+    yield recorder
+
+    await recorder.stop_recording()

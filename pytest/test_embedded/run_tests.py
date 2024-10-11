@@ -28,6 +28,7 @@ from zipfile import ZipFile, ZipInfo
 from src.emu.logging.log_handler import configure_logging
 
 import test_runner
+from git import Git
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -76,6 +77,10 @@ class JavaNotFound(Exception):
 
 
 class AdbNotFound(Exception):
+    pass
+
+
+class GitOpenFiles(Exception):
     pass
 
 
@@ -489,6 +494,13 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "-p",
+        "--presubmit",
+        nargs="*",
+        help="Run tests against tests that were changed in the given commit, or set of files.",
+    )
+
+    parser.add_argument(
         "-g",
         "--generate",
         default=False,
@@ -602,6 +614,35 @@ def create_pyrunner(
 
 
 def main(args):
+    if args.presubmit:
+        # We are doing a presubmit run
+        git = Git()
+        changes = []
+        for file_or_sha in args.presubmit:
+            if git.is_valid_git_commit(file_or_sha):
+                changes += git.changed_files(file_or_sha)
+            else:
+                changes.append(Path(file_or_sha))
+
+        tests = Path("pytest/test_embedded/tests")
+        short = Path("tests")
+        changes = [
+            x.name
+            for x in changes
+            if (x.is_relative_to(tests) or x.is_relative_to(short))
+            and x.name.endswith(".py")
+        ]
+
+        if not changes:
+            logging.info("No tests where changed, no need to run presubmit.")
+            exit(0)
+
+        os.environ["PYTEST_ADDOPTS"] = " ".join([f"-k {test}" for test in changes])
+        logging.info(
+            "Adding '%s' to PYTEST_ADDOPTS to run specific tests.",
+            os.environ["PYTEST_ADDOPTS"],
+        )
+
     py_exe = create_pyrunner(args.local_python, args.virtual_env_dir, args.verbose)
     tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite)
 

@@ -15,6 +15,9 @@
 import pytest
 from aemu.proto.emulator_controller_pb2 import SmsMessage
 from emu.timing import eventually
+import asyncio
+import logging
+import threading
 import time
 
 
@@ -22,7 +25,10 @@ import time
 @pytest.mark.fast
 @pytest.mark.parametrize("phone_number,text_message", [("987654321", "Hello There")])
 async def test_send_inbound_sms_text_message(
-    emulator_controller, phone_number, text_message
+    emulator_controller,
+    logcat,
+    phone_number,
+    text_message,
 ):
     """Send inbound phone number and text message.
 
@@ -53,11 +59,11 @@ async def allow_sms_messages(emulator):
 
 @pytest.mark.hardware
 @pytest.mark.fast
-@pytest.mark.skipos("mac", "reason: timeout on mac.")
-@pytest.mark.skipos("m1", "reason: timeout on m1.")
+# @pytest.mark.skipos("mac", "reason: timeout on mac.")
+# @pytest.mark.skipos("m1", "reason: timeout on m1.")
 @pytest.mark.parametrize("phone_number,text_message", [("987654321", "Hello There")])
 async def test_send_inbound_sms_text_message_received_by_mobly(
-    emulator_controller, mbs, allow_sms_messages, phone_number, text_message
+    emulator_controller, logcat, mbs, allow_sms_messages, phone_number, text_message
 ):
     """
     This test verifies that an inbound SMS text message is received by Mobly.
@@ -70,12 +76,35 @@ async def test_send_inbound_sms_text_message_received_by_mobly(
         text_message: The text content of the SMS.
     """
 
-    message = SmsMessage(srcAddress=phone_number, text=text_message)
-    response = await emulator_controller.sendSms(message)
+    # Function to execute mbs.waitForSms in a separate thread
+    message = {}
+    sms_received = False
+    running = False
+    wait_time = None
+
+    def wait_for_sms():
+        nonlocal message, sms_received, wait_time
+        wait_time = time.time()
+        logging.info("Waiting for sms.")
+        message = mbs.waitForSms(5000)["data"]
+        sms_received = True
+
+    thread = threading.Thread(target=wait_for_sms)
+    thread.start()
+
+    # Make sure we are listening for messages before we send them
+    # TODO: Figure out how to do this with condition variables?
+    await asyncio.sleep(0.5)
+
+    # Now send the actual message.
+    logging.info("Sending sms.")
+    sms = SmsMessage(srcAddress=phone_number, text=text_message)
+    response = await emulator_controller.sendSms(sms)
     assert response.response == response.OK
 
-    # We expect the message with a few 5 seconds, this will raise an exception
-    # in case of failure.
-    message = mbs.waitForSms(5000)["data"]
+    # We will wait at most 5 secs.
+    thread.join()
+
+    assert sms_received
     assert message["OriginatingAddress"] == phone_number
     assert message["MessageBody"] == text_message

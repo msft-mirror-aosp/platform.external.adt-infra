@@ -88,19 +88,28 @@ upload_file() {
 }
 
 download_package() {
+    rm -rf /tmp/incoming
     local file=$1
     # Download stuff
-    pip download $file --index-url http://localhost:3141/packages/staging -d /tmp
+    pip download $file --only-binary=:all: \
+    --platform macosx_11_0_arm64 \
+    --index-url http://localhost:3141/packages/staging -d /tmp/incoming
+    pip download $file --only-binary=:all: \
+    --platform macosx_10_15_x86_64 \
+    --index-url http://localhost:3141/packages/staging -d /tmp/incoming
+    pip download $file --only-binary=:all: \
+    --platform win_amd64 \
+    --index-url http://localhost:3141/packages/staging -d /tmp/incoming
+    pip download $file --only-binary=:all: \
+    --platform manylinux_2_17_x86_64 \
+    --index-url http://localhost:3141/packages/staging -d /tmp/incoming
 
     # Move it around to the right places
-    FIND=$file\*
-    echo "Finding $FIND"
-    for wheel in $(find $HERE/server -name "$FIND"); do
-        dest=$HERE/repo/$(basename $wheel)
-        cp $wheel $dest
-        rm $wheel
-        ln -sf $dest $wheels
+    for fname in $(find /tmp/incoming -name '*whl'); do
+        echo "Processing ${fname}"
+        upload_file ${fname}
     done
+
 }
 
 # register all the packages with git

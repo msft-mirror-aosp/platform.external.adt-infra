@@ -113,9 +113,6 @@ public class SettingsTest {
         assertTrue("Location not found in Settings List",
                 SettingsUtil.navigateToSettingsPath(device, "Location", "See all"));
 
-        UiObject seeAll = device.findObject(new UiSelector()
-                .text("See all"));
-
         boolean recentAccessDesc = new Wait().until(
                 () -> device.findObject(new UiSelector()
                         .description("Recent access")).exists());
@@ -198,18 +195,17 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void testMapPermissions() throws Exception {
-        final String appType = "Location";
-        final String appName = "Maps";
+        final String LOCATION_PERMISSION = "Location";
+        final String MAPS_PERMISSION = "Maps";
 
         if (!testFramework.isGoogleApiAndPlayImage() && !testFramework.isGoogleApiImage()) {
             return;
         }
 
-        SettingsUtil.setAppPermissions_v3(instrumentation, appType, appName, false,
-                "Deny anyway", "Apps", "Permission manager");
+        assertTrue("Map location preferences not found", setAppPermissions(MAPS_PERMISSION, false, LOCATION_PERMISSION));
         device.pressHome();
 
-        AppLauncher.launch(instrumentation, appName);
+        AppLauncher.launch(instrumentation, MAPS_PERMISSION);
         final UiObject acceptAndContinueButton;
         acceptAndContinueButton = device.findObject(new UiSelector().
                 textMatches("(?i)accept\\s&\\scontinue"));
@@ -237,9 +233,6 @@ public class SettingsTest {
                 new Wait(20000L).until(allowForegroundButton::exists));
 
         device.pressHome();
-
-        SettingsUtil.setAppPermissions_v3(instrumentation, appName, appName, true,
-                "Deny anyway", "Apps", "Permission manager");
     }
 
     /**
@@ -263,9 +256,112 @@ public class SettingsTest {
     @TestInfo(id = "4f09278e-d1e3-47bb-a22c-70f236ac9a48")
     public void displayConfigureAppPermissions() throws Exception {
 
-        assertTrue(SettingsUtil.getAppPermissions_v2(instrumentation, "Calendar", "Apps", "Permission manager").exists()
-                && SettingsUtil.getAppPermissions_v2(instrumentation, "Camera", "Apps", "Permission manager").exists()
-                && SettingsUtil.getAppPermissions_v2(instrumentation, "Phone", "Apps", "Permission manager").exists());
+        assertTrue(getAppPermissions("Calendar")
+                && getAppPermissions("Camera")
+                && getAppPermissions("Phone"));
+    }
+
+    private boolean getAppPermissions(String appName) throws Exception {
+        assertTrue(appName + " not found in Settings List",
+                SettingsUtil.navigateToSettingsPath(device, "Apps"));
+
+        UiScrollable scrollableContainer =
+                new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
+        if (!new Wait(10000).until(scrollableContainer::exists)) {
+            Log.w(TAG, "Scrollable view not found");
+            return false;
+        }
+        UiSelector allAppsSelector = new UiSelector().text("All apps");
+        UiSelector seeAllSelector = new UiSelector().textStartsWith("See all");
+
+        UiObject allAppsOption = device.findObject(allAppsSelector);
+        UiObject seeAllOption = device.findObject(seeAllSelector);
+
+        boolean optionFound = scrollableContainer.scrollIntoView(allAppsOption);
+        if (optionFound) {
+            allAppsOption.clickAndWaitForNewWindow();
+        } else {
+            optionFound = scrollableContainer.scrollIntoView(seeAllOption);
+            if (optionFound) {
+                seeAllOption.clickAndWaitForNewWindow();
+            } else {
+                Log.w(TAG, "Failed to scroll to all Apps permissions options");
+                return false;
+            }
+        }
+
+        UiScrollable appsListScrollable = new UiScrollable(new UiSelector().resourceId("com.android.settings:id/apps_list"));
+        appsListScrollable.setAsVerticalList();
+
+        if (!new Wait().until(appsListScrollable::exists)) {
+            Log.w(TAG, "Apps list scrollable view not found");
+            return false;
+        }
+
+        UiObject appToFind = appsListScrollable.getChildByText(new UiSelector().className(TextView.class.getName()), appName);
+        return appToFind.exists();
+    }
+
+    private boolean setAppPermissions(String appName, boolean isPermissionEnabled, String... permissionType) throws Exception {
+        assertTrue(appName + " not found in Apps List",
+                getAppPermissions(appName));
+
+        UiObject appToFind = device.findObject(new UiSelector().text(appName));
+        appToFind.clickAndWaitForNewWindow();
+
+        UiScrollable appRecyclerView = new UiScrollable(new UiSelector().resourceId("com.android.settings:id/recycler_view"));
+        appRecyclerView.setAsVerticalList();
+
+        if (!new Wait().until(appRecyclerView::exists)) {
+            Log.w(TAG, "App list recycler view not found for " + appName);
+            return false;
+        }
+
+        UiObject appPermissions = appRecyclerView.getChildByText(
+                new UiSelector().className(TextView.class.getName()), appName);
+        if (!appPermissions.exists()) {
+            Log.w(TAG, "App permissions not found for " + appName);
+            return false;
+        }
+
+        appPermissions.clickAndWaitForNewWindow();
+        SettingsUtil.dismissUnresponsivePopup(device);
+
+        UiObject permissionsLabel = appRecyclerView.getChildByText(
+                new UiSelector().className(TextView.class.getName()), "Permissions");
+        if (!permissionsLabel.exists()) {
+            Log.w(TAG, "Permissions label not found for " + appName);
+            return false;
+        }
+        permissionsLabel.clickAndWaitForNewWindow();
+        SettingsUtil.dismissUnresponsivePopup(device);
+
+        if (permissionType.length > 0) {
+            UiScrollable permissionRecyclerView = new UiScrollable(new UiSelector().resourceId("com.android.permissioncontroller:id/recycler_view"));
+            permissionRecyclerView.setAsVerticalList();
+            if (!new Wait().until(permissionRecyclerView::exists)) {
+                Log.w(TAG, "Permission recycler view not found for " + appName);
+                return false;
+            }
+            UiObject permissionTypeLabel = permissionRecyclerView.getChildByText(
+                    new UiSelector().className(TextView.class.getName()), permissionType[0]);
+            if (!permissionTypeLabel.exists()) {
+                Log.w(TAG, "Permission type label not found for " + appName);
+                return false;
+            }
+            permissionTypeLabel.clickAndWaitForNewWindow();
+        }
+
+        String permissionButtonId = isPermissionEnabled ?
+                "com.android.permissioncontroller:id/allow_always_radio_button" : "com.android.permissioncontroller:id/deny_radio_button";
+        UiObject permissionButton = device.findObject(
+                new UiSelector().resourceId(permissionButtonId));
+        if (!new Wait().until(permissionButton::exists)) {
+            Log.w(TAG, "Permission button not found for " + appName);
+            return false;
+        }
+        permissionButton.clickAndWaitForNewWindow();
+        return true;
     }
 
     /**
@@ -315,40 +411,44 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
         try {
-            SettingsUtil.navigateToSettingsPath(device, "System", "Date & time");
+            assertTrue("Failed to navigate to Date & Time settings",
+                    new Wait().until(() -> SettingsUtil.navigateToSettingsPath(device, "System", "Date & time"))
+            );
         } catch (Exception e) {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
-        final UiObject timeButton = device.findObject(new UiSelector().text("Set time automatically"));
+        UiObject timeButton = device.findObject(new UiSelector().text("Set time automatically"));
+        assertTrue("Time button not found", new Wait().until(timeButton::exists));
 
-        // Test requires "Automatic date & time" widget to start in the enabled state.
-        if (device.findObject(new UiSelector().text("Date")).isEnabled()) {
+        UiObject dateOption = device.findObject(new UiSelector().text("Date"));
+        assertTrue("Failed to find Date option", new Wait().until(dateOption::exists));
+
+        if (dateOption.isEnabled()) {
             timeButton.click();
         }
-        assertTrue("Failed to disable set date.",
-                new Wait().until(() -> !device.findObject(new UiSelector().text("Date")).isEnabled())
-        );
-        assertTrue("Failed to disable set time.",
-                new Wait().until(() -> !device.findObject(new UiSelector().text("Time")).isEnabled())
-        );
+
+        assertTrue("Failed to disable set date", new Wait().until(() -> !dateOption.isEnabled()));
+        UiObject timeOption = device.findObject(new UiSelector().text("Time"));
+        assertTrue("Failed to disable set time", new Wait().until(() -> !timeOption.isEnabled()));
+
         timeButton.click();
-        assertTrue("Failed to enable set date.",
-                new Wait().until(() -> device.findObject(new UiSelector().text("Date")).isEnabled())
-        );
-        assertTrue("Failed to enable set time.",
-                new Wait().until(() -> device.findObject(new UiSelector().text("Time")).isEnabled())
-        );
-        device.findObject(new UiSelector().text("Date")).clickAndWaitForNewWindow();
+        assertTrue("Failed to enable set date", new Wait().until(dateOption::isEnabled));
+        assertTrue("Failed to enable set time", new Wait().until(timeOption::isEnabled));
 
-        assertTrue(device.findObject(
-                new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES)).exists());
-        device.findObject(new UiSelector().textContains("Cancel")).click();
-        device.findObject(new UiSelector().text("Time")).click();
-        assertTrue(device.findObject(
-                new UiSelector().resourceId(Res.ANDROID_TIME_HEADER_RES)).exists());
+        dateOption.clickAndWaitForNewWindow();
+        UiObject datePickerHeader = device.findObject(new UiSelector().resourceId(Res.ANDROID_DATE_PICKER_HEADER_RES));
+        assertTrue("Date picker not found", new Wait().until(datePickerHeader::exists));
 
-        device.findObject(new UiSelector().textContains("Cancel")).click();
+        UiObject cancelButton = device.findObject(new UiSelector().textContains("Cancel"));
+        assertTrue("Cancel button not found", new Wait().until(cancelButton::exists));
+        cancelButton.click();
+
+        timeOption.click();
+        UiObject timeHeader = device.findObject(new UiSelector().resourceId(Res.ANDROID_TIME_HEADER_RES));
+        assertTrue("Time header not found", new Wait().until(timeHeader::exists));
+
+        cancelButton.click();
     }
 
     /**
@@ -373,16 +473,21 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
         try {
-            SettingsUtil.navigateToSettingsPath(device, "System", "Date & time");
+            assertTrue("Failed to navigate to Date & Time settings",
+                    new Wait().until(() -> SettingsUtil.navigateToSettingsPath(device, "System", "Date & time"))
+            );
         } catch (Exception e) {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
-        final UiObject autoTimeZoneButton = device.findObject(new UiSelector().text("Set time zone automatically"));
-        final UiObject timeZoneButton = device.findObject(new UiSelector().textContains("GMT"));
+        UiObject autoTimeZoneButton = device.findObject(new UiSelector().text("Set time zone automatically"));
+        assertTrue("Auto Time Zone button not found", new Wait().until(autoTimeZoneButton::exists));
+
+        UiObject timeZoneButton = device.findObject(new UiSelector().textContains("GMT"));
+        assertTrue("Time Zone button not found", new Wait().until(timeZoneButton::exists));
 
         // Test requires "Automatic date & time" widget to start in the enabled state.
-        if (timeZoneButton.isEnabled()) {
+        if (new Wait().until(timeZoneButton::isEnabled)) {
             autoTimeZoneButton.click();
         }
         assertTrue("Failed to disable select time zone",
@@ -402,13 +507,14 @@ public class SettingsTest {
 
         UiObject timeZoneLabel = device.findObject(new UiSelector().textMatches("Time zone").
                 resourceId(Res.ANDROID_TITLE_RES).packageName("com.android.settings"));
-        if (timeZoneLabel.waitForExists(3L)) {
+        assertTrue("Time Zone label not found", new Wait().until(timeZoneLabel::exists));
+        if (new Wait().until(timeZoneLabel::exists)) {
             timeZoneLabel.clickAndWaitForNewWindow();
         }
 
         String timezoneOffset = "GMT-08:00";
-        assertTrue("Target time zone label not found",
-                device.findObject(new UiSelector().textContains(timezoneOffset)).waitForExists(3L));
+        UiObject targetTimeZoneLabel = device.findObject(new UiSelector().textContains(timezoneOffset));
+        assertTrue("Target time zone label not found", new Wait().until(targetTimeZoneLabel::exists));
     }
 
     /**
@@ -928,6 +1034,7 @@ public class SettingsTest {
      */
     @Test
     public void revokeDebugAuth() throws Exception {
+
         if (!SettingsUtil.navigateToSettingsPath(device, "System", "Developer options")) {
             SettingsUtil.enableDeveloperOptions(instrumentation);
             Assert.assertTrue("Could not enable developer options",

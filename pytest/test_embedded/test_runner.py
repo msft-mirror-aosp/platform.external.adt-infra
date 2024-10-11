@@ -129,14 +129,16 @@ def run_tests(
     apply_xslt(
         python_exe=pyrun,
         source=result,
-        xslt=HERE / "cfg" / "asHtml.xslt",
-        dest=Path(logdir) / "test_report.html",
+        xslt=HERE / "cfg" / "liftSystemOut.xslt",
+        dest=result,
     )
+
+    # This needs to be applied after the lift stylesheet.
     apply_xslt(
         python_exe=pyrun,
         source=result,
-        xslt=HERE / "cfg" / "liftSystemOut.xslt",
-        dest=result,
+        xslt=HERE / "cfg" / "asMaterialHtml.xslt",
+        dest=Path(logdir) / "test_report.html",
     )
     apply_xslt(
         python_exe=pyrun,
