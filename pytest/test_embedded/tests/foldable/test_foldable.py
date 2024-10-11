@@ -94,7 +94,7 @@ async def test_foldable(emulator_controller, fmt, fold_angle, unfold_angle):
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
 @pytest.mark.async_timeout(90)
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_folded_snapshot_sanity(
     emulator_controller, snapshot_service, fmt, fold_angle, unfold_angle
 ):
@@ -138,7 +138,7 @@ async def test_folded_snapshot_sanity(
 @pytest.mark.parametrize(
     "fmt,fold_angle,unfold_angle", [(ImageFormat.RGB888, 15.0, 180.0)]
 )
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 @pytest.mark.async_timeout(90)
 async def test_unfolded_snapshot_sanity(
     emulator_controller, snapshot_service, fmt, fold_angle, unfold_angle

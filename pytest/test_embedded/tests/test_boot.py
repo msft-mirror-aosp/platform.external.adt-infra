@@ -173,7 +173,7 @@ async def test_snapshot_booted(emulator):
 
 @pytest.mark.boot
 @pytest.mark.skipos("win", "will turn on later")
-@pytest.mark.flaky  # b/286570480
+@pytest.mark.flaky(reruns=0)  # b/286570480
 @pytest.mark.async_timeout(400)
 async def test_emulator_should_idle(emulator):
     """check emulator use less than 25% single cpu when idle."""
@@ -219,7 +219,7 @@ async def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
 @pytest.mark.boot
 @pytest.mark.fast
 @pytest.mark.async_timeout(180)
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_emulator_debug_startup(avd):
     """Ensure the emulator is able to launch with DEBUG messages.
 

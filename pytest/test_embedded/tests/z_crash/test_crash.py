@@ -153,7 +153,7 @@ async def crash(emulator: BaseEmulator, crash_reporter: CrashReporter):
 
 @pytest.mark.boot
 @pytest.mark.fast
-@pytest.mark.flaky  # b/278266218 flaky on linux_x64-gfxstream.
+@pytest.mark.flaky(reruns=0)  # b/278266218 flaky on linux_x64-gfxstream.
 async def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
     """Make sure the emulator can crash, and produces a report.
 

@@ -25,7 +25,7 @@ from emu.timing import wait_until
     "launch_flags",
     [["-no-snapshot"], ["-no-snapshot", "-feature", "WiFiPacketStream"]],
 )
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_wifi_has_connectivity(avd, launch_flags):
     assert await avd.restart(avd.launch_flags + launch_flags)
     assert await avd.wait_for_boot()
