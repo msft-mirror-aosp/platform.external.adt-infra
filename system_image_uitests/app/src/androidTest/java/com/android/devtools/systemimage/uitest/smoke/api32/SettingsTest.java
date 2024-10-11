@@ -407,7 +407,7 @@ public class SettingsTest {
      */
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
-    public void enableSetDateAndSetTime() throws Exception
+    public void enableSetDateAndSetTime() throws Exception {
         assertTrue("Failed to navigate to Date & Time settings",
                     new Wait().until(() -> SettingsUtil.navigateToSettingsPath(device, "System", "Date & time")));
 
