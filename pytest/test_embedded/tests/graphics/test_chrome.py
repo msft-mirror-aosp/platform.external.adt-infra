@@ -13,9 +13,12 @@
 # limitations under the License.
 
 import pytest
+import logging
 from aemu.proto.emulator_controller_pb2 import ImageFormat
+from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 
 from emu.timing import eventually, wait_until
+from tests.test_utils import decode_qrcodes
 
 
 chrome_pkg = "com.android.chrome"
@@ -128,3 +131,50 @@ async def test_launch_chrome_google(avd, get_screenshot):
 
     assert saw_purple, f"Did not see a screenshot with 40% purple pixels"
     await avd.stop_activity(chrome_pkg)
+
+
+@pytest.mark.sanity
+@pytest.mark.graphics
+@pytest.mark.parametrize(
+    "gpu_mode", ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
+)
+async def test_page_loads_with_different_gpu_modes(emulator, gpu_mode, qrcode_png):
+    """Verify AVD has no issues with loading web content with different gpu modes.
+
+    Args:
+        emulator (BaseEmulator): Fixture that gives access to the running emulator.
+        gpu_mode (str): gpu mode.
+        qrcode_png (Qrcode): Fixture that provides a PNG image with a pre-encoded QR code.
+
+    Test Steps:
+        1. Launch an AVD with the option "-gpu auto".
+        2. Open the PNG image with the pre-encoded QR code in Chrome (Verify).
+        3. Repeat the process with other gpu modes:
+           - host, swiftshader_indirect, angle_indirect (Windows), swangle.
+
+    Verification:
+        Chrome should load the image without any graphic issues, observed by
+        the decoding of the embedded QR code through a series of screenshots.
+    """
+    if gpu_mode == "angle_indirect" and pytest.system != "Windows":
+        pytest.skip(f"gpu mode {gpu_mode} is only available on Windows.")
+
+    logging.info(f"Launching the emulator with the gpu mode '{gpu_mode}'.")
+    await emulator.launch(
+        emulator.launch_flags + ["-no-snapshot-save", "-gpu", f"{gpu_mode}"]
+    )
+    await emulator.wait_for_boot()
+
+    await prepare_chrome(emulator)
+    logging.info(f"Opening file '{qrcode_png.path}' in Google Chrome ..")
+    await emulator.start_activity(
+        chrome_cmp,
+        params=f"-d file://{qrcode_png.path}"
+    )
+
+    emulator_controller = EmulatorControllerStub(emulator.channel)
+    logging.info(f"Attempting to decode the QR code ..")
+    assert await decode_qrcodes(
+        [qrcode_png.payload],
+        emulator_controller=emulator_controller
+    ), f"Unable to idetify the QR code payload for gpu '{gpu_mode}'."
