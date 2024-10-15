@@ -74,6 +74,7 @@ fi
 
 setup_twine() {
     # Setup twine and devpi.
+    pip install --upgrade pip
     pip install devpi-client twine pip2pi
     devpi login root --password "@verys@f3pa@ssw0rd"
     devpi use http://localhost:3141/packages/staging
@@ -87,35 +88,56 @@ upload_file() {
     find $HERE -name $wheel -exec git add -f {} \;
 }
 
+download_for_os() {
+    local package=$1
+    local os=$2
+    local dest=$3
+    echo ">>> Obtaining $package for $os"
+    pip download $package \
+    --only-binary=:all: \
+    --platform $os \
+    --index-url http://localhost:3141/packages/staging \
+    --abi cp310 \
+    -d $dest
+}
+
 download_package() {
-    rm -rf /tmp/incoming
+    # Create a temporary directory
+    tmpdir=$(mktemp -d)
     local file=$1
-    # Download stuff
-    pip download $file --only-binary=:all: \
-    --platform macosx_11_0_arm64 \
-    --index-url http://localhost:3141/packages/staging -d /tmp/incoming
-    pip download $file --only-binary=:all: \
-    --platform macosx_10_15_x86_64 \
-    --index-url http://localhost:3141/packages/staging -d /tmp/incoming
-    pip download $file --only-binary=:all: \
-    --platform win_amd64 \
-    --index-url http://localhost:3141/packages/staging -d /tmp/incoming
-    pip download $file --only-binary=:all: \
-    --platform manylinux_2_17_x86_64 \
-    --index-url http://localhost:3141/packages/staging -d /tmp/incoming
+    # You can add more platforms if needed.
+    for supported in \
+        macosx_10_15_x86_64 \
+        macosx_11_0_arm64 \
+        macosx_12_0_arm64 \
+        macosx_14_0_x86_64 \
+        macosx_14_0_arm64 \
+        manylinux_2_17_x86_64 \
+        win_amd64
+    do
+        download_for_os $file $supported "$tmpdir"
+    done
 
     # Move it around to the right places
-    for fname in $(find /tmp/incoming -name '*whl'); do
+    for fname in $(find "$tmpdir" -name '*whl'); do
         echo "Processing ${fname}"
         upload_file ${fname}
     done
 
+    # Clean up the temporary directory
+    rm -rf "$tmpdir"
 }
 
 # register all the packages with git
 register_packages() {
     dir2pi $HERE/repo
     symlinks -cr $HERE
+    find $HERE/repo -type f -name "*.html" -print0 | while IFS= read -r -d '' file; do
+        # Sort the contents of the file.
+        sort "$file" > "$file.tmp"
+        mv "$file.tmp" "$file"
+        echo "Sorted: $file"
+    done
     find $HERE/repo -print0 | xargs -0 git add -f
     find $HERE/server -print0 | xargs -0 git add -f
 }
