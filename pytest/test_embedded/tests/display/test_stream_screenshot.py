@@ -43,7 +43,7 @@ def read_pixel(width, height, pack, arr):
     ],
 )
 async def test_stream_screenshot_receives_frames(
-    animation_app, emulator_controller, tmpdir, fmt, channel
+    animation_app, stream_screenshot, tmpdir, fmt, channel
 ):
     """Test that streaming screenshot receives a series of frames."""
     path = str(tmpdir.realpath())  # Needed for py2 compatibility
@@ -51,14 +51,13 @@ async def test_stream_screenshot_receives_frames(
     with open(tmp_file, "wb") as out:
         out.truncate(360 * 640 * 4 + 1024)
 
-    stream = emulator_controller.streamScreenshot(
+    stream = stream_screenshot(
         ImageFormat(
             width=360,
             height=640,
             format=fmt,
             transport=ImageTransport(channel=channel, handle="file://" + tmp_file),
-        ),
-        timeout=5,
+        )
     )
 
     async def count_10_images():
