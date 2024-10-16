@@ -389,7 +389,7 @@ class Emulator(BaseEmulator):
         exe: Path,
         avd_config: dict[str, str],
         fetcher: Path | None,
-        log_id: str | None,
+        log_id: str | None = "emu-?",
     ) -> None:
         """Create and launches the emulator
 

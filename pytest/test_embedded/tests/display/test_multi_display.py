@@ -595,6 +595,7 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
         exe=emulator.exe,
         avd_config=config,
         fetcher=None,
+        log_id="emu-0",
     )
     await emu.launch(flags=myflags)
     await emu.wait_for_boot(timeout=180)
@@ -609,8 +610,8 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
             return False
         return display_size_pattern.groups()[0] == str(n)
 
-    assert await (
-        eventually(partial(ensure_logical_displays, n_displays, emu), timeout=180)
+    assert await eventually(
+        partial(ensure_logical_displays, n_displays, emu), timeout=180
     ), "Wrong number of displays detected"
 
     await emu.stop()
