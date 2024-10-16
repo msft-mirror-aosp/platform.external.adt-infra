@@ -189,7 +189,7 @@ async def test_emulator_should_idle(emulator):
 
     mytimeout = 45
     if platform.processor() == "i386" and platform.system() == "Darwin":
-        mytimeout = 360
+        mytimeout = 120
     logging.info(
         "Waiting at most %s seconds for emulator to boot from snapshot", mytimeout
     )
@@ -271,7 +271,7 @@ async def test_emulator_debug_startup(avd):
 
 
 @pytest.mark.oldapiboot
-@pytest.mark.async_timeout(1080)
+@pytest.mark.async_timeout(200)
 async def test_first_time_booted_old_api(emulator):
     """Make sure the emulator status is set to booted."""
 
@@ -283,7 +283,8 @@ async def test_first_time_booted_old_api(emulator):
     assert await emulator.launch(flags=myflags)
 
     logging.info("Waiting for it to boot up ...")
-    await asyncio.wait_for(get_booted_notification_time(emulator), timeout=1080)
+    # 99 percentile boots in less than 2 minutes.
+    await asyncio.wait_for(get_booted_notification_time(emulator), timeout=180)
 
     logging.info("Shutting down the emulator ...")
     if emulator.is_alive():
@@ -292,7 +293,7 @@ async def test_first_time_booted_old_api(emulator):
 
 
 @pytest.mark.fast
-@pytest.mark.async_timeout(1080)
+@pytest.mark.async_timeout(240)
 @pytest.mark.parametrize("core", [1, 2])
 async def test_multicore_startup(emulator, core):
     """Verify emulator launches without issues on single and dual core CPUs."""
@@ -302,14 +303,16 @@ async def test_multicore_startup(emulator, core):
     logging.info(f"Launching emulator with {core} core ...")
 
     await emulator.restart(emu_flags=myflags)
+    # 99 percentile boots in less than 2 minutes.
+    # go/stats/#report_id=Emulator%2FBootTime%2F7-day%20BootTime
     assert await emulator.wait_for_boot(
-        timeout=1080
+        timeout=120
     ), f"The emulator couldn't be launched with {core} core"
     await emulator.stop()
 
 
 @pytest.mark.fast
-@pytest.mark.async_timeout(1080)
+@pytest.mark.async_timeout(240)
 async def test_boot_without_internet(emulator):
     """Verify emulator can boot with no internet.
 
@@ -331,8 +334,10 @@ async def test_boot_without_internet(emulator):
 
     # Launch the emulator.
     await emulator.restart(emulator.launch_flags + my_flags)
+    # 99 percentile boots in less than 2 minutes.
+    # go/stats/#report_id=Emulator%2FBootTime%2F7-day%20BootTime
     assert await emulator.wait_for_boot(
-        timeout=180
+        timeout=120
     ), f"The emulator wasn't able to boot without internet."
 
     # Make sure the emulator launched without internet access.
