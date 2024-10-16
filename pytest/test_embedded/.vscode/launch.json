@@ -15,7 +15,7 @@
                 "--emulator=/Users/jansene/src/emu-master-dev/external/qemu/objs/emulator",
                 // This should be the test you wish to run
                 "-k",
-                "test_the_screenrec",
+                "rotation_through_console_observable_through_stream_screenshot",
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
