@@ -135,6 +135,7 @@ async def test_launch_chrome_google(avd, get_screenshot):
 
 @pytest.mark.sanity
 @pytest.mark.graphics
+@pytest.mark.screen_recorder
 @pytest.mark.parametrize(
     "gpu_mode", ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
 )
