@@ -96,7 +96,7 @@ async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
 
 @pytest.mark.snapshot
 @pytest.mark.sanity
-@pytest.mark.async_timeout(300)
+@pytest.mark.async_timeout(240)
 async def test_app_launch_after_snapshot_load(avd, snapshot_service):
     assert await snapshot_service.save("foo")
     snapshots = await snapshot_service.lists()
@@ -396,7 +396,7 @@ async def test_on_demand_ram_loading(emulator):
         assert await emulator.wait_for_boot()
         response = await console.send("avd snapshot get")
         assert any(
-            ['snap' in element for element in response]
+            ["snap" in element for element in response]
         ), "Couldn't load the quickboot snapshot"
         await emulator.adb.run(["reboot"])
         assert await (

@@ -199,11 +199,12 @@ class BaseEmulator(object):
 
         return False
 
-    async def wait_for_boot(self, timeout: int = 600) -> bool:
+    async def wait_for_boot(self, timeout: int = 120) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
 
         Args:
-            timeout (int, optional): Timeout in seconds. Defaults to 600 seconds.
+            timeout (int, optional): Timeout in seconds. Defaults to 120 seconds,
+            which is the 99 percentile of boot times for our users.
 
         Returns:
             bool: True if the emulator has booted, False otherwise.
@@ -217,7 +218,15 @@ class BaseEmulator(object):
             self.description.name(),
             await self.has_booted(),
         )
-        return await wait_until(self.has_booted, timeout=timeout)
+        booted = await wait_until(self.has_booted, timeout=timeout)
+        if not booted:
+            # Didn't boot in time? Let's see if something useful is on logcat:
+            log = await self.adb.exec_out("logcat -d")
+            logging.error(
+                "Boot did not complete in %s seconds, logcat: %s", timeout, log
+            )
+
+        return booted
 
     async def console(self) -> EmulatorClient:
         """Returns a connection to the emulator console, authenticating if needed.
