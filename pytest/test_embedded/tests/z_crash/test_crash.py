@@ -203,7 +203,7 @@ async def nav_back(n):
             exec = "osascript"
             params = [
                 "-e",
-                "tell application \"System Events\" to keystroke tab using shift down"
+                'tell application "System Events" to keystroke tab using shift down'
             ]
             exit_code, output = await Command([exec] + params).run_until_finished()
             assert exit_code == 0, f"Couldn't send Shift+Tab keystroke: {output}"
@@ -212,22 +212,21 @@ async def nav_back(n):
         await asyncio.sleep(1)
         n -= 1
 
+
 async def send_keystroke(keystroke: str):
     logging.info(f"Attempting to send keystroke {keystroke} ..")
     if pytest.system == "Darwin":
         exec = "osascript"
-        params = [
-            "-e",
-            f"tell application \"System Events\" to keystroke {keystroke}"
-        ]
+        params = ["-e", f'tell application "System Events" to keystroke {keystroke}']
         exit_code, output = await Command([exec] + params).run_until_finished()
         assert exit_code == 0, f"Couldn't send keystroke {keystroke}: {output}"
     else:
         pyautogui.press(keystroke)
 
+
 async def send_text(text: str):
     if pytest.system == "Darwin":
-        await send_keystroke("\"" + text + "\"")
+        await send_keystroke('"' + text + '"')
     else:
         pyautogui.write(text)
 
@@ -306,7 +305,9 @@ async def test_crash_dont_send_report(avd, crash_reporter):
 
         # Type some user comments
         await nav_back(2)
-        await send_text("Emulator E2E testing: test_crash.py::test_crash_dont_send_report")
+        await send_text(
+            "Emulator E2E testing: test_crash.py::test_crash_dont_send_report"
+        )
         await asyncio.sleep(2)
 
         async def dismiss_and_verify():
@@ -321,7 +322,9 @@ async def test_crash_dont_send_report(avd, crash_reporter):
             # Check stdout for the 'No consent' message
             async def _verify():
                 return await eventually(
-                    partial(string_in_emulator_log, avd.log, "No consent for crashreport"),
+                    partial(
+                        string_in_emulator_log, avd.log, "No consent for crashreport"
+                    ),
                     timeout=120,
                 )
 
