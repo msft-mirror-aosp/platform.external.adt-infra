@@ -12,13 +12,13 @@ def default_image():
 
 
 @pytest.mark.skipos("all", "Not related to emulator.")
-@pytest.mark.flaky  # b/278294760 flaky on mac_aarch64.
+@pytest.mark.flaky(reruns=0)  # b/278294760 flaky on mac_aarch64.
 def test_at_least_one_available(default_image):
     assert SystemImages().available() is not None
 
 
 @pytest.mark.skipos("all", "Not related to emulator.")
-@pytest.mark.flaky  # b/278294760 flaky on mac_aarch64.
+@pytest.mark.flaky(reruns=0)  # b/278294760 flaky on mac_aarch64.
 def test_can_find_default(default_image):
     image = SystemImages().find(
         abi=default_image["abi"], api=default_image["api"], tag=default_image["tag"]
@@ -27,7 +27,7 @@ def test_can_find_default(default_image):
 
 
 @pytest.mark.skipos("all", "Not related to emulator.")
-@pytest.mark.flaky  # b/278294760 flaky on mac_aarch64.
+@pytest.mark.flaky(reruns=0)  # b/278294760 flaky on mac_aarch64.
 def test_can_install_default(default_image):
     image = SystemImages().install(
         abi=default_image["abi"], api=default_image["api"], tag=default_image["tag"]

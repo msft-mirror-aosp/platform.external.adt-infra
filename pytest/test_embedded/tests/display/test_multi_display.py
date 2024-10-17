@@ -299,7 +299,7 @@ async def test_multidisplay_double_ids_error(
 
 
 @pytest.mark.multidisplay
-@pytest.mark.flaky  # b/322551553
+@pytest.mark.flaky(reruns=0)  # b/322551553
 async def test_multidisplay_can_configure_four(
     ensure_multidisplay_service_ready,
     avd,

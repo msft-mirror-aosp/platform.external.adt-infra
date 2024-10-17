@@ -73,7 +73,7 @@ EMU_TO_PIL_IMAGE_FORMATS = {
 @pytest.mark.embedded
 @pytest.mark.fast
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_screenshot_all_formats_are_equal(
     avd, get_screenshot, animation_app, w, h
 ):
@@ -104,7 +104,7 @@ async def test_screenshot_all_formats_are_equal(
     [(ImageFormat.RGB888, 3), (ImageFormat.RGBA8888, 4)],
 )
 @pytest.mark.parametrize("degrees", [0, 90])
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_screenshot_exact_amount_of_pixels(
     at_home, get_screenshot, emulator_controller, image_format, bpp, degrees
 ):
@@ -164,7 +164,7 @@ async def all_orientations(emulator_controller, request):
 # bug 299344829
 @pytest.mark.embedded
 @pytest.mark.async_timeout(120)
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_screenshot_valid_width_and_height(
     avd, get_screenshot, default_display_config
 ):
@@ -179,7 +179,7 @@ async def test_screenshot_valid_width_and_height(
 
 
 @pytest.mark.embedded
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_screenshot_gets_default_resolution(
     at_home, get_screenshot, default_display_config, all_orientations
 ):
@@ -197,7 +197,7 @@ async def test_screenshot_gets_default_resolution(
 
 
 @pytest.mark.embedded
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_screenshot_never_scales_up(
     at_home, get_screenshot, default_display_config, all_orientations
 ):
@@ -222,7 +222,7 @@ async def test_screenshot_never_scales_up(
 
 
 @pytest.mark.embedded
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_screenshot_should_fail_if_does_not_exist(
     at_home, emulator_controller, default_display_config
 ):
