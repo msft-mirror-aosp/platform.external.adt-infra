@@ -21,6 +21,8 @@ import pytest
 
 from emu.timing import wait_until
 
+WIFI_SSID = "AndroidWifi"
+
 
 def _check_and_kill_iperf3_server():
     """Checks if port 5201 is in use and if an iperf3 server is running on localhost.
@@ -74,10 +76,22 @@ def _read_output(process, logger_name):
 @pytest.mark.wifi_perf
 @pytest.mark.async_timeout(60 * 30)
 @pytest.mark.flaky(reruns=3)  # b/366316511 3 retries to stabilize linux builds
-async def test_iperf3(avd, record_property):
+async def test_iperf3(avd, record_property, mbs):
     """Test case to run iperf3 and record wifi performance."""
     # Disable cellular connection to make sure we are testing wifi
     await avd.adb.shell("svc data disable")
+
+    # Connect to AndroidWifi
+    mbs.wifiConnectSimple(WIFI_SSID, None)
+
+    # Print out current connection info
+    conn_info = mbs.wifiGetConnectionInfo()
+    logging.info("Connection info is: %s", conn_info)
+    assert conn_info, "Failed to get wifi connection info."
+
+    # Verify SSID
+    ssid = conn_info.get("SSID")
+    assert ssid == WIFI_SSID, f"Expected Wifi SSID is {WIFI_SSID}. Actual SSID: {ssid}"
 
     # Wait for Wifi connectivity for up to 30s after boot
     async def has_connectivity():
