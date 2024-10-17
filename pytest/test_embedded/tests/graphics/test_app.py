@@ -21,7 +21,7 @@ from emu.timing import eventually
 
 
 @pytest.mark.graphics
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 async def test_android_app_dialog_has_dimmed_background(
     avd, get_screenshot, log_adb_interactions
 ):

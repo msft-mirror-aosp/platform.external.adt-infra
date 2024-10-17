@@ -30,6 +30,7 @@ dependencies = [
     "pytest-benchmark==4.0.0",
     "pytest-dependency==0.5.1",
     "pytest-logger==1.1.1; sys_platform != 'win32'",
+    "pytest-rerunfailures==14.0",
     "alt-pytest-asyncio==0.7.2",
     "requests==2.28.1",
     "lxml==4.9.1",

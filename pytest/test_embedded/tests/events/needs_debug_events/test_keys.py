@@ -342,7 +342,7 @@ async def test_emulator_controls_keys(avd, emulator_controller):
 
 @pytest.mark.sanity
 @pytest.mark.async_timeout(2080)
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 @pytest.mark.skipos("linux", "This is very flaky on linux b/365169284")
 async def test_close_emulator(avd, logcat, screen_recorder):
     """Ensure the emulator windows closes cleanly.
