@@ -147,7 +147,7 @@
         ],
         "status": "disabled"
     },
-     "embedded_resizable_test_suite_api_34": {
+    "embedded_resizable_test_suite_api_34": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
         "launch_flags": [
             "-no-snapshot",
@@ -519,10 +519,10 @@
         ],
         "status": "disabled"
     },
-    "fast_test_suite_api_31": {
-        "description": "Set of tests we want to run as a part of emulator fast test suite",
+    "fast_test_suite_api_31_set_1_of_2": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite, group 0",
         "pytest_flags": [
-            "-m fast and not resizable and not newresizable"
+            "-m fast and not resizable and not newresizable --group-number=1 --max-groups=2"
         ],
         "avd_configs": [
             {
@@ -533,10 +533,24 @@
         ],
         "status": "disabled"
     },
-    "fast_test_suite_api_33": {
+    "fast_test_suite_api_31_set_2_of_2": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite, group 0",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable --group-number=2 --max-groups=2"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "31",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "disabled"
+    },
+    "fast_test_suite_api_33_set_1_of_2": {
         "description": "Set of tests we want to run as a part of emulator fast test suite",
         "pytest_flags": [
-            "-m fast and not resizable and not newresizable"
+            "-m fast and not resizable and not newresizable --group-number=1 --max-groups=2"
         ],
         "avd_configs": [
             {
@@ -547,10 +561,24 @@
         ],
         "status": "disabled"
     },
-    "fast_test_suite_api_34": {
+    "fast_test_suite_api_33_set_2_of_2": {
         "description": "Set of tests we want to run as a part of emulator fast test suite",
         "pytest_flags": [
-            "-m fast and not resizable and not newresizable"
+            "-m fast and not resizable and not newresizable --group-number=2 --max-groups=2"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "33",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "disabled"
+    },
+    "fast_test_suite_api_34_set_1_of_2": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable --group-number=1 --max-groups=2"
         ],
         "avd_configs": [
             {
@@ -561,10 +589,38 @@
         ],
         "status": "disabled"
     },
-    "fast_test_suite_api_35": {
+    "fast_test_suite_api_34_set_2_of_2": {
         "description": "Set of tests we want to run as a part of emulator fast test suite",
         "pytest_flags": [
-            "-m fast and not resizable and not newresizable"
+            "-m fast and not resizable and not newresizable --group-number=2 --max-groups=2"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "34",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "disabled"
+    },
+    "fast_test_suite_api_35_set_1_of_2": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable --group-number=1 --max-groups=2"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [],
+                "api": "35",
+                "tag.id": "google_apis"
+            }
+        ],
+        "status": "disabled"
+    },
+    "fast_test_suite_api_35_set_2_of_2": {
+        "description": "Set of tests we want to run as a part of emulator fast test suite",
+        "pytest_flags": [
+            "-m fast and not resizable and not newresizable --group-number=2 --max-groups=2"
         ],
         "avd_configs": [
             {
@@ -640,7 +696,7 @@
             }
         ],
         "status": "disabled"
-     },
+    },
     "atv_test_suite_api_31": {
         "description": "Set of tests that run on a Android TV AVD (API 31)",
         "pytest_flags": [

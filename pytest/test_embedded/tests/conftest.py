@@ -25,6 +25,7 @@ The fixtures below can be used to bring the emulator to a certain state, or to
 provide access to parts of the emulator.
 """
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -71,6 +72,18 @@ def pytest_addoption(parser):
         "--symbols",
         action="store",
         help="Location where the breakpad symbols that belong to this emulator can be found.",
+    )
+    parser.addoption(
+        "--group-number",
+        action="store",
+        type=int,
+        help="Run tests belonging to the specified group (1-based).",
+    )
+    parser.addoption(
+        "--max-groups",
+        action="store",
+        type=int,
+        help="Total number of test groups for sharding.",
     )
     parser.addoption(
         "--android_avd_home",
@@ -1105,3 +1118,35 @@ async def screen_recorder(screen_recorder_file):
     await recorder.start_recording()
     yield recorder
     await recorder.stop_recording()
+
+
+def pytest_collection_modifyitems(session, config, items):
+    group = config.getoption("--group-number")
+    max_groups = config.getoption("--max-groups")
+
+    if group is None or max_groups is None:
+        return  # No sharding needed
+
+    if group > max_groups:
+        raise ValueError("The group number should be less or equal than max-groups!")
+    if group == 0:
+        raise ValueError("The group number should be more than 0! (did you mean 1?)")
+
+    # Adjust for 1-based shard index
+    group = int(group) - 1
+    max_groups = int(max_groups)
+
+    selected_items = []
+    for item in items:
+        # Calculate a stable hash for the module name, we use a stable
+        # hashing function
+        module_name = item.module.__name__.encode()  # Encode to bytes
+        hash_object = hashlib.sha256(module_name)
+        module_hash = int(hash_object.hexdigest(), 16) % max_groups
+
+        # Select the test if the hash matches the current shard
+        if module_hash == group:
+            selected_items.append(item)
+
+    # Update the items list to only include the selected tests
+    items[:] = selected_items
