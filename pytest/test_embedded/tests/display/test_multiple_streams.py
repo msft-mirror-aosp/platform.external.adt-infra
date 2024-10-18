@@ -20,7 +20,7 @@ from aemu.proto.emulator_controller_pb2 import ImageFormat
 
 @pytest.mark.embedded
 @pytest.mark.async_timeout(40)
-async def test_multiple_streams_do_not_block(animation_app, stream_screenshot):
+async def test_multiple_streams_do_not_block(animation_app, emulator_controller):
     """Tests that the streamScreenshot does not block when multiple streams are
     requested.
 
