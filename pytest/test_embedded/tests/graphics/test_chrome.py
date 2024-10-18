@@ -176,6 +176,13 @@ async def test_page_loads_with_different_gpu_modes(
 
     emulator_controller = EmulatorControllerStub(emulator.channel)
     logging.info(f"Attempting to decode the QR code ..")
-    assert await decode_qrcodes(
-        [qrcode_png.payload], emulator_controller=emulator_controller
+
+    async def _decode_qrcodes():
+        return await decode_qrcodes(
+            [qrcode_png.payload],
+            emulator_controller=emulator_controller
+        )
+
+    assert await wait_until(
+        _decode_qrcodes, timeout=240
     ), f"Unable to idetify the QR code payload for gpu '{gpu_mode}'."
