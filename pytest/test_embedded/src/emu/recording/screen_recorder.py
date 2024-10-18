@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import asyncio
 import logging
 import os
@@ -22,7 +23,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pytest
-from mss import mss
+from emu.recording.screen_grab import ScreenGrabStrategyFactory
 from PIL import Image as PillowImage
 
 
@@ -171,23 +172,29 @@ class AsyncVideoWriter:
 
 class AsyncScreenRecorder:
     """
-    Asynchronously records the screen using OpenCV and mss.
+    Asynchronously records the screen using a configurable screen capture strategy.
 
-    This class provides a way to record the screen activity asynchronously
-    using the `mss` library for screen capture and `OpenCV` for video encoding.
+    This class provides a way to record screen activity asynchronously using
+    different screen capture methods (MSS, PIL ImageGrab, or PyScreeze) and OpenCV
+    for video encoding.
 
-    Attributes:
-        output_filename (Path|str): The path to the output video file.
-                                    Defaults to "screen_recording.mp4".
-        fps (int): The frames per second for the recording.
-                     Defaults to 30
-        recording (bool): Indicates whether the recording is currently active.
-        task (asyncio.Task): The asyncio task responsible for the recording process.
+    The strategy selection order is:
+    1. MSS (fastest and most reliable) <-- really you want this one.
+    2. PIL ImageGrab (good balance of speed and reliability)
+    3. PyScreeze (most compatible but slower)
 
     Example:
         ```python
         async def main():
-            recorder = AsyncScreenRecorder(output_filename="my_recording.mp4")
+            # The recorder will automatically use the best available strategy
+            recorder = AsyncScreenRecorder(output_filename="recording.mp4")
+
+            # Or specify a particular strategy
+            recorder = AsyncScreenRecorder(
+                output_filename="recording.mp4",
+                strategy='pyscreeze'
+            )
+
             await recorder.start_recording()
             # ... perform actions to be recorded ...
             await recorder.stop_recording()
@@ -197,28 +204,30 @@ class AsyncScreenRecorder:
     """
 
     def __init__(
-        self, output_filename: Path | str = "screen_recording.mp4", fps: int = 30
+        self,
+        output_filename: Path | str = "screen_recording.mp4",
+        fps: int = 30,
+        strategy: str = None,
     ):
         """
         Initializes the AsyncScreenRecorder.
 
-        Note: The higher the fps, the more cpu work and higher chance of missed
-        frames.
-
         Args:
             output_filename (Path|str): The path to the output video file.
             fps (int): The frames per second for the recording.
+            strategy (Optional[ScreenGrabStrategy]): The screen capture strategy to use.
+                                                   If None, the best available strategy
+                                                   will be automatically selected.
         """
         self.output_filename = Path(output_filename)
         self.fps = fps
         self.recording = False
         self.task = None
         self.logger = logging.getLogger(name="rec")
+        self.strategy = ScreenGrabStrategyFactory.create_strategy(strategy)
 
     async def start_recording(self):
-        """
-        Starts the asynchronous screen recording process.
-        """
+        """Starts the asynchronous screen recording process."""
         self.recording = True
         self.task = asyncio.create_task(self._record())
 
@@ -236,79 +245,47 @@ class AsyncScreenRecorder:
         Gets the screen size in raw pixels for the specified monitor.
 
         Args:
-            monitor (int): The monitor index (0-based). Defaults to 0
-                           (primary monitor).
+            monitor (int): The monitor index (0-based). Defaults to 0.
 
         Returns:
             tuple[int, int]: A tuple containing the width and height of the
-                              screen in pixels.
+                            screen in pixels.
         """
-        with mss() as sct:
-            screen = sct.monitors[monitor]
-            img = sct.grab(screen)
-            return img.size.width, img.size.height
+        return self.strategy.get_screen_size(monitor)
 
     async def _record(self):
-        """
-        Internal asynchronous method that performs the screen recording.
-        """
+        """Internal asynchronous method that performs the screen recording."""
         screen_size = self.screen_size_in_raw_pixels()
 
-        with mss() as sct:
-            with AsyncVideoWriter(
-                str(self.output_filename), "mp4v", self.fps, screen_size
-            ) as out:
-                frame_duration = 1 / self.fps
-                next_frame_time = time.monotonic()  # Initialize next frame time
-                frames_behind = 0  # Track how many frames behind we are
-                frame = 0
+        with self.strategy as grabber, AsyncVideoWriter(
+            str(self.output_filename), "mp4v", self.fps, screen_size
+        ) as out:
+            frame_duration = 1 / self.fps
+            next_frame_time = time.monotonic()
+            frames_behind = 0
+            frame = 0
 
-                while self.recording:
-                    start_time = time.monotonic()
+            while self.recording:
+                start_time = time.monotonic()
 
-                    # Capture screen and process frame
-                    # This is not 0 cost time wise, and could be
-                    # an expensive operation, this can cause drift
-                    # which could cause us to fall behind in frames.
-                    img = np.array(sct.grab(sct.monitors[0]))
-                    img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+                img = grabber.grab_screen()
+                out.write(img)
+                frame += 1
+                write_speed = time.monotonic() - start_time
+
+                next_frame_time += frame_duration
+                time_spent = time.monotonic() - start_time
+                sleep_time = next_frame_time - time.monotonic()
+
+                if sleep_time < 0:
+                    frames_behind += int(abs(sleep_time) // frame_duration)
+
+                while frames_behind > 0:
                     out.write(img)
                     frame += 1
-                    write_speed = time.monotonic() - start_time
-
-                    # Increment next frame time, this is the time_stamp we should
-                    # be writing the next frame.
                     next_frame_time += frame_duration
+                    frames_behind -= 1
 
-                    # Calculate time spent and drift
-                    time_spent = time.monotonic() - start_time
-                    sleep_time = next_frame_time - time.monotonic()
-
-                    # Check if we're behind schedule
-                    if sleep_time < 0:
-                        # Calculate how many frames we're behind, we will basically
-                        # rewrite the same frame to catch up and make sure our codec
-                        # receives the proper fps.
-                        frames_behind += int(abs(sleep_time) // frame_duration)
-
-                    # Catch up by writing the same frame until we're back on track
-                    while frames_behind > 0:
-                        # Write the same frame to catch up, we assume this is fast, and will not
-                        # make us fall behind even more.
-                        out.write(img)
-                        frame += 1
-
-                        next_frame_time += frame_duration
-                        frames_behind -= 1
-
-                    # Calculate remaining sleep time after catching up
-                    sleep_time = next_frame_time - time.monotonic()
-
-                    # sleep_time in theory can be negative, if we fell behind a lot,
-                    # and catching up took to much time. Since we are doing co-operative threading
-                    # we should give up control to another task.
-                    sleep_time = max(0, sleep_time)
-                    # Note that we can sleep longer than sleep_time, which
-                    # can cause us to drift.
-                    self.logger.debug("Sleeping: %d", sleep_time)
-                    await asyncio.sleep(sleep_time)
+                sleep_time = next_frame_time - time.monotonic()
+                sleep_time = max(0, sleep_time)
+                await asyncio.sleep(sleep_time)
