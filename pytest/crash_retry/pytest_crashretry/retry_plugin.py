@@ -1,5 +1,4 @@
 import logging
-import sys
 from pathlib import Path
 from time import sleep
 from traceback import format_exception
@@ -24,6 +23,10 @@ RETRY = 0
 FAIL = 1
 EXIT = 2
 PASS = 3
+
+
+class ForceRetryException(Exception):
+    pass
 
 
 class Reporter:
@@ -242,6 +245,10 @@ def should_handle_retry(call: pytest.CallInfo) -> bool:
     # Success?
     if call.excinfo is None:
         return False
+
+    if call.excinfo.errisinstance(ForceRetryException):
+        return True
+
     # if teardown stage, don't retry
     # may handle fixture setup retries in v2 if requested. For now, this is fine.
     if call.when in {"setup", "teardown"}:
@@ -292,6 +299,9 @@ def pytest_runtest_makereport(
     attempts = 1
     hook = item.ihook
 
+    # HACK ATTACK! We are going to inject an xml attributes
+    record_junit_property = item._request.getfixturevalue("record_property")
+
     while True:
         # Default teardowns are already excluded, so this must be the `call` stage
         # Try preliminary teardown using a fake class to ensure every local fixture (i.e.
@@ -319,6 +329,10 @@ def pytest_runtest_makereport(
             original_report.outcome = "retried"  # type: ignore
             hook.pytest_runtest_logreport(report=original_report)
             original_report.outcome = "failed"
+
+        if record_junit_property:
+            record_junit_property(f"attempt-{attempts}", call.excinfo.value)
+
         retry_manager.log_attempt(
             attempt=attempts, name=item.name, exc=call.excinfo, result=RETRY
         )
@@ -345,6 +359,10 @@ def pytest_runtest_makereport(
         if not should_keep_retrying:
             original_report.outcome = retry_report.outcome
             original_report.longrepr = retry_report.longrepr
+
+            if record_junit_property:
+                record_junit_property("retries", attempts)
+
             if cumulative_timing is False:
                 original_report.duration = retry_report.duration
             else:

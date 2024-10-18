@@ -39,6 +39,7 @@ import pytest
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from mobly import asserts
+from pytest_crashretry.retry_plugin import ForceRetryException
 from snippet_uiautomator import uiautomator
 
 from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
@@ -456,7 +457,12 @@ async def avd(avd_launcher: BaseEmulator) -> BaseEmulator:
     if not avd_launcher.is_alive():
         logging.info("--> Restarting emulator")
         await avd_launcher.restart(avd_launcher.launch_flags)
-        assert await avd_launcher.wait_for_boot()
+        booted = await avd_launcher.wait_for_boot()
+        if not booted:
+            avd_launcher.stop()
+            raise ForceRetryException(
+                "The emulator did not boot in time and was stopped."
+            )
     else:
         logging.info("--> Reusing emulator")
     return avd_launcher
@@ -495,7 +501,11 @@ async def manage_avd(emulator) -> BaseEmulator:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
     await emulator.restart(emulator.launch_flags)
-    assert await emulator.wait_for_boot()
+    booted = await emulator.wait_for_boot()
+    if not booted:
+        emulator.stop()
+        raise ForceRetryException("The emulator did not boot in time and was stopped.")
+
     logging.info("The emulator has finished booting")
 
     # Note install appears to fail at times, b/324920328
@@ -674,7 +684,10 @@ async def coldboot_animation_app(avd: BaseEmulator):
     logging.info("--> coldboot_animation_app")
     await avd.stop()
     assert await avd.launch(flags=["-no-snapshot-load"])
-    assert await avd.wait_for_boot()
+    booted = await avd.wait_for_boot()
+    if not booted:
+        avd.stop()
+        raise ForceRetryException("The emulator did not boot in time and was stopped.")
 
     assert avd.is_alive()
 
