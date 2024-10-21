@@ -46,9 +46,7 @@ async def send_phone_call(emu_controller, phone_call, expected_phone_response):
 @pytest.mark.hardware
 @pytest.mark.sanity
 @pytest.mark.skipos("win", "Phone response is InvalidAction instead of OK  b/254332148")
-async def test_inbound_call(
-    at_home, emulator_controller, test_name, phone_call_operation
-):
+async def test_inbound_call(emulator_controller, test_name, phone_call_operation):
     """Sends phone call to the emulator.
 
     Test steps:
@@ -70,7 +68,7 @@ async def test_inbound_call(
 
 @pytest.mark.hardware
 @pytest.mark.async_timeout(1080)
-async def test_inbound_call_bad_operation(at_home, emulator_controller):
+async def test_inbound_call_bad_operation(emulator_controller):
     """Sends invalid phone call operation to the emulator.
 
     Test steps:
@@ -92,7 +90,7 @@ async def test_inbound_call_bad_operation(at_home, emulator_controller):
 
 @pytest.mark.hardware
 @pytest.mark.skipos("win", "reason: b/305810509 - test timeout.")
-def test_inbound_call_bad_number(at_home, emulator_controller):
+def test_inbound_call_bad_number(emulator_controller):
     """Sends phone call from a bad number to the emulator.
 
     Test steps:

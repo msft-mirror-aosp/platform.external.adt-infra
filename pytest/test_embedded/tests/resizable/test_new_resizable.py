@@ -172,7 +172,6 @@ async def test_new_resizable_changes_resolution(
 async def test_new_resizable_observable_from_streaming(
     avd,
     supported_resizable_resolutions,
-    at_home,
     animation_app,
     emulator_controller,
     stream_screenshot,

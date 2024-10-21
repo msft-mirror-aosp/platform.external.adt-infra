@@ -74,7 +74,7 @@ class Axis(Enum):
 @pytest.mark.skip("Very flaky, the physical model appears non-deterministic")
 @pytest.mark.parametrize("axis", [Axis.X, Axis.Y, Axis.Z])
 async def test_physical_rotation_around_axis_will_update_magneto_meter(
-    emulator_controller, mobly, at_home, axis
+    emulator_controller, mobly, axis
 ):
     """Test that setting the physical model is observable through the magneto meter.
 
