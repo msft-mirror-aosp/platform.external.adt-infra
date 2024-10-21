@@ -138,6 +138,7 @@ async def test_launch_chrome_google(avd, get_screenshot):
 
 @pytest.mark.sanity
 @pytest.mark.graphics
+@pytest.mark.async_timeout(1080)
 @pytest.mark.parametrize(
     "gpu_mode", ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
 )
