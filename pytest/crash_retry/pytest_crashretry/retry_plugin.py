@@ -291,9 +291,10 @@ def pytest_runtest_makereport(
     item.stash[outcome_key] = original_report.outcome
 
     flake_mark = item.get_closest_marker("crash_flake")
-    retries = flake_mark.kwargs.get("crash_retries", Defaults.CRASH_RETRIES)
-    delay = flake_mark.kwargs.get("crash_delay", Defaults.CRASH_RETRY_DELAY)
-    cumulative_timing = flake_mark.kwargs.get(
+    kwargs = flake_mark.kwargs if flake_mark is not None else {}
+    retries = kwargs.get("crash_retries", Defaults.CRASH_RETRIES)
+    delay = kwargs.get("crash_delay", Defaults.CRASH_RETRY_DELAY)
+    cumulative_timing = kwargs.get(
         "crash_cumulative_timing", Defaults.CRASH_CUMULATIVE_TIMING
     )
     attempts = 1
