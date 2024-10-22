@@ -69,10 +69,10 @@ public class SettingsTest {
 
     private final static String TAG = "SettingsTest";
 
-    // Tests under this class takes up to 1000 seconds depending on the performance of the bot the
+    // Tests under this class takes up to 1800 seconds depending on the performance of the bot the
     // tests run on.
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(1000);
+    public Timeout globalTimeout = Timeout.seconds(1800);
 
     private IdlingResourceUtil idlingResource;
 
@@ -231,8 +231,6 @@ public class SettingsTest {
                 new UiSelector().resourceId(Res.PERMISSION_ALLOW_FOREGROUND_BUTTON));
         assertTrue("Did not prompt for lack of Maps permission.",
                 new Wait(20000L).until(allowForegroundButton::exists));
-
-        device.pressHome();
     }
 
     /**
@@ -267,7 +265,7 @@ public class SettingsTest {
 
         UiScrollable scrollableContainer =
                 new UiScrollable(new UiSelector().resourceIdMatches(Res.CONTENT_FRAME_CONTAINER_RES));
-        if (!new Wait(10000).until(scrollableContainer::exists)) {
+        if (!new Wait(20000).until(scrollableContainer::exists)) {
             Log.w(TAG, "Scrollable view not found");
             return false;
         }
@@ -279,11 +277,11 @@ public class SettingsTest {
 
         boolean optionFound = scrollableContainer.scrollIntoView(allAppsOption);
         if (optionFound) {
-            allAppsOption.clickAndWaitForNewWindow();
+            allAppsOption.clickAndWaitForNewWindow(30000L);
         } else {
             optionFound = scrollableContainer.scrollIntoView(seeAllOption);
             if (optionFound) {
-                seeAllOption.clickAndWaitForNewWindow();
+                seeAllOption.clickAndWaitForNewWindow(30000L);
             } else {
                 Log.w(TAG, "Failed to scroll to all Apps permissions options");
                 return false;
@@ -293,7 +291,7 @@ public class SettingsTest {
         UiScrollable appsListScrollable = new UiScrollable(new UiSelector().resourceId("com.android.settings:id/apps_list"));
         appsListScrollable.setAsVerticalList();
 
-        if (!new Wait().until(appsListScrollable::exists)) {
+        if (!new Wait(60000).until(appsListScrollable::exists)) {
             Log.w(TAG, "Apps list scrollable view not found");
             return false;
         }
@@ -307,12 +305,12 @@ public class SettingsTest {
                 getAppPermissions(appName));
 
         UiObject appToFind = device.findObject(new UiSelector().text(appName));
-        appToFind.clickAndWaitForNewWindow();
+        appToFind.clickAndWaitForNewWindow(30000L);
 
         UiScrollable appRecyclerView = new UiScrollable(new UiSelector().resourceId("com.android.settings:id/recycler_view"));
         appRecyclerView.setAsVerticalList();
 
-        if (!new Wait().until(appRecyclerView::exists)) {
+        if (!new Wait(20000).until(appRecyclerView::exists)) {
             Log.w(TAG, "App list recycler view not found for " + appName);
             return false;
         }
@@ -410,13 +408,8 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
-        try {
-            assertTrue("Failed to navigate to Date & Time settings",
-                    new Wait().until(() -> SettingsUtil.navigateToSettingsPath(device, "System", "Date & time"))
-            );
-        } catch (Exception e) {
-            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
-        }
+        assertTrue("Failed to navigate to Date & Time settings",
+                    new Wait().until(() -> SettingsUtil.navigateToSettingsPath(device, "System", "Date & time")));
 
         UiObject timeButton = device.findObject(new UiSelector().text("Set time automatically"));
         assertTrue("Time button not found", new Wait().until(timeButton::exists));
@@ -472,13 +465,8 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
-        try {
-            assertTrue("Failed to navigate to Date & Time settings",
-                    new Wait().until(() -> SettingsUtil.navigateToSettingsPath(device, "System", "Date & time"))
-            );
-        } catch (Exception e) {
-            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
-        }
+        assertTrue("Failed to navigate to Date & Time settings",
+                    new Wait().until(() -> SettingsUtil.navigateToSettingsPath(device, "System", "Date & time")));
 
         UiObject autoTimeZoneButton = device.findObject(new UiSelector().text("Set time zone automatically"));
         assertTrue("Auto Time Zone button not found", new Wait().until(autoTimeZoneButton::exists));
@@ -703,7 +691,8 @@ public class SettingsTest {
         final UiObject thirteenHundredLabel = device.findObject(new UiSelector().text("13:00"));
 
         UiSelector dateTimeRegion = new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES);
-        SettingsUtil.scrollToObject(device, dateTimeRegion, twentyFourHourSelector);
+        assertTrue("Failed to scroll to 24 hour format option.",
+                SettingsUtil.scrollToObject(device, dateTimeRegion, twentyFourHourSelector));
 
         // Initialize automatic format option to disabled state.
         if (autoTwentyFourLabel.waitForExists(3L) && !useTwentyFourLabel.isEnabled()) {

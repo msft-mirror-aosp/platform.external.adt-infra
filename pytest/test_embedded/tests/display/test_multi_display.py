@@ -191,7 +191,9 @@ async def test_multiple_display_snapshot(
 
     # load the snapshot and check the number of displays.
     assert await emu_snapshot_service.load("foo")
-    assert await avd.wait_for_boot(timeout=240)
+    # 99 percentile boots in less than 2 minutes.
+    # go/stats/#report_id=Emulator%2FBootTime%2F7-day%20BootTime
+    assert await avd.wait_for_boot(timeout=120)
     # there is no reliable way to detect it has reach home screen
     # so just wait long
     await asyncio.sleep(10)
@@ -595,9 +597,13 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
         exe=emulator.exe,
         avd_config=config,
         fetcher=None,
+        log_id="emu-0",
     )
     await emu.launch(flags=myflags)
-    await emu.wait_for_boot(timeout=180)
+
+    # 99 percentile boots in less than 2 minutes.
+    # go/stats/#report_id=Emulator%2FBootTime%2F7-day%20BootTime
+    await emu.wait_for_boot(timeout=120)
 
     async def ensure_logical_displays(n, emu):
         # Return True if the emulator has 'n' logical displays.
@@ -609,8 +615,8 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
             return False
         return display_size_pattern.groups()[0] == str(n)
 
-    assert await (
-        eventually(partial(ensure_logical_displays, n_displays, emu), timeout=180)
+    assert await eventually(
+        partial(ensure_logical_displays, n_displays, emu), timeout=180
     ), "Wrong number of displays detected"
 
     await emu.stop()

@@ -36,17 +36,17 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
-from emu.process.command import Command
 from aemu.proto.emulator_controller_pb2 import ImageFormat
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
+from mobly import asserts
+from snippet_uiautomator import uiautomator
 
 from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
-from emu.recording.screen_recorder import AsyncScreenRecorder
-from emu.images.convert import save_image
+from emu.images.convert import proto_to_pillow, save_image
+from emu.process.command import Command
+from emu.recording.screen_recorder import AsyncScreenRecorder, AsyncVideoWriter
 from emu.utils import system_cpu
-from snippet_uiautomator import uiautomator
-from mobly import asserts
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -825,16 +825,28 @@ async def get_screenshot(emulator_controller, log_directory, request):
 
 
 @pytest.fixture
-async def stream_screenshot(emulator_controller, log_directory, request):
+async def stream_screenshot(emulator_controller, screen_recorder_file):
     async def streaming_img_call(image_format: ImageFormat):
-        test_name = request.node.nodeid.split("::")[-1]
-        screenshot_dir = Path(log_directory) / "screenshots"
-        screenshot_dir.mkdir(parents=True, exist_ok=True)
-
         stream = emulator_controller.streamScreenshot(image_format)
-        async for img in stream:
-            save_image(img, screenshot_dir, test_name)
-            yield img
+
+        try:
+            # Get the first image
+            first_img = None
+            async for img in stream:
+                first_img = img
+                yield img
+                logging.info("UYp!")
+                break
+        except Exception as e:
+            logger.error(e)
+            raise
+
+        screen_size = (first_img.format.width, first_img.format.height)
+        with AsyncVideoWriter(screen_recorder_file, "mp4v", 60, screen_size) as writer:
+            writer.write_pillow(proto_to_pillow(first_img), realtime=True)
+            async for img in stream:
+                writer.write_pillow(proto_to_pillow(img), realtime=True)
+                yield img
 
     return streaming_img_call
 
@@ -1061,7 +1073,7 @@ def add_junitxml_properties(request, record_testsuite_property):
 
 
 @pytest.fixture
-async def screen_recorder(request, log_directory):
+def screen_recorder_file(request, log_directory):
     screenrecorder_dir = Path(log_directory) / "screenrecording"
     screenrecorder_dir.mkdir(parents=True, exist_ok=True)
     test_name = request.node.nodeid.split("::")[-1]
@@ -1070,9 +1082,13 @@ async def screen_recorder(request, log_directory):
     output_filename = screenrecorder_dir / f"{file_name}.mp4"
     if output_filename.exists():
         output_filename.unlink()
-    recorder = AsyncScreenRecorder(output_filename=output_filename)
+
+    return output_filename
+
+
+@pytest.fixture
+async def screen_recorder(screen_recorder_file):
+    recorder = AsyncScreenRecorder(output_filename=screen_recorder_file)
     await recorder.start_recording()
-
     yield recorder
-
     await recorder.stop_recording()

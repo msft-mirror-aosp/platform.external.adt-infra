@@ -461,7 +461,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "disabled"
+        "status": "enabled"
     },
     "sanity_test_suite_api_34": {
         "description": "Set of tests we want to run as a part of emulator sanity test suite",

@@ -142,7 +142,10 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
     if platform.processor() == "i386" and platform.system() == "Darwin":
         myflags.append("-no-window")
     assert await emulator.launch(flags=myflags)
-    assert await emulator.wait_for_boot(timeout=240)
+
+    # 99 percentile boots in less than 2 minutes.
+    # go/stats/#report_id=Emulator%2FBootTime%2F7-day%20BootTime
+    assert await emulator.wait_for_boot(timeout=120)
     # there is no reliable way to detect it has reach home screen
     # so just wait enough long
     await asyncio.sleep(10)
@@ -157,7 +160,7 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
     # launch with tot
     emulator.exe = totexe
     assert await emulator.launch(flags=["-no-snapshot-save"])
-    assert await emulator.wait_for_boot(timeout=240)
+    assert await emulator.wait_for_boot(timeout=120)
 
     def check_has_booted():
         return check_boot_from_snapshot(emulator.configuration.directory)
@@ -191,7 +194,7 @@ async def test_snapshot_download(emulator):
     assert await emulator.launch(flags=["-wipe-data"])
 
     # The emulator kicks of its boot process, this should succeed
-    assert await emulator.wait_for_boot(timeout=420)
+    assert await emulator.wait_for_boot(timeout=120)
 
     # Stops the emulator.
     await emulator.stop()
@@ -215,4 +218,4 @@ async def test_snapshot_download(emulator):
     assert await emulator.launch()
 
     # The emulator kicks of its boot process, this should succeed
-    assert await emulator.wait_for_boot(timeout=180)
+    assert await emulator.wait_for_boot(timeout=120)

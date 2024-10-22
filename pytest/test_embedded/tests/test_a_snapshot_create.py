@@ -80,7 +80,9 @@ async def test_snapshot_create(emulator):
         )
 
         logging.info("Booting up emualtor ...")
-        assert await emulator.wait_for_boot(timeout=1080)
+        # 99 percentile boots in less than 2 minutes.
+        # go/stats/#report_id=Emulator%2FBootTime%2F7-day%20BootTime
+        assert await emulator.wait_for_boot(timeout=120)
 
         # wait till it settle down a bit
         await asyncio.sleep(30)

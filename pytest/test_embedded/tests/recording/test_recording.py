@@ -118,13 +118,13 @@ async def test_screen_records_video_in_gif(screen_service, animation_app, tmp_pa
 
 @pytest.mark.console
 @pytest.mark.fast
-@pytest.mark.async_timeout(1080)
+@pytest.mark.async_timeout(240)
 async def test_screen_records_video_telnet(emulator, animation_app, tmp_path, telnet):
     myflags = ["-no-window"]
     assert await emulator.launch(flags=myflags)
 
     assert await emulator.wait_for_boot(
-        timeout=1080
+        timeout=120
     ), f"The emulator couldn't be launched with no-window option"
 
     sample_file = tmp_path / "sample_record.webm"
