@@ -840,7 +840,10 @@ async def get_screenshot(emulator_controller, log_directory, request):
             A tuple of the raw screenshot image and the Pillow image object.
         """
         image_format = image_format or ImageFormat()
-        screenshot_dir = Path(screenshot_dir) or Path(log_directory) / "screenshots"
+        if screenshot_dir:
+            screenshot_dir = Path(screenshot_dir)
+        else:
+            screenshot_dir = Path(log_directory) / "screenshots"
         img = await emulator_controller.getScreenshot(image_format)
         test_name = request.node.nodeid.split("::")[-1]
         file_name = re.sub(r"[\\/\{\}:]", "_", test_name)
