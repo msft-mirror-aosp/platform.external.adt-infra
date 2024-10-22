@@ -467,7 +467,7 @@ async def avd(avd_launcher: BaseEmulator) -> BaseEmulator:
     Returns:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
-    if not avd_launcher.is_alive():
+    if not avd_launcher.is_alive() or not avd_launcher.has_booted():
         logging.info("--> Restarting emulator")
         await avd_launcher.restart(avd_launcher.launch_flags)
         booted = await avd_launcher.wait_for_boot()
