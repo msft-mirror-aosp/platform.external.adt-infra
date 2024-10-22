@@ -19,10 +19,10 @@ import logging
 from pathlib import Path
 
 import pytest
-from pytest_crashretry.retry_plugin import ForceRetryException
 
 from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
+from emu.emulator_exceptions import EmulatorFailedToBootException
 from emu.process.command import Command
 from emu.utils import system_cpu
 
@@ -221,7 +221,7 @@ async def avd(avd_launcher: BaseEmulator) -> BaseEmulator:
         booted = await avd_launcher.wait_for_boot()
         if not booted:
             avd_launcher.stop()
-            raise ForceRetryException(
+            raise EmulatorFailedToBootException(
                 "The emulator did not boot in time and was stopped."
             )
     else:
@@ -268,7 +268,9 @@ async def manage_avd(emulator) -> BaseEmulator:
     booted = await emulator.wait_for_boot()
     if not booted:
         emulator.stop()
-        raise ForceRetryException("The emulator did not boot in time and was stopped.")
+        raise EmulatorFailedToBootException(
+            "The emulator did not boot in time and was stopped."
+        )
 
     logging.info("The emulator has finished booting")
 

@@ -3,9 +3,6 @@
 		{
 			"path": "."
 		},
-		{
-			"path": "../crash_retry"
-		}
 	],
 	"settings": {
 		"workbench.colorTheme": "Monokai",
@@ -24,7 +21,7 @@
 		"configurations": [
 			{
 				"name": "Python: Debug Tests",
-				"type": "python",
+				"type": "debugpy",
 				"request": "launch",
 				"program": "${file}",
 				"purpose": [
