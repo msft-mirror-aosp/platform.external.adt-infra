@@ -619,7 +619,7 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
         android_avd_home=tmp_path,
         exe=emulator.exe,
         avd_config=config,
-        fetcher=None,
+        fetcher=emulator.fetcher,
         log_id="emu-0",
     )
     await emu.launch(flags=myflags)

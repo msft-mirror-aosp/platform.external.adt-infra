@@ -164,7 +164,7 @@ async def avd_factory(emulator):
             exe=emulator.exe,
             avd_config=config,
             log_id=f"emu-{len(avds)}",
-            fetcher=None,
+            fetcher=emulator.fetcher,
         )
         avds.append(avd)
         await avd.launch(["-no-snapshot-save"])
