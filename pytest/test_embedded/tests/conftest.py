@@ -850,28 +850,124 @@ async def get_screenshot(emulator_controller, log_directory, request):
     return do_get_screenshot
 
 
-@pytest.fixture
-async def stream_screenshot(emulator_controller, screen_recorder_file):
-    async def streaming_img_call(image_format: ImageFormat):
-        stream = emulator_controller.streamScreenshot(image_format)
+class ScreenshotStreamManager:
+    """
+    Manages streaming screenshots from an emulator and optionally records them to a video file.
 
+    This class provides a context manager interface for easy resource management.
+    It establishes a screenshot stream from the emulator and can optionally record
+    the stream to a video file.
+
+    Args:
+        emulator_controller: The emulator controller object for interacting with the emulator.
+        image_format (ImageFormat): The desired image format for the screenshots.
+        screen_recorder_file (str | Path): The path to the output video file (optional).
+
+    Example:
+        ```python
+            async with ScreenshotStreamManager(
+                emulator_controller, ImageFormat(width=360, height=640), "output.mp4"
+            ) as manager:
+                async for img in manager.stream_with_recording():
+                  # Process the screenshot image (img)
+                  ...
+        ```
+    """
+
+    def __init__(self, emulator_controller, image_format, screen_recorder_file):
+        """
+        Initializes the ScreenshotStreamManager with the provided parameters.
+        """
+        self.emulator_controller = emulator_controller
+        self.image_format = image_format
+        self.screen_recorder_file = screen_recorder_file
+        self.stream = None
+
+    async def __aenter__(self):
+        """
+        Asynchronous context manager entry point. Establishes the screenshot stream.
+        """
+        self.stream = self.emulator_controller.streamScreenshot(self.image_format)
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """
+        Asynchronous context manager exit point. Cancels the screenshot stream.
+        """
+        if self.stream:
+            self.stream.cancel()
+
+    def write_image(self, writer: AsyncVideoWriter, img):
+        """
+        Writes a screenshot image to the video writer.
+
+        Args:
+            writer (AsyncVideoWriter): The video writer object.
+            img: The screenshot image to write.
+        """
+        try:
+            writer.write_pillow(proto_to_pillow(img), realtime=True)
+        except ValueError as e:
+            logging.warning(
+                "Ignoring first frame: can't decode frame: %s, format: %s, skipping due to: %s",
+                img.seq,
+                fmt_proto(img.format),
+                e,
+            )
+
+    async def stream_with_recording(self):
+        """
+        Streams screenshots from the emulator and optionally records them to a video file.
+
+        Yields:
+            Screenshot images as they become available.
+        """
         try:
             # Get the first image
             first_img = None
-            async for img in stream:
+            async for img in self.stream:
                 first_img = img
                 yield img
-                logging.info("UYp!")
                 break
+
+            if not first_img:
+                raise RuntimeError("Failed to get first screenshot")
+
+            screen_size = (first_img.format.width, first_img.format.height)
+            with AsyncVideoWriter(
+                self.screen_recorder_file, "mp4v", 60, screen_size
+            ) as writer:
+                self.write_image(writer, first_img)
+                async for img in self.stream:
+                    self.write_image(writer, img)
+                    yield img
+
         except Exception as e:
-            logger.error(e)
+            logging.error("Error in screenshot stream: %s", e)
             raise
 
-        screen_size = (first_img.format.width, first_img.format.height)
-        with AsyncVideoWriter(screen_recorder_file, "mp4v", 60, screen_size) as writer:
-            writer.write_pillow(proto_to_pillow(first_img), realtime=True)
-            async for img in stream:
-                writer.write_pillow(proto_to_pillow(img), realtime=True)
+
+@pytest.fixture
+async def stream_screenshot(emulator_controller, screen_recorder_file):
+    """
+    Pytest fixture that provides a function for streaming screenshots from an emulator.
+
+    The fixture sets up the necessary components for streaming screenshots and
+    optionally recording them to a video file.
+
+    Args:
+        emulator_controller: The emulator controller object for interacting with the emulator (fixture).
+        screen_recorder_file (str | Path): The path to the output video file (fixture).
+
+    Returns:
+        An async function that takes an ImageFormat argument and streams screenshots.
+    """
+
+    async def streaming_img_call(image_format: ImageFormat):
+        async with ScreenshotStreamManager(
+            emulator_controller, image_format, screen_recorder_file
+        ) as manager:
+            async for img in manager.stream_with_recording():
                 yield img
 
     return streaming_img_call
