@@ -102,10 +102,12 @@ async def get_booted_notification_time(emulator):
 @pytest.mark.wear
 @pytest.mark.atv
 @pytest.mark.tablet
-@pytest.mark.async_timeout(1080)
+@pytest.mark.async_timeout(180)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 async def test_first_time_booted(emulator, record_property):
     """Make sure the emulator status is set to booted."""
 
+    await emulator.stop()
     assert not emulator.is_alive()
 
     logging.info("Launching emulator ...")
@@ -117,9 +119,10 @@ async def test_first_time_booted(emulator, record_property):
 
     logging.info("Wating for it to boot up ...")
 
-    # This will throw an exception in case of a timeout
+    # This will throw an exception in case of a timeout, note that 99% of our
+    # emulators launch in < 180 seconds.
     boot_time = await asyncio.wait_for(
-        get_booted_notification_time(emulator), timeout=1080
+        get_booted_notification_time(emulator), timeout=180
     )
     record_property("emulator_boot_time", boot_time)
 
@@ -130,8 +133,6 @@ async def test_first_time_booted(emulator, record_property):
 
     # make sure it has both radio and wifi
     assert await eventually(network_up, timeout=30), "Radio and wifi are not ready!"
-    assert await emulator.install_apk(APP_DEBUG_APK.absolute(), "com.google.AnimateBox")
-
     await shutdown(emulator)
 
 

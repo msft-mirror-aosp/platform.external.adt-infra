@@ -150,7 +150,7 @@ async def coldboot_animation_app(emulator: BaseEmulator):
     assert await emulator.launch(flags=["-no-snapshot-load"])
     booted = await emulator.wait_for_boot()
     if not booted:
-        emulator.stop()
+        await emulator.stop()
         raise EmulatorFailedToBootException(
             "The emulator did not boot in time and was stopped."
         )
