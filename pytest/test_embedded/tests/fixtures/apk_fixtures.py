@@ -19,9 +19,12 @@ import logging
 import time
 
 import pytest
-from pytest_crashretry.retry_plugin import ForceRetryException
 
 from emu.emulator import BaseEmulator
+from emu.emulator_exceptions import (
+    EmulatorFailedToBootException,
+    FailedToInstallApkException,
+)
 
 
 async def launch_animation_app(avd: BaseEmulator):
@@ -70,7 +73,7 @@ async def wait_for_animation_app_launch(avd: BaseEmulator, timeout: int = 30):
       timeout: The maximum time to wait for the app to launch, in seconds.
 
     Raises:
-      ForceRetryException: If the app fails to launch within the timeout.
+      FailedToInstallApkException: If the app fails to launch within the timeout.
     """
     end_time = time.time() + timeout
     launched = False
@@ -84,7 +87,9 @@ async def wait_for_animation_app_launch(avd: BaseEmulator, timeout: int = 30):
         # Share log cat for debugging
         logging.info("--> Logcat which might be of use:")
         await avd.adb.exec_out("logcat -d")
-        raise ForceRetryException("We failed to install and launch the animation apk.")
+        raise FailedToInstallApkException(
+            "We failed to install and launch the animation apk."
+        )
 
     logging.info("--> animation apk running")
 
@@ -137,7 +142,7 @@ async def coldboot_animation_app(emulator: BaseEmulator):
         None
 
     Raises:
-        ForceRetryException: If the emulator fails to boot.
+        EmulatorFailedToBootException: If the emulator fails to boot.
         AssertionError: If the animation app fails to launch.
     """
     logging.info("--> coldboot_animation_app")
@@ -146,7 +151,9 @@ async def coldboot_animation_app(emulator: BaseEmulator):
     booted = await emulator.wait_for_boot()
     if not booted:
         emulator.stop()
-        raise ForceRetryException("The emulator did not boot in time and was stopped.")
+        raise EmulatorFailedToBootException(
+            "The emulator did not boot in time and was stopped."
+        )
 
     assert emulator.is_alive()
 

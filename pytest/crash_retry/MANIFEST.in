@@ -1,5 +1,0 @@
-include LICENSE
-include .gitignore
-include *.txt
-include tox.ini
-recursive-include tests *.py

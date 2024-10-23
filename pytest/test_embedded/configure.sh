@@ -142,8 +142,6 @@ echo "Make sure you have the devpi server up and running!"
 VIRTUAL_ENV_DEST=./.venv
 if [ -e $VIRTUAL_ENV_DEST/bin/activate ]; then
   . $VIRTUAL_ENV_DEST/bin/activate
-  pip install -e ../crash_retry .
 else
   setup_virtual_env "$@"
-  pip install -e ../crash_retry .
 fi

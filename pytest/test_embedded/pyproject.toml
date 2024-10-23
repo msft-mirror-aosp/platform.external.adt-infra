@@ -40,7 +40,6 @@ dependencies = [
     "importlib-metadata; python_version<'3.8'",
     "snippet-uiautomator==1.1.1",
     "deqr==0.2.2",
-    # "pytest_crashretry @ file:///${AOSP_ROOT}/external/adt_infra/pytest/crash_retry",
 ]
 
 [tool.pytest.ini_options]
