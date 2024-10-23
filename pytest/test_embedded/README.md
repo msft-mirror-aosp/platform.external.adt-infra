@@ -80,6 +80,13 @@ Where xxx descibes a test as follows:
         "pytest_flags": [
             "-m graphics"
         ],
+        //  Large tests can be split up (sharded) by using the
+        //  max groups property. This will split the tests and
+        //  will balance all the test modules based on a stable hash.
+        //  This will dynamically create the following suites:
+        //  - landscape_test_suite_1_of_2
+        //  - landscape_test_suite_2_of_2
+        "maxGroups": 2,
         //  The avd configuration that will be used when running these tests.
         //  These parameters are appended to the config.ini file of the
         //  avd that will be created. This allows you to define your own custom
@@ -325,7 +332,7 @@ For example the test below will only run on linux:
   @pytest.mark.linux
   def test_linux_only():
       assert sys.platform == 'linux'
-  ```
+```
 
 You can find all the markers, and the description, in the [pytest.ini](pytest.ini) file.
 
