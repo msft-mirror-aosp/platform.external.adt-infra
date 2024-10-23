@@ -106,7 +106,7 @@ async def test_screenshot_all_formats_are_equal(
 @pytest.mark.parametrize("degrees", [0, 90])
 @pytest.mark.flaky(reruns=0)
 async def test_screenshot_exact_amount_of_pixels(
-    at_home, get_screenshot, emulator_controller, image_format, bpp, degrees
+    get_screenshot, emulator_controller, image_format, bpp, degrees
 ):
     """Tests that the screenshot API delivers exactly the right amount of pixels.
 
@@ -181,7 +181,7 @@ async def test_screenshot_valid_width_and_height(
 @pytest.mark.embedded
 @pytest.mark.flaky(reruns=0)
 async def test_screenshot_gets_default_resolution(
-    at_home, get_screenshot, default_display_config, all_orientations
+    get_screenshot, default_display_config, all_orientations
 ):
     """Verifies that the default resolution will match the emulator display dimensions"""
     image, _ = await get_screenshot(ImageFormat())
@@ -199,7 +199,7 @@ async def test_screenshot_gets_default_resolution(
 @pytest.mark.embedded
 @pytest.mark.flaky(reruns=0)
 async def test_screenshot_never_scales_up(
-    at_home, get_screenshot, default_display_config, all_orientations
+    get_screenshot, default_display_config, all_orientations
 ):
     """Verifies b/238205075, streamScreenshot should not scale display images up."""
     # The width and height are guaranteed to be larger than the actual screen
@@ -224,7 +224,7 @@ async def test_screenshot_never_scales_up(
 @pytest.mark.embedded
 @pytest.mark.flaky(reruns=0)
 async def test_screenshot_should_fail_if_does_not_exist(
-    at_home, emulator_controller, default_display_config
+    emulator_controller, default_display_config
 ):
     """Verifies b/206033509 streamScreenshot/getScreenshot should fail with INVALID_ARGUMENT if the display doesn't exist"""
     _EMPTY_ = empty_pb2.Empty()

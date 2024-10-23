@@ -260,7 +260,6 @@ Pytest encourages you to use [test fixtures](https://docs.pytest.org/en/6.2.x/fi
 - avd: Gives access to the emulator running the default avd.
 - telnet: Gives access to the telnet console of the current emulator.
 - adb: Function that invokes the adb executable with the given parameters.
-- at_home: Rotate the emulator to portrait mode and move to the home screen.
 - emulator_log: Access to the emulator logs.
 - animation_app: Activates the animation app that displays a rotating triangle.
 - emulator_controller: A grpc stub to the emulator controller.

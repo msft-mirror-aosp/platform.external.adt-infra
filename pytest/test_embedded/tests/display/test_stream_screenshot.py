@@ -202,7 +202,6 @@ def calculate_frame_rate(timestamp1, timestamp2):
 @pytest.mark.embedded
 @pytest.mark.skipos("win", "reason: b/305258769 - error at setup.")
 async def test_stream_screenshot_should_fail_if_does_not_exist(
-    at_home,
     emulator_controller,
     animation_app,
 ):

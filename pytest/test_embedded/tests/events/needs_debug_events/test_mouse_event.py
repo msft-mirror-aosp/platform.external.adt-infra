@@ -16,7 +16,7 @@ import random
 import pytest
 from aemu.proto.emulator_controller_pb2 import MouseEvent
 
-from tests.benchmark_event_fixtures import EventTimeTester
+from tests.fixtures.benchmark_event_fixtures import EventTimeTester
 
 
 async def send_grpc_click(avd, x, y, buttons):

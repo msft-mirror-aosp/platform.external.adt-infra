@@ -35,3 +35,11 @@ async def test_screenrecorder_fixture(screen_recorder_strategy):
     logging.info("Hello from the screen recorder test, i'm going to take a nap!")
     await asyncio.sleep(5)
     logging.info("Yawn! I'm back. You should have a recording")
+
+
+async def test_emulator_screenrecorder_fixture(screen_recorder):
+    logging.info(
+        "Hello from the test_emulator_screenrecorder_fixture test, i'm going to take a nap!"
+    )
+    await asyncio.sleep(5)
+    logging.info("Yawn! I'm back. You should have a recording")

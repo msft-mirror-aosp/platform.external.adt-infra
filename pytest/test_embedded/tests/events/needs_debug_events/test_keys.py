@@ -73,7 +73,7 @@ async def keypress_expects(avd, log, jskey, expected_code):
 
 
 @pytest.mark.hardware
-async def test_hardware_keys(avd, at_home, emulator_log):
+async def test_hardware_keys(avd, emulator_log):
     """Checks that the hardware key events that studio sends are working."""
     if not emulator_log:
         pytest.skip("Likely running under debugger without logger")
@@ -93,7 +93,7 @@ async def test_hardware_keys(avd, at_home, emulator_log):
 
 
 @pytest.mark.hardware
-async def test_whitespace_chrs(avd, at_home, emulator_log):
+async def test_whitespace_chrs(avd, emulator_log):
     """Checks that the whitespace characters that studio sends are working."""
     if not emulator_log:
         pytest.skip("Likely running under debugger without logger")
@@ -111,7 +111,7 @@ async def test_whitespace_chrs(avd, at_home, emulator_log):
 
 
 @pytest.mark.hardware
-async def test_unicode_no_deadlock(at_home, emulator_controller):
+async def test_unicode_no_deadlock(emulator_controller):
     """Tests that we properly handle unicode characters."""
     await emulator_controller.sendKey(
         KeyboardEvent(text="\xc6\x80 <-- Used to deadlock")
