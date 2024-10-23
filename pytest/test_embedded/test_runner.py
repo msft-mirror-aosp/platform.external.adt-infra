@@ -60,45 +60,109 @@ def run_tests(
     android_home: Path,
     grpc_services: Path,
 ):
-    """runs tests on an emulator. It installs necessary packages, restarts adb,
-    runs pytest and converts the results to a junit xml and HTML files.
+    """
+    Runs tests on an emulator, installs necessary packages, restarts adb,
+    runs pytest, and generates JUnit XML and HTML reports.
 
     Args:
+        emulator (str): Path to the emulator binary.
+        use_exceptions (bool): Whether to raise exceptions on pytest failures.
+        logdir (Path): Directory where logs will be written.
+        symbol_path (Path): Optional path to symbols related to the emulator.
+        build_target (str): Name of the build target.
+        pyrun (Callable): Python execution callable for running commands.
+        tests_to_run (str, dict): Test suite(s) configuration to run.
+        collect (bool): If True, collect test lists instead of running tests.
+        fetcher (Optional[Path]): Optional path to fetcher binary.
+        android_home (Path): Path to ANDROID_HOME/ANDROID_SDK_ROOT.
+        grpc_services (Path): Path to GRPC services proto files.
 
-        emulator (str):        Path to the emulator binary
-        use_exceptions(bool):  True if an excpetion should be raised on pytest failures.
-        logdir (Path):         The directory where all the logs will be written to
-        symbol_path(Path):     Optional path to the symbols that belong with this emulator.
-        build_target: (str):   The name of the build target.
-        pyrun (Callable):      The callable used to run python.
-        tests_to_run (str, dict):
-        collect: (bool):       True if the list of tests should be collected, not run.
-        fetcher: (Path):       Optional path to the fetcher binary.
-        android_home: (Path):  Path to ANDROID_HOME (previously ANDROID_SDK_ROOT).
-        grpc_services: (Path): Path to GRPC services protos.
+    Returns:
+        None
     """
-    # sanity checks
     emulator = str(resolve_emulator(emulator))
-    logging.info(
-        "Checking to see if PYTEST_ADDOPTS is available for running tests: %s",
-        os.getenv("PYTEST_ADDOPTS"),
-    )
-
     logdir = Path(logdir)
-    adb = android_home / "platform-tools" / "adb"
-    if OS_NAME == "windows":
-        adb = adb.with_suffix(".exe")
+    adb = resolve_adb_path(android_home)
+    result_xmls, skip_reports = run_test_suites(
+        emulator,
+        use_exceptions,
+        logdir,
+        symbol_path,
+        build_target,
+        pyrun,
+        tests_to_run,
+        collect,
+        fetcher,
+        android_home,
+        adb,
+        grpc_services,
+    )
+    generate_reports(logdir, pyrun, result_xmls, skip_reports, collect)
 
+
+def resolve_adb_path(android_home: Path) -> Path:
+    """
+    Resolves the path to the adb binary, adding the '.exe' extension if on Windows.
+
+    Args:
+        android_home (Path): Path to the Android SDK.
+
+    Returns:
+        Path: The resolved path to the adb binary.
+    """
+    adb = android_home / "platform-tools" / "adb"
+    return adb.with_suffix(".exe") if OS_NAME == "windows" else adb
+
+
+def run_test_suites(
+    emulator: str,
+    use_exceptions: bool,
+    logdir: Path,
+    symbol_path: Path,
+    build_target: str,
+    pyrun: Callable,
+    tests_to_run,
+    collect: bool,
+    fetcher: Optional[Path],
+    android_home: Path,
+    adb: Path,
+    grpc_services: Path,
+) -> tuple[list, list]:
+    """
+    Runs test suites on the emulator, logging the results and handling multiple groups if configured.
+
+    Args:
+        emulator (str): Path to the emulator binary.
+        use_exceptions (bool): Whether to raise exceptions on pytest failures.
+        logdir (Path): Directory where logs will be written.
+        symbol_path (Path): Optional path to symbols related to the emulator.
+        build_target (str): Name of the build target.
+        pyrun (Callable): Python execution callable for running commands.
+        tests_to_run (str, dict): Test suite(s) configuration to run.
+        collect (bool): If True, collect test lists instead of running tests.
+        fetcher (Optional[Path]): Optional path to fetcher binary.
+        android_home (Path): Path to ANDROID_HOME/ANDROID_SDK_ROOT.
+        adb (Path): Path to adb binary.
+        grpc_services (Path): Path to GRPC services proto files.
+
+    Returns:
+        tuple[list, list]: A tuple containing lists of result XMLs and skip report paths.
+    """
     result_xmls = []
     skip_reports = []
+
     for name, cfg in tests_to_run:
-        test_log_dir = logdir / name
-        test_log_dir.mkdir(exist_ok=True, parents=True)
-        with AdbServer(pyrun, adb):
-            with tempfile.TemporaryDirectory() as tmpdir:
-                pytest_flags = cfg["pytest_flags"]
-                avd_configs = json.dumps(cfg["avd_configs"])
-                logging.info("Running %s (%s)", name, cfg["description"])
+        avd_configs = json.dumps(cfg.get("avd_configs", []))
+        max_groups = cfg.get("maxGroups", 1)
+        for group in range(1, max_groups + 1):
+            pytest_flags = prepare_pytest_flags(
+                cfg["pytest_flags"], max_groups, group, name
+            )
+            suite = f"{name}_{group}_of_{max_groups}" if max_groups > 1 else name
+            test_log_dir = setup_test_log_dir(logdir, suite)
+
+            with AdbServer(pyrun, adb), tempfile.TemporaryDirectory() as tmpdir:
+                logging.info("Running %s (%s)", suite, cfg["description"])
                 res = run_single_suite(
                     emulator,
                     use_exceptions,
@@ -110,41 +174,66 @@ def run_tests(
                     pytest_flags,
                     avd_configs,
                     collect,
-                    name,
+                    suite,
                     fetcher,
                     android_home,
                     adb,
                     grpc_services,
                 )
                 result_xmls.append(res)
-                skip_reports.append(test_log_dir.joinpath(name + "_skip.xml"))
+                skip_reports.append(test_log_dir.joinpath(suite + "_skip.xml"))
 
-    if collect:
-        result = Path(logdir) / "COLLECT-embedded_test.xml"
-    else:
-        result = Path(logdir) / "TEST-embedded_test.xml"
-    merge_results(python_exe=pyrun, sources=result_xmls, dest=result)
-    xml_skip_report = Path(logdir) / "skipped_tests.xml"
-    merge_skip_reports(python_exe=pyrun, sources=skip_reports, dest=xml_skip_report)
-    apply_xslt(
-        python_exe=pyrun,
-        source=result,
-        xslt=HERE / "cfg" / "liftSystemOut.xslt",
-        dest=result,
-    )
+    return result_xmls, skip_reports
 
-    # This needs to be applied after the lift stylesheet.
+
+def prepare_pytest_flags(pytest_flags, max_groups: int, group: int, name: str) -> list:
+    """Prepares the pytest flags for a specific test group, adding group-specific options if necessary."""
+    flags = list(pytest_flags)
+    if max_groups > 1:
+        flags += [f"--group-number={group}", f"--max-groups={max_groups}"]
+    return flags
+
+
+def setup_test_log_dir(logdir: Path, suite: str) -> Path:
+    """Sets up the directory for storing test logs for a given suite."""
+    test_log_dir = logdir / suite
+    test_log_dir.mkdir(exist_ok=True, parents=True)
+    return test_log_dir
+
+
+def generate_reports(
+    logdir: Path, pyrun: Callable, result_xmls: list, skip_reports: list, collect: bool
+):
+    """
+    Generates XML and HTML reports for the test results and skipped tests.
+
+    Args:
+        logdir (Path): Directory where reports will be written.
+        pyrun (Callable): Python execution callable for running commands.
+        result_xmls (list): List of paths to result XML files.
+        skip_reports (list): List of paths to skip report files.
+        collect (bool): If True, generate collection XML instead of test results.
+
+    Returns:
+        None
+    """
+    result = logdir / (
+        "COLLECT-embedded_test.xml" if collect else "TEST-embedded_test.xml"
+    )
+    merge_results(pyrun, result_xmls, result)
+
+    xml_skip_report = logdir / "skipped_tests.xml"
+    merge_skip_reports(pyrun, skip_reports, xml_skip_report)
+
+    apply_xslt(pyrun, result, HERE / "cfg" / "liftSystemOut.xslt", result)
     apply_xslt(
-        python_exe=pyrun,
-        source=result,
-        xslt=HERE / "cfg" / "asMaterialHtml.xslt",
-        dest=Path(logdir) / "test_report.html",
+        pyrun, result, HERE / "cfg" / "asMaterialHtml.xslt", logdir / "test_report.html"
     )
     apply_xslt(
-        python_exe=pyrun,
-        source=xml_skip_report,
-        xslt=HERE / "cfg" / "skippedTests.xslt",
-        dest=xml_skip_report.with_suffix(".html"),
+        pyrun,
+        xml_skip_report,
+        HERE / "cfg" / "skippedTests.xslt",
+        xml_skip_report.with_suffix(".html"),
     )
 
 
