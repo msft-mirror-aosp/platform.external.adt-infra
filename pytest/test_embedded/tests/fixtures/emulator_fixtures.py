@@ -267,7 +267,7 @@ async def manage_avd(emulator) -> BaseEmulator:
     await emulator.restart(emulator.launch_flags)
     booted = await emulator.wait_for_boot()
     if not booted:
-        emulator.stop()
+        await emulator.stop()
         raise EmulatorFailedToBootException(
             "The emulator did not boot in time and was stopped."
         )
