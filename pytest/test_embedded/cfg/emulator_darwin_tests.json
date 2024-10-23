@@ -440,7 +440,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -455,7 +455,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -470,6 +470,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -484,6 +485,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -526,7 +528,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -541,7 +543,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -556,7 +558,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -571,7 +573,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -737,7 +739,7 @@
         "pytest_flags": [
             "-k test_force_retry or test_template_writer or test_avd_writer or test_logobserver"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "status": "enabled"
     }
 }

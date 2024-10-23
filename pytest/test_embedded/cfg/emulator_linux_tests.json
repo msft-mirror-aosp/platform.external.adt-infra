@@ -154,7 +154,7 @@
             "-qt-hide-window",
             "-grpc-use-token"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "pytest_flags": [
             "-m embedded_newresizable"
         ],
@@ -329,7 +329,7 @@
         "pytest_flags": [
             "-m graphics or newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -366,6 +366,7 @@
         "pytest_flags": [
             "-m hardware or console and not fast and not sanity"
         ],
+        "maxGroups": 2,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -456,6 +457,7 @@
         "pytest_flags": [
             "-m sanity"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -681,7 +683,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -696,7 +698,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -711,7 +713,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -726,7 +728,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -741,7 +743,7 @@
         "pytest_flags": [
             "-k test_force_retry or test_template_writer or test_avd_writer or test_logobserver"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "status": "enabled"
     }
 }

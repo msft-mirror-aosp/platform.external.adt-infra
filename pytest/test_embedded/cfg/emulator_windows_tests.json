@@ -92,7 +92,7 @@
         "pytest_flags": [
             "-m embedded"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [
@@ -365,6 +365,7 @@
         "pytest_flags": [
             "-m hardware or console"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -441,6 +442,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -455,6 +457,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -483,6 +486,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -497,6 +501,7 @@
         "pytest_flags": [
             "-m oldapiboot"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -512,6 +517,7 @@
         "pytest_flags": [
             "-m oldapiboot"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "api": "30",
@@ -525,7 +531,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -540,7 +546,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -555,6 +561,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -569,7 +576,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -591,7 +598,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled  "
+        "status": "enabled"
     },
     "presubmit_emulator_test_suite_api_34": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
@@ -738,7 +745,7 @@
         "pytest_flags": [
             "-k test_force_retry or test_template_writer or test_avd_writer or test_logobserver"
         ],
-        "maxGroups": 2,
+        "maxGroups": 4,
         "status": "enabled"
     }
 }
