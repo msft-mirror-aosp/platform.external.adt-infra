@@ -50,8 +50,8 @@ def gradle():
     )
     compile_apk(
         EMU_TEST_DIR / "AnimateBox",
-        EMU_TEST_DIR / "src" / "emu" / "apk" / "app-release.apk",
-        "build",
+        EMU_TEST_DIR / "src" / "emu" / "apk" / "app-debug.apk",
+        "assembleDebug",
     )
 
 
