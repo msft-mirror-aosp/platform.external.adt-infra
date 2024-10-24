@@ -40,6 +40,7 @@ import pytest
 # This makes all the fixtures globally available
 # Do not remove these!
 from tests.fixtures.apk_fixtures import *
+from tests.fixtures.benchmark_event_fixtures import *
 from tests.fixtures.emulator_fixtures import *
 from tests.fixtures.emulator_settings_fixtures import *
 from tests.fixtures.grpc_fixtures import *
