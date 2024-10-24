@@ -137,6 +137,8 @@ To set up your development environment, follow these steps:
 source ./configure.sh
 ```
 
+Note: You might have to run `source .venv/bin/activate` after this.
+
 2. **Running Specific Tests:** If you want to run a specific subset of tests with an already active emulator, follow these instructions:
 
     - Ensure that you have launched the emulator with an Android Virtual Device (AVD) configuration that you intend to use for the tests.
@@ -262,7 +264,7 @@ Make sure to start every test that you want to run with the `test_` prefix, othe
 
 ### Test Fixtures
 
-Pytest encourages you to use [test fixtures](https://docs.pytest.org/en/6.2.x/fixture.html). We have a set of test fixtures defined in [tests/conftest.py](tests/conftest.py) that can be used to interact with the emulator. Here is a short list of fixtures:
+Pytest encourages you to use [test fixtures](https://docs.pytest.org/en/6.2.x/fixture.html). We have a set of test fixtures defined in [tests/fixtures](tests/fixtures) directory that can be used to interact with the emulator. Here is a short list of fixtures:
 
 - avd: Gives access to the emulator running the default avd.
 - telnet: Gives access to the telnet console of the current emulator.
@@ -271,6 +273,7 @@ Pytest encourages you to use [test fixtures](https://docs.pytest.org/en/6.2.x/fi
 - animation_app: Activates the animation app that displays a rotating triangle.
 - emulator_controller: A grpc stub to the emulator controller.
 - mbs: The set of standard mobly bundled snippets. See [mbs](https://android.googlesource.com/platform/external/mobly-bundled-snippets/+/refs/heads/main) for more information.
+- emulator_qt_settings: Access to the emulator qt UI configuration.
 
 Test fixtures should be decorated with a `@pytest.mark.async_timeout(xx)` marker to indicate how much time they get for configuration and teardown. For example:
 

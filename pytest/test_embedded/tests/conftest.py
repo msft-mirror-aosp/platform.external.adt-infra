@@ -41,11 +41,11 @@ import pytest
 # Do not remove these!
 from tests.fixtures.apk_fixtures import *
 from tests.fixtures.emulator_fixtures import *
+from tests.fixtures.emulator_settings_fixtures import *
 from tests.fixtures.grpc_fixtures import *
 from tests.fixtures.mobly_fixtures import *
 from tests.fixtures.qrcode_fixtures import *
 from tests.fixtures.screen_recording_fixtures import *
-
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
