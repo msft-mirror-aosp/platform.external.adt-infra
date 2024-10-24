@@ -129,6 +129,7 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
             f"Not running this test on non-gfxstream build {pytestconfig.getoption('build_target')}"
         )
 
+    await emulator.stop()
     assert not emulator.is_alive()
 
     # save tot exe
