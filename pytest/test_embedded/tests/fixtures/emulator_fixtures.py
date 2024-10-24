@@ -200,7 +200,9 @@ async def avd_launcher(emulator: BaseEmulator) -> BaseEmulator:
 
 @pytest.fixture(scope="function")
 @pytest.mark.async_timeout(200)
-async def avd(avd_launcher: BaseEmulator) -> BaseEmulator:
+async def avd(
+    do_not_display_nested_vm_warning, avd_launcher: BaseEmulator
+) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
     This fixture has function scope, which will make sure the emulator will be
@@ -234,7 +236,9 @@ async def avd(avd_launcher: BaseEmulator) -> BaseEmulator:
 
 @pytest.fixture(scope="module")
 @pytest.mark.async_timeout(200)
-async def avds(emulators: list[BaseEmulator]) -> list[BaseEmulator]:
+async def avds(
+    do_not_display_nested_vm_warning, emulators: list[BaseEmulator]
+) -> list[BaseEmulator]:
     """Makes booted emulators accessible and with the animation apk installed.
 
     Note that the following holds:
