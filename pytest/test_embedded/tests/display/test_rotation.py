@@ -368,7 +368,7 @@ async def test_rotation_through_console_observable_through_stream_screenshot(
 @pytest.mark.sanity
 @pytest.mark.flaky(reruns=0)
 async def test_rotation_observable_through_screenshot_embedded_mode(
-    emulator_controller, telnet, avd, at_home
+    emulator_controller, telnet, avd
 ):
     await rotation_through_console_observable_through_screenshot(
         emulator_controller, telnet
