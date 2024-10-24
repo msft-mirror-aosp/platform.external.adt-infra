@@ -145,7 +145,7 @@ async def test_snapshot_booted(emulator):
     It is important to boot fast from snapshot, that is why it
     is set to timeout in 60 seconds
     """
-
+    await emulator.stop()
     assert not emulator.is_alive()
 
     logging.info("Launching emulator ...")
@@ -179,6 +179,7 @@ async def test_snapshot_booted(emulator):
 async def test_emulator_should_idle(emulator):
     """check emulator use less than 25% single cpu when idle."""
 
+    await emulator.stop()
     assert not emulator.is_alive()
 
     logging.info("Launching emulator ...")
@@ -276,6 +277,7 @@ async def test_emulator_debug_startup(avd):
 async def test_first_time_booted_old_api(emulator):
     """Make sure the emulator status is set to booted."""
 
+    await emulator.stop()
     logging.info("Launching emulator ...")
     myflags = ["-wipe-data"]
     if platform.processor() == "i386" and platform.system() == "Darwin":
