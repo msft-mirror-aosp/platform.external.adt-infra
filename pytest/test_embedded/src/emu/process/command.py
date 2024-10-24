@@ -42,6 +42,7 @@ class Command:
         self.env = os.environ.copy()  # Make a copy of the environment
         self.cmd = [str(c) for c in cmd]
         self.process = None
+
         if not logger:
             name = Path(cmd[0]).name
             self.handler = AsyncLogHandler(logging.getLogger(f"{name}"))
@@ -111,12 +112,15 @@ class Command:
         await asyncio.wait_for(self.log_task, timeout=1)
         return proc
 
-    async def run(self):
+    async def run(self, use_stdin_pipe=False):
         """
         Creates a subprocess to execute the command.
 
         A logger will be attached that will log the output from stdout/stderr
         a log handler that will log it logger.info/logger.warning.
+
+        Arguments:
+            used_stdin_pipe (bool): True to pipe stdin. Defaults to False.
 
         Returns:
             asyncio.subprocess.Process: The created subprocess object.
@@ -126,6 +130,7 @@ class Command:
             *self.cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            stdin=asyncio.subprocess.PIPE if use_stdin_pipe else None,
             cwd=self.working_directory,  # Use the working directory if set
             env=self.env,  # Use the specified environment
         )
