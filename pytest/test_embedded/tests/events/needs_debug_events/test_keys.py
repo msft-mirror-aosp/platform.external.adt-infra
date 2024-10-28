@@ -173,7 +173,7 @@ async def test_emulator_controls_keys(avd, emulator_controller):
             # Return 'True' if the stream is observed in the system dump.
             # Store the volume level in the 'output' list.
             dumpsys = await avd.adb.shell("dumpsys audio")
-            match = re.search(f"{stream_type}.*streamVolume:(\d+)", dumpsys)
+            match = re.search(f"{stream_type}.*streamVolume:(\\d+)", dumpsys)
             if match is None:
                 return False
             output.append(int(match.groups()[0]))
@@ -203,7 +203,7 @@ async def test_emulator_controls_keys(avd, emulator_controller):
     async def check_display_rotation(expected_rotation):
         # Check if the current display rotation matches the expected rotation.
         displays_lines = await avd.adb.shell("dumpsys window displays")
-        match = re.search("DisplayRotation.*mRotation=([0-9])\s", displays_lines)
+        match = re.search("DisplayRotation.*mRotation=([0-9])\\s", displays_lines)
         if match is None:
             return False
         current_rotation = int(match.groups()[0])
