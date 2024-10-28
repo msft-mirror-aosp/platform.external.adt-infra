@@ -27,8 +27,8 @@ from google.protobuf import empty_pb2
 from emu.apk import APP_DEBUG_APK
 from emu.timing import eventually
 from emu.emulator import Emulator
+from emu.emulator_exceptions import EmulatorDiedException
 
-from src.emu.emulator_exceptions import EmulatorDiedException
 from tests.test_utils import check_boot_from_snapshot
 import json
 
