@@ -52,7 +52,6 @@ SNAPTOOL = (
     AOSP_ROOT / "external" / "qemu" / "android" / "android-grpc" / "python" / "snaptool"
 )
 NETSIM_GRPC = AOSP_ROOT / "tools" / "netsim" / "testing" / "netsim-grpc"
-CRASH_RETRY = HERE.parent / "crash_retry"
 
 PYTHON_DIR = AOSP_ROOT / "prebuilts" / "python" / f"{OS_NAME}-x86"
 if OS_NAME != "windows":
@@ -609,7 +608,7 @@ def create_pyrunner(
 
     py_exe = PyRunner() if local_python else AospPyRunner(repo, virtual_env_dir)
     verbose = ["-vvv"] if verbose else []
-    py_exe.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE, CRASH_RETRY])
+    py_exe.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
     return py_exe
 
 

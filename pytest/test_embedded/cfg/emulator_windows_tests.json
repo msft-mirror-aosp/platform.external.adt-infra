@@ -92,6 +92,7 @@
         "pytest_flags": [
             "-m embedded"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [
@@ -147,7 +148,7 @@
         ],
         "status": "disabled"
     },
-     "embedded_resizable_test_suite_api_34": {
+    "embedded_resizable_test_suite_api_34": {
         "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
         "launch_flags": [
             "-no-snapshot",
@@ -364,6 +365,7 @@
         "pytest_flags": [
             "-m hardware or console"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -440,6 +442,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -454,6 +457,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -482,6 +486,7 @@
         "pytest_flags": [
             "-m sanity and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -496,6 +501,7 @@
         "pytest_flags": [
             "-m oldapiboot"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -511,6 +517,7 @@
         "pytest_flags": [
             "-m oldapiboot"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "api": "30",
@@ -524,6 +531,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -538,6 +546,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -552,6 +561,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -566,6 +576,7 @@
         "pytest_flags": [
             "-m fast and not resizable and not newresizable"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [],
@@ -587,7 +598,7 @@
                 "tag.id": "google_apis"
             }
         ],
-        "status": "enabled  "
+        "status": "enabled"
     },
     "presubmit_emulator_test_suite_api_34": {
         "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
@@ -640,7 +651,7 @@
             }
         ],
         "status": "disabled"
-     },
+    },
     "atv_test_suite_api_31": {
         "description": "Set of tests that run on a Android TV AVD (API 31)",
         "pytest_flags": [
@@ -727,6 +738,14 @@
                 "tag.id": "google_apis"
             }
         ],
+        "status": "enabled"
+    },
+    "non_emulator_tests": {
+        "description": "Set of non emulator tests to validate grouping and basic test infrastructure functionality",
+        "pytest_flags": [
+            "-k test_force_retry or test_template_writer or test_avd_writer or test_logobserver"
+        ],
+        "maxGroups": 4,
         "status": "enabled"
     }
 }

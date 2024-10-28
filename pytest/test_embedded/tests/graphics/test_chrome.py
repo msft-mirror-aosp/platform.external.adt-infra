@@ -60,9 +60,7 @@ async def prepare_chrome(avd):
         PERMISSION = "READ_EXTERNAL_STORAGE"
     else:
         PERMISSION = "READ_MEDIA_IMAGES"
-    await avd.adb.shell(
-        f"pm grant com.android.chrome android.permission.{PERMISSION}"
-    )
+    await avd.adb.shell(f"pm grant com.android.chrome android.permission.{PERMISSION}")
 
     # Configure to skip welcome page
     await avd.adb.shell(
@@ -140,11 +138,13 @@ async def test_launch_chrome_google(avd, get_screenshot):
 
 @pytest.mark.sanity
 @pytest.mark.graphics
-@pytest.mark.screen_recorder
+@pytest.mark.async_timeout(1080)
 @pytest.mark.parametrize(
     "gpu_mode", ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
 )
-async def test_page_loads_with_different_gpu_modes(emulator, gpu_mode, qrcode_png):
+async def test_page_loads_with_different_gpu_modes(
+    screen_recorder, emulator, gpu_mode, qrcode_png
+):
     """Verify AVD has no issues with loading web content with different gpu modes.
 
     Args:
@@ -173,14 +173,17 @@ async def test_page_loads_with_different_gpu_modes(emulator, gpu_mode, qrcode_pn
 
     await prepare_chrome(emulator)
     logging.info(f"Opening file '{qrcode_png.path}' in Google Chrome ..")
-    await emulator.start_activity(
-        chrome_cmp,
-        params=f"-d file://{qrcode_png.path}"
-    )
+    await emulator.start_activity(chrome_cmp, params=f"-d file://{qrcode_png.path}")
 
     emulator_controller = EmulatorControllerStub(emulator.channel)
     logging.info(f"Attempting to decode the QR code ..")
-    assert await decode_qrcodes(
-        [qrcode_png.payload],
-        emulator_controller=emulator_controller
+
+    async def _decode_qrcodes():
+        return await decode_qrcodes(
+            [qrcode_png.payload],
+            emulator_controller=emulator_controller
+        )
+
+    assert await wait_until(
+        _decode_qrcodes, timeout=240
     ), f"Unable to idetify the QR code payload for gpu '{gpu_mode}'."

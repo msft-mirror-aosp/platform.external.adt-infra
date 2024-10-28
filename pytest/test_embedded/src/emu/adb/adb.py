@@ -14,10 +14,10 @@
 import asyncio
 import logging
 import platform
-from pathlib import Path
 import time
+from pathlib import Path
 
-from emu.emulator_exceptions import EmulatorNotFoundException
+from emu.emulator_exceptions import EmulatorDiedException
 from emu.logging.logcat_parser import parse_logcat
 from emu.process.command import Command
 from emu.process.command_stream import AsyncCommandStream
@@ -257,11 +257,10 @@ class Adb:
         Note:
             This method is for internal use and should not be called directly.
         """
-
         if not self.emulator.is_alive():
-            self.logger.error(f"Emulator with id: {self.name} is not alive.")
+            raise EmulatorDiedException(f"Emulator with id: {self.name} is not alive.")
         elif not await self.online():
-            self.logger.error(f"Emulator with id: {self.name} is not online.")
+            self.logger.error("Emulator with id: %s is not online.", self.name)
 
     async def logcat(self, clear: bool = False, tag: str = None) -> AsyncCommandStream:
         """Obtains the current logcat stream

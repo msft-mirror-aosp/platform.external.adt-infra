@@ -164,7 +164,7 @@ async def avd_factory(emulator):
             exe=emulator.exe,
             avd_config=config,
             log_id=f"emu-{len(avds)}",
-            fetcher=None,
+            fetcher=emulator.fetcher,
         )
         avds.append(avd)
         await avd.launch(["-no-snapshot-save"])
@@ -299,10 +299,10 @@ async def test_avd_commands(avd, telnet):
     response = await telnet.send("avd name")
     assert response is not None and response != ""
     response = await telnet.send("avd status")
-    assert any(['running' in element for element in response])
+    assert any(["running" in element for element in response])
     response = await telnet.send("avd path")
-    assert any(['.avd' in element for element in response])
+    assert any([".avd" in element for element in response])
     response = await telnet.send("avd discoverypath")
-    assert any(['.ini' in element for element in response])
+    assert any([".ini" in element for element in response])
     response = await telnet.send("avd snapshotspath")
-    assert any(['snapshots' in element for element in response])
+    assert any(["snapshots" in element for element in response])

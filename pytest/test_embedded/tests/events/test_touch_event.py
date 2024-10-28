@@ -16,7 +16,7 @@ from aemu.proto.emulator_controller_pb2 import Touch, TouchEvent
 
 
 @pytest.mark.hardware
-async def test_touch_event_identifier_ranges(at_home, emulator_controller):
+async def test_touch_event_identifier_ranges(emulator_controller):
     """Tests that we properly handle identifiers."""
     await emulator_controller.sendTouch(
         TouchEvent(touches=[Touch(x=661, y=1133, pressure=12, identifier=-23122)])
@@ -39,7 +39,7 @@ async def test_touch_event_identifier_ranges(at_home, emulator_controller):
 
 
 @pytest.mark.hardware
-async def test_touch_event_identifier_to_many(at_home, emulator_controller):
+async def test_touch_event_identifier_to_many(emulator_controller):
     """Tests that we properly handle too many registered identifiers."""
     x = 1
     for j in range(20):

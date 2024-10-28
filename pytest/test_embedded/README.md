@@ -80,6 +80,13 @@ Where xxx descibes a test as follows:
         "pytest_flags": [
             "-m graphics"
         ],
+        //  Large tests can be split up (sharded) by using the
+        //  max groups property. This will split the tests and
+        //  will balance all the test modules based on a stable hash.
+        //  This will dynamically create the following suites:
+        //  - landscape_test_suite_1_of_2
+        //  - landscape_test_suite_2_of_2
+        "maxGroups": 2,
         //  The avd configuration that will be used when running these tests.
         //  These parameters are appended to the config.ini file of the
         //  avd that will be created. This allows you to define your own custom
@@ -129,6 +136,8 @@ To set up your development environment, follow these steps:
 ```bash
 source ./configure.sh
 ```
+
+Note: You might have to run `source .venv/bin/activate` after this.
 
 2. **Running Specific Tests:** If you want to run a specific subset of tests with an already active emulator, follow these instructions:
 
@@ -255,16 +264,16 @@ Make sure to start every test that you want to run with the `test_` prefix, othe
 
 ### Test Fixtures
 
-Pytest encourages you to use [test fixtures](https://docs.pytest.org/en/6.2.x/fixture.html). We have a set of test fixtures defined in [tests/conftest.py](tests/conftest.py) that can be used to interact with the emulator. Here is a short list of fixtures:
+Pytest encourages you to use [test fixtures](https://docs.pytest.org/en/6.2.x/fixture.html). We have a set of test fixtures defined in [tests/fixtures](tests/fixtures) directory that can be used to interact with the emulator. Here is a short list of fixtures:
 
 - avd: Gives access to the emulator running the default avd.
 - telnet: Gives access to the telnet console of the current emulator.
 - adb: Function that invokes the adb executable with the given parameters.
-- at_home: Rotate the emulator to portrait mode and move to the home screen.
 - emulator_log: Access to the emulator logs.
 - animation_app: Activates the animation app that displays a rotating triangle.
 - emulator_controller: A grpc stub to the emulator controller.
 - mbs: The set of standard mobly bundled snippets. See [mbs](https://android.googlesource.com/platform/external/mobly-bundled-snippets/+/refs/heads/main) for more information.
+- emulator_qt_settings: Access to the emulator qt UI configuration.
 
 Test fixtures should be decorated with a `@pytest.mark.async_timeout(xx)` marker to indicate how much time they get for configuration and teardown. For example:
 
@@ -326,7 +335,7 @@ For example the test below will only run on linux:
   @pytest.mark.linux
   def test_linux_only():
       assert sys.platform == 'linux'
-  ```
+```
 
 You can find all the markers, and the description, in the [pytest.ini](pytest.ini) file.
 

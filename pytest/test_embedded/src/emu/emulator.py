@@ -420,6 +420,7 @@ class Emulator(BaseEmulator):
         self.kernel_start = 0
         self.log_id = log_id or "emu-1"
         self.logger = logging.getLogger(self.log_id)
+        self.fetcher = fetcher
 
     async def restart(self, emu_flags: List[str]) -> bool:
         """Restarts the emulator, disabling snapshot save if a default snapshot exists.

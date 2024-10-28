@@ -32,4 +32,3 @@ call .venv\Scripts\activate
 
 pip install --upgrade pip wheel setuptools
 pip install wheel %AEMU_GRPC% %SNAPTOOL% %NETSIM_GRPC%
-pip install -e . ..\crash_retry

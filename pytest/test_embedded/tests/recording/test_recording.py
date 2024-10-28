@@ -40,7 +40,7 @@ async def screen_service(service):
     await screen_service.StopRecording(RecordingInfo())
 
 
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 @pytest.mark.graphics
 async def test_screen_record_sends_event(screen_service, tmp_path):
     stream = screen_service.ReceiveRecordingEvents(empty_pb2.Empty())
@@ -58,7 +58,7 @@ async def test_screen_record_sends_event(screen_service, tmp_path):
     ), "Did not receive a notification, even though I started recording"
 
 
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 @pytest.mark.fast
 @pytest.mark.graphics
 @pytest.mark.sanity
@@ -80,7 +80,7 @@ async def test_screen_records_video(screen_service, animation_app, tmp_path):
     ), "We should have recorded a series of frames"
 
 
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 @pytest.mark.graphics
 @pytest.mark.fast
 async def test_can_only_record_once(screen_service, tmp_path):
@@ -94,7 +94,7 @@ async def test_can_only_record_once(screen_service, tmp_path):
         await screen_service.StartRecording(info)
 
 
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 @pytest.mark.graphics
 @pytest.mark.sanity
 @pytest.mark.wear
@@ -106,7 +106,7 @@ async def test_screen_records_video_in_webm(screen_service, animation_app, tmp_p
     verify_recorded_file_header(sample_file, sample_file_header)
 
 
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 @pytest.mark.sanity
 @pytest.mark.graphics
 async def test_screen_records_video_in_gif(screen_service, animation_app, tmp_path):

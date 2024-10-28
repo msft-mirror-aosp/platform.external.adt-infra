@@ -30,6 +30,7 @@ dependencies = [
     "pytest-benchmark==4.0.0",
     "pytest-dependency==0.5.1",
     "pytest-logger==1.1.1; sys_platform != 'win32'",
+    "pytest-rerunfailures==14.0",
     "alt-pytest-asyncio==0.7.2",
     "requests==2.28.1",
     "lxml==4.9.1",
@@ -39,7 +40,6 @@ dependencies = [
     "importlib-metadata; python_version<'3.8'",
     "snippet-uiautomator==1.1.1",
     "deqr==0.2.2",
-    # "pytest_crashretry @ file:///${AOSP_ROOT}/external/adt_infra/pytest/crash_retry",
 ]
 
 [tool.pytest.ini_options]

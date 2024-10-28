@@ -11,17 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-class FailedToLaunchException(Exception):
+
+
+class EmulatorException(Exception):
     pass
 
 
-class EmulatorNotFoundException(Exception):
+class FailedToLaunchException(EmulatorException):
     pass
 
 
-class EmulatorDiedException(Exception):
+class EmulatorNotFoundException(EmulatorException):
     pass
 
 
-class FailedToInstallApk(Exception):
+class EmulatorDiedException(EmulatorException):
+    pass
+
+
+class FailedToInstallApkException(EmulatorException):
+    pass
+
+
+class EmulatorFailedToBootException(EmulatorException):
     pass

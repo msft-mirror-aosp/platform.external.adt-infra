@@ -61,7 +61,30 @@ async def is_landscape(get_screenshot):
 
 @pytest.fixture
 async def ensure_multidisplay_service_ready(emulator_controller):
-    return  # Success, exit the loop
+    max_retries = 5
+    retry_delay = 1  # Initial delay in seconds
+
+    for attempt in range(max_retries):
+        try:
+            status = await emulator_controller.getStatus(_EMPTY_)
+            if (
+                "multidisplay" in status.guestConfig
+                and status.guestConfig["multidisplay"] == "available"
+            ):
+                return  # Success, exit the loop
+        except RpcError as exc_info:
+            if exc_info.value.code() != StatusCode.UNAVAILABLE:
+                raise  # Unexpected error, re-raise
+        except Exception:
+            raise  # Unexpected error, re-raise
+
+        # Exponential backoff
+        await asyncio.sleep(retry_delay)
+        retry_delay *= 2  # Double the delay for the next attempt
+
+    raise TimeoutError(
+        f"Failed to get display configurations after {max_retries} attempts"
+    )
 
 
 @pytest.fixture
@@ -299,7 +322,7 @@ async def test_multidisplay_double_ids_error(
 
 
 @pytest.mark.multidisplay
-@pytest.mark.flaky  # b/322551553
+@pytest.mark.flaky(reruns=0)  # b/322551553
 async def test_multidisplay_can_configure_four(
     ensure_multidisplay_service_ready,
     avd,
@@ -596,7 +619,7 @@ async def test_add_multidisplay_from_config(emulator, tmp_path):
         android_avd_home=tmp_path,
         exe=emulator.exe,
         avd_config=config,
-        fetcher=None,
+        fetcher=emulator.fetcher,
         log_id="emu-0",
     )
     await emu.launch(flags=myflags)

@@ -115,7 +115,7 @@ async def download_emulator_zip(build_id):
 
 
 @pytest.mark.snapshot
-@pytest.mark.flaky
+@pytest.mark.flaky(reruns=0)
 @pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
 @pytest.mark.async_timeout(510)
 async def test_can_load_oldsnapshot(emulator, pytestconfig):
@@ -129,6 +129,7 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
             f"Not running this test on non-gfxstream build {pytestconfig.getoption('build_target')}"
         )
 
+    await emulator.stop()
     assert not emulator.is_alive()
 
     # save tot exe
