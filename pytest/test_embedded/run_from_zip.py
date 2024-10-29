@@ -183,11 +183,10 @@ class VenvRunner:
         )
 
 
-def create_android_home(fetcher: Path) -> Path:
-    """Creates the ANDROID_HOME environment at BASE_DIR/android_home."""
-    android_home = BASE_DIR.joinpath("android_home")
-    if android_home.exists():
-        return android_home
+def create_android_home(fetcher: Path, base_dir: Path) -> Path:
+    """Creates the ANDROID_HOME environment at base_dir/android_home."""
+    android_home = base_dir.joinpath("android_home")
+    android_home.mkdir()
     clt_resource = COMMAND_LINE_TOOLS_RESOURCE_MAP[OS_NAME]
     pt_target = PLATFORM_TOOLS_TARGET_MAP[OS_NAME]
     proc = subprocess.run(
@@ -201,11 +200,9 @@ def create_android_home(fetcher: Path) -> Path:
         encoding="utf-8",
     )
     clt_out, pt_out = proc.stdout.strip().splitlines()
-    tmp_dir = Path(tempfile.mkdtemp(dir=BASE_DIR))
-    tmp_dir.joinpath("cmdline-tools").symlink_to(Path(clt_out) / "cmdline-tools")
-    tmp_dir.joinpath("platform-tools").symlink_to(Path(pt_out) / "platform-tools")
-    tmp_dir.joinpath("platforms").mkdir()
-    tmp_dir.rename(android_home)
+    android_home.joinpath("cmdline-tools").symlink_to(Path(clt_out) / "cmdline-tools")
+    android_home.joinpath("platform-tools").symlink_to(Path(pt_out) / "platform-tools")
+    android_home.joinpath("platforms").mkdir()
     return android_home
 
 
@@ -216,26 +213,27 @@ def main(args: argparse.Namespace) -> None:
     )
 
     fetcher = Path(args.fetcher)
-    android_home = create_android_home(fetcher)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        android_home = create_android_home(fetcher, Path(tmp_dir))
 
-    pyrun = VenvRunner(android_home)
-    tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite)
+        pyrun = VenvRunner(android_home)
+        tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite)
 
-    logging.info("Scheduling %d suites", len(tests_to_run))
+        logging.info("Scheduling %d suites", len(tests_to_run))
 
-    test_runner.run_tests(
-        emulator=args.emulator,
-        use_exceptions=False,
-        logdir=args.logdir,
-        symbol_path=args.symbols,
-        build_target=args.build_target,
-        pyrun=pyrun.run,
-        tests_to_run=tests_to_run,
-        collect=args.collect,
-        fetcher=fetcher,
-        android_home=android_home,
-        grpc_services=BASE_DIR.joinpath("android-grpc"),
-    )
+        test_runner.run_tests(
+            emulator=args.emulator,
+            use_exceptions=False,
+            logdir=args.logdir,
+            symbol_path=args.symbols,
+            build_target=args.build_target,
+            pyrun=pyrun.run,
+            tests_to_run=tests_to_run,
+            collect=args.collect,
+            fetcher=fetcher,
+            android_home=android_home,
+            grpc_services=BASE_DIR.joinpath("android-grpc"),
+        )
 
 
 if __name__ == "__main__":
