@@ -13,8 +13,10 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.Button;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
@@ -939,6 +941,58 @@ public class SettingsUtil {
         Log.i(TAG, "navigateToSettingsPath: Ending method on line " + Thread.currentThread().getStackTrace()[2].getLineNumber());
         return true;
     }
+
+
+    /**
+     * Searches for a specific setting in the Settings app.
+     *
+     * This method launches the Settings app from a shell command. It then clicks on the search box,
+     * waits for the search input to appear, enters the search texts, waits for the search result
+     * to appear, and clicks on the result. If all steps are successful, it returns true.
+     * If any step fails, it returns false.
+     *
+     * @param device   The UiDevice instance that represents an emulator or a connected device.
+     * @param location The text to search for in the Settings app.
+     * @return true if the search and click are successful, false otherwise.
+     * @throws UiObjectNotFoundException if a UI element is not found.
+     */
+    public static boolean searchSettings(UiDevice device, String location) throws Exception {
+        try {
+            device.pressHome();
+            device.executeShellCommand("am start -a android.settings.SETTINGS");
+
+            // Click on the search box
+            UiObject searchBox = device.findObject(new UiSelector().text("Search settings"));
+            if (!searchBox.waitForExists(5000L) || !searchBox.clickAndWaitForNewWindow()) {
+                return false;
+            }
+
+            // Wait for the search input to appear
+            UiObject searchInput = device.findObject(new UiSelector().text("Search settings"));
+            if (!searchInput.waitForExists(5000L)) {
+                return false;
+            }
+
+            // Set the input text to the value of the location string except for the final character
+            searchInput.setText(location + ".");
+
+            // Wait for the search result to appear
+            UiObject searchResult = device.findObject(new UiSelector().text(location).className(TextView.class));
+            if (!searchResult.waitForExists(10000L) || !searchResult.clickAndWaitForNewWindow()) {
+                device.pressKeyCode(KeyEvent.KEYCODE_DEL);
+                if (!searchResult.waitForExists(10000L) || !searchResult.clickAndWaitForNewWindow()) {
+                    return false;
+                }
+            }
+            searchResult.clickAndWaitForNewWindow();
+            // Wait until the search result is gone
+            return searchResult.waitUntilGone(5000L);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in searchSettings: ", e);
+            return false;
+        }
+    }
+
 
     /**
      * This method is used to click on a switch in the Settings app and confirm that the switch has been clicked.
