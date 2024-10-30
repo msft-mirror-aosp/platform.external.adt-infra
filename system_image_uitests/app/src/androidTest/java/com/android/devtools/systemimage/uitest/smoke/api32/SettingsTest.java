@@ -409,7 +409,7 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableSetDateAndSetTime() throws Exception {
         assertTrue("Failed to navigate to Date & Time settings",
-                    new Wait().until(() -> SettingsUtil.navigateToSettingsPath(device, "System", "Date & time")));
+                new Wait().until(() -> SettingsUtil.searchSettings(device, "Date & time")));
 
         UiObject timeButton = device.findObject(new UiSelector().text("Set time automatically"));
         assertTrue("Time button not found", new Wait().until(timeButton::exists));
@@ -466,7 +466,7 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
         assertTrue("Failed to navigate to Date & Time settings",
-                    new Wait().until(() -> SettingsUtil.navigateToSettingsPath(device, "System", "Date & time")));
+                new Wait().until(() -> SettingsUtil.searchSettings(device, "Date & time")));
 
         UiObject autoTimeZoneButton = device.findObject(new UiSelector().text("Set time zone automatically"));
         assertTrue("Auto Time Zone button not found", new Wait().until(autoTimeZoneButton::exists));
@@ -677,7 +677,8 @@ public class SettingsTest {
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
         try {
-            SettingsUtil.navigateToSettingsPath(device, "System", "Date & time");
+            assertTrue("Failed to navigate to Date & Time settings",
+                    new Wait().until(() -> SettingsUtil.searchSettings(device, "Date & time")));
         } catch (Exception e) {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
@@ -1054,7 +1055,7 @@ public class SettingsTest {
     @Test
     public void listConnectedDevices() throws Exception {
         try {
-            SettingsUtil.navigateToSettingsPath(device, "Connected devices");
+            new Wait().until(() -> SettingsUtil.searchSettings(device, "Connected devices"));
         } catch (Exception e) {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
