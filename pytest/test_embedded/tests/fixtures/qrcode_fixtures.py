@@ -19,10 +19,12 @@ import pytest
 
 
 @pytest.fixture
-async def qrcode_png(avd):
-    """A fixture that access a PNG image with a pre-encoded QR code
+async def qrcode_png(emulator):
+    """A fixture that access a PNG image with a pre-encoded QR code.
+
     Args:
-        avd (BaseEmulator): Fixture that gives access to the configured emulator.
+        emulator (BaseEmulator): Fixture that gives access to the configured emulator.
+
     Returns:
         An instance of the Qrcode class. The class attributes are:
         src (str): The path of the source PNG image.
@@ -30,6 +32,10 @@ async def qrcode_png(avd):
         payload (str): The pre-encoded payload of the QR code image.
         The 'show' method can be used to display the image on the display
         identified by the 'display_id' argument (by default, the primary display).
+
+    Notes:
+        If the emulator is not alive, the push method should be used later
+        to push the QR code to the emulator.
     """
 
     class Qrcode:
@@ -40,14 +46,14 @@ async def qrcode_png(avd):
             self.payload = payload
             self.path = Path("/sdcard/Downloads") / self.src.name
 
-        async def _push(self):
+        async def push(self):
             logging.info(f"Pushing '{self.src}' to '{self.path}'")
-            await avd.adb.push(self.src, self.path)
+            await emulator.adb.push(self.src, self.path)
 
         async def show(self, display_id=0):
             """Show the PNG image on display with id <display_id>"""
-            await avd.stop_activity("com.google.android.apps.photos")
-            await avd.start_activity(
+            await emulator.stop_activity("com.google.android.apps.photos")
+            await emulator.start_activity(
                 "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
                 params=f'-a android.intent.action.VIEW -W -d file://{self.path} -t "image/PNG"'
                 + (f" --display {display_id}" if display_id != 0 else ""),
@@ -62,7 +68,8 @@ async def qrcode_png(avd):
     payload = "uzNYdXGMb0kW7qXDejO0niE6liaPm1m0"
 
     qrcode = Qrcode(src, payload)
-    await qrcode._push()
+    if emulator.is_alive():
+        await qrcode.push()
     return qrcode
 
 
