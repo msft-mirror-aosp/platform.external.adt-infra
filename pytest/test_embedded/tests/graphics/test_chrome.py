@@ -57,11 +57,11 @@ async def prepare_chrome(avd):
     )
     api = await avd.api_level()
     await avd.adb.shell(
-        "pm grant com.android.chrome android.permission READ_EXTERNAL_STORAGE"
+        "pm grant com.android.chrome android.permission.READ_EXTERNAL_STORAGE"
     )
     if api >= 33:
         await avd.adb.shell(
-            "pm grant com.android.chrome android.permission READ_MEDIA_IMAGES"
+            "pm grant com.android.chrome android.permission.READ_MEDIA_IMAGES"
     )
 
     # Configure to skip welcome page
