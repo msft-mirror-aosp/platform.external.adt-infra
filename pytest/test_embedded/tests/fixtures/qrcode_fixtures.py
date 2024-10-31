@@ -33,12 +33,12 @@ async def qrcode_png(avd):
     """
 
     class Qrcode:
-        """A class to push a PNG QRcode with a given payload to /sdcard/Downloads"""
+        """A class to push a PNG QRcode with a given payload to /sdcard/Download"""
 
         def __init__(self, src: str, payload: str):
             self.src = src
             self.payload = payload
-            self.path = Path("/sdcard/Downloads") / self.src.name
+            self.path = Path("/sdcard/Download") / self.src.name
 
         async def _push(self):
             logging.info(f"Pushing '{self.src}' to '{self.path}'")
@@ -55,12 +55,13 @@ async def qrcode_png(avd):
             logging.info(f"Launched the QR code PNG image on display '{display_id}'")
 
     src = (
-        Path(__file__).parents[1]
+        Path(__file__).parents[2]
         / "cfg"
         / "qrcode_uzNYdXGMb0kW7qXDejO0niE6liaPm1m0.png"
     )
     payload = "uzNYdXGMb0kW7qXDejO0niE6liaPm1m0"
 
+    assert src.exists(), f"File '{src}' doesn't exist."
     qrcode = Qrcode(src, payload)
     await qrcode._push()
     return qrcode
@@ -70,7 +71,7 @@ async def qrcode_png(avd):
 async def qrcodes_mp4(avd):
     """A fixture that gives access to a MP4 video containing a series of QR codes.
 
-    The fixture pushes a 15-second MP4 video to /sdcard/Downloads, displaying a
+    The fixture pushes a 15-second MP4 video to /sdcard/Download, displaying a
     series of three images with QR codes, each one shown for 5 seconds.
 
     Args:
@@ -98,7 +99,7 @@ async def qrcodes_mp4(avd):
         def __init__(self, src: str, payloads: list):
             self.src = src
             self.payloads = payloads
-            self.path = Path("/sdcard/Downloads") / self.src.name
+            self.path = Path("/sdcard/Download") / self.src.name
 
         async def _push(self):
             logging.info(f"Pushing '{self.src}' to '{self.path}'")
@@ -113,13 +114,14 @@ async def qrcodes_mp4(avd):
             )
             logging.info(f"Started QR codes video on display '{display_id}'")
 
-    src_video = Path(__file__).parents[1] / "cfg" / "qrcodes.mp4"
+    src_video = Path(__file__).parents[2] / "cfg" / "qrcodes.mp4"
     payloads = [
         "uzNYdXGMb0kW7qXDejO0niE6liaPm1m0",
         "W6fEti4U7ImHU1mxBXkLpOehomty7mTM",
         "tAdFTEYPzbOw6qXBR1jyvzFohsx1gfdz",
     ]
 
+    assert src_video.exists(), f"File '{src_video}' doesn't exist."
     qrcodes = Qrcodes(src_video, payloads)
     await qrcodes._push()
     return qrcodes
