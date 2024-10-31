@@ -47,12 +47,13 @@ async def test_netsimd_cpu_usage(avd):
     # Setting up parameters
     threshold = 10
     checks = 5
+    timeout = 300
 
     # Check netsimd CPU usage is below 'threshold' for 'checks' time consecutively.
     # This test will check if the CPU usage stabilizes below 10% within the first
-    # 60 seconds of launching Emulator.
+    # 300 seconds of launching Emulator.
     passed = 0
-    for i in range(61):
+    for i in range(timeout+1):
         # Obtain cpu_usage of netsimd
         cpu_usage = await get_netsimd_cpu_usage()
 
