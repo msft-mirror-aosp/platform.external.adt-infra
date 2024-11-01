@@ -15,6 +15,7 @@
 import ast
 import configparser
 import json
+import logging
 import os
 import platform
 import plistlib
@@ -130,7 +131,7 @@ class QSettings:
         self._array_index: int = -1
         self._status = Status.NoError
         if application:
-            self._domain += f".{application.lower()}"
+            self._domain += f".{application}"
 
         try:
             self._load_settings()
@@ -227,8 +228,7 @@ class QSettings:
                                 f"Invalid defaults data format: {str(e)}"
                             ) from e
                 except subprocess.CalledProcessError as e:
-                    if e.returncode != 1:  # ignore missing defaults
-                        raise AccessError(f"Failed to read defaults: {str(e)}") from e
+                    logging.warning("Failed to read to defaults from system: %s", e)
                     self._data = {}
         except (AccessError, FormatError):
             raise
@@ -319,9 +319,11 @@ class QSettings:
                         text=True,
                     )
                 except subprocess.CalledProcessError as e:
-                    raise SyncError(
-                        f"Failed to write to defaults system: {e.stderr}"
-                    ) from e
+                    logging.warning(
+                        "Failed to write to defaults system: %s, ignoring direct write",
+                        e,
+                    )
+
         except (AccessError, FormatError, SyncError):
             raise
         except Exception as e:
@@ -372,9 +374,10 @@ class QSettings:
                         text=True,
                     )
                 except subprocess.CalledProcessError as e:
-                    raise SyncError(
-                        f"Failed to write to defaults system: {e.stderr}"
-                    ) from e
+                    logging.warning(
+                        "Failed to write to defaults system: %s, ignoring direct write",
+                        e,
+                    )
 
         except SyncError:
             raise

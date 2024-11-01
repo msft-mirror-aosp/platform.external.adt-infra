@@ -27,6 +27,8 @@ from google.protobuf import empty_pb2
 from emu.apk import APP_DEBUG_APK
 from emu.timing import eventually
 from emu.emulator import Emulator
+from emu.emulator_exceptions import EmulatorDiedException
+
 from tests.test_utils import check_boot_from_snapshot
 import json
 
@@ -354,3 +356,26 @@ async def test_boot_without_internet(emulator):
     assert await emulator_has_no_internet_access(
         emulator
     ), "The emulator was launched with internet access."
+
+
+@pytest.mark.fast1
+@pytest.mark.async_timeout(120)
+async def test_gpu_emulation(emulator):
+    debug_pattern = "hw.gpu.enabled = true"
+    # Redirect the emulator stdout/stderr to a temporary file.
+    with tempfile.NamedTemporaryFile() as emu_output:
+        flags = ["-gpu", "on", "-verbose", "-stdouterr-file", emu_output.name]
+
+        await emulator.restart(flags)
+        await asyncio.sleep(5)
+        emu_output.seek(0)
+        if not emulator.is_alive():
+            raise EmulatorDiedException("Emulator is no longer alive")
+
+        contents = emu_output.read().decode()
+        if not contents:
+            raise ValueError("If is empty")
+        has_debug_messages = re.search(debug_pattern, contents)
+        assert has_debug_messages, "DEBUG messages not found in the emulator output"
+        logging.info("Found the debug message '%s'", has_debug_messages.group())
+
