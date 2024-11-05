@@ -136,6 +136,7 @@ async def test_screen_records_video_telnet(emulator, animation_app, tmp_path, te
     verify_recorded_file_header(sample_file, sample_file_header)
 
 
+@pytest.mark.slow
 @pytest.mark.embedded
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
@@ -208,6 +209,7 @@ async def verify_qrcode(emulator, webm_recording, payload):
     ), "Unable to decode the QR code from video '{sample_file}'."
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "gpu_mode", ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
 )
@@ -257,6 +259,7 @@ async def test_screen_records_with_different_gpu_modes(
     await verify_qrcode(emulator, sample_file, qrcode_png.payload)
 
 
+@pytest.mark.slow
 @pytest.mark.graphics
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
