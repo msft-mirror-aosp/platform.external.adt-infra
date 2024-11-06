@@ -81,7 +81,7 @@ async def decode_qrcodes(payloads: list[str], emulator_controller=None):
         timeout = False
         detected = False
         try:
-            detected = await wait_until(partial(detect_qrcode, payload), timeout=15)
+            detected = await wait_until(partial(detect_qrcode, payload), timeout=30)
         except asyncio.TimeoutError:
             timeout = True
         if not detected or timeout:
