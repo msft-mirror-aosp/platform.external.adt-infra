@@ -81,6 +81,7 @@ async def cool_down():
     await asyncio.sleep(60 * 2)
 
 
+@pytest.mark.slow
 @pytest.mark.guestperf
 @pytest.mark.async_timeout(1080)
 async def test_pcmark(avd, log_directory, record_property):

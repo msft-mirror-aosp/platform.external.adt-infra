@@ -138,6 +138,7 @@ async def test_launch_chrome_google(avd, get_screenshot):
     await avd.stop_activity(chrome_pkg)
 
 
+@pytest.mark.slow
 @pytest.mark.sanity
 @pytest.mark.graphics
 @pytest.mark.async_timeout(1080)

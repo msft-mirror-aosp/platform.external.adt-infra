@@ -260,6 +260,7 @@ async def restart_and_verify_crash_dialogue(avd):
         raise
 
 
+@pytest.mark.slow
 @pytest.mark.async_timeout(600)
 @pytest.mark.fast
 @pytest.mark.skipos("linux", "reason: Issue with pyautogui.")
@@ -339,6 +340,7 @@ async def test_crash_dont_send_report(avd, crash_reporter):
         raise
 
 
+@pytest.mark.slow
 @pytest.mark.async_timeout(600)
 @pytest.mark.fast
 @pytest.mark.skipos("linux", "reason: Issue with pyautogui.")
