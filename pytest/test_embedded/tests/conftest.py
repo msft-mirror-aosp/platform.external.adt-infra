@@ -432,20 +432,16 @@ def modifyitems_for_sharding(session, config, items):
     group = int(group) - 1
     max_groups = int(max_groups)
 
-    selected_items = []
+    slow_items = []
+    normal_items = []
     for item in items:
-        # Calculate a stable hash for the module name, we use a stable
-        # hashing function
-        module_name = item.module.__name__.encode()  # Encode to bytes
-        hash_object = hashlib.sha256(module_name)
-        module_hash = int(hash_object.hexdigest(), 16) % max_groups
-
-        # Select the test if the hash matches the current shard
-        if module_hash == group:
-            selected_items.append(item)
+        if item.get_closest_marker("slow") is not None:
+            slow_items.append(item)
+        else:
+            normal_items.append(item)
 
     # Update the items list to only include the selected tests
-    items[:] = selected_items
+    items[:] = slow_items[group::max_groups] + normal_items[group::max_groups]
 
 
 def modifyitems_for_retry(session, config, items):
@@ -484,6 +480,7 @@ def modifyitems_for_retry(session, config, items):
             rerun_marker.kwargs["reruns"] = retries
 
 
+@pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(session, config, items):
     modifyitems_for_retry(session, config, items)
     modifyitems_for_sharding(session, config, items)
