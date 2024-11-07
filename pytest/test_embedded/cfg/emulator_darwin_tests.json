@@ -22,6 +22,7 @@
         "pytest_flags": [
             "-m graphics and not multidisplay"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [
@@ -56,6 +57,7 @@
         "pytest_flags": [
             "-m graphics"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [
@@ -112,6 +114,7 @@
         "pytest_flags": [
             "-m not multidisplay or embedded"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [
@@ -132,6 +135,7 @@
         "pytest_flags": [
             "-m not multidisplay or embedded"
         ],
+        "maxGroups": 4,
         "avd_configs": [
             {
                 "launch_flags": [
