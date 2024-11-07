@@ -571,6 +571,7 @@ async def test_disable_multidisplay(
         await avd.stop_activity(dummy_pkg)
 
 
+@pytest.mark.slow
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(510)
@@ -821,6 +822,7 @@ async def test_multidisplay_controls(
     )
 
 
+@pytest.mark.slow
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)

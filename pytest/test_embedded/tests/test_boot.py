@@ -220,6 +220,7 @@ async def test_a_booted_emulator_immediately_notifies_it_has_booted(avd):
     assert await asyncio.wait_for(get_booted_notification_time(avd), timeout=10)
 
 
+@pytest.mark.slow
 @pytest.mark.boot
 @pytest.mark.fast
 @pytest.mark.async_timeout(180)

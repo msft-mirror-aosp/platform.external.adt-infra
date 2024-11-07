@@ -358,6 +358,7 @@ async def test_invalid_snapshot_notifies_user(avd):
     await asyncio.gather(*[delete_snapshot(f"foo_{i}") for i in range(3)])
 
 
+@pytest.mark.slow
 @pytest.mark.snapshot
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)

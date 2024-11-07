@@ -260,6 +260,7 @@ async def test_screenshot_saved_to_other_folder(get_screenshot):
         assert pillow_image.filename.exists(), "Temporary screenshot not created."
 
 
+@pytest.mark.slow
 @pytest.mark.graphics
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
