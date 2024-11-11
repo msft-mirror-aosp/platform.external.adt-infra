@@ -224,7 +224,7 @@ async def stream_screenshot(emulator_controller, screen_recorder_file):
     return streaming_img_call
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def screen_recorder(screen_recorder_file):
     """
     Pytest fixture that provides an initialized and running AsyncScreenRecorder.
