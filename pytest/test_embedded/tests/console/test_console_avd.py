@@ -306,3 +306,38 @@ async def test_avd_commands(avd, telnet):
     assert any([".ini" in element for element in response])
     response = await telnet.send("avd snapshotspath")
     assert any(["snapshots" in element for element in response])
+
+
+@pytest.mark.fast
+async def test_emulator_event_console_command(avd, telnet):
+    event_commands = [
+        "event send",
+        "event types",
+        "event codes",
+        "event text",
+        "event mouse",
+    ]
+    event_types = [
+        "EV_SYN",
+        "EV_KEY",
+        "EV_REL",
+        "EV_ABS",
+        "EV_MSC",
+        "EV_SW",
+        "EV_LED",
+        "EV_SND",
+        "EV_REP",
+        "EV_FF",
+        "EV_PWR",
+        "EV_FF_STATUS",
+        "EV_MAX",
+    ]
+    event_result = await telnet.send("help event")
+
+    for event_command in event_commands:
+        assert any([event_command in item.strip() for item in event_result])
+
+    event_type_result = await telnet.send("event types")
+
+    for event_type in event_types:
+        assert any([event_type in item.strip() for item in event_type_result])
