@@ -359,7 +359,7 @@ async def test_boot_without_internet(emulator):
     ), "The emulator was launched with internet access."
 
 
-@pytest.mark.fast1
+@pytest.mark.fast
 @pytest.mark.async_timeout(120)
 async def test_gpu_emulation(emulator):
     debug_pattern = "hw.gpu.enabled = true"

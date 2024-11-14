@@ -152,3 +152,25 @@ async def test_accelerometer_updates_with_model_change(avd):
     assert initial_acceleration.value.data != pytest.approx(
         acceleration.value.data
     ), "Acceleration sensor data didn't change after rotation"
+
+
+@pytest.mark.fast
+@pytest.mark.parametrize(
+    "test_name, sensor_value, x",
+    [
+        ("Pressure", "pressure", "100"),
+        ("Temperature", "temperature", "25"),
+        ("Proximity", "proximity", "5"),
+        ("Orientation", "orientation", "90:0:0"),
+        ("Light", "light", "10000"),
+        ("Humidity", "humidity", "50"),
+        ("Acceleration", "acceleration", "7.55:0:0"),
+        ("Gyroscope", "gyroscope", "1:1:1"),
+        ("Magnetic-Field-Uncalibrated", "magnetic-field-uncalibrated", "20:5:40"),
+        ("Gyroscope-Uncalibrated", "gyroscope-uncalibrated", "2:2:2"),
+    ],
+)
+async def test_sensor_value_telnet(emulator, telnet,  test_name, sensor_value, x):
+    await telnet.send("sensor set {0} {1}".format(sensor_value, x))
+    result = await telnet.send("sensor get {}".format(sensor_value))
+    assert "{0} = {1}".format(sensor_value, x) in result
