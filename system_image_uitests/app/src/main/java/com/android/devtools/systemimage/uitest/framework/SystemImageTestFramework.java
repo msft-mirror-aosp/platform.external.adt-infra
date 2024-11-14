@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class SystemImageTestFramework implements TestRule {
 
-    private final Instrumentation mInstrumentation = InstrumentationRegistry.getInstrumentation();
+    private static final Instrumentation mInstrumentation = InstrumentationRegistry.getInstrumentation();
     private final UiDevice mDevice = UiDevice.getInstance(mInstrumentation);
     private final Bundle args = InstrumentationRegistry.getArguments();
     private static final int RETRY_COUNT = 2;
@@ -79,7 +79,7 @@ public class SystemImageTestFramework implements TestRule {
         return args.getString("origin");
     }
 
-    private boolean isExternalStorageWritable() {
+    private static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state) && !Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
             return true;
@@ -87,14 +87,22 @@ public class SystemImageTestFramework implements TestRule {
         return false;
     }
 
-    private boolean checkWriteExternalPermission()
+    private static boolean checkWriteExternalPermission()
     {
         String permission = "android.permission.WRITE_EXTERNAL_STORAGE";
         int res = mInstrumentation.getContext().checkCallingOrSelfPermission(permission);
         return (res == PackageManager.PERMISSION_GRANTED);
     }
 
-    private File getLoggingDir(String testClassName, String testMethodName) {
+    /*
+     * Retrieve the default logging directory for a specified class and test method.
+     * Create the directory if it doesn't exist.
+     *
+     * @param className The name of the class.
+     * @param methodName The name of the test method.
+     * @return The path to the logging directory for the specified method.
+     */
+    public static File getLoggingDir(String testClassName, String testMethodName) {
         Assert.assertTrue("Failed to write to external storage.", isExternalStorageWritable());
         Assert.assertTrue("Failed to acquire permission.", checkWriteExternalPermission());
         File externalStorageDocumentsDir =
