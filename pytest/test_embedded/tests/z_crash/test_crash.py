@@ -174,6 +174,7 @@ async def test_crash_the_emulator(emulator: BaseEmulator, crash_reporter):
 
 @pytest.mark.boot
 @pytest.mark.skipos("win", "Symbol decoding works differently on windows (b/305990645)")
+@pytest.mark.flaky(reruns=0)  # b/379067742 flaky on mac_aarch64_gfxstream.
 async def test_crash_can_decode_symbols(emulator: BaseEmulator, crash_reporter):
     """Make sure that there are symbols in the crashes reported by the emulator.
 
