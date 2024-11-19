@@ -676,12 +676,8 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTwentyFourHourFormat() throws Exception {
-        try {
-            assertTrue("Failed to navigate to Date & Time settings",
-                    new Wait().until(() -> SettingsUtil.searchSettings(device, "Date & time")));
-        } catch (Exception e) {
-            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
-        }
+        assertTrue("Failed to navigate to Date & Time settings",
+                new Wait().until(() -> SettingsUtil.searchSettings(device, "Date & time")));
 
         boolean autoTwentyFourWasEnabled = false;
         boolean useTwentyFourWasEnabled = false;

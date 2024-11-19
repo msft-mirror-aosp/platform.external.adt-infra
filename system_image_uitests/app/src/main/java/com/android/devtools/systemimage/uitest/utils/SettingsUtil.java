@@ -15,6 +15,7 @@ import androidx.test.uiautomator.UiSelector;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -954,13 +955,19 @@ public class SettingsUtil {
      * @param device   The UiDevice instance that represents an emulator or a connected device.
      * @param location The text to search for in the Settings app.
      * @return true if the search and click are successful, false otherwise.
-     * @throws UiObjectNotFoundException if a UI element is not found.
      */
-    public static boolean searchSettings(UiDevice device, String location) throws Exception {
+    public static boolean searchSettings(UiDevice device, String location) {
         try {
             device.pressHome();
             device.executeShellCommand("am start -a android.settings.SETTINGS");
 
+            // Scroll to the top of the settings app
+            UiScrollable scrollableContainer = new UiScrollable(new UiSelector().resourceIdMatches(Res.SETTINGS_LIST_CONTAINER_RES));
+            if (!scrollableContainer.exists()) {
+                return false;
+            }
+            scrollableContainer.scrollToBeginning(10);
+            
             // Click on the search box
             UiObject searchBox = device.findObject(new UiSelector().text("Search settings"));
             if (!searchBox.waitForExists(5000L) || !searchBox.clickAndWaitForNewWindow()) {
@@ -968,7 +975,8 @@ public class SettingsUtil {
             }
 
             // Wait for the search input to appear
-            UiObject searchInput = device.findObject(new UiSelector().text("Search settings"));
+            UiObject searchInput = device.findObject(new UiSelector()
+                    .text("Search settings").className(EditText.class));
             if (!searchInput.waitForExists(5000L)) {
                 return false;
             }
