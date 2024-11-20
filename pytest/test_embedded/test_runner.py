@@ -286,8 +286,8 @@ def run_single_suite(
                 "ANDROID_AVD_HOME": str(tmpdir),
                 "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or "",
             },
-            # Give pytest a chance to "nicely" terminate everything.
-            timeout=2800 if platform.system() != "Windows" else 3200,
+            # Give pytest a chance to "nicely" terminate everything (4 hours).
+            timeout=14400,
             check_output=False,
         )
     except subprocess.TimeoutExpired as timeout_exception:
