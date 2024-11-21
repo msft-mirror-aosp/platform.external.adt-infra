@@ -29,7 +29,7 @@ async def screen_recorder_strategy(screen_recorder_file, request):
 
 
 @pytest.mark.parametrize(
-    "screen_recorder_strategy", ["mss", "pil", "pyscreeze", None], indirect=True
+    "screen_recorder_strategy", ["mss", "pil", "pyscreeze", "no", None], indirect=True
 )
 async def test_screenrecorder_fixture(screen_recorder_strategy):
     logging.info("Hello from the screen recorder test, i'm going to take a nap!")
