@@ -186,7 +186,7 @@ class ScreenshotStreamManager:
 
             screen_size = (first_img.format.width, first_img.format.height)
             with AsyncVideoWriter(
-                self.screen_recorder_file, "mp4v", 60, screen_size
+                self.screen_recorder_file, "mp4v", 5, screen_size
             ) as writer:
                 self.write_image(writer, first_img)
                 async for img in self.stream:
