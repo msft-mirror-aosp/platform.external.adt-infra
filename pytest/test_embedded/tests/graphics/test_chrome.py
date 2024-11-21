@@ -176,8 +176,8 @@ async def test_page_loads_with_different_gpu_modes(
 
     await prepare_chrome(emulator)
     await qrcode_png.push()
-    logging.info(f"Opening file '{qrcode_png.path}' in Google Chrome ..")
-    await emulator.start_activity(chrome_cmp, params=f"-d file://{qrcode_png.path}")
+    logging.info(f"Opening file '{qrcode_png.html}' in Google Chrome ..")
+    await emulator.start_activity(chrome_cmp, params=f"-d file://{qrcode_png.html}")
 
     emulator_controller = EmulatorControllerStub(emulator.channel)
     logging.info(f"Attempting to decode the QR code ..")

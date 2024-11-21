@@ -17,6 +17,33 @@ from pathlib import Path
 
 import pytest
 
+qrcode_html_fmt = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <style>
+        body, html {{
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }}
+        img {{
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }}
+    </style>
+    </head>
+    <body>
+    <img src="file://{}" alt="Image">
+    </body>
+    </html>
+"""
+
 
 @pytest.fixture
 async def qrcode_png(emulator):
@@ -34,8 +61,10 @@ async def qrcode_png(emulator):
         identified by the 'display_id' argument (by default, the primary display).
 
     Notes:
-        If the emulator is not alive, the push method should be used later
-        to push the QR code to the emulator.
+        1. If the emulator is not alive, the push method should be used later
+           to push the QR code to the emulator.
+        2. An html page that can be used to display the QR code in a centered
+           resizable html container is stored in the path 'self.html'.
     """
 
     class Qrcode:
@@ -45,10 +74,20 @@ async def qrcode_png(emulator):
             self.src = src
             self.payload = payload
             self.path = Path("/sdcard/Download") / self.src.name
+            self.html = (
+                Path("/sdcard/Android/data/com.android.chrome/files/Download/")
+                    / "qrcode.html"
+            )
+        async def _create_qrcode_html(self):
+            await emulator.adb.shell(f"mkdir -p {self.html.parent}")
+            qrcode_html= qrcode_html_fmt.format(self.path)
+            await emulator.adb.shell(f'echo "{qrcode_html}" > {self.html}')
+            await emulator.adb.shell(f'chmod +r {self.html}')
 
         async def push(self):
             logging.info(f"Pushing '{self.src}' to '{self.path}'")
             await emulator.adb.push(self.src, self.path)
+            await self._create_qrcode_html()
 
         async def show(self, display_id=0):
             """Show the PNG image on display with id <display_id>"""

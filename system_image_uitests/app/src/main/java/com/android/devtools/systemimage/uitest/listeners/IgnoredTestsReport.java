@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.devtools.systemimage.uitest.framework;
+package com.android.devtools.systemimage.uitest.listeners;
 
 import android.content.pm.PackageManager;
 import android.os.Environment;
@@ -28,7 +28,6 @@ import org.junit.runner.notification.RunListener;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
-import org.dom4j.io.XMLWriter;
 import org.dom4j.Element;
 
 import java.io.File;
@@ -45,7 +44,7 @@ import java.util.Map;
  * Tracks information about ignored tests and generates an XML report with details
  * such as class name, method name, and ignore reason, after the test run finishes.
  */
-public class IgnoreAnnotationListener extends RunListener {
+public class IgnoredTestsReport extends RunListener {
 
     private List<Map<String, String>> ignoredTests = new ArrayList<>();
 
