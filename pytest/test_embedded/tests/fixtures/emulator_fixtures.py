@@ -229,9 +229,10 @@ async def avd(
     else:
         logging.info("--> Reusing emulator")
 
-    avd_launcher.reset_state()
+    await avd_launcher.reset_state()
     yield avd_launcher
-    avd_launcher.reset_state()
+    if avd_launcher.is_alive():
+        await avd_launcher.reset_state()
 
 
 @pytest.fixture(scope="module")
