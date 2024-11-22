@@ -60,34 +60,6 @@ async def is_landscape(get_screenshot):
 
 
 @pytest.fixture
-async def ensure_multidisplay_service_ready(emulator_controller):
-    max_retries = 5
-    retry_delay = 1  # Initial delay in seconds
-
-    for attempt in range(max_retries):
-        try:
-            status = await emulator_controller.getStatus(_EMPTY_)
-            if (
-                "multidisplay" in status.guestConfig
-                and status.guestConfig["multidisplay"] == "available"
-            ):
-                return  # Success, exit the loop
-        except RpcError as exc_info:
-            if exc_info.value.code() != StatusCode.UNAVAILABLE:
-                raise  # Unexpected error, re-raise
-        except Exception:
-            raise  # Unexpected error, re-raise
-
-        # Exponential backoff
-        await asyncio.sleep(retry_delay)
-        retry_delay *= 2  # Double the delay for the next attempt
-
-    raise TimeoutError(
-        f"Failed to get display configurations after {max_retries} attempts"
-    )
-
-
-@pytest.fixture
 async def no_displays(
     ensure_multidisplay_service_ready, emulator_controller, adb_shell
 ):
