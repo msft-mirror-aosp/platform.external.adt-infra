@@ -40,8 +40,7 @@ async def jdb(avd):
     """
 
     class Jdb:
-        """Provides methods to debug an app using Java Debugger (jdb)
-        """
+        """Provides methods to debug an app using Java Debugger (jdb)"""
 
         def __init__(self):
             self.jdb_bin = "jdb"
@@ -92,8 +91,7 @@ async def jdb(avd):
             try:
                 await asyncio.wait_for(self.cmd.run(use_stdin_pipe=True), timeout=30)
             except (Exception, asyncio.TimeoutError) as err:
-                logging.error(
-                    "Timed out while attempting to attach jdb: %s", err)
+                logging.error("Timed out while attempting to attach jdb: %s", err)
                 raise
 
             # Verify jdb is initialized.
@@ -110,6 +108,7 @@ async def jdb(avd):
                 self.app_pid = await avd.adb.exec_out(f"pidof {pkg}")
                 if len(self.app_pid) > 0:
                     return True
+
             return await eventually(_do_get_pid)
 
         async def send(self, cmd, message=None, timeout=30):
@@ -142,26 +141,29 @@ async def jdb(avd):
 
         async def string_in_output(self, string, timeout=30):
             """Return 'True' if 'string' is observed in the jdb output."""
+
             async def _string_in_output():
                 async for line in self.cmd.handler:
                     if string in line:
                         logging.info(f"Matched line '{line}'")
                         return True
-            return await eventually (
-                _string_in_output, timeout=timeout
-            )
+
+            return await eventually(_string_in_output, timeout=timeout)
 
     jdb = Jdb()
     yield jdb
     logging.info("<-- teardown jdb")
-    await jdb.cmd.cancel()
+    if jdb.cmd:
+        await jdb.cmd.cancel()
     logging.info("=== finalized jdb")
 
 
 async def screenshots_equal(screenshot1, screenshot2):
     """Return True if two screenshots are identical pixel-by-pixel."""
-    return list(screenshot1.getdata()) == list(screenshot2.getdata()) \
-           and screenshot1.size == screenshot2.size
+    return (
+        list(screenshot1.getdata()) == list(screenshot2.getdata())
+        and screenshot1.size == screenshot2.size
+    )
 
 
 @pytest.mark.sanity
@@ -185,10 +187,11 @@ async def test_can_debug(avd, jdb, get_screenshot):
         2. The app's execution should be paused.
         3. The app's execution should be resumed.
     """
-    async def screen_is_paused(n=4, delay=.5):
+
+    async def screen_is_paused(n=4, delay=0.5):
         # Return 'True' if 'n' consecutive screenshots are identical.
         _, screenshot_ = await get_screenshot()
-        for i in range(n-1):
+        for i in range(n - 1):
             await asyncio.sleep(delay)
             _, screenshot = await get_screenshot()
             logging.info(f"Comparing screenshots [{i+1}/{n-1}] ...")
@@ -228,7 +231,7 @@ async def test_can_debug(avd, jdb, get_screenshot):
     logging.info("Attempting to clear the breakpoint ..")
     assert await jdb.send(
         "clear com.google.emu.Triangle.draw",
-        "Removed: breakpoint com.google.emu.Triangle.draw"
+        "Removed: breakpoint com.google.emu.Triangle.draw",
     ), "Couldn't verify the breakpoing was removed."
     logging.info("jdb: removed breakpoint 'com.google.emu.Triangle.draw'.")
 
