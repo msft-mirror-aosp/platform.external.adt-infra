@@ -19,12 +19,16 @@ import logging
 from pathlib import Path
 
 import pytest
+from google.protobuf import empty_pb2
+from grpc import RpcError, StatusCode
 
 from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.emulator_exceptions import EmulatorFailedToBootException
 from emu.process.command import Command
 from emu.utils import system_cpu
+
+__EMPTY__ = empty_pb2.Empty()
 
 
 @pytest.fixture(scope="module")
@@ -363,3 +367,48 @@ async def telnet(avd: BaseEmulator):
     """
     assert avd.is_alive()
     return await avd.console()
+
+
+@pytest.fixture
+async def ensure_multidisplay_service_ready(emulator_controller):
+    """Ensures the multi-display service is ready in the emulator.
+
+    This fixture repeatedly checks the emulator status for the
+    "multidisplay" guest configuration to be "available". It uses
+    exponential backoff with a maximum of 5 retries, handling potential
+    gRPC unavailability errors.
+
+    Args:
+        emulator_controller: A fixture providing access to the
+            EmulatorController gRPC client.
+
+    Raises:
+        TimeoutError: If the multi-display service isn't ready after
+            multiple retries.
+        RpcError: If a gRPC error other than UNAVAILABLE occurs.
+        Exception: For any other unexpected errors during status retrieval.
+    """
+    max_retries = 5
+    retry_delay = 1  # Initial delay in seconds
+
+    for attempt in range(max_retries):
+        try:
+            status = await emulator_controller.getStatus(__EMPTY__)
+            if (
+                "multidisplay" in status.guestConfig
+                and status.guestConfig["multidisplay"] == "available"
+            ):
+                return  # Success, exit the loop
+        except RpcError as exc_info:
+            if exc_info.value.code() != StatusCode.UNAVAILABLE:
+                raise  # Unexpected error, re-raise
+        except Exception:
+            raise  # Unexpected error, re-raise
+
+        # Exponential backoff
+        await asyncio.sleep(retry_delay)
+        retry_delay *= 2  # Double the delay for the next attempt
+
+    raise TimeoutError(
+        f"Failed to get display configurations after {max_retries} attempts"
+    )
