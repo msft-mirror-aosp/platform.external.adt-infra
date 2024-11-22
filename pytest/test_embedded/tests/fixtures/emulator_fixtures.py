@@ -217,12 +217,12 @@ async def avd(
     Returns:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
-    if not avd_launcher.is_alive() or not avd_launcher.has_booted():
+    if not avd_launcher.is_alive() or not await avd_launcher.has_booted():
         logging.info("--> Restarting emulator")
         await avd_launcher.restart(avd_launcher.launch_flags)
         booted = await avd_launcher.wait_for_boot()
         if not booted:
-            avd_launcher.stop()
+            await avd_launcher.stop()
             raise EmulatorFailedToBootException(
                 "The emulator did not boot in time and was stopped."
             )
