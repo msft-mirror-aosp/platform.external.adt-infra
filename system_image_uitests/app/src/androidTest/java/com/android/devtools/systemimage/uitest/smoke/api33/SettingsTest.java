@@ -208,26 +208,27 @@ public class SettingsTest {
                 "Deny anyway", "Apps", "Permission manager");
         device.pressHome();
 
-        AppLauncher.launch(instrumentation, appName);
+        device.executeShellCommand("am start -a android.intent.action.VIEW -d geo:0,0");
+        device.waitForIdle();
         final UiObject acceptAndContinueButton;
         acceptAndContinueButton = device.findObject(new UiSelector().
                 textMatches("(?i)accept\\s&\\scontinue"));
-        if (acceptAndContinueButton.exists())
+        if (acceptAndContinueButton.waitForExists(5000L))
             acceptAndContinueButton.clickAndWaitForNewWindow();
 
         final UiObject skipButton;
         skipButton = device.findObject(new UiSelector().textMatches("(?i)skip"));
-        if (skipButton.exists())
+        if (skipButton.waitForExists(5000L))
             skipButton.clickAndWaitForNewWindow();
 
         final UiObject gotItButton;
         gotItButton = device.findObject(new UiSelector().textMatches("(?i)got\\sit"));
-        if (gotItButton.exists())
+        if (gotItButton.waitForExists(5000L))
             gotItButton.clickAndWaitForNewWindow();
 
         final UiObject myLocation;
         myLocation = device.findObject(new UiSelector().resourceId(Res.ANDROID_MY_LOCATION));
-        if (new Wait().until(myLocation::exists))
+        if (myLocation.waitForExists(5000L))
             myLocation.clickAndWaitForNewWindow();
 
         final UiObject allowForegroundButton = device.findObject(
