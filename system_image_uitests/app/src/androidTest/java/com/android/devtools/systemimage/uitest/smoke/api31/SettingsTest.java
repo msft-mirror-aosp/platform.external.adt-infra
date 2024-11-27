@@ -289,7 +289,7 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
-        DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+        DeveloperOptionsManager.enableDeveloperOptions_v4(testFramework);
         assertTrue("Failed to enable Developer options.",
                 AppLauncher.launchPath(
                         instrumentation, true, "Settings", "System", "Developer options"));
