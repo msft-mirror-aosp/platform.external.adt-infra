@@ -135,7 +135,7 @@ async def eventually(predicate, iterator=None, timeout=5):
 
     if iterator is None:
         try:
-            return await wait_until(predicate, timeout) is not None
+            return await wait_until(predicate, timeout)
         except asyncio.TimeoutError:
             return False
 
