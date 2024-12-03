@@ -71,6 +71,7 @@ async def qrcode_png(emulator):
         """A class to push a PNG QRcode with a given payload to /sdcard/Download"""
 
         def __init__(self, src: str, payload: str):
+            self.pushed = False
             self.src = src
             self.payload = payload
             self.path = Path("/sdcard/Download") / self.src.name
@@ -88,9 +89,12 @@ async def qrcode_png(emulator):
             logging.info(f"Pushing '{self.src}' to '{self.path}'")
             await emulator.adb.push(self.src, self.path)
             await self._create_qrcode_html()
+            self.pushed = True
 
         async def show(self, display_id=0):
             """Show the PNG image on display with id <display_id>"""
+            if not self.pushed:
+                await self.push()
             await emulator.stop_activity("com.google.android.apps.photos")
             await emulator.start_activity(
                 "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
