@@ -238,7 +238,7 @@ async def test_emulator_controls_keys(avd, emulator_controller):
         focused_task = await get_top_focused_root_task()
         if focused_task is None:
             return False
-        type = re.search("type=(.*)}", focused_task).groups()[0]
+        type = re.search("type=([^ }]*)", focused_task).group(1)
         if type is None or type != expected_type:
             return False
         return True
@@ -301,11 +301,20 @@ async def test_emulator_controls_keys(avd, emulator_controller):
     assert await eventually(check_screenshot_created), "A screenshot was not created"
 
     ########## Step 6 - Back and Home button ##
+    if avd.configuration.avd["target"] == "android-31":
+        dialer_package = "com.android.dialer"
+        dialer_activity = "com.android.dialer/.main.impl.MainActivity"
+    else:
+        dialer_package = "com.google.android.dialer"
+        dialer_activity = "com.google.android.dialer/.extensions.GoogleDialtactsActivity"
 
     # Launch the dialer app.
-    await avd.start_activity(
-        "com.google.android.dialer/.extensions.GoogleDialtactsActivity", params="-W"
-    )
+    await avd.start_activity(dialer_activity, params="-W")
+
+    # Check if the messaging app has the focus.
+    assert await eventually(
+        partial(check_root_task_contains_name, dialer_package)
+    ), "Couldn't launch the dialer app"
     # Launch the messaging app.
     await avd.start_activity(
         "com.google.android.apps.messaging/.ui.ConversationListActivity", params="-W"
@@ -319,7 +328,7 @@ async def test_emulator_controls_keys(avd, emulator_controller):
     await keypress("GoBack")
     # Check if the focus went back to the dialler app.
     assert await eventually(
-        partial(check_root_task_contains_name, "com.google.android.dialer")
+        partial(check_root_task_contains_name, dialer_package)
     ), "Couldn't go Back"
 
     # Click on Home button.
