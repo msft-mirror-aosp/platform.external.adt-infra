@@ -31,6 +31,7 @@ COPY_PATHS = (
     run_tests.HERE / "cfg",
     run_tests.HERE / "test_runner.py",
     run_tests.HERE / "run_from_zip.py",
+    run_tests.HERE / "pytest.ini",
 )
 
 
