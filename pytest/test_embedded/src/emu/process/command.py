@@ -112,6 +112,16 @@ class Command:
         await asyncio.wait_for(self.log_task, timeout=1)
         return proc
 
+    def is_running(self):
+        """Checks if the command's process is still running.
+
+        Returns:
+            bool: True if the process is running, False otherwise.
+        """
+        if self.process:  # Check if the process has been started
+            return self.process.returncode is None  # None means still running
+        return False
+
     async def run(self, use_stdin_pipe=False):
         """
         Creates a subprocess to execute the command.
