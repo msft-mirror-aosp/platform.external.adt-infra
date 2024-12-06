@@ -253,8 +253,10 @@ async def test_emulator_debug_startup(avd):
 
     logging.info("Launching emulator with option 'debug -all' ...")
 
-    # Sample debug message format: D0412 07:53:41.641776.
-    debug_pattern = r"D\d{4} \d{2}:\d{2}:\d{2}\.\d{6}.*"
+    # Sample debug message format: 07:53:41.641776 112835 DEBUG filename.
+    # Debug logs from main-emulator.cpp always appear as they come before the debug flag
+    # is parsed so should not be counted.
+    debug_pattern = r"^\d{2}:\d{2}:\d{2}\.\d{6} \d+ DEBUG\s+((?!main-emulator\.cpp).)*$"
 
     # Redirect the emulator stdout/stderr to a temporary file.
     with tempfile.NamedTemporaryFile() as emu_output:
@@ -270,7 +272,7 @@ async def test_emulator_debug_startup(avd):
         await asyncio.sleep(5)
 
         contents = emu_output.read().decode()
-        has_debug_messages = re.search(debug_pattern, contents)
+        has_debug_messages = re.search(debug_pattern, contents, re.MULTILINE)
         assert has_debug_messages, "DEBUG messages not found in the emulator output"
         logging.info(f"Found the debug message '{has_debug_messages.group()}'")
 
