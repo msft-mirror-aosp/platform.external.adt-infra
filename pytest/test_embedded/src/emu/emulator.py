@@ -39,7 +39,7 @@ from grpc.aio import AioRpcError
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorClient
-from emu.emulator_exceptions import EmulatorNotFoundException
+from emu.emulator_exceptions import EmulatorNotFoundException, EmulatorDiedException
 from emu.mobly.snippet import Mobly
 from emu.process.command import Command
 from emu.timing import eventually, wait_until
@@ -475,6 +475,11 @@ class Emulator(BaseEmulator):
                 discovery.available(),
                 proc.process.pid,
             )
+
+            # No need to keep trying if the process itself is gone.
+            if not proc.is_running():
+                logging.error("The emulator process is not alive!")
+                raise EmulatorDiedException("The emulator died while launching")
             return (
                 discovery.find_emulator("avd.id", self.configuration.name) is not None
             )
