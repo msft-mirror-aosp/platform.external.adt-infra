@@ -151,7 +151,7 @@ class Adb:
         communication with ADB commands.
 
         Args:
-            try_restart (bool): If true, we will try to restrat the adb
+            try_restart (bool): If true, we will try to restart the adb
             server once, if the device is not online.
 
         Returns:
@@ -261,6 +261,20 @@ class Adb:
             raise EmulatorDiedException(f"Emulator with id: {self.name} is not alive.")
         elif not await self.online():
             self.logger.error("Emulator with id: %s is not online.", self.name)
+
+    async def logcat_cmd(self):
+        """Runs the `adb logcat` command asynchronously.
+
+        Logcat output can be accessed via the logger named "emu-{id}-lct".
+
+        Returns:
+            asyncio.subprocess.Process: The process object representing the running command.
+        """
+        cmd = Command(
+            [self.adb_binary, "-s", self.name, "logcat"],
+            logging.getLogger(f"{self.emulator.log_id}-lct"),
+        )
+        return await cmd.run()
 
     async def logcat(self, clear: bool = False, tag: str = None) -> AsyncCommandStream:
         """Obtains the current logcat stream
