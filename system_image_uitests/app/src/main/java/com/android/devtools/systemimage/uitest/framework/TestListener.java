@@ -15,6 +15,7 @@
 
 package com.android.devtools.systemimage.uitest.framework;
 import com.android.devtools.systemimage.uitest.listeners.IgnoredTestsReport;
+import com.android.devtools.systemimage.uitest.listeners.ScreenRecorderManager;
 
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
@@ -30,7 +31,8 @@ public class TestListener extends RunListener {
     public TestListener() {
         // Initialize the custom listeners (processed in order listed)
         this.delegates = new RunListener[] {
-                new IgnoredTestsReport()
+                new IgnoredTestsReport(),
+                new ScreenRecordManager()
         };
     }
 
