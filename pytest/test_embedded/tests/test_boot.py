@@ -406,3 +406,25 @@ async def test_gpu_emulation(emulator):
         has_debug_messages = re.search(debug_pattern, contents)
         assert has_debug_messages, "DEBUG messages not found in the emulator output"
         logging.info("Found the debug message '%s'", has_debug_messages.group())
+
+
+@pytest.mark.fast
+@pytest.mark.async_timeout(120)
+async def test_gpu_host_emulation(emulator):
+    debug_pattern = "hw.gpu.mode = host"
+    # Redirect the emulator stdout/stderr to a temporary file.
+    with tempfile.NamedTemporaryFile() as emu_output:
+        flags = ["-gpu", "host", "-verbose", "-stdouterr-file", emu_output.name]
+
+        await emulator.restart(flags)
+        await asyncio.sleep(5)
+        emu_output.seek(0)
+        if not emulator.is_alive():
+            raise EmulatorDiedException("Emulator is no longer alive")
+
+        contents = emu_output.read().decode()
+        if not contents:
+            raise ValueError("If is empty")
+        has_debug_messages = re.search(debug_pattern, contents)
+        assert has_debug_messages, "DEBUG messages not found in the emulator output"
+        logging.info("Found the debug message '%s'", has_debug_messages.group())
