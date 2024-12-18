@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 /*
  * Annotation to enable screen recording for the test method execution.
  *
- * To use, import this package and annotation the test method with
+ * To use, import this package and annotate the test method with
  * {@code @ScreenRecord}.
  * <p>Refer to {@link ScreenRecorderManager} for more details.</p>
  */

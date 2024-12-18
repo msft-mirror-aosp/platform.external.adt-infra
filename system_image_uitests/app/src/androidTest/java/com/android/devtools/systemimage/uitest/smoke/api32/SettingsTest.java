@@ -39,6 +39,7 @@ import com.android.devtools.systemimage.uitest.utils.GoogleAppUtil;
 import com.android.devtools.systemimage.uitest.utils.IdlingResourceUtil;
 import com.android.devtools.systemimage.uitest.utils.SettingsUtil;
 import com.android.devtools.systemimage.uitest.utils.Wait;
+import com.android.devtools.systemimage.uitest.annotations.ScreenRecord;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -675,6 +676,7 @@ public class SettingsTest {
      */
     @Test
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
+    @ScreenRecord
     public void enableTwentyFourHourFormat() throws Exception {
         assertTrue("Failed to navigate to Date & Time settings",
                 new Wait().until(() -> SettingsUtil.searchSettings(device, "Date & time")));
