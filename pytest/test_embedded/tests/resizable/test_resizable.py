@@ -48,7 +48,7 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
     return mode
 
 
-@pytest.mark.resizable
+@pytest.mark.newresizable
 @pytest.mark.parametrize(
     "width, height, mode",
     [
@@ -58,13 +58,10 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
         (1920, 1080, DisplayModeValue.DESKTOP),
     ],
 )
-@pytest.mark.flaky(reruns=0)
-@pytest.mark.sanity
-@pytest.mark.skipos("all", "reason: b/309463427")
-async def test_resizable_changes_resolution(
+async def test_resizable_changes_resolution_sanity(
     animation_app, emulator_controller, width, height, mode, get_screenshot
 ):
-    await set_display_mode(mode)
+    await set_display_mode(emulator_controller, mode)
 
     async def screenshot_is_sized_properly():
         image, _ = await get_screenshot(
