@@ -830,7 +830,7 @@ public class SettingsUtil {
             UiDevice device, String accountName) throws Exception {
 
         UiObject manageAccount = device.findObject(new UiSelector().
-                resourceId(Res.GOOGLE_SERVICES_ACCOUNTS_CHIP_RES));
+                text("Manage accounts on this device"));
         if (manageAccount.waitForExists(10000L)) {
             manageAccount.click();
             manageAccount.waitUntilGone(10000L);

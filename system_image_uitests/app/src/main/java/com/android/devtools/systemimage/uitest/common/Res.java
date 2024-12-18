@@ -128,6 +128,7 @@ public class Res {
     public static final String DIALER_DIGITS_RES = "(com.android.dialer\\d*:id|com.google.android.dialer\\d*:id)/digits";
     public static final String DIALER_IN_CALL_RES = "com.google.android.dialer:id/incall_end_call";
     public static final String DIALER_CONTACT_GRID_RES = "com.google.android.dialer:id/contactgrid_contact_name";
+    public static final String GOOGLE_MANAGE_ACCOUNT_BUTTON_RES = "ButtonLabel";
     public static final String GOOGLE_SIGN_IN_CONSENT_NEXT_RES = "signinconsentNext";
     public static final String GOOGLE_SERVICES_NEXT_BUTTON_RES=
             "com.android.chrome:id/next_button";
