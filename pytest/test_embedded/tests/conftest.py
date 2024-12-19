@@ -48,6 +48,7 @@ from tests.fixtures.mobly_fixtures import *
 from tests.fixtures.qrcode_fixtures import *
 from tests.fixtures.screen_recording_fixtures import *
 from tests.fixtures.markers import register_markers
+from tests.fixtures.junit_rerun_reporter import *
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -221,7 +222,9 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
                 else:
                     pytest.skip()
 
-    item.user_properties.append(("flaky", "flaky" in item.keywords))
+    # Only add the flaky marker if it does not yet exist.
+    if not any(x[0] == "flaky" for x in item.user_properties):
+        item.user_properties.append(("flaky", "flaky" in item.keywords))
     logging.info("=============== Setup: %s ===============", item.name)
 
 
