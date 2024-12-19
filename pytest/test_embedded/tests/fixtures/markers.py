@@ -24,6 +24,7 @@ def register_markers(config):
         "boot: Validates behavior immediately after boot",
         "chrome: Chrome tests",
         "console: Relates to the emulator console",
+        "e2e: Tests the entire flow of a feature, spanning multiple components or systems, from start to finish.",
         "embedded_new_resizable: New resizable embedded emulator API since 34",
         "embedded_newresizable: Uses new resizable emulator API since 34, in embedded mode",
         "embedded: Runs only on an embedded emulator",
