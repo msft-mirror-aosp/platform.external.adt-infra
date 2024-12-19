@@ -19,6 +19,7 @@ from pathlib import Path
 
 from emu.emulator_exceptions import EmulatorDiedException
 from emu.logging.logcat_parser import parse_logcat
+from emu.logging.log_handler import create_file_logger
 from emu.process.command import Command
 from emu.process.command_stream import AsyncCommandStream
 from emu.timing import eventually
@@ -270,10 +271,8 @@ class Adb:
         Returns:
             asyncio.subprocess.Process: The process object representing the running command.
         """
-        cmd = Command(
-            [self.adb_binary, "-s", self.name, "logcat"],
-            logging.getLogger(f"{self.emulator.log_id}-lct"),
-        )
+        logger = create_file_logger(f"{self.emulator.log_id}-lct")
+        cmd = Command([self.adb_binary, "-s", self.name, "logcat"], logger)
         return await cmd.run()
 
     async def logcat(self, clear: bool = False, tag: str = None) -> AsyncCommandStream:
