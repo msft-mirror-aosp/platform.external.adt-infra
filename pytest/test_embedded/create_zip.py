@@ -138,7 +138,8 @@ def main(args: argparse.Namespace) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_dir = pathlib.Path(tmp_dir)
             logging.info("Creating python virtualenv")
-            run_tests.create_pyrunner(False, tmp_dir, args.verbose)
+            level = logging.DEBUG if args.verbose else logging.INFO
+            run_tests.create_pyrunner(False, tmp_dir, level)
 
             logging.info("Archiving virtualenv")
             zip_path(zipf, tmp_dir.joinpath(".venv"), symlink_src=run_tests.PYTHON_DIR)

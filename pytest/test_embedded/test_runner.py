@@ -304,7 +304,10 @@ def run_single_suite(
         asyncio.run(collect_crash_reports(emulator, symbol_path, logdir, grpc_services))
 
         # Forcefully terminate all emulator processess
-        pyrun(["-m", "emu.process.kill_emulator"], check_output=False)
+        pyrun(
+            ["-m", "emu.process.kill_emulator", "--log-level", "WARNING"],
+            check_output=False,
+        )
 
         if not junit_test_results.exists():
             raise NoTestResultsProduced(
@@ -364,12 +367,18 @@ class AdbServer:
         self.adb = adb
 
     def __enter__(self):
-        self.pyrun(["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False)
+        self.pyrun(
+            ["-m", "emu.process.kill_emulator", "-p", "adb", "--log-level", "WARNING"],
+            check_output=False,
+        )
         run([self.adb, "start-server"], timeout=60)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         run([self.adb, "kill-server"], timeout=60)
-        self.pyrun(["-m", "emu.process.kill_emulator", "-p", "adb"], check_output=False)
+        self.pyrun(
+            ["-m", "emu.process.kill_emulator", "-p", "adb", "--log-level", "WARNING"],
+            check_output=False,
+        )
 
 
 def merge_results(python_exe: Callable, sources: [Path], dest: Path):
@@ -520,7 +529,7 @@ def run(cmd, cwd=None, extra_env=None, timeout=1200, check_output=True):
     if extra_env:
         local_env.update(extra_env)
 
-    logging.info(
+    logging.warning(
         "Running: %s in %s for at most %s seconds with %s",
         " ".join(cmd),
         cwd,

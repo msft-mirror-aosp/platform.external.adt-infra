@@ -39,7 +39,9 @@ def configure_logging(logging_level, split_to_stderr=False, log_path=None):
     """
     logging_handler_out = logging.StreamHandler(sys.stdout)
     logging_handler_out.setLevel(logging.DEBUG)
-    logging_handler_out.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
+    logging_handler_out.setFormatter(
+        TimeFormatter("%(asctime)s  %(filename)s:%(lineno)d | %(message)s")
+    )
 
     logging.root = logging.getLogger("root")
     logging.root.setLevel(logging_level)
@@ -48,7 +50,9 @@ def configure_logging(logging_level, split_to_stderr=False, log_path=None):
     if log_path:
         logging_handler_file = logging.FileHandler(log_path)
         logging_handler_file.setLevel(logging.DEBUG)
-        logging_handler_file.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
+        logging_handler_file.setFormatter(
+            TimeFormatter("%(asctime)s  %(filename)s:%(lineno)d  | %(message)s")
+        )
         logging.root.addHandler(logging_handler_file)
 
     # Filter warning and above to stderr
@@ -57,7 +61,9 @@ def configure_logging(logging_level, split_to_stderr=False, log_path=None):
 
         logging_handler_err = logging.StreamHandler(sys.stderr)
         logging_handler_err.setLevel(logging.WARNING)
-        logging_handler_err.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
+        logging_handler_err.setFormatter(
+            TimeFormatter("%(asctime)s  %(filename)s:%(lineno)d  EEE | %(message)s")
+        )
         logging.root.addHandler(logging_handler_err)
 
 
