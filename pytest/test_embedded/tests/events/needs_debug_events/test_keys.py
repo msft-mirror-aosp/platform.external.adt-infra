@@ -69,45 +69,45 @@ async def keypress_expects(avd, log, jskey, expected_code):
 
     # There is some concurrency weirdness, so we are willing to wait a few sec
     # to see if all the events arrived.
-    asyncio.wait_for(wait_for_keyboard(log, expected_code), 2)
+    await asyncio.wait_for(wait_for_keyboard(log, expected_code), 2)
 
 
-@pytest.mark.hardware
-async def test_hardware_keys(avd, emulator_log):
-    """Checks that the hardware key events that studio sends are working."""
-    if not emulator_log:
-        pytest.skip("Likely running under debugger without logger")
-
-    expected = [
-        # see https://developer.android.com/reference/android/view/KeyEvent# for event values
+@pytest.mark.parametrize(
+    "key, expected_code",
+    [
         ("Power", 116),
         ("AppSwitch", 580),
         ("GoBack", 158),
         ("GoHome", 102),
         ("AudioVolumeUp", 115),
         ("AudioVolumeDown", 114),
-    ]
+    ],
+)
+async def test_hardware_keys(avd, emulator_log, key, expected_code):
+    """Checks that the hardware key events that studio sends are working."""
+    if not emulator_log:
+        pytest.skip("Likely running under debugger without logger")
 
-    for key, expect in expected:
-        await keypress_expects(avd, emulator_log, key, expect)
+    await keypress_expects(avd, emulator_log, key, expected_code)
 
 
 @pytest.mark.hardware
-async def test_whitespace_chrs(avd, emulator_log):
+@pytest.mark.parametrize(
+    "key, expected_code",
+    [
+        ("\x08", 14),  # Backspace
+        ("\n", 28),  # Enter
+        # "\x18", "KEYCODE_ESCAPE", You will need to send Javascript code.
+        # "\x7f", "KEYCODE_DEL",  You will need to send Javascript code.
+        (" ", 57),  # Space
+    ],
+)
+async def test_whitespace_chrs(avd, emulator_log, key, expected_code):
     """Checks that the whitespace characters that studio sends are working."""
     if not emulator_log:
         pytest.skip("Likely running under debugger without logger")
 
-    expected = [
-        ("\x08", 14),
-        ("\n", 28),
-        # "\x18", "KEYCODE_ESCAPE", You will need to send Javascript code.
-        (" ", 57),
-        # "\x7f", "KEYCODE_DEL",  You will need to send Javascript code.
-    ]
-
-    for key, expect in expected:
-        await keypress_expects(avd, emulator_log, key, expect)
+    await keypress_expects(avd, emulator_log, key, expected_code)
 
 
 @pytest.mark.hardware
@@ -306,7 +306,9 @@ async def test_emulator_controls_keys(avd, emulator_controller):
         dialer_activity = "com.android.dialer/.main.impl.MainActivity"
     else:
         dialer_package = "com.google.android.dialer"
-        dialer_activity = "com.google.android.dialer/.extensions.GoogleDialtactsActivity"
+        dialer_activity = (
+            "com.google.android.dialer/.extensions.GoogleDialtactsActivity"
+        )
 
     # Launch the dialer app.
     await avd.start_activity(dialer_activity, params="-W")
