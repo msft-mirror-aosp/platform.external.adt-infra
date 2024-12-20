@@ -136,6 +136,7 @@ setup_virtual_env() {
     cp $HERE/cfg/pypirc $VIRTUAL_ENV_DEST/pypirc
     pip install --upgrade pip wheel setuptools
     pip install wheel $AEMU_GRPC $SNAPTOOL $NETSIM_GRPC
+    pip install -e .
 }
 echo "Make sure you have the devpi server up and running!"
 
