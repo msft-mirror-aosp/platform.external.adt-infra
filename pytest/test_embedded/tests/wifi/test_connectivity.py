@@ -20,6 +20,7 @@ from functools import partial
 
 WIFI_SSID = "AndroidWifi"
 
+
 @pytest.mark.boot
 @pytest.mark.async_timeout(500)
 # Consider adding separate test suites with launch flags, instead of test parameters,
@@ -76,69 +77,108 @@ async def test_wifi_connectivity_without_mobile_data(avd):
     await avd.adb.shell("svc data enable")
 
 
-@pytest.mark.fast
-@pytest.mark.async_timeout(500)
-async def test_wifi_internet_protocols(avd, mbs):
-    """Verify that both IPv4 and IPv6 protocols are supported over WiFi.
+@pytest.fixture
+async def enable_wifi_only(avd, mbs):
+    """Enables Wi-Fi and disables mobile data on the emulator.
 
     Args:
-        avd (BaseEmulator): Fixture that provides access to the running emulator.
-        mbs (SnippetClientV2): Fixture that provides access to the MBS snippet controller.
+        avd: The emulator instance.
+        mbs: The Mobly Snippet library instance.
 
-    Test Steps:
-        1. Enable WiFi and connect to the Android WiFi network.
-        2. Run commands 'ip -4 addr wlan0' and 'ip -6 addr wlan0' (Verify 1).
-        3. Use ping and nc to test IPv4 and IPv6 connectivity to Google DNS (Verify 2).
+    Yields:
+        None.  This fixture primarily sets up a state and cleans up afterwards.
 
-    Verify:
-        1. There should be IPs assigned to both IPv4 and IPv6 protocols.
-        2. Internet connectivity to Google's public DNS should succeed.
+    This fixture disables mobile data and connects the emulator to a predefined
+    Wi-Fi network (AndroidWifi).  After the test using this fixture completes,
+    mobile data is re-enabled.
     """
-    # Test Wifi only
+    # Disable data
     await avd.adb.shell("svc data disable")
-
-    # Connect to AndroidWifi
     mbs.wifiConnectSimple(WIFI_SSID, None)
 
-    # Verify if both IPv4 and IPv6 addresses are assigned
-    ip_addr = ""
-    async def has_ip(type: str):
-        nonlocal ip_addr
-        ip_cmd = "ip -{} addr show wlan0 | grep -s scope"
-        exit_code, ip_addr = await avd.adb.run(["shell", ip_cmd.format(type)])
-        return True if exit_code == 0 else None
+    yield
 
-    logging.info("Checking IPv4 and IPv6 addresses ...")
-    assert await eventually(
-        partial(has_ip, '4'), timeout=60
-    ), "No Wi-Fi IPv4 address assigned."
-    logging.info("IPv4 addresses assigned to the WI-Fi connection:")
-    [logging.info(ip.strip()) for ip in ip_addr]
+    # Enable data
+    await avd.adb.shell("svc data enable")
 
-    assert await eventually(
-        partial(has_ip, '6'), timeout=60
-    ), "No Wi-Fi IPv6 address assigned."
-    logging.info("IPv6 addresses assigned to the WI-Fi connection:")
-    [logging.info(ip.strip()) for ip in ip_addr]
 
-    # Verify if both IPv4 and IPv6 have network connectivity
+@pytest.fixture
+async def has_ip(avd):
+    """Provides a function to check for assigned IP addresses.
+
+    Args:
+        avd: The emulator instance.
+
+    Returns:
+        A function that takes an IP version ("4" or "6") as a string and returns
+        True if an IP of that version is assigned to wlan0, False otherwise.
+    """
+
+    async def _has_ip(type: str):
+        """Checks if an IP address of the given type is assigned to wlan0.
+
+        Args:
+            type: The IP version ("4" or "6").
+
+        Returns:
+            True if an IP of the given type is assigned, False otherwise.
+        """
+        ip_cmd = f"ip -{type} addr show wlan0 | grep -s scope"
+        exit_code, _ = await avd.adb.run(["shell", ip_cmd])
+        return exit_code == 0
+
+    return _has_ip
+
+
+@pytest.mark.fast
+@pytest.mark.async_timeout(40)
+async def test_wlan0_can_connect_ipv4(enable_wifi_only, avd):
+    """Tests IPv4 connectivity over wlan0.
+
+    Args:
+        enable_wifi_only: Fixture to enable Wi-Fi and disable mobile data.
+        avd: The emulator instance.
+    """
+
     async def has_ipv4_connectivity():
-        exit_code, _ = await avd.adb.run(
-            ["shell", "ping -W 60 -I wlan0 -c 3 8.8.8.8"])
+        exit_code, _ = await avd.adb.run(["shell", "ping -W 60 -I wlan0 -c 3 8.8.8.8"])
         return True if exit_code == 0 else None
+
+    assert await eventually(
+        has_ipv4_connectivity, timeout=20
+    ), "Emulator has not Wifi IPv4 connectivity"
+
+
+@pytest.mark.fast
+@pytest.mark.async_timeout(40)
+async def test_wlan0_ip6_address_assigned(enable_wifi_only, has_ip):
+    """Tests that an IPv6 address is assigned to wlan0.
+
+    Args:
+        enable_wifi_only: Fixture to enable Wi-Fi and disable mobile data.
+        has_ip: Fixture providing a function to check IP address assignment.
+    """
+    assert await eventually(
+        partial(has_ip, "6"), timeout=20
+    ), f"No Wi-Fi IPv6 address assigned"
+
+
+@pytest.mark.fast
+@pytest.mark.async_timeout(40)
+async def test_wlan0_can_connect_ipv6(enable_wifi_only, avd):
+    """Tests IPv6 connectivity over wlan0.
+
+    Args:
+        enable_wifi_only: Fixture to enable Wi-Fi and disable mobile data.
+        avd: The emulator instance.
+    """
 
     async def has_ipv6_connectivity():
         exit_code, _ = await avd.adb.run(
-            ["shell", "nc -w 60 -6 2001:4860:4860::8888 53"])
-        return True if exit_code == 0 else None
+            ["shell", "ping6 -W 60 -I wlan0 -c 3 2001:4860:4860::8888"]
+        )
+        return exit_code == 0
 
-    logging.info("Checking IPv4 and IPv6 connectivity ...")
     assert await eventually(
-        has_ipv4_connectivity, timeout=60
-    ), "Emulator has not Wifi IPv4 connectivity"
-    assert await eventually(
-        has_ipv6_connectivity, timeout=60
-    ), "Emulator has not Wifi IPv6 connectivity"
-
-    # Re-enable data connectivity
-    await avd.adb.shell("svc data enable")
+        has_ipv6_connectivity, timeout=20
+    ), "Emulator has no Wifi IPv6 connectivity"
