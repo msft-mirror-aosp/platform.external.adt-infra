@@ -164,8 +164,12 @@ async def _eventually_async_iter(
         if no such item is found or the iterator is exhausted.
     """
     async for event in queue:
-        if await predicate(event):
-            return event
+        if asyncio.iscoroutinefunction(predicate):
+            if await predicate(event):
+                return event
+        else:
+            if predicate(event):
+                return event
 
     # We timed out or exhausted the iterator.
     return None
