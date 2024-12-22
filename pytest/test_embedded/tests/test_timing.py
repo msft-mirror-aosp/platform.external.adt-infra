@@ -17,6 +17,7 @@ from emu.timing import eventually
 import pytest
 import time
 import asyncio
+import re
 
 
 async def async_sleep():
@@ -66,3 +67,50 @@ async def test_timeout_sync_works():
         f", but it only took {time.time() - start} seconds."
         "This likely means the synchronous function was unexpectedly terminated, which should not happen."
     )
+
+
+async def async_string_iterator(strings):
+    """Turns a list of strings into an async iterator."""
+    for string in strings:
+        yield string
+        await asyncio.sleep(0)
+
+
+async def test_eventual_sync_stream_works():
+    """Tests the 'eventually' function with a synchronous predicate and an asynchronous iterator.
+
+    This test verifies that 'eventually' correctly processes items from an asynchronous iterator
+    using a synchronous predicate function. It checks that the predicate is called for each
+    item in the stream and returns True when the expected item is encountered.
+    """
+    called = 0
+
+    def compare_fn(x):
+        nonlocal called
+        called += 1
+        return x == "you"
+
+    stream = async_string_iterator(["hi", "how", "are", "you"])
+    assert await eventually(compare_fn, stream)
+    assert called == 4
+
+
+async def test_eventual_async_stream_works():
+    """Tests the 'eventually' function with an asynchronous predicate and an asynchronous iterator.
+
+
+    This test verifies that 'eventually' correctly handles both an asynchronous iterator and
+    an asynchronous predicate.  It checks that the predicate is called the expected number
+    of times and returns True when the target item is found.
+    """
+    called = 0
+
+    async def async_compare_fn(x):
+        nonlocal called
+        await asyncio.sleep(0)  # For async behavior.
+        called += 1
+        return x == "you"
+
+    stream = async_string_iterator(["hi", "how", "are", "you"])
+    assert await eventually(async_compare_fn, stream)
+    assert called == 4
