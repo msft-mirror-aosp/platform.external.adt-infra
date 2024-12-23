@@ -58,13 +58,16 @@ async def awake(is_asleep, keypress):
 
 
 @pytest.fixture
-async def set_music_volume_to_one(avd):
-    """Sets the music stream volume to 1.
+async def reset_volume(mbs):
+    """Reset the audio streams using mobly
 
     Args:
         avd: The emulator instance.
     """
-    await avd.adb.shell("media volume --stream STREAM_MUSIC --set 1")
+    mbs.setMusicVolume(3)
+    mbs.setRingVolume(3)
+    mbs.setVoiceCallVolume(3)
+    mbs.setAlarmVolume(3)
 
 
 @pytest.fixture
@@ -104,38 +107,21 @@ async def is_awake(avd):
     return _is_awake
 
 
-async def get_volume(avd, stream_type="STREAM_MUSIC"):
-    """Gets the current volume level for a given stream type.
+async def get_volume(avd):
+    """Gets the current volume levels as an array
 
     Args:
         avd: The emulator instance.
-        stream_type: The type of audio stream. Defaults to "STREAM_MUSIC".
 
     Returns:
-        The current volume level as an integer.
-
-    Raises:
-        AssertionError: If the specified stream type is not found in the dumpsys output.
+        The current volume levels as an array.
     """
-
-    async def audio_dump():
-        return await avd.adb.shell("dumpsys audio")
-
-    async def get_stream_volume_dump(output: list):
-        dumpsys = await audio_dump()
-        match = re.search(f"{stream_type}.*streamVolume:(\\d+)", dumpsys)
-        if match is None:
-            return False
-        output.append(int(match.groups()[0]))
-        return True
-
-    volume = []
-    assert await eventually(partial(get_stream_volume_dump, volume)), f(
-        f"Couldn't detect the stream '{stream_type}' in the system dump after several attempts.\n"
-        "Dump output (may be incomplete):\n"
-        f"{await audio_dump()}"
-    )
-    return volume[0]
+    audio = await avd.adb.exec_out("dumpsys audio | grep 'streamVolume'")
+    volumes = []
+    for line in audio.splitlines():
+        stream, volume = line.strip().split(":", maxsplit=1)
+        volumes.append(int(volume))
+    return volumes
 
 
 async def check_volume_changed(avd, initial_volume, increase=True):
@@ -191,7 +177,7 @@ async def test_emulator_controls_key_power_2x(awake, keypress, is_asleep, is_awa
 
 @pytest.mark.embedded
 @pytest.mark.async_timeout(30)
-async def test_emulator_controls_key_volumeup(avd, set_music_volume_to_one, keypress):
+async def test_emulator_controls_key_volumeup(avd, reset_volume, keypress):
     volume = await get_volume(avd)
     await keypress("AudioVolumeUp", 2)
     assert await check_volume_changed(
@@ -201,7 +187,7 @@ async def test_emulator_controls_key_volumeup(avd, set_music_volume_to_one, keyp
 
 @pytest.mark.embedded
 @pytest.mark.async_timeout(30)
-async def test_emulator_controls_key_volumedown(avd, set_music_volume_to_one, keypress):
+async def test_emulator_controls_key_volumedown(avd, reset_volume, keypress):
     volume = await get_volume(avd)
     await keypress("AudioVolumeDown", 2)
     assert await check_volume_changed(
