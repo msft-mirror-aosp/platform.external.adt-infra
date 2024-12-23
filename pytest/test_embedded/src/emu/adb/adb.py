@@ -185,7 +185,7 @@ class Adb:
         (exit_code, output) = await Command(
             [self.adb_binary, "-s", self.name, "shell", cmd]
         ).run_until_finished(timeout)
-        return " ".join(output)
+        return "\n".join(output)
 
     async def exec_out(self, cmd: str, timeout: int = 10) -> str:
         """Runs the given command using exec-out on the emulator
@@ -201,7 +201,7 @@ class Adb:
         (exit_code, output) = await Command(
             [self.adb_binary, "-s", self.name, "exec-out", cmd]
         ).run_until_finished(timeout)
-        return " ".join(output)
+        return "\n".join(output)
 
     async def run(self, cmd: list[str], timeout: int = 10) -> (int, [str]):
         """Runs the given command on the emulator
