@@ -113,7 +113,7 @@
       }
     ],
     "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
-    "maxGroups": 4,
+    "maxGroups": 6,
     "pytest_flags": [
       "-m not multidisplay or embedded"
     ],
@@ -134,7 +134,7 @@
       }
     ],
     "description": "Set of tests that verify that the embedded emulator works when launched in landscape mode.",
-    "maxGroups": 4,
+    "maxGroups": 6,
     "pytest_flags": [
       "-m not multidisplay or embedded"
     ],
