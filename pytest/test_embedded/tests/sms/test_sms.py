@@ -76,25 +76,10 @@ async def test_send_inbound_sms_text_message_received_by_mobly(
         text_message: The text content of the SMS.
     """
 
-    # Function to execute mbs.waitForSms in a separate thread
     message = {}
-    sms_received = False
-    running = False
-    wait_time = None
 
-    def wait_for_sms():
-        nonlocal message, sms_received, wait_time
-        wait_time = time.time()
-        logging.info("Waiting for sms.")
-        message = mbs.waitForSms(5000)["data"]
-        sms_received = True
-
-    thread = threading.Thread(target=wait_for_sms)
-    thread.start()
-
-    # Make sure we are listening for messages before we send them
-    # TODO: Figure out how to do this with condition variables?
-    await asyncio.sleep(0.5)
+    # Register async handler
+    handler = mbs.asyncWaitForSms()
 
     # Now send the actual message.
     logging.info("Sending sms.")
@@ -102,9 +87,11 @@ async def test_send_inbound_sms_text_message_received_by_mobly(
     response = await emulator_controller.sendSms(sms)
     assert response.response == response.OK
 
-    # We will wait at most 5 secs.
-    thread.join()
+    # We should have received the message
+    sms_received = handler.waitAndGet("ReceivedSms", timeout=5)
+    logging.error("Received %s", sms_received)
 
     assert sms_received
+    message = sms_received.data
     assert message["OriginatingAddress"] == phone_number
     assert message["MessageBody"] == text_message
