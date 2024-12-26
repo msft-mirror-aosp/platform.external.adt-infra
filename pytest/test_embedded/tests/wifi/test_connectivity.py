@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import logging
-
-from emu.timing import wait_until, eventually
 from functools import partial
+
+import pytest
+import platform
+
+from emu.process.command import Command
+from emu.timing import eventually, wait_until
 
 WIFI_SSID = "AndroidWifi"
 
@@ -165,6 +168,7 @@ async def test_wlan0_ip6_address_assigned(enable_wifi_only, has_ip):
 
 @pytest.mark.fast
 @pytest.mark.async_timeout(40)
+@pytest.mark.skip("IPv6 tests are not yet supported. b/386238377")
 async def test_wlan0_can_connect_ipv6(enable_wifi_only, avd):
     """Tests IPv6 connectivity over wlan0.
 
@@ -173,11 +177,20 @@ async def test_wlan0_can_connect_ipv6(enable_wifi_only, avd):
         avd: The emulator instance.
     """
 
+    async def host_can_ping_ipv6():
+        ping_count_option = "-n" if platform.system() == "Windows" else "-c"
+        command = ["ping6", ping_count_option, "3", "ipv6.google.com"]
+        exit_code, _ = await Command(command).run_until_finished()
+        return exit_code == 0
+
     async def has_ipv6_connectivity():
         exit_code, _ = await avd.adb.run(
             ["shell", "ping6 -W 60 -I wlan0 -c 3 2001:4860:4860::8888"]
         )
         return exit_code == 0
+
+    if not await host_can_ping_ipv6():
+        pytest.skip("Host cannot ping ipv6, so guest won't be able to either")
 
     assert await eventually(
         has_ipv6_connectivity, timeout=20
