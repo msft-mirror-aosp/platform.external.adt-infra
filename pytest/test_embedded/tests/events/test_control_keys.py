@@ -17,7 +17,7 @@ import re
 from functools import partial
 
 import pytest
-from aemu.proto.emulator_controller_pb2 import KeyboardEvent
+from aemu.proto.emulator_controller_pb2 import KeyboardEvent, InputEvent
 from emu.emulator import Emulator
 from emu.timing import eventually
 
@@ -33,10 +33,24 @@ async def keypress(emulator_controller):
     """
 
     async def _keypress(key, n_times=1):
+        async def delayed_key_input_event_generator():
+            """Simulates a keypress by sending a down and up event, we assume a keyevent lasts 100ms"""
+
+            # 100 ms for keypress duration should be ok. See fig 2 in:
+            # https://userinterfaces.aalto.fi/136Mkeystrokes/resources/chi-18-analysis.pdf
+            yield InputEvent(
+                key_event=KeyboardEvent(key=key, eventType=KeyboardEvent.keydown)
+            )
+
+            await asyncio.sleep(0.1)
+            yield InputEvent(
+                key_event=KeyboardEvent(key=key, eventType=KeyboardEvent.keyup)
+            )
+
         for _ in range(n_times):
             logging.info("Sending %s key", key)
-            await emulator_controller.sendKey(
-                KeyboardEvent(key=key, eventType=KeyboardEvent.keypress)
+            await emulator_controller.streamInputEvent(
+                delayed_key_input_event_generator()
             )
             await asyncio.sleep(0.5)  # Delay between key presses
 
