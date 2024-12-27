@@ -13,11 +13,12 @@
 # limitations under the License.
 """Contains a set of tests to turn off the emulator."""
 import asyncio
+import logging
 import platform
 import signal
 
 import pytest
-from aemu.proto.emulator_controller_pb2 import KeyboardEvent, InputEvent
+from aemu.proto.emulator_controller_pb2 import InputEvent, KeyboardEvent
 
 from emu.timing import eventually
 from tests.test_utils import click_button, get_window_dump
@@ -54,16 +55,31 @@ async def open_power_menu(emulator_controller):
     """
 
     async def _open_power_menu():
-        events = [
-            InputEvent(key_event=x)
-            for x in [
-                KeyboardEvent(key="AudioVolumeUp", eventType=KeyboardEvent.keydown),
-                KeyboardEvent(key="Power", eventType=KeyboardEvent.keydown),
-                KeyboardEvent(key="AudioVolumeUp", eventType=KeyboardEvent.keyup),
-                KeyboardEvent(key="Power", eventType=KeyboardEvent.keyup),
-            ]
-        ]
-        emulator_controller.streamInputEvent(events)
+        async def long_press_power_button():
+            logging.info("Sending [Volume up] and [Power] keydown events")
+            yield InputEvent(
+                key_event=KeyboardEvent(
+                    key="AudioVolumeUp", eventType=KeyboardEvent.keydown
+                )
+            )
+            yield InputEvent(
+                key_event=KeyboardEvent(key="Power", eventType=KeyboardEvent.keydown)
+            )
+
+            # A long press is 1.0s (see https://developer.android.com/develop/ui/views/touch-and-input/input-events)
+            await asyncio.sleep(1.0)
+
+            logging.info("Sending [Volume up] and [Power] keyup events")
+            yield InputEvent(
+                key_event=KeyboardEvent(
+                    key="AudioVolumeUp", eventType=KeyboardEvent.keyup
+                )
+            )
+            yield InputEvent(
+                key_event=KeyboardEvent(key="Power", eventType=KeyboardEvent.keyup)
+            )
+
+        await emulator_controller.streamInputEvent(long_press_power_button())
 
     return _open_power_menu
 
