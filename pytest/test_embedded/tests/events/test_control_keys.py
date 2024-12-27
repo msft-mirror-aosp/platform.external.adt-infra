@@ -223,11 +223,11 @@ async def test_emulator_controls_key_screenshot(avd):
 @pytest.mark.async_timeout(30)
 async def test_emulator_controls_key_back(avd, keypress, animation_app):
     await avd.start_activity(
-        "com.google.android.apps.messaging/.ui.ConversationListActivity", params="-W"
+        "com.google.android.dialer/com.android.dialer.main.impl.MainActivity"
     )
     assert await eventually(
-        partial(check_root_task_contains_name, avd, "com.google.android.apps.messaging")
-    ), "Could not find the messaging application on the foreground"
+        partial(check_root_task_contains_name, avd, "com.google.android.dialer")
+    ), "Could not find the dialer activity on the foreground"
 
     await keypress("GoBack")
     assert await eventually(
