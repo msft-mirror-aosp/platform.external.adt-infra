@@ -205,7 +205,7 @@ async def avd_launcher(emulator: BaseEmulator) -> BaseEmulator:
 @pytest.fixture(scope="function")
 @pytest.mark.async_timeout(200)
 async def avd(
-    do_not_display_nested_vm_warning, avd_launcher: BaseEmulator
+    request, do_not_display_nested_vm_warning, avd_launcher: BaseEmulator
 ) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
@@ -221,8 +221,18 @@ async def avd(
     Returns:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
-    if not avd_launcher.is_alive() or not await avd_launcher.has_booted():
-        logging.info("--> Restarting emulator")
+    if (
+        request.node.execution_count > 1
+        or not avd_launcher.is_alive()
+        or not await avd_launcher.has_booted()
+    ):
+        logging.info(
+            "--> Restarting emulator (attempt: %d)", request.node.execution_count
+        )
+        flags = avd_launcher.launch_flags
+        if request.node.execution_count > 1:
+            flags.append("-wipe-data")
+
         await avd_launcher.restart(avd_launcher.launch_flags)
         booted = await avd_launcher.wait_for_boot()
         if not booted:
@@ -288,17 +298,15 @@ async def manage_avd(emulator) -> BaseEmulator:
         APP_DEBUG_APK.absolute(), "com.google.AnimateBox"
     )
     if not installed:
-        logging.warning(
-            "The animation app failed to install, this can cause unexpected failures"
-        )
+        await emulator.stop()
+        raise FailedToInstallApkException("The animation app failed to install")
 
     installed = await emulator.install_apk(
         APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
     )
     if not installed:
-        logging.warning(
-            "The mobly snippets failed to install, this can cause unexpected failures"
-        )
+        await emulator.stop()
+        raise FailedToInstallApkException("The mobly snippets failed to install")
 
     await emulator.reset_state()
 

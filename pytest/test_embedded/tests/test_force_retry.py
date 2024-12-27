@@ -58,3 +58,15 @@ def test_force_retry_condition():
         raise EmulatorException("Test failure, please try again!")
 
     assert condition_callback_attempt > 1
+
+
+@pytest.fixture
+def fail_on_first_execution(request):
+    """Tests that request exposed execution_count"""
+    if request.node.execution_count == 1:
+        raise ValueError("Always fail on first")
+
+
+@pytest.mark.flaky(delay=1, reruns=2)
+def test_retry_item(fail_on_first_execution):
+    assert True
