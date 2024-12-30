@@ -213,13 +213,13 @@ class ScreenGrabStrategyFactory:
     # Map of strategy names to their classes
     STRATEGIES = {
         "mss": (MSSStrategy, "MSS"),
-        "pil": (PILStrategy, "PIL ImageGrab"),
-        "pyscreeze": (PyScreezeStrategy, "PyScreeze"),
+        # "pil": (PILStrategy, "PIL ImageGrab"),
+        # "pyscreeze": (PyScreezeStrategy, "PyScreeze"),
         "no": (NoScreenGrabStrategy, "Screen grabbing disabled"),
     }
 
     # Preferred order for automatic strategy selection
-    PREFERRED_ORDER = ["mss", "pil", "pyscreeze", "no"]
+    PREFERRED_ORDER = ["mss", "no"]
 
     @classmethod
     def create_strategy(cls, strategy_name: Optional[str] = None) -> ScreenGrabStrategy:
