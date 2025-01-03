@@ -431,6 +431,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @ScreenRecord
     public void testGoogleLoginSettings() throws Exception {
         String userEmail = GoogleAppUtil.getUserEmail();
         String userPassword = GoogleAppUtil.getUserPassword();
