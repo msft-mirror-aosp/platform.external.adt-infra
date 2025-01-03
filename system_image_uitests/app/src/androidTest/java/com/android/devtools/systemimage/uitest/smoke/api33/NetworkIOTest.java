@@ -75,6 +75,7 @@ public class NetworkIOTest {
      */
     @Test
     @TestInfo(id = "14578825")
+    @ScreenRecord
     public void testBrowserLoadsSite() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();

@@ -186,6 +186,7 @@ public class GoogleServicesTest {
      */
     @Test
     @TestInfo(id = "d7f5673a-a3d0-4f50-856a-dfa10ce5c21c")
+    @ScreenRecord
     public void loginGoogleChrome() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 
