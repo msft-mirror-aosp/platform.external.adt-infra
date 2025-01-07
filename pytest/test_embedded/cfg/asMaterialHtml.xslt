@@ -196,7 +196,7 @@
                     </button>
                     <pre id="error-log-{generate-id()}" class="mdc-typography--body2" style="white-space: pre-wrap; word-break: break-word; margin: 0;">
                       <xsl:value-of select="failure"/>
-                      <xsl:value-of select="error"/>
+                      <xsl:value-of select="error/@message" />
                       <xsl:value-of select="system-out"/>
                     </pre>
                 </div>
