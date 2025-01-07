@@ -149,11 +149,6 @@ class VenvRunner:
             "PATH": f"{os.pathsep}{android_home / 'platform-tools'}"
             + f"{os.pathsep}{os.environ['PATH']}",
         }
-        logging.info(
-            "VenvRunner:, using python: %s, version: %s",
-            sys.executable,
-            subprocess.check_output([sys.executable, "--version"]),
-        )
 
     def run(
         self,
