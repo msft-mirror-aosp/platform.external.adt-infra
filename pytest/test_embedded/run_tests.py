@@ -183,6 +183,12 @@ class PyRunner:
             + f"{os.pathsep}{os.environ['PATH']}",
         }
         self.py_exe = shutil.which("python")
+
+        logging.info(
+            "PyRunner: Using python: %s, version: %s",
+            self.py_exe,
+            subprocess.check_output([self.py_exe, "--version"]),
+        )
         if not shutil.which("adb", path=self.env["PATH"]):
             raise AdbNotFound(f"Unable to find adb on the path: {self.env['PATH']}")
 
@@ -375,6 +381,11 @@ class AospPyRunner(PyRunner):
         else:
             virtualenv = "venv"
 
+        logging.info(
+            "AospPyRunner: Using Python: %s, version: %s",
+            self.py_exe,
+            subprocess.check_output([self.py_exe, "--version"]),
+        )
         tmpdir = Path(self.in_directory)
         test_runner.run(
             [
