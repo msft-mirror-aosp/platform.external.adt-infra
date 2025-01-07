@@ -22,7 +22,6 @@ import pytest
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
 
-from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
 from emu.emulator_exceptions import (
     EmulatorFailedToBootException,
@@ -299,21 +298,6 @@ async def manage_avd(emulator) -> BaseEmulator:
         )
 
     logging.info("The emulator has finished booting")
-
-    # Note install appears to fail at times, b/324920328
-    installed = await emulator.install_apk(
-        APP_DEBUG_APK.absolute(), "com.google.AnimateBox"
-    )
-    if not installed:
-        await emulator.stop()
-        raise FailedToInstallApkException("The animation app failed to install")
-
-    installed = await emulator.install_apk(
-        APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
-    )
-    if not installed:
-        await emulator.stop()
-        raise FailedToInstallApkException("The mobly snippets failed to install")
 
     await emulator.reset_state()
 

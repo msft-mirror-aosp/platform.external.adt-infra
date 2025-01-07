@@ -97,7 +97,7 @@ async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
 @pytest.mark.snapshot
 @pytest.mark.sanity
 @pytest.mark.async_timeout(240)
-async def test_app_launch_after_snapshot_load(avd, snapshot_service):
+async def test_app_launch_after_snapshot_load(avd, snapshot_service, animation_app):
     assert await snapshot_service.save("foo")
     snapshots = await snapshot_service.lists()
     assert "foo" in [x.snapshot_id for x in snapshots]
@@ -149,7 +149,7 @@ async def test_snapshot_can_save_and_delete(telnet, snapshot_service):
 
 @pytest.mark.snapshot
 @pytest.mark.fast
-async def test_snapshot_can_save_and_load(avd, telnet, snapshot_service):
+async def test_snapshot_can_save_and_load(avd, telnet, snapshot_service, animation_app):
     await telnet.send("avd snapshot save foo1")
     assert eventually(
         contains_snapshot, telnet, timeout=10.0

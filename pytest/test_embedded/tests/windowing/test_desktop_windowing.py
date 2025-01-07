@@ -28,7 +28,7 @@ End-to-end tests that change windowing mode with caption bar buttons (minimize, 
 
 
 @pytest.fixture
-async def show_status_bar(avd):
+async def show_status_bar(avd, animitaion_app):
     """
     This fixture starts the StatusBarActivity which keeps its status bar visible.
     """

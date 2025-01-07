@@ -18,10 +18,37 @@ from mobly import asserts
 from snippet_uiautomator import uiautomator
 
 from emu.emulator import BaseEmulator
+from emu.apk import APP_MOBLY_APK
 
 
 @pytest.fixture
-def mobly(avd: BaseEmulator):
+@pytest.mark.async_timeout(90)
+async def install_mobly_apk(avd: BaseEmulator):
+    """Installs the Mobly Snippets APK on the emulator.
+
+    Retries installation up to 3 times in case of transient failures.
+    """
+    assert avd.is_alive()
+
+    for attempt in range(3):
+        installed = await avd.install_apk(
+            APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
+        )
+        if installed:
+            return
+
+        logging.warning(
+            f"Failed to install Mobly Snippets APK (attempt {attempt + 1}/3). Retrying..."
+        )
+        await asyncio.sleep(1)  # Wait a bit before retrying
+
+    raise FailedToInstallApkException(
+        "The Mobly Snippets APK failed to install after multiple retries."
+    )
+
+
+@pytest.fixture
+def mobly(install_mobly_apk, avd: BaseEmulator):
     """
     Provides a function to access Mobly snippet controllers for the emulator.
 
@@ -65,7 +92,7 @@ def mbs(mobly):
 
 
 @pytest.fixture(scope="function")
-async def ad_ui(avd: BaseEmulator):
+async def ad_ui(mobly, avd: BaseEmulator):
     """
     Provides access to the Android device's UI through UiAutomator.
 

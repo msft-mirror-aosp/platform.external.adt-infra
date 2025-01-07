@@ -24,6 +24,7 @@ from emu.timing import eventually
 @pytest.mark.flaky(reruns=0)
 async def test_android_app_dialog_has_dimmed_background(
     avd,
+    animation_app,
     get_screenshot,
 ):
     """
