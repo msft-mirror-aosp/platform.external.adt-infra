@@ -243,10 +243,14 @@ async def avd(
     else:
         logging.info("--> Reusing emulator")
 
-    await avd_launcher.reset_state()
-    yield avd_launcher
-    if avd_launcher.is_alive():
+    dependencies = [
+        mark for mark in request.node.iter_markers() if mark.name == "dependency"
+    ]
+
+    # Only reset emulator state if we are not a child dependeny
+    if not (dependencies and "depends" in dependencies[0].kwargs):
         await avd_launcher.reset_state()
+    yield avd_launcher
 
 
 @pytest.fixture(scope="module")
