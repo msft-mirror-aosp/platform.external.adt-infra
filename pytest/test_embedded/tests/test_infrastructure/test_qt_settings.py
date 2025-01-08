@@ -19,17 +19,20 @@ from emu.qt.emulator_settings import UISettings, CRASHREPORT_PREFERENCE_VALUE
 from emu.qt.qt_settings import Status
 
 
+@pytest.mark.test_infra
 @pytest.mark.flaky(reruns=0)
 def test_emu_can_initialize_settings(emulator_qt_settings):
     assert emulator_qt_settings.status() == Status.NoError
 
 
+@pytest.mark.test_infra
 @pytest.mark.flaky(reruns=0)
 def test_emu_never_sends_crashes(emulator_qt_settings, never_upload_crashes):
     crash_settings = emulator_qt_settings[UISettings.CRASHREPORT_PREFERENCE]
     assert crash_settings == CRASHREPORT_PREFERENCE_VALUE.NEVER.value
 
 
+@pytest.mark.test_infra
 @pytest.mark.flaky(reruns=0)
 def test_emu_does_not_display_nested_vm_warning(
     emulator_qt_settings, do_not_display_nested_vm_warning
@@ -38,6 +41,7 @@ def test_emu_does_not_display_nested_vm_warning(
     assert nested_vm_warning == "false"
 
 
+@pytest.mark.test_infra
 @pytest.mark.flaky(reruns=0)
 def test_can_read_and_write(
     emulator_qt_settings,
