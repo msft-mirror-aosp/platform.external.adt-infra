@@ -222,11 +222,27 @@ async def test_emulator_controls_key_screenshot(avd):
 @pytest.mark.embedded
 @pytest.mark.async_timeout(30)
 async def test_emulator_controls_key_back(avd, keypress, animation_app):
-    await avd.start_activity(
-        "com.google.android.dialer/com.android.dialer.main.impl.MainActivity"
-    )
+
+    # List of activities we can launch to switch to the next application
+    # Note that dependning on your api level you might have different apks available.
+    possible_activities = [
+        "com.google.android.deskclock/com.android.deskclock.DeskClock",
+        "com.google.android.dialer/com.android.dialer.main.impl.MainActivity",
+    ]
+    to_find = None
+
+    for activity in possible_activities:
+        if await avd.start_activity(activity):
+            to_find = activity.split("/")[0]
+            break
+
+    if not to_find:
+        pytest.skip(
+            reason="No activity present in this system image we can use for testing"
+        )
+
     assert await eventually(
-        partial(check_root_task_contains_name, avd, "com.google.android.dialer")
+        partial(check_root_task_contains_name, avd, to_find)
     ), "Could not find the dialer activity on the foreground"
 
     await keypress("GoBack")
