@@ -24,7 +24,10 @@ from grpc import RpcError, StatusCode
 
 from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
-from emu.emulator_exceptions import EmulatorFailedToBootException
+from emu.emulator_exceptions import (
+    EmulatorFailedToBootException,
+    FailedToInstallApkException,
+)
 from emu.process.command import Command
 from emu.utils import system_cpu
 
