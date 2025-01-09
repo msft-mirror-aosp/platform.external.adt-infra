@@ -69,13 +69,28 @@ class AsyncVideoWriter:
         self._thread = None
         self._stop_event = threading.Event()
         self._last_write_time = time.time()
+        self.logger = logging.getLogger(name="AsyncVideoWriter")
 
     def _write_frames(self):
         """Worker thread function to continuously write frames from the queue."""
+        count = 0
+        start_time = time.time()
+        last_fps_log_time = start_time
+
         while not self._stop_event.is_set():
             try:
                 frame = self.queue.get(timeout=0.5)
                 self._writer.write(frame)
+                count += 1
+
+                current_time = time.time()
+                elapsed_time_since_last_log = current_time - last_fps_log_time
+                if elapsed_time_since_last_log >= 10:
+                    elapsed_time = current_time - start_time
+                    fps = count / elapsed_time if elapsed_time > 0 else 0
+                    self.logger.info("Current FPS: %.2f", fps)
+                    last_fps_log_time = current_time
+
             except queue.Empty:
                 continue
 
@@ -139,7 +154,7 @@ class AsyncVideoWriter:
                 self._queue_frame(frame)
             self._last_write_time = current_time
         else:
-            logging.info("Frame dropped to maintain FPS for %s", self.filename)
+            self.logger.info("Frame dropped to maintain FPS for %s", self.filename)
 
     def write_pillow(self, image: PillowImage, realtime=False):
         """
@@ -206,7 +221,7 @@ class AsyncScreenRecorder:
     def __init__(
         self,
         output_filename: Path | str = "screen_recording.mp4",
-        fps: int = 30,
+        fps: int = 5,
         strategy: str = None,
     ):
         """

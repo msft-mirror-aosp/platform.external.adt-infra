@@ -25,6 +25,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 
+import com.android.devtools.systemimage.uitest.annotations.ScreenRecord;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
@@ -186,6 +187,7 @@ public class GoogleServicesTest {
      */
     @Test
     @TestInfo(id = "d7f5673a-a3d0-4f50-856a-dfa10ce5c21c")
+    @ScreenRecord
     public void loginGoogleChrome() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
 

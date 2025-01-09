@@ -22,11 +22,14 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
+
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.FrameLayout;
+
+import com.android.devtools.systemimage.uitest.annotations.ScreenRecord;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
@@ -289,7 +292,7 @@ public class SettingsTest {
     @Test
     @TestInfo(id = "4578f63f-7d2e-4e5e-a4e0-0ce2ae67982e")
     public void developerOptionsEnabled() throws Exception {
-        DeveloperOptionsManager.enableDeveloperOptions_v3(testFramework);
+        DeveloperOptionsManager.enableDeveloperOptions_v4(testFramework);
         assertTrue("Failed to enable Developer options.",
                 AppLauncher.launchPath(
                         instrumentation, true, "Settings", "System", "Developer options"));
@@ -431,6 +434,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @ScreenRecord
     public void testGoogleLoginSettings() throws Exception {
         String userEmail = GoogleAppUtil.getUserEmail();
         String userPassword = GoogleAppUtil.getUserPassword();
@@ -442,6 +446,7 @@ public class SettingsTest {
 
         boolean wasUserLoggedIn = SettingsUtil.verifyGoogleAccountStatus(
                 instrumentation, userLoginInfo);
+
         if (wasUserLoggedIn) {
             userLoginInfo.clickAndWaitForNewWindow();
             assertTrue("Google account could not be removed.",
@@ -463,10 +468,15 @@ public class SettingsTest {
             }
         }
 
-        final UiObject manageAccountButton = device.findObject(
-                new UiSelector()
-                        .text(wasUserLoggedIn ? "Manage your Google Account" : "Sign in to your Google Account")
-                        .className(Button.class));
+        UiObject manageAccountButton = wasUserLoggedIn ?
+                device.findObject(
+                    new UiSelector()
+                        .text("Manage your Google Account")
+                        .className(Button.class)) :
+                device.findObject(
+                    new UiSelector()
+                        .resourceId(Res.GOOGLE_MANAGE_ACCOUNT_BUTTON_RES)
+                        .className(TextView.class));
 
         assertTrue("Manage Google account button not found.",
                 new Wait(20000L).until(manageAccountButton::exists));

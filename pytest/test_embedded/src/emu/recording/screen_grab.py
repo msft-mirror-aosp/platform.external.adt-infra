@@ -186,18 +186,40 @@ class PyScreezeStrategy(ScreenGrabStrategy):
             return None
 
 
+class NoScreenGrabStrategy(ScreenGrabStrategy):
+    """Screen grabbing strategy that returns empty data."""
+
+    def get_screen_size(self, monitor: int = 0) -> tuple[int, int]:
+        return 0, 0
+
+    def grab_screen(self, monitor: int = 0) -> np.ndarray:
+        return np.array([])
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    @classmethod
+    def create(cls) -> Optional["NoScreenGrabStrategy"]:
+        logging.warning("Screen grabbing disabled!")
+        return cls()
+
+
 class ScreenGrabStrategyFactory:
     """Factory for creating screen grab strategies with fallback support."""
 
     # Map of strategy names to their classes
     STRATEGIES = {
         "mss": (MSSStrategy, "MSS"),
-        "pil": (PILStrategy, "PIL ImageGrab"),
-        "pyscreeze": (PyScreezeStrategy, "PyScreeze"),
+        # "pil": (PILStrategy, "PIL ImageGrab"),
+        # "pyscreeze": (PyScreezeStrategy, "PyScreeze"),
+        "no": (NoScreenGrabStrategy, "Screen grabbing disabled"),
     }
 
     # Preferred order for automatic strategy selection
-    PREFERRED_ORDER = ["mss", "pil", "pyscreeze"]
+    PREFERRED_ORDER = ["mss", "no"]
 
     @classmethod
     def create_strategy(cls, strategy_name: Optional[str] = None) -> ScreenGrabStrategy:

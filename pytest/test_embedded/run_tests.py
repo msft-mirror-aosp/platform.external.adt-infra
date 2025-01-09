@@ -293,7 +293,7 @@ class PyRunner:
         Args:
             packages ([str]): The set of packages to install
         """
-        self.run(["-m", "pip", "install", "-v", "--upgrade"] + packages, timeout=600)
+        self.run(["-m", "pip", "install", "--upgrade"] + packages, timeout=600)
 
     def run(
         self,
@@ -517,7 +517,15 @@ def parse_arguments():
         dest="verbose",
         default=False,
         action="store_true",
-        help="Enable verbose logging",
+        help=argparse.SUPPRESS,  # Suppress -v/--verbose from help
+    )
+
+    parser.add_argument(
+        "--log-level",
+        dest="log_level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Set the logging level. Overrides --verbose.",
     )
 
     parser.add_argument(
@@ -566,8 +574,11 @@ def parse_arguments():
     )
 
     args = parser.parse_args()
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    if args.log_level:
+        log_level = getattr(logging, args.log_level)
     configure_logging(
-        logging.DEBUG if args.verbose else logging.INFO,
+        log_level,
         log_path=test_runner.get_log_path(Path(args.logdir)),
     )
 
@@ -596,7 +607,7 @@ def parse_arguments():
 
 
 def create_pyrunner(
-    local_python: bool, virtual_env_dir: str, verbose: bool
+    local_python: bool, virtual_env_dir: str, log_level: int
 ) -> PyRunner:
     """Creates a PyRunner object, installing the needed pip packages."""
     repo = AOSP_ROOT / "external" / "adt-infra" / "devpi" / "repo" / "simple"
@@ -607,8 +618,8 @@ def create_pyrunner(
         repo = f"file://{repo}"
 
     py_exe = PyRunner() if local_python else AospPyRunner(repo, virtual_env_dir)
-    verbose = ["-vvv"] if verbose else []
-    py_exe.pip_install(verbose + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
+    verbose_flags = ["-vvv"] if log_level == logging.DEBUG else []
+    py_exe.pip_install(verbose_flags + [AEMU_GRPC, SNAPTOOL, NETSIM_GRPC, HERE])
     return py_exe
 
 
@@ -642,7 +653,9 @@ def main(args):
             os.environ["PYTEST_ADDOPTS"],
         )
 
-    py_exe = create_pyrunner(args.local_python, args.virtual_env_dir, args.verbose)
+    py_exe = create_pyrunner(
+        args.local_python, args.virtual_env_dir, logging.getLogger().getEffectiveLevel()
+    )
     tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite)
 
     logging.info("Scheduling %d suites", len(tests_to_run))

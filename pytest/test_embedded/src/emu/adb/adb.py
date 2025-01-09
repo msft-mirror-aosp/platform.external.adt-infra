@@ -19,6 +19,7 @@ from pathlib import Path
 
 from emu.emulator_exceptions import EmulatorDiedException
 from emu.logging.logcat_parser import parse_logcat
+from emu.logging.log_handler import create_file_logger
 from emu.process.command import Command
 from emu.process.command_stream import AsyncCommandStream
 from emu.timing import eventually
@@ -151,7 +152,7 @@ class Adb:
         communication with ADB commands.
 
         Args:
-            try_restart (bool): If true, we will try to restrat the adb
+            try_restart (bool): If true, we will try to restart the adb
             server once, if the device is not online.
 
         Returns:
@@ -184,7 +185,7 @@ class Adb:
         (exit_code, output) = await Command(
             [self.adb_binary, "-s", self.name, "shell", cmd]
         ).run_until_finished(timeout)
-        return " ".join(output)
+        return "\n".join(output)
 
     async def exec_out(self, cmd: str, timeout: int = 10) -> str:
         """Runs the given command using exec-out on the emulator
@@ -200,7 +201,7 @@ class Adb:
         (exit_code, output) = await Command(
             [self.adb_binary, "-s", self.name, "exec-out", cmd]
         ).run_until_finished(timeout)
-        return " ".join(output)
+        return "\n".join(output)
 
     async def run(self, cmd: list[str], timeout: int = 10) -> (int, [str]):
         """Runs the given command on the emulator
@@ -261,6 +262,18 @@ class Adb:
             raise EmulatorDiedException(f"Emulator with id: {self.name} is not alive.")
         elif not await self.online():
             self.logger.error("Emulator with id: %s is not online.", self.name)
+
+    async def logcat_cmd(self):
+        """Runs the `adb logcat` command asynchronously.
+
+        Logcat output can be accessed via the logger named "emu-{id}-lct".
+
+        Returns:
+            asyncio.subprocess.Process: The process object representing the running command.
+        """
+        logger = create_file_logger(f"{self.emulator.log_id}-lct")
+        cmd = Command([self.adb_binary, "-s", self.name, "logcat"], logger)
+        return await cmd.run()
 
     async def logcat(self, clear: bool = False, tag: str = None) -> AsyncCommandStream:
         """Obtains the current logcat stream

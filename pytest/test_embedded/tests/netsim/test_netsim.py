@@ -1,15 +1,37 @@
+# Copyright 2024 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific
 import asyncio
 import logging
+import platform
 import psutil
 import pytest
 
 from emu.timing import eventually
 
+EXE_SUFFIX = '.exe' if platform.system() == 'Windows' else ''
+NETSIMD_BINARY = f'netsimd{EXE_SUFFIX}'
+
+
+class NetsimProcessNotFoundException(Exception):
+    """Unable to find netsimd process."""
+
+    pass
+
 
 def netsim_is_alive():
     for process in psutil.process_iter(["name"]):
         try:
-            if "netsimd" in process.name():
+            if NETSIMD_BINARY in process.name():
                 return True
         except:
             pass
@@ -21,12 +43,12 @@ async def get_netsimd_cpu_usage():
     netsimd_cpu_usage = [
         process.info["cpu_percent"]
         for process in psutil.process_iter(["name", "cpu_percent"])
-        if process.info["name"] == "netsimd"
+        if process.info["name"] == NETSIMD_BINARY
     ]
     if len(netsimd_cpu_usage) > 1:
         raise AssertionError("Multiple netsimd processes found")
     elif len(netsimd_cpu_usage) == 0:
-        raise AssertionError("Process netsimd not found")
+        raise NetsimProcessNotFoundException("Process netsimd not found")
     else:
         return netsimd_cpu_usage[0]
 
@@ -42,8 +64,9 @@ async def test_netsimd_is_launched(avd):
 @pytest.mark.boot
 @pytest.mark.netsim
 @pytest.mark.async_timeout(1080)
+@pytest.mark.flaky(reruns=2, only_rerun=["NetsimProcessNotFoundException"])
 async def test_netsimd_cpu_usage(avd):
-    """Test case to verify CPU usage of 'netsimd' process"""
+    """Test case to verify CPU usage of 'netsimd' process."""
     # Setting up parameters
     threshold = 10
     checks = 5
@@ -53,7 +76,7 @@ async def test_netsimd_cpu_usage(avd):
     # This test will check if the CPU usage stabilizes below 10% within the first
     # 300 seconds of launching Emulator.
     passed = 0
-    for i in range(timeout+1):
+    for i in range(timeout + 1):
         # Obtain cpu_usage of netsimd
         cpu_usage = await get_netsimd_cpu_usage()
 

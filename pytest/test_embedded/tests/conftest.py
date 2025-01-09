@@ -47,6 +47,8 @@ from tests.fixtures.grpc_fixtures import *
 from tests.fixtures.mobly_fixtures import *
 from tests.fixtures.qrcode_fixtures import *
 from tests.fixtures.screen_recording_fixtures import *
+from tests.fixtures.markers import register_markers
+from tests.fixtures.junit_rerun_reporter import *
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -220,7 +222,9 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
                 else:
                     pytest.skip()
 
-    item.user_properties.append(("flaky", "flaky" in item.keywords))
+    # Only add the flaky marker if it does not yet exist.
+    if not any(x[0] == "flaky" for x in item.user_properties):
+        item.user_properties.append(("flaky", "flaky" in item.keywords))
     logging.info("=============== Setup: %s ===============", item.name)
 
 
@@ -246,19 +250,9 @@ def pytest_configure(config):
     pytest.system = platform.system()
     pytest.processor = platform.processor()
 
-    # Register the 'skipos' marker.
-    config.addinivalue_line(
-        "markers",
-        (
-            "skipos(platform, reason=None): "
-            "skip the given test for the given platform. "
-            "Valid platform values and systems are: "
-            "'win' (Windows), 'linux' (Linux), 'mac' (macOS), "
-            "'m1' (macOS aarch64). "
-            "Multiple OS values are accepted, such as 'win, linux'. "
-            "To skip the test in all platforms, use the 'all' option."
-        ),
-    )
+    # Registers all the markers
+    register_markers(config)
+
     os_map = {
         "Windows": "win",
         "Linux": "linux",
@@ -266,13 +260,6 @@ def pytest_configure(config):
     }
     # Current skipos platform
     pytest.os = os_map.get(pytest.system, "unknown")
-
-    # Register the 'flaky' marker
-    config.addinivalue_line(
-        "markers",
-        "flaky: "
-        "Set a test as flaky, and exclude it from test failures on the dashboard.",
-    )
 
 
 def pytest_sessionfinish(

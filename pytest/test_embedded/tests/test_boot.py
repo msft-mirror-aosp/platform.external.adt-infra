@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import asyncio
+import json
 import logging
 import platform
 import re
@@ -25,61 +26,76 @@ from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 
 from emu.apk import APP_DEBUG_APK
-from emu.timing import eventually
 from emu.emulator import Emulator
 from emu.emulator_exceptions import EmulatorDiedException
-
+from emu.timing import eventually
 from tests.test_utils import check_boot_from_snapshot
-import json
-
-# This will run the tests in this module using this
-# user configuration. This will fetch an image with api 33 and
-# tag.id "google_apis"
-#
-# On M1 this will resolve to:  system-images;android-33;google_apis;arm64-v8a                                           | 5            | Google APIs ARM 64 v8a System Image
-# On X64 this will resolve to: system-images;android-33;google_apis;x86_64
-# avd_config = {"api": "33", "tag.id": "google_apis"}
 
 
 async def has_network(adb):
-    """check whether it has network or not
-    adb shell ifconfig, it should have both eth0 and wlan0
+    """Checks if the emulator has a network connection.
+
+    Verifies network connectivity by checking for the presence of either 'eth0'
+    or 'wlan0' interfaces using the `ifconfig` command.
+
+    Note: Tablets usually do not have eth0, whereas most others will have both.
+
+    Args:
+        adb: The adb connection object for the emulator.
+
+    Returns:
+        True if either 'eth0' or 'wlan0' interface is found, indicating
+        a network connection; False otherwise.
     """
-    radio_wifi = False
     result = await adb.shell("ifconfig")
-    if "eth0" in result and "wlan0" in result:
-        logging.info("success result %s", result)
-        radio_wifi = True
-    return radio_wifi
+    if "eth0" in result or "wlan0" in result:
+        logging.info("Success: Network interfaces found. Result: %s", result)
+        return True
+    return False
 
 
 def cpu_usage(emulator):
-    """
-    Check if the CPU usage of the specified emulator is less than a threshold.
+    """Checks the CPU usage of the emulator.
 
-    This function checks the CPU usage of an emulator and compares it to the given threshold (25%).
-    If the CPU usage is lower than or equal to the threshold, the function returns True;
-    otherwise, it returns False."""
+    Retrieves the CPU usage of the emulator process over a 2-second interval.
+
+    Args:
+        emulator: The Emulator object representing the running emulator.
+
+    Returns:
+        The CPU usage of the emulator process as a percentage.
+    """
     proc_emu = psutil.Process(emulator.description.pid())
     cpu_usage = proc_emu.cpu_percent(interval=2)
-    logging.info("emulator usage is %d", cpu_usage)
+    logging.info("Emulator usage is %d", cpu_usage)
     return cpu_usage
 
 
 async def shutdown(emulator):
-    # kill is the way to ask it to save snapshot if applicable and quit
+    """Shuts down the emulator gracefully.
+
+    Attempts to shut down the emulator by sending a 'kill' command, allowing
+    it to save a snapshot if applicable.  Waits for the emulator to fully
+    shut down. If the initial shutdown attempt fails, a forced stop is
+    attempted.
+
+    Args:
+        emulator: The Emulator object representing the running emulator.
+
+    Raises:
+        AssertionError: If the emulator fails to shut down.
+    """
     await emulator.adb.run(["emu", "kill"])
-    # for windows, wait 30 seconds for it to fully shutdown to avoid
-    # the multiinstnace.lock failure, hopefully, especially on gcp windows
+    # For Windows, add a delay to ensure complete shutdown and avoid
+    # potential multiinstance.lock issues.
     if platform.system() == "Windows":
         await asyncio.sleep(30)
 
-    def emulator_died():
+    async def emulator_died():
         return not emulator.is_alive()
 
     await eventually(emulator_died, timeout=60)
 
-    # Maybe we didn't shutdown in time, if so try some other method.
     if emulator.is_alive():
         await emulator.stop(timeout=60)
 
@@ -87,6 +103,17 @@ async def shutdown(emulator):
 
 
 async def get_booted_notification_time(emulator):
+    """Retrieves the emulator boot time from the notification stream.
+
+    Connects to the emulator's gRPC controller and listens for the 'booted'
+    notification, which contains the boot time.
+
+    Args:
+        emulator: The Emulator object representing the running emulator.
+
+    Returns:
+        The boot time in milliseconds, or None if the notification is not received.
+    """
     controller = EmulatorControllerStub(emulator.channel)
     stream = controller.streamNotification(empty_pb2.Empty())
     async for notification in stream:
@@ -112,7 +139,7 @@ async def test_first_time_booted(emulator, record_property):
     await emulator.stop()
     assert not emulator.is_alive()
 
-    logging.info("Launching emulator ...")
+    logging.info("Launching emulator from clean slate")
     myflags = ["-wipe-data", "-no-snapshot-load"]
     if platform.processor() == "i386" and platform.system() == "Darwin":
         myflags.append("-no-window")
@@ -128,13 +155,12 @@ async def test_first_time_booted(emulator, record_property):
     )
     record_property("emulator_boot_time", boot_time)
 
-    logging.info("Wating for it to stablize ...")
+    logging.info("Waiting for network.")
 
     async def network_up():
         return await has_network(emulator.adb)
 
-    # make sure it has both radio and wifi
-    assert await eventually(network_up, timeout=30), "Radio and wifi are not ready!"
+    assert await eventually(network_up, timeout=30), "Eth0 or wlan are not up (yet?)!"
     await shutdown(emulator)
 
 
@@ -253,8 +279,10 @@ async def test_emulator_debug_startup(avd):
 
     logging.info("Launching emulator with option 'debug -all' ...")
 
-    # Sample debug message format: D0412 07:53:41.641776.
-    debug_pattern = r"D\d{4} \d{2}:\d{2}:\d{2}\.\d{6}.*"
+    # Sample debug message format: 07:53:41.641776 112835 DEBUG filename.
+    # Debug logs from main-emulator.cpp always appear as they come before the debug flag
+    # is parsed so should not be counted.
+    debug_pattern = r"^\d{2}:\d{2}:\d{2}\.\d{6} \d+ DEBUG\s+((?!main-emulator\.cpp).)*$"
 
     # Redirect the emulator stdout/stderr to a temporary file.
     with tempfile.NamedTemporaryFile() as emu_output:
@@ -270,7 +298,7 @@ async def test_emulator_debug_startup(avd):
         await asyncio.sleep(5)
 
         contents = emu_output.read().decode()
-        has_debug_messages = re.search(debug_pattern, contents)
+        has_debug_messages = re.search(debug_pattern, contents, re.MULTILINE)
         assert has_debug_messages, "DEBUG messages not found in the emulator output"
         logging.info(f"Found the debug message '{has_debug_messages.group()}'")
 
@@ -379,4 +407,3 @@ async def test_gpu_emulation(emulator):
         has_debug_messages = re.search(debug_pattern, contents)
         assert has_debug_messages, "DEBUG messages not found in the emulator output"
         logging.info("Found the debug message '%s'", has_debug_messages.group())
-

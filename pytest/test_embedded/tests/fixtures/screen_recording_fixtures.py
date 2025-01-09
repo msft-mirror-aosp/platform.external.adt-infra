@@ -186,7 +186,7 @@ class ScreenshotStreamManager:
 
             screen_size = (first_img.format.width, first_img.format.height)
             with AsyncVideoWriter(
-                self.screen_recorder_file, "mp4v", 60, screen_size
+                self.screen_recorder_file, "mp4v", 5, screen_size
             ) as writer:
                 self.write_image(writer, first_img)
                 async for img in self.stream:
@@ -224,7 +224,7 @@ async def stream_screenshot(emulator_controller, screen_recorder_file):
     return streaming_img_call
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=False)
 async def screen_recorder(screen_recorder_file):
     """
     Pytest fixture that provides an initialized and running AsyncScreenRecorder.

@@ -19,12 +19,19 @@ import logging
 from pathlib import Path
 
 import pytest
+from google.protobuf import empty_pb2
+from grpc import RpcError, StatusCode
 
 from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
-from emu.emulator_exceptions import EmulatorFailedToBootException
+from emu.emulator_exceptions import (
+    EmulatorFailedToBootException,
+    FailedToInstallApkException,
+)
 from emu.process.command import Command
 from emu.utils import system_cpu
+
+__EMPTY__ = empty_pb2.Empty()
 
 
 @pytest.fixture(scope="module")
@@ -201,7 +208,7 @@ async def avd_launcher(emulator: BaseEmulator) -> BaseEmulator:
 @pytest.fixture(scope="function")
 @pytest.mark.async_timeout(200)
 async def avd(
-    do_not_display_nested_vm_warning, avd_launcher: BaseEmulator
+    request, do_not_display_nested_vm_warning, avd_launcher: BaseEmulator
 ) -> BaseEmulator:
     """Makes a booted emulator accessible and with the animation apk installed.
 
@@ -217,21 +224,36 @@ async def avd(
     Returns:
         BaseEmulator: A successfully booted emulator with the debug apk installed.
     """
-    if not avd_launcher.is_alive() or not avd_launcher.has_booted():
-        logging.info("--> Restarting emulator")
+    if (
+        request.node.execution_count > 1
+        or not avd_launcher.is_alive()
+        or not await avd_launcher.has_booted()
+    ):
+        logging.info(
+            "--> Restarting emulator (attempt: %d)", request.node.execution_count
+        )
+        flags = avd_launcher.launch_flags
+        if request.node.execution_count > 1:
+            flags.append("-wipe-data")
+
         await avd_launcher.restart(avd_launcher.launch_flags)
         booted = await avd_launcher.wait_for_boot()
         if not booted:
-            avd_launcher.stop()
+            await avd_launcher.stop()
             raise EmulatorFailedToBootException(
                 "The emulator did not boot in time and was stopped."
             )
     else:
         logging.info("--> Reusing emulator")
 
-    avd_launcher.reset_state()
+    dependencies = [
+        mark for mark in request.node.iter_markers() if mark.name == "dependency"
+    ]
+
+    # Only reset emulator state if we are not a child dependeny
+    if not (dependencies and "depends" in dependencies[0].kwargs):
+        await avd_launcher.reset_state()
     yield avd_launcher
-    avd_launcher.reset_state()
 
 
 @pytest.fixture(scope="module")
@@ -283,17 +305,15 @@ async def manage_avd(emulator) -> BaseEmulator:
         APP_DEBUG_APK.absolute(), "com.google.AnimateBox"
     )
     if not installed:
-        logging.warning(
-            "The animation app failed to install, this can cause unexpected failures"
-        )
+        await emulator.stop()
+        raise FailedToInstallApkException("The animation app failed to install")
 
     installed = await emulator.install_apk(
         APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
     )
     if not installed:
-        logging.warning(
-            "The mobly snippets failed to install, this can cause unexpected failures"
-        )
+        await emulator.stop()
+        raise FailedToInstallApkException("The mobly snippets failed to install")
 
     await emulator.reset_state()
 
@@ -362,3 +382,48 @@ async def telnet(avd: BaseEmulator):
     """
     assert avd.is_alive()
     return await avd.console()
+
+
+@pytest.fixture
+async def ensure_multidisplay_service_ready(emulator_controller):
+    """Ensures the multi-display service is ready in the emulator.
+
+    This fixture repeatedly checks the emulator status for the
+    "multidisplay" guest configuration to be "available". It uses
+    exponential backoff with a maximum of 5 retries, handling potential
+    gRPC unavailability errors.
+
+    Args:
+        emulator_controller: A fixture providing access to the
+            EmulatorController gRPC client.
+
+    Raises:
+        TimeoutError: If the multi-display service isn't ready after
+            multiple retries.
+        RpcError: If a gRPC error other than UNAVAILABLE occurs.
+        Exception: For any other unexpected errors during status retrieval.
+    """
+    max_retries = 5
+    retry_delay = 1  # Initial delay in seconds
+
+    for attempt in range(max_retries):
+        try:
+            status = await emulator_controller.getStatus(__EMPTY__)
+            if (
+                "multidisplay" in status.guestConfig
+                and status.guestConfig["multidisplay"] == "available"
+            ):
+                return  # Success, exit the loop
+        except RpcError as exc_info:
+            if exc_info.value.code() != StatusCode.UNAVAILABLE:
+                raise  # Unexpected error, re-raise
+        except Exception:
+            raise  # Unexpected error, re-raise
+
+        # Exponential backoff
+        await asyncio.sleep(retry_delay)
+        retry_delay *= 2  # Double the delay for the next attempt
+
+    raise TimeoutError(
+        f"Failed to get display configurations after {max_retries} attempts"
+    )

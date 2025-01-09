@@ -1,0 +1,89 @@
+/*
+ * Copyright (c) 2024 The Android Open Source Project
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.devtools.systemimage.uitest.listeners;
+import android.util.Log;
+import androidx.test.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
+import org.junit.runner.notification.RunListener;
+import com.android.devtools.systemimage.uitest.annotations.ScreenRecord;
+import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
+import org.junit.runner.Description;
+import java.io.File;
+
+/**
+ * Manages screen recording for tests annotated with {@code @ScreenRecord}.
+ *
+ * <p>Uses ADB to start an independent thread for screen recording during the
+ * test method execution. The recording is automatically stopped at test
+ * teardown, and the resulting MP4 video is saved to the method's logging
+ * folder as 'screen_recording.mp4', with a maximum recording duration of
+ * 180 seconds.</p>
+ */
+public class ScreenRecorderManager extends RunListener {
+
+    private final static String TAG = "ScreenRecorder";
+    private UiDevice mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    private boolean recording = false;
+    private File mp4File;
+
+    private void startRecording(Description description) {
+        String className = description.getTestClass().getSimpleName();
+        String methodName = description.getMethodName();
+        File logDir = SystemImageTestFramework.getLoggingDir(className, methodName);
+        String fileName = "screen_recording.mp4";
+        mp4File = new File(logDir, fileName);
+        mp4File.delete();
+        new Thread(() -> {
+            try {
+                String[] cmd = {"screenrecord", mp4File.getAbsolutePath()};
+                Log.i(TAG, "Launching screenrecord ...");
+                mDevice.executeShellCommand(String.join(" ", cmd));
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
+        }).start();
+        recording = true;
+    }
+
+    private void stopRecording() {
+        if (recording) {
+            Log.i(TAG, "Terminating screenrecord ...");
+            try {
+                String[] cmd = {"pkill", "-2", "screenrecord"};
+                Runtime.getRuntime().exec(cmd);
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
+            recording = false;
+        }
+    }
+
+    @Override
+    public void testStarted(Description description) throws Exception {
+        if (description.getAnnotation(ScreenRecord.class) != null) {
+            Log.i(TAG, "ScreenRecorder SetUp");
+            startRecording(description);
+        }
+    }
+
+    @Override
+    public void testFinished(Description description) throws Exception {
+        if (description.getAnnotation(ScreenRecord.class) != null) {
+            Log.d(TAG, "ScreenRecorder tearDown");
+            stopRecording();
+        }
+    }
+}

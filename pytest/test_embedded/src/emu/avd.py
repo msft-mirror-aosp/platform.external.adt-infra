@@ -76,7 +76,31 @@ class FetcherSystemImages:
         """
         return self.install(api, abi, tag)
 
-    def install(self, api: str, abi: str, tag: str = "google_apis") -> dict[str, str]:
+    def find_and_unpack_ab(self, api: str, abi: str, tag: str, build_id: str,
+                           target: str, resource: str) -> Optional[dict[str, str]]:
+        """Installs the system image using the fetcher binary from android build.
+
+           The fetcher binary handles caching and clearing out older images.
+
+        Args:
+            api (str): Api level, usually a number, or first letter of desert
+            abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
+            tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
+                       google_apis_tablet|android-desktop|android-wear|android-tv
+            build_id (str): Android Build ID.
+            target (str): Build target.
+            resource (str): Resource file to download.
+
+        Returns:
+            dict[str, str]:  A dictionary with api, tag, abi, and cpu.
+
+        Raises:
+            SystemImageDownloadFailed: If we failed to obtain the given image
+        """
+        return self.install(api, abi, tag, f"ab,{build_id},{target},{resource}")
+
+    def install(self, api: str, abi: str, tag: str = "google_apis",
+                fetch_target: str = "") -> dict[str, str]:
         """Installs the system image using the fetcher binary.
 
            The fetcher binary handles caching and clearing out older images.
@@ -86,6 +110,7 @@ class FetcherSystemImages:
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
                        google_apis_tablet|android-desktop|android-wear|android-tv
+            fetch_target(str): Optional fetcher target to use instead of deferring to sdkmanager.
 
         Raises:
             SystemImageDownloadFailed: If we failed to obtain the given image
@@ -93,11 +118,15 @@ class FetcherSystemImages:
         Returns:
             dict[str, str]:  A dictionary with api, tag, abi, and cpu.
         """
-        logging.info("Installing system-images;android-%s;%s;%s", api, tag, abi)
+        if fetch_target:
+            logging.info("Installing %s", fetch_target)
+        else:
+            logging.info("Installing system-images;android-%s;%s;%s", api, tag, abi)
+            fetch_target = f"sdk,android-{api},{tag},{abi}"
         download = subprocess.run(
             [
                 self._fetcher,
-                f"sdk,android-{api},{tag},{abi}",
+                fetch_target,
             ],
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -203,6 +232,11 @@ class SystemImages:
             ),
             None,
         )
+
+    def find_and_unpack_ab(self, api: str, abi: str, tag: str, build_id: str,
+                           target: str, resource: str) -> Optional[dict[str, str]]:
+        """Unsupported."""
+        raise NotImplementedError("Android Build is only supported with --fetcher")
 
     def find_and_unpack(self, api: str, abi: str, tag: str) -> Optional[dict[str, str]]:
         """Finds the system image with the given api, abi and tag, and makes
@@ -442,6 +476,10 @@ class AvdWriter:
                 "tag": tag,
                 "abi": abi,
             }
+        elif "android_build" in custom_cfg:
+            ab_cfg = custom_cfg["android_build"]
+            avd = self.sys_imgs.find_and_unpack_ab(api, abi, tag, ab_cfg["build_id"],
+                                                   ab_cfg["target"], ab_cfg["resource"])
         else:
             avd = self.sys_imgs.find_and_unpack(api, abi, tag)
             if not avd:

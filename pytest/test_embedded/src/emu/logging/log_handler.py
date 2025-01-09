@@ -39,7 +39,9 @@ def configure_logging(logging_level, split_to_stderr=False, log_path=None):
     """
     logging_handler_out = logging.StreamHandler(sys.stdout)
     logging_handler_out.setLevel(logging.DEBUG)
-    logging_handler_out.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
+    logging_handler_out.setFormatter(
+        TimeFormatter("%(asctime)s  %(filename)s:%(lineno)d | %(message)s")
+    )
 
     logging.root = logging.getLogger("root")
     logging.root.setLevel(logging_level)
@@ -48,7 +50,9 @@ def configure_logging(logging_level, split_to_stderr=False, log_path=None):
     if log_path:
         logging_handler_file = logging.FileHandler(log_path)
         logging_handler_file.setLevel(logging.DEBUG)
-        logging_handler_file.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
+        logging_handler_file.setFormatter(
+            TimeFormatter("%(asctime)s  %(filename)s:%(lineno)d  | %(message)s")
+        )
         logging.root.addHandler(logging_handler_file)
 
     # Filter warning and above to stderr
@@ -57,8 +61,60 @@ def configure_logging(logging_level, split_to_stderr=False, log_path=None):
 
         logging_handler_err = logging.StreamHandler(sys.stderr)
         logging_handler_err.setLevel(logging.WARNING)
-        logging_handler_err.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
+        logging_handler_err.setFormatter(
+            TimeFormatter("%(asctime)s  %(filename)s:%(lineno)d  EEE | %(message)s")
+        )
         logging.root.addHandler(logging_handler_err)
+
+
+def default_file_handler():
+    """Returns the default file handler from the root logger.
+
+    This function iterates through the handlers associated with the root logger
+    and returns the first instance of `logging.FileHandler` it encounters.
+
+    Returns:
+        logging.FileHandler: The default file handler, or None if no file
+        handler is found in the root logger's handlers.
+    """
+    for handler in logging.root.handlers:
+        if isinstance(handler, logging.FileHandler):
+            return handler
+
+
+def create_file_logger(logger_name, log_file=None, level=logging.DEBUG):
+    """
+    Creates a logger that writes to a specific file.
+
+    If `log_file` is provided, a new FileHandler is created and attached
+    to the logger. Otherwise, the default file handler from the root logger
+    is used.  This allows for centralized management of file logging
+    configuration.
+
+    Args:
+      log_file: The path to the log file. If None, the default file handler
+          from the root logger will be used.
+      logger_name: The name of the logger.
+      level: The logging level for the logger.
+
+    Returns:
+      A configured logging.Logger instance.
+    """
+
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(level)
+
+    if log_file:
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(TimeFormatter("%(asctime)s | %(message)s"))
+    else:
+        file_handler = default_file_handler()
+
+    logger.addHandler(file_handler)
+    logger.propagate = False
+
+    logging.info("Created logger for: %s -> %s", logger_name, file_handler)
+    return logger
 
 
 class AsyncLogHandler:

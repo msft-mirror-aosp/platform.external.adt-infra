@@ -139,21 +139,21 @@ async def test_screen_records_video_telnet(emulator, animation_app, tmp_path, te
 @pytest.mark.slow
 @pytest.mark.embedded
 @pytest.mark.fast
-@pytest.mark.async_timeout(1080)
+@pytest.mark.async_timeout(240)
 async def test_screen_recording_duration(animation_app, emulator, tmp_path):
     screen_service = ScreenRecordingStub(channel=emulator.channel)
     sample_file = tmp_path / "sample.gif"
     sample_file_header = b"\x1aE\xdf\xa3"
     info = RecordingInfo(width=120, height=120, file_name=str(sample_file))
     logging.info("Starting the recording: %s", info)
-    await screen_service.StartRecording(info)
+    await screen_service.StartRecording(info, timeout=5)
     # Recording can be done to max of 180 secs. Once 180 secs are over, it will stop the recording
     await asyncio.sleep(200)  # Wait for more than 180 secs
     await screen_service.StartRecording(
-        info
+        info, timeout=5
     )  # Recording can be started again after 180 secs
     logging.info("Stopping the recording: %s", info)
-    await screen_service.StopRecording(info)
+    await screen_service.StopRecording(info, timeout=5)
     verify_recorded_file_header(sample_file, sample_file_header)
 
 
@@ -162,10 +162,10 @@ async def screen_records_video(
 ):
     info = RecordingInfo(width=width, height=height, file_name=str(sample_file))
     logging.info("Starting the recording: %s", info)
-    await screen_service.StartRecording(info)
+    await screen_service.StartRecording(info, timeout=5)
     await asyncio.sleep(duration)
     logging.info("Stopping the recording: %s", info)
-    await screen_service.StopRecording(info)
+    await screen_service.StopRecording(info, timeout=5)
 
 
 def verify_recorded_file_header(sample_file, sample_file_header):
@@ -215,7 +215,7 @@ async def verify_qrcode(emulator, webm_recording, payload):
 )
 @pytest.mark.graphics
 @pytest.mark.fast
-@pytest.mark.async_timeout(1080)
+@pytest.mark.async_timeout(240)
 async def test_screen_records_with_different_gpu_modes(
     emulator, gpu_mode, tmp_path, qrcode_png
 ):
@@ -262,7 +262,7 @@ async def test_screen_records_with_different_gpu_modes(
 @pytest.mark.slow
 @pytest.mark.graphics
 @pytest.mark.fast
-@pytest.mark.async_timeout(1080)
+@pytest.mark.async_timeout(240)
 async def test_screen_records_with_different_orientations(
     avd, screen_service, telnet, tmp_path, qrcode_png
 ):
@@ -323,13 +323,13 @@ async def test_screen_records_with_different_orientations(
     landscape_portrait_file = tmp_path / "sample_landscape_portrait.webm"
     info = RecordingInfo(width=270, height=480, file_name=str(landscape_portrait_file))
     logging.info("Starting the recording: %s", info)
-    await screen_service.StartRecording(info)
+    await screen_service.StartRecording(info, timeout=5)
     for angle in [-180, 90, 0]:
         logging.info(f"Rotating the emulator to {angle} degrees ..")
         await rotate()
 
     logging.info("Stopping the recording: %s", info)
-    await screen_service.StopRecording(info)
+    await screen_service.StopRecording(info, timeout=5)
 
     await check_webm(landscape_portrait_file, sample_file_header)
     await verify_qrcode(avd, landscape_portrait_file, qrcode_png.payload)

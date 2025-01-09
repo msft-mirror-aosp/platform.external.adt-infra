@@ -166,7 +166,15 @@ def main():
         dest="verbose",
         default=False,
         action="store_true",
-        help="Enable verbose logging",
+        help=argparse.SUPPRESS,  # Suppress -v/--verbose from help
+    )
+
+    parser.add_argument(
+        "--log-level",
+        dest="log_level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Set the logging level. Overrides --verbose.",
     )
 
     parser.add_argument(
@@ -178,7 +186,10 @@ def main():
 
     args = parser.parse_args()
 
-    lvl = logging.DEBUG if args.verbose else logging.INFO
+    lvl = logging.DEBUG if args.verbose else logging.WARNING
+    if args.log_level:
+        lvl = getattr(logging, args.log_level)
+
     message = "%(asctime)s %(message)s" if args.verbose else "%(message)s"
 
     logging.basicConfig(

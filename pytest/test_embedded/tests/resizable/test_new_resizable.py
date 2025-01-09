@@ -52,7 +52,7 @@ async def supported_resizable_resolutions(avd):
         return []
 
     resolutions = []
-    resize = re.compile(r"(phone|foldable|tablet|desktop)-(\d+)-(\d+)-(\d+)-(\d+)")
+    resize = re.compile(r"(phone|foldable|tablet)-(\d+)-(\d+)-(\d+)-(\d+)")
     cfg = avd.hardware["hw.resizable.configs"]
 
     for match in resize.findall(cfg):
@@ -91,7 +91,6 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
         (1080, 2340, DisplayModeValue.PHONE),
         (2208, 1840, DisplayModeValue.FOLDABLE),
         (1920, 1200, DisplayModeValue.TABLET),
-        (1920, 1080, DisplayModeValue.DESKTOP),
     ],
 )
 @pytest.mark.flaky(reruns=0)
@@ -286,7 +285,6 @@ async def assertDisplayMode(expected_mode, emulator_controller):
         (0, "Phone", DisplayModeValue.PHONE),
         (1, "Foldable", DisplayModeValue.FOLDABLE),
         (2, "Tablet", DisplayModeValue.TABLET),
-        (3, "Desktop", DisplayModeValue.DESKTOP),
     ],
 )
 @pytest.mark.newresizable
@@ -313,7 +311,6 @@ async def test_new_resizable_changes_resolution_from_console(
                 0 = Phone
                 1 = Foldable
                 2 = Tablet
-                3 = Desktop
     """
     logging.info(f"Resizing display to '{name}' ...")
     await telnet.send(f"resize-display {index}")
@@ -339,7 +336,7 @@ async def test_new_resizable_snapshot_saves_display_mode(avd, emulator_controlle
         3. Take a snapshot.
         4. Change the display mode to Foldable
         5. Load the snapshot created in step 3.
-        6. Repeat step  2-5 for Tablet and Desktop display mode.
+        6. Repeat step  2-5 for Tablet display mode.
 
     Verification:
         1. When the snapshot is loaded, the original ('Phone') display mode is loaded.
@@ -352,7 +349,6 @@ async def test_new_resizable_snapshot_saves_display_mode(avd, emulator_controlle
     for index, name, expected_mode in [
         (1, "Foldable", DisplayModeValue.FOLDABLE),
         (2, "Tablet", DisplayModeValue.TABLET),
-        (3, "Desktop", DisplayModeValue.DESKTOP),
     ]:
 
         # Set a new display mode.

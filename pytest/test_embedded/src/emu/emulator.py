@@ -39,7 +39,7 @@ from grpc.aio import AioRpcError
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorClient
-from emu.emulator_exceptions import EmulatorNotFoundException
+from emu.emulator_exceptions import EmulatorNotFoundException, EmulatorDiedException
 from emu.mobly.snippet import Mobly
 from emu.process.command import Command
 from emu.timing import eventually, wait_until
@@ -62,7 +62,6 @@ class BaseEmulator(object):
         self.android_home = android_home.absolute()
         self.android_avd_home = android_avd_home.absolute()
         self.apk_installed = set()
-        self.proc = None
         self.executable = None
         self.logger = logging.getLogger("emulator")
         self.logger.info(
@@ -76,6 +75,7 @@ class BaseEmulator(object):
         self.mobly_device: Mobly = None
         self.channel = None
         self.log_id = "emu-0"
+        self.logcat = None
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
 
@@ -239,11 +239,14 @@ class BaseEmulator(object):
         )
 
     def is_alive(self) -> bool:
-        """Returns true if we believe the emulator is still alive."""
+        """Checks if the underlying emulator process is still running.
 
-        # We must have killed the emulator.
+        Returns:
+            bool: True if the emulator process is running, False otherwise.
+        """
+
         if self.description is None:
-            self.logger.error("No description (not launched yet?)!")
+            self.logger.error("No description available (emulator not launched?)")
             return False
 
         return self.description.is_alive()
@@ -344,6 +347,7 @@ class BaseEmulator(object):
         - Move the device upright
         - Wake up the device. (send the wake up event)
         """
+        logging.info("Reset emulator to well known state..")
         stub = EmulatorControllerStub(self.channel)
         await stub.sendKey(
             KeyboardEvent(key="WakeUp", eventType=KeyboardEvent.keypress)
@@ -416,7 +420,6 @@ class Emulator(BaseEmulator):
             avd_config["abi"] = self._default_abi()
         self.configuration = avd_gen.create_from_config(avd_config)
         self.exe = Path(exe)
-        self.proc = None
         self.kernel_start = 0
         self.log_id = log_id or "emu-1"
         self.logger = logging.getLogger(self.log_id)
@@ -475,14 +478,27 @@ class Emulator(BaseEmulator):
                 discovery.available(),
                 proc.process.pid,
             )
+
+            # No need to keep trying if the process itself is gone.
+            if not proc.is_running():
+                logging.error("The emulator process is not alive!")
+                raise EmulatorDiedException("The emulator died while launching")
             return (
                 discovery.find_emulator("avd.id", self.configuration.name) is not None
             )
 
+        async def adb_online():
+            return await self.adb.online()
+
         await eventually(discover_emulator, timeout=30)
 
-        self.kernel_start = 0
         self._discover(self.configuration.name)
+        self.kernel_start = 0
+
+        if self.is_alive():
+            await eventually(adb_online, timeout=10)
+            self.logcat = await self.adb.logcat_cmd()
+
         return self.is_alive()
 
     def _get_free_port(self, port=5554, max_port=30):
@@ -605,6 +621,8 @@ class Emulator(BaseEmulator):
         if self.cmd:
             logging.info("Cancelling cmd task.")
             await self.cmd.cancel()
+        if self.logcat:
+            await self.logcat.cancel()
 
     async def has_booted(self) -> bool:
         """Check if the emulator has booted.
