@@ -347,6 +347,7 @@ class BaseEmulator(object):
         - Move the device upright
         - Wake up the device. (send the wake up event)
         """
+        logging.info("Reset emulator to well known state..")
         stub = EmulatorControllerStub(self.channel)
         await stub.sendKey(
             KeyboardEvent(key="WakeUp", eventType=KeyboardEvent.keypress)
