@@ -25,7 +25,6 @@ import pytest
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 
-from emu.apk import APP_DEBUG_APK
 from emu.emulator import Emulator
 from emu.emulator_exceptions import EmulatorDiedException
 from emu.timing import eventually
