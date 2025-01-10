@@ -319,6 +319,7 @@ tests.
 * newresizable: marks test that should run on a new resizable emulator api since 34
 * slow: marks tests as slow (deselect with '-m "not slow"')
 * snapshot: marks tests related to snapshot operations
+* test_infra: Test infrastructure (fixtures, helper functions, etc) test
 * multidisplay: mark tests related to multidisplay
 * win32: marks test as windows only, will only run on a windows machine.
 * sanity: set of emulator sanity tests

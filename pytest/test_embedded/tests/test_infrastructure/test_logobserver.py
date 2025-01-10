@@ -16,6 +16,7 @@ def data_writer(log_file: Path, text: List[str]):
         time.sleep(0.1)
 
 
+@pytest.mark.test_infra
 def test_reads_all_lines_immediately(tmp_path):
     log_file = tmp_path / "hello.txt"
     log_file.write_text("Hello\nWorld\n")
@@ -24,6 +25,7 @@ def test_reads_all_lines_immediately(tmp_path):
         assert "World" == observer.get(block=True, timeout=0.5)
 
 
+@pytest.mark.test_infra
 def test_no_lines_times_out(tmp_path):
     log_file = tmp_path / "hello.txt"
     log_file.write_text("")
@@ -32,6 +34,7 @@ def test_no_lines_times_out(tmp_path):
             observer.get(block=True, timeout=0.5)
 
 
+@pytest.mark.test_infra
 def test_reads_lines_as_they_come(tmp_path):
     log_file = tmp_path / "hello.txt"
     with open(log_file, "w", encoding="utf-8") as test_file:

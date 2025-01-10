@@ -36,14 +36,17 @@ class TemplateTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
+    @pytest.mark.test_infra
     def test_writer_writes_file(self):
         self.writer.write_template("Pixel2.ini", {})
         self.assertTrue(os.path.exists(os.path.join(self.tmpdir, "Pixel2.ini")))
 
+    @pytest.mark.test_infra
     def test_renames_file(self):
         self.writer.write_template("Pixel2.ini", {}, "foo")
         self.assertTrue(os.path.exists(os.path.join(self.tmpdir, "foo")))
 
+    @pytest.mark.test_infra
     def test_makes_dict(self):
         dict = self.writer.template_to_dict(
             "Pixel2.ini", {"avd_home": "foo", "name": "bar"}
