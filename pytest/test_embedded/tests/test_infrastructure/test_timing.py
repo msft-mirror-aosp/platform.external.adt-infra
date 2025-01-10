@@ -30,6 +30,7 @@ def sync_sleep():
     time.sleep(1)
 
 
+@pytest.mark.test_infra
 async def test_timeout_async_exit_fast():
     """Test that eventually times out quickly with async functions.
 
@@ -47,6 +48,7 @@ async def test_timeout_async_exit_fast():
     ), "Eventually should timeout immediately in async methods"
 
 
+@pytest.mark.test_infra
 async def test_timeout_sync_works():
     """Test that eventually can handle synchronous functions
 
@@ -69,6 +71,7 @@ async def test_timeout_sync_works():
     )
 
 
+@pytest.mark.test_infra
 async def async_string_iterator(strings):
     """Turns a list of strings into an async iterator."""
     for string in strings:
@@ -76,6 +79,7 @@ async def async_string_iterator(strings):
         await asyncio.sleep(0)
 
 
+@pytest.mark.test_infra
 async def test_eventual_sync_stream_works():
     """Tests the 'eventually' function with a synchronous predicate and an asynchronous iterator.
 
@@ -95,6 +99,7 @@ async def test_eventual_sync_stream_works():
     assert called == 4
 
 
+@pytest.mark.test_infra
 async def test_eventual_async_stream_works():
     """Tests the 'eventually' function with an asynchronous predicate and an asynchronous iterator.
 

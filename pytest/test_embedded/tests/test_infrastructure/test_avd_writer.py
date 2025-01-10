@@ -8,23 +8,27 @@ from emu.avd import (
 )
 
 
+@pytest.mark.test_infra
 def test_throw_on_unknown_avd_root(pytestconfig):
     with pytest.raises(AndroidAvdHomeDoesNotExist):
         AvdWriter(avd_home="/bar/foo/guusku", fetcher=pytestconfig.getoption("fetcher"))
 
 
+@pytest.mark.test_infra
 def test_throw_on_unknown_cpu(pytestconfig, tmp_path):
     writer = AvdWriter(avd_home=tmp_path, fetcher=pytestconfig.getoption("fetcher"))
     with pytest.raises(UnsupportedAbiOrCpu):
         writer.create(abi="BADCPU", api="33", tag="google_apis")
 
 
+@pytest.mark.test_infra
 def test_throw_on_unknown_tag(pytestconfig, tmp_path):
     writer = AvdWriter(avd_home=tmp_path, fetcher=pytestconfig.getoption("fetcher"))
     with pytest.raises(SystemImageDownloadFailed):
         writer.create(abi="arm64-v8a", api="33", tag="wanou?")
 
 
+@pytest.mark.test_infra
 def test_can_write_avd(pytestconfig, tmp_path):
     writer = AvdWriter(avd_home=tmp_path, fetcher=pytestconfig.getoption("fetcher"))
     cfg = writer.create(abi="arm64-v8a", api="33", tag="google_apis")

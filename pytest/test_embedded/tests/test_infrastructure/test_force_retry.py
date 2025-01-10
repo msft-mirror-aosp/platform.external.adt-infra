@@ -29,11 +29,13 @@ def first_force_retry():
         raise EmulatorException("Fixture failure, please try again!")
 
 
+@pytest.mark.test_infra
 def test_force_fixture_retry(first_force_retry):
     """Tests that if a fixture fails with an EmulatorException, it will be re-tried."""
     assert fixture_attempt == 2
 
 
+@pytest.mark.test_infra
 def test_force_retry():
     global attempt
     attempt += 1
