@@ -19,6 +19,7 @@ import pytest
 import shutil
 import xml.etree.ElementTree as ET
 import zipfile
+from emu.application import Application
 
 
 pcmark_package = "com.futuremark.pcmark.android.benchmark"
@@ -27,9 +28,11 @@ install_path = f"/storage/emulated/0/Android/data/{pcmark_package}/files"
 
 
 async def install_pcmark(avd, bundle_path):
-    await avd.install_apk(
-        bundle_path.joinpath("pcmark-android-v3-0-4061.apk"), pcmark_package
+    pcmark = Application(
+        apk_path=bundle_path.joinpath("pcmark-android-v3-0-4061.apk"),
+        package_name=pcmark_package,
     )
+    pcmark.install()
     await avd.adb.shell(f"mkdir -p {install_path}")
     await avd.adb.push(f"{bundle_path.joinpath('key.txt')}", install_path)
     await avd.adb.push(

@@ -799,8 +799,8 @@ async def test_multidisplay_controls(
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
-@pytest.mark.skipos("mac", "reason: screenrecord user permission should be given.")
-@pytest.mark.skipos("m1", "reason: screenrecord user permission should be given.")
+# @pytest.mark.skipos("mac", "reason: screenrecord user permission should be given.")
+# @pytest.mark.skipos("m1", "reason: screenrecord user permission should be given.")
 async def test_multidisplay_video_playback(
     ensure_multidisplay_service_ready,
     avd,
