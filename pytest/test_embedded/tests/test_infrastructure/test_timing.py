@@ -13,11 +13,148 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests that the default configuration will attempt to retry the tests."""
-from emu.timing import eventually
+from emu.timing import eventually, retry
 import pytest
 import time
 import asyncio
 import re
+
+
+class MockLogger:
+    def __init__(self):
+        self.messages = []
+
+    def warning(self, *msg):
+        self.messages.append(("WARNING", msg))
+
+    def error(self, *msg):
+        self.messages.append(("ERROR", msg))
+
+
+@pytest.fixture
+def mock_logger(monkeypatch):
+    logger = MockLogger()
+    monkeypatch.setattr("logging.warning", logger.warning)
+    monkeypatch.setattr("logging.error", logger.error)
+    return logger
+
+
+# Test cases
+async def test_retry_success_immediately(mock_logger):
+    async def succeed():
+        return "success"
+
+    result = await retry(succeed, attempts=3)
+    assert result == "success"
+    assert len(mock_logger.messages) == 0  # No warnings or errors should be logged
+
+
+async def test_retry_success_after_retries(mock_logger):
+    attempts_counter = 0
+
+    async def succeed_on_second_try():
+        nonlocal attempts_counter
+        attempts_counter += 1
+        if attempts_counter < 2:
+            return None  # Falsy value
+        else:
+            return "success"
+
+    result = await retry(succeed_on_second_try, attempts=3, delay=0.1)
+    assert result == "success"
+    assert attempts_counter == 2
+    assert len(mock_logger.messages) == 1
+    assert mock_logger.messages[0][0] == "WARNING"
+    assert "returned a falsy value: None" in mock_logger.messages[0][1]
+
+
+async def test_retry_failure_all_attempts_falsy(mock_logger):
+    async def always_fail():
+        return None
+
+    with pytest.raises(RuntimeError) as excinfo:
+        await retry(always_fail, attempts=3, delay=0.1)
+    assert "failed after 3 attempts" in str(excinfo.value)
+    assert len(mock_logger.messages) == 4
+
+
+async def test_retry_failure_all_attempts_exception(mock_logger):
+    async def always_fail():
+        raise ValueError("oops")
+
+    with pytest.raises(ValueError) as excinfo:
+        await retry(always_fail, attempts=3, delay=0.1)
+    assert "oops" in str(excinfo.value)
+    assert len(mock_logger.messages) == 4
+
+
+async def test_retry_with_custom_exception(mock_logger):
+    async def fail_with_custom_exception():
+        raise KeyError("key not found")
+
+    with pytest.raises(KeyError) as excinfo:
+        await retry(
+            fail_with_custom_exception,
+            attempts=3,
+            delay=0.1,
+            retry_on_exception=KeyError,
+        )
+    assert "key not found" in str(excinfo.value)
+
+
+async def test_retry_no_retry_on_different_exception(mock_logger):
+    async def fail_with_different_exception():
+        raise ValueError("invalid value")
+
+    with pytest.raises(ValueError) as excinfo:
+        await retry(
+            fail_with_different_exception,
+            attempts=3,
+            delay=0.1,
+            retry_on_exception=KeyError,
+        )
+    assert "invalid value" in str(excinfo.value)
+    assert (
+        len(mock_logger.messages) == 0
+    )  # No warnings or errors should be logged, since we didn't retry
+
+
+async def test_retry_no_retry_on_falsy_success(mock_logger):
+    async def return_falsy_but_we_accept_it():
+        return None
+
+    result = await retry(
+        return_falsy_but_we_accept_it, attempts=3, retry_on_falsy=False
+    )
+    assert result is None
+    assert len(mock_logger.messages) == 0
+
+
+async def test_retry_named_operation(mock_logger):
+    async def succeed_eventually():
+        return "ok"
+
+    result = await retry(succeed_eventually, attempts=3, name="My Operation")
+    assert result == "ok"
+    assert len(mock_logger.messages) == 0
+
+
+async def test_retry_with_arguments(mock_logger):
+    attempts_counter = 0
+
+    async def succeed_with_args(a, b):
+        nonlocal attempts_counter
+        attempts_counter += 1
+        if attempts_counter < 3:
+            raise ValueError("Not enough attempts")
+        else:
+            return a + b
+
+    result = await retry(
+        lambda: succeed_with_args(5, 10), attempts=5, delay=0.1, name="Addition"
+    )
+    assert result == 15
+    assert attempts_counter == 3
 
 
 async def async_sleep():
