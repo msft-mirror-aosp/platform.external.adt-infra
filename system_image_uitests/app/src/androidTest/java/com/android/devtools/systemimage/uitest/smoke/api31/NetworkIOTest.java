@@ -78,8 +78,8 @@ public class NetworkIOTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "14578825")
     @ScreenRecord
+    @TestInfo(id = "14578825")
     public void testBrowserLoadsSite() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();

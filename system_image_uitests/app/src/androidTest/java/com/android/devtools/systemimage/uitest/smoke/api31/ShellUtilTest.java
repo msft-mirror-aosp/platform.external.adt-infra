@@ -115,6 +115,7 @@ public class ShellUtilTest {
      *   </pre>
      */
     @Test
+    @ScreenRecord
     @TestInfo(id = "14581588")
     public void createBugReport() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();

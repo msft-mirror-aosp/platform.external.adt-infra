@@ -377,6 +377,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @ScreenRecord
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
         try {
