@@ -54,34 +54,29 @@ async def open_power_menu(emulator_controller):
         A coroutine that opens the power menu.
     """
 
-    async def _open_power_menu():
-        async def long_press_power_button():
-            logging.info("Sending [Volume up] and [Power] keydown events")
-            yield InputEvent(
-                key_event=KeyboardEvent(
-                    key="AudioVolumeUp", eventType=KeyboardEvent.keydown
-                )
+    async def long_press_power_button_down():
+        logging.info("Sending [Volume up] and [Power] keydown events")
+        yield InputEvent(
+            key_event=KeyboardEvent(
+                key="AudioVolumeUp", eventType=KeyboardEvent.keydown
             )
-            yield InputEvent(
-                key_event=KeyboardEvent(key="Power", eventType=KeyboardEvent.keydown)
-            )
+        )
+        yield InputEvent(
+            key_event=KeyboardEvent(key="Power", eventType=KeyboardEvent.keydown)
+        )
 
-            # A long press is 1.0s (see https://developer.android.com/develop/ui/views/touch-and-input/input-events)
-            await asyncio.sleep(1.0)
+    async def long_press_power_button_up():
+        logging.info("Sending [Volume up] and [Power] keydown events")
+        yield InputEvent(
+            key_event=KeyboardEvent(key="AudioVolumeUp", eventType=KeyboardEvent.keyup)
+        )
+        yield InputEvent(
+            key_event=KeyboardEvent(key="Power", eventType=KeyboardEvent.keyup)
+        )
 
-            logging.info("Sending [Volume up] and [Power] keyup events")
-            yield InputEvent(
-                key_event=KeyboardEvent(
-                    key="AudioVolumeUp", eventType=KeyboardEvent.keyup
-                )
-            )
-            yield InputEvent(
-                key_event=KeyboardEvent(key="Power", eventType=KeyboardEvent.keyup)
-            )
-
-        await emulator_controller.streamInputEvent(long_press_power_button())
-
-    return _open_power_menu
+    await emulator_controller.streamInputEvent(long_press_power_button_down())
+    yield
+    await emulator_controller.streamInputEvent(long_press_power_button_up())
 
 
 @pytest.fixture
@@ -105,28 +100,20 @@ async def is_power_menu_open(avd):
 @pytest.mark.sanity
 @pytest.mark.async_timeout(20)
 @pytest.mark.flaky(reruns=2)
+@pytest.mark.dependency()
 async def test_can_open_power_menu(open_power_menu, is_power_menu_open):
     """Verifies that the power menu can be opened.
 
     Note: Bringing up the power menu is a bit flaky.
     """
-    await open_power_menu()
     assert await eventually(is_power_menu_open), "Couldn't open the Power options menu."
 
 
 @pytest.mark.sanity
 @pytest.mark.async_timeout(60)
-@pytest.mark.flaky(reruns=2)
-async def test_close_emulator_with_power_menu(
-    open_power_menu, is_power_menu_open, avd, emulator_is_off
-):
-    """Verifies closing the emulator via the power menu.
-
-    Note: Bringing up the power menu is a bit flaky.
-    """
-    await open_power_menu()
-    assert await eventually(is_power_menu_open), "Couldn't open the Power options menu."
-
+@pytest.mark.dependency(depends=["test_can_open_power_menu"])
+async def test_close_emulator_with_power_menu(avd, emulator_is_off):
+    """Verifies closing the emulator via the power menu."""
     assert await click_button(
         avd, text="Power off"
     ), "Couldn't click the Power off button."

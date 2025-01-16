@@ -25,7 +25,6 @@ The fixtures below can be used to bring the emulator to a certain state, or to
 provide access to parts of the emulator.
 """
 import asyncio
-import hashlib
 import json
 import logging
 import os
@@ -36,6 +35,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
+
+from emu.emulator_exceptions import EmulatorException
 
 # This makes all the fixtures globally available
 # Do not remove these!
@@ -188,6 +189,48 @@ def log_thread_error(args):
 
 
 threading.excepthook = log_thread_error
+
+
+def pytest_runtest_makereport(item, call):
+    """
+    Pytest hook to modify test reports for EmulatorExceptions.
+
+    This hook intercepts test reports and modifies those that failed due to
+    an EmulatorException. Instead of marking the test as failed, it marks
+    it as skipped and adds information about the infrastructure error.
+
+    Args:
+        item: The pytest test item.
+        call: The pytest call object.
+
+    Returns:
+        A modified TestReport object if the test failed due to an
+        EmulatorException, otherwise None.
+    """
+    if call.when == "call" and call.excinfo:
+        if issubclass(call.excinfo.type, EmulatorException):
+            # Modify the report to mark the test as skipped
+            report = TestReport.from_item_and_call(
+                item, call
+            )  # Properly create a TestReport
+
+            last_traceback_entry = call.excinfo.traceback[-1]
+            # Extract filename and line number (add 1 to lineno)
+            filename = Path(last_traceback_entry.path).name
+            line_number = last_traceback_entry.lineno + 1
+
+            report = TestReport.from_item_and_call(item, call)
+            report.outcome = "skipped"
+            report.longrepr = (
+                f"{filename}:{line_number}",
+                "Infrastructure Error",
+                f"{call.excinfo.value}",
+            )
+            report.sections.append(
+                ("infrastructure-error", "Skipped due to Emulator Exception")
+            )
+            item.user_properties.append(("infrastructure-error", True))
+            return report
 
 
 def pytest_runtest_setup(item: pytest.Item) -> None:

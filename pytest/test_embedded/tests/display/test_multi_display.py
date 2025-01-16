@@ -450,6 +450,7 @@ async def get_displays_ids(avd):
 async def test_disable_multidisplay(
     ensure_multidisplay_service_ready,
     avd,
+    animation_app,
     no_displays,
     is_landscape,
     emulator_controller,

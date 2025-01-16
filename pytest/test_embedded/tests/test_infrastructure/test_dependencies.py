@@ -9,6 +9,7 @@ def patch_reset_state(request, mocker):
     return mocker.patch.object(BaseEmulator, "reset_state", return_value=None)
 
 
+@pytest.mark.test_infra
 @pytest.mark.dependency()
 async def test_avd_reset_state_dependent_parent(avd, patch_reset_state):
     """Tests avd fixture's reset_state behavior for dependent tests (parent).
@@ -20,6 +21,7 @@ async def test_avd_reset_state_dependent_parent(avd, patch_reset_state):
     patch_reset_state.assert_called()
 
 
+@pytest.mark.test_infra
 @pytest.mark.dependency(depends=["test_avd_reset_state_dependent_parent"])
 async def test_avd_reset_state_dependent_child(avd, patch_reset_state):
     """Tests avd fixture's reset_state behavior for dependent tests (child).
@@ -31,6 +33,7 @@ async def test_avd_reset_state_dependent_child(avd, patch_reset_state):
     patch_reset_state.assert_not_called()
 
 
+@pytest.mark.test_infra
 async def test_avd_reset_state_independent(avd, patch_reset_state):
     """Tests avd fixture's reset_state behavior for independent tests.
 
