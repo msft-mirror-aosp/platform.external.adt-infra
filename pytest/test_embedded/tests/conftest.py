@@ -199,6 +199,8 @@ def pytest_runtest_makereport(item, call):
     an EmulatorException. Instead of marking the test as failed, it marks
     it as skipped and adds information about the infrastructure error.
 
+    We intercept fixtures during the setup phase and tests themselves.
+
     Args:
         item: The pytest test item.
         call: The pytest call object.
@@ -207,7 +209,8 @@ def pytest_runtest_makereport(item, call):
         A modified TestReport object if the test failed due to an
         EmulatorException, otherwise None.
     """
-    if call.when == "call" and call.excinfo:
+    if (call.when == "call" or call.when == "setup") and call.excinfo:
+        logging.warning("Here we are! %s", call.excinfo.type)
         if issubclass(call.excinfo.type, EmulatorException):
             # Modify the report to mark the test as skipped
             report = TestReport.from_item_and_call(
