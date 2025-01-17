@@ -44,20 +44,32 @@ async def add_fingerprint(avd, ad_ui) -> int:
     Returns:
         PIN: randomly generated fingerprint ID.
     """
+    api = await avd.api_level()
     activity = "android.settings.SECURITY_SETTINGS"
     assert await avd.adb.shell(f"am start -W -a {activity}"), \
                                 "Couldn't start Settings -> Security"
 
-    security_frame = ad_ui(clazz="android.widget.FrameLayout", description="Security")
+    security_label = "Security" if api <= 33 else "Security & privacy"
+    security_frame = ad_ui(clazz="android.widget.FrameLayout", description=security_label)
     assert security_frame.wait.exists(30E3), "'Security' frame not found."
 
-    api = await avd.api_level()
-    pin_label = {
-        31: "Pixel Imprint + PIN",
-        33: "PIN"
+    if api == 34:
+        ad_ui(scrollable=True).scroll.down(text="Account security")
+        ad_ui(scrollable=True).scroll.up(text="Device unlock")
+        assert ad_ui(text="Device unlock").wait.click()
+    fingerprint_label = {
+        31: "Pixel Imprint",
+        33: "Pixel Imprint",
+        34: "Face & Fingerprint Unlock"
     }.get(api)
-    assert ad_ui(scrollable=True).scroll.down.click(text="Pixel Imprint")
-    assert ad_ui(text=pin_label).wait.click()
+    ad_ui(scrollable=True).scroll.down(text=fingerprint_label)
+    assert ad_ui(text=fingerprint_label).wait.click()
+    pin_unlock_label = {
+        31: "Pixel Imprint + PIN",
+        33: "PIN",
+        34: "PIN • Face • Fingerprint"
+    }.get(api)
+    assert ad_ui(text=pin_unlock_label).wait.click()
 
     # Set unlock PIN and click NEXT.
     PIN = random.randint(0, 999)
@@ -75,14 +87,17 @@ async def add_fingerprint(avd, ad_ui) -> int:
 
     assert ad_ui(text='DONE', clazz='android.widget.Button').wait.click(10e3)
     await asyncio.sleep(2)
+    if api == 34:
+        ad_ui(scrollable=True).scroll.down(text="Pixel Imprint")
+        assert ad_ui(text="Pixel Imprint").wait.click()
+        await asyncio.sleep(2)
     ad_ui(scrollable=True).scroll.down()
     assert ad_ui(text='I AGREE', clazz='android.widget.Button').wait.click()
 
-    # Touch the finger print sensor
-    logging.info(f"Attempt to touch the finger print sensor with fingerid {PIN}")
+    # Touch the fingerprint sensor
+    logging.info(f"Attempt to touch the fingerprint sensor with fingerid {PIN}")
     touch_label = ad_ui(text='Touch the sensor', clazz="android.widget.TextView")
     assert touch_label.wait.exists(10E3)
-    touch_label.click.wait()
     await asyncio.sleep(5)
     console = await avd.console()
     await console.send(f"finger touch {PIN}")
@@ -120,7 +135,9 @@ async def remove_fingerprint(avd, ad_ui, PIN):
         1. The fingerprint named "Finger 1" no long exists on the
            "Pixel Imprint" screen.
     """
-    assert ad_ui(scrollable=True).scroll.down.click(text="Pixel Imprint")
+    api = await avd.api_level()
+    fingerprint_label = "Face & Fingerprint Unlock" if api == 34 else "Pixel Imprint"
+    assert ad_ui(scrollable=True).scroll.down.click(text=fingerprint_label)
 
     ad_ui(text="Re-enter your PIN", clazz="android.widget.TextView")\
          .wait.exists(10E3)
@@ -128,6 +145,11 @@ async def remove_fingerprint(avd, ad_ui, PIN):
     ad_ui(clazz='android.widget.EditText').set_text('{:04}'.format(PIN))
     await asyncio.sleep(2)
     assert ad_ui.press('enter')
+
+    if api == 34:
+        ad_ui(text="Pixel Imprint").wait.exists()
+        ad_ui(scrollable=True).scroll.down(text="Pixel Imprint")
+        assert ad_ui(text="Pixel Imprint").click.wait()
 
     assert ad_ui(desc="Delete", clickable=True).wait.click()
     await asyncio.sleep(2)
@@ -161,8 +183,8 @@ async def test_fingerprint_unlock(avd, ad_ui):
         3. The fingerprint is no longer listed on the "Pixel Imprint" screen.
     """
     api = await avd.api_level()
-    if api < 31 or api > 33:
-        pytest.skip("Requires API level < 34")
+    if api < 31 or api > 34:
+        pytest.skip("Requires API level < 35")
 
     # Add fingerprint
     logging.info("Attempting to add fingerprint ...")
