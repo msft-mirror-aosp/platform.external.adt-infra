@@ -477,6 +477,29 @@ def modifyitems_for_sharding(session, config, items):
     items[:] = slow_items[group::max_groups] + normal_items[group::max_groups]
 
 
+def filter_test_infra(session, config, items):
+    """Filter out infrastructure tests unless explicitly requested.
+
+    This hook modifies the collected test items to exclude tests marked with
+    `@pytest.mark.test_infra` unless the `-m test_infra` option is provided
+    when running pytest.
+
+    Rationale:
+
+    Infrastructure tests validate the test infrastructure itself (fixtures, etc.)
+    and can conflict with environment tests that expect specific things to be
+    installed (e.g., mss, pyscreeze). Running both types of tests together
+    might lead to unexpected behavior or failures.
+
+    Args:
+        session: The pytest session object.
+        config: The pytest config object.
+        items: List of collected test items.
+    """
+    if "test_infra" not in config.getoption("-m", default="").split():
+        items[:] = [item for item in items if "test_infra" not in item.keywords]
+
+
 def modifyitems_for_retry(session, config, items):
     """
     Modify test items to enable retries for specific exceptions.
@@ -515,6 +538,7 @@ def modifyitems_for_retry(session, config, items):
 
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(session, config, items):
+    filter_test_infra(session, config, items)
     modifyitems_for_retry(session, config, items)
     modifyitems_for_sharding(session, config, items)
 
