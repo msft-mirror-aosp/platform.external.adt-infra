@@ -36,6 +36,7 @@ from pathlib import Path
 
 import pytest
 
+from emu.avd import FetcherSystemImages, SystemImageDownloadFailed, SystemImages
 from emu.emulator_exceptions import EmulatorException
 
 # This makes all the fixtures globally available
@@ -45,11 +46,11 @@ from tests.fixtures.benchmark_event_fixtures import *
 from tests.fixtures.emulator_fixtures import *
 from tests.fixtures.emulator_settings_fixtures import *
 from tests.fixtures.grpc_fixtures import *
+from tests.fixtures.junit_rerun_reporter import *
+from tests.fixtures.markers import register_markers
 from tests.fixtures.mobly_fixtures import *
 from tests.fixtures.qrcode_fixtures import *
 from tests.fixtures.screen_recording_fixtures import *
-from tests.fixtures.markers import register_markers
-from tests.fixtures.junit_rerun_reporter import *
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -71,6 +72,16 @@ RETRY_ON_EXCEPTIONS = [
     "FailedToInstallApkException",
     "EmulatorException",
 ]
+
+DEFAULT_AVD_CONFIG = {
+    "abi": (
+        "arm64-v8a"
+        if platform.machine() in ("armv7l", "armv8l", "aarch64", "arm64")
+        else "x86_64"
+    ),
+    "tag.id": "google_apis",
+    "api": "31",
+}
 
 
 def pytest_addoption(parser):
@@ -128,7 +139,7 @@ def pytest_addoption(parser):
 
     parser.addoption(
         "--avd_configs",
-        default="{}",
+        default=json.dumps([DEFAULT_AVD_CONFIG]),
         help="A list of JSON snippets that contains the avd configuration that should be used to run this test",
     )
     parser.addoption(
@@ -287,6 +298,31 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
         )
 
 
+def prefetch_system_images(pytestconfig):
+    """Prefetches system images based on avd configurations.
+
+    This function is intended to be used as a setup fixture for pytest.
+    It retrieves the android sdk root and avd configurations from the pytest
+    command line options, and then installs the necessary system images
+    using the SystemImages class.
+
+    This will always update and pull the latest public system images!
+
+    Args:
+        pytestconfig: The pytest configuration object.
+    """
+    if pytestconfig.getoption("fetcher"):
+        si = FetcherSystemImages(pytestconfig.getoption("fetcher"))
+    else:
+        si = SystemImages(pytestconfig.getoption("android_home"))
+    for cfg in json.loads(pytestconfig.getoption("avd_configs")):
+        abi = cfg.get("abi", DEFAULT_AVD_CONFIG["abi"])
+        api = cfg.get("api", DEFAULT_AVD_CONFIG["api"])
+        tag = cfg.get("tag.id", DEFAULT_AVD_CONFIG["tag.id"])
+        logging.info("Obtaining or updating api:%s, tag:%s, abi:%s", api, tag, abi)
+        si.install(api, abi, tag)
+
+
 # Workaround for
 # https://docs.pytest.org/en/latest/deprecations.html#pytest-namespace
 def pytest_configure(config):
@@ -298,6 +334,7 @@ def pytest_configure(config):
 
     # Registers all the markers
     register_markers(config)
+    prefetch_system_images(config)
 
     os_map = {
         "Windows": "win",
