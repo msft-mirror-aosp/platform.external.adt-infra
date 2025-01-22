@@ -76,8 +76,9 @@ class FetcherSystemImages:
         """
         return self.install(api, abi, tag)
 
-    def find_and_unpack_ab(self, api: str, abi: str, tag: str, build_id: str,
-                           target: str, resource: str) -> Optional[dict[str, str]]:
+    def find_and_unpack_ab(
+        self, api: str, abi: str, tag: str, build_id: str, target: str, resource: str
+    ) -> Optional[dict[str, str]]:
         """Installs the system image using the fetcher binary from android build.
 
            The fetcher binary handles caching and clearing out older images.
@@ -99,8 +100,9 @@ class FetcherSystemImages:
         """
         return self.install(api, abi, tag, f"ab,{build_id},{target},{resource}")
 
-    def install(self, api: str, abi: str, tag: str = "google_apis",
-                fetch_target: str = "") -> dict[str, str]:
+    def install(
+        self, api: str, abi: str, tag: str = "google_apis", fetch_target: str = ""
+    ) -> dict[str, str]:
         """Installs the system image using the fetcher binary.
 
            The fetcher binary handles caching and clearing out older images.
@@ -165,8 +167,9 @@ class SystemImages:
 
         if not self.sys_root.exists():
             logging.warning(
-                f"The directory {self.sys_root} does not exist (yet?). Is ANDROID_SDK_ROOT set properly?"
+                f"The directory {self.sys_root} does not exist, creating it"
             )
+            self.sys_root.resolve().absolute().mkdir(parents=True)
 
         self.sdk_manager = abs_root / "cmdline-tools" / "latest" / "bin" / "sdkmanager"
 
@@ -193,7 +196,6 @@ class SystemImages:
                 self.sys_root,
             )
             return
-        logging.info("Looking for images in %s", self.sys_root)
         for x in self._recursive_iglob(self.sys_root):
             m = self.IMAGE.match(str(x))
             if m:
@@ -233,8 +235,9 @@ class SystemImages:
             None,
         )
 
-    def find_and_unpack_ab(self, api: str, abi: str, tag: str, build_id: str,
-                           target: str, resource: str) -> Optional[dict[str, str]]:
+    def find_and_unpack_ab(
+        self, api: str, abi: str, tag: str, build_id: str, target: str, resource: str
+    ) -> Optional[dict[str, str]]:
         """Unsupported."""
         raise NotImplementedError("Android Build is only supported with --fetcher")
 
@@ -478,8 +481,9 @@ class AvdWriter:
             }
         elif "android_build" in custom_cfg:
             ab_cfg = custom_cfg["android_build"]
-            avd = self.sys_imgs.find_and_unpack_ab(api, abi, tag, ab_cfg["build_id"],
-                                                   ab_cfg["target"], ab_cfg["resource"])
+            avd = self.sys_imgs.find_and_unpack_ab(
+                api, abi, tag, ab_cfg["build_id"], ab_cfg["target"], ab_cfg["resource"]
+            )
         else:
             avd = self.sys_imgs.find_and_unpack(api, abi, tag)
             if not avd:
