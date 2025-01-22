@@ -19,6 +19,19 @@ import random
 from emu.timing import wait_until
 
 
+FINGERPRINT_LABEL = {
+    31: "Pixel Imprint",
+    33: "Pixel Imprint",
+    34: "Face & Fingerprint Unlock",
+    35: "Fingerprint & Face Unlock"
+}
+PIN_UNLOCK_LABEL = {
+    31: "Pixel Imprint + PIN",
+    33: "PIN",
+    34: "PIN • Face • Fingerprint",
+    35: "PIN • Fingerprint • Face"
+}
+
 async def add_fingerprint(avd, ad_ui) -> int:
     """Add a new fingerprint to the emulator
 
@@ -49,37 +62,36 @@ async def add_fingerprint(avd, ad_ui) -> int:
     assert await avd.adb.shell(f"am start -W -a {activity}"), \
                                 "Couldn't start Settings -> Security"
 
+    if api >= 34:
+        ad_ui(text="Checking device settings…",
+              res="com.android.permissioncontroller:id/status_summary")\
+             .wait.gone(20e3)
+
     security_label = "Security" if api <= 33 else "Security & privacy"
     security_frame = ad_ui(clazz="android.widget.FrameLayout", description=security_label)
     assert security_frame.wait.exists(30E3), "'Security' frame not found."
 
-    if api == 34:
-        ad_ui(scrollable=True).scroll.down(text="Account security")
-        ad_ui(scrollable=True).scroll.up(text="Device unlock")
-        assert ad_ui(text="Device unlock").wait.click()
-    fingerprint_label = {
-        31: "Pixel Imprint",
-        33: "Pixel Imprint",
-        34: "Face & Fingerprint Unlock"
-    }.get(api)
-    ad_ui(scrollable=True).scroll.down(text=fingerprint_label)
-    assert ad_ui(text=fingerprint_label).wait.click()
-    pin_unlock_label = {
-        31: "Pixel Imprint + PIN",
-        33: "PIN",
-        34: "PIN • Face • Fingerprint"
-    }.get(api)
-    assert ad_ui(text=pin_unlock_label).wait.click()
+    if api >= 34:
+        ad_ui(scrollable=True)\
+            .scroll.down(text="Device unlock", res="android:id/title")
+        ad_ui(text="Device unlock", res="android:id/title").click.wait()
+
+    ad_ui(scrollable=True).scroll.down(text=FINGERPRINT_LABEL[api])
+    ad_ui(text=FINGERPRINT_LABEL[api]).click()
+    ad_ui(text="Choose a screen lock").wait.exists()
+    ad_ui(scrollable=True).scroll.down(text=PIN_UNLOCK_LABEL[api])
+    ad_ui(text=PIN_UNLOCK_LABEL[api]).wait.exists()
+    assert ad_ui(text=PIN_UNLOCK_LABEL[api]).click.wait(10e5)
 
     # Set unlock PIN and click NEXT.
     PIN = random.randint(0, 999)
     ad_ui(clazz='android.widget.EditText').set_text('{:04}'.format(PIN))
     next_button = ad_ui(text='NEXT', clazz='android.widget.Button')
     assert await wait_until(lambda: next_button.enabled)
-    next_button.click()
+    next_button.click.wait()
 
     # Reenter PIN and click CONFIRM.
-    assert ad_ui(text="Re-enter your PIN").wait.exists(20E3)
+    assert ad_ui(text="Re-enter your PIN").wait.exists(20e3)
     ad_ui(clazz='android.widget.EditText').set_text('{:04}'.format(PIN))
     confirm_button = ad_ui(text='CONFIRM', clazz='android.widget.Button')
     assert await wait_until(lambda: confirm_button.enabled)
@@ -87,7 +99,7 @@ async def add_fingerprint(avd, ad_ui) -> int:
 
     assert ad_ui(text='DONE', clazz='android.widget.Button').wait.click(10e3)
     await asyncio.sleep(2)
-    if api == 34:
+    if api >= 34:
         ad_ui(scrollable=True).scroll.down(text="Pixel Imprint")
         assert ad_ui(text="Pixel Imprint").wait.click()
         await asyncio.sleep(2)
@@ -136,8 +148,8 @@ async def remove_fingerprint(avd, ad_ui, PIN):
            "Pixel Imprint" screen.
     """
     api = await avd.api_level()
-    fingerprint_label = "Face & Fingerprint Unlock" if api == 34 else "Pixel Imprint"
-    assert ad_ui(scrollable=True).scroll.down.click(text=fingerprint_label)
+    ad_ui(scrollable=True).scroll.down(text=FINGERPRINT_LABEL[api])
+    assert ad_ui(text=FINGERPRINT_LABEL[api]).wait.click()
 
     ad_ui(text="Re-enter your PIN", clazz="android.widget.TextView")\
          .wait.exists(10E3)
@@ -146,12 +158,13 @@ async def remove_fingerprint(avd, ad_ui, PIN):
     await asyncio.sleep(2)
     assert ad_ui.press('enter')
 
-    if api == 34:
+    if api >= 34:
         ad_ui(text="Pixel Imprint").wait.exists()
         ad_ui(scrollable=True).scroll.down(text="Pixel Imprint")
         assert ad_ui(text="Pixel Imprint").click.wait()
 
-    assert ad_ui(desc="Delete", clickable=True).wait.click()
+    assert ad_ui(res="com.android.settings:id/delete_button",
+                 clickable=True).wait.click(10e3)
     await asyncio.sleep(2)
     assert ad_ui(text="Cancel", clazz="android.widget.Button")\
                .sibling(clazz="android.widget.Button").wait.click(15e3)
@@ -183,8 +196,6 @@ async def test_fingerprint_unlock(avd, ad_ui):
         3. The fingerprint is no longer listed on the "Pixel Imprint" screen.
     """
     api = await avd.api_level()
-    if api < 31 or api > 34:
-        pytest.skip("Requires API level < 35")
 
     # Add fingerprint
     logging.info("Attempting to add fingerprint ...")
