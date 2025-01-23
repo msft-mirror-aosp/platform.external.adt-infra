@@ -38,6 +38,7 @@ def test_strategy_availability(strategies):
         print(f"Strategy available: {name}")
 
 
+@pytest.mark.test_infra
 @pytest.mark.benchmark(group="initialization", min_rounds=5, max_time=30.0)
 @pytest.mark.parametrize("strategy_name", ScreenGrabStrategyFactory.PREFERRED_ORDER)
 def test_strategy_initialization(benchmark, strategy_name):
@@ -54,6 +55,7 @@ def test_strategy_initialization(benchmark, strategy_name):
         assert isinstance(strategy, ScreenGrabStrategy)
 
 
+@pytest.mark.test_infra
 @pytest.mark.benchmark(group="screen_capture", min_rounds=50, max_time=30.0)
 @pytest.mark.parametrize("strategy_name", ScreenGrabStrategyFactory.PREFERRED_ORDER)
 def test_screen_capture_performance(benchmark, strategy_name):
@@ -70,6 +72,7 @@ def test_screen_capture_performance(benchmark, strategy_name):
     benchmark(capture_screen)
 
 
+@pytest.mark.test_infra
 @pytest.mark.benchmark(group="screen_size", min_rounds=50, max_time=30.0)
 @pytest.mark.parametrize("strategy_name", ScreenGrabStrategyFactory.PREFERRED_ORDER)
 def test_get_screen_size_performance(benchmark, strategy_name):
