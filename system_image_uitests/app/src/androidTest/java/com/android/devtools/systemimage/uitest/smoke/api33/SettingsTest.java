@@ -445,6 +445,7 @@ public class SettingsTest {
 
         boolean wasUserLoggedIn = SettingsUtil.verifyGoogleAccountStatus(
                 instrumentation, userLoginInfo);
+
         if (wasUserLoggedIn) {
             userLoginInfo.clickAndWaitForNewWindow();
             assertTrue("Google account could not be removed.",
@@ -466,15 +467,28 @@ public class SettingsTest {
             }
         }
 
-        final UiObject manageAccountButton = device.findObject(
-                new UiSelector()
-                        .text(wasUserLoggedIn ? "Manage your Google Account" : "Sign in to your Google Account")
-                        .className(Button.class));
+        UiObject manageAccountButton = wasUserLoggedIn ?
+                device.findObject(
+                        new UiSelector()
+                                .text("Manage your Google Account")
+                                .className(Button.class)) :
+                device.findObject(
+                        new UiSelector()
+                                .resourceId(Res.GOOGLE_MANAGE_ACCOUNT_BUTTON_RES)
+                                .className(TextView.class));
 
-        assertTrue("Manage Google account button not found.",
-                new Wait(20000L).until(manageAccountButton::exists));
+        if (manageAccountButton.waitForExists(20000L)) {
+            manageAccountButton.clickAndWaitForNewWindow();
+        } else {
+            final UiObject signInAccountButton = device.findObject(
+                    new UiSelector()
+                            .text("Sign in to your Google Account")
+                            .className(Button.class));
 
-        manageAccountButton.click();
+            assertTrue("Google account button not found.",
+                    signInAccountButton.waitForExists(5000L));
+            signInAccountButton.clickAndWaitForNewWindow();
+        }
 
         if (wasUserLoggedIn) {
             final UiObject addAccountButton = device.findObject(
@@ -500,44 +514,64 @@ public class SettingsTest {
         assertTrue("Checking info label before email input not dismissed.",
                 checkingInfoLabel.waitUntilGone(90000L));
 
-        final UiObject signInLabel = device.findObject(
+        final UiObject googleLoginInput = device.findObject(
                 new UiSelector().
-                        text("Sign in").
-                        resourceId("headingText").
-                        className(TextView.class));
-        assertTrue("Sign in label not found.",
-                new Wait(90000L).until(signInLabel::exists));
+                        className(EditText.class).
+                        index(0));
 
-        final UiObject googleEmailInput = device.findObject(
+        final UiObject forgotEmailButton = device.findObject(
                 new UiSelector().
-                        resourceId("identifierId").
-                        className(EditText.class));
+                        text("Forgot email?").
+                        className(Button.class));
+        assertTrue("Google account forgot email not found.",
+                new Wait(200000L).until(forgotEmailButton::exists));
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account email input not found.",
-                new Wait(20000L).until(googleEmailInput::exists));
+                new Wait(10000L).until(googleLoginInput::exists));
 
-        googleEmailInput.clearTextField();
-        googleEmailInput.setText(userEmail);
-        googleEmailInput.clickAndWaitForNewWindow(3000L);
-        device.pressEnter();
+        UiObject nextButton = device.findObject(new UiSelector().text("NEXT"));
+        if (nextButton.waitForExists(60000L) && forgotEmailButton.waitForExists(10000L)) {
+            googleLoginInput.clearTextField();
+            googleLoginInput.setText(userEmail);
+            googleLoginInput.clickAndWaitForNewWindow(3000L);
+            device.pressEnter();
+
+            if (!forgotEmailButton.waitUntilGone(10000L)) {
+                nextButton.clickAndWaitForNewWindow();
+            }
+        }
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Email input entry page not dismissed.",
-                googleEmailInput.waitUntilGone(90000L));
+                forgotEmailButton.waitUntilGone(90000L));
 
-        final UiObject googlePasswordInput = device.findObject(
+        final UiObject forgotPasswordButton = device.findObject(
                 new UiSelector().
-                        className(EditText.class));
+                        text("Show password").
+                        className(TextView.class));
+        assertTrue("Google account forgot password not found.",
+                new Wait(200000L).until(forgotPasswordButton::exists));
+
+        final UiObject chromeProgressBar =
+                device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account password input not found.",
-                new Wait(20000L).until(googlePasswordInput::exists));
+                new Wait(90000L).until(
+                        () -> !chromeProgressBar.exists()) && googleLoginInput.waitForExists(10000L));
 
-        googlePasswordInput.clearTextField();
-        googlePasswordInput.setText(userPassword);
-        googlePasswordInput.clickAndWaitForNewWindow(3000L);
-        device.pressEnter();
+        if (nextButton.waitForExists(60000L) && forgotPasswordButton.waitForExists(10000L)) {
+            googleLoginInput.clearTextField();
+            googleLoginInput.setText(userPassword);
+            googleLoginInput.clickAndWaitForNewWindow(3000L);
+            device.pressEnter();
+
+            if (!forgotPasswordButton.waitUntilGone(10000L)) {
+                nextButton.clickAndWaitForNewWindow();
+            }
+        }
+
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Password input entry page not dismissed.",
-                googlePasswordInput.waitUntilGone(90000L));
+                forgotPasswordButton.waitUntilGone(90000L));
 
         final UiObject iAgreeButton = device.findObject(
                 new UiSelector().
