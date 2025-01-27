@@ -314,6 +314,15 @@ def run_single_suite(
                 f"We expected a junit report in {junit_test_results}."
             )
 
+        # Create a html report of the suite, this will end up in the
+        # test_suite archive.
+        apply_xslt(
+            python_exe=pyrun,
+            source=junit_test_results,
+            xslt=HERE / "cfg" / "asMaterialHtml.xslt",
+            dest=Path(logdir) / f"{name}.html",
+        )
+
         # Let's exit with a message that contains the first failure
         # This way we can have it show up as part of the snippet we display
         # on our build bots

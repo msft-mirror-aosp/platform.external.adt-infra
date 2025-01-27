@@ -22,9 +22,11 @@ import pytest
 from google.protobuf import empty_pb2
 from grpc import RpcError, StatusCode
 
-from emu.apk import APP_DEBUG_APK, APP_MOBLY_APK
 from emu.emulator import BaseEmulator, DebugEmulator, Emulator
-from emu.emulator_exceptions import EmulatorFailedToBootException
+from emu.emulator_exceptions import (
+    EmulatorFailedToBootException,
+    FailedToInstallApkException,
+)
 from emu.process.command import Command
 from emu.utils import system_cpu
 
@@ -243,10 +245,14 @@ async def avd(
     else:
         logging.info("--> Reusing emulator")
 
-    await avd_launcher.reset_state()
-    yield avd_launcher
-    if avd_launcher.is_alive():
+    dependencies = [
+        mark for mark in request.node.iter_markers() if mark.name == "dependency"
+    ]
+
+    # Only reset emulator state if we are not a child dependeny
+    if not (dependencies and "depends" in dependencies[0].kwargs):
         await avd_launcher.reset_state()
+    yield avd_launcher
 
 
 @pytest.fixture(scope="module")
@@ -292,21 +298,6 @@ async def manage_avd(emulator) -> BaseEmulator:
         )
 
     logging.info("The emulator has finished booting")
-
-    # Note install appears to fail at times, b/324920328
-    installed = await emulator.install_apk(
-        APP_DEBUG_APK.absolute(), "com.google.AnimateBox"
-    )
-    if not installed:
-        await emulator.stop()
-        raise FailedToInstallApkException("The animation app failed to install")
-
-    installed = await emulator.install_apk(
-        APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
-    )
-    if not installed:
-        await emulator.stop()
-        raise FailedToInstallApkException("The mobly snippets failed to install")
 
     await emulator.reset_state()
 

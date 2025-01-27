@@ -17,10 +17,6 @@
     "avd_configs": [
       {
         "api": "33",
-        "launch_flags": [
-          "-monitor-adb",
-          "3"
-        ],
         "tag.id": "google_apis"
       }
     ],
@@ -34,10 +30,6 @@
     "avd_configs": [
       {
         "api": "34",
-        "launch_flags": [
-          "-monitor-adb",
-          "3"
-        ],
         "tag.id": "google_apis"
       }
     ],

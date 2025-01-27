@@ -33,5 +33,17 @@ class FailedToInstallApkException(EmulatorException):
     pass
 
 
+class ActivityNotFoundException(EmulatorException):
+    pass
+
+
+class FailedToStartActivityException(EmulatorException):
+    pass
+
+
+class FailedToStopActivityException(EmulatorException):
+    pass
+
+
 class EmulatorFailedToBootException(EmulatorException):
     pass

@@ -25,7 +25,6 @@ The fixtures below can be used to bring the emulator to a certain state, or to
 provide access to parts of the emulator.
 """
 import asyncio
-import hashlib
 import json
 import logging
 import os
@@ -37,6 +36,9 @@ from pathlib import Path
 
 import pytest
 
+from emu.avd import FetcherSystemImages, SystemImageDownloadFailed, SystemImages
+from emu.emulator_exceptions import EmulatorException
+
 # This makes all the fixtures globally available
 # Do not remove these!
 from tests.fixtures.apk_fixtures import *
@@ -44,11 +46,11 @@ from tests.fixtures.benchmark_event_fixtures import *
 from tests.fixtures.emulator_fixtures import *
 from tests.fixtures.emulator_settings_fixtures import *
 from tests.fixtures.grpc_fixtures import *
+from tests.fixtures.junit_rerun_reporter import *
+from tests.fixtures.markers import register_markers
 from tests.fixtures.mobly_fixtures import *
 from tests.fixtures.qrcode_fixtures import *
 from tests.fixtures.screen_recording_fixtures import *
-from tests.fixtures.markers import register_markers
-from tests.fixtures.junit_rerun_reporter import *
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -70,6 +72,16 @@ RETRY_ON_EXCEPTIONS = [
     "FailedToInstallApkException",
     "EmulatorException",
 ]
+
+DEFAULT_AVD_CONFIG = {
+    "abi": (
+        "arm64-v8a"
+        if platform.machine() in ("armv7l", "armv8l", "aarch64", "arm64")
+        else "x86_64"
+    ),
+    "tag.id": "google_apis",
+    "api": "31",
+}
 
 
 def pytest_addoption(parser):
@@ -127,7 +139,7 @@ def pytest_addoption(parser):
 
     parser.addoption(
         "--avd_configs",
-        default="{}",
+        default=json.dumps([DEFAULT_AVD_CONFIG]),
         help="A list of JSON snippets that contains the avd configuration that should be used to run this test",
     )
     parser.addoption(
@@ -190,6 +202,51 @@ def log_thread_error(args):
 threading.excepthook = log_thread_error
 
 
+def pytest_runtest_makereport(item, call):
+    """
+    Pytest hook to modify test reports for EmulatorExceptions.
+
+    This hook intercepts test reports and modifies those that failed due to
+    an EmulatorException. Instead of marking the test as failed, it marks
+    it as skipped and adds information about the infrastructure error.
+
+    We intercept fixtures during the setup phase and tests themselves.
+
+    Args:
+        item: The pytest test item.
+        call: The pytest call object.
+
+    Returns:
+        A modified TestReport object if the test failed due to an
+        EmulatorException, otherwise None.
+    """
+    if (call.when == "call" or call.when == "setup") and call.excinfo:
+        logging.warning("Here we are! %s", call.excinfo.type)
+        if issubclass(call.excinfo.type, EmulatorException):
+            # Modify the report to mark the test as skipped
+            report = TestReport.from_item_and_call(
+                item, call
+            )  # Properly create a TestReport
+
+            last_traceback_entry = call.excinfo.traceback[-1]
+            # Extract filename and line number (add 1 to lineno)
+            filename = Path(last_traceback_entry.path).name
+            line_number = last_traceback_entry.lineno + 1
+
+            report = TestReport.from_item_and_call(item, call)
+            report.outcome = "skipped"
+            report.longrepr = (
+                f"{filename}:{line_number}",
+                "Infrastructure Error",
+                f"{call.excinfo.value}",
+            )
+            report.sections.append(
+                ("infrastructure-error", "Skipped due to Emulator Exception")
+            )
+            item.user_properties.append(("infrastructure-error", True))
+            return report
+
+
 def pytest_runtest_setup(item: pytest.Item) -> None:
     """
     Check whether the test is supported on the platform, handle
@@ -241,6 +298,31 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
         )
 
 
+def prefetch_system_images(pytestconfig):
+    """Prefetches system images based on avd configurations.
+
+    This function is intended to be used as a setup fixture for pytest.
+    It retrieves the android sdk root and avd configurations from the pytest
+    command line options, and then installs the necessary system images
+    using the SystemImages class.
+
+    This will always update and pull the latest public system images!
+
+    Args:
+        pytestconfig: The pytest configuration object.
+    """
+    if pytestconfig.getoption("fetcher"):
+        si = FetcherSystemImages(pytestconfig.getoption("fetcher"))
+    else:
+        si = SystemImages(pytestconfig.getoption("android_home"))
+    for cfg in json.loads(pytestconfig.getoption("avd_configs")):
+        abi = cfg.get("abi", DEFAULT_AVD_CONFIG["abi"])
+        api = cfg.get("api", DEFAULT_AVD_CONFIG["api"])
+        tag = cfg.get("tag.id", DEFAULT_AVD_CONFIG["tag.id"])
+        logging.info("Obtaining or updating api:%s, tag:%s, abi:%s", api, tag, abi)
+        si.install(api, abi, tag)
+
+
 # Workaround for
 # https://docs.pytest.org/en/latest/deprecations.html#pytest-namespace
 def pytest_configure(config):
@@ -252,6 +334,7 @@ def pytest_configure(config):
 
     # Registers all the markers
     register_markers(config)
+    prefetch_system_images(config)
 
     os_map = {
         "Windows": "win",
@@ -431,6 +514,29 @@ def modifyitems_for_sharding(session, config, items):
     items[:] = slow_items[group::max_groups] + normal_items[group::max_groups]
 
 
+def filter_test_infra(session, config, items):
+    """Filter out infrastructure tests unless explicitly requested.
+
+    This hook modifies the collected test items to exclude tests marked with
+    `@pytest.mark.test_infra` unless the `-m test_infra` option is provided
+    when running pytest.
+
+    Rationale:
+
+    Infrastructure tests validate the test infrastructure itself (fixtures, etc.)
+    and can conflict with environment tests that expect specific things to be
+    installed (e.g., mss, pyscreeze). Running both types of tests together
+    might lead to unexpected behavior or failures.
+
+    Args:
+        session: The pytest session object.
+        config: The pytest config object.
+        items: List of collected test items.
+    """
+    if "test_infra" not in config.getoption("-m", default="").split():
+        items[:] = [item for item in items if "test_infra" not in item.keywords]
+
+
 def modifyitems_for_retry(session, config, items):
     """
     Modify test items to enable retries for specific exceptions.
@@ -469,6 +575,7 @@ def modifyitems_for_retry(session, config, items):
 
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(session, config, items):
+    filter_test_infra(session, config, items)
     modifyitems_for_retry(session, config, items)
     modifyitems_for_sharding(session, config, items)
 

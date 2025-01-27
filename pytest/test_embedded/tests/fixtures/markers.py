@@ -50,6 +50,7 @@ def register_markers(config):
         "standard: Tests independent of an emulator",
         "std: Standard test that does not need an emulator",
         "tablet: Runs on a tablet image",
+        "test_infra: Test infrastructure (fixtures, helper functions, etc) test"
         "uiautomator: Performs UI actions",
         "wear: Runs on Wear OS",
         "wifi_perf: WiFi performance test",

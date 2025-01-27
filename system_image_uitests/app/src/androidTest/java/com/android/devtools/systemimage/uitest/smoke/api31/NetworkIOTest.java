@@ -78,8 +78,8 @@ public class NetworkIOTest {
      *   </pre>
      */
     @Test
-    @TestInfo(id = "14578825")
     @ScreenRecord
+    @TestInfo(id = "14578825")
     public void testBrowserLoadsSite() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();
         UiDevice device = testFramework.getDevice();
@@ -103,7 +103,7 @@ public class NetworkIOTest {
                 // If this is the first launch, dismiss the "Welcome to Chrome" screen.
                 UiObject acceptButton = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-                if (acceptButton.exists()) {
+                if (acceptButton.waitForExists(TimeUnit.SECONDS.toMillis(10))) {
                     acceptButton.clickAndWaitForNewWindow();
                 }
 

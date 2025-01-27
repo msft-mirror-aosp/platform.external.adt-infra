@@ -214,7 +214,7 @@ async def test_stream_clipboard_sends_updated_data_to_other_channel_only_once(av
 
 @pytest.mark.embedded
 async def test_stream_clipboard_from_android_immediately_sends_data(
-    avd, emulator_controller
+    avd, emulator_controller, animation_app
 ):
     """Verify that the internal clipboard status that is changed within android is sent."""
     clipboard_data = "ola"

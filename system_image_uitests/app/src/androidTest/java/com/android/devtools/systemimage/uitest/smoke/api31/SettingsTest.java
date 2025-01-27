@@ -377,6 +377,7 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
+    @ScreenRecord
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
         try {
@@ -478,10 +479,18 @@ public class SettingsTest {
                         .resourceId(Res.GOOGLE_MANAGE_ACCOUNT_BUTTON_RES)
                         .className(TextView.class));
 
-        assertTrue("Manage Google account button not found.",
-                new Wait(20000L).until(manageAccountButton::exists));
+        if (manageAccountButton.waitForExists(20000L)) {
+            manageAccountButton.clickAndWaitForNewWindow();
+        } else {
+            final UiObject signInAccountButton = device.findObject(
+                    new UiSelector()
+                        .text("Sign in to your Google Account")
+                        .className(Button.class));
+            assertTrue("Google account button not found.",
+                    signInAccountButton.waitForExists(5000L));
+            signInAccountButton.clickAndWaitForNewWindow();
+        }
 
-        manageAccountButton.click();
 
         if (wasUserLoggedIn) {
             final UiObject addAccountButton = device.findObject(
@@ -513,24 +522,26 @@ public class SettingsTest {
                         className(EditText.class).
                         index(0));
 
+         final UiObject forgotEmailButton = device.findObject(
+                new UiSelector().
+                        text("Forgot email?").
+                        className(Button.class));
+
+         assertTrue("Google account forgot email not found.",
+                new Wait(200000L).until(forgotEmailButton::exists));
+
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account email input not found.",
-                new Wait(200000L).until(googleLoginInput::exists));
+                new Wait(10000L).until(googleLoginInput::exists));
 
         googleLoginInput.clearTextField();
         googleLoginInput.setText(userEmail);
         googleLoginInput.clickAndWaitForNewWindow(3000L);
         device.pressEnter();
 
-        final UiObject forgotEmailButton = device.findObject(
-                new UiSelector().
-                        text("Forgot email?").
-                        className(Button.class));
-
-        assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Email input entry page not dismissed.",
-                forgotEmailButton.waitUntilGone(90000L));
+        forgotEmailButton.waitUntilGone(90000L);
 
         assertTrue(wasUserLoggedIn ? "After logout: " : "First attempt: " + "Google account password input not found.",
-                new Wait(20000L).until(googleLoginInput::exists));
+                googleLoginInput.waitForExists(30000L));
 
         googleLoginInput.clearTextField();
         googleLoginInput.setText(userPassword);

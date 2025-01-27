@@ -141,14 +141,15 @@ Note: You might have to run `source .venv/bin/activate` after this.
 
 2. **Running Specific Tests:** If you want to run a specific subset of tests with an already active emulator, follow these instructions:
 
-    - Ensure that you have launched the emulator with an Android Virtual Device (AVD) configuration that you intend to use for the tests.
+    * Ensure that you have launched the emulator with an Android Virtual Device (AVD) configuration that you intend to use for the tests.
 
-    - Employ the following command to execute a particular test by specifying its name:
+    * Employ the following command to execute a particular test by specifying its name:
+
 ```bash
 pytest --debug_emulator -k "name_of_the_test"
 ```
 
-    Replace `name_of_the_test` with the actual name of the test you wish to run. For printing out a list of available tests, run `pytest --co`.
+  Replace `name_of_the_test` with the actual name of the test you wish to run. For printing out a list of available tests, run `pytest --co`.
 
 ### Running tests from Visual Studio Code
 
@@ -178,11 +179,11 @@ the ability to restart running emulators.
 By default the test runner scripts are using the AOSP Python interpreter, which comes with some limitations, such as the absence of symbols and TLS support. The most troublesome limitation is that you will not be able to install additional packages, or use packages that rely on public symbols, such as [py-spy](https://github.com/benfred/py-spy). To work around this
 you can install your own matching interpreter:
 
-- Install [PyEnv](https://github.com/pyenv/pyenv) (`brew install pyenv`).
-- Install Python 3.10.6 (`pyenv install 3.10.6`)
-- Create a new virtual environment (`python -m venv .venv`)
-- Activate the virtual environment (`source .venv/bin/activate`)
-- Run run_tests.sh with the `--no-aosp` flag and the path to the emulator binary
+* Install [PyEnv](https://github.com/pyenv/pyenv) (`brew install pyenv`).
+* Install Python 3.10.6 (`pyenv install 3.10.6`)
+* Create a new virtual environment (`python -m venv .venv`)
+* Activate the virtual environment (`source .venv/bin/activate`)
+* Run run_tests.sh with the `--no-aosp` flag and the path to the emulator binary
 
 For example:
 
@@ -196,6 +197,7 @@ Now you can use your own python tools to inspect issues.
 
 If you wish to run a test from a suite you will have to pass in the right parameters. You can find the exact details in the [cfg/emulator_tests.json](cfg/emulator_tests.json) file. For example to run the landscape test suite from the command line can run:
 
+```sh
       pytest -m graphics and not multidisplay \
            --emulator=~/src/emu/external/qemu/objs/emulator \
            --avd_configs '[{
@@ -208,15 +210,15 @@ If you wish to run a test from a suite you will have to pass in the right parame
             "skin.name": "1280x720"
           }]'  \
           --emulator_launch_flags '["-no-snapshot]'
-
+```
 ## Obtaining new packages with devpi
 
 The virtual environment is using the python interpreter in AOSP. This interpreter does not support TLS, and hence you will not be able to install external packages. To work around this you can run a local devpi server using a python interpreter that does support tls.
 
 Devpi can be run by running a devpi server that is found here: [../../devpi/](../../devpi).
 
-- Change to the `../../devpi` directory.
-- Run the `./launch_devpi.sh` script.
+* Change to the `../../devpi` directory.
+* Run the `./launch_devpi.sh` script.
 
 ie:
 
@@ -266,14 +268,14 @@ Make sure to start every test that you want to run with the `test_` prefix, othe
 
 Pytest encourages you to use [test fixtures](https://docs.pytest.org/en/6.2.x/fixture.html). We have a set of test fixtures defined in [tests/fixtures](tests/fixtures) directory that can be used to interact with the emulator. Here is a short list of fixtures:
 
-- avd: Gives access to the emulator running the default avd.
-- telnet: Gives access to the telnet console of the current emulator.
-- adb: Function that invokes the adb executable with the given parameters.
-- emulator_log: Access to the emulator logs.
-- animation_app: Activates the animation app that displays a rotating triangle.
-- emulator_controller: A grpc stub to the emulator controller.
-- mbs: The set of standard mobly bundled snippets. See [mbs](https://android.googlesource.com/platform/external/mobly-bundled-snippets/+/refs/heads/main) for more information.
-- emulator_qt_settings: Access to the emulator qt UI configuration.
+* avd: Gives access to the emulator running the default avd.
+* telnet: Gives access to the telnet console of the current emulator.
+* adb: Function that invokes the adb executable with the given parameters.
+* emulator_log: Access to the emulator logs.
+* animation_app: Activates the animation app that displays a rotating triangle.
+* emulator_controller: A grpc stub to the emulator controller.
+* mbs: The set of standard mobly bundled snippets. See [mbs](https://android.googlesource.com/platform/external/mobly-bundled-snippets/+/refs/heads/main) for more information.
+* emulator_qt_settings: Access to the emulator qt UI configuration.
 
 Test fixtures should be decorated with a `@pytest.mark.async_timeout(xx)` marker to indicate how much time they get for configuration and teardown. For example:
 
@@ -299,35 +301,36 @@ Pytest allows you to define [markers](https://docs.pytest.org/en/7.1.x/example/m
 We have the following set of markers that can be used to annotate the various
 tests.
 
-- adb: marks test as adb test.
-- atv: marks tests that should run on Android TV.
-- boot: marks tests as boot test, these tests validate that something hold just after booting. (deselect with '-m "not boot"')
-- console: mark tests related to the emulator console
-- darwin: marks test as darwin only, will only run if you are on darwin.
-- e2e: marks test as end to end (deselect with '-m "not e2e"')
-- embedded: marks test as embedded only, will run on an embedded emulator.
-- foldable: marks test that operates on a foldable emulator
-- newfoldable: marks test that operates on a new foldable emulator api since 34
-- graphics: marks tests related to graphics operations
-- hardware: marks test as a low-level hardware test
-- linux: marks test as linux only, will only run if you are on linux.
-- hostperf: marks test as a host side performance test (deselect with '-m "not hostperf"')
-- guestperf: marks test as a guest side performance test
-- resizable: marks test that should run on a resizable emulator
-- newresizable: marks test that should run on a new resizable emulator api since 34
-- slow: marks tests as slow (deselect with '-m "not slow"')
-- snapshot: marks tests related to snapshot operations
-- multidisplay: mark tests related to multidisplay
-- win32: marks test as windows only, will only run on a windows machine.
-- sanity: set of emulator sanity tests
-- fast: set of emulator fast suite tests
-- xpass: chrome tests
-- netsim: Netsim emulator tests
-- oldapiboot: marks tests that should run on old api
-- wear: marks tests that should run on wear OS
-- tablet: marks tests taht should run on a tablet image
-- embedded_newresizable: marks test that should run on a new resizable embedded emulator api since 34
-- uiautomator: marks tests that perform UI actions
+* adb: marks test as adb test.
+* atv: marks tests that should run on Android TV.
+* boot: marks tests as boot test, these tests validate that something hold just after booting. (deselect with '-m "not boot"')
+* console: mark tests related to the emulator console
+* darwin: marks test as darwin only, will only run if you are on darwin.
+* e2e: marks test as end to end (deselect with '-m "not e2e"')
+* embedded: marks test as embedded only, will run on an embedded emulator.
+* foldable: marks test that operates on a foldable emulator
+* newfoldable: marks test that operates on a new foldable emulator api since 34
+* graphics: marks tests related to graphics operations
+* hardware: marks test as a low-level hardware test
+* linux: marks test as linux only, will only run if you are on linux.
+* hostperf: marks test as a host side performance test (deselect with '-m "not hostperf"')
+* guestperf: marks test as a guest side performance test
+* resizable: marks test that should run on a resizable emulator
+* newresizable: marks test that should run on a new resizable emulator api since 34
+* slow: marks tests as slow (deselect with '-m "not slow"')
+* snapshot: marks tests related to snapshot operations
+* test_infra: Test infrastructure (fixtures, helper functions, etc) test
+* multidisplay: mark tests related to multidisplay
+* win32: marks test as windows only, will only run on a windows machine.
+* sanity: set of emulator sanity tests
+* fast: set of emulator fast suite tests
+* xpass: chrome tests
+* netsim: Netsim emulator tests
+* oldapiboot: marks tests that should run on old api
+* wear: marks tests that should run on wear OS
+* tablet: marks tests taht should run on a tablet image
+* embedded_newresizable: marks test that should run on a new resizable embedded emulator api since 34
+* uiautomator: marks tests that perform UI actions
 
 For example the test below will only run on linux:
 
@@ -369,9 +372,9 @@ The emulator E2E tests use cooperative multitasking where possible. Cooperative 
 
 Imagine you're a barista at a coffee shop with several customers waiting for orders:
 
-- **Blocking Approach:** You make each drink from start to finish before moving on to the next customer. If someone orders a complex drink, everyone else in line waits. Standard functions like `time.sleep(5)` pause the entire program, like getting stuck on a long phone call while other tasks pile up.
+* **Blocking Approach:** You make each drink from start to finish before moving on to the next customer. If someone orders a complex drink, everyone else in line waits. Standard functions like `time.sleep(5)` pause the entire program, like getting stuck on a long phone call while other tasks pile up.
 
-- **Cooperative Multitasking:** You start each drink, and while one is brewing, you switch to making another. You quickly handle multiple customers at once, making the best use of your time. Keywords like `asyncio` and `await` let you write code that cooperates. `await asyncio.sleep(5)` tells Python, "Pause this task for 5 seconds, but feel free to work on something else if it's available."
+* **Cooperative Multitasking:** You start each drink, and while one is brewing, you switch to making another. You quickly handle multiple customers at once, making the best use of your time. Keywords like `asyncio` and `await` let you write code that cooperates. `await asyncio.sleep(5)` tells Python, "Pause this task for 5 seconds, but feel free to work on something else if it's available."
 
 Example:
 
@@ -398,28 +401,45 @@ Explanation:
 
 #### Benefits
 
-- **Responsiveness:** Programs stay snappy even when tasks take time.
-- **Efficiency:** Better resource utilization by not idling.
-- **Timeout Control:** Easier to stop tasks that take too long.
-- **Better (sub)process control:**  `asyncio` is well-suited to read `stderr` and `stdout` of a process concurrently and non-blockingly, preventing your program from freezing while waiting for data.
+* **Responsiveness:** Programs stay snappy even when tasks take time.
+* **Efficiency:** Better resource utilization by not idling.
+* **Timeout Control:** Easier to stop tasks that take too long.
+* **Better (sub)process control:**  `asyncio` is well-suited to read `stderr` and `stdout` of a process concurrently and non-blockingly, preventing your program from freezing while waiting for data.
 
 #### Why It Matters for Emulator Testing
 
-- **Concurrent Actions:** While your app installs (`adb install`), you can already set up the emulator's state (e.g., GPS location via gRPC calls), saving time.
-- **Network Calls Without Freezing:**  `await` ensures your test script doesn't freeze while waiting for gRPC responses from the emulator. Networks calls immediately detect disappearing (crashed) emulators v.s. blocking for indeterminate time.
-- **Responsive User Simulation:** Simulating user input (touch, swipe) can involve delays. Cooperative multitasking handles these delays gracefully without blocking the entire test flow.
-- **Timeouts to Prevent Stalled Tests:**  Use `asyncio.wait_for` to set timeouts; if a task exceeds the limit (e.g., an APK installation taking too long, telnet console is stuck), your test can fail gracefully instead of hanging.
+* **Concurrent Actions:** While your app installs (`adb install`), you can already set up the emulator's state (e.g., GPS location via gRPC calls), saving time.
+* **Network Calls Without Freezing:**  `await` ensures your test script doesn't freeze while waiting for gRPC responses from the emulator. Networks calls immediately detect disappearing (crashed) emulators v.s. blocking for indeterminate time.
+* **Responsive User Simulation:** Simulating user input (touch, swipe) can involve delays. Cooperative multitasking handles these delays gracefully without blocking the entire test flow.
+* **Timeouts to Prevent Stalled Tests:**  Use `asyncio.wait_for` to set timeouts; if a task exceeds the limit (e.g., an APK installation taking too long, telnet console is stuck), your test can fail gracefully instead of hanging.
 
 #### Resources
 
-- **async-io-in-python** ([https://realpython.com/async-io-python/](https://realpython.com/async-io-python/))
-- **Python asyncio Guide** ([https://superfastpython.com/python-asyncio/](https://superfastpython.com/python-asyncio/))
+* **async-io-in-python** ([https://realpython.com/async-io-python/](https://realpython.com/async-io-python/))
+* **Python asyncio Guide** ([https://superfastpython.com/python-asyncio/](https://superfastpython.com/python-asyncio/))
 
 ### Using mobly
 
 The test framework includes (limited) support for mobly. Mobly gradle dependencies require JDK 11. Basically you can write your own mobly snippets to make it easier to write end to end tests that interact with the device. The AnimationApp contains a sample of how to write a client side [snippet](AnimateBox/app/src/main/java/com/google/emu/snippets/ExampleSnippet.kt) that can be used from within a [test](tests/mobly//test_mobly_snippet.py).
 
 To learn how to write your own mobly extensions to create more comprehensive tests look [here](https://github.com/google/mobly-snippet-lib).
+
+### Using test dependencies
+
+In software testing, the concept of test dependencies plays a crucial role, especially when dealing with complex systems like emulators. Ideally, tests should be self-contained and independent, each focusing on a single aspect of the software. This isolation ensures that tests can run in any order without affecting each other.
+
+However, emulators often require specific states before a test can begin, which can be time-consuming and prone to errors. Consider this scenario:
+
+* Step 1: Bring up the shutdown menu by pressing volume up and down.
+* Step 2: Click the power menu button on the screen.
+
+This seemingly simple action involves two distinct test phases. By using the pytest dependency framework, we can separate these steps, allowing us to track flakiness numbers for each phase independently. This granular approach helps pinpoint the source of any test failures more accurately.
+
+Things to be aware of:
+
+* Dependencies should only be in a single module.
+* Dependencies should be run in order.
+* Dependencies DO NOT reset the state of the AVD. The emulator is not guaranteed to be upright, on the home screen, and awake.
 
 ## Known Issuess
 
@@ -429,7 +449,7 @@ Here's a list of known issues and workarounds. Most of these are related to Mac 
 
 If you are using an architecture that is not supported you might find that
 packages are missing. You must check in these packages in our local (on disk)
-repository. See [README. MD](../../devpi/README. MD) for details on how to do this.
+repository. See [README. MD](../../devpi/README.MD) for details on how to do this.
 
 ## Import errors
 
@@ -467,8 +487,10 @@ is to install a java 8 runtime using [sdkman](https://sdkman.io/)
 
 For example:
 
+```sh
     curl -s "https://get.sdkman.io" | bash
     sdk install java 8.332.08.1-amzn
     sdk use java 8.332.08.1-amzn
+```
 
 This should set your default Java version to 8, after which you should be able to run the tests.

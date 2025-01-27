@@ -25,6 +25,7 @@ from emu.emulator_exceptions import (
     EmulatorFailedToBootException,
     FailedToInstallApkException,
 )
+from emu.apk import APP_DEBUG_APK
 
 
 async def launch_animation_app(avd: BaseEmulator):
@@ -96,7 +97,33 @@ async def wait_for_animation_app_launch(avd: BaseEmulator, timeout: int = 30):
 
 @pytest.fixture
 @pytest.mark.async_timeout(90)
-async def animation_app(avd: BaseEmulator):
+async def install_animation_apk(avd: BaseEmulator):
+    """Installs the animation APK on the emulator.
+
+    Retries installation up to 3 times in case of transient failures.
+    """
+    assert avd.is_alive()
+
+    for attempt in range(3):
+        installed = await avd.install_apk(
+            APP_DEBUG_APK.absolute(), "com.google.AnimateBox"
+        )
+        if installed:
+            return
+
+        logging.warning(
+            f"Failed to install animation APK (attempt {attempt + 1}/3). Retrying..."
+        )
+        await asyncio.sleep(1)  # Wait a bit before retrying
+
+    raise FailedToInstallApkException(
+        "The animation app failed to install after multiple retries."
+    )
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(90)
+async def animation_app(install_animation_apk, avd: BaseEmulator):
     """Launch the animation app that displays a rotating triangle.
 
     This fixture launches an application that displays a rotating

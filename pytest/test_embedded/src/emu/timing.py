@@ -14,9 +14,79 @@
 import asyncio
 import logging
 import time
-from typing import Any, AsyncIterator, Awaitable, Callable, TypeVar
+from typing import (
+    Any,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    TypeVar,
+    Coroutine,
+    Type,
+    Union,
+)
 
 T = TypeVar("T")
+
+
+async def retry(
+    operation: Callable[..., Coroutine[Any, Any, T]],
+    attempts: int,
+    delay: float = 1,
+    name: str = "",
+    retry_on_exception: Union[Type[Exception], tuple[Type[Exception], ...]] = Exception,
+    retry_on_falsy: bool = True,
+) -> T:
+    """Retries an asynchronous operation a specified number of times.
+
+    Args:
+        operation: The asynchronous operation to retry.
+        attempts: The maximum number of attempts to make.
+        delay: The delay in seconds between attempts.
+        name: An optional name to identify the operation in log messages.
+        retry_on_exception: The exception type(s) to catch and retry on. Defaults to `Exception` (all exceptions).
+        retry_on_falsy: Whether to retry if the operation returns a falsy value (e.g., None, False, 0, "").
+                         Defaults to True.
+
+    Returns:
+        The result of the operation if successful.
+
+    Raises:
+        Exception: If all attempts fail, the exception from the last attempt is raised.
+    """
+    last_exception = None
+    for attempt in range(attempts):
+        try:
+            result = await operation()
+            if result or not retry_on_falsy:
+                return result
+            else:
+                logging.warning(
+                    "%s attempt %s/%s returned a falsy value: %s, retrying...",
+                    name,
+                    attempt + 1,
+                    attempts,
+                    result,
+                )
+        except retry_on_exception as e:
+            last_exception = e
+            logging.warning(
+                "%s attempt %s/%s raised an exception: %s, retrying...",
+                name,
+                attempt + 1,
+                attempts,
+                e,
+            )
+
+        if attempt < attempts - 1:
+            await asyncio.sleep(delay)
+
+    error_message = "%s failed after %s attempts." % (name, attempts)
+    if last_exception:
+        error_message += " Last exception: %s" % last_exception
+    logging.error(error_message)
+    if last_exception:
+        raise last_exception
+    raise RuntimeError(error_message)
 
 
 async def _true() -> bool:
