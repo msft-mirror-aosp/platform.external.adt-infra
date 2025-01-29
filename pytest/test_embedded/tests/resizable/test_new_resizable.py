@@ -93,10 +93,8 @@ async def set_display_mode(emulator_controller, mode, timeout=5):
         (1920, 1200, DisplayModeValue.TABLET),
     ],
 )
-@pytest.mark.flaky(reruns=0)
-@pytest.mark.sanity
 @pytest.mark.embedded_newresizable
-async def test_new_resizable_changes_resolution(
+async def test_new_resizable_changes_resolution_sanity(
     supported_resizable_resolutions,
     avd,
     animation_app,
