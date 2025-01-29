@@ -334,7 +334,9 @@ def pytest_configure(config):
 
     # Registers all the markers
     register_markers(config)
-    prefetch_system_images(config)
+    # Skip the prefetch if the tests are not actually being run.
+    if not config.getoption("--setup-plan"):
+        prefetch_system_images(config)
 
     os_map = {
         "Windows": "win",
