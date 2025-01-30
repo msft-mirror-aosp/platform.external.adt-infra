@@ -573,6 +573,11 @@ def parse_arguments():
         "for fetching system images.",
     )
 
+    parser.add_argument(
+        "--system_image_path",
+        help="Optional path to use for the system image for all tests.",
+    )
+
     args = parser.parse_args()
     log_level = logging.DEBUG if args.verbose else logging.INFO
     if args.log_level:
@@ -656,7 +661,8 @@ def main(args):
     py_exe = create_pyrunner(
         args.local_python, args.virtual_env_dir, logging.getLogger().getEffectiveLevel()
     )
-    tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite)
+    tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite,
+                                                args.system_image_path)
 
     logging.info("Scheduling %d suites", len(tests_to_run))
     if args.build_dir:

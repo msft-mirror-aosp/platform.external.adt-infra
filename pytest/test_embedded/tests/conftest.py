@@ -316,6 +316,8 @@ def prefetch_system_images(pytestconfig):
     else:
         si = SystemImages(pytestconfig.getoption("android_home"))
     for cfg in json.loads(pytestconfig.getoption("avd_configs")):
+        if "image.sysdir.1" in cfg:
+            continue
         abi = cfg.get("abi", DEFAULT_AVD_CONFIG["abi"])
         api = cfg.get("api", DEFAULT_AVD_CONFIG["api"])
         tag = cfg.get("tag.id", DEFAULT_AVD_CONFIG["tag.id"])
