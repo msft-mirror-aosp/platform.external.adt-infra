@@ -88,10 +88,10 @@ public class NetworkIOTest {
                 UiObject internetTile = device.findObject(new UiSelector().resourceId(
                         Res.NOTIFICATIONS_TILE_LABEL).text("Internet"));
                 assertTrue("Could not connect to the network.",
-                        new Wait(TimeUnit.SECONDS.toMillis(30)).until(internetTile::exists));
+                        new Wait().until(internetTile::exists));
                 internetTile.click();
                 UiObject connectWifiSummary = device.findObject(new UiSelector().resourceId(
-                        Res.ANDROID_WIFI_SUMMARY_RES).text("Connected"));
+                        Res.ANDROID_WIFI_SUMMARY_RES).textContains("Connected"));
                 assertTrue("Could not find connected label.",
                         new Wait(TimeUnit.SECONDS.toMillis(30)).until(connectWifiSummary::exists));
 
@@ -107,31 +107,30 @@ public class NetworkIOTest {
                 // If this is the first launch, dismiss the "Welcome to Chrome" screen.
                 UiObject acceptButton = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_TERMS_ACCEPT_BUTTON_RES));
-                if (acceptButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+                if (acceptButton.waitForExists(TimeUnit.SECONDS.toMillis(10))) {
                     acceptButton.clickAndWaitForNewWindow();
                 }
 
-                // Dismiss the "Sign in to Chrome" screen if it's there.
-                UiObject noThanksButton = device.findObject(new UiSelector().resourceIdMatches(
-                        Res.CHROME_NO_THANKS_BUTTON_RES));
-                if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
-                    noThanksButton.clickAndWaitForNewWindow();
-
-                    if (noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
-                        noThanksButton.clickAndWaitForNewWindow();
+                // Dismiss Chrome Sign-in screen and pop up dialogs.
+                UiObject noThanksButton;
+                while (true) {
+                    noThanksButton = device.findObject(new UiSelector().resourceIdMatches(Res.CHROME_NO_THANKS_BUTTON_RES));
+                    if (!noThanksButton.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+                        break;
                     }
+                    noThanksButton.clickAndWaitForNewWindow();
                 }
 
                 UiObject searchBox = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_SEARCH_BOX_RES));
-                if (searchBox.waitForExists(TimeUnit.SECONDS.toMillis(5))) {
+                if (searchBox.exists()) {
                     searchBox.clickAndWaitForNewWindow();
                 }
 
                 final UiObject textField = device.findObject(new UiSelector().resourceId(
                         Res.CHROME_URL_BAR_RES));
                 Assert.assertTrue("Chrome URL bar not found",
-                        new Wait(TimeUnit.SECONDS.toMillis(5)).until(textField::exists));
+                        new Wait().until(textField::exists));
 
                 textField.click();
                 textField.clearTextField();
@@ -143,9 +142,8 @@ public class NetworkIOTest {
                 final UiObject progress =
                         device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
                 boolean isSuccess =
-                        new Wait(TimeUnit.SECONDS.toMillis(5)).until(() -> !progress.exists());
+                        new Wait().until(() -> !progress.exists());
                 assertTrue("Failed to dismiss the loading bar.", isSuccess);
-                device.pressBack();
             }
         }
     }

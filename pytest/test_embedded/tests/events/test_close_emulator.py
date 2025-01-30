@@ -133,6 +133,7 @@ async def test_close_emulator_with_console_kill(telnet, emulator_is_off):
     ), "The emulator was not shut down after the kill command was send over the telnet console"
 
 
+@pytest.mark.skipos("win", "reason: b/392949854 killing pytest")
 @pytest.mark.sanity
 @pytest.mark.async_timeout(60)
 async def test_close_emulator_with_ctrl_c(avd, emulator_is_off):
