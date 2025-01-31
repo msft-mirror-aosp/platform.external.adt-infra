@@ -46,3 +46,9 @@ def never_upload_crashes(emulator_qt_settings):
 def do_not_display_nested_vm_warning(emulator_qt_settings):
     emulator_qt_settings[UISettings.SHOW_NESTED_WARNING] = "false"
     emulator_qt_settings.sync()
+
+
+@pytest.fixture
+def do_not_display_virtualscene_info(emulator_qt_settings):
+    emulator_qt_settings[UISettings.SHOW_VIRTUALSCENE_INFO] = "false"
+    emulator_qt_settings.sync()
