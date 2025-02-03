@@ -278,6 +278,7 @@ def run_single_suite(
                 f"--build_target={build_target}",
                 f"--android_home={android_home}",
                 f"--grpc_services={grpc_services}",
+                "--record_screen",
             ]
             + pytest_flags,
             cwd=HERE,

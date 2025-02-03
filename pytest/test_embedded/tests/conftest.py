@@ -126,6 +126,11 @@ def pytest_addoption(parser):
         help="The path to the SDK installation directory. This should contain system-images and adb.",
     )
     parser.addoption(
+        "--record_screen",
+        action="store_true",
+        help="Attempt to record the screen while running tests.",
+    )
+    parser.addoption(
         "--debug_emulator",
         action="store_true",
         help="Connect to the first available emulator for debugging. "
