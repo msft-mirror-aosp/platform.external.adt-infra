@@ -10,6 +10,8 @@ import pytest
 import requests
 
 from emu.process.command import Command
+from emu.application import AnimationApplication
+from emu.emulator_exceptions import EmulatorNotFoundException, EmulatorFailedToDownload
 from emu.timing import eventually
 from tests.test_utils import check_boot_from_snapshot
 
@@ -46,15 +48,17 @@ async def download_file(save_to_path, url):
         logging.info("file %s exists, skip downloading", save_to_path)
         return
     logging.info("downloading file %s ...", save_to_path)
-    cmd = Command(["curl", "-o", save_to_path, url])
-    cmd.run_until_finished(timeout=500)
-    return
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
 
-    if True:
-        r = requests.get(url, stream=True)
-        with open(save_to_path) as fd:
-            for chunk in r.iter_content(chunk_size=4096):
-                fd.write(chunk)
+        with open(save_to_path, "wb") as fd:
+            for chunk in response.iter_content(chunk_size=4096):
+                if chunk:
+                    fd.write(chunk)
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Download failed: %s", e)
+        raise EmulatorFailedToDownload(e)
 
 
 def extract_file(zf, info, extract_dir):
@@ -73,45 +77,59 @@ def unzip_file(path_to_zip_file):
             extract_file(zf, info, directory_to_extract_to)
 
 
-def check_emulator_binaries(path_to_emulator_dir) -> bool:
+def check_emulator_binaries(path_to_emulator_dir: Path) -> bool:
     """check emulator, qemu-system etc exists"""
 
     myemuexe = "emulator"
     if platform.system() == "Windows":
         myemuexe += ".exe"
-    return os.path.exists(Path(path_to_emulator_dir, myemuexe))
+    return (path_to_emulator_dir / myemuexe).exists()
 
 
-async def download_emulator_zip(build_id):
-    """Download an emulator zip with given build id"""
-    mysdkpath = os.environ["ANDROID_SDK_ROOT"]
-    logging.info("sdk root %s", mysdkpath)
-    mydownloaded_emulator_path = Path(mysdkpath, "emulators").absolute()
-    logging.info("sdk emulator %s", mydownloaded_emulator_path)
-    if check_emulator_binaries(
-        Path(mydownloaded_emulator_path, f"{build_id}", "emulator")
-    ):
-        return Path(
-            mydownloaded_emulator_path, f"{build_id}", "emulator", "emulator"
-        ).absolute()
-    remote_long_path_name = get_repository_url() + "/" + get_emulator_filename(build_id)
-    local_long_path_name = Path(
-        mydownloaded_emulator_path, f"{build_id}", get_emulator_filename(build_id)
-    )
-    Path(mydownloaded_emulator_path, f"{build_id}").mkdir(parents=True, exist_ok=True)
-    logging.info("now download %s from %s", local_long_path_name, remote_long_path_name)
-    await download_file(local_long_path_name, remote_long_path_name)
-    assert os.path.exists(local_long_path_name)
-    if not check_emulator_binaries(
-        Path(mydownloaded_emulator_path, f"{build_id}", "emulator")
-    ):
-        unzip_file(local_long_path_name)
-    assert check_emulator_binaries(
-        Path(mydownloaded_emulator_path, f"{build_id}", "emulator")
-    )
-    return Path(
-        mydownloaded_emulator_path, f"{build_id}", "emulator", "emulator"
-    ).absolute()
+async def download_emulator_zip(build_id: str) -> Path:
+    """Downloads and extracts an emulator zip for the given build ID.
+
+    If the emulator is already present in the Android SDK, it returns the path
+    to the emulator binary. Otherwise, it downloads the zip file from the
+    official repository, extracts it, and returns the path to the binary.
+
+    Args:
+        build_id: The build ID of the emulator to download.
+
+    Returns:
+        The path to the emulator executable.
+
+    Raises:
+        EmulatorNotFoundException: If the emulator cannot be downloaded or extracted.
+        EmulatorFailedToDownload: If the emulator download fails.
+    """
+    sdk_path = Path(os.environ["ANDROID_SDK_ROOT"])
+    emulator_dir = sdk_path / "emulators" / build_id / "emulator"
+    emulator_exe = emulator_dir / "emulator"
+
+    if check_emulator_binaries(emulator_dir):
+        return emulator_exe.absolute()
+
+    zip_filename = get_emulator_filename(build_id)
+    remote_url = get_repository_url() + "/" + zip_filename
+    local_zip_path = emulator_dir.parent / zip_filename
+
+    emulator_dir.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        await download_file(local_zip_path, remote_url)
+    except EmulatorFailedToDownload as e:
+        raise  # Re-raise the download exception
+
+    if not local_zip_path.exists():
+        raise EmulatorNotFoundException(f"Failed to download {remote_url}")
+
+    unzip_file(local_zip_path)
+
+    if not check_emulator_binaries(emulator_dir):
+        raise EmulatorNotFoundException("Emulator binary not found after extraction.")
+
+    return emulator_exe.absolute()
 
 
 @pytest.mark.snapshot
@@ -124,11 +142,6 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
     First, use old emulator to create a snapshot
     Second, load it with current emulator, make sure snapshot load is successful
     """
-    if "gfxstream" not in pytestconfig.getoption("build_target"):
-        pytest.skip(
-            f"Not running this test on non-gfxstream build {pytestconfig.getoption('build_target')}"
-        )
-
     await emulator.stop()
     assert not emulator.is_alive()
 
@@ -147,16 +160,14 @@ async def test_can_load_oldsnapshot(emulator, pytestconfig):
     # 99 percentile boots in less than 2 minutes.
     # go/stats/#report_id=Emulator%2FBootTime%2F7-day%20BootTime
     assert await emulator.wait_for_boot(timeout=120)
-    # there is no reliable way to detect it has reach home screen
-    # so just wait enough long
-    await asyncio.sleep(10)
-    # windows need extra time  :(
-    if platform.system() == "Windows":
-        await asyncio.sleep(20)
+
+    apk = AnimationApplication(emulator)
+    await apk.install()
+    await apk.start()
     await emulator.stop()
-    # there is no reliable way to detect it has done saving
-    # so just wait enough long
-    await asyncio.sleep(10)
+
+    # Now we wait until the emulator has stopped.
+    assert eventually(lambda: not emulator.is_alive(), timeout=20)
 
     # launch with tot
     emulator.exe = totexe
