@@ -224,8 +224,8 @@ async def stream_screenshot(emulator_controller, screen_recorder_file):
     return streaming_img_call
 
 
-@pytest.fixture(autouse=False)
-async def screen_recorder(screen_recorder_file):
+@pytest.fixture(autouse=True)
+async def screen_recorder(screen_recorder_file, request):
     """
     Pytest fixture that provides an initialized and running AsyncScreenRecorder.
 
@@ -246,7 +246,10 @@ async def screen_recorder(screen_recorder_file):
     Yields:
         AsyncScreenRecorder: An initialized and running instance of AsyncScreenRecorder.
     """
-    recorder = AsyncScreenRecorder(output_filename=screen_recorder_file)
-    await recorder.start_recording()
-    yield recorder
-    await recorder.stop_recording()
+    if request.config.getoption("--record_screen"):
+        recorder = AsyncScreenRecorder(output_filename=screen_recorder_file)
+        await recorder.start_recording()
+        yield recorder
+        await recorder.stop_recording()
+    else:
+        yield
