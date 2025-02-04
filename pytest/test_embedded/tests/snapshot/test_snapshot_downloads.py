@@ -116,7 +116,7 @@ async def download_emulator_zip(build_id):
 
 @pytest.mark.snapshot
 @pytest.mark.flaky(reruns=0)
-@pytest.mark.skipif(sys.platform == "win32", reason="b/280653636")
+@pytest.mark.skip(reason="b375280350, no longer supported")
 @pytest.mark.async_timeout(510)
 async def test_can_load_oldsnapshot(emulator, pytestconfig):
     """test that current emulator can load the snapshot created by old emulator
