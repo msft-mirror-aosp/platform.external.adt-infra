@@ -343,7 +343,8 @@ def run_single_suite(
     return junit_test_results
 
 
-def get_tests_to_run(test_config: str, test_suite: str) -> List[Tuple[str, Dict]]:
+def get_tests_to_run(test_config: str, test_suite: str,
+                     system_image_path: str = '') -> List[Tuple[str, Dict]]:
     """Gets the list of tests to run."""
     with open(test_config, "r", encoding="utf-8") as file:
         test_cfg = json.load(file)
@@ -355,6 +356,11 @@ def get_tests_to_run(test_config: str, test_suite: str) -> List[Tuple[str, Dict]
     ]
     if not tests_to_run:
         raise NoTestResultsProduced(f"No enabled test suite matching {test_suite}")
+    # Override the system image if one was specified.
+    if system_image_path:
+        for _, cfg in tests_to_run:
+            for avd_cfg in cfg.get("avd_configs", ()):
+                avd_cfg["image.sysdir.1"] = system_image_path
     return tests_to_run
 
 

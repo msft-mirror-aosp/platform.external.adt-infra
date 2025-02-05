@@ -136,6 +136,11 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
     )
 
+    parser.add_argument(
+        "--system_image_path",
+        help="Optional path to use for the system image for all tests.",
+    )
+
     return parser.parse_args()
 
 
@@ -217,7 +222,9 @@ def main(args: argparse.Namespace) -> None:
         android_home = create_android_home(fetcher, Path(tmp_dir))
 
         pyrun = VenvRunner(android_home)
-        tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite)
+        tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite,
+                                                    args.system_image_path)
+
 
         logging.info("Scheduling %d suites", len(tests_to_run))
 
