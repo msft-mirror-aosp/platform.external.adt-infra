@@ -126,6 +126,11 @@ def pytest_addoption(parser):
         help="The path to the SDK installation directory. This should contain system-images and adb.",
     )
     parser.addoption(
+        "--record_screen",
+        action="store_true",
+        help="Attempt to record the screen while running tests.",
+    )
+    parser.addoption(
         "--debug_emulator",
         action="store_true",
         help="Connect to the first available emulator for debugging. "
@@ -316,6 +321,8 @@ def prefetch_system_images(pytestconfig):
     else:
         si = SystemImages(pytestconfig.getoption("android_home"))
     for cfg in json.loads(pytestconfig.getoption("avd_configs")):
+        if "image.sysdir.1" in cfg:
+            continue
         abi = cfg.get("abi", DEFAULT_AVD_CONFIG["abi"])
         api = cfg.get("api", DEFAULT_AVD_CONFIG["api"])
         tag = cfg.get("tag.id", DEFAULT_AVD_CONFIG["tag.id"])
