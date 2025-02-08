@@ -144,6 +144,8 @@ async def get_navigation_direction(initial_center_coords, stream):
     return direction
 
 
+@pytest.mark.fast
+@pytest.mark.graphics
 @pytest.mark.async_timeout(300)
 async def test_ar_sanity(avd, camera_activity, stream_screenshot, emulator_controller):
     """
