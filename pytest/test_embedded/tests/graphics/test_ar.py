@@ -20,6 +20,7 @@ import numpy as np
 import cv2
 import pytest
 import logging
+import asyncio
 
 
 @pytest.fixture
@@ -30,6 +31,7 @@ async def camera_activity(avd, ad_ui, do_not_display_virtualscene_info):
         emulator: The configured emulator instance.
         ad_ui: UIautomator snippet's emulator device.
     """
+    api = await avd.api_level()
     await avd.start_activity("com.android.camera2/com.android.camera.CameraActivity")
     ad_ui(text="NEXT", res="com.android.camera2:id/confirm_button").wait.click(20e3)
 
@@ -37,6 +39,12 @@ async def camera_activity(avd, ad_ui, do_not_display_virtualscene_info):
         text="Only this time",
         res="com.android.permissioncontroller:id/permission_allow_one_time_button",
     ).wait.click(20e3)
+
+    await asyncio.sleep(5)
+    if api > 33:
+        # APIs 33+ default to front camera; switch to back.
+        assert ad_ui(res="com.android.camera2:id/three_dots").wait.click(20e3)
+        assert ad_ui(res="com.android.camera2:id/camera_toggle_button").wait.click(20e3)
 
     assert ad_ui(res="com.android.camera2:id/shutter_button").wait.exists(20e3)
 
@@ -177,10 +185,6 @@ async def test_ar_sanity(avd, camera_activity, stream_screenshot, emulator_contr
             await get_navigation_direction(original_center, stream)
             == expected_direction
         )
-
-    api = await avd.api_level()
-    if api != 31:
-        pytest.skip(reason="Requires API level 31.")
 
     assert avd.is_alive(), "Couldn't launch the emulator."
 
