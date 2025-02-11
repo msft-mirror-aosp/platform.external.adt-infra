@@ -21,6 +21,7 @@ import cv2
 import pytest
 import logging
 import asyncio
+import datetime
 
 
 @pytest.fixture
@@ -32,21 +33,22 @@ async def camera_activity(avd, ad_ui, do_not_display_virtualscene_info):
         ad_ui: UIautomator snippet's emulator device.
     """
     api = await avd.api_level()
+    UI_WAIT_TIME = datetime.timedelta(seconds=20)
     await avd.start_activity("com.android.camera2/com.android.camera.CameraActivity")
-    ad_ui(text="NEXT", res="com.android.camera2:id/confirm_button").wait.click(20e3)
+    ad_ui(text="NEXT", res="com.android.camera2:id/confirm_button").wait.click(UI_WAIT_TIME)
 
     ad_ui(
         text="Only this time",
         res="com.android.permissioncontroller:id/permission_allow_one_time_button",
-    ).wait.click(20e3)
+    ).wait.click(UI_WAIT_TIME)
 
     await asyncio.sleep(5)
     if api > 33:
         # APIs 33+ default to front camera; switch to back.
-        assert ad_ui(res="com.android.camera2:id/three_dots").wait.click(20e3)
-        assert ad_ui(res="com.android.camera2:id/camera_toggle_button").wait.click(20e3)
+        assert ad_ui(res="com.android.camera2:id/three_dots").wait.click(UI_WAIT_TIME)
+        assert ad_ui(res="com.android.camera2:id/camera_toggle_button").wait.click(UI_WAIT_TIME)
 
-    assert ad_ui(res="com.android.camera2:id/shutter_button").wait.exists(20e3)
+    assert ad_ui(res="com.android.camera2:id/shutter_button").wait.exists(UI_WAIT_TIME)
 
 
 async def get_AR_green_rect_coords(stream, timeout=20):
