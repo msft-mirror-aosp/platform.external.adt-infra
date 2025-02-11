@@ -29,7 +29,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.FrameLayout;
 
-import com.android.devtools.systemimage.uitest.annotations.ScreenRecord;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
@@ -377,7 +376,6 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
-    @ScreenRecord
     @TestInfo(id = "f83bf063-2a8c-4d1b-808b-20fd76933135")
     public void enableTimeZone() throws Exception {
         try {
@@ -435,7 +433,6 @@ public class SettingsTest {
      *   </pre>
      */
     @Test
-    @ScreenRecord
     public void testGoogleLoginSettings() throws Exception {
         String userEmail = GoogleAppUtil.getUserEmail();
         String userPassword = GoogleAppUtil.getUserPassword();
