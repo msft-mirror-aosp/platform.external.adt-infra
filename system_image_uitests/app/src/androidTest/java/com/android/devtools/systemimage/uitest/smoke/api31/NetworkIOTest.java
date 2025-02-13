@@ -26,7 +26,6 @@ import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
-import com.android.devtools.systemimage.uitest.annotations.ScreenRecord;
 import com.android.devtools.systemimage.uitest.annotations.TestInfo;
 import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.framework.SystemImageTestFramework;
@@ -78,7 +77,6 @@ public class NetworkIOTest {
      *   </pre>
      */
     @Test
-    @ScreenRecord
     @TestInfo(id = "14578825")
     public void testBrowserLoadsSite() throws Exception {
         Instrumentation instrumentation = testFramework.getInstrumentation();

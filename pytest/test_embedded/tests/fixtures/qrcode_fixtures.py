@@ -14,6 +14,7 @@
 # limitations under the License.
 import logging
 from pathlib import Path
+from emu.application import GooglePhotosApplication
 
 import pytest
 
@@ -71,19 +72,21 @@ async def qrcode_png(emulator):
         """A class to push a PNG QRcode with a given payload to /sdcard/Download"""
 
         def __init__(self, src: str, payload: str):
+            self.photos = GooglePhotosApplication(emulator)
             self.pushed = False
             self.src = src
             self.payload = payload
             self.path = Path("/sdcard/Download") / self.src.name
             self.html = (
                 Path("/sdcard/Android/data/com.android.chrome/files/Download/")
-                    / "qrcode.html"
+                / "qrcode.html"
             )
+
         async def _create_qrcode_html(self):
             await emulator.adb.shell(f"mkdir -p {self.html.parent}")
-            qrcode_html= qrcode_html_fmt.format(self.path)
+            qrcode_html = qrcode_html_fmt.format(self.path)
             await emulator.adb.shell(f'echo "{qrcode_html}" > {self.html}')
-            await emulator.adb.shell(f'chmod +r {self.html}')
+            await emulator.adb.shell(f"chmod +r {self.html}")
 
         async def push(self):
             logging.info(f"Pushing '{self.src}' to '{self.path}'")
@@ -95,9 +98,9 @@ async def qrcode_png(emulator):
             """Show the PNG image on display with id <display_id>"""
             if not self.pushed:
                 await self.push()
-            await emulator.stop_activity("com.google.android.apps.photos")
-            await emulator.start_activity(
-                "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
+            await self.photos.stop()
+            await emulator.start(
+                ".pager.HostPhotoPagerActivity",
                 params=f'-a android.intent.action.VIEW -W -d file://{self.path} -t "image/PNG"'
                 + (f" --display {display_id}" if display_id != 0 else ""),
             )
@@ -148,6 +151,7 @@ async def qrcodes_mp4(avd):
 
         def __init__(self, src: str, payloads: list):
             self.src = src
+            self.photos = GooglePhotosApplication(avd)
             self.payloads = payloads
             self.path = Path("/sdcard/Download") / self.src.name
 
@@ -156,9 +160,9 @@ async def qrcodes_mp4(avd):
             await avd.adb.push(self.src, self.path)
 
         async def play(self, display_id=0):
-            await avd.stop_activity("com.google.android.apps.photos")
-            await avd.start_activity(
-                "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
+            await self.photos.stop()
+            await self.photos.start(
+                ".pager.HostPhotoPagerActivity",
                 params=f'-a android.intent.action.VIEW -d file://{self.path} -t "video/*"'
                 + (f" --display {display_id}" if display_id != 0 else ""),
             )

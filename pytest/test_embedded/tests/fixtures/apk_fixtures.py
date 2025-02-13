@@ -25,74 +25,7 @@ from emu.emulator_exceptions import (
     EmulatorFailedToBootException,
     FailedToInstallApkException,
 )
-from emu.apk import APP_DEBUG_APK
-
-
-async def launch_animation_app(avd: BaseEmulator):
-    """
-    Launches the debug animation app on the emulator.
-
-    This function performs the following steps to ensure the animation app is running:
-
-    1. Stops any existing instances of the animation app.
-    2. Clears the logcat (best-effort, not guaranteed to be complete).
-    3. Starts the main activity of the animation app.
-    4. Waits for the "--STARTED--" message in the logcat, indicating the app has launched.
-
-    Args:
-        avd: The emulator instance on which to launch the app.
-
-    Returns:
-        bool: True if the app launched successfully, False otherwise.
-    """
-    logging.info("--> launch_animation_app")
-    assert avd.is_alive()
-    assert await avd.stop_activity("com.google.AnimateBox")
-
-    await avd.adb.clear_logcat()
-    assert await avd.start_activity("com.google.AnimateBox/com.google.emu.MainActivity")
-
-    async def wait_for_started():
-        async with await avd.adb.logcat(tag="aemu") as stream:
-            logging.info("Waiting for --STARTED-- in logcat stream.")
-            async for line in stream:
-                if "--STARTED--" in line:
-                    return True
-
-    try:
-        return await asyncio.wait_for(wait_for_started(), timeout=5)
-    except asyncio.TimeoutError:
-        logging.warning("No --STARTED-- tag seen.")
-        return False
-
-
-async def wait_for_animation_app_launch(avd: BaseEmulator, timeout: int = 30):
-    """Attempts to launch the animation app within a given timeout.
-
-    Args:
-      avd: The emulator to launch the app on.
-      timeout: The maximum time to wait for the app to launch, in seconds.
-
-    Raises:
-      FailedToInstallApkException: If the app fails to launch within the timeout.
-    """
-    end_time = time.time() + timeout
-    launched = False
-    while time.time() < end_time and not launched:
-        launched = await launch_animation_app(avd)
-        if not launched:
-            await asyncio.sleep(1)
-
-    if not launched:
-        avd.stop()
-        # Share log cat for debugging
-        logging.info("--> Logcat which might be of use:")
-        await avd.adb.exec_out("logcat -d")
-        raise FailedToInstallApkException(
-            "We failed to install and launch the animation apk."
-        )
-
-    logging.info("--> animation apk running")
+from emu.application import AnimationApplication
 
 
 @pytest.fixture
@@ -102,23 +35,9 @@ async def install_animation_apk(avd: BaseEmulator):
 
     Retries installation up to 3 times in case of transient failures.
     """
-    assert avd.is_alive()
-
-    for attempt in range(3):
-        installed = await avd.install_apk(
-            APP_DEBUG_APK.absolute(), "com.google.AnimateBox"
-        )
-        if installed:
-            return
-
-        logging.warning(
-            f"Failed to install animation APK (attempt {attempt + 1}/3). Retrying..."
-        )
-        await asyncio.sleep(1)  # Wait a bit before retrying
-
-    raise FailedToInstallApkException(
-        "The animation app failed to install after multiple retries."
-    )
+    apk = AnimationApplication(avd)
+    await apk.install()
+    yield apk
 
 
 @pytest.fixture
@@ -141,15 +60,13 @@ async def animation_app(install_animation_apk, avd: BaseEmulator):
     Raises:
         AssertionError: If the animation app fails to launch.
     """
-    logging.info("--> animation_app")
-    assert avd.is_alive()
-
-    await wait_for_animation_app_launch(avd, timeout=30)
+    animation = install_animation_apk
+    await animation.start()
     logging.info("--> yielding animation_app")
-    yield
+    yield animation
     logging.info("<-- teardown animation_app")
 
-    await avd.stop_activity("com.google.AnimateBox")
+    await animation.stop()
     logging.info("=== finalized animation_app")
 
 

@@ -19,6 +19,7 @@ from snippet_uiautomator import uiautomator
 
 from emu.emulator import BaseEmulator
 from emu.apk import APP_MOBLY_APK
+from emu.application import Application
 
 
 @pytest.fixture
@@ -28,23 +29,13 @@ async def install_mobly_apk(avd: BaseEmulator):
 
     Retries installation up to 3 times in case of transient failures.
     """
-    assert avd.is_alive()
-
-    for attempt in range(3):
-        installed = await avd.install_apk(
-            APP_MOBLY_APK.absolute(), "com.google.android.mobly.snippet.bundled"
-        )
-        if installed:
-            return
-
-        logging.warning(
-            f"Failed to install Mobly Snippets APK (attempt {attempt + 1}/3). Retrying..."
-        )
-        await asyncio.sleep(1)  # Wait a bit before retrying
-
-    raise FailedToInstallApkException(
-        "The Mobly Snippets APK failed to install after multiple retries."
+    mobly_snippets = Application(
+        avd,
+        apk_path=APP_MOBLY_APK.absolute(),
+        package_name="com.google.android.mobly.snippet.bundled",
     )
+    await mobly_snippets.install()
+    yield mobly_snippets
 
 
 @pytest.fixture

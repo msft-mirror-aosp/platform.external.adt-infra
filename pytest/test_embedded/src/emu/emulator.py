@@ -39,6 +39,7 @@ from grpc.aio import AioRpcError
 from emu.adb.adb import Adb
 from emu.avd import AvdWriter
 from emu.console.emulator_connection import EmulatorClient
+from emu.application import Application
 from emu.emulator_exceptions import EmulatorNotFoundException, EmulatorDiedException
 from emu.mobly.snippet import Mobly
 from emu.process.command import Command
@@ -251,41 +252,11 @@ class BaseEmulator(object):
 
         return self.description.is_alive()
 
-    async def install_apk(self, apk: Path, package_name: str) -> bool:
-        """Installs an apk in the emulator.
-
-        Note: An apk will be installed only once unless force has been set to
-        true.
-
-        Args:
-            apk (Path): Path to the apk that should be installed.
-            package (str): The name of the package.
-
-        Returns;
-            True if the package name is in `pm list packages`
-        """
-        count = 0
-        try:
-            while not await self.adb.is_installed(package_name) and count < 3:
-                await self.adb.install(apk.absolute())
-                await asyncio.sleep(2)
-                count += 1
-        finally:
-            return await self.adb.is_installed(package_name)
-
-    async def pgrep(self, process_name: str) -> bool:
-        shell = await self.adb.shell(f"ps -A | grep {process_name}")
-        return process_name in shell
-
-    async def activity_is_running(self, activity: str):
-        """Returns true if the given activity is running."""
-        return await self.pgrep(activity[: activity.find("/")])
-
     async def start_activity(self, activity: str, params=None) -> bool:
         """Attempts to start the given activity.
 
-        An activity is considered to be running when the activity is in the list returned
-        by running `shell dumpsys activity activities`
+        An activity is considered to be running when the package name can
+        be found in the process list.
 
         If the acitivity has failed to launch within 15 seconds, it will
         be considered a failure.
@@ -296,28 +267,11 @@ class BaseEmulator(object):
         Returns:
             True if the activity was started successfully, False otherwise.
         """
-
-        shell = f"am start -n {activity}"
-        if params:
-            shell += f" {params}"
-
-        count = 0
-        while count < 3:
-            await self.adb.shell(shell)
-            await asyncio.sleep(2)
-            if await self.activity_is_running(activity):
-                return True
-            count += 1
-
-        return await self.activity_is_running(activity)
+        app = Application(self, default_activity=activity)
+        return await app.start(params=params, timeout=15)
 
     async def stop_activity(self, activity: str) -> bool:
         """Attempts to stop the given activity.
-
-        An activity is considered to be running when the activity is in the list returned
-        by running `shell dumpsys activity activities`
-
-        We will try to force-stop the activity for at most 15 seconds.
 
         Args:
             activity: The name of the package to stop.
@@ -325,18 +279,8 @@ class BaseEmulator(object):
         Returns:
             True if the activity is not running, False otherwise.
         """
-
-        shell = f"am force-stop {activity}"
-
-        count = 0
-        while count < 3:
-            await self.adb.shell(shell)
-            await asyncio.sleep(2)
-            if not await self.activity_is_running(activity):
-                return True
-            count += 1
-
-        return not await self.activity_is_running(activity)
+        app = Application(self, package_name=activity)
+        return await app.stop()
 
     async def reset_state(self):
         """Resets this emulator to a well known state.
