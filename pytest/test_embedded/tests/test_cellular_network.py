@@ -54,32 +54,30 @@ async def get_network_type(avd):
     matches = re.findall(pattern, mServiceState)
     return matches[0] if len(matches) !=0 else None
 
-@pytest.mark.parametrize(
-    "network_standard,expected_type", [
-        (CellInfo.CELL_STANDARD_GSM, "EDGE"),
-        (CellInfo.CELL_STANDARD_UMTS, "HSPA"),
-        (CellInfo.CELL_STANDARD_HSCSD, "EDGE"),
-        (CellInfo.CELL_STANDARD_HSDPA, "HSPA"),
-        (CellInfo.CELL_STANDARD_GPRS, "EDGE"),
-        (CellInfo.CELL_STANDARD_LTE, "LTE"),
-        (CellInfo.CELL_STANDARD_EDGE, "EDGE"),
-        (CellInfo.CELL_STANDARD_FULL, "LTE"),
-        (CellInfo.CELL_STANDARD_5G, "NR")
-    ]
-)
+
+@pytest.fixture
+async def ensure_network_ready(avd):
+    """Ensure the default emulator GSM network is ready"""
+    async def _ensure_default_gsm_network_type():
+        network_type = await avd.adb.shell("getprop gsm.network.type")
+        return network_type.strip() == "LTE"
+    if await eventually(_ensure_default_gsm_network_type, timeout=60):
+        return # Success
+    raise TimeoutError(
+        f"Default GSM network type (LTE) not set."
+    )
 
 
 @pytest.mark.fast
 @pytest.mark.async_timeout(120)
 async def test_network_type_observable_from_registry(
-        avd, modem_controller, network_standard, expected_type):
+    avd, modem_controller, ensure_network_ready):
     """Verify that the cellular network type is observable from the telephony registry.
 
     Args:
         avd (BaseEmulator): The booted emulator instance.
         modem_controller (ModemStub): The modem controller gRPC stub.
-        network_standard (CellStandard): The network standard to test.
-        expected_type (str): The expected network type.
+        ensure_network_ready: Ensures the default GSM network is ready.
 
     Test steps:
         1. Launch a new AVD.
@@ -89,14 +87,28 @@ async def test_network_type_observable_from_registry(
     Verify:
         1. The new network type should be reflected in the telephony registry.
     """
-    async def network_type_is_observable_from_registry():
+    async def network_type_is_observable_from_registry(expected_type):
         network_type = await get_network_type(avd)
         logging.info(f"Detected network type {network_type} (expected {expected_type})")
         return network_type == expected_type
 
-    logging.info(f"Changing network emulation type to {expected_type} ...")
-    await modem_controller.setCellInfo(CellInfo(cell_standard=network_standard))
-
-    assert await eventually (
-        network_type_is_observable_from_registry, timeout=60
-    ), f"Couldn't observe network type '{expected_type}'"
+    for network_standard, expected_type in [
+        (CellInfo.CELL_STANDARD_GSM, "EDGE"),
+        (CellInfo.CELL_STANDARD_UMTS, "HSPA"),
+        (CellInfo.CELL_STANDARD_HSCSD, "EDGE"),
+        (CellInfo.CELL_STANDARD_HSDPA, "HSPA"),
+        (CellInfo.CELL_STANDARD_GPRS, "EDGE"),
+        (CellInfo.CELL_STANDARD_LTE, "LTE"),
+        (CellInfo.CELL_STANDARD_EDGE, "EDGE"),
+        (CellInfo.CELL_STANDARD_FULL, "LTE"),
+        (CellInfo.CELL_STANDARD_5G, "NR")
+    ]:
+        logging.info(f"Setting network emulation type to {expected_type} ...")
+        await modem_controller.setCellInfo(CellInfo(cell_standard=network_standard))
+        assert await eventually (
+            partial(
+                network_type_is_observable_from_registry,
+                expected_type
+            ),
+            timeout=60
+        ), f"Couldn't observe network type '{expected_type}'"
