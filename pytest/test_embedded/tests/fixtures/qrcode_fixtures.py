@@ -99,7 +99,7 @@ async def qrcode_png(emulator):
             if not self.pushed:
                 await self.push()
             await self.photos.stop()
-            await emulator.start(
+            await emulator.start_activity(
                 ".pager.HostPhotoPagerActivity",
                 params=f'-a android.intent.action.VIEW -W -d file://{self.path} -t "image/PNG"'
                 + (f" --display {display_id}" if display_id != 0 else ""),
@@ -161,7 +161,7 @@ async def qrcodes_mp4(avd):
 
         async def play(self, display_id=0):
             await self.photos.stop()
-            await self.photos.start(
+            await self.photos.start_activity(
                 ".pager.HostPhotoPagerActivity",
                 params=f'-a android.intent.action.VIEW -d file://{self.path} -t "video/*"'
                 + (f" --display {display_id}" if display_id != 0 else ""),
