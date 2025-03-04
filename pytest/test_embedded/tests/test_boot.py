@@ -26,7 +26,7 @@ from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from google.protobuf import empty_pb2
 
 from emu.emulator import Emulator
-from emu.emulator_exceptions import EmulatorDiedException
+from emu.emulator_exceptions import EmulatorException, EmulatorDiedException
 from emu.timing import eventually
 from tests.test_utils import check_boot_from_snapshot
 
@@ -188,6 +188,12 @@ async def test_snapshot_booted(emulator):
     logging.info("Wating for it to boot up from snapshot ...")
     assert await emulator.wait_for_boot(timeout=mytimeout)
     logging.info("Wating for it to stablize ...")
+
+    # Ensure the emulator has snapshots available.
+    console = await emulator.console()
+    output = await console.send("avd snapshot list")
+    if 'There is no snapshot available.' in output:
+        raise EmulatorException("No snapshots found for the current AVD.")
 
     def has_booted_from_snapshot():
         return check_boot_from_snapshot(emulator.configuration.directory)
