@@ -53,6 +53,39 @@ public class GoogleAppUtil {
     }
 
     /**
+     * Finds the "Forgot Password" link on the screen based on the API level.
+     *
+     * @param device the UiDevice instance representing the device on which the test is currently running
+     * @param api the API level of the device
+     * @return the UiObject representing the "Forgot Password" link
+     */
+    private static UiObject findForgotPasswordLink(UiDevice device, int api) {
+        UiObject forgotPasswordLink;
+        switch (api) {
+            case 27:
+            case 28:
+            case 31:
+            case 32:
+                forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
+                break;
+
+            case 29:
+            case 30:
+                forgotPasswordLink = device.findObject(new UiSelector().text("Forgot password?"));
+                break;
+
+            case 33:
+                forgotPasswordLink = device.findObject(new UiSelector().textMatches("(?i)forgot password?(?-i)"));
+                break;
+
+            default:
+                forgotPasswordLink = device.findObject(new UiSelector().description("Forgot password?"));
+                break;
+        }
+        return forgotPasswordLink;
+    }
+
+    /**
      * Log a user into a Google application
      *
      * @param instrumentation the instrumentation instance
@@ -179,17 +212,7 @@ public class GoogleAppUtil {
         assertTrue("Forgot email link not dismissed.",
                 forgotEmailLink.waitUntilGone(90000L));
 
-        UiObject forgotPasswordLink;
-
-        if (api == 27 || api == 28) {
-            forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
-        } else if (api == 29 || api == 30) {
-            forgotPasswordLink = device.findObject(new UiSelector().text("Forgot password?"));
-        } else if (api >= 31) {
-            forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
-        } else {
-            forgotPasswordLink = device.findObject(new UiSelector().description("Forgot password?"));
-        }
+        UiObject forgotPasswordLink = findForgotPasswordLink(device, api);
 
         boolean needsPassword = forgotPasswordLink.waitForExists(
                 TimeUnit.MILLISECONDS.convert(1000L, TimeUnit.SECONDS));
