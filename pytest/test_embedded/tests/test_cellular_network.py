@@ -18,6 +18,7 @@ import logging
 from aemu.proto.modem_service_pb2 import CellInfo
 from aemu.proto.modem_service_pb2_grpc import ModemStub
 from emu.timing import eventually
+from functools import partial
 from google.protobuf import empty_pb2
 
 __EMPTY__ = empty_pb2.Empty()
