@@ -168,7 +168,7 @@ async def screenshots_equal(screenshot1, screenshot2):
 
 @pytest.mark.sanity
 @pytest.mark.async_timeout(500)
-async def test_can_debug(avd, jdb, get_screenshot):
+async def test_can_debug(avd, jdb, get_screenshot, install_animation_apk):
     """Verify test app can be debugged on the emulator.
 
     Args:
@@ -200,18 +200,13 @@ async def test_can_debug(avd, jdb, get_screenshot):
                 return False
         return True
 
-    test_app = "AnimateBox"
-    test_pkg = "com.google" + "." + test_app
-    test_activity = "com.google.emu.MainActivity"
-
-    # Launch test app with debug flag.
-    assert await avd.start_activity(
-        f"{test_pkg}/{test_activity}", params="-D"
-    ), f"Couldn't launch {test_app}"
+    await install_animation_apk.start(params="-D")
+    assert await eventually(install_animation_apk.is_running), \
+        "Couldnt' launch AnimateBox in Debug mode."
     await asyncio.sleep(10)
 
     # Attach jdb to the package.
-    await jdb.attach(test_pkg)
+    await jdb.attach(install_animation_apk.package_name)
 
     # Allow the Animation to run for a few seconds.
     await asyncio.sleep(10)
