@@ -471,7 +471,7 @@ public class SettingsTest {
         UiObject manageAccountButton = wasUserLoggedIn ?
                 device.findObject(
                         new UiSelector()
-                                .textStartWith("Manage")
+                                .textStartsWith("Manage")
                                 .className(Button.class)) :
                 device.findObject(
                         new UiSelector()
