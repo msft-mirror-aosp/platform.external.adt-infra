@@ -16,6 +16,7 @@ from emu.timing import eventually
 from emu.images.convert import proto_to_pillow
 from emu.emulator_exceptions import EmulatorException
 from aemu.proto.emulator_controller_pb2 import Image, ImageFormat, RotationRadian
+from emu.application import CameraApplication
 from functools import partial
 import numpy as np
 import cv2
@@ -23,44 +24,74 @@ import pytest
 import logging
 import asyncio
 import datetime
+import re
 
 
 @pytest.fixture
-async def camera_activity(avd, ad_ui, do_not_display_virtualscene_info):
-    """Launch the camera activity.
+async def camera_app(avd, do_not_display_virtualscene_info):
+    """Launch the camera application"""
+    camera_app = CameraApplication(avd)
+    await camera_app.start()
+    logging.info("--> yielding camera_app")
+    yield camera_app
+    logging.info("<-- teardown camera_app")
+    await camera_app.stop()
+    logging.info("=== finalized camera_app")
+
+
+@pytest.fixture
+async def camera_ready(avd, ad_ui, camera_app):
+    """Ensure the camera app launches without interruptions.
 
     Args:
-        emulator: The configured emulator instance.
+        avd: The emulator instance.
         ad_ui: UIautomator snippet's emulator device.
+        camera_app: The camera application fixture.
     """
+    async def camera_is_active():
+        logging.info("Waiting for the camera to start.")
+        camera_dump = await avd.adb.shell("dumpsys media.camera")
+        camera_pattern = re.compile("Active Camera Clients:\n\[\n\(Camera ID:\s*(\d+)")
+        match = camera_pattern.search(camera_dump)
+        if match:
+            camera_id = match.group(1)
+            logging.info(f"Camera {camera_id} was activated.")
+            return True
+
     ad_ui.watcher("LauncherError") \
          .when(text="Pixel Launcher isn't responding") \
          .click()
+    ad_ui.watcher("SystemUIError") \
+         .when(text="System UI isn't responding") \
+         .click()
 
-    api = await avd.api_level()
+    if ad_ui.watcher('LauncherError').triggered:
+        raise EmulatorException("Pixel Launcher stopped responding.")
+    if ad_ui.watcher('SystemUIError').triggered:
+        raise EmulatorException("System UI stopped responding.")
+
     UI_WAIT_TIME = datetime.timedelta(seconds=20)
-    await avd.start_activity("com.android.camera2/com.android.camera.CameraActivity")
-    ad_ui(text="NEXT", res="com.android.camera2:id/confirm_button").wait.click(UI_WAIT_TIME)
-
+    assert ad_ui(
+        text="NEXT", res="com.android.camera2:id/confirm_button"
+    ).wait.click(UI_WAIT_TIME)
     ad_ui(
         text="Only this time",
         res="com.android.permissioncontroller:id/permission_allow_one_time_button",
     ).wait.click(UI_WAIT_TIME)
 
     await asyncio.sleep(5)
+    assert await eventually(camera_is_active)
 
-    if ad_ui.watcher('LauncherError').triggered:
-        raise EmulatorException("Pixel Launcher stopped responding")
-
+    api = await avd.api_level()
     if api > 33:
-        # APIs 33+ default to front camera; switch to back.
+        # APIs 33+ default to front camera; switch to back camera.
         assert ad_ui(res="com.android.camera2:id/three_dots").wait.click(UI_WAIT_TIME)
         assert ad_ui(res="com.android.camera2:id/camera_toggle_button").click.wait(UI_WAIT_TIME)
 
     assert ad_ui(res="com.android.camera2:id/shutter_button").wait.exists(UI_WAIT_TIME)
 
 
-async def get_AR_green_rect_coords(stream, timeout=20):
+async def get_ar_green_rect_coords(stream, timeout=20):
     """Detect the green marker in the virtual scene and retrieve its center coordinates.
 
     Scans the screenshot stream to detect the green rectangle marker in the
@@ -78,7 +109,7 @@ async def get_AR_green_rect_coords(stream, timeout=20):
     """
     center_coords = []
 
-    async def _detect_AR_green_rect(img: Image):
+    async def _detect_ar_green_rect(img: Image):
         """Check for the presence of the green rectangle and calculate its center.
 
         Identifies green-colored contours in the provided screenshot. If exactly
@@ -115,7 +146,7 @@ async def get_AR_green_rect_coords(stream, timeout=20):
         center_coords += [cx] + [cy]
         return True
 
-    res = await eventually(_detect_AR_green_rect, stream, timeout)
+    res = await eventually(_detect_ar_green_rect, stream, timeout)
     return center_coords if res else None
 
 
@@ -143,7 +174,7 @@ async def get_navigation_direction(initial_center_coords, stream):
     move_threshold = 200  # in Pixels
     iddle_threshold = 10  # in Pixels
     cx0, cy0 = initial_center_coords
-    final_coords = await get_AR_green_rect_coords(stream)
+    final_coords = await get_ar_green_rect_coords(stream)
     assert final_coords is not None, "Couldn't detect AR marker."
     cx, cy = final_coords
 
@@ -166,13 +197,13 @@ async def get_navigation_direction(initial_center_coords, stream):
 @pytest.mark.fast
 @pytest.mark.graphics
 @pytest.mark.async_timeout(300)
-async def test_ar_sanity(avd, camera_activity, stream_screenshot, emulator_controller):
+async def test_ar_sanity(avd, camera_ready, stream_screenshot, emulator_controller):
     """
     Objective: Verify the Augmented Reality (AR) emulator feature is supported.
 
     Args:
         avd: The emulator instance.
-        camera_activity: A fixture that launches the camera app.
+        camera_ready: Ensures the camera app is opened and usable.
         stream_screenshot: A fixture that provides the screenshot streaming function.
         emulator_controller: The EmulatorControllerStub instance.
 
@@ -213,7 +244,7 @@ async def test_ar_sanity(avd, camera_activity, stream_screenshot, emulator_contr
         logging.info(f"Navigating VirtualScene camera to the {expected_direction} ...")
 
         # Get the current center coordinates
-        original_coords = await get_AR_green_rect_coords(stream)
+        original_coords = await get_ar_green_rect_coords(stream)
         assert original_coords is not None, "Couldn't detect AR marker."
 
         # Rotate the virtualscene camera
