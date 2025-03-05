@@ -14,6 +14,7 @@
 
 from emu.timing import eventually
 from emu.images.convert import proto_to_pillow
+from emu.emulator_exceptions import EmulatorException
 from aemu.proto.emulator_controller_pb2 import Image, ImageFormat, RotationRadian
 from functools import partial
 import numpy as np
@@ -32,6 +33,10 @@ async def camera_activity(avd, ad_ui, do_not_display_virtualscene_info):
         emulator: The configured emulator instance.
         ad_ui: UIautomator snippet's emulator device.
     """
+    ad_ui.watcher("LauncherError") \
+         .when(text="Pixel Launcher isn't responding") \
+         .click()
+
     api = await avd.api_level()
     UI_WAIT_TIME = datetime.timedelta(seconds=20)
     await avd.start_activity("com.android.camera2/com.android.camera.CameraActivity")
@@ -43,10 +48,14 @@ async def camera_activity(avd, ad_ui, do_not_display_virtualscene_info):
     ).wait.click(UI_WAIT_TIME)
 
     await asyncio.sleep(5)
+
+    if ad_ui.watcher('LauncherError').triggered:
+        raise EmulatorException("Pixel Launcher stopped responding")
+
     if api > 33:
         # APIs 33+ default to front camera; switch to back.
         assert ad_ui(res="com.android.camera2:id/three_dots").wait.click(UI_WAIT_TIME)
-        assert ad_ui(res="com.android.camera2:id/camera_toggle_button").wait.click(UI_WAIT_TIME)
+        assert ad_ui(res="com.android.camera2:id/camera_toggle_button").click.wait(UI_WAIT_TIME)
 
     assert ad_ui(res="com.android.camera2:id/shutter_button").wait.exists(UI_WAIT_TIME)
 
