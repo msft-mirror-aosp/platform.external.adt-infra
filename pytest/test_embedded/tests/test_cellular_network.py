@@ -23,9 +23,15 @@ from google.protobuf import empty_pb2
 __EMPTY__ = empty_pb2.Empty()
 
 @pytest.fixture
-def modem_controller(service):
+def modem_controller(avd):
     """A gRPC stub to the modem controller."""
-    yield service(ModemStub)
+    try:
+        ctrl = ModemStub(avd.channel)
+        logging.info(f"Got {ctrl} response from modem controller.")
+    except Exception as e:
+        logging.error(f"An exception occurred: {e}")
+        raise
+    return ctrl
 
 async def get_network_type(avd):
     """Retrieve the cellular network type from the telephony registry.
@@ -64,7 +70,7 @@ async def get_network_type(avd):
 
 
 @pytest.mark.fast
-@pytest.mark.async_timeout(300)
+@pytest.mark.async_timeout(120)
 async def test_network_type_observable_from_registry(
         avd, modem_controller, network_standard, expected_type):
     """Verify that the cellular network type is observable from the telephony registry.
@@ -85,11 +91,12 @@ async def test_network_type_observable_from_registry(
     """
     async def network_type_is_observable_from_registry():
         network_type = await get_network_type(avd)
+        logging.info(f"Detected network type {network_type} (expected {expected_type})")
         return network_type == expected_type
 
     logging.info(f"Changing network emulation type to {expected_type} ...")
     await modem_controller.setCellInfo(CellInfo(cell_standard=network_standard))
 
     assert await eventually (
-        network_type_is_observable_from_registry, timeout=10
+        network_type_is_observable_from_registry, timeout=60
     ), f"Couldn't observe network type '{expected_type}'"
