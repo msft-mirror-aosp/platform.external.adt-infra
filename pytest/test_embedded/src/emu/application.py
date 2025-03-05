@@ -271,3 +271,6 @@ DialerApplication = create_application_subclass(
 YouTubeApplication = create_application_subclass(
     "com.google.android.youtube/com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity"
 )
+CameraApplication = create_application_subclass(
+    "com.android.camera2/com.android.camera.CameraActivity"
+)
