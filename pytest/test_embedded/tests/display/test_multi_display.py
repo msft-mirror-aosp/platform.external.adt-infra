@@ -418,8 +418,9 @@ async def get_package_display_id(avd, package):
         The Display ID (int) where the package is running.
         None if the package is not present in the window system dump.
     """
-    windows_dump = await avd.adb.shell("dumpsys window", timeout=60)
-    display_lines = re.search(f"Window.*{package}.*mDisplayId=([0-9]*)", windows_dump)
+    windows_dump = await avd.adb.shell("dumpsys window windows", timeout=60)
+    pattern = re.compile(f"Window.*{package}.*\n.*mDisplayId=([0-9]*)?")
+    display_lines = pattern.search(windows_dump)
     if display_lines is None:
         return None
     return int(display_lines.groups()[0])
@@ -444,104 +445,114 @@ async def get_displays_ids(avd):
     return [int(id_) for id_ in display_ids_list]
 
 
+@pytest.fixture
+async def two_multidisplays(emulator_controller, no_displays):
+    """Configure and enable two additional displays"""
+    async def ensure_two_displays():
+        cfg = await emulator_controller.getDisplayConfigurations(_EMPTY_)
+        return len(cfg.displays) == 2
+
+    resolutions = [(720, 1280), (1080, 1920)]
+    displays = [
+        DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
+        for idx, x in enumerate(resolutions)
+    ]
+    # Set the display configuration from 'displays'.
+    to_set = DisplayConfigurations(displays=displays)
+    logging.info("Enabling multidisplays")
+    await emulator_controller.setDisplayConfigurations(to_set)
+    await eventually(ensure_two_displays, timeout=10)
+    # Wait a bit longer for it to stabilize
+    await asyncio.sleep(10)
+
+
+@pytest.fixture
+async def displays_ids(avd) -> list[int]:
+    """Retrieve the IDs of all configured displays"""
+    return await get_multidisplays_ids(avd)
+
+
+@pytest.mark.parametrize(
+    "target_display", ['display_2', 'display_3']
+)
 @pytest.mark.multidisplay
 @pytest.mark.fast
 @pytest.mark.async_timeout(1080)
 async def test_disable_multidisplay(
-    ensure_multidisplay_service_ready,
     avd,
-    animation_app,
-    no_displays,
     is_landscape,
+    install_animation_apk,
+    two_multidisplays,
+    displays_ids,
+    target_display,
     emulator_controller,
 ):
     """Ensure an app is moved to the primary display when multidisplay is disabled.
 
     Args:
-        avd (BaseEmulator): Fixture that gives access to the running emulator.
-        no_displays (callable): Fixture to make sure the emulator has no multi displays configured.
-        is_landscape (bool): Fixture that indicates whether the emulator is in landscape orientation.
-        emulator_controller (EmulatorControllerStub): An instance of the emulator controller fixture.
+        avd (BaseEmulator): The running emulator.
+        is_landscape (bool): Whether the emulator is in landscape orientation.
+        install_animation_apk: The animation application fixture instance.
+        two_multidisplays: Configures and enables two additional displays.
+        displays_ids: The list of the IDs for all configured displays.
+        target_display: The display being tested.
+        emulator_controller: The emulator controller fixture instance.
 
     Test UUID: d0114791-2781-45ee-b4fa-b496d767604e
 
     Test Steps:
         1. Configure multiple display resolutions.
         2. Launch the animation APK on the current display.
-        3. Disable multidisplay functionality
-        4. Confirm the animation APK moved to the primary display (Verify).
-        5. Repeat the steps 2-4 for all display resolutions
+        3. Disable multidisplay functionality.
+        4. Confirm the animation APK moves to the primary display (Verify).
+        5. Repeat the steps 2-4 for all display resolutions.
 
     Verify:
         - Ensure that the secondary display is removed after disabling multidisplay.
-        - Verify that the app running on the secondary display is correctly moved to the primary display.
+        - Verify that the app running on the secondary display correctly moves to
+          the primary display.
     """
     if is_landscape:
         pytest.skip("Cannot run multi display tests in landscape mode.")
 
-    # Displays configurations to be tested.
-    resolutions = [(720, 1280), (1080, 1920)]
-    displays = [
-        DisplayConfiguration(width=x[0], height=x[1], dpi=213, display=idx + 1)
-        for idx, x in enumerate(resolutions)
-    ]
-
     async def disable_multidisplay():
-        # Ensure the device has only one display
+        # Ensure the device has only one display.
         cfg = await emulator_controller.setDisplayConfigurations(
             DisplayConfigurations(displays=[])
         )
         logging.info("Disabling multidisplay mode")
         assert len(cfg.displays) == 1
-        return cfg
-
-    async def enable_multidisplay(displays):
-        # Set the display configuration from 'displays'.
-        to_set = DisplayConfigurations(displays=displays)
-        logging.info("Enabling multidisplay mode")
-        cfg = await emulator_controller.setDisplayConfigurations(to_set)
-        return cfg
 
     async def app_is_on_primary_display(pkg):
         # Return True if 'pkg' is detected on the primary display.
-        display_id = await get_package_display_id(avd, pkg)
-        return display_id == 0
+        async def _app_is_on_primary_display():
+            display_id = await get_package_display_id(avd, pkg)
+            if display_id is not None:
+                logging.info(f"Detected app on display {display_id}")
+                return display_id == displays_ids[0]
+        return await eventually(_app_is_on_primary_display, timeout=20)
 
-    dummy_pkg = "com.google.AnimateBox"
-    dummy_activity = f"{dummy_pkg}/com.google.emu.MainActivity"
-    pkg_name = dummy_pkg.split(".")[-1]
-    await avd.stop_activity(dummy_pkg)
+    pkg_name = install_animation_apk.package_name
+    display_num = int(target_display[-1]) - 1
+    display_id = displays_ids[display_num]
 
-    for i in range(len(resolutions)):
+    # Start app on display 'display_id'.
+    assert await install_animation_apk.start(params=f"--display {display_id}"), \
+        f"Couldn't launch package '{pkg_name}' on display {display_id}"
 
-        # Enable multidisplay.
-        await enable_multidisplay(displays)
-        await asyncio.sleep(20)
+    # Disable multidisplay.
+    logging.info(
+        f"Disable multidisplay while app {pkg_name} is on display {display_id}"
+    )
+    await disable_multidisplay()
 
-        # Get the current displays list.
-        assert await eventually(
-            partial(get_displays_ids, avd), timeout=60
-        ), "Couldn't retrieve the displays Ids"
-        ids = await get_displays_ids(avd)
+    # Verify that the app has moved to the primary display.
+    assert await app_is_on_primary_display(pkg_name), \
+        f"App {pkg_name} was not found on the primary display " \
+        f"after disabling display {display_id}."
 
-        # Start app on the display 'ids[i + 1]'.
-        assert await eventually(
-            partial(start_on_display, avd, dummy_activity, ids[i + 1]), timeout=60
-        ), f"Couldn't launch package '{pkg_name}' on display {ids[i + 1]}"
-
-        # Disable multidisplay.
-        logging.info(
-            f"Disable multidisplay while app {pkg_name} is on display {ids[i + 1]}"
-        )
-        await disable_multidisplay()
-
-        # Verify if the app is present in the primary display.
-        assert await eventually(
-            partial(app_is_on_primary_display, dummy_pkg)
-        ), f"App {pkg_name} was not found on display 0"
-
-        # Stop the app.
-        await avd.stop_activity(dummy_pkg)
+    # Stop the app.
+    await install_animation_apk.stop()
 
 
 @pytest.mark.slow
