@@ -46,7 +46,6 @@ async def test_snapshot_cannot_load_unknown_snapshot(snapshot_service):
 
 
 @pytest.mark.snapshot
-@pytest.mark.sanity
 async def test_snapshot_can_save_and_load_through_service(snapshot_service):
     assert await snapshot_service.save("foo")
     snapshots = await snapshot_service.lists()
@@ -78,7 +77,6 @@ async def test_snapshot_pull_gets_a_tar(snapshot_service, tmpdir):
     assert tar.getmembers()
 
 
-@pytest.mark.skipos("all")
 @pytest.mark.sanity
 @pytest.mark.snapshot
 async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
