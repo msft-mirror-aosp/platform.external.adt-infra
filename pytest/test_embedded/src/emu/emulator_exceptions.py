@@ -47,3 +47,7 @@ class FailedToStopActivityException(EmulatorException):
 
 class EmulatorFailedToBootException(EmulatorException):
     pass
+
+
+class EmulatorFailedToDownload(EmulatorException):
+    pass

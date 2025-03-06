@@ -1478,6 +1478,8 @@ EXPECTED_RELEASE_CONTENTS = {
         "emulator/lib64/vulkan/libvulkan.so",
         "emulator/lib64/vulkan/libvulkan.so.1",
         "emulator/lib64/vulkan/vk_swiftshader_icd.json",
+        "emulator/lib64/vulkan/libvulkan_lvp.so",
+        "emulator/lib64/vulkan/lvp_icd.x86_64.json",
         "emulator/lib/adb_service.proto",
         "emulator/lib/advancedFeatures.ini",
         "emulator/lib/ca-bundle.pem",
