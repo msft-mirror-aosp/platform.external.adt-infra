@@ -25,7 +25,6 @@ def tmp_test_file(tmp_path):
 
 
 @pytest.mark.adb
-@pytest.mark.sanity
 @pytest.mark.flaky(reruns=0)
 async def test_adb_screencapture_creates_a_file(avd, tmp_test_file):
     device_file = f"/sdcard/{tmp_test_file.name}"
