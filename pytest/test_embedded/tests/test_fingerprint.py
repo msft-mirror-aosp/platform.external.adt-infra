@@ -77,7 +77,7 @@ async def add_fingerprint(avd, ad_ui) -> int:
     if api >= 34:
         ad_ui(scrollable=True)\
             .scroll.down(text="Device unlock", res="android:id/title")
-        ad_ui(text="Device unlock", res="android:id/title").click.wait()
+        ad_ui(text="Device unlock", res="android:id/title").click.wait(UI_WAIT_TIME)
 
     ad_ui(scrollable=True).scroll.down(text=FINGERPRINT_LABEL[api])
     ad_ui(text=FINGERPRINT_LABEL[api]).wait.click(UI_WAIT_TIME)
@@ -91,25 +91,25 @@ async def add_fingerprint(avd, ad_ui) -> int:
     ad_ui(clazz='android.widget.EditText').set_text('{:04}'.format(PIN))
     next_button = ad_ui(text='NEXT', clazz='android.widget.Button')
     assert await wait_until(lambda: next_button.enabled)
-    next_button.click.wait()
+    next_button.click.wait(UI_WAIT_TIME)
 
     # Reenter PIN and click CONFIRM.
     assert ad_ui(text="Re-enter your PIN").wait.exists(UI_WAIT_TIME)
     ad_ui(clazz='android.widget.EditText').set_text('{:04}'.format(PIN))
     confirm_button = ad_ui(text='CONFIRM', clazz='android.widget.Button')
     assert await wait_until(lambda: confirm_button.enabled)
-    confirm_button.click.wait()
+    confirm_button.click.wait(UI_WAIT_TIME)
 
     assert ad_ui(text='DONE', clazz='android.widget.Button').wait.click(UI_WAIT_TIME)
     await asyncio.sleep(2)
     if api >= 34:
         ad_ui(scrollable=True).scroll.down(text="Pixel Imprint")
-        assert ad_ui(text="Pixel Imprint").wait.click()
+        assert ad_ui(text="Pixel Imprint").wait.click(UI_WAIT_TIME)
         await asyncio.sleep(2)
     ad_ui(scrollable=True).scroll.down()
     agree_button = ad_ui(text='I AGREE', clazz='android.widget.Button')
     agree_button.wait.exists(UI_WAIT_TIME)
-    assert agree_button.click.wait()
+    assert agree_button.click.wait(UI_WAIT_TIME)
 
     # Touch the fingerprint sensor
     logging.info(f"Attempt to touch the fingerprint sensor with fingerid {PIN}")
@@ -129,7 +129,7 @@ async def add_fingerprint(avd, ad_ui) -> int:
     assert ad_ui(text="Fingerprint added",
                  clazz="android.widget.TextView").wait.exists(UI_WAIT_TIME)
 
-    assert ad_ui(text='DONE', clazz='android.widget.Button').wait.click()
+    assert ad_ui(text='DONE', clazz='android.widget.Button').wait.click(UI_WAIT_TIME)
     logging.info(f"Added new fingerprint with fingerid {PIN}")
 
     return PIN
@@ -154,7 +154,7 @@ async def remove_fingerprint(avd, ad_ui, PIN):
     """
     api = await avd.api_level()
     ad_ui(scrollable=True).scroll.down(text=FINGERPRINT_LABEL[api])
-    assert ad_ui(text=FINGERPRINT_LABEL[api]).wait.click()
+    assert ad_ui(text=FINGERPRINT_LABEL[api]).wait.click(UI_WAIT_TIME)
 
     ad_ui(text="Re-enter your PIN", clazz="android.widget.TextView")\
          .wait.exists(UI_WAIT_TIME)
@@ -166,7 +166,7 @@ async def remove_fingerprint(avd, ad_ui, PIN):
     if api >= 34:
         ad_ui(text="Pixel Imprint").wait.exists()
         ad_ui(scrollable=True).scroll.down(text="Pixel Imprint")
-        assert ad_ui(text="Pixel Imprint").click.wait()
+        assert ad_ui(text="Pixel Imprint").click.wait(UI_WAIT_TIME)
 
     assert ad_ui(res="com.android.settings:id/delete_button",
                  clickable=True).wait.click(UI_WAIT_TIME)
