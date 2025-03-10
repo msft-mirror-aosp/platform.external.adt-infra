@@ -58,22 +58,16 @@ async def camera_ready(avd, ad_ui, camera_app):
             logging.info(f"Camera {camera_id} was activated.")
             return True
 
-    ad_ui.watcher("LauncherError") \
-         .when(text="Pixel Launcher isn't responding") \
-         .click()
-    ad_ui.watcher("SystemUIError") \
-         .when(text="System UI isn't responding") \
-         .click()
-
-    if ad_ui.watcher('LauncherError').triggered:
-        raise EmulatorException("Pixel Launcher stopped responding.")
-    if ad_ui.watcher('SystemUIError').triggered:
-        raise EmulatorException("System UI stopped responding.")
-
     UI_WAIT_TIME = datetime.timedelta(seconds=20)
-    assert ad_ui(
+    ad_ui(
         text="NEXT", res="com.android.camera2:id/confirm_button"
     ).wait.click(UI_WAIT_TIME)
+
+    if ad_ui(text="Pixel Launcher isn't responding").exists:
+        raise EmulatorException("Pixel Launcher stopped responding.")
+    if ad_ui(text="System UI isn't responding").exists:
+        raise EmulatorException("System UI isn't responding.")
+
     ad_ui(
         text="Only this time",
         res="com.android.permissioncontroller:id/permission_allow_one_time_button",
