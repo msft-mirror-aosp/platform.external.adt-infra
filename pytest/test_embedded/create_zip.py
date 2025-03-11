@@ -16,6 +16,7 @@
 
 import argparse
 import logging
+import os
 import pathlib
 import tempfile
 import time
@@ -138,6 +139,13 @@ def main(args: argparse.Namespace) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_dir = pathlib.Path(tmp_dir)
             logging.info("Creating python virtualenv")
+            # NOTE: The buildbot may set these variables to directories that do not exist. The
+            # virtualenv code called below fails in that case.
+            if os.environ.get('TMP'):
+                pathlib.Path(os.environ['TMP']).mkdir(exist_ok=True, parents=True)
+            if os.environ.get('TEMP'):
+                pathlib.Path(os.environ['TEMP']).mkdir(exist_ok=True, parents=True)
+
             level = logging.DEBUG if args.verbose else logging.INFO
             run_tests.create_pyrunner(False, tmp_dir, level)
 
@@ -145,7 +153,7 @@ def main(args: argparse.Namespace) -> None:
             zip_path(zipf, tmp_dir.joinpath(".venv"), symlink_src=run_tests.PYTHON_DIR)
 
         # NOTE: There are symlinks here, but they are all to protos within the same tree so can be
-        # safefully ignored.
+        # safely ignored.
         logging.info("Archiving grpc protos")
         zip_path(zipf, run_tests.GRPC_SERVICES, glob_match="**/*.proto")
 
