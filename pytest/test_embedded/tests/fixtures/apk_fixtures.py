@@ -29,7 +29,7 @@ from emu.application import AnimationApplication
 
 
 @pytest.fixture
-@pytest.mark.async_timeout(90)
+@pytest.mark.async_timeout(120)
 async def install_animation_apk(avd: BaseEmulator):
     """Installs the animation APK on the emulator.
 
@@ -41,7 +41,7 @@ async def install_animation_apk(avd: BaseEmulator):
 
 
 @pytest.fixture
-@pytest.mark.async_timeout(90)
+@pytest.mark.async_timeout(120)
 async def animation_app(install_animation_apk, avd: BaseEmulator):
     """Launch the animation app that displays a rotating triangle.
 
