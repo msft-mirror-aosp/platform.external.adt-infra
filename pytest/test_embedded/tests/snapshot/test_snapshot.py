@@ -37,6 +37,8 @@ async def snapshot_service(avd, service):
     snapshots = await snap.lists()
     for entry in snapshots:
         await snap.delete(entry.snapshot_id)
+        if entry.snapshot_id != "default_boot":
+            await snap.delete(entry.snapshot_id)
 
 
 @pytest.mark.snapshot
@@ -145,18 +147,33 @@ async def test_snapshot_can_save_and_delete(telnet, snapshot_service):
     assert not await contains_snapshot(telnet), "foo1 snapshot not deleted"
 
 
+async def booted_from_snapshot(telnet, expected_snapshot: str):
+    """Return True if booted from 'expected_snapshot'"""
+    snapshots = await telnet.send("avd snapshot get")
+    if snapshots is None:
+        return None
+    logging.info(f"Current snapshot loaded: {snapshots[0]}")
+    if snapshots[0] == expected_snapshot:
+        return True
+
+
 @pytest.mark.snapshot
 @pytest.mark.fast
-async def test_snapshot_can_save_and_load(avd, telnet, snapshot_service, animation_app):
+async def test_snapshot_can_save_and_load(avd, telnet, snapshot_service):
+    snapshots = await telnet.send("avd snapshot get")
+    logging.info("Emulator booted from snapshot %s.", snapshots[0])
+
     await telnet.send("avd snapshot save foo1")
-    assert eventually(
-        contains_snapshot, telnet, timeout=10.0
+    assert await eventually(
+        partial(contains_snapshot, telnet), timeout=10.0
     ), "foo1 snapshot not available"
-    assert await avd.start_activity(
-        "com.google.AnimateBox/com.google.emu.MainActivity", params=None
-    )
+    logging.info("Snapshot foo1 successfully saved.")
+
     assert await telnet.send("avd snapshot load foo1")
-    assert await avd.stop_activity("com.google.AnimateBox")
+    assert await eventually(
+        partial(booted_from_snapshot, telnet, "foo1"), timeout=30
+    ), "Couldn't load snapshot foo1"
+
 
 
 @pytest.mark.snapshot
