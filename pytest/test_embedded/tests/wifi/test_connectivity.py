@@ -168,7 +168,6 @@ async def test_wlan0_ip6_address_assigned(enable_wifi_only, has_ip):
 
 @pytest.mark.fast
 @pytest.mark.async_timeout(40)
-@pytest.mark.skip("IPv6 tests are not yet supported. b/386238377")
 async def test_wlan0_can_connect_ipv6(enable_wifi_only, avd):
     """Tests IPv6 connectivity over wlan0.
 

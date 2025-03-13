@@ -111,7 +111,6 @@ async def test_can_open_power_menu(open_power_menu, is_power_menu_open):
 
 @pytest.mark.sanity
 @pytest.mark.async_timeout(60)
-@pytest.mark.dependency(depends=["test_can_open_power_menu"])
 async def test_close_emulator_with_power_menu(avd, emulator_is_off):
     """Verifies closing the emulator via the power menu."""
     assert await click_button(

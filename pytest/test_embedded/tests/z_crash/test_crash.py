@@ -264,8 +264,6 @@ async def restart_and_verify_crash_dialogue(avd):
 @pytest.mark.slow
 @pytest.mark.async_timeout(600)
 @pytest.mark.fast
-@pytest.mark.skipos("linux", "reason: Issue with pyautogui.")
-@pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
 async def test_crash_dont_send_report(avd, crash_reporter):
     """Verify user can reject/cancel sending emulator crash report.
 
@@ -344,8 +342,6 @@ async def test_crash_dont_send_report(avd, crash_reporter):
 @pytest.mark.slow
 @pytest.mark.async_timeout(600)
 @pytest.mark.fast
-@pytest.mark.skipos("linux", "reason: Issue with pyautogui.")
-@pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
 async def test_crash_send_report(avd, crash_reporter):
     """Verify user can proceed with sending emulator crash report.
 
@@ -429,8 +425,6 @@ async def test_crash_send_report(avd, crash_reporter):
 
 @pytest.mark.fast
 @pytest.mark.async_timeout(600)
-@pytest.mark.skipos("linux", "reason: Issue with pyautogui.")
-@pytest.mark.skipos("win", "reason: Shift+Tab hotkey unreliable.")
 async def test_crash_without_internet(avd, crash_reporter):
     """Verify no exceptions are raised when sending a crash report without internet connectivity.
 
