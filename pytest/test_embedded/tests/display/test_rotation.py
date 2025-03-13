@@ -272,7 +272,6 @@ async def rotation_through_console_observable_through_stream_screenshot(
 
 
 @pytest.mark.graphics
-@pytest.mark.fast
 @pytest.mark.sanity
 @pytest.mark.parametrize(
     "rotation, quadrant",
