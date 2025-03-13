@@ -30,6 +30,7 @@ from src.emu.logging.log_handler import configure_logging
 COPY_PATHS = (
     run_tests.HERE / "tests",
     run_tests.HERE / "cfg",
+    run_tests.HERE / "fix_win_venv.py",
     run_tests.HERE / "test_runner.py",
     run_tests.HERE / "run_from_zip.py",
     run_tests.HERE / "pytest.ini",
