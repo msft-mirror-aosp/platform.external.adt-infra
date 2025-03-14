@@ -26,6 +26,7 @@ import com.android.devtools.systemimage.uitest.common.Res;
 import com.android.devtools.systemimage.uitest.watchers.watcher;
 import java.util.concurrent.TimeUnit;
 import android.util.Log;
+import android.widget.Button;
 
 import org.junit.Assert;
 
@@ -56,33 +57,15 @@ public class GoogleAppUtil {
      * Finds the "Forgot Password" link on the screen based on the API level.
      *
      * @param device the UiDevice instance representing the device on which the test is currently running
-     * @param api the API level of the device
      * @return the UiObject representing the "Forgot Password" link
      */
-    private static UiObject findForgotPasswordLink(UiDevice device, int api) {
-        UiObject forgotPasswordLink;
-        switch (api) {
-            case 27:
-            case 28:
-            case 31:
-            case 32:
-                forgotPasswordLink = device.findObject(new UiSelector().resourceId("forgotPassword"));
-                break;
-
-            case 29:
-            case 30:
-                forgotPasswordLink = device.findObject(new UiSelector().text("Forgot password?"));
-                break;
-
-            case 33:
-                forgotPasswordLink = device.findObject(new UiSelector().textMatches("(?i)forgot password?(?-i)"));
-                break;
-
-            default:
-                forgotPasswordLink = device.findObject(new UiSelector().description("Forgot password?"));
-                break;
-        }
-        return forgotPasswordLink;
+    private static UiObject findForgotPasswordLink(UiDevice device) {
+        return switch (GoogleAppUtil.api) {
+            case 27, 28, 31, 32 -> device.findObject(new UiSelector().resourceId("forgotPassword"));
+            case 29, 30 -> device.findObject(new UiSelector().text("Forgot password?"));
+            case 33 -> device.findObject(new UiSelector().textMatches("(?i)forgot password?(?-i)"));
+            default -> device.findObject(new UiSelector().description("Forgot password?"));
+        };
     }
 
     /**
@@ -96,12 +79,12 @@ public class GoogleAppUtil {
     public static boolean loginGoogleApp(Instrumentation instrumentation, boolean firstAttempt) throws Exception {
         final UiDevice device = UiDevice.getInstance(instrumentation);
 
-        GoogleAppUtil.openChromeSettings(instrumentation);
-        UiObject syncAndPersonalizeButton = device.findObject(
-                new UiSelector().text("Sync and personalize across devices"));
-        if (syncAndPersonalizeButton.waitForExists(5L)) {
-            syncAndPersonalizeButton.clickAndWaitForNewWindow();
-        }
+        UiObject syncAndPersonalizeButton = GoogleAppUtil.openChromeSettings(instrumentation);
+
+        assertTrue("Settings menu item not found during login",
+                syncAndPersonalizeButton != null && syncAndPersonalizeButton.waitForExists(5000L));
+
+        syncAndPersonalizeButton.clickAndWaitForNewWindow();
 
         UiObject accountPromoButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_ACCOUNT_RES));
@@ -180,7 +163,20 @@ public class GoogleAppUtil {
             clickNext(device);
         }
 
+        final UiObject checkingInfoLabel = device.findObject(
+                new UiSelector().resourceId(Res.GOOGLE_LAYOUT_ICON_RES));
+
+        assertTrue("Checking info label before email input not dismissed.",
+                checkingInfoLabel.waitUntilGone(90000L));
+
         UiObject editInput = device.findObject(new UiSelector().className("android.widget.EditText"));
+
+        final UiObject forgotEmailLink = device.findObject(
+                new UiSelector().text("Forgot email?").className(Button.class));
+
+        assertTrue("Google account forgot email not found.",
+                new Wait(200000L).until(forgotEmailLink::exists));
+
         boolean hasEditInput = editInput.waitForExists(
                 TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS));
         assertTrue("Email field not found", firstAttempt || hasEditInput);
@@ -190,9 +186,6 @@ public class GoogleAppUtil {
             TimeUnit.SECONDS.sleep(5);
             return loginGoogleApp(instrumentation, false);
         }
-
-        UiObject forgotEmailLink = api >= 28 ? device.findObject(new UiSelector().text("Forgot email?")) :
-                device.findObject(new UiSelector().description("Forgot email?"));
 
         boolean needsEmail = forgotEmailLink.waitForExists(
                 TimeUnit.MILLISECONDS.convert(10L, TimeUnit.SECONDS));
@@ -208,34 +201,58 @@ public class GoogleAppUtil {
         editInput.clearTextField();
         editInput.setText(getUserEmail());
         clickNext(device);
+        UiObject nextButton = device.findObject(new UiSelector().textMatches("(?i)next(?-i)"));
+        if (nextButton.waitForExists(60000L) && forgotEmailLink.waitForExists(10000L)) {
+            editInput.clearTextField();
+            editInput.setText(getUserEmail());
+            editInput.clickAndWaitForNewWindow(3000L);
+            device.pressEnter();
+
+            if (!forgotEmailLink.waitUntilGone(10000L) && nextButton.isEnabled()) {
+                nextButton.clickAndWaitForNewWindow();
+            }
+        }
 
         assertTrue("Forgot email link not dismissed.",
                 forgotEmailLink.waitUntilGone(90000L));
 
-        UiObject forgotPasswordLink = findForgotPasswordLink(device, api);
+        UiObject passwordButton = device.findObject(
+                new UiSelector().
+                        textMatches("(?i)show password(?-i)"));
 
-        boolean needsPassword = forgotPasswordLink.waitForExists(
-                TimeUnit.MILLISECONDS.convert(1000L, TimeUnit.SECONDS));
-        assertTrue("Forgot password not found", firstAttempt ||needsPassword);
-        if ( !needsPassword ) {
-            Log.i("Login", "Retry google login");
-            device.pressHome();
-            TimeUnit.SECONDS.sleep(5);
-            return loginGoogleApp(instrumentation, false);
+        boolean passwordButtonFound = new Wait(200000L).until(passwordButton::exists);
+
+        if (!passwordButtonFound) {
+            passwordButton = findForgotPasswordLink(device);
+            passwordButtonFound = new Wait().until(passwordButton::exists);
         }
+        assertTrue("Google account password button not found.", passwordButtonFound);
 
-        Log.i("Login", "enter password");
-        editInput.setText(getUserPassword());
-        clickNext(device);
+        final UiObject chromeProgressBar =
+                device.findObject(new UiSelector().resourceId(Res.CHROME_PROGRESS_BAR_RES));
 
-        assertTrue("Forgot password link not dismissed.",
-                forgotPasswordLink.waitUntilGone(90000L));
+        UiObject passwordInput = device.findObject(new UiSelector().className("android.widget.EditText"));
+        assertTrue("Google account password input not found.",
+                new Wait(90000L).until(
+                        () -> chromeProgressBar.waitUntilGone(90000L) && passwordInput.waitForExists(900000L)));
+        if (nextButton.waitForExists(60000L) && passwordInput.waitForExists(10000L)) {
+            passwordInput.clearTextField();
+            passwordInput.setText(getUserPassword());
+            passwordInput.clickAndWaitForNewWindow(3000L);
+            device.pressEnter();
+            if (!passwordInput.waitUntilGone(10000L) && nextButton.isEnabled()) {
+                nextButton.clickAndWaitForNewWindow();
+            }
+        }
+        assertTrue("Google account password input not dismissed.",
+                new Wait(90000L).until(
+                        () -> passwordInput.waitUntilGone(90000L) && chromeProgressBar.waitUntilGone(90000L)));
 
         boolean isSignedIn =
                 new watcher(device, Res.GOOGLE_APP_CONF_WATCHER_PATTERN).checkForCondition();
 
         if ((api >= 24 && api <= 29) || api >= 31) {
-            UiObject signInConsentButton = api == 32 ?
+            UiObject signInConsentButton = api >= 32 ?
                     device.findObject(
                             new UiSelector().resourceId(Res.CHROME_TERMS_ACCEPT_BUTTON_RES)) :
                     device.findObject(
@@ -324,7 +341,6 @@ public class GoogleAppUtil {
             final UiDevice device = UiDevice.getInstance(instrumentation);
 
             GoogleAppUtil.openChromeSettings(instrumentation);
-
             final UiObject androidIconButton = api == 31 ?
                     device.findObject(
                             new UiSelector().resourceId(Res.CHROME_SIGNIN_PROMO_BUTTON_RES)) :
@@ -406,10 +422,10 @@ public class GoogleAppUtil {
      * @param instrumentation the instrumentation instance
      * @throws Exception if an error occurs during the operation
      */
-    private static void openChromeSettings(Instrumentation instrumentation) throws Exception {
+    private static UiObject openChromeSettings(Instrumentation instrumentation) throws Exception {
         UiDevice device = UiDevice.getInstance(instrumentation);
 
-        AppLauncher.launch(instrumentation, "Chrome");
+        device.executeShellCommand("am start -n com.android.chrome/com.google.android.apps.chrome.Main");
 
         UiObject addAccountToDeviceButton = device.findObject(
                 new UiSelector().resourceId("com.android.chrome:id/signin_fre_continue_button"));
@@ -442,15 +458,27 @@ public class GoogleAppUtil {
         final UiObject chromeMenuButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_MENU_BUTTON_RES));
 
-        if (new Wait().until(chromeMenuButton::exists)) {
-            chromeMenuButton.clickAndWaitForNewWindow();
+        for (int i = 0; i < 5; i++) {
+            if (new Wait(5000L).until(chromeMenuButton::exists)) {
+                chromeMenuButton.clickAndWaitForNewWindow(5000L);
+                if (chromeMenuButton.waitUntilGone(5000L)) {
+                    break;
+                }
+            }
         }
 
         final UiObject settingsButton = device.findObject(new UiSelector().text("Settings"));
 
-        if (new Wait().until(settingsButton::exists)) {
+        if (new Wait(5000L).until(settingsButton::exists)) {
             settingsButton.clickAndWaitForNewWindow();
+            settingsButton.waitUntilGone(5000L);
+            UiObject syncAndPersonalizeButton = device.findObject(
+                    new UiSelector().text("Sync and personalize across devices"));
+            if (syncAndPersonalizeButton.waitForExists(10000L)) {
+                return syncAndPersonalizeButton;
+            }
         }
+        return null;
     }
 
     /**
