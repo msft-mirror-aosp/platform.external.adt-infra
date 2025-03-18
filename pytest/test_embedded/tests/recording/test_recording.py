@@ -177,31 +177,26 @@ def verify_recorded_file_header(sample_file, sample_file_header):
     ), f"{header} != sample_file_header, the magic header"
 
 
-async def play_webm(emulator, file):
+async def play_webm(emulator, file, ad_ui):
     """Play a .webm video using the default video player."""
-
-    async def dismiss_fullscreen_popup():
-        # Dismiss fullscreen mode if needed.
-        status = await click_button(emulator, text="Got it")
-        return None if not status else True
 
     await emulator.stop_activity("com.google.android.apps.photos")
     await emulator.start_activity(
         "com.google.android.apps.photos/.pager.HostPhotoPagerActivity",
         params=f'-a android.intent.action.VIEW -W -d file://{file} -t "video/*"',
     )
-    await eventually(dismiss_fullscreen_popup)
+    ad_ui(text="Got it").wait.click()
     logging.info(f"Launched recording file '{file}'")
 
 
-async def verify_qrcode(emulator, webm_recording, payload):
+async def verify_qrcode(emulator, webm_recording, payload, ad_ui):
     """Play a .webm recording in the emulator and check if a QR code exists"""
-    video_path = Path("/sdcard/Downloads/") / webm_recording.name
+    video_path = Path("/sdcard/Download/") / webm_recording.name
     await emulator.adb.push(webm_recording, video_path)
     emulator_controller = EmulatorControllerStub(emulator.channel)
 
     async def _play_and_decode():
-        await play_webm(emulator, video_path)
+        await play_webm(emulator, video_path, ad_ui)
         return await decode_qrcodes([payload], emulator_controller=emulator_controller)
 
     assert await wait_until(
@@ -217,7 +212,7 @@ async def verify_qrcode(emulator, webm_recording, payload):
 @pytest.mark.fast
 @pytest.mark.async_timeout(240)
 async def test_screen_records_with_different_gpu_modes(
-    emulator, gpu_mode, tmp_path, qrcode_png
+    emulator, gpu_mode, tmp_path, qrcode_png, ad_ui
 ):
     """Verify screen recording work with different gpu modes.
 
@@ -225,6 +220,8 @@ async def test_screen_records_with_different_gpu_modes(
         emulator (BaseEmulator): Fixture that gives access to the running emulator.
         gpu_mode (str): gpu mode.
         tmp_path (Path): Fixture that provides a temporary working directory.
+        qrcode_png (Qrcode): QR code PNG fixture.
+        ad_ui (UiDevice): mobly's UiAutomator snippet device.
 
     Test Steps:
         1. Launch an AVD with the option "-gpu auto".
@@ -255,8 +252,10 @@ async def test_screen_records_with_different_gpu_modes(
     sample_file_header = b"\x1A\x45\xDF\xA3"
     await qrcode_png.show()
     await screen_records_video(screen_service, sample_file, 270, 480, 15)
+    logging.info("Screen recordin stopped. Verifying the video file...")
     verify_recorded_file_header(sample_file, sample_file_header)
-    await verify_qrcode(emulator, sample_file, qrcode_png.payload)
+    logging.info("Attempting to verify the QR code...")
+    await verify_qrcode(emulator, sample_file, qrcode_png.payload, ad_ui)
 
 
 @pytest.mark.slow
