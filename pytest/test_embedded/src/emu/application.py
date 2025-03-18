@@ -159,7 +159,9 @@ class Application:
         self,
         activity=None,
         params: str = "",
-        wait_for_started: Callable[[], Coroutine[Any, Any, bool]] = lambda: True,
+        wait_for_started: Callable[
+            [], Coroutine[Any, Any, bool]
+        ] = lambda: asyncio.ensure_future(asyncio.sleep(0, True)),
         timeout: float = 5,
     ) -> bool:
         """Starts the application on the emulator.
