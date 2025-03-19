@@ -263,7 +263,7 @@ async def test_screen_records_with_different_gpu_modes(
 @pytest.mark.fast
 @pytest.mark.async_timeout(240)
 async def test_screen_records_with_different_orientations(
-    avd, screen_service, telnet, tmp_path, qrcode_png
+    avd, screen_service, telnet, tmp_path, qrcode_png, ad_ui
 ):
     """Verify the behavior of screen recording with different screen orientation.
 
@@ -316,7 +316,7 @@ async def test_screen_records_with_different_orientations(
     await qrcode_png.show()
     await screen_records_video(screen_service, landscape_file, 270, 480, 20)
     verify_recorded_file_header(landscape_file, sample_file_header)
-    await verify_qrcode(avd, landscape_file, qrcode_png.payload)
+    await verify_qrcode(avd, landscape_file, qrcode_png.payload, ad_ui)
 
     # Ensure a valid recording is produced while the emulator is rotated.
     landscape_portrait_file = tmp_path / "sample_landscape_portrait.webm"
@@ -331,4 +331,4 @@ async def test_screen_records_with_different_orientations(
     await screen_service.StopRecording(info, timeout=5)
 
     await check_webm(landscape_portrait_file, sample_file_header)
-    await verify_qrcode(avd, landscape_portrait_file, qrcode_png.payload)
+    await verify_qrcode(avd, landscape_portrait_file, qrcode_png.payload, ad_ui)
