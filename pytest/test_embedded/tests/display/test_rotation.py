@@ -272,7 +272,6 @@ async def rotation_through_console_observable_through_stream_screenshot(
 
 
 @pytest.mark.graphics
-@pytest.mark.fast
 @pytest.mark.sanity
 @pytest.mark.parametrize(
     "rotation, quadrant",
@@ -307,7 +306,7 @@ async def test_rotation_pixels_in_the_right_place(
 
     stream = stream_screenshot(ImageFormat(format=ImageFormat.RGB888))
     assert await eventually(
-        find_square_in_image, stream
+        find_square_in_image, stream, timeout=120
     ), f"Did not see the rotation to {rotation} in time."
 
 

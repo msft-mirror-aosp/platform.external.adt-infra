@@ -38,7 +38,6 @@ class Application:
         apk_path: Path = None,
     ):
         self.avd = avd
-        self.adb = avd.adb
         self.apk_path = apk_path  # Could be none for install apks.
         self.default_activity = default_activity
         if package_name is None and default_activity is not None:
@@ -49,6 +48,10 @@ class Application:
             raise ValueError(
                 "Package name not specified or could not be extracted from activity"
             )
+
+    @property
+    def adb(self):
+        return self.avd.adb
 
     def extract_package_name(self, activity_string: str) -> str:
         """
@@ -156,7 +159,9 @@ class Application:
         self,
         activity=None,
         params: str = "",
-        wait_for_started: Callable[[], Coroutine[Any, Any, bool]] = lambda: True,
+        wait_for_started: Callable[
+            [], Coroutine[Any, Any, bool]
+        ] = lambda: asyncio.ensure_future(asyncio.sleep(0, True)),
         timeout: float = 5,
     ) -> bool:
         """Starts the application on the emulator.

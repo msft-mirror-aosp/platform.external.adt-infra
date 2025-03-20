@@ -16,6 +16,7 @@ import logging
 from pathlib import Path
 from emu.application import GooglePhotosApplication
 
+import datetime
 import pytest
 
 qrcode_html_fmt = """
@@ -47,7 +48,7 @@ qrcode_html_fmt = """
 
 
 @pytest.fixture
-async def qrcode_png(emulator):
+async def qrcode_png(emulator, ad_ui):
     """A fixture that access a PNG image with a pre-encoded QR code.
 
     Args:
@@ -96,13 +97,25 @@ async def qrcode_png(emulator):
 
         async def show(self, display_id=0):
             """Show the PNG image on display with id <display_id>"""
+            async def _wait_for_started():
+                """Return True if the Photo app share button exists"""
+                _WAIT_TIME = datetime.timedelta(seconds=30)
+                return ad_ui(res="com.google.android.apps.photos:id/share").wait.exists()
+
             if not self.pushed:
                 await self.push()
             await self.photos.stop()
-            await emulator.start_activity(
-                ".pager.HostPhotoPagerActivity",
-                params=f'-a android.intent.action.VIEW -W -d file://{self.path} -t "image/PNG"'
-                + (f" --display {display_id}" if display_id != 0 else ""),
+            activity_params = (
+                '-a', 'android.intent.action.VIEW',
+                '-d', f'file://{self.path}', '-t', '"image/PNG"'
+            )
+            if display_id != 0:
+                activity_params += ['--display', f"{display_id}"]
+
+                assert await self.photos.start(
+                    params=' '.join(activity_params),
+                    wait_for_started=_wait_for_started,
+                    timeout=30
             )
             logging.info(f"Launched the QR code PNG image on display '{display_id}'")
 
