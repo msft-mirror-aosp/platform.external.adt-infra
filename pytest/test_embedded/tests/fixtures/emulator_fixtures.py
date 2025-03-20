@@ -387,12 +387,13 @@ async def ensure_multidisplay_service_ready(emulator_controller):
         RpcError: If a gRPC error other than UNAVAILABLE occurs.
         Exception: For any other unexpected errors during status retrieval.
     """
-    max_retries = 5
-    retry_delay = 1  # Initial delay in seconds
+    max_retries = 10
+    retry_delay = 2  # Initial delay in seconds
 
     for attempt in range(max_retries):
         try:
             status = await emulator_controller.getStatus(__EMPTY__)
+            logging.info("Attempting %s for status %s", attempt, status)
             if (
                 "multidisplay" in status.guestConfig
                 and status.guestConfig["multidisplay"] == "available"
