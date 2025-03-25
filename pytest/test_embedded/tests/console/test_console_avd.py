@@ -12,6 +12,7 @@ from aemu.proto.screen_recording_service_pb2 import RecordingInfo
 from aemu.proto.screen_recording_service_pb2_grpc import ScreenRecordingStub
 from aemu.proto.emulator_controller_pb2 import PhoneCall, PhoneResponse
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
+from emu.application import YouTubeApplication
 import logging
 import asyncio
 
@@ -212,16 +213,13 @@ async def test_concurrent_avds(avd, avd_factory, tmp_path):
     channel2 = avd2.description.get_async_grpc_channel([("emulator.security", "token")])
 
     # Ensure Youtube launches on both AVDs.
-    youtube_pkg = "com.google.android.youtube"
-    youtube_activity = (
-        "com.google.android.apps.youtube.app.watchwhile.WatchWhileActivity"
-    )
-    assert await avd1.start_activity(
-        "/".join((youtube_pkg, youtube_activity)), params="-W"
-    ), "Couldn't launch Youtube on AVD1"
-    assert await avd2.start_activity(
-        "/".join((youtube_pkg, youtube_activity)), params="-W"
-    ), "Couldn't launch Youtube on AVD2"
+    youtube_app_avd1 = YouTubeApplication(avd1)
+    await youtube_app_avd1.stop()
+    await youtube_app_avd1.start(params="-W")
+
+    youtube_app_avd2 = YouTubeApplication(avd2)
+    await youtube_app_avd2.stop()
+    await youtube_app_avd2.start(params="-W", delay=10)
 
     # Ensure snapshots are saved and loaded on both AVDs.
     snapshot_services = [
