@@ -112,10 +112,10 @@ async def qrcode_png(emulator, ad_ui):
             if display_id != 0:
                 activity_params += ['--display', f"{display_id}"]
 
-                assert await self.photos.start(
-                    params=' '.join(activity_params),
-                    wait_for_started=_wait_for_started,
-                    timeout=30
+            assert await self.photos.start(
+                params=' '.join(activity_params),
+                wait_for_started=_wait_for_started,
+                timeout=30
             )
             logging.info(f"Launched the QR code PNG image on display '{display_id}'")
 
