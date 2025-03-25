@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import asyncio
-import re
 import os
 import tarfile
 import logging
@@ -22,6 +21,7 @@ import pytest
 from aemu.proto.snapshot_service_pb2_grpc import SnapshotServiceStub
 from snaptool.snapshot import AsyncSnapshotService
 from emu.timing import eventually
+from emu.application import MessagingApplication
 from functools import partial
 
 
@@ -37,8 +37,6 @@ async def snapshot_service(avd, service):
     snapshots = await snap.lists()
     for entry in snapshots:
         await snap.delete(entry.snapshot_id)
-        if entry.snapshot_id != "default_boot":
-            await snap.delete(entry.snapshot_id)
 
 
 @pytest.mark.snapshot
@@ -94,20 +92,34 @@ async def test_snapshot_can_restore_a_pulled_snapshot(snapshot_service, tmpdir):
     assert await snapshot_service.load("foo")
 
 
+@pytest.fixture
+async def messaging_app(avd, ad_ui):
+    """Launch the Messaging application"""
+    async def _wait_for_started():
+        while True:
+            if ad_ui(
+                res="com.google.android.apps.messaging:id/action_bar_root"
+            ).exists:
+                return True
+    messaging_app = MessagingApplication(avd)
+    assert await messaging_app.start(wait_for_started=_wait_for_started, timeout=10)
+    logging.info("--> yielding messaging_app")
+    yield messaging_app
+    logging.info("<-- teardown messaging_app")
+    await messaging_app.stop()
+    logging.info("=== finalized messaging_app")
+
+
 @pytest.mark.snapshot
 @pytest.mark.sanity
 @pytest.mark.async_timeout(240)
-async def test_app_launch_after_snapshot_load(avd, snapshot_service, animation_app):
+async def test_app_launch_after_snapshot_load(avd, snapshot_service, messaging_app):
     assert await snapshot_service.save("foo")
     snapshots = await snapshot_service.lists()
     assert "foo" in [x.snapshot_id for x in snapshots]
     assert await snapshot_service.load("foo")
-    assert await avd.wait_for_boot(timeout=120)
-    assert await avd.stop_activity("com.google.AnimateBox")
-    await asyncio.sleep(5)
-    assert await avd.start_activity(
-        "com.google.AnimateBox/com.google.emu.MainActivity", params=None
-    )
+    assert await avd.wait_for_boot()
+    assert await messaging_app.is_running()
 
 
 @pytest.mark.hostperf
