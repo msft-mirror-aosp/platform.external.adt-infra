@@ -12,16 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Contains a set of tests to turn off the emulator."""
-import asyncio
-import logging
 import platform
 import signal
-
 import pytest
-from aemu.proto.emulator_controller_pb2 import InputEvent, KeyboardEvent
 
 from emu.timing import eventually
-from tests.test_utils import click_button, get_window_dump
+from tests.test_utils import click_button
 
 
 @pytest.fixture
@@ -34,7 +30,6 @@ async def emulator_is_off(avd):
     Returns:
         A function that returns True if the emulator is off, False otherwise.
     """
-
     def _emulator_is_off():
         return not avd.is_alive()
 
@@ -42,45 +37,22 @@ async def emulator_is_off(avd):
 
 
 @pytest.fixture
-async def open_power_menu(emulator_controller):
-    """Provides a coroutine to open the power menu in the emulator.
+async def open_power_menu(avd, ad_ui):
+    """Open the power menu in the emulator.
 
-    Sends a sequence of key events (Volume Up + Power) to trigger the power menu.
-
-    Args:
-        emulator_controller: Fixture to interact with the emulator.
-
-    Returns:
-        A coroutine that opens the power menu.
+    Launches the power menu from the Quick Settings panel.
     """
+    await avd.adb.shell("cmd statusbar expand-notifications")
+    assert ad_ui(res="com.android.systemui:id/notification_panel").wait.exists()
 
-    async def long_press_power_button_down():
-        logging.info("Sending [Volume up] and [Power] keydown events")
-        yield InputEvent(
-            key_event=KeyboardEvent(
-                key="AudioVolumeUp", eventType=KeyboardEvent.keydown
-            )
-        )
-        yield InputEvent(
-            key_event=KeyboardEvent(key="Power", eventType=KeyboardEvent.keydown)
-        )
+    await avd.adb.shell("cmd statusbar expand-settings")
+    pm_button = ad_ui(res="com.android.systemui:id/pm_lite")
 
-    async def long_press_power_button_up():
-        logging.info("Sending [Volume up] and [Power] keydown events")
-        yield InputEvent(
-            key_event=KeyboardEvent(key="AudioVolumeUp", eventType=KeyboardEvent.keyup)
-        )
-        yield InputEvent(
-            key_event=KeyboardEvent(key="Power", eventType=KeyboardEvent.keyup)
-        )
-
-    await emulator_controller.streamInputEvent(long_press_power_button_down())
-    yield
-    await emulator_controller.streamInputEvent(long_press_power_button_up())
-
+    assert pm_button.wait.exists()
+    assert pm_button.click.wait()
 
 @pytest.fixture
-async def is_power_menu_open(avd):
+async def is_power_menu_open(ad_ui):
     """Provides a coroutine to check if the power menu is open.
 
     Args:
@@ -91,15 +63,13 @@ async def is_power_menu_open(avd):
     """
 
     async def _is_power_menu_open():
-        window_dump = await get_window_dump(avd)
-        return 'text="Power off"' in window_dump
+        return ad_ui(text="Power off").exists
 
     return _is_power_menu_open
 
 
 @pytest.mark.sanity
-@pytest.mark.async_timeout(20)
-@pytest.mark.flaky(reruns=2)
+@pytest.mark.async_timeout(30)
 @pytest.mark.dependency()
 async def test_can_open_power_menu(open_power_menu, is_power_menu_open):
     """Verifies that the power menu can be opened.
