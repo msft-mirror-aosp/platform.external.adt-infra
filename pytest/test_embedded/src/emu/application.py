@@ -15,11 +15,14 @@
 
 import asyncio
 import logging
-from typing import Callable, Any, Coroutine, TypeVar, Type, Union
+from typing import Callable, Any, Coroutine
 
 from emu.apk import APP_DEBUG_APK
 from emu.timing import retry
-from emu.emulator_exceptions import FailedToInstallApkException
+from emu.emulator_exceptions import (
+    FailedToInstallApkException,
+    FailedToStartActivityException
+)
 from pathlib import Path
 
 
@@ -163,6 +166,9 @@ class Application:
             [], Coroutine[Any, Any, bool]
         ] = lambda: asyncio.ensure_future(asyncio.sleep(0, True)),
         timeout: float = 5,
+        attempts: int = 3,
+        delay: float = 1,
+
     ) -> bool:
         """Starts the application on the emulator.
 
@@ -170,6 +176,8 @@ class Application:
             params: Additional parameters to pass to the activity.
             wait_for_started: A callable that determines if the application has started.
             timeout: The maximum time to wait for the application to start, in seconds.
+            attempts: The maximum number of attempts to make.
+            delay: The delay in seconds between attempts.
 
         Returns:
             True if the application started successfully, False otherwise.
@@ -185,13 +193,20 @@ class Application:
                 lambda: self._start_activity(
                     wait_for_started, activity, params, timeout
                 ),
-                attempts=3,
+                attempts=attempts,
                 name=f"Starting {self.default_activity}",
+                delay=delay
             )
             logging.info("Successfully started %s", self.default_activity)
             return success
+        except RuntimeError:
+          raise FailedToStartActivityException
         except Exception as e:
-            logging.error("Failed to start %s after 4 attempts.", self.default_activity)
+            logging.error(
+                "Failed to start %s after 4 attempts.",
+                self.default_activity,
+                self.attempts
+            )
             return False
 
     async def stop(self) -> bool:
