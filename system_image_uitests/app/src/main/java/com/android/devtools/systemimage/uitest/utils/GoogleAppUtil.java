@@ -263,6 +263,23 @@ public class GoogleAppUtil {
             }
         }
 
+        UiObject recoveryInformationTitle = device.findObject(new UiSelector().
+                textMatches("(?i)recovery information(?-i)"));
+        UiObject cancelButton = device.findObject(new UiSelector().
+                textMatches("(?i)cancel(?-i)")); 
+
+        if (recoveryInformationTitle.waitForExists(10000L) && cancelButton.exists()) {
+            cancelButton.clickAndWaitForNewWindow(3000L);
+            UiObject signedInTitle = device.findObject(new UiSelector().
+                    textMatches("(?i)you're signed in(?-i)"));
+            UiObject notNowButton = device.findObject(new UiSelector().
+                    textMatches("(?i)not now(?-i)"));
+            if (signedInTitle.waitForExists(10000L) && notNowButton.exists()) {
+                notNowButton.clickAndWaitForNewWindow(3000L);
+                return true;
+            }
+        }
+
         if (!isSignedIn) {
             if (firstAttempt) {
                 Log.i("Login", "Retry google login");
@@ -285,6 +302,13 @@ public class GoogleAppUtil {
             backupSwitch.click();
         }
 
+        UiObject moreButton = device.findObject(new UiSelector().textMatches("(?i)more(?-i)").
+                className("android.widget.Button")); 
+
+        if (moreButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            moreButton.click();
+        }
+
         UiObject acceptButton = api >= 29 ?
                 device.findObject(new UiSelector().textMatches("(?i)accept(?-i)")) :
                 device.findObject(
@@ -299,7 +323,6 @@ public class GoogleAppUtil {
             agreeButton.clickAndWaitForNewWindow();
         }
 
-        UiObject moreButton = device.findObject(new UiSelector().textMatches("(?i)more(?-i)"));
         if (moreButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             moreButton.clickAndWaitForNewWindow();
         }
@@ -447,6 +470,8 @@ public class GoogleAppUtil {
             nextButton.clickAndWaitForNewWindow();
         }
 
+        refuseSync(device);
+
         final UiObject chromeUpdateButton = device.findObject(
                 new UiSelector().resourceId(Res.CHROME_MENU_BADGE_RES)
         );
@@ -473,9 +498,22 @@ public class GoogleAppUtil {
             settingsButton.clickAndWaitForNewWindow();
             settingsButton.waitUntilGone(5000L);
             UiObject syncAndPersonalizeButton = device.findObject(
-                    new UiSelector().text("Sync and personalize across devices"));
+                    new UiSelector().textMatches("(?i)sync and personalize across devices(?-i)").
+                        className("android.widget.Button"));
             if (syncAndPersonalizeButton.waitForExists(10000L)) {
                 return syncAndPersonalizeButton;
+            }
+            UiObject turnOnSyncButton = device.findObject(
+                    new UiSelector().textMatches("(?i)turn on sync(?-i)").
+                        className("android.widget.Button"));
+            if (turnOnSyncButton.exists()) {
+                return turnOnSyncButton;
+            }
+            UiObject continueAsButton = device.findObject(
+                    new UiSelector().textStartsWith("Continue as ").
+                        className("android.widget.Button"));
+            if (continueAsButton.exists()) {
+                return continueAsButton;
             }
         }
         return null;
@@ -518,6 +556,10 @@ public class GoogleAppUtil {
     public static void refuseSync(UiDevice device) throws Exception {
         UiObject noThanksButton = device.findObject(new UiSelector().
                 resourceIdMatches(Res.CHROME_NO_THANKS_BUTTON_RES));
+        if (!noThanksButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
+            noThanksButton = device.findObject(new UiSelector().
+                    textMatches("(?i)no thanks(?-i)"));
+        }
         if (noThanksButton.waitForExists(TimeUnit.MILLISECONDS.convert(3L, TimeUnit.SECONDS))) {
             noThanksButton.clickAndWaitForNewWindow();
         }

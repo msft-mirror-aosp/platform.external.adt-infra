@@ -849,8 +849,7 @@ public class SettingsUtil {
         }
 
         UiObject removeAccount = device.findObject(new UiSelector().
-                text("Remove account").
-                resourceIdMatches(Res.ANDROID_BUTTON + "|" + Res.ANDROID_BUTTON_ONE).
+                textMatches("(?i)remove account(?-i)").
                 className(Button.class));
         if (removeAccount.waitForExists(5000L)) {
             removeAccount.click();
@@ -860,7 +859,7 @@ public class SettingsUtil {
         }
 
         UiObject confirmRemove = device.findObject(new UiSelector().
-                text("Remove account").
+                textMatches("(?i)remove account(?-i)").
                 resourceId(Res.ANDROID_BUTTON_ONE).
                 className(Button.class));
         if (confirmRemove.waitForExists(5000L)) {
