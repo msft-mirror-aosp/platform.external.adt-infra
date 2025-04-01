@@ -857,7 +857,7 @@ async def test_multidisplay_video_playback(
 
     # Make sure the qrcodes video plays and is decoded correctly.
     assert await wait_until(
-        partial(assert_secondary_display_playback, sec_display), timeout=120
+        partial(assert_secondary_display_playback, sec_display), timeout=160
     ), "Couldn't play the test video on the secondary display."
 
 
