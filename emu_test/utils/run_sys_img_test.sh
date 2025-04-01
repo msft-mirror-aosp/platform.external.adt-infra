@@ -36,11 +36,11 @@ function run_with_timeout () {
 
 # Grab everything after git_devtools-test- starting with api.
 TARGET="$(echo $DIST_DIR | sed "s/.*git_devtools-test-.*-\(api.*\)\/.*/\1/g")"
-export ADT_INFRA='/buildbot/src/android/emu-master-dev/external/adt-infra'
+export ADT_INFRA='/buildbot/src/android/emu-main-dev/external/adt-infra'
 export ANDROID_SDK_ROOT="$SDK_EMULATOR"
 export JAVA_HOME="$PWD/prebuilts/studio/jdk/jdk17/linux/"
 rm -rf "$ANDROID_SDK_ROOT/system-images"
-ln -sf "/buildbot/src/android/emu-master-dev/prebuilts/android-emulator-build/system-images/linux/system-images" "$ANDROID_SDK_ROOT"
+ln -sf "/buildbot/src/android/emu-main-dev/prebuilts/android-emulator-build/system-images/linux/system-images" "$ANDROID_SDK_ROOT"
 ls $SDK_EMULATOR
 # BUILD_DIR="out/prebuilt_cached/builds/$TARGET"
 
@@ -57,7 +57,7 @@ ls $SDK_EMULATOR
 # $ADT_INFRA has to be set on the build machine. It should have absolute path
 # where adt-infra needs to be checked out.
 ## rm -rf $ADT_INFRA
-## git clone https://android.googlesource.com/platform/external/adt-infra -b emu-master-dev $ADT_INFRA
+## git clone https://android.googlesource.com/platform/external/adt-infra -b emu-main-dev $ADT_INFRA
 
 # SDK=$SDK_SYS_IMAGE
 
