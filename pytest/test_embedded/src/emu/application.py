@@ -205,7 +205,7 @@ class Application:
             logging.error(
                 "Failed to start %s after 4 attempts.",
                 self.default_activity,
-                self.attempts
+                attempts
             )
             return False
 
