@@ -34,9 +34,9 @@ function run_with_timeout () {
    fi
 }
 
-# Grab everything after git_devtools-test- starting with api.
-TARGET="$(echo $DIST_DIR | sed "s/.*git_devtools-test-.*-\(api.*\)\/.*/\1/g")"
-export ADT_INFRA='/buildbot/src/android/emu-main-dev/external/adt-infra'
+# Grab everything after git_emu-main-dev- starting with api.
+TARGET="$(echo $DIST_DIR | sed "s/.*git_emu-main-dev-.*-\(api.*\)\/.*/\1/g")"
+export ADT_INFRA='external/adt-infra'
 export ANDROID_SDK_ROOT="$SDK_EMULATOR"
 export JAVA_HOME="$PWD/prebuilts/studio/jdk/jdk17/linux/"
 rm -rf "$ANDROID_SDK_ROOT/system-images"
