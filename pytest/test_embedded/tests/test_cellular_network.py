@@ -20,6 +20,7 @@ from aemu.proto.modem_service_pb2_grpc import ModemStub
 from emu.timing import eventually
 from functools import partial
 from google.protobuf import empty_pb2
+from functools import partial
 
 __EMPTY__ = empty_pb2.Empty()
 
@@ -113,3 +114,39 @@ async def test_network_type_observable_from_registry(
             ),
             timeout=60
         ), f"Couldn't observe network type '{expected_type}'"
+
+
+@pytest.mark.parametrize(
+    "status,data_status", [
+        ("HOME", CellInfo.CELL_STATUS_HOME),
+        ("ROAMING", CellInfo.CELL_STATUS_ROAMING),
+        ("NOT_REG_SEARCHING", CellInfo.CELL_STATUS_SEARCHING),
+        ("DENIED", CellInfo.CELL_STATUS_DENIED),
+    ]
+)
+async def test_data_status_is_observable(avd, modem_controller, status, data_status):
+    """Verify that cellular data status changes are observable through gRPC.
+
+    Args:
+        avd (BaseEmulator): The booted emulator instance.
+        modem_controller (ModemStub): The modem controller gRPC stub.
+        status (str): Label for the cellular data status.
+        data_status (CellStatus): Cellular data status enumerated value.
+
+    Test steps:
+        1. Launch a new AVD.
+        2. Set the cellular data status to one of the predefined values:
+           HOME, ROAMING, NOT_REG_SEARCHING, DENIED (Verify 1).
+    Verify:
+        1. The cellular data status returned via gRPC matches the set status.
+    """
+    async def _has_data_status(data_status):
+        cell_info = await modem_controller.getCellInfo(__EMPTY__)
+        return cell_info.cell_status_data == data_status
+
+    logging.info(f"Changing cellular data status to {status} ...")
+    await modem_controller.setCellInfo(CellInfo(cell_status_data=data_status))
+
+    assert await eventually (
+        partial(_has_data_status, data_status), timeout=10
+    ), f"Failed to set cellular data status to {status}"
