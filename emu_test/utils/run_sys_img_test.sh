@@ -40,6 +40,8 @@ export ADT_INFRA='external/adt-infra'
 export ANDROID_SDK_ROOT="$SDK_EMULATOR"
 export JAVA_HOME="$PWD/prebuilts/studio/jdk/jdk17/linux/"
 rm -rf "$ANDROID_SDK_ROOT/system-images"
+ls /buildbot/src/android/emu-main-dev/prebuilts
+find /buildbot/src/android/emu-main-dev -type d -maxdepth 2
 ln -sf "/buildbot/src/android/emu-main-dev/prebuilts/android-emulator-build/system-images/linux/system-images" "$ANDROID_SDK_ROOT"
 ls $SDK_EMULATOR
 # BUILD_DIR="out/prebuilt_cached/builds/$TARGET"
