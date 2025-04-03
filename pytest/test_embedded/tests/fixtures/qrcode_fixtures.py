@@ -117,6 +117,7 @@ async def qrcode_png(emulator, ad_ui):
                 wait_for_started=_wait_for_started,
                 timeout=30
             )
+            ad_ui(text="Got it").wait.click()
             logging.info(f"Launched the QR code PNG image on display '{display_id}'")
 
     src = (
@@ -134,7 +135,7 @@ async def qrcode_png(emulator, ad_ui):
 
 
 @pytest.fixture
-async def qrcodes_mp4(avd):
+async def qrcodes_mp4(avd, ad_ui):
     """A fixture that gives access to a MP4 video containing a series of QR codes.
 
     The fixture pushes a 15-second MP4 video to /sdcard/Download, displaying a
@@ -173,11 +174,36 @@ async def qrcodes_mp4(avd):
             await avd.adb.push(self.src, self.path)
 
         async def play(self, display_id=0):
+            """Play the MP4 video on display with id <display_id>"""
+            async def _wait_for_started():
+                """Return True when the videplayer loading spinner is gone."""
+                _WAIT_TIME = datetime.timedelta(seconds=20)
+                spinner_resource_id = "/".join((
+                    "com.google.android.apps.photos:id",
+                    "photos_videoplayer_loading_spinner"
+                ))
+                ad_ui(res=spinner_resource_id).wait.exists(_WAIT_TIME)
+                logging.info("Videoplayer loading spinner detected.")
+                status = ad_ui(res=spinner_resource_id).wait.gone(_WAIT_TIME)
+                if not status:
+                    logging.info(
+                        "Videoplayer failed to launch: loading spinner didn't stop."
+                    )
+                return status
+
             await self.photos.stop()
-            await self.photos.start_activity(
-                ".pager.HostPhotoPagerActivity",
-                params=f'-a android.intent.action.VIEW -d file://{self.path} -t "video/*"'
-                + (f" --display {display_id}" if display_id != 0 else ""),
+            activity_params = [
+                '-a', 'android.intent.action.VIEW', '-S',
+                '-d', f'file://{self.path}', '-t', '"video/*"'
+            ]
+            if display_id != 0:
+                activity_params += ['--display', f"{display_id}"]
+
+            await self.photos.start(
+                params=' '.join(activity_params),
+                wait_for_started=_wait_for_started,
+                attempts=7,
+                timeout=60,
             )
             logging.info(f"Started QR codes video on display '{display_id}'")
 
