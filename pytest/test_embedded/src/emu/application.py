@@ -200,7 +200,7 @@ class Application:
             logging.info("Successfully started %s", self.default_activity)
             return success
         except RuntimeError:
-          raise FailedToStartActivityException
+            raise FailedToStartActivityException
         except Exception as e:
             logging.error(
                 "Failed to start %s after 4 attempts.",
