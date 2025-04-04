@@ -124,6 +124,7 @@ async def test_network_type_observable_from_registry(
         ("DENIED", CellInfo.CELL_STATUS_DENIED),
     ]
 )
+@pytest.mark.fast
 async def test_data_status_is_observable(avd, modem_controller, status, data_status):
     """Verify that cellular data status changes are observable through gRPC.
 
