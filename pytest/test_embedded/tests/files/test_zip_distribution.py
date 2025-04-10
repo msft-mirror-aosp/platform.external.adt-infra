@@ -1046,6 +1046,8 @@ EXPECTED_RELEASE_CONTENTS = {
         "emulator/lib64/vulkan/glslangValidator.exe",
         "emulator/lib64/vulkan/vk_swiftshader.dll",
         "emulator/lib64/vulkan/vk_swiftshader_icd.json",
+        "emulator/lib64/vulkan/vulkan_lvp.dll",
+        "emulator/lib64/vulkan/lvp_icd.x86_64.json",
         "emulator/lib64/vulkan/vulkan-1.dll",
         "emulator/libabseil_dll.dll",
         "emulator/lib/adb_service.proto",
