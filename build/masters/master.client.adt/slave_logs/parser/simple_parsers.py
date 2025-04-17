@@ -65,7 +65,7 @@ AVD_GPU = 'GPU'
 # This takes the values: 'qemu1', 'qemu2'
 AVD_QEMU_ENGINE = 'QEMU_ENGINE'
 AVD_REGEXES = (
-        (re.compile('.*(default|google_apis|android-tv|android-wear)-'
+        (re.compile('.*(default|google_apis|android-tv|android-wear|google-xr)-'
                     '(.*)-(.*)-(\d+)-gpu_(.*)-api(\d+)'),
          (AVD_TAG, AVD_ABI, AVD_DEVICE, AVD_RAM, AVD_GPU, AVD_API)),
         (re.compile(".*INFO - Running - .*(qemu(?:1|2))"),

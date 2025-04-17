@@ -530,6 +530,27 @@
     ],
     "status": "enabled"
   },
+  "presubmit_emulator_test_suite_api_xr": {
+    "avd_configs": [
+      {
+        "device.name": "XR1",
+        "api": "34",
+        "launch_flags": [
+          "-feature",
+          "Vulkan",
+          "-gpu",
+          "host",
+          "-no-snapshot"
+        ],
+        "tag.id": "google-xr"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for XR AVDs",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky"
+    ],
+    "status": "enabled"
+  },
   "resizable_emulator_test_suite_api_34": {
     "avd_configs": [
       {

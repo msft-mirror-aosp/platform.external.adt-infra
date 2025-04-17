@@ -118,7 +118,7 @@ You can find a set of configuration files in the [cfg](cfg/) directory.
 The `avd_configs` object in the test configuration JSON file allows you to specify your own custom AVD configurations. The following properties are mandatory for each config:
 
 * `api`: This determines the API level that should be used when obtaining the system image.
-* `tag.id`: A tag.id indicates the type of system image, which currently can be one of the following: `default|google_apis|android-desktop|android-wear|google_apis_playstore|android-tv`. You can run `$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list` to get detailed information on available system images.
+* `tag.id`: A tag.id indicates the type of system image, which currently can be one of the following: `default|google_apis|android-desktop|android-wear|google_apis_playstore|android-tv|google-xr`. You can run `$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list` to get detailed information on available system images.
 * `abi`: This contains the guest CPU that will be used. Make sure that `abi` matches the CPU you are currently running under. You cannot launch an ABI of `x86` on a Mac M1, for example.
   * On X86 (Intel/AMD), `abi` can be `x86` or `x86_64`.
   * On Mac M1 (and Linux ARM), `abi` can be `arm64-v8a` or `armeabi-v7a`.

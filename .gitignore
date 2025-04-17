@@ -1,6 +1,7 @@
 venv
 .venv
 .vscode
+.DS_Store
 system_image_uitests/.gradle
 system_image_uitests/.idea
 system_image_uitests/app/app.iml

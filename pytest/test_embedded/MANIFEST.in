@@ -9,4 +9,6 @@ include src/emu/templates/TV_1080p.avd/config.ini
 include src/emu/templates/TV_1080p.ini
 include src/emu/templates/WearOS_Square.avd/config.ini
 include src/emu/templates/WearOS_Square.ini
+include src/emu/templates/XR1.avd/config.ini
+include src/emu/templates/XR1.ini
 include src/emu/templates/emulator_test_access.json
