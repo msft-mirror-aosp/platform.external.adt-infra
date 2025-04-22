@@ -1,0 +1,179 @@
+{
+  "fast_test_suite_api_31": {
+    "avd_configs": [
+      {
+        "api": "31",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator fast test suite",
+    "maxGroups": 4,
+    "pytest_flags": [
+      "-m fast and not resizable and not newresizable"
+    ],
+    "status": "disabled"
+  },
+  "fast_test_suite_api_33": {
+    "avd_configs": [
+      {
+        "api": "33",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator fast test suite",
+    "maxGroups": 4,
+    "pytest_flags": [
+      "-m fast and not resizable and not newresizable"
+    ],
+    "status": "disabled"
+  },
+  "fast_test_suite_api_34": {
+    "avd_configs": [
+      {
+        "api": "34",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator fast test suite",
+    "maxGroups": 4,
+    "pytest_flags": [
+      "-m fast and not resizable and not newresizable"
+    ],
+    "status": "disabled"
+  },
+  "fast_test_suite_api_35": {
+    "avd_configs": [
+      {
+        "api": "35",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator fast test suite",
+    "maxGroups": 4,
+    "pytest_flags": [
+      "-m fast and not resizable and not newresizable"
+    ],
+    "status": "disabled"
+  },
+  "presubmit_emulator_test_suite_api_31": {
+    "avd_configs": [
+      {
+        "api": "31",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky"
+    ],
+    "status": "enabled"
+  },
+  "presubmit_emulator_test_suite_api_34": {
+    "avd_configs": [
+      {
+        "api": "34",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky"
+    ],
+    "status": "disabled"
+  },
+  "sanity_test_suite_api_28": {
+    "avd_configs": [
+      {
+        "api": "28",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator sanity test suite",
+    "maxGroups": 4,
+    "pytest_flags": [
+      "-m oldapiboot"
+    ],
+    "status": "disabled"
+  },
+  "sanity_test_suite_api_30": {
+    "avd_configs": [
+      {
+        "api": "30",
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator sanity test suite",
+    "launch_flags": [],
+    "maxGroups": 4,
+    "pytest_flags": [
+      "-m oldapiboot"
+    ],
+    "status": "disabled"
+  },
+  "sanity_test_suite_api_31": {
+    "avd_configs": [
+      {
+        "api": "31",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator sanity test suite",
+    "maxGroups": 4,
+    "pytest_flags": [
+      "-m sanity and not resizable and not newresizable"
+    ],
+    "status": "enabled"
+  },
+  "sanity_test_suite_api_33": {
+    "avd_configs": [
+      {
+        "api": "33",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator sanity test suite",
+    "maxGroups": 4,
+    "pytest_flags": [
+      "-m sanity and not resizable and not newresizable"
+    ],
+    "status": "disabled"
+  },
+  "sanity_test_suite_api_34": {
+    "avd_configs": [
+      {
+        "api": "34",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator sanity test suite",
+    "pytest_flags": [
+      "-m sanity and not resizable and not newresizable"
+    ],
+    "status": "disabled"
+  },
+  "sanity_test_suite_api_35": {
+    "avd_configs": [
+      {
+        "api": "35",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as a part of emulator sanity test suite",
+    "maxGroups": 4,
+    "pytest_flags": [
+      "-m sanity and not resizable and not newresizable"
+    ],
+    "status": "enabled"
+  },
+}
