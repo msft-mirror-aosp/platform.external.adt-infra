@@ -535,10 +535,6 @@ class Emulator(BaseEmulator):
             "console,snapshot",
         ]
 
-        if "Vulkan" not in flags:
-            # Vulkan will cause snapshot saving failure, disable it for now
-            default_flags = default_flags + ["-feature", "-Vulkan"]
-
         if "-no-metrics" not in flags:
             # The option '-no-metrics' is ignored if used alongside "-metrics-collection"
             default_flags = default_flags + ["-metrics-collection"]
