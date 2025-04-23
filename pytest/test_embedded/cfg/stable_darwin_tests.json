@@ -174,5 +174,5 @@
       "-m sanity and not resizable and not newresizable"
     ],
     "status": "enabled"
-  },
+  }
 }
