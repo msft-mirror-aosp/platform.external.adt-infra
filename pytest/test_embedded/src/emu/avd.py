@@ -20,6 +20,7 @@ import platform
 import re
 import shutil
 import subprocess
+import enum
 from itertools import chain
 from pathlib import Path
 from typing import Iterator, Optional
@@ -47,6 +48,12 @@ class SdkManagerDoesNotExist(Exception):
 class UnsupportedAbiOrCpu(Exception):
     pass
 
+class SdkManagerChannel(enum.Enum):
+    # Values are defined by sdkmanager binary
+    STABLE = 0
+    BETA = 1
+    DEV = 2
+    CANARY = 3
 
 class FetcherSystemImages:
     def __init__(self, fetcher: Path):
@@ -66,7 +73,7 @@ class FetcherSystemImages:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
-                       google_apis_tablet|android-desktop|android-wear|android-tv
+                       google_apis_tablet|android-desktop|android-wear|android-tv|google-xr
 
         Returns:
             dict[str, str]:  A dictionary with api, tag, abi, and cpu.
@@ -87,7 +94,7 @@ class FetcherSystemImages:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
-                       google_apis_tablet|android-desktop|android-wear|android-tv
+                       google_apis_tablet|android-desktop|android-wear|android-tv|google-xr
             build_id (str): Android Build ID.
             target (str): Build target.
             resource (str): Resource file to download.
@@ -111,7 +118,7 @@ class FetcherSystemImages:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
-                       google_apis_tablet|android-desktop|android-wear|android-tv
+                       google_apis_tablet|android-desktop|android-wear|android-tv|google-xr
             fetch_target(str): Optional fetcher target to use instead of deferring to sdkmanager.
 
         Raises:
@@ -120,11 +127,15 @@ class FetcherSystemImages:
         Returns:
             dict[str, str]:  A dictionary with api, tag, abi, and cpu.
         """
+        channel = SdkManagerChannel.STABLE
+        if tag == "google-xr":
+            # Use Canary releases for XR
+            channel = SdkManagerChannel.CANARY
         if fetch_target:
-            logging.info("Installing %s", fetch_target)
+            logging.info(f"Installing {fetch_target} on channel:{channel.name}")
         else:
-            logging.info("Installing system-images;android-%s;%s;%s", api, tag, abi)
-            fetch_target = f"sdk,android-{api},{tag},{abi}"
+            logging.info(f"Installing 'system-images;android-{api};{tag};{abi}' on channel:{channel.name}")
+            fetch_target = f"sdk,android-{api},{tag},{abi},{channel.value}"
         download = subprocess.run(
             [
                 self._fetcher,
@@ -149,7 +160,7 @@ class FetcherSystemImages:
 
 class SystemImages:
     IMAGE = re.compile(
-        r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
+        r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv|google-xr)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
     )
 
     def __init__(self, sdk_root: Path = Path(os.environ.get("ANDROID_SDK_ROOT", "."))):
@@ -191,11 +202,7 @@ class SystemImages:
             SystemImageDirectoryDoesNotExist: If no system-images directory was find under the root
         """
         if not self.sys_root.exists():
-            logging.warning(
-                "The directory %s does not exist (yet?). Is ANDROID_SDK_ROOT set properly?",
-                self.sys_root,
-            )
-            return
+            raise SystemImageDirectoryDoesNotExist(f"The directory {self.sys_root} does not exist (yet?). Is ANDROID_SDK_ROOT set properly?")
         for x in self._recursive_iglob(self.sys_root):
             m = self.IMAGE.match(str(x))
             if m:
@@ -218,7 +225,7 @@ class SystemImages:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
-                       google_apis_tablet|android-desktop|android-wear|android-tv
+                       google_apis_tablet|android-desktop|android-wear|android-tv|google-xr
 
         Returns:
             Optional[dict[str, str]]:  A dictionary with api, tag, abi, and cpu.
@@ -255,7 +262,7 @@ class SystemImages:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
-                       google_apis_tablet|android-desktop|android-wear|android-tv
+                       google_apis_tablet|android-desktop|android-wear|android-tv|google-xr
 
         Returns:
             Optional[dict[str, str]]:  A dictionary with api, tag, abi, and cpu.
@@ -289,7 +296,7 @@ class SystemImages:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
-                       google_apis_tablet|android-desktop|android-wear|android-tv
+                       google_apis_tablet|android-desktop|android-wear|android-tv|google-xr
 
         Raises:
             SystemImageDownloadFailed: If we failed to obtain the given image
@@ -297,21 +304,33 @@ class SystemImages:
         Returns:
             dict[str, str]:  A dictionary with api, tag, abi, and cpu.
         """
-        logging.info("Installing system-images;android-%s;%s;%s", api, tag, abi)
-        donwload = subprocess.run(
+        # # 0 (Stable), 1 (Beta), 2 (Dev), and 3 (Canary).
+        channel = SdkManagerChannel.STABLE
+        if tag == "google-xr":
+            # Use Canary releases for XR
+            channel = SdkManagerChannel.CANARY
+        logging.info(f"Installing 'system-images;android-{api};{tag};{abi}' on channel:{channel.name}")
+        download = subprocess.run(
             [
                 self.sdk_manager,
                 f"system-images;android-{api};{tag};{abi}",
+                f"--channel={channel.value}",
             ],
             stderr=subprocess.PIPE,
             check=False,
         )
-        if donwload.returncode != 0:
-            logging.error("sdkmanager: %s", donwload.stderr.decode("UTF-8"))
+        if download.returncode != 0:
+            logging.error("sdkmanager: %s", download.stderr.decode("UTF-8"))
             raise SystemImageDownloadFailed(
                 f"Failed to obtain image system-images;android-{api};{abi};{tag}"
             )
-        return self.find(api, abi, tag)
+        ret = self.find(api, abi, tag)
+        if not ret:
+            # This may happen if SystemImages.IMAGE regex requires an update
+            raise SystemImageDownloadFailed(
+                f"Failed to find system-image for {api}-{tag}-{abi}, make sure find regex is up to date."
+            )
+        return ret
 
     def _recursive_iglob(self, rootdir: Path) -> Iterator[Path]:
         """Recursively glob the directory for files.
@@ -511,8 +530,8 @@ class AvdWriter:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of the machine. Note that qemu must support this abi!
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
-                       google_apis_tablet|android-desktop|android-wear|android-tv
-            [optional] device.name (str): One of: Pixel2|PixelFold|Nexus7_2013|TV_1080p|WearOS_Square
+                       google_apis_tablet|android-desktop|android-wear|android-tv|google-xr
+            [optional] device.name (str): One of: Pixel2|PixelFold|Nexus7_2013|TV_1080p|WearOS_Square|XR1
                                           Defaults to Pixel2.
             [optional] AvdId (str): The name of the AVD to be created. Defaults to "{api}_{tag}_{abi}_{device_name}"
 
@@ -559,7 +578,7 @@ class AvdWriter:
             api (str): Api level, usually a number, or first letter of desert
             abi (str): The abi of interest, one of x86|x86_64|arm64-v8a
             tag (str): Tag of interest, one of default|google_apis|google_apis_playstore|
-                       google_apis_tablet|android-desktop|android-wear|android-tv
+                       google_apis_tablet|android-desktop|android-wear|android-tv|google-xr
 
         Returns:
             AvdConfig: The avd configuration that can be used to launch the emulator
