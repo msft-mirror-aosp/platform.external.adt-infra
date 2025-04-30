@@ -343,13 +343,12 @@ async def test_emulator_event_console_command(avd, telnet):
 
 @pytest.mark.fast
 async def test_emulator_crash_console_command(avd, telnet):
-    response = ""
     try:
-        response = await telnet.send("crash")
-        assert False, "Emulator client connection did not close as expected"
+        # We crash, we might get a response, but that is not guaranteed.
+        await telnet.send("crash")
     except emu.console.emulator_connection.EmulatorClientEOF:
-        assert eventually(
-            "OK: crashing emulator, bye bye" in response, timeout=10.0
-        ), "emulator did not crash"
-        assert not avd.is_alive()
-        pass  # Connection closed successfully
+        pass
+
+    # But the emulator should be gone.
+    assert not avd.is_alive()
+
