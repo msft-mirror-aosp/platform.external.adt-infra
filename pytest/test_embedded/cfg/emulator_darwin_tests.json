@@ -530,7 +530,7 @@
     ],
     "status": "enabled"
   },
-  "presubmit_emulator_test_suite_api_xr": {
+  "presubmit_emulator_test_suite_xr_api_34": {
     "avd_configs": [
       {
         "device.name": "XR1",
@@ -547,7 +547,7 @@
     ],
     "description": "Set of tests we want to run as part of presubmit for XR AVDs",
     "pytest_flags": [
-      "-m boot and not slow and not flaky"
+      "-m boot and not slow and not flaky and not snapshot"
     ],
     "status": "enabled"
   },

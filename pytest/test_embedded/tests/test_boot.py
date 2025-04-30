@@ -163,6 +163,7 @@ async def test_first_time_booted(emulator, record_property):
     await shutdown(emulator)
 
 
+@pytest.mark.snapshot
 @pytest.mark.boot
 @pytest.mark.sanity
 @pytest.mark.async_timeout(120)
