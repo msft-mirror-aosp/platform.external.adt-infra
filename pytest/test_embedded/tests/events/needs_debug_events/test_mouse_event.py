@@ -63,6 +63,7 @@ def send_mouse_over(tester):
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
 )
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_mouse_perf_wall_grpc(avd, android_start_time, adb_event_stream, benchmark):
     """Checks that we can send mouse events over gRPC.
 
@@ -81,6 +82,7 @@ def test_mouse_perf_wall_grpc(avd, android_start_time, adb_event_stream, benchma
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
 )
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_mouse_perf_wall_telnet(avd, android_start_time, adb_event_stream, benchmark):
     """Checks that we can send mouse events over telnet.
 
@@ -100,6 +102,7 @@ def test_mouse_perf_wall_telnet(avd, android_start_time, adb_event_stream, bench
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
 )
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_mouse_perf_host_guest_telnet(
     avd, android_start_time, adb_event_stream, benchmark_stat
 ):
@@ -126,6 +129,7 @@ def test_mouse_perf_host_guest_telnet(
 @pytest.mark.skipos(
     "all", "Wall time measurements with adb are flaky and not supported beyond P."
 )
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_mouse_perf_host_guest_grpc(
     avd, android_start_time, adb_event_stream, benchmark_stat
 ):
@@ -147,6 +151,7 @@ def test_mouse_perf_host_guest_grpc(
 
 @pytest.mark.hostperf
 @pytest.mark.benchmark(group="mouse-host-host")
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over grpc.
 
@@ -168,6 +173,7 @@ def test_mouse_perf_host_host_grpc(avd, emulator_log, benchmark_stat):
 
 @pytest.mark.hostperf
 @pytest.mark.benchmark(group="mouse-host-host")
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_mouse_perf_host_host_telnet(avd, emulator_log, benchmark_stat):
     """Checks that we can send mouse events over telnet.
 

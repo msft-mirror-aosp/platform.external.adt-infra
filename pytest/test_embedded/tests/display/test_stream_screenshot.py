@@ -102,6 +102,7 @@ async def test_stream_screenshot_perf(
     "w,h",
     [(270, 480), (360, 640), (720, 1280), (810, 1440), (1080, 1920), (1440, 2880)],
 )
+@pytest.mark.skip("perf tests need to be explicitly selected")
 async def test_stream_screenshot_perf_mmap(
     emulator_controller, animation_app, benchmark_stat, pytestconfig, tmpdir, w, h
 ):

@@ -127,6 +127,7 @@ def send_letter_over(send_fn, avd, log):
 
 @pytest.mark.hostperf
 @pytest.mark.benchmark(group="letter-host-host")
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_letter_perf_host_host_grpc(emulator_log, benchmark_stat):
     """Checks that we can send keyboard events over grpc.
 
@@ -147,6 +148,7 @@ def test_letter_perf_host_host_grpc(emulator_log, benchmark_stat):
 
 @pytest.mark.hostperf
 @pytest.mark.benchmark(group="letter-host-host")
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_letter_perf_host_host_telnet(avd, emulator_log, benchmark_stat):
     """Checks that we can send keyboard events over telnet.
 

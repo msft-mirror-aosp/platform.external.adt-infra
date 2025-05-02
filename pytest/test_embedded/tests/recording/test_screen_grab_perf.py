@@ -58,6 +58,7 @@ def test_strategy_initialization(benchmark, strategy_name):
 @pytest.mark.test_infra
 @pytest.mark.benchmark(group="screen_capture", min_rounds=50, max_time=30.0)
 @pytest.mark.parametrize("strategy_name", ScreenGrabStrategyFactory.PREFERRED_ORDER)
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_screen_capture_performance(benchmark, strategy_name):
     """Benchmark screen capture performance for each available strategy."""
     strategy = ScreenGrabStrategyFactory.create_strategy(strategy_name)
@@ -75,6 +76,7 @@ def test_screen_capture_performance(benchmark, strategy_name):
 @pytest.mark.test_infra
 @pytest.mark.benchmark(group="screen_size", min_rounds=50, max_time=30.0)
 @pytest.mark.parametrize("strategy_name", ScreenGrabStrategyFactory.PREFERRED_ORDER)
+@pytest.mark.skip("perf tests need to be explicitly selected")
 def test_get_screen_size_performance(benchmark, strategy_name):
     """Benchmark get_screen_size performance for each available strategy."""
     strategy = ScreenGrabStrategyFactory.create_strategy(strategy_name)

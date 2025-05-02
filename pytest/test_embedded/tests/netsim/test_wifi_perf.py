@@ -76,6 +76,7 @@ def _read_output(process, logger_name):
 @pytest.mark.wifi_perf
 @pytest.mark.async_timeout(60 * 30)
 @pytest.mark.flaky(reruns=3)  # b/366316511 3 retries to stabilize linux builds
+@pytest.mark.skip("perf tests need to be explicitly selected")
 async def test_iperf3(avd, record_property, mbs):
     """Test case to run iperf3 and record wifi performance."""
     # Disable cellular connection to make sure we are testing wifi
