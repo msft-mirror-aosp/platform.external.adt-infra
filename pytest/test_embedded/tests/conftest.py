@@ -73,6 +73,92 @@ RETRY_ON_EXCEPTIONS = [
     "EmulatorException",
 ]
 
+FLAKY_TESTS = [
+    "test_adb_screencapture_creates_a_file",
+    "test_adb_screencapture_is_a_png",
+    "test_android_app_dialog_has_dimmed_background",
+    "test_can_debug",
+    "test_can_open_power_menu",
+    "test_can_use_standard_mobly_snippets",
+    "test_chrome",
+    "test_close_window",
+    "test_console_avd",
+    "test_crash_dont_send_report",
+    "test_crash_send_report",
+    "test_crash_without_internet",
+    "test_display_width_decreases_when_folded",
+    "test_display_width_increases_when_unfolded",
+    "test_emulator_controls_key_home",
+    "test_emulator_controls_key_screenshot",
+    "test_emulator_controls_key_volumedown",
+    "test_emulator_controls_key_volumeup",
+    "test_emulator_crash_console_command",
+    "test_fingerprint_unlock",
+    "test_folded_display_format_matches_screenshot_format",
+    "test_iperf3",
+    "test_launch_app",
+    "test_letter_perf_host_host_grpc",
+    "test_letter_perf_host_host_telnet",
+    "test_maximize_and_restore_window",
+    "test_minimize_and_restore_window",
+    "test_mouse_perf_host_host_grpc",
+    "test_mouse_perf_host_host_telnet",
+    "test_multi_display",
+    "test_multicore_startup[1]",
+    "test_multidisplay_avd_features_work",
+    "test_multidisplay_del_empty_no_crash",
+    "test_multidisplay_del_invalid_display_no_crash",
+    "test_multidisplay_out_of_order_add_no_crash",
+    "test_network_type_observable_from_registry",
+    "test_new_foldable_immediately_receives_a_folded_notification",
+    "test_new_foldable_immediately_receives_an_unfolded_notification",
+    "test_new_foldable_receives_a_fold_notification",
+    "test_new_foldable_receives_an_unfold_notification",
+    "test_new_resizable_changes_resolution_from_console[0-Phone-0]",
+    "test_new_resizable_changes_resolution_from_console[1-Foldable-1]",
+    "test_new_resizable_changes_resolution_from_console[2-Tablet-2]",
+    "test_new_resizable_changes_resolution_sanity[2208-1840-1]",
+    "test_new_resizable_folding_observable_from_streaming[1-4]",
+    "test_new_resizable_folding_observable_from_streaming[2-3]",
+    "test_new_resizable_observable_from_streaming[1-4]",
+    "test_new_resizable_observable_from_streaming[2-3]",
+    "test_new_resizable_snapshot_saves_display_mode",
+    "test_page_loads_with_different_gpu_modes[auto]",
+    "test_page_loads_with_different_gpu_modes[host]",
+    "test_page_loads_with_different_gpu_modes[swangle]",
+    "test_page_loads_with_different_gpu_modes[swiftshader_indirect]",
+    "test_pcmark",
+    "test_power_down_turns_off_the_screen",
+    "test_recording",
+    "test_resizable_changes_resolution_sanity[1080-2340-0]",
+    "test_resizable_changes_resolution_sanity[1768-2208-1]",
+    "test_resizable_changes_resolution_sanity[1920-1080-3]",
+    "test_resizable_changes_resolution_sanity[1920-1200-2]",
+    "test_resizable_observable_from_streaming[1-4]",
+    "test_resizable_observable_from_streaming[2-3]",
+    "test_retry_success_after_retries",
+    "test_rotation_through_console_observable_through_stream_screenshot",
+    "test_screen_records_with_different_gpu_modes[host]",
+    "test_screen_records_with_different_gpu_modes[swangle]",
+    "test_screen_records_with_different_gpu_modes[swiftshader_indirect]",
+    "test_screen_records_with_different_orientations",
+    "test_send_a_sequence_of_single_key_events",
+    "test_send_a_sequence_of_single_mouse_events",
+    "test_send_inbound_sms_text_message_received_by_mobly[987654321-Hello There]",
+    "test_sms",
+    "test_snapshot_can_restore_a_pulled_snapshot",
+    "test_snapshot_list_perf",
+    "test_stream_a_sequence_of_key_events",
+    "test_stream_a_sequence_of_mouse_events",
+    "test_stream_clipboard_from_android_immediately_sends_data",
+    "test_stream_update_should_be_fast_after_rotation",
+    "test_two_devices_attach_to_netsimd",
+    "test_wifi_connectivity_without_mobile_data",
+    "test_wifi_has_connectivity[launch_flags0]",
+    "test_wifi_has_connectivity[launch_flags1]",
+    "test_wlan0_can_connect_ipv6",
+]
+
 DEFAULT_AVD_CONFIG = {
     "abi": (
         "arm64-v8a"
@@ -582,11 +668,18 @@ def modifyitems_for_retry(session, config, items):
             rerun_marker.kwargs["reruns"] = retries
 
 
+def modifyitems_for_flakiness(session, config, items):
+    for item in items:
+        if item.name in FLAKY_TESTS:
+            item.add_marker(pytest.mark.skip(reason=f"Test '{item.name}' is in the flaky test list."))
+
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(session, config, items):
     filter_test_infra(session, config, items)
+    modifyitems_for_flakiness(session, config, items)
     modifyitems_for_retry(session, config, items)
     modifyitems_for_sharding(session, config, items)
+
 
 
 @pytest.fixture(scope="session")
