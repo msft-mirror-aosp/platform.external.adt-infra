@@ -95,7 +95,6 @@ FLAKY_TESTS = [
     "test_emulator_crash_console_command",
     "test_fingerprint_unlock",
     "test_folded_display_format_matches_screenshot_format",
-    "test_iperf3",
     "test_launch_app",
     "test_letter_perf_host_host_grpc",
     "test_letter_perf_host_host_telnet",
