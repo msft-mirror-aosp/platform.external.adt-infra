@@ -1,0 +1,25 @@
+module(
+    name = "aemu-grpc",
+    version = "0.0.1",
+)
+
+bazel_dep(name = "rules_python", version = "1.0.0")
+bazel_dep(name = "rules_proto", version = "7.1.0")
+bazel_dep(name = "protobuf", version = "30.2", repo_name = "com_google_protobuf")
+bazel_dep(name = "grpc", version = "1.72.0", repo_name = "com_github_grpc_grpc")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = "3.10",
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pypi",
+    python_version = "3.10",
+    # We could use an internal one if needed:
+    #index_url = "https://android.googlesource.com/platform/external/adt-infra/+/refs/heads/emu-master-dev/devpi/repo/simple",
+    requirements_lock = ":requirements_lock.txt",
+)
+use_repo(pip, "pypi")

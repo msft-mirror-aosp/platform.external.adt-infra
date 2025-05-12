@@ -1,0 +1,39 @@
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@rules_python//python:pip.bzl", "compile_pip_requirements")
+
+package(default_visibility = ["//visibility:public"])
+
+# This rule adds a convenient way to update the requirements file.
+compile_pip_requirements(
+    name = "requirements",
+    src = "requirements.in",
+    requirements_txt = "requirements_lock.txt",
+)
+
+py_library(
+    name = "aemu_grpc_lib",
+    srcs = glob(["src/**/*.py"]),
+    imports = ["src"],
+    deps = [
+        "//src/aemu/proto:aemu_py_grpc",
+        "//src/aemu/proto:aemu_py_proto",
+        "@pypi//psutil",
+    ],
+)
+
+py_test(
+    name = "all_tests",
+    srcs = glob(
+        ["tests/**/*.py"],
+    ),
+    main = "tests/run_pytest_main.py",
+    python_version = "PY3",
+    deps = [
+        ":aemu_grpc_lib",
+        # "@pypi//grpcio",
+        "@pypi//mock",
+        # "@pypi//protobuf",
+        "@pypi//pytest",
+        "@pypi//pytest_mock",
+    ],
+)
