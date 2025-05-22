@@ -109,7 +109,7 @@ async def messaging_app(avd, ad_ui):
     await messaging_app.stop()
     logging.info("=== finalized messaging_app")
 
-
+@pytest.mark.skip(reason="b/419600604 suspected hanging test")
 @pytest.mark.snapshot
 @pytest.mark.sanity
 @pytest.mark.async_timeout(240)

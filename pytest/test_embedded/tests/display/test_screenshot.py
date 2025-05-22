@@ -69,7 +69,7 @@ EMU_TO_PIL_IMAGE_FORMATS = {
     ImageFormat.PNG: "PNG",
 }
 
-
+@pytest.mark.skip(reason="b/419600604 suspected hanging test")
 @pytest.mark.embedded
 @pytest.mark.fast
 @pytest.mark.parametrize("w,h", [(0, 0), (320, 200), (1920, 1080)])

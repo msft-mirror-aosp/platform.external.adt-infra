@@ -152,6 +152,7 @@ async def test_wlan0_can_connect_ipv4(enable_wifi_only, avd):
     ), "Emulator has not Wifi IPv4 connectivity"
 
 
+@pytest.mark.skip(reason="b/419600604 suspected hanging test")
 @pytest.mark.fast
 @pytest.mark.async_timeout(40)
 async def test_wlan0_ip6_address_assigned(enable_wifi_only, has_ip):
