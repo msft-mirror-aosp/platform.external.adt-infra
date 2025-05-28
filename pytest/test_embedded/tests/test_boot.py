@@ -167,6 +167,8 @@ async def test_first_time_booted(emulator, record_property):
 @pytest.mark.boot
 @pytest.mark.sanity
 @pytest.mark.async_timeout(120)
+@pytest.mark.skipos("win", "reason: unable to succeed")
+@pytest.mark.skipos("mac", "reason: unable to succeed")
 async def test_snapshot_booted(emulator):
     """Make sure the emulator status is able to boot from snapshot.
 
