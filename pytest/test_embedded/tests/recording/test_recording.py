@@ -94,6 +94,7 @@ async def test_can_only_record_once(screen_service, tmp_path):
         await screen_service.StartRecording(info)
 
 
+@pytest.mark.skipos("mac", reason="b/419600604 suspected hanging test")
 @pytest.mark.flaky(reruns=0)
 @pytest.mark.graphics
 @pytest.mark.sanity
