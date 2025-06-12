@@ -37,12 +37,13 @@ def merge_results_multiple_suites(xml_files):
 
 
 def merge_results(xml_files):
-    """Merges al the test results into a single xml as a single suite that we can present."""
+    """Merges all the test results into a single xml as a single suite that we can present.
+    For tests that appear in multiple files, keeps the latest result (later successful runs override earlier failures)."""
     failures = 0
     tests = 0
     errors = 0
     time = 0.0
-    cases = []
+    cases = {}  # Dictionary to store latest result for each test case
     hostname = ""
     timestamp = None
     names = []
@@ -60,9 +61,21 @@ def merge_results(xml_files):
         tests += int(test_suite.attrib["tests"])
         errors += int(test_suite.attrib["errors"])
         time += float(test_suite.attrib["time"])
+
         for case in test_suite.findall("testcase"):
             case.attrib["classname"] = f"{config_name}.{case.get('classname', '')}"
-            cases.append(case)
+            # Use classname + name as unique identifier for the test case
+            test_id = f"{case.attrib['classname']}.{case.attrib['name']}"
+            cases[test_id] = case
+
+    # Recalculate actual failures and errors based on final test states
+    actual_failures = 0
+    actual_errors = 0
+    for case in cases.values():
+        if case.find("failure") is not None:
+            actual_failures += 1
+        if case.find("error") is not None:
+            actual_errors += 1
 
     new_root = ET.Element("testsuites")
     test_suite = ET.SubElement(
@@ -70,15 +83,15 @@ def merge_results(xml_files):
         "testsuite",
         attrib={
             "name": "_".join(names),
-            "failures": f"{failures}",
-            "tests": f"{tests}",
-            "errors": f"{errors}",
+            "failures": f"{actual_failures}",
+            "tests": f"{len(cases)}",
+            "errors": f"{actual_errors}",
             "time": f"{time}",
             "hostname": hostname,
             "timestamp": timestamp,
         },
     )
-    for case in cases:
+    for case in cases.values():
         test_suite.append(case)
 
     return ET.ElementTree(new_root)

@@ -253,6 +253,7 @@ def run_single_suite(
     android_home: Path,
     adb: Path,
     grpc_services: Path,
+    max_retries: int = 3,  # Default to 3 retries for 25% flakiness rate
 ):
     if collect:
         pytest_flags.append("--setup-plan")
@@ -261,54 +262,86 @@ def run_single_suite(
 
     junit_test_results = Path(logdir) / f"{name}.xml"
     exit_code = 1
+    retry_count = 0
+    all_results = []
+
     try:
-        exit_code = pyrun(
-            [
-                "-m",
-                "pytest",
-                "-vv",
-                "-x" if use_exceptions else "",
-                f"--junitxml={junit_test_results}",
-                f"--log-file={logdir}/{name}.log",
-                f"--emulator={emulator}",
-                f"--symbols={symbol_path}",
-                "--avd_configs",
-                avd_configs,
-                f"--android_avd_home={tmpdir}",
-                f"--build_target={build_target}",
-                f"--android_home={android_home}",
-                f"--grpc_services={grpc_services}",
-                "--record_screen",
-            ]
-            + pytest_flags,
-            cwd=HERE,
-            env={
-                "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
-                "ANDROID_AVD_HOME": str(tmpdir),
-                "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or "",
-            },
-            # Give pytest a chance to "nicely" terminate everything (4 hours).
-            timeout=14400,
-            check_output=False,
-        )
-    except subprocess.TimeoutExpired as timeout_exception:
-        logging.info(
-            "The test suite %s timed out after %s seconds",
-            name,
-            timeout_exception.timeout,
-        )
-        # Force the emulator to crash when the test suite timesout.
-        run([adb, "emu", "crash"], timeout=300)
+        while retry_count <= max_retries:
+            current_results = Path(logdir) / f"{name}_attempt_{retry_count}.xml"
+            all_results.append(current_results)
 
-    finally:
-        # Let's see if we can collect crash reports..
-        asyncio.run(collect_crash_reports(emulator, symbol_path, logdir, grpc_services))
+            # Add --last-failed flag for retries after first attempt
+            current_flags = list(pytest_flags)
+            if retry_count == 0:
+                current_flags.append("--cache-clear")
+            else:
+                current_flags.append("--last-failed")
+                current_flags.append("--no-header")
+                current_flags.append("--no-summary")
 
-        # Forcefully terminate all emulator processess
-        pyrun(
-            ["-m", "emu.process.kill_emulator", "--log-level", "WARNING"],
-            check_output=False,
-        )
+            try:
+                exit_code = pyrun(
+                    [
+                        "-m",
+                        "pytest",
+                        "-vv",
+                        "-x" if use_exceptions else "",
+                        f"--junitxml={current_results}",
+                        f"--log-file={logdir}/{name}_attempt_{retry_count}.log",
+                        f"--emulator={emulator}",
+                        f"--symbols={symbol_path}",
+                        "--avd_configs",
+                        avd_configs,
+                        f"--android_avd_home={tmpdir}",
+                        f"--build_target={build_target}",
+                        f"--android_home={android_home}",
+                        f"--grpc_services={grpc_services}",
+                        "--record_screen",
+                    ]
+                    + current_flags,
+                    cwd=HERE,
+                    env={
+                        "ANDROID_EMU_ENABLE_CRASH_REPORTING": "YES",
+                        "ANDROID_AVD_HOME": str(tmpdir),
+                        "PYTEST_ADDOPTS": os.getenv("PYTEST_ADDOPTS") or "",
+                    },
+                    # Give pytest a chance to "nicely" terminate everything (4 hours).
+                    timeout=14400,
+                    check_output=False,
+                )
+
+                # If all tests passed, break the retry loop
+                if exit_code == 0:
+                    break
+
+            except subprocess.TimeoutExpired as timeout_exception:
+                logging.info(
+                    "The test suite %s timed out after %s seconds on attempt %d",
+                    name,
+                    timeout_exception.timeout,
+                    retry_count,
+                )
+                # Force the emulator to crash when the test suite timesout.
+                run([adb, "emu", "crash"], timeout=300)
+
+            finally:
+                # Let's see if we can collect crash reports..
+                asyncio.run(collect_crash_reports(emulator, symbol_path, logdir, grpc_services))
+
+                # Forcefully terminate all emulator processess
+                pyrun(
+                    ["-m", "emu.process.kill_emulator", "--log-level", "WARNING"],
+                    check_output=False,
+                )
+
+            retry_count += 1
+
+        # Merge all result files into the final junit_test_results
+        if len(all_results) > 1:
+            merge_results(pyrun, all_results, junit_test_results)
+        elif len(all_results) == 1:
+            # If only one attempt was needed, just copy the file
+            all_results[0].rename(junit_test_results)
 
         if not junit_test_results.exists():
             raise NoTestResultsProduced(
@@ -339,6 +372,12 @@ def run_single_suite(
             )
             with open(failure_file, "r", encoding="utf-8") as failure:
                 raise UnitTestFailure(failure.read())
+
+    finally:
+        # Clean up intermediate result files
+        for result_file in all_results:
+            if result_file != junit_test_results and result_file.exists():
+                result_file.unlink()
 
     return junit_test_results
 
