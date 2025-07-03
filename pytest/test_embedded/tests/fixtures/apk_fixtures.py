@@ -25,7 +25,18 @@ from emu.emulator_exceptions import (
     EmulatorFailedToBootException,
     FailedToInstallApkException,
 )
-from emu.application import AnimationApplication
+from emu.application import (
+    AnimationApplication,
+    GearsApplication,
+    GltfViewerApplication,
+    HelloVKApplication,
+    MapsDemoApplication,
+    TriangleApplication,
+    VulkanCapsViewerApplication,
+    VulkanSamplesApplication,
+)
+
+
 
 
 @pytest.fixture
@@ -68,6 +79,154 @@ async def animation_app(install_animation_apk, avd: BaseEmulator):
 
     await animation.stop()
     logging.info("=== finalized animation_app")
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def install_hellovk_apk(avd: BaseEmulator):
+    """Installs the hellovk APK on the emulator.
+
+    Retries installation up to 3 times in case of transient failures.
+    """
+    apk = HelloVKApplication(avd)
+    await apk.install()
+    yield apk
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def hellovk_app(install_hellovk_apk, avd: BaseEmulator):
+    """Launch the hellovk app that a triangle rendered with vulkan.
+
+    Args:
+        avd: An instance of the `BaseEmulator` class.
+
+    Yields:
+        None
+
+    Raises:
+        AssertionError: If the hellovk app fails to launch.
+    """
+    hellovk = install_hellovk_apk
+    await hellovk.start()
+    logging.info("--> yielding hellovk_app")
+    yield hellovk
+    logging.info("<-- teardown hellovk_app")
+
+    await hellovk.stop()
+    logging.info("=== finalized hellovk_app")
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def install_gears_apk(avd: BaseEmulator):
+    """Installs the gears APK on the emulator."""
+    apk = GearsApplication(avd)
+    await apk.install()
+    yield apk
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def gears_app(install_gears_apk, avd: BaseEmulator):
+    """Launch the gears app."""
+    gears = install_gears_apk
+    await gears.start()
+    yield gears
+    await gears.stop()
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def install_gltf_viewer_apk(avd: BaseEmulator):
+    """Installs the gltf viewer APK on the emulator."""
+    apk = GltfViewerApplication(avd)
+    await apk.install()
+    yield apk
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def gltf_viewer_app(install_gltf_viewer_apk, avd: BaseEmulator):
+    """Launch the gltf viewer app."""
+    gltf_viewer = install_gltf_viewer_apk
+    await gltf_viewer.start()
+    yield gltf_viewer
+    await gltf_viewer.stop()
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def install_maps_demo_apk(avd: BaseEmulator):
+    """Installs the maps demo APK on the emulator."""
+    apk = MapsDemoApplication(avd)
+    await apk.install()
+    yield apk
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def maps_demo_app(install_maps_demo_apk, avd: BaseEmulator):
+    """Launch the maps demo app."""
+    maps_demo = install_maps_demo_apk
+    await maps_demo.start()
+    yield maps_demo
+    await maps_demo.stop()
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def install_triangle_apk(avd: BaseEmulator):
+    """Installs the triangle APK on the emulator."""
+    apk = TriangleApplication(avd)
+    await apk.install()
+    yield apk
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def triangle_app(install_triangle_apk, avd: BaseEmulator):
+    """Launch the triangle app."""
+    triangle = install_triangle_apk
+    await triangle.start()
+    yield triangle
+    await triangle.stop()
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def install_vulkancapsviewer_apk(avd: BaseEmulator):
+    """Installs the vulkancapsviewer APK on the emulator."""
+    apk = VulkanCapsViewerApplication(avd)
+    await apk.install()
+    yield apk
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def vulkancapsviewer_app(install_vulkancapsviewer_apk, avd: BaseEmulator):
+    """Launch the vulkancapsviewer app."""
+    vulkancapsviewer = install_vulkancapsviewer_apk
+    await vulkancapsviewer.start()
+    yield vulkancapsviewer
+    await vulkancapsviewer.stop()
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def install_vulkan_samples_apk(avd: BaseEmulator):
+    """Installs the vulkan samples APK on the emulator."""
+    apk = VulkanSamplesApplication(avd)
+    await apk.install()
+    yield apk
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def vulkan_samples_app(install_vulkan_samples_apk, avd: BaseEmulator):
+    """Launch the vulkan samples app."""
+    vulkan_samples = install_vulkan_samples_apk
+    await vulkan_samples.start()
+    yield vulkan_samples
+    await vulkan_samples.stop()
 
 
 @pytest.fixture

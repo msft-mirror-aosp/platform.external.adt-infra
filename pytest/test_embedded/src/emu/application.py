@@ -17,7 +17,16 @@ import asyncio
 import logging
 from typing import Callable, Any, Coroutine
 
-from emu.apk import APP_DEBUG_APK
+from emu.apk import (
+    APP_DEBUG_APK,
+    APP_GEARS_APK,
+    APP_GLTF_VIEWER_APK,
+    APP_HELLOVK_APK,
+    APP_MAPS_DEMO_APK,
+    APP_TRIANGLE_APK,
+    APP_VULKANCAPSVIEWER_APK,
+    APP_VULKAN_SAMPLES_APK,
+)
 from emu.timing import retry
 from emu.emulator_exceptions import (
     FailedToInstallApkException,
@@ -33,30 +42,8 @@ class BaseEmulator:
 class Application:
     """Represents an application that can be installed and run on an emulator."""
 
-    def __init__(
-        self,
-        avd: BaseEmulator,
-        package_name: str = None,
-        default_activity: str = None,
-        apk_path: Path = None,
-    ):
-        self.avd = avd
-        self.apk_path = apk_path  # Could be none for install apks.
-        self.default_activity = default_activity
-        if package_name is None and default_activity is not None:
-            self.package_name = self.extract_package_name(default_activity)
-        else:
-            self.package_name = package_name
-        if not self.package_name:
-            raise ValueError(
-                "Package name not specified or could not be extracted from activity"
-            )
-
-    @property
-    def adb(self):
-        return self.avd.adb
-
-    def extract_package_name(self, activity_string: str) -> str:
+    @staticmethod
+    def extract_package_name(activity_string: str) -> str:
         """
         Extracts the package name from an activity string.
 
@@ -80,6 +67,51 @@ class Application:
                 e,
             )
             return None
+
+    @staticmethod
+    async def start_strategy_no_wait():
+        await asyncio.sleep(0)
+        return True
+
+    @staticmethod
+    async def  start_strategy_wait_for_activity_manager_signal(avd, package_name):
+        async def start():
+            async with await avd.adb.logcat(tag="ActivityManager") as stream:
+                    async for line in stream:
+                        if f"Displayed {package_name}" in line:
+                            return True
+                    return False
+        return start
+
+    def __init__(
+        self,
+        avd: BaseEmulator,
+        package_name: str = None,
+        default_activity: str = None,
+        apk_path: Path = None,
+        wait_for_start_strategy: Callable[
+            [], Coroutine[Any, Any, bool]
+        ] = start_strategy_no_wait
+    ):
+        self.avd = avd
+        self.apk_path = apk_path
+        self.default_activity = default_activity
+        if package_name is None and default_activity is not None:
+            self.package_name = Application.extract_package_name(default_activity)
+        else:
+            self.package_name = package_name
+        if not self.package_name:
+            raise ValueError(
+                "Package name not specified or could not be extracted from activity"
+            )
+
+        self.wait_for_started = wait_for_start_strategy
+
+    @property
+    def adb(self):
+        return self.avd.adb
+
+
 
     async def _install_operation(self):
         try:
@@ -162,19 +194,15 @@ class Application:
         self,
         activity=None,
         params: str = "",
-        wait_for_started: Callable[
-            [], Coroutine[Any, Any, bool]
-        ] = lambda: asyncio.ensure_future(asyncio.sleep(0, True)),
         timeout: float = 5,
         attempts: int = 3,
         delay: float = 1,
-
     ) -> bool:
         """Starts the application on the emulator.
 
         Args:
+            activity: The activity to start. If None, the default activity is used.
             params: Additional parameters to pass to the activity.
-            wait_for_started: A callable that determines if the application has started.
             timeout: The maximum time to wait for the application to start, in seconds.
             attempts: The maximum number of attempts to make.
             delay: The delay in seconds between attempts.
@@ -189,13 +217,14 @@ class Application:
         )
         logging.info("Starting %s with params: %s", self.package_name, params)
         try:
+            await self.adb.clear_logcat()
             success = await retry(
                 lambda: self._start_activity(
-                    wait_for_started, activity, params, timeout
+                    self.wait_for_started, activity, params, timeout
                 ),
                 attempts=attempts,
                 name=f"Starting {self.default_activity}",
-                delay=delay
+                delay=delay,
             )
             logging.info("Successfully started %s", self.default_activity)
             return success
@@ -203,9 +232,9 @@ class Application:
             raise FailedToStartActivityException
         except Exception as e:
             logging.error(
-                "Failed to start %s after 4 attempts.",
+                "Failed to start %s after %d attempts.",
                 self.default_activity,
-                attempts
+                attempts,
             )
             return False
 
@@ -233,27 +262,110 @@ class AnimationApplication(Application):
     """Represents the rotating triangle application used for testing."""
 
     def __init__(self, avd: BaseEmulator):
-        super().__init__(
-            avd,
-            default_activity="com.google.AnimateBox/com.google.emu.MainActivity",
-            apk_path=APP_DEBUG_APK.absolute(),
-        )
-
-    async def start(self, activity=None, params=None, timeout: float = 5) -> bool:
         async def wait_for_animation_app_started():
-            async with await self.avd.adb.logcat(tag="aemu") as stream:
+            async with await avd.adb.logcat(tag="aemu") as stream:
                 logging.info("Waiting for --STARTED-- in logcat stream.")
                 async for line in stream:
                     if "--STARTED--" in line:
                         return True
             return False
 
-        await self.adb.clear_logcat()
-        return await super().start(
-            activity=activity,
-            params=params,
-            wait_for_started=wait_for_animation_app_started,
-            timeout=timeout,
+        super().__init__(
+            avd,
+            default_activity="com.google.AnimateBox/com.google.emu.MainActivity",
+            apk_path=APP_DEBUG_APK,
+            wait_for_start_strategy=wait_for_animation_app_started,
+        )
+
+
+class HelloVKApplication(Application):
+    """Represents HelloVK App."""
+
+    def __init__(self, avd: BaseEmulator):
+        app_activity = "com.android.hellovk/com.android.hellovk.VulkanActivity"
+        super().__init__(
+            avd,
+            default_activity=app_activity,
+            apk_path=APP_HELLOVK_APK,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
+        )
+
+
+class VulkanSamplesApplication(Application):
+    """Represents Vulkan Samples App."""
+
+    def __init__(self, avd: BaseEmulator):
+        app_activity = "com.khronos.vulkan_samples/com.khronos.vulkan_samples.SampleLauncherActivity"
+        super().__init__(
+            avd,
+            default_activity=app_activity,
+            apk_path=APP_VULKAN_SAMPLES_APK,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
+        )
+
+
+class VulkanCapsViewerApplication(Application):
+    """Represents Vulkan Caps Viewer App."""
+
+    def __init__(self, avd: BaseEmulator):
+        app_activity = "de.saschawillems.vulkancapsviewer/org.qtproject.qt5.android.bindings.QtActivity"
+        super().__init__(
+            avd,
+            default_activity=app_activity,
+            apk_path=APP_VULKANCAPSVIEWER_APK,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
+        )
+
+
+class TriangleApplication(Application):
+    """Represents Triangle App."""
+
+    def __init__(self, avd: BaseEmulator):
+        app_activity = "de.saschawillems.vulkanTriangle/de.saschawillems.vulkanSample.VulkanActivity"
+        super().__init__(
+            avd,
+            default_activity=app_activity,
+            apk_path=APP_TRIANGLE_APK,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
+        )
+
+
+class MapsDemoApplication(Application):
+    """Represents Maps Demo App."""
+
+    def __init__(self, avd: BaseEmulator):
+        app_activity = "com.example.mapdemo/com.example.mapdemo.MainActivity"
+        super().__init__(
+            avd,
+            default_activity=app_activity,
+            apk_path=APP_MAPS_DEMO_APK,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
+        )
+
+
+class GltfViewerApplication(Application):
+    """Represents GLTF Viewer App."""
+
+    def __init__(self, avd: BaseEmulator):
+        app_activity = "de.saschawillems.vulkanglTFPBR/de.saschawillems.vulkanglTFPBR.VulkanActivity"
+        super().__init__(
+            avd,
+            default_activity=app_activity,
+            apk_path=APP_GLTF_VIEWER_APK,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
+        )
+
+
+class GearsApplication(Application):
+    """Represents Gears App."""
+
+    def __init__(self, avd: BaseEmulator):
+        app_activity = "de.saschawillems.vulkanGears/de.saschawillems.vulkanSample.VulkanActivity"
+        super().__init__(
+            avd,
+            default_activity=app_activity,
+            apk_path=APP_GEARS_APK,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
         )
 
 

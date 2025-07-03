@@ -739,5 +739,45 @@
       "-m wear"
     ],
     "status": "enabled"
+  },
+  "vulkan_app_tests_api36_gpu_host": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Run vulkan apps and ensure they don't crash. Take a screenshot",
+    "pytest_flags": [
+      "-m vulkan_apps"
+    ],
+    "status": "enabled"
+  },
+    "vulkan_app_tests_api36_gpu_software": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Run vulkan apps and ensure they don't crash. Take a screenshot",
+    "pytest_flags": [
+      "-m vulkan_apps"
+    ],
+    "status": "enabled"
   }
 }
