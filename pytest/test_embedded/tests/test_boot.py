@@ -207,7 +207,6 @@ async def test_snapshot_booted(emulator):
 
 
 @pytest.mark.boot
-@pytest.mark.skipos("win", "will turn on later")
 @pytest.mark.flaky(reruns=0)  # b/286570480
 @pytest.mark.async_timeout(400)
 async def test_emulator_should_idle(emulator):
