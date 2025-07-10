@@ -62,6 +62,10 @@ else:
     PYTHON = BASE_DIR / ".venv" / "bin" / "python3"
 
 
+class FetcherFlagRequiredError(Exception):
+    pass
+
+
 def parse_arguments() -> argparse.Namespace:
     """Parses the command line arguments."""
     parser = argparse.ArgumentParser(
@@ -133,12 +137,16 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--fetcher",
         help="Path to the fetcher binary used for fetching system images.",
-        required=True,
     )
 
     parser.add_argument(
         "--system_image_path",
         help="Optional path to use for the system image for all tests.",
+    )
+
+    parser.add_argument(
+        "--android_home",
+        help="Optional path to use for ANDROID_HOME.",
     )
 
     return parser.parse_args()
@@ -216,10 +224,16 @@ def main(args: argparse.Namespace) -> None:
         logging.DEBUG if args.verbose else logging.INFO,
         log_path=test_runner.get_log_path(Path(args.logdir)),
     )
-
-    fetcher = Path(args.fetcher)
     with tempfile.TemporaryDirectory() as tmp_dir:
-        android_home = create_android_home(fetcher, Path(tmp_dir))
+        if not args.fetcher:
+            if not args.android_home or not args.system_image_path:
+                raise FetcherFlagRequiredError('--fetcher is required unless both --android_home '
+                                               'and --system_image_path are specified')
+            fetcher = None
+            android_home = Path(args.android_home)
+        else:
+            fetcher = Path(args.fetcher)
+            android_home = create_android_home(fetcher, Path(tmp_dir))
 
         pyrun = VenvRunner(android_home)
         tests_to_run = test_runner.get_tests_to_run(args.test_config, args.test_suite,
