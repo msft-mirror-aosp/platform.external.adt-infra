@@ -1,8 +1,8 @@
 {
-  "fast_test_suite_api_31": {
+  "fast_test_suite_api_36": {
     "avd_configs": [
       {
-        "api": "31",
+        "api": "36",
         "launch_flags": [],
         "tag.id": "google_apis"
       }
@@ -73,6 +73,20 @@
     ],
     "status": "enabled"
   },
+  "presubmit_emulator_test_suite_api_36": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "launch_flags": [],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky"
+    ],
+    "status": "enabled"
+  },
   "presubmit_emulator_test_suite_api_34": {
     "avd_configs": [
       {
@@ -115,10 +129,10 @@
     ],
     "status": "enabled"
   },
-  "sanity_test_suite_api_31": {
+  "sanity_test_suite_api_36": {
     "avd_configs": [
       {
-        "api": "31",
+        "api": "36",
         "launch_flags": [],
         "tag.id": "google_apis"
       }
