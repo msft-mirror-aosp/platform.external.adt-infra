@@ -740,7 +740,7 @@
     ],
     "status": "enabled"
   },
-  "vulkan_app_tests_api36_gpu_host": {
+  "vulkan_app_tests_gpu_host_api_36": {
     "avd_configs": [
       {
         "api": "36",
@@ -760,7 +760,27 @@
     ],
     "status": "enabled"
   },
-    "vulkan_app_tests_api36_gpu_software": {
+  "vulkan_samples_tests_gpu_host_api_36": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Run vulkan samples",
+    "pytest_flags": [
+      "-m vulkan_apps_samples"
+    ],
+    "status": "enabled"
+  },
+  "vulkan_samples_tests_gpu_software_api_36": {
     "avd_configs": [
       {
         "api": "36",
@@ -774,9 +794,9 @@
         "tag.id": "google_apis"
       }
     ],
-    "description": "Run vulkan apps and ensure they don't crash. Take a screenshot",
+    "description": "Run vulkan samples",
     "pytest_flags": [
-      "-m vulkan_apps"
+      "-m vulkan_apps_samples"
     ],
     "status": "enabled"
   }

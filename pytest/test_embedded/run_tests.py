@@ -446,6 +446,15 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--local_run",
+        default=False,
+        dest="local_run",
+        action="store_true",
+        help="Queue the run in 'local' mode, so that assets and dependencies will be searched for locally "
+        + ", as opposed to the infrastructure configured path.",
+    )
+
+    parser.add_argument(
         "-e",
         "--emulator",
         dest="emulator",
@@ -679,6 +688,7 @@ def main(args):
                 fetcher=args.fetcher,
                 android_home=ANDROID_SDK_ROOT,
                 grpc_services=GRPC_SERVICES,
+                local_run=args.local_run,
             )
     else:
         test_runner.run_tests(
@@ -693,6 +703,7 @@ def main(args):
             fetcher=args.fetcher,
             android_home=ANDROID_SDK_ROOT,
             grpc_services=GRPC_SERVICES,
+            local_run=args.local_run,
         )
 
 
