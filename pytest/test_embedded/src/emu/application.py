@@ -26,6 +26,15 @@ from emu.apk import (
     APP_TRIANGLE_APK,
     APP_VULKANCAPSVIEWER_APK,
     APP_VULKAN_SAMPLES_APK,
+    APP_VULKAN_SAMPLES_ASSETS,
+    PREBUILT_GEARS_APK,
+    PREBUILT_GLTF_VIEWER_APK,
+    PREBUILT_HELLOVK_APK,
+    PREBUILT_MAPS_DEMO_APK,
+    PREBUILT_TRIANGLE_APK,
+    PREBUILT_VULKANCAPSVIEWER_APK,
+    PREBUILT_VULKAN_SAMPLES_APK,
+    PREBUILT_VULKAN_SAMPLES_ASSETS,
 )
 from emu.timing import retry
 from emu.emulator_exceptions import (
@@ -91,11 +100,13 @@ class Application:
         apk_path: Path = None,
         wait_for_start_strategy: Callable[
             [], Coroutine[Any, Any, bool]
-        ] = start_strategy_no_wait
+        ] = start_strategy_no_wait,
+        local_run: bool = False,
     ):
         self.avd = avd
         self.apk_path = apk_path
         self.default_activity = default_activity
+        self.local_run = local_run
         if package_name is None and default_activity is not None:
             self.package_name = Application.extract_package_name(default_activity)
         else:
@@ -152,6 +163,12 @@ class Application:
         Raises:
             FailedToInstallApkException: If the installation fails after the specified number of attempts.
         """
+        if self.local_run and not self.apk_path.exists():
+            logging.error(f"APK not found at {self.apk_path}")
+            logging.error("For local runs, you must manually download and extract the test APKs.")
+            logging.error(f"Please ensure the APK is available at the specified path.")
+            raise FileNotFoundError(f"APK not found: {self.apk_path}")
+
         logging.info("Installing %s from %s", self.package_name, self.apk_path)
         try:
             success = await retry(
@@ -261,7 +278,7 @@ class Application:
 class AnimationApplication(Application):
     """Represents the rotating triangle application used for testing."""
 
-    def __init__(self, avd: BaseEmulator):
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
         async def wait_for_animation_app_started():
             async with await avd.adb.logcat(tag="aemu") as stream:
                 logging.info("Waiting for --STARTED-- in logcat stream.")
@@ -275,18 +292,20 @@ class AnimationApplication(Application):
             default_activity="com.google.AnimateBox/com.google.emu.MainActivity",
             apk_path=APP_DEBUG_APK,
             wait_for_start_strategy=wait_for_animation_app_started,
+            local_run=local_run,
         )
 
 
 class HelloVKApplication(Application):
     """Represents HelloVK App."""
 
-    def __init__(self, avd: BaseEmulator):
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
         app_activity = "com.android.hellovk/com.android.hellovk.VulkanActivity"
+        apk_path = APP_HELLOVK_APK if local_run else PREBUILT_HELLOVK_APK
         super().__init__(
             avd,
             default_activity=app_activity,
-            apk_path=APP_HELLOVK_APK,
+            apk_path=apk_path,
             wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
         )
 
@@ -294,25 +313,57 @@ class HelloVKApplication(Application):
 class VulkanSamplesApplication(Application):
     """Represents Vulkan Samples App."""
 
-    def __init__(self, avd: BaseEmulator):
-        app_activity = "com.khronos.vulkan_samples/com.khronos.vulkan_samples.SampleLauncherActivity"
+    async def ensure_assets(self, avd : BaseEmulator):
+        install_path=Path(f"/storage/emulated/0/Android/data/{self.package_name}/files")
+        tmp_dir_base = Path("/data/local/tmp")
+        # Push assets to a temporary location
+        await avd.adb.shell(f"mkdir -p {install_path}")
+
+        assets_to_push = ["assets", "shaders"]
+        for asset_dir_name in assets_to_push:
+            source_dir = self.assets_path / asset_dir_name
+            if source_dir.exists():
+                    tmp_asset = tmp_dir_base / asset_dir_name
+                    await avd.adb.push(f"{source_dir}", tmp_asset)
+                    await avd.adb.shell(f"cp -r {tmp_asset} {install_path}")
+                    await avd.adb.shell(f"chmod 777 -R {install_path / asset_dir_name}")
+            else:
+                if self.local_run:
+                    logging.error(f"Asset directory not found at {source_dir}")
+                    logging.error("For local runs, you must manually download and extract the vulkan samples assets.")
+                    logging.error(f"Please download the assets from the Vulkan samples repository and place them in {self.assets_path}")
+                else:
+                    logging.warning(f"Asset directory not found, skipping: {source_dir}")
+
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
+        self.app_activity = "com.khronos.vulkan_samples/com.khronos.vulkan_samples.SampleLauncherActivity"
+        self.local_run = local_run
+
+        if self.local_run:
+            apk_path = APP_VULKAN_SAMPLES_APK
+            self.assets_path = APP_VULKAN_SAMPLES_ASSETS
+        else:
+            apk_path = PREBUILT_VULKAN_SAMPLES_APK
+            self.assets_path = PREBUILT_VULKAN_SAMPLES_ASSETS
+
         super().__init__(
             avd,
-            default_activity=app_activity,
-            apk_path=APP_VULKAN_SAMPLES_APK,
-            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
+            default_activity=self.app_activity,
+            apk_path=apk_path,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(self.app_activity))
         )
 
 
 class VulkanCapsViewerApplication(Application):
     """Represents Vulkan Caps Viewer App."""
 
-    def __init__(self, avd: BaseEmulator):
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
         app_activity = "de.saschawillems.vulkancapsviewer/org.qtproject.qt5.android.bindings.QtActivity"
+        apk_path = APP_VULKANCAPSVIEWER_APK if local_run else PREBUILT_VULKANCAPSVIEWER_APK
         super().__init__(
             avd,
             default_activity=app_activity,
-            apk_path=APP_VULKANCAPSVIEWER_APK,
+            apk_path=apk_path,
             wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
         )
 
@@ -320,12 +371,13 @@ class VulkanCapsViewerApplication(Application):
 class TriangleApplication(Application):
     """Represents Triangle App."""
 
-    def __init__(self, avd: BaseEmulator):
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
         app_activity = "de.saschawillems.vulkanTriangle/de.saschawillems.vulkanSample.VulkanActivity"
+        apk_path = APP_TRIANGLE_APK if local_run else PREBUILT_TRIANGLE_APK
         super().__init__(
             avd,
             default_activity=app_activity,
-            apk_path=APP_TRIANGLE_APK,
+            apk_path=apk_path,
             wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
         )
 
@@ -333,12 +385,13 @@ class TriangleApplication(Application):
 class MapsDemoApplication(Application):
     """Represents Maps Demo App."""
 
-    def __init__(self, avd: BaseEmulator):
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
         app_activity = "com.example.mapdemo/com.example.mapdemo.MainActivity"
+        apk_path = APP_MAPS_DEMO_APK if local_run else PREBUILT_MAPS_DEMO_APK
         super().__init__(
             avd,
             default_activity=app_activity,
-            apk_path=APP_MAPS_DEMO_APK,
+            apk_path=apk_path,
             wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
         )
 
@@ -346,12 +399,13 @@ class MapsDemoApplication(Application):
 class GltfViewerApplication(Application):
     """Represents GLTF Viewer App."""
 
-    def __init__(self, avd: BaseEmulator):
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
         app_activity = "de.saschawillems.vulkanglTFPBR/de.saschawillems.vulkanglTFPBR.VulkanActivity"
+        apk_path = APP_GLTF_VIEWER_APK if local_run else PREBUILT_GLTF_VIEWER_APK
         super().__init__(
             avd,
             default_activity=app_activity,
-            apk_path=APP_GLTF_VIEWER_APK,
+            apk_path=apk_path,
             wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
         )
 
@@ -359,14 +413,16 @@ class GltfViewerApplication(Application):
 class GearsApplication(Application):
     """Represents Gears App."""
 
-    def __init__(self, avd: BaseEmulator):
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
         app_activity = "de.saschawillems.vulkanGears/de.saschawillems.vulkanSample.VulkanActivity"
+        apk_path = APP_GEARS_APK if local_run else PREBUILT_GEARS_APK
         super().__init__(
             avd,
             default_activity=app_activity,
-            apk_path=APP_GEARS_APK,
+            apk_path=apk_path,
             wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
         )
+
 
 
 def create_application_subclass(activity: str):

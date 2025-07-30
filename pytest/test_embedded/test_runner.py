@@ -59,6 +59,7 @@ def run_tests(
     fetcher: Optional[Path],
     android_home: Path,
     grpc_services: Path,
+    local_run: bool = False,
 ):
     """
     Runs tests on an emulator, installs necessary packages, restarts adb,
@@ -76,6 +77,7 @@ def run_tests(
         fetcher (Optional[Path]): Optional path to fetcher binary.
         android_home (Path): Path to ANDROID_HOME/ANDROID_SDK_ROOT.
         grpc_services (Path): Path to GRPC services proto files.
+        local_run (bool): True if we are running locally.
 
     Returns:
         None
@@ -96,6 +98,7 @@ def run_tests(
         android_home,
         adb,
         grpc_services,
+        local_run,
     )
     generate_reports(logdir, pyrun, result_xmls, skip_reports, collect)
 
@@ -127,6 +130,7 @@ def run_test_suites(
     android_home: Path,
     adb: Path,
     grpc_services: Path,
+    local_run: bool = False,
 ) -> tuple[list, list]:
     """
     Runs test suites on the emulator, logging the results and handling multiple groups if configured.
@@ -144,6 +148,7 @@ def run_test_suites(
         android_home (Path): Path to ANDROID_HOME/ANDROID_SDK_ROOT.
         adb (Path): Path to adb binary.
         grpc_services (Path): Path to GRPC services proto files.
+        local_run (bool): True if we are running on the local host.
 
     Returns:
         tuple[list, list]: A tuple containing lists of result XMLs and skip report paths.
@@ -179,6 +184,7 @@ def run_test_suites(
                     android_home,
                     adb,
                     grpc_services,
+                    local_run,
                 )
                 result_xmls.append(res)
                 skip_reports.append(test_log_dir.joinpath(suite + "_skip.xml"))
@@ -253,12 +259,15 @@ def run_single_suite(
     android_home: Path,
     adb: Path,
     grpc_services: Path,
+    local_run: bool = False,
     max_retries: int = 3,  # Default to 3 retries for 25% flakiness rate
 ):
     if collect:
         pytest_flags.append("--setup-plan")
     if fetcher:
         pytest_flags.append(f"--fetcher={fetcher}")
+    if local_run:
+        pytest_flags.append(f"--local_run")
 
     junit_test_results = Path(logdir) / f"{name}.xml"
     exit_code = 1

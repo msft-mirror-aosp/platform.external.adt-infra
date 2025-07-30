@@ -271,6 +271,13 @@ def pytest_addoption(parser):
         action="store",
         help="The path to all the grpc services.",
     )
+    parser.addoption(
+        "--local_run",
+        action="store_true",
+        default=False,
+        help="Queue the run in 'local' mode, so that assets and dependencies will be searched for locally "
+        + ", as opposed to the infrastructure configured path.",
+    )
 
 
 ALL_PLATFORMS = set("darwin linux win32".split())

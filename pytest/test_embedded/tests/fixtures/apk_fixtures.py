@@ -41,12 +41,13 @@ from emu.application import (
 
 @pytest.fixture
 @pytest.mark.async_timeout(120)
-async def install_animation_apk(avd: BaseEmulator):
+async def install_animation_apk(request, avd: BaseEmulator):
     """Installs the animation APK on the emulator.
 
     Retries installation up to 3 times in case of transient failures.
     """
-    apk = AnimationApplication(avd)
+    local_run = request.config.getoption("--local_run")
+    apk = AnimationApplication(avd, local_run)
     await apk.install()
     yield apk
 
@@ -82,12 +83,13 @@ async def animation_app(install_animation_apk, avd: BaseEmulator):
 
 @pytest.fixture
 @pytest.mark.async_timeout(120)
-async def install_hellovk_apk(avd: BaseEmulator):
+async def install_hellovk_apk(request, avd: BaseEmulator):
     """Installs the hellovk APK on the emulator.
 
     Retries installation up to 3 times in case of transient failures.
     """
-    apk = HelloVKApplication(avd)
+    local_run = request.config.getoption("--local_run")
+    apk = HelloVKApplication(avd, local_run)
     await apk.install()
     yield apk
 
@@ -117,9 +119,10 @@ async def hellovk_app(install_hellovk_apk, avd: BaseEmulator):
 
 @pytest.fixture
 @pytest.mark.async_timeout(120)
-async def install_gears_apk(avd: BaseEmulator):
+async def install_gears_apk(request, avd: BaseEmulator):
     """Installs the gears APK on the emulator."""
-    apk = GearsApplication(avd)
+    local_run = request.config.getoption("--local_run")
+    apk = GearsApplication(avd, local_run)
     await apk.install()
     yield apk
 
@@ -136,9 +139,10 @@ async def gears_app(install_gears_apk, avd: BaseEmulator):
 
 @pytest.fixture
 @pytest.mark.async_timeout(120)
-async def install_gltf_viewer_apk(avd: BaseEmulator):
+async def install_gltf_viewer_apk(request, avd: BaseEmulator):
     """Installs the gltf viewer APK on the emulator."""
-    apk = GltfViewerApplication(avd)
+    local_run = request.config.getoption("--local_run")
+    apk = GltfViewerApplication(avd, local_run)
     await apk.install()
     yield apk
 
@@ -155,9 +159,10 @@ async def gltf_viewer_app(install_gltf_viewer_apk, avd: BaseEmulator):
 
 @pytest.fixture
 @pytest.mark.async_timeout(120)
-async def install_maps_demo_apk(avd: BaseEmulator):
+async def install_maps_demo_apk(request, avd: BaseEmulator):
     """Installs the maps demo APK on the emulator."""
-    apk = MapsDemoApplication(avd)
+    local_run = request.config.getoption("--local_run")
+    apk = MapsDemoApplication(avd, local_run)
     await apk.install()
     yield apk
 
@@ -174,9 +179,10 @@ async def maps_demo_app(install_maps_demo_apk, avd: BaseEmulator):
 
 @pytest.fixture
 @pytest.mark.async_timeout(120)
-async def install_triangle_apk(avd: BaseEmulator):
+async def install_triangle_apk(request, avd: BaseEmulator):
     """Installs the triangle APK on the emulator."""
-    apk = TriangleApplication(avd)
+    local_run = request.config.getoption("--local_run")
+    apk = TriangleApplication(avd, local_run)
     await apk.install()
     yield apk
 
@@ -193,9 +199,10 @@ async def triangle_app(install_triangle_apk, avd: BaseEmulator):
 
 @pytest.fixture
 @pytest.mark.async_timeout(120)
-async def install_vulkancapsviewer_apk(avd: BaseEmulator):
+async def install_vulkancapsviewer_apk(request, avd: BaseEmulator):
     """Installs the vulkancapsviewer APK on the emulator."""
-    apk = VulkanCapsViewerApplication(avd)
+    local_run = request.config.getoption("--local_run")
+    apk = VulkanCapsViewerApplication(avd, local_run)
     await apk.install()
     yield apk
 
@@ -211,23 +218,25 @@ async def vulkancapsviewer_app(install_vulkancapsviewer_apk, avd: BaseEmulator):
 
 
 @pytest.fixture
-@pytest.mark.async_timeout(120)
-async def install_vulkan_samples_apk(avd: BaseEmulator):
+@pytest.mark.async_timeout(300)
+async def install_vulkan_samples_apk(request, avd: BaseEmulator):
     """Installs the vulkan samples APK on the emulator."""
-    apk = VulkanSamplesApplication(avd)
+    local_run = request.config.getoption("--local_run")
+    apk = VulkanSamplesApplication(avd, local_run)
     await apk.install()
     yield apk
 
 
 @pytest.fixture
 @pytest.mark.async_timeout(120)
-async def vulkan_samples_app(install_vulkan_samples_apk, avd: BaseEmulator):
+async def vulkan_samples_app(request, install_vulkan_samples_apk, avd: BaseEmulator):
     """Launch the vulkan samples app."""
+    sample_name= request.param
     vulkan_samples = install_vulkan_samples_apk
-    await vulkan_samples.start()
+    await vulkan_samples.ensure_assets(avd)
+    await vulkan_samples.start(params=f"-e sample {sample_name}")
     yield vulkan_samples
     await vulkan_samples.stop()
-
 
 @pytest.fixture
 @pytest.mark.async_timeout(200)

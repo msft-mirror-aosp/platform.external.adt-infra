@@ -110,11 +110,9 @@ class Adb:
             src (str): The path of the file on the host.
             dest (str): The destination path on the device.
         """
-
+        cmd_array = [self.adb_binary, "-s", self.name, "push", src, dest]
         await self._check_adb_and_raise()
-        await Command(
-            [self.adb_binary, "-s", self.name, "push", src, dest]
-        ).run_until_finished()
+        await Command(cmd_array).run_until_finished()
 
     async def wait_boot_complete(self, timeout=60, timedelta=1):
         """
