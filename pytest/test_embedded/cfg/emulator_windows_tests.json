@@ -700,10 +700,10 @@
     ],
     "status": "disabled"
   },
-  "tablet_test_suite_api_34": {
+  "tablet_test_suite_api_35": {
     "avd_configs": [
       {
-        "api": "34",
+        "api": "35",
         "launch_flags": [
           "-no-snapshot"
         ],
