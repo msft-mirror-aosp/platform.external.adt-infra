@@ -173,6 +173,9 @@ async def test_snapshot_booted(emulator):
     It is important to boot fast from snapshot, that is why it
     is set to timeout in 60 seconds
     """
+    # Ensure the emulator is running before being stopped or no snapshot will be created.
+    if not emulator.is_alive():
+        await emulator.launch()
     await emulator.stop()
     assert not emulator.is_alive()
 
