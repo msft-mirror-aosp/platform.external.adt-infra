@@ -27,6 +27,8 @@ from emu.apk import (
     APP_VULKANCAPSVIEWER_APK,
     APP_VULKAN_SAMPLES_APK,
     APP_VULKAN_SAMPLES_ASSETS,
+    APP_GFXBENCH_APK,
+    APP_GFXBENCH_ASSETS,
     PREBUILT_GEARS_APK,
     PREBUILT_GLTF_VIEWER_APK,
     PREBUILT_HELLOVK_APK,
@@ -35,6 +37,8 @@ from emu.apk import (
     PREBUILT_VULKANCAPSVIEWER_APK,
     PREBUILT_VULKAN_SAMPLES_APK,
     PREBUILT_VULKAN_SAMPLES_ASSETS,
+    PREBUILT_GFXBENCH_APK,
+    PREBUILT_GFXBENCH_ASSETS
 )
 from emu.timing import retry
 from emu.emulator_exceptions import (
@@ -83,7 +87,7 @@ class Application:
         return True
 
     @staticmethod
-    async def  start_strategy_wait_for_activity_manager_signal(avd, package_name):
+    def  start_strategy_wait_for_activity_manager_signal(avd, package_name):
         async def start():
             async with await avd.adb.logcat(tag="ActivityManager") as stream:
                     async for line in stream:
@@ -274,6 +278,30 @@ class Application:
             logging.error("Failed to stop %s after 3 attempts.", self.package_name)
             return False
 
+    async def start_as_broadcast(self, action: str, receiver: str, params: str = "") -> bool:
+        """Starts the application on the emulator using a broadcast intent.
+
+        Args:
+            action: The action to broadcast.
+            receiver: The receiver to start.
+            params: Additional parameters to pass to the broadcast.
+
+        Returns:
+            True if the broadcast was sent successfully, False otherwise.
+        """
+        logging.info("Starting %s with broadcast action: %s and receiver: %s", self.package_name, action, receiver)
+        if not receiver:
+            logging.error("No receiver specified.")
+            return False
+
+        try:
+            logging.info(f"Running: am broadcast -a {action} -n {self.package_name}/{receiver} {params}")
+            await self.adb.shell(f"am broadcast -a {action} -n {self.package_name}/{receiver} {params}")
+            return True
+        except Exception as e:
+            logging.error("Failed to send broadcast %s: %s", action, e)
+            return False
+
 
 class AnimationApplication(Application):
     """Represents the rotating triangle application used for testing."""
@@ -423,6 +451,56 @@ class GearsApplication(Application):
             wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(avd, Application.extract_package_name(app_activity))
         )
 
+
+class GfxbenchApplication(Application):
+    """Represents GFXBench App."""
+
+    async def ensure_assets(self, avd : BaseEmulator):
+        install_path=Path(f"/storage/emulated/0/Android/data/{self.package_name}/files")
+        # First check if the assets are already on the device.
+        if "exists" in await avd.adb.shell(f"[ -d {install_path / 'data'} ] && echo 'exists'"):
+            logging.info("GFXBench assets already exist on the device, skipping copy.")
+            return
+
+        tmp_dir_base = Path("/data/local/tmp")
+        # Push assets to a temporary location
+        await avd.adb.shell(f"mkdir -p {install_path}")
+
+        assets_to_push = ["data"]
+        for asset_dir_name in assets_to_push:
+            source_dir = self.assets_path / asset_dir_name
+            if source_dir.exists():
+                    tmp_asset = tmp_dir_base / asset_dir_name
+                    await avd.adb.push(f"{source_dir}", tmp_asset)
+                    await avd.adb.shell(f"cp -r {tmp_asset} {install_path}")
+                    await avd.adb.shell(f"chmod 777 -R {install_path / asset_dir_name}")
+            else:
+                if self.local_run:
+                    logging.error(f"Asset directory not found at {source_dir}")
+                    logging.error("For local runs, you must manually download and extract the gfxbench assets.")
+                    logging.error(f"Please download the assets from the gfxbench repository and place them in {self.assets_path}")
+                else:
+                    logging.warning(f"Asset directory not found, skipping: {source_dir}")
+
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
+        self.app_activity = "net.kishonti.gfxbench.vulkan.v50105.corporate/net.kishonti.app.MainActivity"
+        self.local_run = local_run
+
+        if self.local_run:
+            apk_path = APP_GFXBENCH_APK
+            self.assets_path = APP_GFXBENCH_ASSETS
+        else:
+            apk_path = PREBUILT_GFXBENCH_APK
+            self.assets_path = PREBUILT_GFXBENCH_ASSETS
+
+        super().__init__(
+            avd,
+            default_activity=self.app_activity,
+            apk_path=apk_path,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(
+                avd, Application.extract_package_name(self.app_activity)
+            ),
+        )
 
 
 def create_application_subclass(activity: str):

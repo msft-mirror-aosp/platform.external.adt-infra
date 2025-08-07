@@ -95,3 +95,31 @@ async def test_vulkan_samples(vulkan_samples_app, avd, get_screenshot):
     #Wait for the render to start (some samples are slower than others)
     await asyncio.sleep(5)
     await get_screenshot()
+
+
+
+@pytest.mark.vulkan_apps_gfxbench
+@pytest.mark.async_timeout(300)
+async def test_gfxbench_is_stable(gfxbench_app, avd, get_screenshot):
+    """Verifies that the gfxbench sample app is running."""
+    assert await gfxbench_app.is_running(), "Gfxbench application process not found"
+    assert avd.is_alive()
+    await asyncio.sleep(5) # wait for the app to start and check that it didn't crash
+    assert avd.is_alive()
+    await get_screenshot()
+
+
+## These benchmarks will all create a <benchmark_name>.json file with frame times etc.
+BENCHMARKS_TO_RUN = [
+    "vulkan_5_high",
+]
+
+@pytest.mark.vulkan_apps_gfxbench
+@pytest.mark.async_timeout(300)
+@pytest.mark.parametrize("gfxbench_app", BENCHMARKS_TO_RUN, indirect=True)
+async def test_gfxbench_run_benchmark(gfxbench_app, avd, get_screenshot):
+    """Verifies that the gfxbench sample app is running."""
+    assert await gfxbench_app.is_running(), "Gfxbench application process not found"
+    await asyncio.sleep(5) # wait for the app to start
+    assert avd.is_alive()
+    await get_screenshot()

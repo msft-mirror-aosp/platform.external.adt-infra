@@ -17,6 +17,7 @@
 import asyncio
 import logging
 import time
+from pathlib import Path
 
 import pytest
 
@@ -34,6 +35,7 @@ from emu.application import (
     TriangleApplication,
     VulkanCapsViewerApplication,
     VulkanSamplesApplication,
+    GfxbenchApplication,
 )
 
 
@@ -280,3 +282,53 @@ async def coldboot_animation_app(emulator: BaseEmulator):
     await emulator.stop_activity("com.google.AnimateBox")
     await emulator.reset_state()
     logging.info("== finalized coldboot_animation_app")
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def install_gfxbench_apk(request, avd: BaseEmulator):
+    """Installs the gfxbench APK on the emulator."""
+    local_run = request.config.getoption("--local_run")
+    apk = GfxbenchApplication(avd, local_run)
+    await apk.install()
+    yield apk
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(300)
+async def gfxbench_app(request, install_gfxbench_apk, avd: BaseEmulator, log_directory):
+    """Launch the gfxbench app."""
+    benchmark_name = getattr(request, "param", None)
+    gfxbench = install_gfxbench_apk
+    await gfxbench.ensure_assets(avd)
+    await gfxbench.start()
+
+    if benchmark_name:
+        play_time_s = 100  # 100 seconds
+        play_time_ms = play_time_s*1000
+        timeout_buffer_s = 20  # 20s buffer
+        timeout_s = play_time_s + timeout_buffer_s
+
+        # The app expects the test ids to be passed under the `test_ids` extra.
+        logging.info(f"running {benchmark_name} for {play_time_ms} ms.")
+        params = f'-e test_ids "{benchmark_name}" --ei raw_config.play_time {play_time_ms}'
+        await avd.adb.clear_logcat()
+        await gfxbench.start_as_broadcast(
+            action="net.kishonti.testfw.ACTION_RUN_TESTS",
+            receiver="net.kishonti.benchui.corporate.CommandLineSession",
+            params=params
+        )
+
+        # Wait for the benchmark to complete by watching for the results file.
+        results_dir = f"/storage/emulated/0/Android/data/{gfxbench.package_name}/files/results"
+        try:
+            await avd.adb.wait_for_path(f"{results_dir}/results.json", timeout_s)
+        except asyncio.TimeoutError:
+            pytest.fail("Timeout waiting for GFXBench benchmark to complete.")
+
+        # Pull the results from the device.
+        await avd.adb.pull(results_dir, str(log_directory))
+
+
+    yield gfxbench
+    await gfxbench.stop()

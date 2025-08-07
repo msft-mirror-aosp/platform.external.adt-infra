@@ -151,7 +151,7 @@ class Command:
         )  # Start logging task
         return self
 
-    async def run_until_finished(self, timeout: int = 10) -> (int, [str]):
+    async def run_until_finished(self, timeout: int = 20) -> (int, [str]):
         """
         Runs the command, waits for completion (with a timeout), and captures output.
 
