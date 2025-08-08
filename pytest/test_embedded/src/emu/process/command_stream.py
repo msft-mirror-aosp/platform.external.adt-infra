@@ -35,6 +35,8 @@ class AsyncCommandStream:
         return self
 
     async def __anext__(self):
+        if self._process.returncode is not None:
+            raise StopAsyncIteration()
         line = await self._process.stdout.readline()
         return line.decode("utf-8").rstrip()
 
