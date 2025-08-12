@@ -87,7 +87,7 @@ class Adb:
 
         await self._check_adb_and_raise()
         await Command(
-            [self.adb_binary, "-s", self.name, "install", apk]
+            [self.adb_binary, "-s", self.name, "install", "-r", "-g", apk]
         ).run_until_finished()
 
     async def pull(self, src: str, dest: str) -> None:
@@ -317,3 +317,26 @@ class Adb:
         """
 
         return AsyncCommandStream([self.adb_binary, "-s", self.name] + cmd)
+
+    async def wait_for_path(self, path: str, timeout: int = 60) -> None:
+        """Waits for a path to exist on the device using an idiomatic async approach.
+
+        Args:
+            path (str): The path to wait for.
+            timeout (int, optional): The timeout in seconds. Defaults to 60.
+
+        Raises:
+            asyncio.TimeoutError: If the path does not exist after the timeout.
+        """
+        self.logger.info("Waiting up to %ss for path %s to exist.", timeout, path)
+
+        async def _path_exists():
+            result = await self.shell(f"[ -e {path} ] && echo 'exists' || echo 'missing'")
+            return "exists" in result
+
+        try:
+            await eventually(_path_exists, timeout=timeout)
+            self.logger.info("Path %s found.", path)
+        except Exception as e:
+            self.logger.error("Timeout waiting for path %s.", path)
+            raise e

@@ -36,6 +36,7 @@ def register_markers(config):
         "hardware: Low-level hardware test",
         "vulkan_apps: Run a set of vulkan app tests",
         "vulkan_apps_samples: Run a set of vulkan app sample tests",
+        "vulkan_apps_gfxbench: Run vulkan app gfxbench tests",
         "hostperf: Host-side performance test",
         "multi: Uses multiple emulator at the same time.",
         "multidisplay: Relates to multi-display",

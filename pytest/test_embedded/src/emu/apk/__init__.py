@@ -18,6 +18,8 @@ APP_TRIANGLE_APK = _DATA_DIR / "triangle-debug.apk"
 APP_VULKANCAPSVIEWER_APK = _DATA_DIR / "vulkancapsviewer_3.40_arm.apk"
 APP_VULKAN_SAMPLES_APK = _DATA_DIR / "vulkan_samples-release.apk"
 APP_VULKAN_SAMPLES_ASSETS = _DATA_DIR / "assets" / "vulkan_samples"
+APP_GFXBENCH_APK = _DATA_DIR / "gfxbench_vulkan-5.1.5+corporate.apk"
+APP_GFXBENCH_ASSETS = _DATA_DIR / "assets" / "gfxbench"
 
 # The prebuilt versions of the APKs are stored in a zip file.
 PREBUILT_HELLOVK_APK = _PREBUILT_DIR / "hellovk/hellovk/hellovk.apk"
@@ -29,3 +31,6 @@ PREBUILT_VULKANCAPSVIEWER_APK = _PREBUILT_DIR / "vulkancapsviewer/vulkancapsview
 PREBUILT_VULKAN_SAMPLES_DIR = _PREBUILT_DIR / "vulkan_samples/vulkan_samples"
 PREBUILT_VULKAN_SAMPLES_APK = PREBUILT_VULKAN_SAMPLES_DIR / "vulkan_samples.apk"
 PREBUILT_VULKAN_SAMPLES_ASSETS = PREBUILT_VULKAN_SAMPLES_DIR
+PREBUILT_GFXBENCH_DIR = _PREBUILT_DIR / "gfxbench/"
+PREBUILT_GFXBENCH_APK = PREBUILT_GFXBENCH_DIR / "gfxbench_vulkan-5.1.5+corporate.apk"
+PREBUILT_GFXBENCH_ASSETS = PREBUILT_GFXBENCH_DIR
