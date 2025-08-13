@@ -226,9 +226,9 @@ def main(args: argparse.Namespace) -> None:
     )
     with tempfile.TemporaryDirectory() as tmp_dir:
         if not args.fetcher:
-            if not args.android_home or not args.system_image_path:
-                raise FetcherFlagRequiredError('--fetcher is required unless both --android_home '
-                                               'and --system_image_path are specified')
+            if not args.android_home:
+                raise FetcherFlagRequiredError('--fetcher is required unless --android_home '
+                                               'is specified')
             fetcher = None
             android_home = Path(args.android_home)
         else:
