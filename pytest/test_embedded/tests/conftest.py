@@ -129,7 +129,6 @@ FLAKY_TESTS = [
     "test_page_loads_with_different_gpu_modes[host]",
     "test_page_loads_with_different_gpu_modes[swangle]",
     "test_page_loads_with_different_gpu_modes[swiftshader_indirect]",
-    "test_pcmark",
     "test_power_down_sleeps_the_device",
     "test_power_down_turns_off_the_screen",
     "test_recording",
