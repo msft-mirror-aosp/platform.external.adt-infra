@@ -87,7 +87,7 @@ class Adb:
 
         await self._check_adb_and_raise()
         await Command(
-            [self.adb_binary, "-s", self.name, "install", "-r", "-g", apk]
+            [self.adb_binary, "-s", self.name, "install", "-r", "-g", "-t", apk]
         ).run_until_finished()
 
     async def pull(self, src: str, dest: str) -> None:
