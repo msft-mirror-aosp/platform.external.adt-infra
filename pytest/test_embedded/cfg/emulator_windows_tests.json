@@ -48,10 +48,10 @@
         "launch_flags": [
           "-no-snapshot"
         ],
-        "tag.id": "android-tv"
+        "tag.id": "google-tv"
       }
     ],
-    "description": "Set of tests that run on a Android TV AVD (API 31)",
+    "description": "Set of tests that run on a Google TV AVD (API 36)",
     "pytest_flags": [
       "-m atv"
     ],
