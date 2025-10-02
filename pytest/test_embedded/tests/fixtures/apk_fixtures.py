@@ -285,12 +285,12 @@ async def coldboot_animation_app(emulator: BaseEmulator):
 
 
 @pytest.fixture
-@pytest.mark.async_timeout(120)
+@pytest.mark.async_timeout(300)
 async def install_gfxbench_apk(request, avd: BaseEmulator):
     """Installs the gfxbench APK on the emulator."""
     local_run = request.config.getoption("--local_run")
     apk = GfxbenchApplication(avd, local_run)
-    await apk.install()
+    await apk.install(timeout=300)
     yield apk
 
 

@@ -128,10 +128,10 @@ class Application:
 
 
 
-    async def _install_operation(self):
+    async def _install_operation(self, timeout: int = 100):
         try:
             if not await self.adb.is_installed(self.package_name):
-                await self.adb.install(self.apk_path.absolute())
+                await self.adb.install(self.apk_path.absolute(), timeout=timeout)
         finally:
             return await self.adb.is_installed(self.package_name)
 
@@ -154,12 +154,13 @@ class Application:
         shell = await self.adb.exec_out(f"ps -A | grep {self.package_name}")
         return self.package_name in shell
 
-    async def install(self, attempts: int = 3, delay: float = 1) -> bool:
+    async def install(self, attempts: int = 3, delay: float = 1, timeout: int = 100) -> bool:
         """Installs the application on the emulator.
 
         Args:
             attempts: The maximum number of attempts to make.
             delay: The delay in seconds between attempts.
+            timeout: The timeout in seconds for the installation.
 
         Returns:
             True if installation was successful, False otherwise.
@@ -176,7 +177,7 @@ class Application:
         logging.info("Installing %s from %s", self.package_name, self.apk_path)
         try:
             success = await retry(
-                self._install_operation,
+                lambda: self._install_operation(timeout=timeout),
                 attempts=attempts,
                 delay=delay,
                 name=f"Install {self.package_name}",

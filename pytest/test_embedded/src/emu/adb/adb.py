@@ -78,17 +78,18 @@ class Adb:
 
         return "package:" in await self.shell(f"pm path {package}")
 
-    async def install(self, apk: Path) -> None:
+    async def install(self, apk: Path, timeout: int = 100) -> None:
         """Install the given apk on the device.
 
         Args:
             apk (Path): The path to the APK file to be installed.
+            timeout (int, optional): Timeout in seconds. Defaults to 100s.
         """
 
         await self._check_adb_and_raise()
         await Command(
             [self.adb_binary, "-s", self.name, "install", "-r", "-g", "-t", apk]
-        ).run_until_finished()
+        ).run_until_finished(timeout)
 
     async def pull(self, src: str, dest: str) -> None:
         """Pull a file from the device to the host.
