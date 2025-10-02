@@ -220,6 +220,10 @@ class BaseEmulator(object):
             await self.has_booted(),
         )
         booted = await wait_until(self.has_booted, timeout=timeout)
+        if booted:
+            # Turn off immersive mode confirmation, as this can pop up on first launch.
+            result = await self.adb.shell("settings put secure immersive_mode_confirmations 'confirmed'")
+            logging.info(f"Immersive mode confirmation disabled: {result}")
         if not booted:
             # Didn't boot in time? Let's see if something useful is on logcat:
             log = await self.adb.exec_out("logcat -d")
