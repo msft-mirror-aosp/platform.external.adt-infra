@@ -17,10 +17,11 @@ import pytest
 import re
 import json
 from aemu.proto.emulator_controller_pb2 import (
+    DisplayConfiguration,
+    DisplayConfigurations,
     ImageFormat,
     Rotation,
 )
-from aemu.proto.display_configuration_pb2 import DisplayConfiguration, DisplayConfigurations
 from aemu.proto.emulator_controller_pb2_grpc import EmulatorControllerStub
 from emu.emulator import Emulator
 from emu.timing import eventually, wait_until
