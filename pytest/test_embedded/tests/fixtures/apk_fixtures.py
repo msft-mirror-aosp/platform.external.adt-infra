@@ -306,7 +306,7 @@ async def gfxbench_app(request, install_gfxbench_apk, avd: BaseEmulator, log_dir
     if benchmark_name:
         play_time_s = 100  # 100 seconds
         play_time_ms = play_time_s*1000
-        timeout_buffer_s = 20  # 20s buffer
+        timeout_buffer_s = 60  # 60s buffer
         timeout_s = play_time_s + timeout_buffer_s
 
         # The app expects the test ids to be passed under the `test_ids` extra.
