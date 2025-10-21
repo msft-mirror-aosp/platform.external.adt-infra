@@ -224,6 +224,8 @@ class BaseEmulator(object):
             # Turn off immersive mode confirmation, as this can pop up on first launch.
             result = await self.adb.shell("settings put secure immersive_mode_confirmations 'confirmed'")
             logging.info(f"Immersive mode confirmation disabled: {result}")
+            result = await self.adb.shell("setprop debug.wm.disable_deprecated_target_sdk_dialog 1")
+            logging.info(f"Disable deprecated target sdk dialog disabled: {result}")
         if not booted:
             # Didn't boot in time? Let's see if something useful is on logcat:
             log = await self.adb.exec_out("logcat -d")
