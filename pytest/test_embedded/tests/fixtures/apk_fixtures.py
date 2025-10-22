@@ -15,6 +15,7 @@
 """Fixtures for launching an animation APK."""
 
 import asyncio
+import json
 import logging
 import time
 from pathlib import Path
@@ -328,6 +329,18 @@ async def gfxbench_app(request, install_gfxbench_apk, avd: BaseEmulator, log_dir
 
         # Pull the results from the device.
         await avd.adb.pull(results_dir, str(log_directory))
+
+        # Parse the results and fail if any benchmark failed.
+        results_file = log_directory / "results" / "results.json"
+        if results_file.exists():
+            with open(results_file, "r") as f:
+                results_data = json.load(f)
+                for result in results_data.get("results", []):
+                    if result.get("status") == "FAILED":
+                        error_msg = result.get("error_string", "Unknown error")
+                        pytest.fail(
+                            f"GFXBench benchmark '{result.get('test_id')}' failed with status FAILED: {error_msg}"
+                        )
 
 
     yield gfxbench
