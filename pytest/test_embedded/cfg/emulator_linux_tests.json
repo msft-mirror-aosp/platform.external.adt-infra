@@ -763,7 +763,9 @@
           "host",
           "-no-snapshot",
           "-feature",
-          "Vulkan"
+          "Vulkan",
+          "-feature",
+          "GuestAngle"
         ],
         "tag.id": "google_apis"
       }
@@ -783,7 +785,9 @@
           "lavapipe",
           "-no-snapshot",
           "-feature",
-          "Vulkan"
+          "Vulkan",
+          "-feature",
+          "GuestAngle"
         ],
         "tag.id": "google_apis"
       }
@@ -803,7 +807,9 @@
           "host",
           "-no-snapshot",
           "-feature",
-          "Vulkan"
+          "Vulkan",
+          "-feature",
+          "GuestAngle"
         ],
         "tag.id": "google_apis"
       }
@@ -823,7 +829,9 @@
           "lavapipe",
           "-no-snapshot",
           "-feature",
-          "Vulkan"
+          "Vulkan",
+          "-feature",
+          "GuestAngle"
         ],
         "tag.id": "google_apis"
       }
@@ -843,7 +851,9 @@
           "host",
           "-no-snapshot",
           "-feature",
-          "Vulkan"
+          "Vulkan",
+          "-feature",
+          "GuestAngle"
         ],
         "tag.id": "google_apis"
       }
@@ -863,7 +873,9 @@
           "lavapipe",
           "-no-snapshot",
           "-feature",
-          "Vulkan"
+          "Vulkan",
+          "-feature",
+          "GuestAngle"
         ],
         "tag.id": "google_apis"
       }
