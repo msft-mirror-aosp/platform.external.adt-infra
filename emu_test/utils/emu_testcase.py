@@ -296,6 +296,8 @@ class EmuBaseTestCase(LoggedTestCase):
             launch_cmd += ["-perf-stat", self.perf_file]
         if avd.gpu == "swiftshader":
             launch_cmd += ["-gpu", "swiftshader_indirect"]
+        else if avd.gpu == "lavapipe":
+            launch_cmd += ["-gpu", "lavapipe"]
         else:
             if emu_argparser.emu_args.builder_name == "Linux_gce":
                 launch_cmd = ["vglrun", "+v", "-c", "proxy"] + launch_cmd

@@ -16,7 +16,7 @@ TAG = ["default",
        "google_apis",
        "google_apis_playstore"]
 
-GPU = ["swiftshader"]
+GPU = ["lavapipe"]
 
 TESTCASE = ["idle",
             "gpu_stress",

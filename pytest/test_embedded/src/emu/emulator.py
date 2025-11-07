@@ -534,7 +534,7 @@ class Emulator(BaseEmulator):
             str(access_file),
             "-debug-log",
             "-gpu",
-            "swiftshader_indirect",
+            "lavapipe",
             "-debug-events",
             "-debug-grpc",
             "-debug",

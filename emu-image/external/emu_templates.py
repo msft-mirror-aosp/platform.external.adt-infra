@@ -93,7 +93,7 @@ pulseaudio -D
 socat -d tcp-listen:5555,reuseaddr,fork tcp:127.0.0.1:6555 &
 
 # Kick off the emulator
-exec emulator/emulator @Pixel2 -verbose -show-kernel -ports 6554,6555 -grpc 5556 -no-window -gpu swiftshader_indirect -skip-adb-auth -logcat "*:v"
+exec emulator/emulator @Pixel2 -verbose -show-kernel -ports 6554,6555 -grpc 5556 -no-window -gpu lavapipe -skip-adb-auth -logcat "*:v"
 """
 
 default_pa_template = """

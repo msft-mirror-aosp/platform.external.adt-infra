@@ -207,7 +207,7 @@ async def verify_qrcode(emulator, webm_recording, payload, ad_ui):
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    "gpu_mode", ["auto", "host", "swiftshader_indirect", "angle_indirect", "swangle"]
+    "gpu_mode", ["auto", "host", "swiftshader_indirect", "swangle", "lavapipe"]
 )
 @pytest.mark.graphics
 @pytest.mark.fast
@@ -232,16 +232,13 @@ async def test_screen_records_with_different_gpu_modes(
         5. Save the video in "WEBM" format (Verify 1).
         6. Play the video in the default video player (Verify 2).
         7. Repeat the process with other gpu modes:
-        host, swiftshader_indirect, angle_indirect (Windows), swangle.
+        host, swiftshader_indirect, swangle, lavapipe.
 
     Verification:
         1. The saved WEBM recording should be a valid video file.
         2. The video is played without any rendering issues, observed from the
            decoding of the embedded QR code through a series of screenshots.
     """
-    if gpu_mode == "angle_indirect" and platform.system != "Windows":
-        pytest.skip(f"gpu mode {gpu_mode} is only available on Windows.")
-
     logging.info(f"Launching the emulator with the gpu mode '{gpu_mode}'.")
     await emulator.launch(
         emulator.launch_flags + ["-no-snapshot-save", "-gpu", f"{gpu_mode}"]
