@@ -207,7 +207,7 @@ async def verify_qrcode(emulator, webm_recording, payload, ad_ui):
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    "gpu_mode", ["auto", "host", "swiftshader_indirect", "swangle", "lavapipe"]
+    "gpu_mode", ["auto", "host", "swiftshader", "swangle", "lavapipe"]
 )
 @pytest.mark.graphics
 @pytest.mark.fast

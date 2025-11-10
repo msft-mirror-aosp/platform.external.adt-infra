@@ -143,7 +143,7 @@ async def test_launch_chrome_google(avd, get_screenshot):
 @pytest.mark.graphics
 @pytest.mark.async_timeout(1080)
 @pytest.mark.parametrize(
-    "gpu_mode", ["auto", "host", "swiftshader_indirect", "swangle", "lavapipe"]
+    "gpu_mode", ["auto", "host", "swiftshader", "swangle", "lavapipe"]
 )
 async def test_page_loads_with_different_gpu_modes(emulator, gpu_mode, qrcode_png):
     """Verify AVD has no issues with loading web content with different gpu modes.
@@ -157,7 +157,7 @@ async def test_page_loads_with_different_gpu_modes(emulator, gpu_mode, qrcode_pn
         1. Launch an AVD with the option "-gpu auto".
         2. Open the PNG image with the pre-encoded QR code in Chrome (Verify).
         3. Repeat the process with other gpu modes:
-           - host, swiftshader_indirect, swangle, lavapipe.
+           - host, swiftshader, swangle, lavapipe.
 
     Verification:
         Chrome should load the image without any graphic issues, observed by
