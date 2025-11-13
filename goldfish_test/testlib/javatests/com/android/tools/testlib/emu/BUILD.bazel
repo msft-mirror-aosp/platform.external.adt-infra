@@ -1,0 +1,12 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+kt_jvm_test(
+    name = "discovery_test",
+    size = "small",
+    srcs = ["DiscoveryTest.kt"],
+    test_class = "com.android.tools.testlib.emu.DiscoveryTest",
+    deps = [
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@bazel_tools//tools/jdk:TestRunner",
+    ],
+)
