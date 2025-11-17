@@ -892,5 +892,47 @@
       "-m vulkan_apps_gfxbench"
     ],
     "status": "enabled"
+  },
+  "ensure_lavapipe_api_34": {
+    "avd_configs": [
+      {
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Tests that the emulator can be launched with the Lavapipe driver.",
+    "pytest_flags": [
+      "-m",
+      "ensure_lavapipe"
+    ],
+    "status": "enabled"
+  },
+  "ensure_lavapipe_api_36": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Tests that the emulator can be launched with the Lavapipe driver.",
+    "pytest_flags": [
+      "-m",
+      "ensure_lavapipe"
+    ],
+    "status": "enabled"
   }
 }
