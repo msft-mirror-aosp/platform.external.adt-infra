@@ -1,14 +1,25 @@
+"""Goldfish test module."""
+
 module(
     name = "goldfish_test",
     version = "0.0.1",
 )
 
+bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_gcs", version = "1.0.1")
 bazel_dep(name = "rules_kotlin", version = "2.1.6")
 bazel_dep(name = "rules_java", version = "8.11.0")
 bazel_dep(name = "rules_pkg", version = "1.1.0")
+bazel_dep(name = "rules_python", version = "1.6.3")
 
 gcs_archive = use_repo_rule("@rules_gcs//gcs:repo_rules.bzl", "gcs_archive")
+
+gcs_archive(
+    name = "test_seq_linux",
+    build_file = "//deps/test_seq:linux.BUILD",
+    sha256 = "ffebc35e4c811facc921b0f92294211bcfa485e26ce2e880b0aa65b2fb4a2501",
+    url = "gs://emu-next-bazel/test_seq/test_seq_20251119_0840_RC00/test_seq_linux.zip",
+)
 
 gcs_archive(
     name = "tradefed",

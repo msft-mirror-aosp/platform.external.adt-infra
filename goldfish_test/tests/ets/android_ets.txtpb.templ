@@ -1,0 +1,134 @@
+agent:  {
+  id:  "goldfish_fetch"
+  extract:  {
+    path: "%(goldfish_zip)s"
+  }
+}
+agent:  {
+  id:  "image_fetch"
+  extract:  {
+    path:  "%(image_zip)s"
+  }
+}
+agent:  {
+  id:  "platform_tools_fetch"
+  extract:  {
+    path:  "%(platform_tools_zip)s"
+  }
+}
+agent:  {
+  id:  "build_tools_fetch"
+  extract:  {
+    path:  "%(build_tools_zip)s"
+  }
+}
+agent:  {
+  id:  "tradefed_fetch"
+  extract:  {
+    path:  "%(android_ets_zip)s"
+  }
+}
+agent:  {
+  imports:  {
+    id:  "platform_tools_fetch"
+    src:  "extract_dir"
+  }
+  android_home:  {}
+}
+agent:  {
+  imports:  {
+    id:  "image_fetch"
+    src:  "extract_dir"
+  }
+  avd:  {
+    avd_config_ini:  "avd.ini.displayname=°UTF8"
+    avd_config_ini:  "avd.ini.encoding=UTF-8"
+    avd_config_ini:  "disk.dataPartition.size=4G"
+    avd_config_ini:  "hw.accelerometer=yes"
+    avd_config_ini:  "hw.audioInput=yes"
+    avd_config_ini:  "hw.battery=yes"
+    avd_config_ini:  "hw.camera.back=emulated"
+    avd_config_ini:  "hw.camera.front=emulated"
+    avd_config_ini:  "hw.cpu.ncore=4"
+    avd_config_ini:  "hw.device.hash2=MD5:2fa0e16c8cceb7d385183284107c0c88"
+    avd_config_ini:  "hw.device.manufacturer=Google"
+    avd_config_ini:  "hw.device.name=Pixel 7 Pro"
+    avd_config_ini:  "hw.dPad=no"
+    avd_config_ini:  "hw.gps=yes"
+    avd_config_ini:  "hw.gpu.enabled=yes"
+    avd_config_ini:  "hw.keyboard=yes"
+    avd_config_ini:  "hw.lcd.density=560"
+    avd_config_ini:  "hw.lcd.height=3120"
+    avd_config_ini:  "hw.lcd.width=1440"
+    avd_config_ini:  "hw.mainKeys=no"
+    avd_config_ini:  "hw.ramSize=4096"
+    avd_config_ini:  "hw.sdCard=no"
+    avd_config_ini:  "hw.sensors.orientation=yes"
+    avd_config_ini:  "hw.sensors.proximity=yes"
+    avd_config_ini:  "hw.trackBall=no"
+    avd_config_ini:  "skin.dynamic=no"
+    avd_config_ini:  "skin.name=1440x3120"
+    avd_config_ini:  "skin.path=1440x3120"
+    avd_config_ini:  "tag.display=Google Play"
+    avd_config_ini:  "tag.id=google_apis_playstore"
+    cleanup: true
+  }
+}
+agent: {
+  imports: {
+    id: "tradefed"
+    src: "results_dir"
+  }
+  junit_xml_result: {}
+}
+agent:  {
+  imports:  {
+    id:  "android_home"
+    src:  "android_home"
+  }
+  imports:  {
+    id:  "avd"
+    src:  "avd_path"
+  }
+  imports:  {
+    id:  "goldfish_fetch"
+    src:  "extract_dir"
+  }
+  goldfish:  {
+    args:  "-wipe-data"
+    args:  "-verbose"
+    args: "-show-kernel"
+    args: "-guest-angle"
+    args: "-not-in-bazel"
+    cleanup: true
+    emulator_path:  "emulator"
+    max_attempts:  5
+  }
+}
+agent: {
+  id: "tradefed"
+  imports: {
+    id: "tradefed_fetch"
+    src: "extract_dir"
+  }
+  imports: {
+    id: "platform_tools_fetch"
+    src: "extract_dir"
+    dst: "platform_tools_extract_dir"
+  }
+  imports: {
+    id: "build_tools_fetch"
+    src: "extract_dir"
+    dst: "build_tools_extract_dir"
+  }
+  imports: {
+    id: "goldfish"
+    src: "serial_number"
+  }
+  tradefed: {
+    args: "run"
+    args: "commandAndExit"
+    args: "%(ets_plan_xml)s"
+    preclean: true
+  }
+}
