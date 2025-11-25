@@ -2,26 +2,33 @@
 
 load("@rules_python//python:defs.bzl", "py_test")
 
-def run_sequence(name, template, template_args = {}, template_path_args = {}):
+def run_sequence(name, template, template_args = {}):
     """Generates a py_test rule which will run a test sequence.
 
     Args:
       name: Name of the py_test rule to generate.
       template: Test sequence template file to run.
-      template_args: dict of key/value to fill in the template.
-      template_path_args: dict of key/value to fill in the template where the
-        values are bazel labels to be converted to paths.
+      template_args: dict of key/value to fill in the template. Values must be a
+        tuple (kind, value) where kind is one of str, path, dir, symdir.
     """
     extra_args = []
+    extra_deps = []
     if template_args:
         extra_args.append("--template_args")
-        for i in template_args.items():
-            extra_args.extend(i)
-    if template_path_args:
-        extra_args.append("--template_path_args")
-        for k, v in template_path_args.items():
-            extra_args.append(k)
-            extra_args.append("$(location " + v + ")")
+        for key, (kind, value) in template_args.items():
+            extra_args.append(key)
+            extra_args.append(kind)
+            if kind == "str":
+                # NOTE: Despite being a list of strings bazel post processes these
+                # arguments so they must be quoted to avoid issues with spaces.
+                extra_args.append("'" + value + "'")
+            else:
+                extra_args.append("$(location " + value + ")")
+                extra_deps.append(value)
+                if kind != "path":
+                    # NOTE: The target of v will refer to a single file, but all must
+                    # be present so depend explicitly on the all_files filegroup.
+                    extra_deps.append(value.rsplit(":", 1)[0] + ":all_files")
 
     py_test(
         name = name,
@@ -36,7 +43,7 @@ def run_sequence(name, template, template_args = {}, template_path_args = {}):
             "@test_seq_linux//:test_seq_files",
             "@test_seq_linux//:test_seq",
             template,
-        ] + template_path_args.values(),
+        ] + extra_deps,
         main = "run_sequence.py",
         target_compatible_with = select({
             "@platforms//os:macos": ["@platforms//:incompatible"],
