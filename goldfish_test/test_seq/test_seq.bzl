@@ -43,4 +43,6 @@ def run_sequence(name, template, template_args = {}, template_path_args = {}):
             "@platforms//os:windows": ["@platforms//:incompatible"],
             "//conditions:default": [],
         }),
+        # TODO(kmagic): Make this configurable.
+        size = "large",
     )
