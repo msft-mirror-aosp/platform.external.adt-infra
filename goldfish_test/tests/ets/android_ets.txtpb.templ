@@ -5,41 +5,17 @@ agent:  {
   }
 }
 agent:  {
-  id:  "image_fetch"
-  extract:  {
-    path:  "%(image_zip)s"
-  }
-}
-agent:  {
-  id:  "platform_tools_fetch"
-  extract:  {
-    path:  "%(platform_tools_zip)s"
-  }
-}
-agent:  {
-  id:  "build_tools_fetch"
-  extract:  {
-    path:  "%(build_tools_zip)s"
-  }
-}
-agent:  {
   id:  "tradefed_fetch"
   extract:  {
     path:  "%(android_ets_zip)s"
   }
 }
 agent:  {
-  imports:  {
-    id:  "platform_tools_fetch"
-    src:  "extract_dir"
+  android_home:  {
+    extract_dir:  "%(platform_tools_extract_dir)s"
   }
-  android_home:  {}
 }
 agent:  {
-  imports:  {
-    id:  "image_fetch"
-    src:  "extract_dir"
-  }
   avd:  {
     avd_config_ini:  "avd.ini.displayname=°UTF8"
     avd_config_ini:  "avd.ini.encoding=UTF-8"
@@ -72,6 +48,7 @@ agent:  {
     avd_config_ini:  "tag.display=Google Play"
     avd_config_ini:  "tag.id=google_apis_playstore"
     cleanup: true
+    extract_dir:  "%(image_extract_dir)s"
   }
 }
 agent: {
@@ -112,16 +89,6 @@ agent: {
     src: "extract_dir"
   }
   imports: {
-    id: "platform_tools_fetch"
-    src: "extract_dir"
-    dst: "platform_tools_extract_dir"
-  }
-  imports: {
-    id: "build_tools_fetch"
-    src: "extract_dir"
-    dst: "build_tools_extract_dir"
-  }
-  imports: {
     id: "goldfish"
     src: "serial_number"
   }
@@ -129,6 +96,8 @@ agent: {
     args: "run"
     args: "commandAndExit"
     args: "%(ets_plan_xml)s"
+    build_tools_extract_dir: "%(build_tools_extract_dir)s"
+    platform_tools_extract_dir: "%(platform_tools_extract_dir)s"
     preclean: true
   }
 }
