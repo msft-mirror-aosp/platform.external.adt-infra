@@ -1,0 +1,40 @@
+load("@grpc-java//:java_grpc_library.bzl", "java_grpc_library")
+load("@protobuf//bazel:java_proto_library.bzl", "java_proto_library")
+
+# TODO: This contains all the known emulator protobuf.
+# These will move once b/444507168 is resolved
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+package(default_visibility = ["//visibility:public"])
+
+proto_library(
+    name = "aemu_proto",
+    srcs = [
+        "avd_service.proto",
+        "car_service.proto",
+        "emulator_controller.proto",
+        "grpc_endpoint_description.proto",
+        "modem_service.proto",
+        "rtc_service.proto",
+        "screen_recording_service.proto",
+        "sensor_service.proto",
+        "ui_controller_service.proto",
+        "virtual_scene_service.proto",
+        "waterfall.proto",
+    ],
+    deps = [
+        "@protobuf//:empty_proto",
+        "@protobuf//:wrappers_proto",
+    ],
+)
+
+java_proto_library(
+    name = "aemu_java_proto",
+    deps = [":aemu_proto"],
+)
+
+java_grpc_library(
+    name = "aemu_java_grpc",
+    srcs = [":aemu_proto"],
+    deps = [":aemu_java_proto"],
+)
