@@ -5,6 +5,7 @@ module(
     version = "0.0.1",
 )
 
+bazel_dep(name = "goldfish", version = "0.0.1")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_gcs", version = "1.0.1")
 bazel_dep(name = "rules_kotlin", version = "2.1.6")
@@ -67,4 +68,33 @@ gcs_archive(
     build_file = "//deps/tradefed:tradefed.BUILD",
     sha256 = "59d1f73d91ab1a12c93457db38d2d880bef3fcd042717fe3546b36b0150b7fa2",
     url = "gs://emu-next-bazel/ab/tradefed/tradefed/14344819/tradefed.zip",
+)
+
+# Generic BUILD.bazel file which exposes all files in the archive.
+_generic_build = """package(default_visibility = ["//visibility:public"])
+filegroup(
+  name = "all_files",
+  srcs = glob(["**/*"]),
+)
+"""
+
+gcs_archive(
+    name = "build-tools-linux",
+    build_file_content = _generic_build,
+    sha256 = "321e687caa570210bf4acd80e8cfbe901d17368d83f51976ccbba3656093fe2b",
+    url = "gs://emu-next-bazel/ab/aosp-sdk-release/sdk/13278306/sdk-repo-linux-build-tools-13278306.zip",
+)
+
+gcs_archive(
+    name = "platform-tools-linux",
+    build_file_content = _generic_build,
+    sha256 = "5c377d32e7ba0c1f982417ec588c33d8e379141e806c46c2de26cf42fe6ed51e",
+    url = "gs://emu-next-bazel/ab/aosp-sdk-release/sdk/13278306/sdk-repo-linux-platform-tools-13278306.zip",
+)
+
+gcs_archive(
+    name = "android_minigbm16k-x86_64",
+    build_file_content = _generic_build,
+    sha256 = "2f98e9fdc3c1e51f302eff758de57a531911d725b86bfd0b608f364603992010",
+    url = "gs://emu-next-bazel/sys-img/sdk_gphone16k_x86_64_minigbm-userdebug/sdk-repo-linux-system-images-14339737.zip",
 )

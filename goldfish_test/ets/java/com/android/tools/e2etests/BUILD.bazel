@@ -16,7 +16,7 @@ java_binary(
     name = "e2e_tests",
     testonly = 1,
     use_launcher = False,
-    visibility = ["//tests/ets:__pkg__"],
+    visibility = ["//ets:__pkg__"],
     runtime_deps = [
         ":display_name_test",
         "//testlib/java/com/android/tools/testlib/tradefed:log_saver",
