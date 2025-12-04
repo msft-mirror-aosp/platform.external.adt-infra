@@ -1,3 +1,56 @@
+"""Configuration to run ets."""
+
+import argparse
+
+from test_seq import config
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    config.add_args(parser)
+    parser.add_argument(
+        "--goldfish_zip", type=config.path_type, help="Path to the goldfish zip"
+    )
+    parser.add_argument(
+        "--android_ets_zip", type=config.path_type, help="Path to the android-ets zip"
+    )
+    parser.add_argument(
+        "--image_extract_dir", type=config.dir_type, help="Path to the extracted image"
+    )
+    parser.add_argument(
+        "--ets_plan_xml", type=config.path_type, help="Path to the ets xml plan file"
+    )
+    parser.add_argument(
+        "--build_tools_extract_dir",
+        type=config.dir_type,
+        help="Path to the extracted build tools",
+    )
+    parser.add_argument(
+        "--platform_tools_extract_dir",
+        type=config.dir_type,
+        help="Path to the extracted platform tools",
+    )
+    return parser.parse_args()
+
+
+def build_config(args: argparse.Namespace) -> str:
+    """Build the config.txtpb.
+
+    NOTE: In the near future this will be built from actual protobuf objects.
+    This is currently used to allow the outer layers to functon as expected when
+    the protobuf object support is added.
+    """
+    return _CONFIG_TEMPL % {
+        "goldfish_zip": args.goldfish_zip,
+        "android_ets_zip": args.android_ets_zip,
+        "image_extract_dir": args.image_extract_dir,
+        "build_tools_extract_dir": args.build_tools_extract_dir,
+        "platform_tools_extract_dir": args.platform_tools_extract_dir,
+        "ets_plan_xml": args.ets_plan_xml,
+    }
+
+
+_CONFIG_TEMPL = """
 agent:  {
   id:  "goldfish_fetch"
   extract:  {
@@ -101,3 +154,8 @@ agent: {
     preclean: true
   }
 }
+"""
+
+if __name__ == "__main__":
+    args = parse_args()
+    config.main(args, build_config(args))

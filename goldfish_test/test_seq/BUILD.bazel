@@ -1,6 +1,12 @@
 """Test Sequencer Related Code."""
 
-exports_files(
-    srcs = ["run_sequence.py"],
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name = "config",
+    srcs = [
+        "config.py",
+        "run_sequence.py",
+    ],
     visibility = ["//visibility:public"],
 )

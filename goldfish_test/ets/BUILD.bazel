@@ -8,12 +8,6 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "android_ets_templ",
-    srcs = ["android_ets.txtpb.templ"],
-    visibility = ["//visibility:public"],
-)
-
 pkg_files(
     name = "e2e_tests",
     srcs = [
@@ -52,13 +46,35 @@ pkg_zip(
 
 run_sequence(
     name = "run",
-    template = ":android_ets_templ",
-    template_args = {
-        "goldfish_zip": ("path", "@goldfish//emulator:release"),
-        "image_extract_dir": ("dir", "@android_minigbm16k-x86_64//:BUILD.bazel"),
-        "platform_tools_extract_dir": ("dir", "@platform-tools-linux//:BUILD.bazel"),
-        "build_tools_extract_dir": ("dir", "@build-tools-linux//:BUILD.bazel"),
-        "android_ets_zip": ("path", ":android_ets_zip"),
-        "ets_plan_xml": ("path", ":ets_plans"),
-    },
+    size = "large",
+    srcs = ["android_ets_cfg.py"],
+    args = [
+        "--goldfish_zip",
+        "$(location @goldfish//emulator:release)",
+        "--image_extract_dir",
+        "$(location @android_minigbm16k-x86_64//:BUILD.bazel)",
+        "--platform_tools_extract_dir",
+        "$(location @platform-tools-linux//:BUILD.bazel)",
+        "--build_tools_extract_dir",
+        "$(location @build-tools-linux//:BUILD.bazel)",
+        "--android_ets_zip",
+        "$(location :android_ets_zip)",
+        "--ets_plan_xml",
+        "$(location :ets_plans)",
+    ],
+    data = [
+        ":android_ets_zip",
+        ":ets_plans",
+        "@android_minigbm16k-x86_64//:BUILD.bazel",
+        "@android_minigbm16k-x86_64//:all_files",
+        "@build-tools-linux//:BUILD.bazel",
+        "@build-tools-linux//:all_files",
+        "@goldfish//emulator:release",
+        "@platform-tools-linux//:BUILD.bazel",
+        "@platform-tools-linux//:all_files",
+    ],
+    main = "android_ets_cfg.py",
+    deps = [
+        "//test_seq:config",
+    ],
 )
