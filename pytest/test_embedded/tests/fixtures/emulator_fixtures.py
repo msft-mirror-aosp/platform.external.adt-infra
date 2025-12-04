@@ -178,6 +178,8 @@ async def manage_emulator(
 
         emu.symbols = pytestconfig.getoption("symbols")
         emu.launch_flags = avd_config.get("launch_flags", [])
+        if "env" in avd_config:
+            emu.env = avd_config["env"]
         pytest.emulators[name] = emu
 
     return pytest.emulators[name]

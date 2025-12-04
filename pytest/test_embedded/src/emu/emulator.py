@@ -77,6 +77,7 @@ class BaseEmulator(object):
         self.channel = None
         self.log_id = "emu-0"
         self.logcat = None
+        self.env = None
         adb = shutil.which("adb", path=self.android_home / "platform-tools")
         subprocess.check_call([adb, "start-server"])
 
@@ -504,7 +505,8 @@ class Emulator(BaseEmulator):
             "ANDROID_SDK_ROOT": str(self.android_home),
             "DISPLAY": os.environ.get("DISPLAY", ":0"),
         }
-
+        if self.env:
+            local_env.update(self.env)
         # Pick a random "adb" supported port.
         port = random.randint(5554, 5584)
         port = self._get_free_port(port, 4096)

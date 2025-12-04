@@ -66,6 +66,46 @@ async def test_run_triangle(triangle_app, avd, get_screenshot):
     await get_screenshot()
 
 
+@pytest.mark.vvl_testing
+@pytest.mark.async_timeout(80)
+async def test_vvl_error_in_host_logs_on_boot(avd, emulator_log):
+    """Verifies that there are no vulkan validation errors in the host logs after boot."""
+    if not await avd.wait_for_boot(timeout=60):
+        pytest.fail("Emulator did not boot within 60 seconds.")
+
+    # Wait for the system to settle down and produce logs.
+    await asyncio.sleep(5)
+
+    all_vvl_messages = []
+    error_found = False
+
+    APP_TAGS_FOR_ERROR_CHECKING = [
+        "AEMU",
+    ]
+    VALIDATION_TAG = "VALIDATION"
+    ERROR_TAG = "ERROR"
+    # Read all available lines from the log queue without blocking.
+    line_iterator = iter(emulator_log.readlines())
+    for line in line_iterator:
+        if VALIDATION_TAG in line:
+            try:
+                next_line = next(line_iterator)
+                if any(app_tag in next_line for app_tag in APP_TAGS_FOR_ERROR_CHECKING):
+                    all_vvl_messages.append(line.strip())
+                    if ERROR_TAG in line:
+                        error_found = True
+            except StopIteration:
+                # Reached end of file after VALIDATION_TAG, no next line to check
+                pass
+
+    # Always print VVL messages for debugging.
+    if all_vvl_messages:
+        logging.info(f"VVL messages found in host logs:\n" + "\n".join(all_vvl_messages))
+
+    if error_found:
+        pytest.fail(f"VVL errors found in host logs.\n")
+
+
 @pytest.mark.vulkan_apps
 @pytest.mark.async_timeout(30)
 async def test_run_vulkancapsviewer(vulkancapsviewer_app, avd, get_screenshot):

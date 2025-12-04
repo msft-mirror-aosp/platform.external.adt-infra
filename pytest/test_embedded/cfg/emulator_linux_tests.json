@@ -907,6 +907,62 @@
     ],
     "status": "enabled"
   },
+    "vvl_testing_vulkan_swapchain_gpu_software_api_36": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "env": {
+          "GFXSTREAM_USE_TESTING_VALIDATION_LAYERS": "1"
+        },
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot",
+          "-feature",
+          "GuestAngle",
+          "-feature",
+          "VulkanNativeSwapchain",
+          "-feature",
+          "VulkanDebugUtils"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Checks for VVLs",
+    "pytest_flags": [
+      "-m",
+      "vvl_testing"
+    ],
+    "status": "enabled"
+  },
+  "vvl_testing_vulkan_swapchain_gpu_host_api_36": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "env": {
+          "GFXSTREAM_USE_TESTING_VALIDATION_LAYERS": "1"
+        },
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot",
+          "-feature",
+          "GuestAngle",
+          "-feature",
+          "VulkanNativeSwapchain",
+          "-feature",
+          "VulkanDebugUtils"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Checks for VVLs",
+    "pytest_flags": [
+      "-m",
+      "vvl_testing"
+    ],
+    "status": "enabled"
+  },
   "ensure_lavapipe_api_36": {
     "avd_configs": [
       {
