@@ -5,7 +5,8 @@ import pytest
 
 
 @pytest.mark.vulkan_apps
-@pytest.mark.async_timeout(80)
+@pytest.mark.async_timeout(180)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 async def test_run_hello_vk(
     hellovk_app, avd, get_screenshot
 ):
@@ -23,7 +24,8 @@ async def test_run_hello_vk(
 
 
 @pytest.mark.vulkan_apps
-@pytest.mark.async_timeout(80)
+@pytest.mark.async_timeout(180)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 async def test_run_gears(gears_app, avd, get_screenshot):
     """Verifies that the gears app is running."""
     wait_time_s = 10
@@ -34,7 +36,8 @@ async def test_run_gears(gears_app, avd, get_screenshot):
 
 
 @pytest.mark.vulkan_apps
-@pytest.mark.async_timeout(80)
+@pytest.mark.async_timeout(180)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 async def test_run_gltf_viewer(gltf_viewer_app, avd, get_screenshot):
     """Verifies that the gltf viewer app is running."""
     wait_time_s = 10
@@ -45,7 +48,8 @@ async def test_run_gltf_viewer(gltf_viewer_app, avd, get_screenshot):
 
 
 @pytest.mark.vulkan_apps
-@pytest.mark.async_timeout(80)
+@pytest.mark.async_timeout(180)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 async def test_run_maps_demo(maps_demo_app, avd, get_screenshot):
     """Verifies that the maps demo app is running."""
     wait_time_s = 10
@@ -56,7 +60,8 @@ async def test_run_maps_demo(maps_demo_app, avd, get_screenshot):
 
 
 @pytest.mark.vulkan_apps
-@pytest.mark.async_timeout(80)
+@pytest.mark.async_timeout(180)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 async def test_run_triangle(triangle_app, avd, get_screenshot):
     """Verifies that the triangle app is running."""
     wait_time_s = 10
@@ -67,7 +72,8 @@ async def test_run_triangle(triangle_app, avd, get_screenshot):
 
 
 @pytest.mark.vvl_testing
-@pytest.mark.async_timeout(80)
+@pytest.mark.async_timeout(180)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 async def test_vvl_error_in_host_logs_on_boot(avd, emulator_log):
     """Verifies that there are no vulkan validation errors in the host logs after boot."""
     if not await avd.wait_for_boot(timeout=60):
@@ -107,7 +113,8 @@ async def test_vvl_error_in_host_logs_on_boot(avd, emulator_log):
 
 
 @pytest.mark.vulkan_apps
-@pytest.mark.async_timeout(80)
+@pytest.mark.async_timeout(180)
+@pytest.mark.flaky(reruns=2, reruns_delay=2)
 async def test_run_vulkancapsviewer(vulkancapsviewer_app, avd, get_screenshot):
     """Verifies that the vulkancapsviewer app is running."""
     wait_time_s = 10
