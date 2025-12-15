@@ -1,8 +1,9 @@
-<!-- Initial tradefed xml configuration running a single test. -->
+<!-- Emulator test suite configuration. -->
 <configuration description="A basic Tradefed test configuration">
 
-  <test class="com.android.tradefed.testtype.HostTest" >
-    <option name="class" value="com.android.tools.e2etests.DisplayNameTest" />
+  <test class="com.android.tools.testlib.tradefed.EmulatorTestSuite">
+    <option name="tests-dir" value="testcases" />
+    <option name="skip-loading-config-jar" value="true" />
   </test>
 
   <result_reporter class="com.android.tradefed.result.ConsoleResultReporter" />

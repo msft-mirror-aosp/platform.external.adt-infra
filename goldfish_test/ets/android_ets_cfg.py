@@ -8,6 +8,7 @@ from test_seq import config
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     config.add_args(parser)
+    parser.add_argument("--abi", help="ABI to run the tests as")
     parser.add_argument(
         "--goldfish_zip", type=config.path_type, help="Path to the goldfish zip"
     )
@@ -16,9 +17,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--image_extract_dir", type=config.dir_type, help="Path to the extracted image"
-    )
-    parser.add_argument(
-        "--ets_plan_xml", type=config.path_type, help="Path to the ets xml plan file"
     )
     parser.add_argument(
         "--build_tools_extract_dir",
@@ -41,12 +39,12 @@ def build_config(args: argparse.Namespace) -> str:
     the protobuf object support is added.
     """
     return _CONFIG_TEMPL % {
+        "abi": args.abi,
         "goldfish_zip": args.goldfish_zip,
         "android_ets_zip": args.android_ets_zip,
         "image_extract_dir": args.image_extract_dir,
         "build_tools_extract_dir": args.build_tools_extract_dir,
         "platform_tools_extract_dir": args.platform_tools_extract_dir,
-        "ets_plan_xml": args.ets_plan_xml,
     }
 
 
@@ -148,7 +146,9 @@ agent: {
   tradefed: {
     args: "run"
     args: "commandAndExit"
-    args: "%(ets_plan_xml)s"
+    args: "ets"
+    args: "--abi"
+    args: "%(abi)s"
     build_tools_extract_dir: "%(build_tools_extract_dir)s"
     platform_tools_extract_dir: "%(platform_tools_extract_dir)s"
     preclean: true
