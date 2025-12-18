@@ -1601,6 +1601,7 @@ EXPECTED_RELEASE_CONTENTS = {
         "emulator/lib64/vulkan/libvulkan_lvp.so",
         "emulator/lib64/vulkan/libLLVM.so",
         "emulator/lib64/vulkan/libncurses.so.6",
+        "emulator/lib64/vulkan/libxcb-aemu.so",
         "emulator/lib64/vulkan/libxml2.so.2",
         "emulator/lib64/vulkan/libedit.so.0",
         "emulator/lib64/vulkan/lvp_icd.json",
