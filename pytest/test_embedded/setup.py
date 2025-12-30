@@ -22,11 +22,19 @@ def compile_apk(source_dir, dest_apk, gradle_target):
         )
         return
 
+    # Check for local gradlew first
     bin_path = (
-        GRADLE_DIR / "gradlew"
+        source_dir / "gradlew"
         if platform.system() != "Windows"
-        else GRADLE_DIR / "gradlew.bat"
+        else source_dir / "gradlew.bat"
     )
+
+    if not bin_path.exists():
+        bin_path = (
+            GRADLE_DIR / "gradlew"
+            if platform.system() != "Windows"
+            else GRADLE_DIR / "gradlew.bat"
+        )
 
     if not bin_path.exists():
         raise Exception(f"The gradle script {bin_path} is not present")
