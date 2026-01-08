@@ -201,7 +201,7 @@ class BaseEmulator(object):
 
         return False
 
-    async def wait_for_boot(self, timeout: int = 120) -> bool:
+    async def wait_for_boot(self, timeout: int = 180) -> bool:
         """Wait at most timeout seconds for the emulator to be booted.
 
         Args:
