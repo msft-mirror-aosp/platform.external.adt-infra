@@ -4,6 +4,7 @@ load("//test_seq:test_seq.bzl", "run_sequence")
 
 pkg_files(
     name = "e2e_host_tests",
+    testonly = True,
     srcs = [
         "//ets/java/com/android/tools/e2etests:e2e_tests_deploy.jar",
     ],
@@ -12,14 +13,20 @@ pkg_files(
 
 pkg_files(
     name = "ets_modules",
+    testonly = True,
     srcs = [
         "//ets/java/com/android/tools/e2etests:module_configs",
+        "//ets/java/com/android/tools/e2etests/boot:pkg",
     ],
+    # Bazel builds the apks in with read-only permissions, which tradefed does
+    # not handle.
+    attributes = pkg_attributes(mode = "0644"),
     prefix = "android-ets/testcases",
 )
 
 pkg_files(
     name = "ets_tradefed",
+    testonly = True,
     srcs = [
         "ets-tradefed",
     ],
@@ -29,6 +36,7 @@ pkg_files(
 
 pkg_filegroup(
     name = "android_ets",
+    testonly = True,
     srcs = [
         ":e2e_host_tests",
         ":ets_modules",
@@ -39,6 +47,7 @@ pkg_filegroup(
 
 pkg_zip(
     name = "android_ets_zip",
+    testonly = True,
     srcs = [
         ":android_ets",
     ],
@@ -63,6 +72,8 @@ run_sequence(
         "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
         "--android_ets_zip",
         "$(rlocationpath :android_ets_zip)",
+        "--emulator_access_json",
+        "$(rlocationpath @goldfish//emulator/grpc/security:unsecure-emulator-access)",
     ],
     data = [
         ":android_ets_zip",
@@ -71,6 +82,7 @@ run_sequence(
         "@build-tools-linux//:BUILD.bazel",
         "@build-tools-linux//:all_files",
         "@goldfish//emulator:release",
+        "@goldfish//emulator/grpc/security:unsecure-emulator-access",
         "@platform-tools-linux//:BUILD.bazel",
         "@platform-tools-linux//:all_files",
     ],

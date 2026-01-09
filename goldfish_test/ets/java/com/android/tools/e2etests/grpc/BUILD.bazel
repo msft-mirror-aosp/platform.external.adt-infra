@@ -1,0 +1,13 @@
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+
+kt_android_library(
+    name = "grpc_lib",
+    testonly = 1,
+    srcs = ["Grpc.kt"],
+    visibility = ["//ets:__subpackages__"],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "@maven//:androidx_test_core",
+        "@maven//:io_grpc_grpc_okhttp",
+    ],
+)
