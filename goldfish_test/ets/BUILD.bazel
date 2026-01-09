@@ -54,15 +54,15 @@ run_sequence(
         "--abi",
         "x86_64",
         "--goldfish_zip",
-        "$(location @goldfish//emulator:release)",
+        "$(rlocationpath @goldfish//emulator:release)",
         "--image_extract_dir",
-        "$(location @android16k-x86_64//:BUILD.bazel)",
+        "$(rlocationpath @android16k-x86_64//:BUILD.bazel)",
         "--platform_tools_extract_dir",
-        "$(location @platform-tools-linux//:BUILD.bazel)",
+        "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
         "--build_tools_extract_dir",
-        "$(location @build-tools-linux//:BUILD.bazel)",
+        "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
         "--android_ets_zip",
-        "$(location :android_ets_zip)",
+        "$(rlocationpath :android_ets_zip)",
     ],
     data = [
         ":android_ets_zip",
@@ -77,5 +77,6 @@ run_sequence(
     main = "android_ets_cfg.py",
     deps = [
         "//test_seq:config",
+        "@rules_python//python/runfiles",
     ],
 )
