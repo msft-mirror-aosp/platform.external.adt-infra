@@ -20,7 +20,7 @@ def run_sequence(name, srcs, args = [], data = [], **kwargs):
     py_test(
         name = name,
         args = args + ["--mode=run", "--test_seq_path"] + select({
-            "@platforms//os:linux": ["$(location @test_seq_linux//:test_seq)"],
+            "@platforms//os:linux": ["$(rlocationpath @test_seq_linux//:test_seq)"],
             "//conditions:default": [],
         }),
         srcs = srcs,
@@ -48,7 +48,7 @@ def run_sequence(name, srcs, args = [], data = [], **kwargs):
     py_test(
         name = name + "_print",
         args = args + ["--mode=print", "--test_seq_path"] + select({
-            "@platforms//os:linux": ["$(location @test_seq_linux//:test_seq)"],
+            "@platforms//os:linux": ["$(rlocationpath @test_seq_linux//:test_seq)"],
             "//conditions:default": [],
         }),
         srcs = srcs,
