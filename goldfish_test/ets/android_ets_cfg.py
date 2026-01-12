@@ -2,7 +2,7 @@
 
 import argparse
 
-from test_seq import config
+from sequence import config
 
 
 def parse_args() -> argparse.Namespace:

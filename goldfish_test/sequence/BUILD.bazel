@@ -6,7 +6,10 @@ py_library(
     name = "config",
     srcs = [
         "config.py",
-        "run_sequence.py",
+        "run.py",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        "@rules_python//python/runfiles",
+    ],
 )

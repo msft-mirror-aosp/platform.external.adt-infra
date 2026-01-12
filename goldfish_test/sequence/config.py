@@ -8,7 +8,7 @@ from collections.abc import Callable
 import os
 
 from python.runfiles import Runfiles
-from test_seq import run_sequence
+from sequence import run
 
 
 def path_type(value: str) -> str:
@@ -43,4 +43,4 @@ def main(args: argparse.Namespace, config: str):
     if args.mode == "print":
         print(config)
     elif args.mode == "run":
-        run_sequence.run(args.test_seq_path, config)
+        run.run(args.test_seq_path, config)
