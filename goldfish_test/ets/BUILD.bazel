@@ -29,6 +29,7 @@ pkg_files(
     testonly = True,
     srcs = [
         "ets-tradefed",
+        "ets-tradefed.bat",
     ],
     attributes = pkg_attributes(mode = "0777"),
     prefix = "android-ets/tools",
