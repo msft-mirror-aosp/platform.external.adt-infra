@@ -19,7 +19,7 @@ filegroup(
 """
 
 def _test_seq_extension_impl(module_ctx):
-    root_modules = [m for m in module_ctx.modules if m.is_root and m.tags.configure]
+    root_modules = [m for m in module_ctx.modules if m.is_root]
     if len(root_modules) > 1:
         fail("Expected at most one root module, found {}".format(", ".join([x.name for x in root_modules])))
 
@@ -43,6 +43,7 @@ def _test_seq_extension_impl(module_ctx):
         sha256 = os_tags.sha256,
         url = os_tags.url,
     )
+    return module_ctx.extension_metadata(reproducible = True)
 
 _archive_tags = tag_class(attrs = {
     "sha256": attr.string(),
@@ -51,6 +52,7 @@ _archive_tags = tag_class(attrs = {
 
 test_seq_extension = module_extension(
     implementation = _test_seq_extension_impl,
+    os_dependent = True,
     tag_classes = {
         "linux": _archive_tags,
         "macos": _archive_tags,
