@@ -51,6 +51,7 @@ from tests.fixtures.markers import register_markers
 from tests.fixtures.mobly_fixtures import *
 from tests.fixtures.qrcode_fixtures import *
 from tests.fixtures.screen_recording_fixtures import *
+from tests.fixtures.image_fixtures import *
 
 OS_NAME = platform.system().lower()
 HERE = Path(os.path.dirname(__file__)).absolute()
