@@ -170,3 +170,39 @@ async def test_gfxbench_run_benchmark(gfxbench_app, avd, get_screenshot):
     await asyncio.sleep(5) # wait for the app to start
     assert avd.is_alive()
     await get_screenshot()
+
+
+@pytest.mark.vulkan_apps
+@pytest.mark.async_timeout(180)
+async def test_vulkan_qr(qr_generator_app, avd, get_screenshot):
+    """Verifies that the QR generator app is running and displaying the correct QR code."""
+    wait_time_s = 3
+    await asyncio.sleep(wait_time_s)
+    assert await qr_generator_app.is_running(), f"QR Generator application process not found after {wait_time_s} seconds"
+    assert avd.is_alive()
+
+    _, img = await get_screenshot()
+
+    import deqr
+    # Attempt to decode the QR code from the PIL image.
+    # Note: verify deqr API if this fails.
+    decoder = deqr.QuircDecoder()
+    decoded_text = decoder.decode(img)
+    logging.info(f"Decoded QR code: {decoded_text}")
+    assert decoded_text, "No QR code detected"
+    # QuircDecoder.decode returns a list of QRCode objects.
+    first_match = decoded_text[0]
+
+    # Based on logs: QRCode(..., data_entries=(QrCodeData(..., data=...), ...))
+    if hasattr(first_match, 'data_entries') and first_match.data_entries:
+        content = first_match.data_entries[0].data
+    elif hasattr(first_match, 'data'):
+        content = first_match.data
+    else:
+        content = first_match
+
+    if isinstance(content, bytes):
+        content = content.decode("utf-8")
+
+    logging.info(f"Extracted content: {content}")
+    assert content == "Hello Vulkan QR", f"Expected 'Hello Vulkan QR', but got '{content}'"
