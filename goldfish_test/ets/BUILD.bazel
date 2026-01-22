@@ -63,7 +63,7 @@ run_sequence(
     args = [
         "--goldfish_zip",
         "$(rlocationpath @goldfish//emulator:release)",
-        "--android_ets_zip",
+        "--tradefed_zip",
         "$(rlocationpath :android_ets_zip)",
         "--emulator_access_json",
         "$(rlocationpath @goldfish//emulator/grpc/security:unsecure-emulator-access)",
@@ -118,6 +118,8 @@ run_sequence(
         "requires-network",
     ],
     deps = [
+        "//sequence:agent_common",
         "//sequence:config",
+        "@test_seq//test_seq/proto:test_sequencer_pb2",
     ],
 )
