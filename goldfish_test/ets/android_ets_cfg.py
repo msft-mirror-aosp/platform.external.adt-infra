@@ -137,7 +137,7 @@ agent:  {
     args: "-grpc-allowlist"
     args: "%(emulator_access_json)s"
     cleanup: true
-    emulator_path:  "emulator"
+    emulator_path:  "emulator/emulator"
     max_attempts:  5
   }
 }
