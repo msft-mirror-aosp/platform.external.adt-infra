@@ -30,8 +30,8 @@ def run_sequence(name, srcs, args = [], data = [], **kwargs):
             "@test_seq//:test_seq_files",
         ],
         target_compatible_with = select({
-            "@platforms//os:linux": [],
-            "//conditions:default": ["@platforms//:incompatible"],
+            "//conditions:default": [],
+            "@platforms//os:windows": ["@platforms//:incompatible"],
         }),
         **kwargs
     )
@@ -56,8 +56,8 @@ def run_sequence(name, srcs, args = [], data = [], **kwargs):
             "@test_seq//:test_seq_files",
         ],
         target_compatible_with = select({
-            "@platforms//os:linux": [],
-            "//conditions:default": ["@platforms//:incompatible"],
+            "//conditions:default": [],
+            "@platforms//os:windows": ["@platforms//:incompatible"],
         }),
         **kwargs
     )
