@@ -1,9 +1,10 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
-load("//test_seq:test_seq.bzl", "run_sequence")
+load("//sequence:sequence.bzl", "run_sequence")
 
 pkg_files(
     name = "e2e_host_tests",
+    testonly = True,
     srcs = [
         "//ets/java/com/android/tools/e2etests:e2e_tests_deploy.jar",
     ],
@@ -12,16 +13,23 @@ pkg_files(
 
 pkg_files(
     name = "ets_modules",
+    testonly = True,
     srcs = [
         "//ets/java/com/android/tools/e2etests:module_configs",
+        "//ets/java/com/android/tools/e2etests/boot:pkg",
     ],
+    # Bazel builds the apks in with read-only permissions, which tradefed does
+    # not handle.
+    attributes = pkg_attributes(mode = "0644"),
     prefix = "android-ets/testcases",
 )
 
 pkg_files(
     name = "ets_tradefed",
+    testonly = True,
     srcs = [
         "ets-tradefed",
+        "ets-tradefed.bat",
     ],
     attributes = pkg_attributes(mode = "0777"),
     prefix = "android-ets/tools",
@@ -29,6 +37,7 @@ pkg_files(
 
 pkg_filegroup(
     name = "android_ets",
+    testonly = True,
     srcs = [
         ":e2e_host_tests",
         ":ets_modules",
@@ -39,6 +48,7 @@ pkg_filegroup(
 
 pkg_zip(
     name = "android_ets_zip",
+    testonly = True,
     srcs = [
         ":android_ets",
     ],
@@ -54,28 +64,31 @@ run_sequence(
         "--abi",
         "x86_64",
         "--goldfish_zip",
-        "$(location @goldfish//emulator:release)",
+        "$(rlocationpath @goldfish//emulator:release)",
         "--image_extract_dir",
-        "$(location @android_minigbm16k-x86_64//:BUILD.bazel)",
+        "$(rlocationpath @android16k-x86_64//:BUILD.bazel)",
         "--platform_tools_extract_dir",
-        "$(location @platform-tools-linux//:BUILD.bazel)",
+        "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
         "--build_tools_extract_dir",
-        "$(location @build-tools-linux//:BUILD.bazel)",
+        "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
         "--android_ets_zip",
-        "$(location :android_ets_zip)",
+        "$(rlocationpath :android_ets_zip)",
+        "--emulator_access_json",
+        "$(rlocationpath @goldfish//emulator/grpc/security:unsecure-emulator-access)",
     ],
     data = [
         ":android_ets_zip",
-        "@android_minigbm16k-x86_64//:BUILD.bazel",
-        "@android_minigbm16k-x86_64//:all_files",
+        "@android16k-x86_64//:BUILD.bazel",
+        "@android16k-x86_64//:all_files",
         "@build-tools-linux//:BUILD.bazel",
         "@build-tools-linux//:all_files",
         "@goldfish//emulator:release",
+        "@goldfish//emulator/grpc/security:unsecure-emulator-access",
         "@platform-tools-linux//:BUILD.bazel",
         "@platform-tools-linux//:all_files",
     ],
     main = "android_ets_cfg.py",
     deps = [
-        "//test_seq:config",
+        "//sequence:config",
     ],
 )

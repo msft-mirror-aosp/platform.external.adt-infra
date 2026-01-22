@@ -19,18 +19,16 @@ def run_sequence(name, srcs, args = [], data = [], **kwargs):
 
     py_test(
         name = name,
-        args = args + ["--mode=run", "--test_seq_path"] + select({
-            "@platforms//os:linux": ["$(location @test_seq_linux//:test_seq)"],
-            "//conditions:default": [],
-        }),
+        args = args + [
+            "--mode=run",
+            "--test_seq_path",
+            "$(rlocationpath @test_seq//:test_seq)",
+        ],
         srcs = srcs,
-        data = data + select({
-            "@platforms//os:linux": [
-                "@test_seq_linux//:test_seq",
-                "@test_seq_linux//:test_seq_files",
-            ],
-            "//conditions:default": [],
-        }),
+        data = data + [
+            "@test_seq//:test_seq",
+            "@test_seq//:test_seq_files",
+        ],
         target_compatible_with = select({
             "@platforms//os:linux": [],
             "//conditions:default": ["@platforms//:incompatible"],
@@ -47,18 +45,16 @@ def run_sequence(name, srcs, args = [], data = [], **kwargs):
     kwargs.setdefault("main", name + ".py")
     py_test(
         name = name + "_print",
-        args = args + ["--mode=print", "--test_seq_path"] + select({
-            "@platforms//os:linux": ["$(location @test_seq_linux//:test_seq)"],
-            "//conditions:default": [],
-        }),
+        args = args + [
+            "--mode=print",
+            "--test_seq_path",
+            "$(rlocationpath @test_seq//:test_seq)",
+        ],
         srcs = srcs,
-        data = data + select({
-            "@platforms//os:linux": [
-                "@test_seq_linux//:test_seq",
-                "@test_seq_linux//:test_seq_files",
-            ],
-            "//conditions:default": [],
-        }),
+        data = data + [
+            "@test_seq//:test_seq",
+            "@test_seq//:test_seq_files",
+        ],
         target_compatible_with = select({
             "@platforms//os:linux": [],
             "//conditions:default": ["@platforms//:incompatible"],

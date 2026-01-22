@@ -7,12 +7,14 @@ import argparse
 from collections.abc import Callable
 import os
 
-from test_seq import run_sequence
+from python.runfiles import Runfiles
+from sequence import run
 
 
 def path_type(value: str) -> str:
     """Turns a relative path into an absolute one."""
-    return os.path.join(os.getcwd(), value)
+    runfiles = Runfiles.Create()
+    return runfiles.Rlocation(value)
 
 
 def dir_type(value: str) -> str:
@@ -32,11 +34,13 @@ def add_args(parser: argparse.ArgumentParser):
         default="run",
         help="Mode to run, print: print .txtpb, run: run the sequence",
     )
-    parser.add_argument("--test_seq_path", help="Path to the test sequencer binary")
+    parser.add_argument(
+        "--test_seq_path", type=path_type, help="Path to the test sequencer binary"
+    )
 
 
 def main(args: argparse.Namespace, config: str):
     if args.mode == "print":
         print(config)
     elif args.mode == "run":
-        run_sequence.run(args.test_seq_path, config)
+        run.run(args.test_seq_path, config)

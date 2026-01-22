@@ -2,7 +2,7 @@
 
 import argparse
 
-from test_seq import config
+from sequence import config
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,6 +24,11 @@ def parse_args() -> argparse.Namespace:
         help="Path to the extracted build tools",
     )
     parser.add_argument(
+        "--emulator_access_json",
+        type=config.path_type,
+        help="Path to the emulator_access.json",
+    )
+    parser.add_argument(
         "--platform_tools_extract_dir",
         type=config.dir_type,
         help="Path to the extracted platform tools",
@@ -42,6 +47,7 @@ def build_config(args: argparse.Namespace) -> str:
         "abi": args.abi,
         "goldfish_zip": args.goldfish_zip,
         "android_ets_zip": args.android_ets_zip,
+        "emulator_access_json": args.emulator_access_json,
         "image_extract_dir": args.image_extract_dir,
         "build_tools_extract_dir": args.build_tools_extract_dir,
         "platform_tools_extract_dir": args.platform_tools_extract_dir,
@@ -128,8 +134,10 @@ agent:  {
     args: "-show-kernel"
     args: "-guest-angle"
     args: "-not-in-bazel"
+    args: "-grpc-allowlist"
+    args: "%(emulator_access_json)s"
     cleanup: true
-    emulator_path:  "emulator"
+    emulator_path:  "emulator/emulator"
     max_attempts:  5
   }
 }
@@ -143,12 +151,19 @@ agent: {
     id: "goldfish"
     src: "serial_number"
   }
+  imports: {
+    id: "goldfish"
+    src: "grpc_port"
+    dst: "args"
+    re_replace: "com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:=${1}"
+  }
   tradefed: {
     args: "run"
     args: "commandAndExit"
     args: "ets"
     args: "--abi"
     args: "%(abi)s"
+    args: "--test-arg"
     build_tools_extract_dir: "%(build_tools_extract_dir)s"
     platform_tools_extract_dir: "%(platform_tools_extract_dir)s"
     preclean: true
