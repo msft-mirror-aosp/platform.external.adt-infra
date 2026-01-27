@@ -60,29 +60,46 @@ def avd(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     )
 
 
+def cts(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConfig:
+    ac = _tradefed(ns)
+    ac.tradefed.extract_dir = ns.tradefed_extract_dir
+    ac.tradefed.args.extend(args)
+    ac.tradefed.args.extend(
+        [
+            "--skip-preconditions",
+            "--skip-all-system-status-check",
+            "--no-has-server-side-config",
+            "-l",
+            "INFO",
+        ]
+    )
+    ac.imports.extend(
+        [
+            test_sequencer_pb2.Import(
+                id="tradefed",
+                src="has_retry_data",
+                dst="retry",
+            ),
+        ]
+    )
+    return ac
+
+
 def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
-    return test_sequencer_pb2.AgentConfig(
-        tradefed=tradefed_pb2.Tradefed(
-            args=[
-                "run",
-                "commandAndExit",
-                "ets",
-                "--abi",
-                ns.abi,
-                "--test-arg",
-            ],
-            build_tools_extract_dir=ns.build_tools_extract_dir,
-            platform_tools_extract_dir=ns.platform_tools_extract_dir,
-            preclean=True,
-        ),
-        imports=[
+    ac = _tradefed(ns)
+    ac.tradefed.args.extend(
+        [
+            "ets",
+            "--abi",
+            ns.abi,
+            "--test-arg",
+        ]
+    )
+    ac.imports.extend(
+        [
             test_sequencer_pb2.Import(
                 id="tradefed_fetch",
                 src="extract_dir",
-            ),
-            test_sequencer_pb2.Import(
-                id="goldfish",
-                src="serial_number",
             ),
             test_sequencer_pb2.Import(
                 id="goldfish",
@@ -90,8 +107,9 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
                 dst="args",
                 re_replace="com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:=${1}",
             ),
-        ],
+        ]
     )
+    return ac
 
 
 def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
@@ -103,8 +121,6 @@ def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
                 "-show-kernel",
                 "-guest-angle",
                 "-not-in-bazel",
-                "-grpc-allowlist",
-                ns.emulator_access_json,
             ],
             cleanup=True,
             emulator_path="emulator/emulator",
@@ -134,6 +150,17 @@ def goldfish_fetch(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     )
 
 
+def goldfish_grpc(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ac = goldfish(ns)
+    ac.goldfish.args.extend(
+        [
+            "-grpc-allowlist",
+            ns.emulator_access_json,
+        ]
+    )
+    return ac
+
+
 def junit_xml_result(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return test_sequencer_pb2.AgentConfig(
         junit_xml_result=junit_xml_result_pb2.JUnitXMLResult(),
@@ -141,6 +168,26 @@ def junit_xml_result(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             test_sequencer_pb2.Import(
                 id="tradefed",
                 src="results_dir",
+            ),
+        ],
+    )
+
+
+def _tradefed(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    return test_sequencer_pb2.AgentConfig(
+        tradefed=tradefed_pb2.Tradefed(
+            args=[
+                "run",
+                "commandAndExit",
+            ],
+            build_tools_extract_dir=ns.build_tools_extract_dir,
+            platform_tools_extract_dir=ns.platform_tools_extract_dir,
+            preclean=True,
+        ),
+        imports=[
+            test_sequencer_pb2.Import(
+                id="goldfish",
+                src="serial_number",
             ),
         ],
     )

@@ -70,21 +70,6 @@ _KNOWN_FLAGS = {
     "abi": lambda p: p.add_argument(
         "--abi", help="ABI to run the tests as", required=True
     ),
-    "goldfish_zip": lambda p: p.add_argument(
-        "--goldfish_zip", type=path_type, help="Path to the goldfish zip", required=True
-    ),
-    "tradefed_zip": lambda p: p.add_argument(
-        "--tradefed_zip",
-        type=path_type,
-        help="Path to the android-ets zip",
-        required=True,
-    ),
-    "image_extract_dir": lambda p: p.add_argument(
-        "--image_extract_dir",
-        type=dir_type,
-        help="Path to the extracted image",
-        required=True,
-    ),
     "build_tools_extract_dir": lambda p: p.add_argument(
         "--build_tools_extract_dir",
         type=dir_type,
@@ -97,10 +82,36 @@ _KNOWN_FLAGS = {
         help="Path to the emulator_access.json",
         required=True,
     ),
+    "goldfish_zip": lambda p: p.add_argument(
+        "--goldfish_zip", type=path_type, help="Path to the goldfish zip", required=True
+    ),
+    "image_extract_dir": lambda p: p.add_argument(
+        "--image_extract_dir",
+        type=dir_type,
+        help="Path to the extracted image",
+        required=True,
+    ),
     "platform_tools_extract_dir": lambda p: p.add_argument(
         "--platform_tools_extract_dir",
         type=dir_type,
         help="Path to the extracted platform tools",
+        required=True,
+    ),
+    "tradefed_args": lambda p: p.add_argument(
+        "--tradefed_args",
+        help="Arguments to pass to tradefed (comma-separated)",
+        required=True,
+    ),
+    "tradefed_extract_dir": lambda p: p.add_argument(
+        "--tradefed_extract_dir",
+        type=symlink_dir_type,
+        help="Path to the extracted tradefed zip",
+        required=True,
+    ),
+    "tradefed_zip": lambda p: p.add_argument(
+        "--tradefed_zip",
+        type=path_type,
+        help="Path to the android-ets zip",
         required=True,
     ),
 }
