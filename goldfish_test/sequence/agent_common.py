@@ -1,6 +1,7 @@
 """Common agent configurations."""
 
 import argparse
+import os
 
 from test_seq.proto import android_home_pb2
 from test_seq.proto import avd_pb2
@@ -92,6 +93,9 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             "ets",
             "--abi",
             ns.abi,
+            "--module-arg",
+            "VulkanAppTest:set-option:apk_path:"
+            + os.path.join(ns.hellovk_extract_dir, "hellovk", "hellovk.apk"),
             "--test-arg",
         ]
     )
