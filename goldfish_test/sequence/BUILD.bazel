@@ -3,6 +3,21 @@
 load("@rules_python//python:defs.bzl", "py_library")
 
 py_library(
+    name = "agent_common",
+    srcs = ["agent_common.py"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@test_seq//test_seq/proto:android_home_pb2",
+        "@test_seq//test_seq/proto:avd_pb2",
+        "@test_seq//test_seq/proto:extract_pb2",
+        "@test_seq//test_seq/proto:goldfish_pb2",
+        "@test_seq//test_seq/proto:junit_xml_result_pb2",
+        "@test_seq//test_seq/proto:test_sequencer_pb2",
+        "@test_seq//test_seq/proto:tradefed_pb2",
+    ],
+)
+
+py_library(
     name = "config",
     srcs = [
         "config.py",
@@ -11,5 +26,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "@rules_python//python/runfiles",
+        "@test_seq//test_seq/proto:test_sequencer_pb2",
     ],
 )

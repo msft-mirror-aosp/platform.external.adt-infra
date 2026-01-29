@@ -37,6 +37,7 @@ from emu.application import (
     VulkanCapsViewerApplication,
     VulkanSamplesApplication,
     GfxbenchApplication,
+    QrGeneratorApplication,
 )
 
 
@@ -345,3 +346,23 @@ async def gfxbench_app(request, install_gfxbench_apk, avd: BaseEmulator, log_dir
 
     yield gfxbench
     await gfxbench.stop()
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def install_qr_generator_apk(request, avd: BaseEmulator):
+    """Installs the QR generator APK on the emulator."""
+    local_run = request.config.getoption("--local_run")
+    apk = QrGeneratorApplication(avd, local_run)
+    await apk.install()
+    yield apk
+
+
+@pytest.fixture
+@pytest.mark.async_timeout(120)
+async def qr_generator_app(install_qr_generator_apk, avd: BaseEmulator):
+    """Launch the QR generator app."""
+    qr_app = install_qr_generator_apk
+    await qr_app.start()
+    yield qr_app
+    await qr_app.stop()
