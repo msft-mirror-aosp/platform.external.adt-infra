@@ -160,7 +160,7 @@ class FetcherSystemImages:
 
 class SystemImages:
     IMAGE = re.compile(
-        r".*android-(\d+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv|google-xr)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
+        r".*android-([\d.]+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv|google-xr)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
     )
 
     def __init__(self, sdk_root: Path = Path(os.environ.get("ANDROID_SDK_ROOT", "."))):
