@@ -280,6 +280,11 @@ def pytest_addoption(parser):
         help="Queue the run in 'local' mode, so that assets and dependencies will be searched for locally "
         + ", as opposed to the infrastructure configured path.",
     )
+    parser.addoption(
+        "--fishtank",
+        action="store",
+        help="The path to the fishtank distribution.",
+    )
 
 
 ALL_PLATFORMS = set("darwin linux win32".split())
