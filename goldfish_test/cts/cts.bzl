@@ -148,8 +148,10 @@ def cts_test_specs(name, test_specs = [], additional_data = []):
                 "@test_seq//test_seq/proto:test_sequencer_pb2",
             ],
             size = "enormous",
-            # Note: mac platforms may need requires-network for GRPC to work
-            tags = ["manual"],
+            tags = [
+                "manual",
+                "requires-network",
+            ],
         )
 
     native.test_suite(
