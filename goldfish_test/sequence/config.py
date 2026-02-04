@@ -85,6 +85,12 @@ _KNOWN_FLAGS = {
     "goldfish_zip": lambda p: p.add_argument(
         "--goldfish_zip", type=path_type, help="Path to the goldfish zip", required=True
     ),
+    "hellovk_extract_dir": lambda p: p.add_argument(
+        "--hellovk_extract_dir",
+        type=dir_type,
+        help="Path to the extracted hellovk app",
+        required=True,
+    ),
     "image_extract_dir": lambda p: p.add_argument(
         "--image_extract_dir",
         type=dir_type,

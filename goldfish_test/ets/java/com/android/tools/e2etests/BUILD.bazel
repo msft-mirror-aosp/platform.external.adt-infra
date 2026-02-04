@@ -27,6 +27,7 @@ java_binary(
     visibility = ["//ets:__pkg__"],
     runtime_deps = [
         ":display_name_test",
+        "//ets/java/com/android/tools/e2etests/vulkan:vulkan_app_test",
         "//testlib/java/com/android/tools/testlib/tradefed:emulator_test_suite",
         "//testlib/java/com/android/tools/testlib/tradefed:log_saver",
         "//testlib/java/com/android/tools/testlib/tradefed:xml_reporter",
