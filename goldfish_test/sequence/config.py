@@ -48,7 +48,8 @@ def main(
     if args.mode == "print":
         print(cfg)
     elif args.mode == "run":
-        run.run(args.test_seq_path, cfg)
+        # NOTE: All of the java tools are passed in, just use the first.
+        run.run(args.test_seq_path, cfg, [args.java_path[0]])
 
 
 def _add_args(parser: argparse.ArgumentParser):
@@ -62,6 +63,13 @@ def _add_args(parser: argparse.ArgumentParser):
         "--test_seq_path",
         type=path_type,
         help="Path to the test sequencer binary",
+        required=True,
+    )
+    parser.add_argument(
+        "--java_path",
+        nargs="+",
+        type=dir_type,
+        help="Paths to the java tools to put in PATH",
         required=True,
     )
 

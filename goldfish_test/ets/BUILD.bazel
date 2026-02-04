@@ -83,7 +83,7 @@ run_sequence(
         ],
         "@platforms//os:macos": [
             "--abi",
-            "arm64",
+            "arm64-v8a",
             "--build_tools_extract_dir",
             "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
             "--image_extract_dir",
