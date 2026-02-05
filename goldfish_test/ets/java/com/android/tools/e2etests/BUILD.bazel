@@ -22,7 +22,7 @@ java_binary(
     name = "e2e_tests",
     testonly = 1,
     resource_strip_prefix = "ets/java/com/android/tools/e2etests",
-    resources = ["config/ets.xml"],
+    resources = glob(["config/*.xml"]),
     use_launcher = False,
     visibility = ["//ets:__pkg__"],
     runtime_deps = [

@@ -90,7 +90,7 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ac = _tradefed(ns)
     ac.tradefed.args.extend(
         [
-            "ets",
+            ns.ets_plan,
             "--abi",
             ns.abi,
             "--module-arg",

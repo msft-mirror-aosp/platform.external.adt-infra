@@ -8,7 +8,13 @@ The tests are triggered by bazel test rules, currently you can run all of the
 tests via:
 
 ```sh
-bazel test @goldfish_test//ets:run
+bazel test @goldfish_test//ets:ets
+```
+
+Or just the presubmit tests with:
+
+```sh
+bazel test @goldfish_test//ets:presubmit
 ```
 
 The actual test is a thin python wrapper that uses the

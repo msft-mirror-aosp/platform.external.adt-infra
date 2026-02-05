@@ -90,6 +90,11 @@ _KNOWN_FLAGS = {
         help="Path to the emulator_access.json",
         required=True,
     ),
+    "ets_plan": lambda p: p.add_argument(
+        "--ets_plan",
+        help="ETS plan to run (ets, presubmit, ...)",
+        required=True,
+    ),
     "goldfish_zip": lambda p: p.add_argument(
         "--goldfish_zip", type=path_type, help="Path to the goldfish zip", required=True
     ),
