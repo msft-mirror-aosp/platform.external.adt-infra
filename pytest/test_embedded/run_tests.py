@@ -110,27 +110,33 @@ class TemporaryEmulatorDeploy:
                 f"{self.build_dir} does not exist, are you launching the scripts from {AOSP_ROOT}?"
             )
 
-    def _find_dist_zip(self, type: str) -> Path:
-        dist_regex = (
-            r"sdk-repo-(linux|linux_aarch64|darwin|darwin_aarch64|windows)-"
-            f"{type}"
-            r"-((standalone-|P?)\d+).zip"
-        )
+    def _find_dist_zip(self, type: str, dist_regex: Optional[str] = None) -> Optional[Path]:
+        if not dist_regex:
+            dist_regex = (
+                r"sdk-repo-(linux|linux_aarch64|darwin|darwin_aarch64|windows)-"
+                f"{type}"
+                r"-((standalone-|P?)\d+).zip"
+            )
+
         logging.info("Looking for %s", dist_regex)
         valid_target = re.compile(dist_regex)
         for option in self.build_dir.glob("*.zip"):
-            groups = valid_target.findall(str(option))
+            groups = valid_target.findall(option.name)
             logging.info("Considering %s: (%s)", option, groups)
             if groups:
                 return option
 
-        raise FileNotFoundError(f"No file matching {type} was found.")
+        return None
 
     def __enter__(self):
         # Extract the emulator
         emu_master_dev = Path(self.tmp.name) / "emu-master-dev"
         emu_master_dev.mkdir(parents=True, exist_ok=True)
-        sdk_repo = ZipFileWithAttr(self._find_dist_zip("emulator"))
+        emu_zip = self._find_dist_zip("emulator")
+        if not emu_zip:
+            raise FileNotFoundError(f"No file matching emulator was found in {self.build_dir}")
+
+        sdk_repo = ZipFileWithAttr(emu_zip)
         logging.info("Extracting %s to %s", sdk_repo.filename, emu_master_dev)
         sdk_repo.extractall(path=emu_master_dev)
 
@@ -142,7 +148,24 @@ class TemporaryEmulatorDeploy:
             symbols = ZipFileWithAttr(symzip)
             symbols.extractall(path=symbol_path)
 
-        return shutil.which("emulator", path=emu_master_dev / "emulator"), symbol_path
+        # Extract fishtank.
+        fishtank_path = None
+        fishtank_regex = (
+            r"FISHTANK-sdk-repo-(linux|linux_aarch64|darwin|darwin_aarch64|windows)-"
+            r"emu-((standalone-|P?)\d+).zip"
+        )
+        fishtank_zip = self._find_dist_zip("", dist_regex=fishtank_regex)
+        if fishtank_zip:
+            fishtank_path = Path(self.tmp.name) / "fishtank-dist"
+            logging.info("Extracting %s to %s", fishtank_zip, fishtank_path)
+            fishtank = ZipFileWithAttr(fishtank_zip)
+            fishtank.extractall(path=fishtank_path)
+
+        return (
+            shutil.which("emulator", path=emu_master_dev / "emulator"),
+            symbol_path,
+            shutil.which("fishtank", path=fishtank_path / "fishtank"),
+        )
 
     def __exit__(self, exc_type, exc_value, tb):
         self.tmp.__exit__(exc_type, exc_value, tb)
@@ -463,6 +486,13 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--fishtank",
+        dest="fishtank",
+        help="Path to the fishtank binary that is used for running the tests. "
+        + "Cannot be used in combination with the --build_dir flag",
+    )
+
+    parser.add_argument(
         "-b",
         "--build_dir",
         dest="build_dir",
@@ -675,7 +705,7 @@ def main(args):
 
     logging.info("Scheduling %d suites", len(tests_to_run))
     if args.build_dir:
-        with TemporaryEmulatorDeploy(args.build_dir) as (emulator, symbols):
+        with TemporaryEmulatorDeploy(args.build_dir) as (emulator, symbols, fishtank):
             test_runner.run_tests(
                 emulator=emulator,
                 use_exceptions=args.use_exceptions,
@@ -689,6 +719,7 @@ def main(args):
                 android_home=ANDROID_SDK_ROOT,
                 grpc_services=GRPC_SERVICES,
                 local_run=args.local_run,
+                fishtank=fishtank,
             )
     else:
         test_runner.run_tests(
@@ -704,6 +735,7 @@ def main(args):
             android_home=ANDROID_SDK_ROOT,
             grpc_services=GRPC_SERVICES,
             local_run=args.local_run,
+            fishtank=args.fishtank,
         )
 
 

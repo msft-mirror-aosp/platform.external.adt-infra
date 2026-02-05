@@ -17,6 +17,7 @@ pkg_files(
     srcs = [
         "//ets/java/com/android/tools/e2etests:module_configs",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
+        "//ets/java/com/android/tools/e2etests/vulkan:pkg",
     ],
     # Bazel builds the apks in with read-only permissions, which tradefed does
     # not handle.
@@ -63,6 +64,8 @@ run_sequence(
     args = [
         "--goldfish_zip",
         "$(rlocationpath @goldfish//emulator:release)",
+        "--hellovk_extract_dir",
+        "$(rlocationpath @hellovk//:BUILD.bazel)",
         "--tradefed_zip",
         "$(rlocationpath :android_ets_zip)",
         "--emulator_access_json",
@@ -93,6 +96,8 @@ run_sequence(
         ":android_ets_zip",
         "@goldfish//emulator:release",
         "@goldfish//emulator/grpc/security:unsecure-emulator-access",
+        "@hellovk//:BUILD.bazel",
+        "@hellovk//:all_files",
     ] + select({
         "@platforms//os:linux": [
             "@android16k-x86_64//:BUILD.bazel",

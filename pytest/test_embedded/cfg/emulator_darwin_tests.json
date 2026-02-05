@@ -13,6 +13,50 @@
     ],
     "status": "enabled"
   },
+  "accessibility_test_suite_vulkan_swapchain_api_36": {
+    "avd_configs": [
+      {
+        "api": "36.1",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan",
+          "-feature",
+          "VulkanNativeSwapchain",
+          "-feature",
+          "GuestAngle"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Validation of accessibility features",
+    "pytest_flags": [
+      "-k test_accessibility_display_inversion"
+    ],
+    "status": "enabled"
+  },
+  "accessibility_test_suite_api_36": {
+    "avd_configs": [
+      {
+        "api": "36.1",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Validation of accessibility features",
+    "pytest_flags": [
+      "-k test_accessibility_display_inversion"
+    ],
+    "status": "enabled"
+  },
   "adb_test_suite_api_33": {
     "avd_configs": [
       {

@@ -60,6 +60,7 @@ def run_tests(
     android_home: Path,
     grpc_services: Path,
     local_run: bool = False,
+    fishtank: Optional[Path] = None,
 ):
     """
     Runs tests on an emulator, installs necessary packages, restarts adb,
@@ -78,6 +79,7 @@ def run_tests(
         android_home (Path): Path to ANDROID_HOME/ANDROID_SDK_ROOT.
         grpc_services (Path): Path to GRPC services proto files.
         local_run (bool): True if we are running locally.
+        fishtank (Optional[Path]): Optional path to the fishtank distribution.
 
     Returns:
         None
@@ -99,6 +101,7 @@ def run_tests(
         adb,
         grpc_services,
         local_run,
+        fishtank,
     )
     generate_reports(logdir, pyrun, result_xmls, skip_reports, collect)
 
@@ -131,6 +134,7 @@ def run_test_suites(
     adb: Path,
     grpc_services: Path,
     local_run: bool = False,
+    fishtank: Optional[Path] = None,
 ) -> tuple[list, list]:
     """
     Runs test suites on the emulator, logging the results and handling multiple groups if configured.
@@ -149,6 +153,7 @@ def run_test_suites(
         adb (Path): Path to adb binary.
         grpc_services (Path): Path to GRPC services proto files.
         local_run (bool): True if we are running on the local host.
+        fishtank (Optional[Path]): Optional path to the fishtank distribution.
 
     Returns:
         tuple[list, list]: A tuple containing lists of result XMLs and skip report paths.
@@ -185,6 +190,7 @@ def run_test_suites(
                     adb,
                     grpc_services,
                     local_run,
+                    fishtank=fishtank,
                 )
                 result_xmls.append(res)
                 skip_reports.append(test_log_dir.joinpath(suite + "_skip.xml"))
@@ -261,6 +267,7 @@ def run_single_suite(
     grpc_services: Path,
     local_run: bool = False,
     max_retries: int = 3,  # Default to 3 retries for 25% flakiness rate
+    fishtank: Optional[Path] = None,
 ):
     if collect:
         pytest_flags.append("--setup-plan")
@@ -268,6 +275,8 @@ def run_single_suite(
         pytest_flags.append(f"--fetcher={fetcher}")
     if local_run:
         pytest_flags.append(f"--local_run")
+    if fishtank:
+        pytest_flags.append(f"--fishtank={fishtank}")
 
     junit_test_results = Path(logdir) / f"{name}.xml"
     exit_code = 1
