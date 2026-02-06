@@ -154,8 +154,69 @@ def cts_test_specs(name, test_specs = [], additional_data = []):
             ],
         )
 
+        # Version of the tests supporting local overrides.
+        run_sequence(
+            name = "local_" + test,
+            srcs = ["cts_config.py"],
+            main = "cts_config.py",
+            args = [
+                "--goldfish_zip",
+                "$(rlocationpath @local//goldfish:release)",
+                "--image_extract_dir",
+                "$(rlocationpath @local//image:BUILD.bazel)",
+                "--tradefed_extract_dir",
+                "$(rlocationpath @local//cts:BUILD.bazel)",
+            ] + test_spec.args + select({
+                "@platforms//os:linux": [
+                    "--build_tools_extract_dir",
+                    "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
+                    "--platform_tools_extract_dir",
+                    "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
+                ],
+                "@platforms//os:macos": [
+                    "--build_tools_extract_dir",
+                    "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
+                    "--platform_tools_extract_dir",
+                    "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
+                ],
+            }),
+            data = [
+                "@local//cts:BUILD.bazel",
+                "@local//cts:all_files",
+                "@local//goldfish:release",
+                "@local//image:BUILD.bazel",
+                "@local//image:all_files",
+            ] + additional_data + select({
+                "@platforms//os:linux": [
+                    "@build-tools-linux//:BUILD.bazel",
+                    "@build-tools-linux//:all_files",
+                    "@platform-tools-linux//:BUILD.bazel",
+                    "@platform-tools-linux//:all_files",
+                ],
+                "@platforms//os:macos": [
+                    "@build-tools-mac//:BUILD.bazel",
+                    "@build-tools-mac//:all_files",
+                    "@platform-tools-mac//:BUILD.bazel",
+                    "@platform-tools-mac//:all_files",
+                ],
+            }),
+            deps = [
+                "//sequence:agent_common",
+                "//sequence:config",
+                "@test_seq//test_seq/proto:test_sequencer_pb2",
+            ],
+            size = "enormous",
+            # Note: mac platforms may need requires-network for GRPC to work
+            tags = ["manual"],
+        )
+
     native.test_suite(
         name = name,
         tests = tests,
+        tags = ["manual"],
+    )
+    native.test_suite(
+        name = "local_" + name,
+        tests = ["local_" + t for t in tests],
         tags = ["manual"],
     )
