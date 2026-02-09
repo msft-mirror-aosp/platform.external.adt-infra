@@ -817,7 +817,7 @@
     ],
     "status": "enabled"
   },
-    "vulkan_app_tests_gpu_host_api_36": {
+  "vulkan_app_tests_gpu_host_api_36": {
     "avd_configs": [
       {
         "api": "36",
@@ -837,7 +837,7 @@
     ],
     "status": "enabled"
   },
-    "vulkan_app_tests_gpu_software_api_36": {
+  "vulkan_app_tests_gpu_software_api_36": {
     "avd_configs": [
       {
         "api": "36",
@@ -970,6 +970,103 @@
           "Vulkan"
         ],
         "tag.id": "google_apis"
+      }
+    ],
+    "description": "Tests that the emulator can be launched with the Lavapipe driver.",
+    "pytest_flags": [
+      "-m",
+      "ensure_lavapipe"
+    ],
+    "status": "enabled"
+  },
+  "xr_vulkan_app_tests_gpu_host_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "XR1",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan",
+          "-featue",
+          "GuestAngle",
+          "-no-snapshot"
+        ],
+        "tag.id": "google-xr"
+      }
+    ],
+    "description": "Run vulkan apps and ensure they don't crash. Take a screenshot",
+    "pytest_flags": [
+      "-m vulkan_apps"
+    ],
+    "status": "enabled"
+  },
+  "xr_vulkan_samples_tests_gpu_host_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "XR1",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan",
+          "-featue",
+          "GuestAngle",
+          "-no-snapshot"
+        ],
+        "tag.id": "google-xr"
+      }
+    ],
+    "description": "Run vulkan samples",
+    "pytest_flags": [
+      "-m vulkan_apps_samples"
+    ],
+    "status": "enabled"
+  },
+  "xr_vulkan_app_tests_gfxbench_gpu_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "XR1",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan",
+          "-featue",
+          "GuestAngle",
+          "-no-snapshot"
+        ],
+        "tag.id": "google-xr"
+      }
+    ],
+    "description": "Run gfxbench vulkan benchmark",
+    "pytest_flags": [
+      "-m vulkan_apps_gfxbench"
+    ],
+    "status": "enabled"
+  },
+  "xr_ensure_lavapipe_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "XR1",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot",
+          "-feature",
+          "Vulkan",
+          "-featue",
+          "GuestAngle",
+          "-no-snapshot"
+        ],
+        "tag.id": "google-xr"
       }
     ],
     "description": "Tests that the emulator can be launched with the Lavapipe driver.",
