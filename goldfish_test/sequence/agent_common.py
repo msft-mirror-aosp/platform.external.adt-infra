@@ -120,10 +120,8 @@ def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return test_sequencer_pb2.AgentConfig(
         goldfish=goldfish_pb2.GoldFish(
             args=[
-                "-wipe-data",
                 "-verbose",
                 "-show-kernel",
-                "-guest-angle",
                 "-not-in-bazel",
             ],
             cleanup=True,
