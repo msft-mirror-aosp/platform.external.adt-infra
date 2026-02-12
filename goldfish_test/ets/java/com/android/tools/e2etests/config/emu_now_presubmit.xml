@@ -3,8 +3,6 @@
 
     <include name="ets" />
     <option name="include-filter" value="BootTest" />
-    <!-- Currently fails on emu-next -->
-    <option name="exclude-filter" value="BootTest com.android.tools.e2etests.boot.BootTest#bootNotificationTime" />
     <option name="include-filter" value="DisplayNameTest" />
     <option name="include-filter" value="VulkanAppTest" />
 
