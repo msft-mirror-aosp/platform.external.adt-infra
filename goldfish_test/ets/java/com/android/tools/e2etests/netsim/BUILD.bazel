@@ -1,0 +1,22 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = [
+        ":NetsimSingleDeviceTest.config",
+    ],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_jvm_test(
+    name = "netsim_single_device_test",
+    srcs = ["NetsimSingleDeviceTest.kt"],
+    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    deps = [
+        "//testlib/java/com/android/tools/testlib/netsim:grpc",
+        "@netsim//proto:netsim_java_grpc",
+        "@netsim//proto:netsim_java_proto",
+        "@tradefed//:tradefed_jars",
+    ],
+)

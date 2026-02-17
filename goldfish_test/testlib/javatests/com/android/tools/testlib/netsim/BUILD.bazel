@@ -1,0 +1,13 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+kt_jvm_test(
+    name = "grpc_test",
+    size = "small",
+    srcs = ["GrpcTest.kt"],
+    test_class = "com.android.tools.testlib.netsim.GrpcTest",
+    deps = [
+        "//testlib/java/com/android/tools/testlib/netsim:grpc",
+        "@bazel_tools//tools/jdk:TestRunner",
+        "@tradefed//:tradefed_test_jars",
+    ],
+)
