@@ -29,6 +29,7 @@ from emu.apk import (
     APP_VULKAN_SAMPLES_ASSETS,
     APP_GFXBENCH_APK,
     APP_GFXBENCH_ASSETS,
+    APP_QR_GENERATOR_APK,
     PREBUILT_GEARS_APK,
     PREBUILT_GLTF_VIEWER_APK,
     PREBUILT_HELLOVK_APK,
@@ -38,7 +39,8 @@ from emu.apk import (
     PREBUILT_VULKAN_SAMPLES_APK,
     PREBUILT_VULKAN_SAMPLES_ASSETS,
     PREBUILT_GFXBENCH_APK,
-    PREBUILT_GFXBENCH_ASSETS
+    PREBUILT_GFXBENCH_ASSETS,
+    PREBUILT_QR_GENERATOR_APK
 )
 from emu.timing import retry
 from emu.emulator_exceptions import (
@@ -500,6 +502,24 @@ class GfxbenchApplication(Application):
             apk_path=apk_path,
             wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(
                 avd, Application.extract_package_name(self.app_activity)
+            ),
+        )
+
+
+class QrGeneratorApplication(Application):
+    """Represents QR Generator App."""
+
+    def __init__(self, avd: BaseEmulator, local_run: bool = False):
+        app_activity = "com.emu.qr_vulkan_render/com.emu.qr_vulkan_render.MainActivity"
+        # Since there is no prebuilt for this one yet, we use the local one or the one in the apk folder.
+        apk_path = APP_QR_GENERATOR_APK
+
+        super().__init__(
+            avd,
+            default_activity=app_activity,
+            apk_path=apk_path,
+            wait_for_start_strategy=Application.start_strategy_wait_for_activity_manager_signal(
+                avd, Application.extract_package_name(app_activity)
             ),
         )
 

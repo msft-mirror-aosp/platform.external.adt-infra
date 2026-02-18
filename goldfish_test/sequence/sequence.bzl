@@ -23,15 +23,19 @@ def run_sequence(name, srcs, args = [], data = [], **kwargs):
             "--mode=run",
             "--test_seq_path",
             "$(rlocationpath @test_seq//:test_seq)",
+            "--java_path",
+            "$(rlocationpaths @rules_java//toolchains:remotejdk_21)",
         ],
         srcs = srcs,
         data = data + [
             "@test_seq//:test_seq",
             "@test_seq//:test_seq_files",
+            "@rules_java//toolchains:remotejdk_21",
         ],
+        toolchains = ["@rules_java//toolchains:remotejdk_21"],
         target_compatible_with = select({
-            "@platforms//os:linux": [],
-            "//conditions:default": ["@platforms//:incompatible"],
+            "//conditions:default": [],
+            "@platforms//os:windows": ["@platforms//:incompatible"],
         }),
         **kwargs
     )
@@ -56,8 +60,8 @@ def run_sequence(name, srcs, args = [], data = [], **kwargs):
             "@test_seq//:test_seq_files",
         ],
         target_compatible_with = select({
-            "@platforms//os:linux": [],
-            "//conditions:default": ["@platforms//:incompatible"],
+            "//conditions:default": [],
+            "@platforms//os:windows": ["@platforms//:incompatible"],
         }),
         **kwargs
     )

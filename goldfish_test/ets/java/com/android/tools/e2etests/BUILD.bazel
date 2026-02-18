@@ -22,11 +22,12 @@ java_binary(
     name = "e2e_tests",
     testonly = 1,
     resource_strip_prefix = "ets/java/com/android/tools/e2etests",
-    resources = ["config/ets.xml"],
+    resources = glob(["config/*.xml"]),
     use_launcher = False,
     visibility = ["//ets:__pkg__"],
     runtime_deps = [
         ":display_name_test",
+        "//ets/java/com/android/tools/e2etests/vulkan:vulkan_app_test",
         "//testlib/java/com/android/tools/testlib/tradefed:emulator_test_suite",
         "//testlib/java/com/android/tools/testlib/tradefed:log_saver",
         "//testlib/java/com/android/tools/testlib/tradefed:xml_reporter",

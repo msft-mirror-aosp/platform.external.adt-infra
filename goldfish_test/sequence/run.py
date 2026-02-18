@@ -5,7 +5,7 @@ import pathlib
 import subprocess
 
 
-def run(test_seq_path: str, sequence: str):
+def run(test_seq_path: str, sequence: str, extra_path: list[str]):
     tmp_dir = pathlib.Path(os.environ["TEST_TMPDIR"])
     sequence_path = tmp_dir.joinpath("sequence.txtpb")
     sequence_path.write_text(sequence)
@@ -21,6 +21,7 @@ def run(test_seq_path: str, sequence: str):
     env["DISABLE_CLEARCUT"] = "1"
     env["HOME"] = str(home)
     env["XDG_RUNTIME_DIR"] = str(xdg_runtime)
+    env["PATH"] = os.pathsep.join(extra_path + [env["PATH"]])
 
     subprocess.run(
         args=[
