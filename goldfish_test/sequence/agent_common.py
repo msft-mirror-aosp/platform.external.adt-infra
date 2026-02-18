@@ -123,6 +123,7 @@ def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
                 "-verbose",
                 "-show-kernel",
                 "-not-in-bazel",
+                "-no-window",
             ],
             cleanup=True,
             emulator_path="emulator/emulator",
