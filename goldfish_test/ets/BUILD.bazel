@@ -17,6 +17,7 @@ pkg_files(
     srcs = [
         "//ets/java/com/android/tools/e2etests:module_configs",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
+        "//ets/java/com/android/tools/e2etests/netsim:pkg",
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
     ],
     # Bazel builds the apks in with read-only permissions, which tradefed does
@@ -31,6 +32,7 @@ pkg_files(
     srcs = [
         "ets-tradefed",
         "ets-tradefed.bat",
+        "script_help.sh",
     ],
     attributes = pkg_attributes(mode = "0777"),
     prefix = "android-ets/tools",
