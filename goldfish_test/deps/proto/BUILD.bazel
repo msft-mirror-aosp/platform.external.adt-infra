@@ -3,7 +3,7 @@ load("@protobuf//bazel:java_proto_library.bzl", "java_proto_library")
 
 # TODO: This contains all the known emulator protobuf.
 # These will move once b/444507168 is resolved
-load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
 

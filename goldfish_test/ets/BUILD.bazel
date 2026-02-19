@@ -60,3 +60,13 @@ pkg_zip(
 run_ets(name = "ets")
 
 run_ets(name = "presubmit")
+
+# Currently there are no tests specific for the postsubmit. This alias exists so
+# the build can run two different targets based on the environment, as they are
+# expected to deviate in the future.
+test_suite(
+    name = "postsubmit",
+    tests = [
+        ":presubmit",
+    ],
+)
