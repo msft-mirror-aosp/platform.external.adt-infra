@@ -929,7 +929,7 @@
           "-no-snapshot",
           "-feature",
           "Vulkan",
-          "-featue",
+          "-feature",
           "GuestAngle",
           "-no-snapshot"
         ],
@@ -953,7 +953,7 @@
           "-no-snapshot",
           "-feature",
           "Vulkan",
-          "-featue",
+          "-feature",
           "GuestAngle",
           "-no-snapshot"
         ],
@@ -977,7 +977,7 @@
           "-no-snapshot",
           "-feature",
           "Vulkan",
-          "-featue",
+          "-feature",
           "GuestAngle",
           "-no-snapshot"
         ],
@@ -1001,7 +1001,7 @@
           "-no-snapshot",
           "-feature",
           "Vulkan",
-          "-featue",
+          "-feature",
           "GuestAngle",
           "-no-snapshot"
         ],
