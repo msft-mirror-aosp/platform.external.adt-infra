@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.android.emulator.control.EmulatorControllerGrpc
 import io.grpc.InsecureChannelCredentials
 import io.grpc.okhttp.OkHttpChannelBuilder
+import java.util.concurrent.TimeUnit
 
 const val TAG = "EmuGrpc"
 
@@ -27,5 +28,9 @@ object EmulatorController {
         )
         .build()
     stub = EmulatorControllerGrpc.newBlockingStub(channel)
+  }
+
+  fun defaultDeadline(): EmulatorControllerGrpc.EmulatorControllerBlockingStub {
+    return stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
   }
 }

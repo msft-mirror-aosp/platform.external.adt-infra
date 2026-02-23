@@ -3,7 +3,6 @@ package com.android.tools.e2etests.call
 import com.android.emulator.control.PhoneCall
 import com.android.emulator.control.PhoneResponse
 import com.android.tools.e2etests.grpc.EmulatorController
-import java.util.concurrent.TimeUnit
 import org.junit.Assert
 import org.junit.Test
 
@@ -62,7 +61,7 @@ class CallTest {
 
   fun sendPhoneCall(op: PhoneCall.Operation, number: String): PhoneResponse.Response {
     val resp =
-      EmulatorController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
+      EmulatorController.defaultDeadline()
         .sendPhone(PhoneCall.newBuilder().setOperation(op).setNumber(number).build())
 
     return resp.getResponse()
