@@ -4,6 +4,7 @@
     <include name="ets" />
     <option name="include-filter" value="BootTest" />
     <option name="include-filter" value="DisplayNameTest" />
+    <option name="include-filter" value="NetsimSingleDeviceTest" />
     <option name="include-filter" value="VulkanAppTest" />
 
 </configuration>
