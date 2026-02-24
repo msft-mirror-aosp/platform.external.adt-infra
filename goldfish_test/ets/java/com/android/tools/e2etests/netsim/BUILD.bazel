@@ -3,10 +3,21 @@ load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 filegroup(
     name = "pkg",
     testonly = 1,
-    srcs = [
-        ":NetsimSingleDeviceTest.config",
-    ],
+    srcs = glob(["*.config"]),
     visibility = ["//ets:__pkg__"],
+)
+
+kt_jvm_test(
+    name = "netsim_daemon_test",
+    srcs = ["NetsimDaemonTest.kt"],
+    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    deps = [
+        "@maven//:com_github_oshi_oshi_core",
+        "@maven//:junit_junit",
+        "@maven//:net_java_dev_jna_jna",
+        "@maven//:net_java_dev_jna_jna_platform",
+        "@tradefed//:tradefed_jars",
+    ],
 )
 
 kt_jvm_test(

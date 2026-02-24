@@ -81,7 +81,7 @@ CUR_DIR=$(dirname "$0")
 TF_JAR_DIR=$(dirname "$0")
 if [ -f "${CUR_DIR}/tradefed.jar" ]; then
     # Use a hardcoded list of jars to avoid ordering issues when using *.
-    TF_PATH="${CUR_DIR}/compatibility-host-util.jar:${CUR_DIR}/compatibility-tradefed.jar:${CUR_DIR}/loganalysis.jar:${CUR_DIR}/tradefed-avd-util-tests.jar:${CUR_DIR}/tradefed-contrib.jar:${CUR_DIR}/tradefed-isolation-tests.jar:${CUR_DIR}/tradefed.jar:${CUR_DIR}/tradefed-tests.jar:${CUR_DIR}/e2e_tests_deploy.jar"
+    TF_PATH="${CUR_DIR}/e2e_tests_pre_deploy.jar:${CUR_DIR}/compatibility-host-util.jar:${CUR_DIR}/compatibility-tradefed.jar:${CUR_DIR}/loganalysis.jar:${CUR_DIR}/tradefed-avd-util-tests.jar:${CUR_DIR}/tradefed-contrib.jar:${CUR_DIR}/tradefed-isolation-tests.jar:${CUR_DIR}/tradefed.jar:${CUR_DIR}/tradefed-tests.jar:${CUR_DIR}/e2e_tests_post_deploy.jar"
 fi
 
 if [ -z "${TF_PATH}" ]; then

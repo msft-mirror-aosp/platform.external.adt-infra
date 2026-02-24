@@ -16,10 +16,22 @@ kt_jvm_test(
     ],
 )
 
-# This rule is not meant to be run directly, but as a means to get a single jar file containing all
-# of e2e test dependencies.
+# These rules are not meant to be run directly, but as a means to get a single
+# jar file containing all of e2e test dependencies. There are conflicts with
+# tradefed jar dependencies: e2e_tests_pre comes first in the classpath while
+# e2e_tests_post comes last.
 java_binary(
-    name = "e2e_tests",
+    name = "e2e_tests_pre",
+    testonly = 1,
+    use_launcher = False,
+    visibility = ["//ets:__pkg__"],
+    runtime_deps = [
+        "//ets/java/com/android/tools/e2etests/netsim:netsim_daemon_test",
+    ],
+)
+
+java_binary(
+    name = "e2e_tests_post",
     testonly = 1,
     resource_strip_prefix = "ets/java/com/android/tools/e2etests",
     resources = glob(["config/*.xml"]),
@@ -27,6 +39,7 @@ java_binary(
     visibility = ["//ets:__pkg__"],
     runtime_deps = [
         ":display_name_test",
+        "//ets/java/com/android/tools/e2etests/netsim:netsim_daemon_test",
         "//ets/java/com/android/tools/e2etests/netsim:netsim_single_device_test",
         "//ets/java/com/android/tools/e2etests/vulkan:vulkan_app_test",
         "//testlib/java/com/android/tools/testlib/tradefed:emulator_test_suite",

@@ -6,6 +6,7 @@
     <!-- Currently fails on emu-next -->
     <option name="exclude-filter" value="BootTest com.android.tools.e2etests.boot.BootTest#bootNotificationTime" />
     <option name="include-filter" value="DisplayNameTest" />
+    <option name="include-filter" value="NetsimDaemonTest" />
     <option name="include-filter" value="NetsimSingleDeviceTest" />
     <!-- Currently fails on emu-next b/486936726 -->
     <option name="exclude-filter" value="NetsimSingleDeviceTest com.android.tools.e2etests.netsim.NetsimSingleDeviceTest#netsimRadioStateToggle" />

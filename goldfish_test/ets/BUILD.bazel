@@ -6,7 +6,8 @@ pkg_files(
     name = "e2e_host_tests",
     testonly = True,
     srcs = [
-        "//ets/java/com/android/tools/e2etests:e2e_tests_deploy.jar",
+        "//ets/java/com/android/tools/e2etests:e2e_tests_post_deploy.jar",
+        "//ets/java/com/android/tools/e2etests:e2e_tests_pre_deploy.jar",
     ],
     prefix = "android-ets/tools",
 )
