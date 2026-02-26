@@ -1,0 +1,19 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_jvm_library(
+    name = "grpc",
+    testonly = 1,
+    srcs = ["Grpc.kt"],
+    deps = [
+        "@grpc-java//api",
+        "@grpc-java//context",
+        "@grpc-java//protobuf",
+        "@grpc-java//stub",
+        "@netsim//proto:netsim_java_grpc",
+        "@protobuf//:protobuf_java",
+        "@protobuf//:protobuf_java_util",
+        "@tradefed//:tradefed_jars",
+    ],
+)

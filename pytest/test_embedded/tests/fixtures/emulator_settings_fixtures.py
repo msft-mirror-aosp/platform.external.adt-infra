@@ -24,7 +24,7 @@ from emu.qt.qt_settings import QSettings
 from emu.qt.emulator_settings import UISettings, CRASHREPORT_PREFERENCE_VALUE
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def emulator_qt_settings():
     ORG_NAME = "Android Open Source Project"
     ORG_DOMAIN = "com.android"
@@ -33,7 +33,7 @@ def emulator_qt_settings():
     return QSettings(ORG_NAME, ORG_DOMAIN, APP_NAME)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def never_upload_crashes(emulator_qt_settings):
     """Configure the emulator to never upload crashes."""
     emulator_qt_settings[UISettings.CRASHREPORT_PREFERENCE] = (
@@ -42,13 +42,13 @@ def never_upload_crashes(emulator_qt_settings):
     emulator_qt_settings.sync()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def do_not_display_nested_vm_warning(emulator_qt_settings):
     emulator_qt_settings[UISettings.SHOW_NESTED_WARNING] = "false"
     emulator_qt_settings.sync()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def do_not_display_virtualscene_info(emulator_qt_settings):
     emulator_qt_settings[UISettings.SHOW_VIRTUALSCENE_INFO] = "false"
     emulator_qt_settings.sync()

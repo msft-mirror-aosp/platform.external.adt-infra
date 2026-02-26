@@ -25,9 +25,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class DiscoveryTest {
-  @Rule
-  @JvmField
-  val tempFolder = TemporaryFolder()
+  @Rule @JvmField val tempFolder = TemporaryFolder()
 
   @Test
   fun testConstructor() {
@@ -60,15 +58,23 @@ class DiscoveryTest {
     want.add("$serial")
 
     // Create the OS specific files at the same serial since only one will show up.
-    for (e in listOf(EnvDir("LOCALAPPDATA", arrayOf("Temp")), EnvDir("XDG_RUNTIME_DIR", arrayOf()),
-                     EnvDir("HOME", arrayOf("Library", "Caches", "TemporaryItems")))) {
+    for (e in
+      listOf(
+        EnvDir("LOCALAPPDATA", arrayOf("Temp")),
+        EnvDir("XDG_RUNTIME_DIR", arrayOf()),
+        EnvDir("HOME", arrayOf("Library", "Caches", "TemporaryItems")),
+      )) {
       val baseDir = tempFolder.newFolder(e.name, *e.subPath)
       createEmulatorIn(Paths.get(baseDir.toString()), "$serial")
       env[e.name] = Paths.get(tempFolder.getRoot().toString(), e.name).toString()
     }
     // Now increase the serial every emulator since these will all show up.
-    for (e in listOf(EnvDir("ANDROID_EMULATOR_HOME", arrayOf()), EnvDir("ANDROID_AVD_HOME", arrayOf()),
-                     EnvDir("ANDROID_SDK_HOME", arrayOf(".android")))) {
+    for (e in
+      listOf(
+        EnvDir("ANDROID_EMULATOR_HOME", arrayOf()),
+        EnvDir("ANDROID_AVD_HOME", arrayOf()),
+        EnvDir("ANDROID_SDK_HOME", arrayOf(".android")),
+      )) {
       serial++
       want.add("$serial")
       val baseDir = tempFolder.newFolder(e.name, *e.subPath)
@@ -79,17 +85,12 @@ class DiscoveryTest {
     val emus = runningEmulators(env)
     assertEquals(want.size, emus.size)
 
-    val got = buildSet {
-      emus.forEach {
-        add(it.discoveryIni["port.serial"])
-      }
-    }
+    val got = buildSet { emus.forEach { add(it.discoveryIni["port.serial"]) } }
     assertEquals(want, got)
   }
 }
 
 class EnvDir(val name: String, val subPath: Array<String>) {}
-
 
 private fun createEmulatorIn(path: Path, portSerial: String) {
   val runDir = path.resolve("avd").resolve("running")

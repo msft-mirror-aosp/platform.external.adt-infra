@@ -15,48 +15,49 @@
  */
 package com.android.tools.e2etests
 
-import com.android.tools.testlib.emu.Discovery
 import com.android.tools.testlib.emu.findEmulator
-import com.android.tradefed.log.LogUtil.CLog
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test
-import org.junit.runner.RunWith
 import org.junit.Assert
 import org.junit.Test
+import org.junit.runner.RunWith
 
 @RunWith(DeviceJUnit4ClassRunner::class)
 class DisplayNameTest : BaseHostJUnit4Test() {
 
-    @Test
-    fun testCheckDiscoveryNameMatchesConfigIni() {
-        Assert.assertNotNull(getDevice())
-        System.out.println(getDevice().getSerialNumber())
-        val discovery = findEmulator(getDevice().getSerialNumber())
-        Assert.assertNotNull(discovery)
-        if (discovery != null) {
-            Assert.assertNotNull(discovery.discoveryIni["avd.name"])
-            Assert.assertEquals(discovery.discoveryIni["avd.name"], discovery.configIni["avd.ini.displayname"])
-        }
+  @Test
+  fun testCheckDiscoveryNameMatchesConfigIni() {
+    Assert.assertNotNull(getDevice())
+    System.out.println(getDevice().getSerialNumber())
+    val discovery = findEmulator(getDevice().getSerialNumber())
+    Assert.assertNotNull(discovery)
+    if (discovery != null) {
+      Assert.assertNotNull(discovery.discoveryIni["avd.name"])
+      Assert.assertEquals(
+        discovery.discoveryIni["avd.name"],
+        discovery.configIni["avd.ini.displayname"],
+      )
     }
+  }
 
-    @Test
-    fun testCheckDisplayNameContainsNonAscii() {
-        Assert.assertNotNull(getDevice())
-        System.out.println(getDevice().getSerialNumber())
-        val discovery = findEmulator(getDevice().getSerialNumber())
-        Assert.assertNotNull(discovery)
-        if (discovery != null) {
-            Assert.assertNotNull(discovery.discoveryIni["avd.name"])
-            Assert.assertTrue(containsNonAscii(discovery.discoveryIni["avd.name"] ?: ""))
-        }
+  @Test
+  fun testCheckDisplayNameContainsNonAscii() {
+    Assert.assertNotNull(getDevice())
+    System.out.println(getDevice().getSerialNumber())
+    val discovery = findEmulator(getDevice().getSerialNumber())
+    Assert.assertNotNull(discovery)
+    if (discovery != null) {
+      Assert.assertNotNull(discovery.discoveryIni["avd.name"])
+      Assert.assertTrue(containsNonAscii(discovery.discoveryIni["avd.name"] ?: ""))
     }
+  }
 }
 
 fun containsNonAscii(s: String): Boolean {
-    for (char in s) {
-        if (char.code > 127) {
-            return true
-        }
+  for (char in s) {
+    if (char.code > 127) {
+      return true
     }
-    return false
+  }
+  return false
 }
