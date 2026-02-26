@@ -9,7 +9,6 @@ fun netsimdIsLaunched(): Boolean {
 
   for (proc in os.getProcesses()) {
     val args = proc.getArguments()
-    System.out.println(args)
     if (!args.isEmpty() && Paths.get(args.get(0)).getFileName().toString() == netsimdName) {
       return true
     }
