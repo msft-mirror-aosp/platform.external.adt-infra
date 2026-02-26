@@ -511,8 +511,10 @@ class QrGeneratorApplication(Application):
 
     def __init__(self, avd: BaseEmulator, local_run: bool = False):
         app_activity = "com.emu.qr_vulkan_render/com.emu.qr_vulkan_render.MainActivity"
-        # Since there is no prebuilt for this one yet, we use the local one or the one in the apk folder.
-        apk_path = APP_QR_GENERATOR_APK
+        if self.local_run:
+            apk_path = APP_QR_GENERATOR_APK
+        else:
+            apk_path = PREBUILT_QR_GENERATOR_APK
 
         super().__init__(
             avd,
