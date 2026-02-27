@@ -12,6 +12,7 @@ kt_jvm_test(
     srcs = ["NetsimDaemonTest.kt"],
     visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
     deps = [
+        "//testlib/java/com/android/tools/testlib/netsim:netsimd",
         "@maven//:com_github_oshi_oshi_core",
         "@maven//:junit_junit",
         "@maven//:net_java_dev_jna_jna",

@@ -11,3 +11,14 @@ kt_jvm_test(
         "@tradefed//:tradefed_test_jars",
     ],
 )
+
+kt_jvm_test(
+    name = "netsimd_test",
+    size = "small",
+    srcs = ["NetsimdTest.kt"],
+    test_class = "com.android.tools.testlib.netsim.NetsimdTest",
+    deps = [
+        "//testlib/java/com/android/tools/testlib/netsim:netsimd",
+        "@bazel_tools//tools/jdk:TestRunner",
+    ],
+)
