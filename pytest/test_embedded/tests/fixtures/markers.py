@@ -58,6 +58,8 @@ def register_markers(config):
         "wear: Runs on Wear OS",
         "wifi_perf: WiFi performance test",
         "windows: Runs only on Windows",
+        "xr: Runs on XR devices",
+        "glasses: Runs on AI Glasses",
     ]
     for marker in markers:
         config.addinivalue_line("markers", marker)

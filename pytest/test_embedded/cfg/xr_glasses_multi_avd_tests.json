@@ -1,0 +1,32 @@
+{
+    "xr_glasses_multi_avd_pairing_test_suite_api_36": {
+        "description": "Set of tests that verify assisted pairing between phone and glasses emulators",
+        "pytest_flags": [
+            "-m multi and xr and glasses"
+        ],
+        "source.directories": [
+            "tests/xr/glasses"
+        ],
+        "avd_configs": [
+            {
+                "launch_flags": [
+                    "-no-snapshot"
+                ],
+                "api": "CANARY",
+                "channel": "canary",
+                "tag.id": "google_apis",
+                "AvdId": "TestPhone"
+            },
+            {
+                "launch_flags": [
+                    "-no-snapshot"
+                ],
+                "api": "36",
+                "tag.id": "ai-glasses",
+                "avd.ini.displayname": "TestGlasses",
+                "AvdId": "TestGlasses"
+            }
+        ],
+        "status": "enabled"
+    }
+}

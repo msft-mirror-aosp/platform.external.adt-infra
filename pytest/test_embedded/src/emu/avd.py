@@ -48,12 +48,14 @@ class SdkManagerDoesNotExist(Exception):
 class UnsupportedAbiOrCpu(Exception):
     pass
 
+
 class SdkManagerChannel(enum.Enum):
     # Values are defined by sdkmanager binary
     STABLE = 0
     BETA = 1
     DEV = 2
     CANARY = 3
+
 
 class FetcherSystemImages:
     def __init__(self, fetcher: Path):
@@ -108,7 +110,12 @@ class FetcherSystemImages:
         return self.install(api, abi, tag, f"ab,{build_id},{target},{resource}")
 
     def install(
-        self, api: str, abi: str, tag: str = "google_apis", fetch_target: str = ""
+        self,
+        api: str,
+        abi: str,
+        tag: str = "google_apis",
+        fetch_target: str = "",
+        channel: Optional[SdkManagerChannel] = None,
     ) -> dict[str, str]:
         """Installs the system image using the fetcher binary.
 
@@ -127,14 +134,16 @@ class FetcherSystemImages:
         Returns:
             dict[str, str]:  A dictionary with api, tag, abi, and cpu.
         """
-        channel = SdkManagerChannel.STABLE
-        if tag == "google-xr":
-            # Use Canary releases for XR
+        channel = channel or SdkManagerChannel.STABLE
+        if tag in ["google-xr", "ai-glasses"]:
+            # Use Canary releases for XR and Glasses
             channel = SdkManagerChannel.CANARY
         if fetch_target:
             logging.info(f"Installing {fetch_target} on channel:{channel.name}")
         else:
-            logging.info(f"Installing 'system-images;android-{api};{tag};{abi}' on channel:{channel.name}")
+            logging.info(
+                f"Installing 'system-images;android-{api};{tag};{abi}' on channel:{channel.name}"
+            )
             fetch_target = f"sdk,android-{api},{tag},{abi},{channel.value}"
         download = subprocess.run(
             [
@@ -160,7 +169,7 @@ class FetcherSystemImages:
 
 class SystemImages:
     IMAGE = re.compile(
-        r".*android-([\d.]+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv|google-xr)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
+        r".*android-([\w\.-]+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv|google-xr|ai-glasses)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
     )
 
     def __init__(self, sdk_root: Path = Path(os.environ.get("ANDROID_SDK_ROOT", "."))):
@@ -202,7 +211,9 @@ class SystemImages:
             SystemImageDirectoryDoesNotExist: If no system-images directory was find under the root
         """
         if not self.sys_root.exists():
-            raise SystemImageDirectoryDoesNotExist(f"The directory {self.sys_root} does not exist (yet?). Is ANDROID_SDK_ROOT set properly?")
+            raise SystemImageDirectoryDoesNotExist(
+                f"The directory {self.sys_root} does not exist (yet?). Is ANDROID_SDK_ROOT set properly?"
+            )
         for x in self._recursive_iglob(self.sys_root):
             m = self.IMAGE.match(str(x))
             if m:
@@ -289,7 +300,13 @@ class SystemImages:
                         shutil.copyfileobj(file_gz_in, file_gz_out, blocksize)
         return image
 
-    def install(self, api: str, abi: str, tag: str = "google_apis") -> dict[str, str]:
+    def install(
+        self,
+        api: str,
+        abi: str,
+        tag: str = "google_apis",
+        channel: Optional[SdkManagerChannel] = None,
+    ) -> dict[str, str]:
         """Installs the system image with the given api, abi and tag.
 
         Args:
@@ -305,11 +322,13 @@ class SystemImages:
             dict[str, str]:  A dictionary with api, tag, abi, and cpu.
         """
         # # 0 (Stable), 1 (Beta), 2 (Dev), and 3 (Canary).
-        channel = SdkManagerChannel.STABLE
-        if tag == "google-xr":
-            # Use Canary releases for XR
+        channel = channel or SdkManagerChannel.STABLE
+        if tag in ["google-xr", "ai-glasses"]:
+            # Use Canary releases for XR and Glasses
             channel = SdkManagerChannel.CANARY
-        logging.info(f"Installing 'system-images;android-{api};{tag};{abi}' on channel:{channel.name}")
+        logging.info(
+            f"Installing 'system-images;android-{api};{tag};{abi}' on channel:{channel.name}"
+        )
         download = subprocess.run(
             [
                 self.sdk_manager,
@@ -504,15 +523,24 @@ class AvdWriter:
                 api, abi, tag, ab_cfg["build_id"], ab_cfg["target"], ab_cfg["resource"]
             )
         else:
-            avd = self.sys_imgs.find_and_unpack(api, abi, tag)
-            if not avd:
-                logging.warning(
-                    "Installing api: %s, abi: %s, tag: %s, this is a very expensive operation, and can easily take up 10 minutes!",
-                    api,
-                    abi,
-                    tag,
-                )
-                avd = self.sys_imgs.install(api, abi, tag)
+            channel_val = custom_cfg.get("channel")
+            channel = SdkManagerChannel[channel_val.upper()] if channel_val else None
+
+            if channel:
+                # find_and_unpack does not check the channel, so we must always
+                # run install to ensure we have the correct channel version.
+                # sdkmanager will quickly skip if the image is already up-to-date.
+                avd = self.sys_imgs.install(api, abi, tag, channel=channel)
+            else:
+                avd = self.sys_imgs.find_and_unpack(api, abi, tag)
+                if not avd:
+                    logging.warning(
+                        "Installing api: %s, abi: %s, tag: %s, channel: default, this is a very expensive operation, and can easily take up 10 minutes!",
+                        api,
+                        abi,
+                        tag,
+                    )
+                    avd = self.sys_imgs.install(api, abi, tag)
 
         avd["name"] = name
         avd["avd_home"] = self.avd_home
