@@ -17,3 +17,14 @@ kt_jvm_library(
         "@tradefed//:tradefed_jars",
     ],
 )
+
+kt_jvm_library(
+    name = "netsimd",
+    testonly = 1,
+    srcs = ["Netsimd.kt"],
+    deps = [
+        "@maven//:com_github_oshi_oshi_core",
+        "@maven//:net_java_dev_jna_jna",
+        "@maven//:net_java_dev_jna_jna_platform",
+    ],
+)

@@ -6,6 +6,7 @@ import io.grpc.InsecureChannelCredentials
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 import netsim.frontend.FrontendServiceGrpc
 
 val TAG = "NetimGrpc"
@@ -24,6 +25,10 @@ object NetsimController {
     val channel =
       Grpc.newChannelBuilder("localhost:" + grpcPort, InsecureChannelCredentials.create()).build()
     stub = FrontendServiceGrpc.newBlockingStub(channel)
+  }
+
+  fun defaultDeadline(): FrontendServiceGrpc.FrontendServiceBlockingStub {
+    return stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
   }
 }
 

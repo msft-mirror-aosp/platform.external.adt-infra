@@ -3,6 +3,7 @@
 
     <include name="ets" />
     <option name="include-filter" value="BootTest" />
+    <option name="include-filter" value="CallTest" />
     <option name="include-filter" value="DisplayNameTest" />
     <option name="include-filter" value="NetsimDaemonTest" />
     <option name="include-filter" value="NetsimSingleDeviceTest" />
