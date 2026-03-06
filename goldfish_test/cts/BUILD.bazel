@@ -1255,3 +1255,10 @@ cts_plan(
     name = "deqp-plan",
     plan_glob = "xts_plan_files/deqp/**",
 )
+
+test_suite(
+    name = "postsubmit",
+    tests = [
+        "cts.CtsUsbTests",
+    ],
+)
