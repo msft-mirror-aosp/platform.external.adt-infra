@@ -59,6 +59,13 @@ service VirtualSceneService {
      * @return The current animation state, including whether the TV is on or off.
      */
     rpc getAnimationState(google.protobuf.Empty) returns (AnimationState);
+
+    /**
+     * Reload the environment.
+     * @param The new environment file contents. If empty, environment.ini will be used.
+     * @return True if the new environment loaded successfully.
+     */
+    rpc reloadEnvironment(ReloadEnvironmentRequest) returns (ReloadEnvironmentResponse);
 };
 
 
@@ -90,4 +97,13 @@ message PosterList {
 
 message AnimationState {
     bool tvOn = 1;
+}
+
+message ReloadEnvironmentRequest {
+    // AVD's environment.ini file will be used if empty
+    string environment_config = 1;
+}
+
+message ReloadEnvironmentResponse {
+    bool success = 1;
 }
