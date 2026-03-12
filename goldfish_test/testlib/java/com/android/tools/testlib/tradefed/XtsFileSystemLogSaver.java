@@ -30,18 +30,22 @@ public class XtsFileSystemLogSaver extends FileSystemLogSaver {
     @Option(name = "logs-dir", description = "base directory to output logs")
     private File mLogsDir = null;
 
+    private File mLogReportDir = null;
+
     /** Returns the logs directory that should be used to store logs. */
     @Override
     protected File generateLogReportDir(IBuildInfo buildInfo, File reportDir, String moduleName)
             throws IOException {
-        if (mLogsDir != null) {
-          String nowStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd_HH.mm.ss"));
-          File outDir = new File(mLogsDir, nowStr);
-          outDir.mkdirs();
-          return outDir;
+        if (mLogsDir == null) {
+            // Base directory unspecified, just use the default.
+            return super.generateLogReportDir(buildInfo, reportDir, moduleName);
         }
-        // Base directory unspecified, just use the default.
-        return super.generateLogReportDir(buildInfo, reportDir, moduleName);
+        if (mLogReportDir == null) {
+          String nowStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd_HH.mm.ss"));
+          mLogReportDir = new File(mLogsDir, nowStr);
+          mLogReportDir.mkdirs();
+        }
+        return mLogReportDir;
     }
 
 }

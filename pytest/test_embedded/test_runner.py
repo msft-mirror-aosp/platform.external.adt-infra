@@ -401,7 +401,7 @@ def run_single_suite(
 
 
 def get_tests_to_run(test_config: str, test_suite: str,
-                     system_image_path: str = '') -> List[Tuple[str, Dict]]:
+                     system_image_paths: list[str]) -> List[Tuple[str, Dict]]:
     """Gets the list of tests to run."""
     with open(test_config, "r", encoding="utf-8") as file:
         test_cfg = json.load(file)
@@ -414,10 +414,13 @@ def get_tests_to_run(test_config: str, test_suite: str,
     if not tests_to_run:
         raise NoTestResultsProduced(f"No enabled test suite matching {test_suite}")
     # Override the system image if one was specified.
-    if system_image_path:
+    if system_image_paths:
+        # Older callers would pass a single system image for all tests so repeat
+        # it for each avd.
+        image_paths = system_image_paths * 4
         for _, cfg in tests_to_run:
-            for avd_cfg in cfg.get("avd_configs", ()):
-                avd_cfg["image.sysdir.1"] = system_image_path
+            for avd_cfg, image_path in zip(cfg.get("avd_configs", ()), image_paths):
+                avd_cfg["image.sysdir.1"] = image_path
     return tests_to_run
 
 

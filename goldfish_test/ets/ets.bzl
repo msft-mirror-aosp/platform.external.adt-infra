@@ -64,6 +64,9 @@ def run_ets(name):
                 "@platform-tools-mac//:all_files",
             ],
         }),
+        exec_properties = {
+            "dockerNetwork": "standard",
+        },
         main = "android_ets_cfg.py",
         tags = [
             "exclusive-if-local",
