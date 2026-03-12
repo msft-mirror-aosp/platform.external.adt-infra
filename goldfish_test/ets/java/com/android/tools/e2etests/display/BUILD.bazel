@@ -1,14 +1,25 @@
 load("@rules_android//rules:rules.bzl", "android_binary")
 load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 
 filegroup(
     name = "pkg",
     testonly = 1,
     srcs = [
+        ":AdbScreenCapTest.config",
         ":ScreenshotTest.apk",
         ":ScreenshotTest.config",
     ],
     visibility = ["//ets:__pkg__"],
+)
+
+kt_jvm_test(
+    name = "adb_screen_cap_test",
+    srcs = ["AdbScreenCapTest.kt"],
+    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    deps = [
+        "@tradefed//:tradefed_jars",
+    ],
 )
 
 kt_android_library(

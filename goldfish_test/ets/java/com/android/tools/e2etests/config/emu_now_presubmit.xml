@@ -2,6 +2,7 @@
 <configuration description="Presubmit tests">
 
     <include name="ets" />
+    <option name="include-filter" value="AdbScreenCapTest" />
     <option name="include-filter" value="BootTest" />
     <option name="include-filter" value="CallTest" />
     <option name="include-filter" value="DisplayNameTest" />
