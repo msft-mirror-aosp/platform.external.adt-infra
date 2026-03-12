@@ -12,7 +12,7 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         agent_common.goldfish_fetch(ns),
         agent_common.tradefed_fetch(ns),
         agent_common.android_home(ns),
-        agent_common.avd(ns),
+        agent_common.avd_ets(ns),
         agent_common.junit_xml_result_ets_close(ns),
         agent_common.junit_xml_result(ns),
         agent_common.goldfish_grpc(ns),

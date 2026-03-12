@@ -61,6 +61,12 @@ def avd(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     )
 
 
+def avd_ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ret = avd(ns)
+    ret.avd.avd_config_ini[:] = ["avd.ini.displayname=UTF8🤖"]
+    return ret
+
+
 def cts(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConfig:
     ac = _tradefed(ns)
     ac.tradefed.extract_dir = ns.tradefed_extract_dir
