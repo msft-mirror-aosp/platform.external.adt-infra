@@ -19,6 +19,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests:module_configs",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
+        "//ets/java/com/android/tools/e2etests/display:pkg",
         "//ets/java/com/android/tools/e2etests/events:pkg",
         "//ets/java/com/android/tools/e2etests/netsim:pkg",
         "//ets/java/com/android/tools/e2etests/sensors:pkg",

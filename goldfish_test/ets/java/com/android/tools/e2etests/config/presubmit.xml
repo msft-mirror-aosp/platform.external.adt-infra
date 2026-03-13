@@ -7,6 +7,7 @@
     <option name="include-filter" value="NetsimDaemonTest" />
     <option name="include-filter" value="NetsimSingleDeviceTest" />
     <option name="include-filter" value="SensorTest" />
+    <option name="include-filter" value="ScreenshotTest" />
     <option name="include-filter" value="VulkanAppTest" />
 
 </configuration>

@@ -1,0 +1,39 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = [
+        ":ScreenshotTest.apk",
+        ":ScreenshotTest.config",
+    ],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_android_library(
+    name = "screenshot_test_lib",
+    testonly = 1,
+    srcs = ["ScreenshotTest.kt"],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
+        "@maven//:androidx_test_core",
+        "@maven//:androidx_test_runner",
+        "@maven//:androidx_test_services_storage",
+        "@maven//:com_google_testparameterinjector_test_parameter_injector",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+android_binary(
+    name = "ScreenshotTest",
+    testonly = 1,
+    custom_package = "com.android.tools.e2etests.display",
+    manifest = "ScreenshotTestManifest.xml",
+    manifest_values = {
+        "minSdkVersion": "36",
+        "targetSdkVersion": "36",
+    },
+    deps = [":screenshot_test_lib"],
+)
