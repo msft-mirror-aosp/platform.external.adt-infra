@@ -8,27 +8,23 @@ filegroup(
 )
 
 kt_jvm_test(
-    name = "netsim_daemon_test",
-    srcs = ["NetsimDaemonTest.kt"],
+    name = "close_emulator_test",
+    srcs = ["CloseEmulatorTest.kt"],
     visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
     deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//deps/proto:aemu_java_proto",
         "//testlib/java/com/android/tools/testlib/netsim:netsimd",
+        "@grpc-java//api",
+        "@grpc-java//context",
+        "@grpc-java//protobuf",
+        "@grpc-java//stub",
         "@maven//:com_github_oshi_oshi_core",
         "@maven//:junit_junit",
         "@maven//:net_java_dev_jna_jna",
         "@maven//:net_java_dev_jna_jna_platform",
-        "@tradefed//:tradefed_jars",
-    ],
-)
-
-kt_jvm_test(
-    name = "netsim_single_device_test",
-    srcs = ["NetsimSingleDeviceTest.kt"],
-    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
-    deps = [
-        "//testlib/java/com/android/tools/testlib/netsim:grpc",
-        "@netsim//proto:netsim_java_grpc",
-        "@netsim//proto:netsim_java_proto",
+        "@protobuf//:protobuf_java",
+        "@protobuf//:protobuf_java_util",
         "@tradefed//:tradefed_jars",
     ],
 )
