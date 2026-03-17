@@ -21,7 +21,7 @@ public class AdbScreenCapTest : BaseHostJUnit4Test() {
   @Test
   fun screencapCreatesPngFile() {
     val ts = timestamp()
-    val fileName = "/sdcard/__screenshot_${ts}.png"
+    val fileName = "/data/local/tmp/__screenshot_${ts}.png"
     getDevice().executeShellCommand("rm ${fileName}")
 
     getDevice().executeShellCommand("screencap ${fileName}")
