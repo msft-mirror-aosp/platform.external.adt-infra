@@ -1,0 +1,19 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = [
+        ":AdbPushPullTest.config",
+    ],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_jvm_test(
+    name = "adb_push_pull_test",
+    srcs = ["AdbPushPullTest.kt"],
+    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    deps = [
+        "@tradefed//:tradefed_jars",
+    ],
+)
