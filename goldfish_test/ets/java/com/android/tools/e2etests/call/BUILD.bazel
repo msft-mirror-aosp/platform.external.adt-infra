@@ -1,0 +1,37 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = [
+        ":CallTest.apk",
+        ":CallTest.config",
+    ],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_android_library(
+    name = "call_test_lib",
+    testonly = 1,
+    srcs = ["CallTest.kt"],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
+        "@maven//:androidx_test_core",
+        "@maven//:androidx_test_runner",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+android_binary(
+    name = "CallTest",
+    testonly = 1,
+    custom_package = "com.android.tools.e2etests.boot",
+    manifest = "CallTestManifest.xml",
+    manifest_values = {
+        "minSdkVersion": "36",
+        "targetSdkVersion": "36",
+    },
+    deps = [":call_test_lib"],
+)

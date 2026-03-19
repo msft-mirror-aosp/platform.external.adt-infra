@@ -64,9 +64,14 @@ def run_ets(name):
                 "@platform-tools-mac//:all_files",
             ],
         }),
+        exec_properties = {
+            "dockerNetwork": "standard",
+        },
         main = "android_ets_cfg.py",
         tags = [
-            "exclusive-if-local",
+            # "exclusive-if-local" fails to parallelize on RBE
+            # https://github.com/bazelbuild/bazel/issues/17834
+            "resources:qemu_instances:1",
             "manual",
             "requires-network",
         ],

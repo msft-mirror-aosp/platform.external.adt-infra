@@ -30,6 +30,7 @@ import kotlin.io.path.forEachDirectoryEntry
 class Discovery(val discoveryPath: Path) {
   val discoveryIni = parseIni(discoveryPath)
   val configIni = parseIni(Paths.get(discoveryIni["avd.dir"] ?: "").resolve("config.ini"))
+  val pid = discoveryPath.getFileName().toString().substring(4).dropLast(4)
 }
 
 /**

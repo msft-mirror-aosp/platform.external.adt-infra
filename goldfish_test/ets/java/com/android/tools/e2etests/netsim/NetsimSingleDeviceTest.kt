@@ -5,7 +5,6 @@ import com.android.tools.testlib.netsim.NetsimController
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test
 import com.google.protobuf.Empty
-import java.util.concurrent.TimeUnit
 import netsim.frontend.Frontend.PatchDeviceRequest
 import netsim.model.Model.Chip
 import netsim.model.Model.Device
@@ -20,18 +19,14 @@ class NetsimSingleDeviceTest : BaseHostJUnit4Test() {
 
   @Test
   fun deviceAttachesToNetsimd() {
-    val resp =
-      NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-        .listDevice(Empty.getDefaultInstance())
+    val resp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
 
     Assert.assertTrue(resp.getDevicesCount() > 0)
   }
 
   @Test
   fun devicePatchAndReset() {
-    val resp =
-      NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-        .listDevice(Empty.getDefaultInstance())
+    val resp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
     Assert.assertTrue(resp.getDevicesCount() > 0)
 
     // Patch the device's position and orientation.
@@ -49,22 +44,17 @@ class NetsimSingleDeviceTest : BaseHostJUnit4Test() {
             .build()
         )
         .build()
-    NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS).patchDevice(req)
+    NetsimController.defaultDeadline().patchDevice(req)
 
     // Verify the patched position and orientation.
-    val patchedResp =
-      NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-        .listDevice(Empty.getDefaultInstance())
+    val patchedResp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
     val patchedDevice = getDevice(patchedResp.getDevicesList(), name)
     Assert.assertEquals(patchedDevice.getPosition(), patchPosition)
     Assert.assertEquals(patchedDevice.getOrientation(), patchOrientation)
 
     // Reset and verify position and orientation.
-    NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-      .reset(Empty.getDefaultInstance())
-    val resetResp =
-      NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-        .listDevice(Empty.getDefaultInstance())
+    NetsimController.defaultDeadline().reset(Empty.getDefaultInstance())
+    val resetResp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
     val resetDevice = getDevice(resetResp.getDevicesList(), name)
     Assert.assertEquals(resetDevice.getPosition(), Position.getDefaultInstance())
     Assert.assertEquals(resetDevice.getOrientation(), Orientation.getDefaultInstance())
@@ -72,39 +62,27 @@ class NetsimSingleDeviceTest : BaseHostJUnit4Test() {
 
   @Test
   fun netsimRadioStateToggle() {
-    val resp =
-      NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-        .listDevice(Empty.getDefaultInstance())
+    val resp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
     Assert.assertTrue(resp.getDevicesCount() > 0)
 
     // Turn off Radio State (BLE) and verify.
     val name = resp.getDevices(0).getName()
-    NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-      .patchDevice(patchBleStateRequest(name, false))
+    NetsimController.defaultDeadline().patchDevice(patchBleStateRequest(name, false))
 
-    var patchedResp =
-      NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-        .listDevice(Empty.getDefaultInstance())
+    var patchedResp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
     assertBleState(getDevice(patchedResp.getDevicesList(), name), false)
 
     // Turn on Radio State (BLE) and verify.
-    NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-      .patchDevice(patchBleStateRequest(name, true))
+    NetsimController.defaultDeadline().patchDevice(patchBleStateRequest(name, true))
 
-    patchedResp =
-      NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-        .listDevice(Empty.getDefaultInstance())
+    patchedResp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
     assertBleState(getDevice(patchedResp.getDevicesList(), name), true)
 
     // Turn off Radio State (BLE), reset and verify.
-    NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-      .patchDevice(patchBleStateRequest(name, false))
-    NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-      .reset(Empty.getDefaultInstance())
+    NetsimController.defaultDeadline().patchDevice(patchBleStateRequest(name, false))
+    NetsimController.defaultDeadline().reset(Empty.getDefaultInstance())
 
-    patchedResp =
-      NetsimController.stub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
-        .listDevice(Empty.getDefaultInstance())
+    patchedResp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
     assertBleState(getDevice(patchedResp.getDevicesList(), name), true)
   }
 }

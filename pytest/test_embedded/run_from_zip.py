@@ -142,6 +142,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--system_image_path",
         help="Optional path to use for the system image for all tests.",
+        nargs="*",
     )
 
     parser.add_argument(

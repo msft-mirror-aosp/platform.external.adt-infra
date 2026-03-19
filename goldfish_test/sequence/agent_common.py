@@ -61,6 +61,12 @@ def avd(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     )
 
 
+def avd_ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ret = avd(ns)
+    ret.avd.avd_config_ini[:] = ["avd.ini.displayname=UTF8🤖"]
+    return ret
+
+
 def cts(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConfig:
     ac = _tradefed(ns)
     ac.tradefed.extract_dir = ns.tradefed_extract_dir
@@ -86,8 +92,19 @@ def cts(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConf
     return ac
 
 
-def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+def _ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ac = _tradefed(ns)
+    ac.imports.append(
+        test_sequencer_pb2.Import(
+            id="tradefed_fetch",
+            src="extract_dir",
+        ),
+    )
+    return ac
+
+
+def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ac = _ets(ns)
     ac.tradefed.args.extend(
         [
             ns.ets_plan,
@@ -99,17 +116,48 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             "--test-arg",
         ]
     )
+    ac.imports.append(
+        test_sequencer_pb2.Import(
+            id="goldfish",
+            src="grpc_port",
+            dst="args",
+            re_replace="com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:=${1}",
+        ),
+    )
+    return ac
+
+
+def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ac = _ets(ns)
+    ac.id = "ets_close"
+    # The test closes the emulator so tradefed cannot connect to it via adb or an error will be
+    # raised when it closes.
+    imps = [i for i in ac.imports if i.src != "serial_number"]
+    del ac.imports[:]
+    ac.imports.extend(imps)
+    ac.tradefed.args.extend(
+        [
+            "ets",
+            "-m",
+            "CloseEmulatorTest",
+            "--abi",
+            ns.abi,
+            "--null-device",
+        ]
+    )
     ac.imports.extend(
         [
-            test_sequencer_pb2.Import(
-                id="tradefed_fetch",
-                src="extract_dir",
-            ),
             test_sequencer_pb2.Import(
                 id="goldfish",
                 src="grpc_port",
                 dst="args",
-                re_replace="com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:=${1}",
+                re_replace="--module-arg=CloseEmulatorTest:set-option:grpc_port:${1}",
+            ),
+            test_sequencer_pb2.Import(
+                id="goldfish",
+                src="serial_number",
+                dst="args",
+                re_replace="--module-arg=CloseEmulatorTest:set-option:emu_serial:${1}",
             ),
         ]
     )
@@ -170,6 +218,21 @@ def junit_xml_result(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
         imports=[
             test_sequencer_pb2.Import(
                 id="tradefed",
+                src="results_dir",
+            ),
+        ],
+    )
+
+
+def junit_xml_result_ets_close(
+    ns: argparse.Namespace,
+) -> test_sequencer_pb2.AgentConfig:
+    return test_sequencer_pb2.AgentConfig(
+        id="junit_xml_ets_close",
+        junit_xml_result=junit_xml_result_pb2.JUnitXMLResult(),
+        imports=[
+            test_sequencer_pb2.Import(
+                id="ets_close",
                 src="results_dir",
             ),
         ],
