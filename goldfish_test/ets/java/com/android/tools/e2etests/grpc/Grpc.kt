@@ -15,6 +15,7 @@ const val TAG = "EmuGrpc"
  * @property stub the grpc stub.
  */
 object EmulatorController {
+  var asyncStub: EmulatorControllerGrpc.EmulatorControllerStub? = null
   var stub: EmulatorControllerGrpc.EmulatorControllerBlockingStub? = null
 
   init {
@@ -28,6 +29,11 @@ object EmulatorController {
         )
         .build()
     stub = EmulatorControllerGrpc.newBlockingStub(channel)
+    asyncStub = EmulatorControllerGrpc.newStub(channel)
+  }
+
+  fun asyncDefaultDeadline(): EmulatorControllerGrpc.EmulatorControllerStub {
+    return asyncStub!!.withDeadlineAfter(10, TimeUnit.SECONDS)
   }
 
   fun defaultDeadline(): EmulatorControllerGrpc.EmulatorControllerBlockingStub {

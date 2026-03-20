@@ -1,9 +1,11 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
 load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 
 filegroup(
     name = "pkg",
     testonly = 1,
-    srcs = glob(["*.config"]),
+    srcs = glob(["*.config"]) + [":ControlKeysTest.apk"],
     visibility = ["//ets:__pkg__"],
 )
 
@@ -28,4 +30,31 @@ kt_jvm_test(
         "@protobuf//:protobuf_java_util",
         "@tradefed//:tradefed_jars",
     ],
+)
+
+kt_android_library(
+    name = "control_keys_test_lib",
+    testonly = 1,
+    srcs = ["ControlKeysTest.kt"],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//deps/proto:aemu_java_proto",
+        "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
+        "//testlib/java/com/android/tools/testlib/emu:eventually",
+        "@maven//:androidx_test_core",
+        "@maven//:androidx_test_runner",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+android_binary(
+    name = "ControlKeysTest",
+    testonly = 1,
+    custom_package = "com.android.tools.e2etests.events",
+    manifest = "ControlKeysTestManifest.xml",
+    manifest_values = {
+        "minSdkVersion": "36",
+        "targetSdkVersion": "36",
+    },
+    deps = [":control_keys_test_lib"],
 )

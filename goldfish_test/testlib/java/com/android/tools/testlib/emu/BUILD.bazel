@@ -6,3 +6,8 @@ kt_jvm_library(
     name = "discovery",
     srcs = ["Discovery.kt"],
 )
+
+kt_jvm_library(
+    name = "eventually",
+    srcs = ["Eventually.kt"],
+)
