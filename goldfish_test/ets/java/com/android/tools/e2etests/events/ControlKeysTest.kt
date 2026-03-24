@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.android.emulator.control.InputEvent
 import com.android.emulator.control.KeyboardEvent
 import com.android.tools.e2etests.grpc.EmulatorController
+import com.android.tools.testlib.emu.Adb
 import com.android.tools.testlib.emu.eventually
 import com.google.protobuf.Empty
 import io.grpc.Status
@@ -20,7 +21,7 @@ val TAG = "ControlKeysTest"
 // TODO(kmagic): Add the volume key tests once they can be deflaked.
 class ControlKeysTest {
 
-  val instrumentation = InstrumentationRegistry.getInstrumentation()
+  val adb = Adb(InstrumentationRegistry.getInstrumentation().getUiAutomation())
 
   @Test
   fun powerButton() {
@@ -33,12 +34,12 @@ class ControlKeysTest {
 
   @Test
   fun screenshot() {
-    adbShell("rm -rf /storage/emulated/0/Pictures/Screenshots/*")
-    adbShell("input keyevent 120")
+    adb.shell("rm -rf /storage/emulated/0/Pictures/Screenshots/*")
+    adb.shell("input keyevent 120")
     Assert.assertTrue(
       eventually(10, 100) {
         var screenshotCreated = false
-        for (file in adbShell("ls /storage/emulated/0/Pictures/Screenshots/")) {
+        for (file in adb.shell("ls /storage/emulated/0/Pictures/Screenshots/")) {
           if (file.contains("Screenshot_")) {
             screenshotCreated = true
           }
@@ -48,16 +49,8 @@ class ControlKeysTest {
     )
   }
 
-  fun adbShell(command: String): List<String> {
-    val fd = instrumentation.getUiAutomation().executeShellCommand(command)
-    return FileInputStream(fd.getFileDescriptor()).bufferedReader(charset = Charsets.UTF_8).use {
-      reader ->
-      reader.readLines()
-    }
-  }
-
   fun getWakefulnessLine(): String {
-    for (line in adbShell("dumpsys power")) {
+    for (line in adb.shell("dumpsys power")) {
       if (line.contains("mWakefulness=")) {
         return line.trim()
       }
