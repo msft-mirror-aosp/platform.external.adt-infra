@@ -17,6 +17,7 @@ package com.android.tools.testlib.emu
 
 import java.io.File
 import java.io.FileNotFoundException
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.collections.ArrayList
@@ -41,7 +42,11 @@ class Discovery(val discoveryPath: Path) {
 fun runningEmulators(env: Map<String, String> = System.getenv()): List<Discovery> {
   return buildList {
     discoveryDirectories(env).forEach {
-      it.forEachDirectoryEntry(glob = "pid_*.ini") { entry -> add(Discovery(entry)) }
+      try {
+        it.forEachDirectoryEntry(glob = "pid_*.ini") { entry -> add(Discovery(entry)) }
+      } catch (e: NoSuchFileException) {
+        // If the directory does not exist, then there are no emulators.
+      }
     }
   }
 }
