@@ -1233,6 +1233,7 @@ EXPECTED_RELEASE_CONTENTS = {
         "emulator/msvcp140.dll",
         "emulator/netsimd.exe",
         "emulator/netsim.exe",
+        "emulator/netsimdx.exe",
         "emulator/netsim-ui/",
         "emulator/netsim-ui/assets/",
         "emulator/netsim-ui/assets/grid-background.svg",

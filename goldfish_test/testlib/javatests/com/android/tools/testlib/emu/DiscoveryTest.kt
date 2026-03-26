@@ -42,7 +42,9 @@ class DiscoveryTest {
   @Test
   fun testFindEmulator() {
     createEmulatorIn(Paths.get(tempFolder.getRoot().toString()), "5678")
-    val env = mapOf("ANDROID_EMULATOR_HOME" to tempFolder.getRoot().toString())
+    val missingPath = Paths.get(tempFolder.getRoot().toString(), "missing")
+    val env = mapOf("ANDROID_EMULATOR_HOME" to tempFolder.getRoot().toString(),
+                    "ANDROID_AVD_HOME" to missingPath.toString())
     val emu = findEmulator("emulator-5678", env)
     assertNotNull(emu)
     if (emu != null) {

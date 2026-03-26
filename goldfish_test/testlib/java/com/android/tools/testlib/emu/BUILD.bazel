@@ -1,8 +1,20 @@
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
 load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 package(default_visibility = ["//visibility:public"])
 
+kt_android_library(
+    name = "adb",
+    testonly = 1,
+    srcs = ["Adb.kt"],
+)
+
 kt_jvm_library(
     name = "discovery",
     srcs = ["Discovery.kt"],
+)
+
+kt_jvm_library(
+    name = "eventually",
+    srcs = ["Eventually.kt"],
 )
