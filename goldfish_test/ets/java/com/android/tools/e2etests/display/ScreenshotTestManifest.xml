@@ -14,4 +14,8 @@
          android:targetPackage="com.android.tools.e2etests.display"
          android:label="Screenshot Test">
     </instrumentation>
+    <queries>
+        <package android:name="com.google.AnimateBox" />
+    </queries>
+
 </manifest>

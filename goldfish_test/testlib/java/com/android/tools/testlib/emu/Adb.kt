@@ -1,7 +1,6 @@
 package com.android.tools.testlib.emu
 
 import android.app.UiAutomation
-import android.os.ParcelFileDescriptor
 import java.io.FileInputStream
 
 /**
