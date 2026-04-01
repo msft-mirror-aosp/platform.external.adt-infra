@@ -164,6 +164,19 @@ def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
+def ets_external(ns: argparse.Namespace, serial_number: str, grpc_port: str) -> test_sequencer_pb2.AgentConfig:
+  ac = ets(ns)
+  imps = [i for i in ac.imports if i.id != "goldfish"]
+  del ac.imports[:]
+  ac.imports.extend(imps)
+  ac.tradefed.serial_number.append(serial_number)
+  ac.tradefed.args.append(
+      "--test_arg=com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:="
+      + grpc_port
+  )
+  return ac
+
+
 def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return test_sequencer_pb2.AgentConfig(
         goldfish=goldfish_pb2.GoldFish(
