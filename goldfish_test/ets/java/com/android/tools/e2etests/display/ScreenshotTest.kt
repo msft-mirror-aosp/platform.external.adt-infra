@@ -1,14 +1,24 @@
 package com.android.tools.e2etests.display
 
+import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.util.Log
+import android.view.KeyEvent
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.platform.io.PlatformTestStorage
 import androidx.test.platform.io.PlatformTestStorageRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import com.android.emulator.control.Image
 import com.android.emulator.control.ImageFormat
 import com.android.emulator.control.ParameterValue
 import com.android.emulator.control.PhysicalModelValue
 import com.android.tools.e2etests.grpc.EmulatorController
+import com.android.tools.testlib.emu.Adb
+import com.android.tools.testlib.emu.eventually
 import com.google.protobuf.ByteString
 import com.google.testing.junit.testparameterinjector.TestParameter
 import com.google.testing.junit.testparameterinjector.TestParameterInjector
@@ -16,9 +26,14 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 
+val TAG = "ScreenshotTest"
+
 @RunWith(TestParameterInjector::class)
 class ScreenshotTest {
 
+  val inst = InstrumentationRegistry.getInstrumentation()
+  val adb = Adb(inst.getUiAutomation())
+  val context = inst.getTargetContext()
   val testStorage: PlatformTestStorage = PlatformTestStorageRegistry.getInstance()
 
   enum class TestCase(val format: ImageFormat.ImgFormat, val rotation: Float) {
@@ -48,7 +63,79 @@ class ScreenshotTest {
     )
   }
 
-  fun saveScreenshot(name: String, image: Image) {
+  enum class FormatsEqualCase(val width: Int, val height: Int) {
+    CASE_0_0(0, 0),
+    CASE_320_200(320, 200),
+    CASE_1920_1080(1920, 1080),
+  }
+
+  @Test
+  fun screenshotAllFormatsAreEqual() {
+    val packageName = "com.google.AnimateBox"
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    Log.i(TAG, "Starting animation app")
+
+    // Stop the animation app if it is already running so we start from a clean state.
+    adb.shell("am force-stop $packageName")
+
+    device.pressHome()
+    val launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName)
+    launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    context.startActivity(launchIntent)
+
+    device.wait(Until.hasObject(By.pkg(packageName).depth(0)), 3000)
+    // The animation app can sometimes take a while to start.
+    Assert.assertTrue(eventually(300, 100) { logcatContainsLine("--STARTED--") })
+    device.pressKeyCode(KeyEvent.KEYCODE_P)
+    Assert.assertTrue(eventually(30, 100) { logcatContainsLine("Pausing animation") })
+
+    // The above work can take some time, so only do it once. Ideally all these cases should be
+    // run even if the first fails, but that seems to involve pulling in more third party
+    // libraries.
+    Log.i(TAG, "Running test")
+    for (testCase in FormatsEqualCase.entries) {
+      var lastPixels: IntArray? = null
+      for (format in
+        listOf(
+          ImageFormat.ImgFormat.RGBA8888,
+          ImageFormat.ImgFormat.RGB888,
+          ImageFormat.ImgFormat.PNG,
+        )) {
+        val imageFormat =
+          ImageFormat.newBuilder()
+            .setFormat(format)
+            .setWidth(testCase.width)
+            .setHeight(testCase.height)
+            .build()
+        val resp = EmulatorController.defaultDeadline().getScreenshot(imageFormat)
+        val bmp =
+          saveScreenshot(
+            "screenshotAllFormatsAreEqual_${testCase.toString()}_${format.toString()}.png",
+            resp,
+          )
+        if (lastPixels == null) {
+          lastPixels = IntArray(bmp.width * bmp.height)
+          bmp.getPixels(lastPixels, 0, bmp.width, 0, 0, bmp.width, bmp.height)
+          // Make sure the pixels are not all the same (i.e. the screen is not blank). The other
+          // screenshots must match this one, so there's no need to do this check again.
+          Assert.assertFalse(pixelsAreTheSame(lastPixels))
+        } else {
+          val currentPixels = IntArray(bmp.width * bmp.height)
+          bmp.getPixels(currentPixels, 0, bmp.width, 0, 0, bmp.width, bmp.height)
+          Assert.assertArrayEquals(
+            "${testCase.toString()}_${format.toString()}",
+            lastPixels,
+            currentPixels,
+          )
+        }
+      }
+    }
+  }
+
+  fun saveScreenshot(name: String, image: Image): Bitmap {
+    if (image.getFormat().getFormat() == ImageFormat.ImgFormat.PNG) {
+      return savePngScreenshot(name, image)
+    }
     val bitmap =
       Bitmap.createBitmap(
         toColorArray(image),
@@ -57,7 +144,26 @@ class ScreenshotTest {
         Bitmap.Config.ARGB_8888,
       )
     testStorage.openOutputFile(name).use { bitmap.compress(Bitmap.CompressFormat.PNG, 90, it) }
+    return bitmap
   }
+
+  fun savePngScreenshot(name: String, image: Image): Bitmap {
+    testStorage.openOutputFile(name).use { it.write(image.getImage().toByteArray()) }
+    return BitmapFactory.decodeByteArray(image.getImage().toByteArray(), 0, image.getImage().size())
+  }
+
+  fun logcatContainsLine(want: String): Boolean {
+    for (line in adb.logcat(" aemu *:")) {
+      if (line.contains(want)) {
+        return true
+      }
+    }
+    return false
+  }
+}
+
+fun pixelsAreTheSame(pixels: IntArray): Boolean {
+  return pixels.isEmpty() || pixels.all { it == pixels[0] }
 }
 
 fun toColorArray(image: Image): IntArray {
@@ -82,12 +188,14 @@ fun imageFormatBPP(imageFormat: ImageFormat): Int {
 fun pixelToColor(raw: ByteString, pixel: Int, bpp: Int): Int {
   var alpha = 255
   if (bpp == 4) {
-    alpha = raw.byteAt(pixel * bpp + 3).toInt()
+    alpha = raw.byteAt(pixel * bpp + 3).toInt() and 0xFF
   }
+  // NOTE: Byte values are signed in Java, so promoting to an int will cause negative values to be
+  // out of range. Color.argb() does not handle this, so we need to do it.
   return Color.argb(
     alpha,
-    raw.byteAt(pixel * bpp).toInt(),
-    raw.byteAt(pixel * bpp + 1).toInt(),
-    raw.byteAt(pixel * bpp + 2).toInt(),
+    raw.byteAt(pixel * bpp).toInt() and 0xFF,
+    raw.byteAt(pixel * bpp + 1).toInt() and 0xFF,
+    raw.byteAt(pixel * bpp + 2).toInt() and 0xFF,
   )
 }
