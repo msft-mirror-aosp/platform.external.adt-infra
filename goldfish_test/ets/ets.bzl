@@ -17,7 +17,7 @@ def run_ets(name):
             "--tradefed_zip",
             "$(rlocationpath :android_ets_zip)",
             "--emulator_access_json",
-            "$(rlocationpath @goldfish//emulator/grpc/security:unsecure-emulator-access)",
+            "$(rlocationpath @goldfish//emulator/libs/grpc_security:unsecure-emulator-access)",
         ] + select({
             "@platforms//os:linux": [
                 "--abi",
@@ -43,7 +43,7 @@ def run_ets(name):
         data = [
             ":android_ets_zip",
             "@goldfish//emulator:release",
-            "@goldfish//emulator/grpc/security:unsecure-emulator-access",
+            "@goldfish//emulator/libs/grpc_security:unsecure-emulator-access",
             "@hellovk//:BUILD.bazel",
             "@hellovk//:all_files",
         ] + select({

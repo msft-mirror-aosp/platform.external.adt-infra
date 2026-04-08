@@ -18,7 +18,6 @@
                 "avd.ini.encoding": "UTF-8",
                 "disk.dataPartition.size": "6442450944",
                 "hw.accelerometer": "no",
-                "hw.arc": "false",
                 "hw.audioInput": "yes",
                 "hw.battery": "yes",
                 "hw.camera.back": "None",
