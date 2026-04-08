@@ -10,3 +10,14 @@ kt_jvm_test(
         "@bazel_tools//tools/jdk:TestRunner",
     ],
 )
+
+kt_jvm_test(
+    name = "eventually_test",
+    size = "small",
+    srcs = ["EventuallyTest.kt"],
+    test_class = "com.android.tools.testlib.emu.EventuallyTest",
+    deps = [
+        "//testlib/java/com/android/tools/testlib/emu:eventually",
+        "@bazel_tools//tools/jdk:TestRunner",
+    ],
+)

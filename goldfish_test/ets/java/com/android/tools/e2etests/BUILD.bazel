@@ -41,6 +41,7 @@ java_binary(
         ":display_name_test",
         "//ets/java/com/android/tools/e2etests/display:adb_screen_cap_test",
         "//ets/java/com/android/tools/e2etests/events:close_emulator_test",
+        "//ets/java/com/android/tools/e2etests/files:adb_push_pull_test",
         "//ets/java/com/android/tools/e2etests/netsim:netsim_daemon_test",
         "//ets/java/com/android/tools/e2etests/netsim:netsim_single_device_test",
         "//ets/java/com/android/tools/e2etests/vulkan:vulkan_app_test",
