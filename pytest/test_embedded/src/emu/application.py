@@ -389,7 +389,7 @@ class VulkanCapsViewerApplication(Application):
     """Represents Vulkan Caps Viewer App."""
 
     def __init__(self, avd: BaseEmulator, local_run: bool = False):
-        app_activity = "de.saschawillems.vulkancapsviewer/org.qtproject.qt5.android.bindings.QtActivity"
+        app_activity = "de.saschawillems.vulkancapsviewer/org.qtproject.qt.android.bindings.QtActivity"
         apk_path = APP_VULKANCAPSVIEWER_APK if local_run else PREBUILT_VULKANCAPSVIEWER_APK
         super().__init__(
             avd,
