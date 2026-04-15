@@ -47,7 +47,9 @@ class MainActivity : Activity() {
         Log.i(TAG, JsonLogger.toJson("KeyboardEvent", key))
 
         if (keyCode == KeyEvent.KEYCODE_P) {
-            mGLView!!.mPaused = !mGLView!!.mPaused
+            mGLView!!.mPaused = true
+        } else if (keyCode == KeyEvent.KEYCODE_R) {
+            mGLView!!.mPaused = false
         }
         return true
     }
