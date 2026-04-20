@@ -18,6 +18,7 @@ import com.android.emulator.control.ParameterValue
 import com.android.emulator.control.PhysicalModelValue
 import com.android.tools.e2etests.grpc.EmulatorController
 import com.android.tools.testlib.emu.Adb
+import com.android.tools.testlib.emu.LogcatWatcher
 import com.android.tools.testlib.emu.eventually
 import com.google.protobuf.ByteString
 import com.google.testing.junit.testparameterinjector.TestParameter
@@ -27,6 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 val TAG = "ScreenshotTest"
+val FILTER = "aemu:I"
 
 @RunWith(TestParameterInjector::class)
 class ScreenshotTest {
@@ -78,6 +80,8 @@ class ScreenshotTest {
     // Stop the animation app if it is already running so we start from a clean state.
     adb.shell("am force-stop $packageName")
 
+    val watcher = LogcatWatcher(adb, FILTER)
+
     device.pressHome()
     val launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName)
     launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -85,9 +89,9 @@ class ScreenshotTest {
 
     device.wait(Until.hasObject(By.pkg(packageName).depth(0)), 3000)
     // The animation app can sometimes take a while to start.
-    Assert.assertTrue(eventually(300, 100) { logcatContainsLine("--STARTED--") })
+    Assert.assertTrue(eventually(300, 100) { watcher.containsNewLine("--STARTED--") })
     device.pressKeyCode(KeyEvent.KEYCODE_P)
-    Assert.assertTrue(eventually(30, 100) { logcatContainsLine("Pausing animation") })
+    Assert.assertTrue(eventually(30, 100) { watcher.containsNewLine("Pausing animation") })
 
     // The above work can take some time, so only do it once. Ideally all these cases should be
     // run even if the first fails, but that seems to involve pulling in more third party
@@ -150,15 +154,6 @@ class ScreenshotTest {
   fun savePngScreenshot(name: String, image: Image): Bitmap {
     testStorage.openOutputFile(name).use { it.write(image.getImage().toByteArray()) }
     return BitmapFactory.decodeByteArray(image.getImage().toByteArray(), 0, image.getImage().size())
-  }
-
-  fun logcatContainsLine(want: String): Boolean {
-    for (line in adb.logcat(" aemu *:")) {
-      if (line.contains(want)) {
-        return true
-      }
-    }
-    return false
   }
 }
 

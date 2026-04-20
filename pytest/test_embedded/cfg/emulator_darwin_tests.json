@@ -13,21 +13,11 @@
     ],
     "status": "enabled"
   },
-  "accessibility_test_suite_vulkan_swapchain_api_36": {
+  "accessibility_test_suite_api_36": {
     "avd_configs": [
       {
         "api": "36.1",
-        "launch_flags": [
-          "-gpu",
-          "host",
-          "-no-snapshot",
-          "-feature",
-          "Vulkan",
-          "-feature",
-          "VulkanNativeSwapchain",
-          "-feature",
-          "GuestAngle"
-        ],
+        "launch_flags": [],
         "tag.id": "google_apis"
       }
     ],
@@ -37,23 +27,70 @@
     ],
     "status": "enabled"
   },
-  "accessibility_test_suite_api_36": {
+  "accessibility_test_suite_vulkan_swapchain_api_36": {
+    "avd_configs": [
+      {
+        "api": "36.1",
+        "launch_flags": [
+          "-no-snapshot",
+          "-feature",
+          "GuestAngle",
+          "-feature",
+          "VulkanNativeSwapchain"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Validation of accessibility features using Vulkan Native Swapchain",
+    "pytest_flags": [
+      "-k test_accessibility_display_inversion"
+    ],
+    "status": "enabled"
+  },
+  "virtual_environment_test_suite_api_36": {
     "avd_configs": [
       {
         "api": "36.1",
         "launch_flags": [
           "-gpu",
-          "host",
-          "-no-snapshot",
-          "-feature",
-          "Vulkan"
+          "software",
+          "-camera-back",
+          "environment",
+          "-camera-front",
+          "none"
         ],
         "tag.id": "google_apis"
       }
     ],
-    "description": "Validation of accessibility features",
+    "description": "Validation of virtual environment features",
     "pytest_flags": [
-      "-k test_accessibility_display_inversion"
+      "-k test_virtual_environment"
+    ],
+    "status": "enabled"
+  },
+  "virtual_environment_test_suite_vulkan_swapchain_api_36": {
+    "avd_configs": [
+      {
+        "api": "36.1",
+        "launch_flags": [
+          "-no-snapshot",
+          "-gpu",
+          "software",
+          "-camera-back",
+          "environment",
+          "-camera-front",
+          "none",
+          "-feature",
+          "GuestAngle",
+          "-feature",
+          "VulkanNativeSwapchain"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Validation of virtual environment features",
+    "pytest_flags": [
+      "-k test_virtual_environment"
     ],
     "status": "enabled"
   },
