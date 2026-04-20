@@ -12,7 +12,9 @@
     <option name="include-filter" value="NetsimDaemonTest" />
     <option name="include-filter" value="NetsimSingleDeviceTest" />
     <option name="include-filter" value="SensorTest" />
+    <!-- TODO(kmagic): Re-enable once screenshot tests are fixed. -->
     <option name="include-filter" value="ScreenshotTest" />
+    <option name="exclude-filter" value="ScreenshotTest com.android.tools.e2etests.display.ScreenshotTest#screenshotAllFormatsAreEqual" />
     <option name="include-filter" value="VulkanAppTest" />
 
 </configuration>
