@@ -3,6 +3,7 @@
 import os
 import pathlib
 import subprocess
+import sys
 
 
 def run(test_seq_path: str, sequence: str, extra_path: list[str]):
@@ -22,6 +23,14 @@ def run(test_seq_path: str, sequence: str, extra_path: list[str]):
     env["HOME"] = str(home)
     env["XDG_RUNTIME_DIR"] = str(xdg_runtime)
     env["PATH"] = os.pathsep.join(extra_path + [env["PATH"]])
+    # Macs have TMPDIR on a different filesystem, preventing tradefed from
+    # hardlinking files. Redefine TMPDIR to a subdirectory of TEST_TMPDIR
+    # to avoid this.
+    if sys.platform.lower() == "darwin":
+        darwin_tmp = tmp_dir.joinpath("tmp")
+        darwin_tmp.mkdir()
+        env["TMPDIR"] = str(darwin_tmp)
+        env["JAVA_TOOL_OPTIONS"] = "-Djava.io.tmpdir=" + str(darwin_tmp)
 
     subprocess.run(
         args=[
