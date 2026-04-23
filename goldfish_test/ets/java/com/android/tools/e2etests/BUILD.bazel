@@ -1,20 +1,4 @@
 load("@rules_java//java:defs.bzl", "java_binary")
-load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
-
-filegroup(
-    name = "module_configs",
-    srcs = glob(["*.config"]),
-    visibility = ["//ets:__pkg__"],
-)
-
-kt_jvm_test(
-    name = "display_name_test",
-    srcs = ["DisplayNameTest.kt"],
-    deps = [
-        "//testlib/java/com/android/tools/testlib/emu:discovery",
-        "@tradefed//:tradefed_jars",
-    ],
-)
 
 # These rules are not meant to be run directly, but as a means to get a single
 # jar file containing all of e2e test dependencies. There are conflicts with
@@ -38,7 +22,7 @@ java_binary(
     use_launcher = False,
     visibility = ["//ets:__pkg__"],
     runtime_deps = [
-        ":display_name_test",
+        "//ets/java/com/android/tools/e2etests/discovery:display_name_test",
         "//ets/java/com/android/tools/e2etests/display:adb_screen_cap_test",
         "//ets/java/com/android/tools/e2etests/events:close_emulator_test",
         "//ets/java/com/android/tools/e2etests/files:adb_push_pull_test",

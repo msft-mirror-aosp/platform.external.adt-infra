@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.e2etests
+package com.android.tools.e2etests.discovery
 
 import com.android.tools.testlib.emu.findEmulator
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner
@@ -28,7 +28,6 @@ class DisplayNameTest : BaseHostJUnit4Test() {
   @Test
   fun testCheckDiscoveryNameMatchesConfigIni() {
     Assert.assertNotNull(getDevice())
-    System.out.println(getDevice().getSerialNumber())
     val discovery = findEmulator(getDevice().getSerialNumber())
     Assert.assertNotNull(discovery)
     if (discovery != null) {
@@ -43,7 +42,6 @@ class DisplayNameTest : BaseHostJUnit4Test() {
   @Test
   fun testCheckDisplayNameContainsNonAscii() {
     Assert.assertNotNull(getDevice())
-    System.out.println(getDevice().getSerialNumber())
     val discovery = findEmulator(getDevice().getSerialNumber())
     Assert.assertNotNull(discovery)
     if (discovery != null) {
