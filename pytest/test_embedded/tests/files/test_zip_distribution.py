@@ -34,7 +34,6 @@ EXPECTED_RELEASE_CONTENTS = {
         "_codesign/entitlements.xml",
         "_codesign/filelist",
         "emulator/",
-        "emulator/android-info.txt",
         "emulator/bin64/",
         "emulator/bin64/e2fsck",
         "emulator/bin64/fsck.ext4",
@@ -464,7 +463,6 @@ EXPECTED_RELEASE_CONTENTS = {
         "_codesign/entitlements.xml",
         "_codesign/filelist",
         "emulator/",
-        "emulator/android-info.txt",
         "emulator/bin64/",
         "emulator/bin64/e2fsck",
         "emulator/bin64/fsck.ext4",
@@ -889,7 +887,6 @@ EXPECTED_RELEASE_CONTENTS = {
     ],
     "windows_x86_64": [
         "emulator/",
-        "emulator/android-info.txt",
         "emulator/bin64/",
         "emulator/bin64/cygblkid-1.dll",
         "emulator/bin64/cygcom_err-2.dll",
@@ -1350,7 +1347,6 @@ EXPECTED_RELEASE_CONTENTS = {
     ],
     "linux_x86_64": [
         "emulator/",
-        "emulator/android-info.txt",
         "emulator/bin64/",
         "emulator/bin64/e2fsck",
         "emulator/bin64/fsck.ext4",
