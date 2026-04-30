@@ -87,11 +87,20 @@ class ScreenshotTest {
     launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
     context.startActivity(launchIntent)
 
-    device.wait(Until.hasObject(By.pkg(packageName).depth(0)), 3000)
+    Assert.assertNotNull(device.wait(Until.hasObject(By.pkg(packageName).depth(0)), 5000))
     // The animation app can sometimes take a while to start.
     Assert.assertTrue(eventually(300, 100) { watcher.containsNewLine("--STARTED--") })
-    device.pressKeyCode(KeyEvent.KEYCODE_P)
-    Assert.assertTrue(eventually(30, 100) { watcher.containsNewLine("Pausing animation") })
+
+    // Keycodes can sometimes get lost so try to pause multiple times.
+    Assert.assertTrue(
+      eventually(5, 500) {
+        device.pressKeyCode(KeyEvent.KEYCODE_P)
+        watcher.containsNewLine("Pausing animation")
+      }
+    )
+
+    // The pause action can trigger the clock/status to be shown.
+    Thread.sleep(500)
 
     // The above work can take some time, so only do it once. Ideally all these cases should be
     // run even if the first fails, but that seems to involve pulling in more third party

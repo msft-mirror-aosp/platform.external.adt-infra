@@ -3,6 +3,7 @@
 import argparse
 import os
 
+from test_seq.proto import adb_pb2
 from test_seq.proto import android_home_pb2
 from test_seq.proto import avd_pb2
 from test_seq.proto import extract_pb2
@@ -10,6 +11,24 @@ from test_seq.proto import goldfish_pb2
 from test_seq.proto import junit_xml_result_pb2
 from test_seq.proto import test_sequencer_pb2
 from test_seq.proto import tradefed_pb2
+
+
+def adb(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConfig:
+    return test_sequencer_pb2.AgentConfig(
+        adb=adb_pb2.ADB(
+            args=args,
+        ),
+        imports = [
+            test_sequencer_pb2.Import(
+                id="android_home",
+                src="android_home",
+            ),
+            test_sequencer_pb2.Import(
+                id="goldfish",
+                src="serial_number",
+            ),
+        ]
+    )
 
 
 def android_home(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
@@ -110,6 +129,10 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             ns.ets_plan,
             "--abi",
             ns.abi,
+            "--retry-strategy",
+            "RETRY_ANY_FAILURE",
+            "--max-testcase-run-count",
+            "3",
             "--module-arg",
             "VulkanAppTest:set-option:apk_path:"
             + os.path.join(ns.hellovk_extract_dir, "hellovk", "hellovk.apk"),
@@ -165,16 +188,16 @@ def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
 
 
 def ets_external(ns: argparse.Namespace, serial_number: str, grpc_port: str) -> test_sequencer_pb2.AgentConfig:
-  ac = ets(ns)
-  imps = [i for i in ac.imports if i.id != "goldfish"]
-  del ac.imports[:]
-  ac.imports.extend(imps)
-  ac.tradefed.serial_number.append(serial_number)
-  ac.tradefed.args.append(
-      "--test_arg=com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:="
-      + grpc_port
-  )
-  return ac
+    ac = ets(ns)
+    imps = [i for i in ac.imports if i.id != "goldfish"]
+    del ac.imports[:]
+    ac.imports.extend(imps)
+    ac.tradefed.serial_number.append(serial_number)
+    ac.tradefed.args.append(
+        "--test_arg=com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:="
+        + grpc_port
+    )
+    return ac
 
 
 def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
