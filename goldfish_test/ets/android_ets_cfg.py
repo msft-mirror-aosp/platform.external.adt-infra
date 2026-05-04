@@ -16,6 +16,8 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         agent_common.junit_xml_result_ets_close(ns),
         agent_common.junit_xml_result(ns),
         agent_common.goldfish_grpc(ns),
+        # Prevent the play store from updating to avoid a heavy load on the emulator.
+        agent_common.adb(ns, ["shell", "pm" ,"disable-user", "com.android.vending"]),
         agent_common.ets(ns),
         agent_common.ets_close(ns),
     ]

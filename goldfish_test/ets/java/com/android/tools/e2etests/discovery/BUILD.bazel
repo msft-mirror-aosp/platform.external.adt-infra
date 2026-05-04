@@ -1,0 +1,17 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+filegroup(
+    name = "pkg",
+    srcs = ["DisplayNameTest.config"],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_jvm_test(
+    name = "display_name_test",
+    srcs = ["DisplayNameTest.kt"],
+    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    deps = [
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@tradefed//:tradefed_jars",
+    ],
+)
