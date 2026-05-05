@@ -91,6 +91,10 @@ class ScreenshotTest {
     // The animation app can sometimes take a while to start.
     Assert.assertTrue(eventually(300, 100) { watcher.containsNewLine("--STARTED--") })
 
+    // There may be a dialog indicating the app is full screen. Click it.
+    val fullScreenDialog = device.wait(Until.findObject(By.text("Got it")), 500)
+    fullScreenDialog?.click()
+
     // Keycodes can sometimes get lost so try to pause multiple times.
     Assert.assertTrue(
       eventually(5, 500) {

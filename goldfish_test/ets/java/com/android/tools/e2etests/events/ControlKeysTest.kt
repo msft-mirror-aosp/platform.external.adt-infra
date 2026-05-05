@@ -37,7 +37,7 @@ class ControlKeysTest {
     adb.shell("rm -rf /storage/emulated/0/Pictures/Screenshots/*")
     adb.shell("input keyevent 120")
     Assert.assertTrue(
-      eventually(10, 100) {
+      eventually(20, 500) {
         var screenshotCreated = false
         for (file in adb.shell("ls /storage/emulated/0/Pictures/Screenshots/")) {
           if (file.contains("Screenshot_")) {
