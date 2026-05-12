@@ -5,7 +5,7 @@
     <option name="include-filter" value="AdbPushPullTest" />
     <option name="include-filter" value="AdbScreenCapTest" />
     <option name="include-filter" value="BootTest" />
-    <!-- APK installation error -->
+    <!-- Not yet implemented on emu-next -->
     <option name="exclude-filter" value="CallTest" />
     <option name="include-filter" value="ControlKeysTest" />
     <!-- Not yet passing on emu-next -->
