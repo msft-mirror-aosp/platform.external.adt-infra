@@ -1,177 +1,95 @@
 # Emulator Test Suite
 
-The Emulator Test Suite is a set of end to end tests for the goldfish emulator.
+The Emulator Test Suite is a set of end to end tests for the goldfish emulator
+that are run via
+[Tradefed](https://g3doc.corp.google.com/company/teams/tradefed/index.md?cl=head).
+
+## TL;DR
+
+The easiest way to run ETS is via bazel:
+
+```sh
+bazel test --config=ants --config=sponge @goldfish_test//ets:presubmit
+
+...
+
+INFO: Build completed successfully, 9424 total actions
+@goldfish_test//ets:presubmit                                            PASSED in 140.8s
+
+Executed 1 out of 1 test: 1 test passes.
+There were tests whose specified size is too big. Use the --test_verbose_timeout_warnings command line option to see which ones these are.
+INFO: Streaming build results to: https://fusion2.corp.google.com/invocations/e518676f-33f1-4db4-a54e-1a8a9f54f464
+```
+
+The link on the final line will take you to more detailed results/logs.
 
 ## Overview
 
-The tests are triggered by bazel test rules, currently you can run all of the
-tests via:
+### Why Tradefed?
 
-```sh
-bazel test @goldfish_test//ets:ets
-```
+[Tradefed](https://g3doc.corp.google.com/company/teams/tradefed/index.md?cl=head)
+is the test harness for all of xTS as has a number of features our pytest
+implementation was lacking (handling of lost devices, cancelling a run early and
+getting partial results) as well a large number of existing libraries (ADB
+interactions, loading APKs, etc).
 
-Or just the presubmit tests with:
+It is very dynamic in that it discovers module config files upon startup so new
+tests can be added without needing to recompile tradefed itself. Additionally
+all of our tooling already works with running tradefed and interpreting the
+results.
 
-```sh
-bazel test @goldfish_test//ets:presubmit
-```
+### How is the Emulator Test Suite Built?
 
-The actual test is a thin python wrapper that uses the
+Like other xTS variants, the Emulator Test Suite is packaged a zip file. For our
+use-case, we start with a prebuilt version of tradefed and repackage that zip
+with our specific test files. The contents includes:
+
+-   Tradefed prebuilt files (jars, shell scripts, etc)
+-   Host side test jars
+-   Module config files
+-   On device test APK files
+-   Support APK files (AnimateBox)
+
+### How does bazel run the tests?
+
+To aid in the running the large sequence of events that need to take place,
+bazel uses
 [test sequencer](https://g3doc.corp.google.com/wireless/android/devtools/emulator/tradefed_analysis/test_loop_v2/test_seq/docs/QuickStart.md?cl=head)
-toolset to do the following:
+to do the heavy lifting. The bazel rule itself has the following dependencies:
 
-- Unzip needed packages (emulator, ETS, etc)
-- Create an AVD
-- Boot the emulator
-- Run ETS
-- Upload results
+-   Built on the fly
+    -   Emulator
+    -   Emulator Test Suite
+-   Downloaded from GCS
+    -   System Image
+    -   Build/Platform tools
+    -   Test Sequencer
 
-## Test Sequencer Configs
+The test itself is python code which accepts flags from bazel of the paths to
+each of the above components. This is used to construct the test sequencer
+config file, as well as run test sequencer.
 
-The configurations are a flexible way to define the sequence of steps needed for
-running a test. This can include steps like download build artifacts, unzipping
-them, buildind AVDs, booting emulators, running tradefed, doing reties, etc.
+The primary test sequencer config will do the following:
 
-For bazel based ETS tests, this will typically include unzipping the emulator
-and ETS, creating the AVD, booting the emulator and running ETS. One config
-will be tied to one bazel rule.
+-   Extract any dependencies which are within zip files
+-   Create the ANDROID_HOME directory
+-   Create an avd
+-   Boot the emulator
+-   Run the emulator test suite
+-   Translate the output result file into one bazel can consume.
 
-The configs are in the progress of migrating to a py-proto based system to
-enable re-use. If you need to adjust an AVD or goldfish flags, contact kmagic@.
+If the test was run with `--config=sponge --config=ants` the result and logs
+will be uploaded to sponge/test fusion and a link to these will be printed.
+Without those flags the files seem to disappear in the bazel ether.
 
-## ETS Tests
+### Presubmit vs Postsubmit
 
-At the lowest level the tests are Junit test classes that run on the device.
-They must be written in kotlin and will have access to the emulators GRPC
-interface for device interaction. The tests will by their nature be running on
-an already booted device. Below is a snippet from:
-[BootTest.kt](java/com/android/tools/e2etests/boot/BootTest.kt)
+The tests currently run in both presubmit and postsubmit. While there are two
+separate bazel targets, `@goldfish_test//ets:presubmit` and
+`@goldfish_test//ets:postsubmit` they currently resolve to the same tests. At
+some time in the future the post-submit target will likely contain more, longer
+running tests.
 
-```kotlin
-package com.android.tools.e2etests.boot
+## Futher Information
 
-import com.android.tools.e2etests.grpc.EmulatorController
-import com.google.protobuf.Empty
-import org.junit.Assert
-import org.junit.Test
-import java.util.concurrent.TimeUnit
-
-class BootTest {
-    @Test
-    fun statusIsBooted() {
-      val resp = EmulatorController.defaultDeadline().getStatus(Empty.getDefaultInstance())
-      Assert.assertTrue(resp.getBooted())
-    }
-}
-```
-
-Like normal junit tests, annotate the function with `@Test` and it will run as a
-test. The EmulatorController class can be used to get a cached grpc stub. Always
-use a deadline for any grpc method to ensure the test will not hang.
-
-These classes are then grouped into modules, which build as a single APK.
-Modules must contain all homogenous tests, all the tests should be able to run
-and pass together. If two tests are related, but one only passes on a phone AVD
-and the other only passes on a TV AVD, put them in separate modules.
-
-Each module will need two support files, the android xml manifest and a tradefed
-config. [BootTestManifest.xml](java/com/android/tools/e2etests/boot/BootTestManifest.xml)
-can be relatively simple as seen below. You must enable the internet permission
-to use GRPC.
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.tools.e2etests.boot" >
-    <application android:usesCleartextTraffic="true">>
-       <uses-library android:name="android.test.runner"/>
-    </application>
-    <uses-permission android:name="android.permission.INTERNET" />
-    <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
-         android:targetPackage="com.android.tools.e2etests.boot"
-         android:label="Boot test">
-    </instrumentation>
-</manifest>
-```
-
-The tradefed config is responsible for installing the apk and triggering the
-test run. Always set cleanup-apks to true to try to keep things clean between
-modules.
-[BootTest.config](java/com/android/tools/e2etests/boot/BootTest.config)
-
-```xml
-<configuration description="Tests related to the emulator boot">
-    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-        <option name="cleanup-apks" value="true" />
-        <option name="test-file-name" value="BootTest.apk" />
-    </target_preparer>
-    <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
-        <option name="package" value="com.android.tools.e2etests.boot" />
-    </test>
-</configuration>
-```
-The [BUILD.bazel](java/com/android/tools/e2etests/boot/BUILD.bazel) file lives
-in the same directory and builds the apk as well as the package for inclusion in
-the android-ets.zip file.
-
-```BUILD
-load("@rules_android//rules:rules.bzl", "android_binary")
-load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
-
-filegroup(
-    name = "pkg",
-    testonly = 1,
-    srcs = [
-        ":BootTest.apk",
-        ":BootTest.config",
-    ],
-    visibility = ["//ets:__pkg__"],
-)
-
-kt_android_library(
-    name = "boot_test_lib",
-    testonly = 1,
-    srcs = ["BootTest.kt"],
-    deps = [
-        "//deps/proto:aemu_java_grpc",
-        "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
-        "@maven//:androidx_test_core",
-        "@maven//:androidx_test_runner",
-        "@tradefed//:tradefed_jars",
-    ],
-)
-
-android_binary(
-    name = "BootTest",
-    testonly = 1,
-    custom_package = "com.android.tools.e2etests.boot",
-    manifest = "BootTestManifest.xml",
-    manifest_values = {
-        "minSdkVersion": "36",
-        "targetSdkVersion": "36",
-    },
-    deps = [":boot_test_lib"],
-)
-```
-
-Lastly the package needs to be included in the overal android-ets.zip bazel rule
-from [BUILD.bazel](BUILD.bazel)
-```BUILD
-pkg_files(
-    name = "ets_modules",
-    testonly = True,
-    srcs = [
-        "//ets/java/com/android/tools/e2etests:module_configs",
-        "//ets/java/com/android/tools/e2etests/boot:pkg",
-    ],
-    # Bazel builds the apks in with read-only permissions, which tradefed does
-    # not handle.
-    attributes = pkg_attributes(mode = "0644"),
-    prefix = "android-ets/testcases",
-)
-
-```
-
-In the current setup, every test module is run so inclusion in the zip is all
-that is needed to get the tests running.
+[ETS Codelab](https://source.corp.google.com/h/googleplex-android/platform/superproject/emu-main-next/+/emu-main-next:third_party/adt-infra/goldfish_test/ets/codelab.md)
