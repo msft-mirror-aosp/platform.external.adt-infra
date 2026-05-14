@@ -1,40 +1,38 @@
-load("@grpc-java//:java_grpc_library.bzl", "java_grpc_library")
-load("@protobuf//bazel:java_proto_library.bzl", "java_proto_library")
-
-# TODO: This contains all the known emulator protobuf.
-# These will move once b/444507168 is resolved
-load("@protobuf//bazel:proto_library.bzl", "proto_library")
+load("@rules_java//java:defs.bzl", "java_library")
 
 package(default_visibility = ["//visibility:public"])
 
-proto_library(
-    name = "aemu_proto",
-    srcs = [
-        "avd_service.proto",
-        "car_service.proto",
-        "emulator_controller.proto",
-        "grpc_endpoint_description.proto",
-        "modem_service.proto",
-        "rtc_service.proto",
-        "screen_recording_service.proto",
-        "sensor_service.proto",
-        "ui_controller_service.proto",
-        "virtual_scene_service.proto",
-        "waterfall.proto",
-    ],
-    deps = [
-        "@protobuf//:empty_proto",
-        "@protobuf//:wrappers_proto",
-    ],
-)
-
-java_proto_library(
+java_library(
     name = "aemu_java_proto",
-    deps = [":aemu_proto"],
+    visibility = ["//visibility:public"],
+    exports = [
+        "@aemu//protos/client:grpc_endpoint_description_java_proto",
+        "@aemu//protos/services/emulator-controller:emulator_controller_java_proto",
+        "@aemu//protos/services/incubating/avd:avd_service_java_proto",
+        "@aemu//protos/services/incubating/car:car_service_java_proto",
+        "@aemu//protos/services/incubating/modem:modem_service_java_proto",
+        "@aemu//protos/services/incubating/recording:screen_recording_service_java_proto",
+        "@aemu//protos/services/incubating/sensor:sensor_service_java_proto",
+        "@aemu//protos/services/incubating/virtualscene:virtual_scene_service_java_proto",
+        "@aemu//protos/services/ui-controller:ui_controller_service_java_proto",
+        "@aemu//protos/services/waterfall:waterfall_java_proto",
+        "@aemu//protos/services/webrtc:rtc_service_java_proto",
+    ],
 )
 
-java_grpc_library(
+java_library(
     name = "aemu_java_grpc",
-    srcs = [":aemu_proto"],
-    deps = [":aemu_java_proto"],
+    visibility = ["//visibility:public"],
+    exports = [
+        "@aemu//protos/services/emulator-controller:emulator_controller_java_grpc",
+        "@aemu//protos/services/incubating/avd:avd_service_java_grpc",
+        "@aemu//protos/services/incubating/car:car_service_java_grpc",
+        "@aemu//protos/services/incubating/modem:modem_service_java_grpc",
+        "@aemu//protos/services/incubating/recording:screen_recording_service_java_grpc",
+        "@aemu//protos/services/incubating/sensor:sensor_service_java_grpc",
+        "@aemu//protos/services/incubating/virtualscene:virtual_scene_service_java_grpc",
+        "@aemu//protos/services/ui-controller:ui_controller_service_java_grpc",
+        "@aemu//protos/services/waterfall:waterfall_java_grpc",
+        "@aemu//protos/services/webrtc:rtc_service_java_grpc",
+    ],
 )

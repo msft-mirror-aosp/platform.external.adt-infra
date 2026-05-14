@@ -1,0 +1,37 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = [
+        ":SmsTest.apk",
+        ":SmsTest.config",
+    ],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_android_library(
+    name = "sms_test_lib",
+    testonly = 1,
+    srcs = ["SmsTest.kt"],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
+        "@maven//:androidx_test_core",
+        "@maven//:androidx_test_runner",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+android_binary(
+    name = "SmsTest",
+    testonly = 1,
+    custom_package = "com.android.tools.e2etests.sms",
+    manifest = "SmsTestManifest.xml",
+    manifest_values = {
+        "minSdkVersion": "36",
+        "targetSdkVersion": "36",
+    },
+    deps = [":sms_test_lib"],
+)
