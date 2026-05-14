@@ -12,11 +12,19 @@ from test_seq.proto import junit_xml_result_pb2
 from test_seq.proto import test_sequencer_pb2
 from test_seq.proto import tradefed_pb2
 
+_adb_counter = 0
 
-def adb(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConfig:
+
+def adb(
+    ns: argparse.Namespace, args: list[str], timeout_seconds=60
+) -> test_sequencer_pb2.AgentConfig:
+    global _adb_counter
+    _adb_counter += 1
     return test_sequencer_pb2.AgentConfig(
+        id=f"adb-{_adb_counter}",
         adb=adb_pb2.ADB(
             args=args,
+            timeout_seconds=timeout_seconds,
         ),
         imports=[
             test_sequencer_pb2.Import(
