@@ -82,7 +82,10 @@ def avd(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
 
 def avd_ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ret = avd(ns)
-    ret.avd.avd_config_ini[:] = ["avd.ini.displayname=UTF8🤖"]
+    ret.avd.avd_config_ini[:] = [
+        "avd.ini.displayname=UTF8🤖",
+        "hw.ramSize=8192",  # Make sure we do not run under low memory conditions.
+    ]
     return ret
 
 
