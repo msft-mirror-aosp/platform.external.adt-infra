@@ -27,7 +27,8 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
   @Option(name = "emu_serial", description = "Emulator serial number. If empty test is skipped")
   private var mEmuSerial: String = ""
 
-  private val mTimeoutMillis = 20000
+  // wait 60 seconds to give snapshot more time to save
+  private val mTimeoutMillis = 60000
 
   @Test
   fun closeEmulatorAndCheckProcesses() {
