@@ -153,6 +153,32 @@ For the curious, the tests that involve closing the emulator run separately to
 ensure they run last, and also to avoid issues with tradefed when the device
 under test disappears.
 
+### Presubmit Plans
+
+There are currently two plan files that direct tradefed on which modules to run:
+
+- [`presubmit.xml`](https://source.corp.google.com/h/googleplex-android/platform/superproject/emu-main-next/+/emu-main-next:third_party/adt-infra/goldfish_test/ets/java/com/android/tools/config/presubmit.xml)
+- [`emu_now_presubmit.xml`](https://source.corp.google.com/h/googleplex-android/platform/superproject/emu-main-next/+/emu-main-next:third_party/adt-infra/goldfish_test/ets/java/com/android/tools/config/emu_now_presubmit.xml)
+
+They currently exist separately to allow writing tests that work on one platform
+but not on the other. In these files one can specify which modules/test to
+include and exclude.
+
+```xml
+    <!-- APK installation error -->
+    <option name="exclude-filter" value="CallTest" />
+    <option name="include-filter" value="ControlKeysTest" />
+    <!-- Not yet passing on emu-next -->
+    <option name="exclude-filter" value="ControlKeysTest com.android.tools.e2etests.events.ControlKeysTest#screenshot" />
+```
+
+When excluding tests, please add a comment indicating why they are excluded.
+There is a unit test to ensure every module in the zip file is either explicitly
+included or excluded as this step could easily be forgotten.
+
+[`@goldfish_test//testlib:emu_module_test`](https://source.corp.google.com/h/googleplex-android/platform/superproject/emu-main-next/+/emu-main-next:third_party/adt-infra/goldfish_test/testlib/ets_modules_test.py)
+
+
 ### On Device Tests
 
 #### Code

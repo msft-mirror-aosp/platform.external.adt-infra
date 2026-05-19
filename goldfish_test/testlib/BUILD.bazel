@@ -1,0 +1,17 @@
+"""Common goldfish test code."""
+
+load("@rules_python//python:defs.bzl", "py_test")
+
+py_test(
+    name = "ets_modules_test",
+    srcs = ["ets_modules_test.py"],
+    data = [
+        "//ets:android_ets_zip",
+    ],
+    args = [
+        "$(rlocationpath //ets:android_ets_zip)",
+    ],
+    deps = [
+        "@rules_python//python/runfiles",
+    ],
+)

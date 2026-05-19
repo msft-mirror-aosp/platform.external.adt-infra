@@ -211,7 +211,7 @@ def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             ],
             cleanup=True,
             emulator_path="emulator/emulator",
-            max_attempts=5,
+            max_attempts=3,
         ),
         imports=[
             test_sequencer_pb2.Import(

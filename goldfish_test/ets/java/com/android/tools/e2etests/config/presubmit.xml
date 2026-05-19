@@ -5,6 +5,8 @@
     <option name="include-filter" value="AdbPushPullTest" />
     <option name="include-filter" value="AdbScreenCapTest" />
     <option name="include-filter" value="BootTest" />
+    <!-- Not yet implemented on emu-next -->
+    <option name="exclude-filter" value="CallTest" />
     <option name="include-filter" value="ControlKeysTest" />
     <!-- Not yet passing on emu-next -->
     <option name="exclude-filter" value="ControlKeysTest com.android.tools.e2etests.events.ControlKeysTest#screenshot" />
@@ -13,6 +15,8 @@
     <option name="include-filter" value="NetsimSingleDeviceTest" />
     <option name="include-filter" value="SensorTest" />
     <option name="include-filter" value="ScreenshotTest" />
+    <!-- Not yet implemented on emu-next -->
+    <option name="exclude-filter" value="SmsTest" />
     <option name="include-filter" value="VulkanAppTest" />
 
 </configuration>
