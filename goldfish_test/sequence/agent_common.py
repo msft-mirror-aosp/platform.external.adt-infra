@@ -254,8 +254,20 @@ def goldfish_grpc(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ac = goldfish(ns)
     ac.goldfish.args.extend(
         [
+            "-verbose-grpc",
             "-grpc-allowlist",
             ns.emulator_access_json,
+        ]
+    )
+    return ac
+
+
+def goldfish_very_verbose(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ac = goldfish(ns)
+    ac.goldfish.args.extend(
+        [
+            "-vmodule",
+            "*=1",
         ]
     )
     return ac
