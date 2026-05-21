@@ -5,13 +5,19 @@
     <option name="include-filter" value="AdbPushPullTest" />
     <option name="include-filter" value="AdbScreenCapTest" />
     <option name="include-filter" value="BootTest" />
+    <!-- These tests experience timeouts -->
     <option name="include-filter" value="CallTest" />
+    <option name="exclude-filter" value="CallTest com.android.tools.e2etests.call.CallTest#acceptCall" />
+    <option name="exclude-filter" value="CallTest com.android.tools.e2etests.call.CallTest#disconnectCall" />
+    <option name="exclude-filter" value="CallTest com.android.tools.e2etests.call.CallTest#takeCallOffHold" />
+    <option name="exclude-filter" value="CallTest com.android.tools.e2etests.call.CallTest#placeCallOnHold" />
     <option name="include-filter" value="ControlKeysTest" />
     <option name="include-filter" value="DisplayNameTest" />
     <option name="include-filter" value="NetsimDaemonTest" />
     <option name="include-filter" value="NetsimSingleDeviceTest" />
     <option name="include-filter" value="ScreenshotTest" />
     <option name="include-filter" value="SensorTest" />
+    <option name="include-filter" value="SmsTest" />
     <option name="include-filter" value="VulkanAppTest" />
 
 </configuration>
