@@ -5,6 +5,7 @@
     <option name="include-filter" value="AdbPushPullTest" />
     <option name="include-filter" value="AdbScreenCapTest" />
     <option name="include-filter" value="BootTest" />
+    <option name="include-filter" value="InputTest" />
     <!-- These tests experience timeouts -->
     <option name="include-filter" value="CallTest" />
     <option name="exclude-filter" value="CallTest com.android.tools.e2etests.call.CallTest#acceptCall" />

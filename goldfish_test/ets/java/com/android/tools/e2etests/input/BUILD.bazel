@@ -1,0 +1,49 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = [
+        ":InputTest.apk",
+        ":InputTest.config",
+    ],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_android_library(
+    name = "input_test_lib",
+    testonly = 1,
+    srcs = [
+        "AndroidInputTest.kt",
+        "EvDevConstants.kt",
+        "EventObserver.kt",
+        "InputTestActivity.kt",
+        "KeyboardInputTest.kt",
+        "MouseInputTest.kt",
+        "PenInputTest.kt",
+        "TouchInputTest.kt",
+        "TouchpadInputTest.kt",
+        "WheelInputTest.kt",
+    ],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
+        "@maven//:androidx_test_core",
+        "@maven//:androidx_test_runner",
+        "@maven//:androidx_test_uiautomator_uiautomator",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+android_binary(
+    name = "InputTest",
+    testonly = 1,
+    custom_package = "com.android.tools.e2etests.input",
+    manifest = "InputTestManifest.xml",
+    manifest_values = {
+        "minSdkVersion": "36",
+        "targetSdkVersion": "36",
+    },
+    deps = [":input_test_lib"],
+)
