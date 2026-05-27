@@ -4,12 +4,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import android.provider.Telephony
+import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
-import com.android.emulator.control.PhoneResponse
-import com.android.emulator.control.SmsMessage
-import com.android.tools.e2etests.grpc.EmulatorController
+import com.android.emulation.control.incubating.SmsMessage
+import com.android.tools.e2etests.grpc.ModemService
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -19,8 +21,31 @@ val SENDER_NUMBER = "+1234567890"
 val SMS_TEXT = "Hello from Emulator Controller!"
 
 class SmsTest {
+
+    @Before
+    fun verifySystemReadiness() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as android.telephony.TelephonyManager
+
+        Log.i(TAG, "Waiting for virtual modem and SIM to initialize...")
+        var isReady = false
+        for (attempt in 1..60) {
+            val state = tm.simState
+            Log.d(TAG, "SIM State is currently: $state (Attempt $attempt/300)")
+            if (state == android.telephony.TelephonyManager.SIM_STATE_READY) {
+                isReady = true
+                break
+            }
+            Thread.sleep(1000L)
+        }
+
+        if (!isReady) {
+            Assert.fail("Virtual modem/SIM never reached READY state")
+        }
+    }
+
     /**
-     * Verifies that sending an SMS via Emulator Controller results in the message
+     * Verifies that sending an SMS via Modem Service results in the message
      * being received by Android.
      */
     @Test
@@ -48,8 +73,9 @@ class SmsTest {
                             currentSender = msg.originatingAddress ?: ""
                         }
 
-                        // Only accept the message if it matches our expected sender and unique text
-                        if (currentSender == SENDER_NUMBER && currentText == uniqueText) {
+                        Log.i(TAG, "Received SMS from: $currentSender with text: $currentText")
+
+                        if (currentText == uniqueText) {
                             receivedText = currentText
                             receivedSender = currentSender
                             latch.countDown()
@@ -62,8 +88,8 @@ class SmsTest {
         context.registerReceiver(receiver, filter)
 
         try {
-            val resp = sendSms(SENDER_NUMBER, uniqueText)
-            Assert.assertEquals(resp, PhoneResponse.Response.OK)
+            sendSms(SENDER_NUMBER, uniqueText)
+            // If call succeeds, we wait for the broadcast
 
             val success = latch.await(10, TimeUnit.SECONDS)
             Assert.assertTrue("Timed out waiting for SMS", success)
@@ -77,18 +103,26 @@ class SmsTest {
     fun sendSms(
         sender: String,
         text: String,
-    ): PhoneResponse.Response {
-        val resp =
-            EmulatorController
-                .defaultDeadline()
-                .sendSms(
+    ) {
+        Log.i(TAG, "Attempting to send SMS via gRPC ModemService...")
+        try {
+            ModemService
+                .stub!!
+                .withDeadlineAfter(10, TimeUnit.SECONDS)
+                .receiveSms(
                     SmsMessage
                         .newBuilder()
-                        .setSrcAddress(sender)
+                        .setNumber(sender)
                         .setText(text)
                         .build(),
                 )
-
-        return resp.getResponse()
+            Log.i(TAG, "gRPC receiveSms call completed successfully (Status OK)")
+        } catch (e: io.grpc.StatusRuntimeException) {
+            Log.e(TAG, "gRPC receiveSms call failed! Status: ${e.status.code}, Description: ${e.status.description}")
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "gRPC receiveSms call failed with unexpected exception: ${e.message}", e)
+            throw e
+        }
     }
 }

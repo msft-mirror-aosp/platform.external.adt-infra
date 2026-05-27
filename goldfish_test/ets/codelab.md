@@ -480,9 +480,9 @@ flag with the test authentication file.
 $ prebuilts/bazel/linux-x86_64/bazel test @goldfish_test//ets:external_presubmit
 ```
 
-This currently only works on linux, however it just scans for a discovery file
-so should be fairly easy to port for someone with a mac (see
-`external_ets_cfg.py` in the same directory as this file).
+This works on all platforms (Linux, macOS, and Windows) by scanning for 
+emulator discovery files (see `external_ets_cfg.py` in the same 
+directory as this file).
 
 Also of note is that the CloseEmulatorTest module is not run, as that would
 terminate the existing emulator which is counter productive to the iteration

@@ -23,6 +23,7 @@ from emu.emulator import BaseEmulator
 EXPECTED_FISHTANK_CONTENTS = {
     "darwin_x86_64": [
         "fishtank/fishtank",
+        "fishtank/lib/ca-bundle.pem",
         "fishtank/lib64/libabseil_dll.dylib",
         "fishtank/lib64/libandroid-emu-agents.dylib",
         "fishtank/lib64/libandroid-emu-base-logging.dylib",
@@ -188,6 +189,7 @@ EXPECTED_FISHTANK_CONTENTS = {
     ],
     "darwin_aarch64": [
         "fishtank/fishtank",
+        "fishtank/lib/ca-bundle.pem",
         "fishtank/lib64/libabseil_dll.dylib",
         "fishtank/lib64/libandroid-emu-agents.dylib",
         "fishtank/lib64/libandroid-emu-base-logging.dylib",
@@ -353,6 +355,7 @@ EXPECTED_FISHTANK_CONTENTS = {
     ],
     "linux_x86_64": [
         "fishtank/fishtank",
+        "fishtank/lib/ca-bundle.pem",
         "fishtank/lib64/libabseil_dll.so",
         "fishtank/lib64/libandroid-emu-agents.so",
         "fishtank/lib64/libandroid-emu-base-logging.so",
@@ -549,6 +552,7 @@ EXPECTED_FISHTANK_CONTENTS = {
     "windows_x86_64": [
         "fishtank/concrt140.dll",
         "fishtank/fishtank.exe",
+        "fishtank/lib/ca-bundle.pem",
         "fishtank/lib64/qt/bin/icudtl.dat",
         "fishtank/lib64/qt/bin/qtwebengine_devtools_resources.pak",
         "fishtank/lib64/qt/bin/qtwebengine_locales/am.pak",

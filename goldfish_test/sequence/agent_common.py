@@ -12,13 +12,21 @@ from test_seq.proto import junit_xml_result_pb2
 from test_seq.proto import test_sequencer_pb2
 from test_seq.proto import tradefed_pb2
 
+_adb_counter = 0
 
-def adb(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConfig:
+
+def adb(
+    ns: argparse.Namespace, args: list[str], timeout_seconds=60
+) -> test_sequencer_pb2.AgentConfig:
+    global _adb_counter
+    _adb_counter += 1
     return test_sequencer_pb2.AgentConfig(
+        id=f"adb-{_adb_counter}",
         adb=adb_pb2.ADB(
             args=args,
+            timeout_seconds=timeout_seconds,
         ),
-        imports = [
+        imports=[
             test_sequencer_pb2.Import(
                 id="android_home",
                 src="android_home",
@@ -27,7 +35,7 @@ def adb(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConf
                 id="goldfish",
                 src="serial_number",
             ),
-        ]
+        ],
     )
 
 
@@ -82,7 +90,10 @@ def avd(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
 
 def avd_ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ret = avd(ns)
-    ret.avd.avd_config_ini[:] = ["avd.ini.displayname=UTF8🤖"]
+    ret.avd.avd_config_ini[:] = [
+        "avd.ini.displayname=UTF8🤖",
+        "hw.ramSize=8192",  # Make sure we do not run under low memory conditions.
+    ]
     return ret
 
 
@@ -187,14 +198,16 @@ def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
-def ets_external(ns: argparse.Namespace, serial_number: str, grpc_port: str) -> test_sequencer_pb2.AgentConfig:
+def ets_external(
+    ns: argparse.Namespace, serial_number: str, grpc_port: str
+) -> test_sequencer_pb2.AgentConfig:
     ac = ets(ns)
     imps = [i for i in ac.imports if i.id != "goldfish"]
     del ac.imports[:]
     ac.imports.extend(imps)
     ac.tradefed.serial_number.append(serial_number)
     ac.tradefed.args.append(
-        "--test_arg=com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:="
+        "com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:="
         + grpc_port
     )
     return ac
@@ -241,8 +254,20 @@ def goldfish_grpc(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ac = goldfish(ns)
     ac.goldfish.args.extend(
         [
+            "-verbose-grpc",
             "-grpc-allowlist",
             ns.emulator_access_json,
+        ]
+    )
+    return ac
+
+
+def goldfish_very_verbose(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ac = goldfish(ns)
+    ac.goldfish.args.extend(
+        [
+            "-vmodule",
+            "*=1",
         ]
     )
     return ac

@@ -1,5 +1,6 @@
 package com.android.tools.testlib.netsim
 
+import java.nio.file.InvalidPathException
 import java.nio.file.Paths
 import oshi.SystemInfo
 
@@ -9,8 +10,12 @@ fun netsimdIsLaunched(): Boolean {
 
   for (proc in os.getProcesses()) {
     val args = proc.getArguments()
-    if (!args.isEmpty() && Paths.get(args.get(0)).getFileName().toString() == netsimdName) {
-      return true
+    try {
+      if (!args.isEmpty() && Paths.get(args.get(0)).getFileName().toString() == netsimdName) {
+        return true
+      }
+    } catch (e: InvalidPathException) {
+      // Ignore invalid paths and continue checking the rest of the processes.
     }
   }
   return false
