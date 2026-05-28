@@ -42,12 +42,15 @@ def _local_impl(repo_ctx):
 
     # Defaults are OS specific.
     goldfish_label = "@goldfish//emulator"
+    gts_label = "@gts//"
     if "linux" in repo_ctx.os.name or "windows" in repo_ctx.os.name:
         cts_label = "@cts-x86-64//"
         image_label = "@android16k-x86_64//"
+        sts_label = "@sts-x86-64//"
     elif "mac" in repo_ctx.os.name:
         cts_label = "@cts-arm64//"
         image_label = "@android16k-arm64//"
+        sts_label = "@sts-arm64//"
     else:
         fail("Unsupported os name: " + repo_ctx.os.name)
 
@@ -61,10 +64,20 @@ def _local_impl(repo_ctx):
     else:
         repo_ctx.file("cts/BUILD", _alias_dir_build.format(label = cts_label))
 
+    if _check_for_zip_and_extract(repo_ctx, base_path, "gts"):
+        repo_ctx.file("gts/BUILD.bazel", _local_dir_build)
+    else:
+        repo_ctx.file("gts/BUILD", _alias_dir_build.format(label = gts_label))
+
     if _check_for_zip_and_extract(repo_ctx, base_path, "image"):
         repo_ctx.file("image/BUILD.bazel", _local_dir_build)
     else:
         repo_ctx.file("image/BUILD", _alias_dir_build.format(label = image_label))
+
+    if _check_for_zip_and_extract(repo_ctx, base_path, "sts"):
+        repo_ctx.file("sts/BUILD.bazel", _local_dir_build)
+    else:
+        repo_ctx.file("sts/BUILD", _alias_dir_build.format(label = sts_label))
 
     # The goldfish target is always expected to be a zip file, so it is always aliased.
     if _get_local_zip(base_path, "goldfish") != None:

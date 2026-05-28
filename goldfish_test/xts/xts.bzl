@@ -1,4 +1,4 @@
-"""Creates a rule that runs CTS."""
+"""Creates a rule that runs XTS."""
 
 load("//sequence:sequence.bzl", "run_sequence")
 
@@ -20,7 +20,7 @@ def deqp_tests(name, submodules = []):
         )
         for smp in submodules
     ]
-    cts_test_specs(name, test_specs)
+    xts_test_specs(name, "cts", test_specs)
 
 def cts_media_tests(name, modules = []):
     """Creates a set of rules that runs CTS media modules.
@@ -46,24 +46,26 @@ def cts_media_tests(name, modules = []):
         "@cts-media-1.5//:BUILD.bazel",
         "@cts-media-1.5//:all_files",
     ]
-    cts_test_specs(name, test_specs, additional_data = additional_data)
+    xts_test_specs(name, "cts", test_specs, additional_data = additional_data)
 
-def cts_tests(name, modules = []):
-    """Creates a set of rules that runs CTS modules.
+def xts_tests(name, suite, modules = []):
+    """Creates a set of rules that runs XTS modules.
 
     Args:
       name: The name of the rule
+      suite: The name of the suite to run
       modules: A list of modules to create rules for of the form
           <name>.<module>
     """
     test_specs = [struct(subname = m, args = ["--module", m]) for m in modules]
-    cts_test_specs(name, test_specs)
+    xts_test_specs(name, suite, test_specs)
 
-def cts_plan(name, plan_glob):
-    """Creates a set of rules that runs CTS modules.
+def xts_plan(name, suite, plan_glob):
+    """Creates a set of rules that runs XTS modules.
 
     Args:
       name: The name of the rule
+      suite: The name of the suite to run
       plan_glob: A glob pattern of tests to include.  e.g.
           xts_test_plans/presubmit/**
     """
@@ -75,25 +77,36 @@ def cts_plan(name, plan_glob):
         )
         for plan_file in additional_data
     ]
-    cts_test_specs(name, test_specs, additional_data = additional_data)
+    xts_test_specs(name, suite, test_specs, additional_data = additional_data)
 
-def cts_test_specs(name, test_specs = [], additional_data = []):
-    """Creates a set of rules that runs CTS with a given test specification.
+def xts_test_specs(name, suite, test_specs = [], additional_data = []):
+    """Creates a set of rules that runs XTS with a given test specification.
 
     Args:
       name: The name of the rule
+      suite: The name of the suite to run
       test_specs: The test spec struct that will be passed to the tradefed agent
       additional_data: Additional data files
     """
+    # GTS is does not have two separate builds.
+    if suite == "gts":
+        linux_suite_repo = "gts"
+        mac_suite_repo = "gts"
+    else:
+        linux_suite_repo = suite + "-x86-64"
+        mac_suite_repo = suite + "-arm64"
+
     tests = []
     for test_spec in test_specs:
         test = name + "." + test_spec.subname
         tests.append(test)
         run_sequence(
             name = test,
-            srcs = ["cts_config.py"],
-            main = "cts_config.py",
+            srcs = ["xts_config.py"],
+            main = "xts_config.py",
             args = [
+                "--suite",
+                suite,
                 "--goldfish_zip",
                 "$(rlocationpath @goldfish//emulator:release)",
             ] + test_spec.args + select({
@@ -105,7 +118,7 @@ def cts_test_specs(name, test_specs = [], additional_data = []):
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
                     "--tradefed_extract_dir",
-                    "$(rlocationpath @cts-x86-64//:BUILD.bazel)",
+                    "$(rlocationpath @" + linux_suite_repo +"//:BUILD.bazel)",
                 ],
                 "@platforms//os:macos": [
                     "--build_tools_extract_dir",
@@ -115,7 +128,7 @@ def cts_test_specs(name, test_specs = [], additional_data = []):
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
                     "--tradefed_extract_dir",
-                    "$(rlocationpath @cts-arm64//:BUILD.bazel)",
+                    "$(rlocationpath @" + mac_suite_repo +"//:BUILD.bazel)",
                 ],
             }),
             data = [
@@ -126,8 +139,8 @@ def cts_test_specs(name, test_specs = [], additional_data = []):
                     "@android16k-x86_64//:all_files",
                     "@build-tools-linux//:BUILD.bazel",
                     "@build-tools-linux//:all_files",
-                    "@cts-x86-64//:BUILD.bazel",
-                    "@cts-x86-64//:all_files",
+                    "@" + linux_suite_repo + "//:BUILD.bazel",
+                    "@" + linux_suite_repo + "//:all_files",
                     "@platform-tools-linux//:BUILD.bazel",
                     "@platform-tools-linux//:all_files",
                 ],
@@ -136,8 +149,8 @@ def cts_test_specs(name, test_specs = [], additional_data = []):
                     "@android16k-arm64-v8a//:all_files",
                     "@build-tools-mac//:BUILD.bazel",
                     "@build-tools-mac//:all_files",
-                    "@cts-arm64//:BUILD.bazel",
-                    "@cts-arm64//:all_files",
+                    "@" + mac_suite_repo + "//:BUILD.bazel",
+                    "@" + mac_suite_repo + "//:all_files",
                     "@platform-tools-mac//:BUILD.bazel",
                     "@platform-tools-mac//:all_files",
                 ],
@@ -157,15 +170,15 @@ def cts_test_specs(name, test_specs = [], additional_data = []):
         # Version of the tests supporting local overrides.
         run_sequence(
             name = "local_" + test,
-            srcs = ["cts_config.py"],
-            main = "cts_config.py",
+            srcs = ["xts_config.py"],
+            main = "xts_config.py",
             args = [
                 "--goldfish_zip",
                 "$(rlocationpath @local//goldfish:release)",
                 "--image_extract_dir",
                 "$(rlocationpath @local//image:BUILD.bazel)",
                 "--tradefed_extract_dir",
-                "$(rlocationpath @local//cts:BUILD.bazel)",
+                "$(rlocationpath @local//xts:BUILD.bazel)",
             ] + test_spec.args + select({
                 "@platforms//os:linux": [
                     "--build_tools_extract_dir",
@@ -181,8 +194,8 @@ def cts_test_specs(name, test_specs = [], additional_data = []):
                 ],
             }),
             data = [
-                "@local//cts:BUILD.bazel",
-                "@local//cts:all_files",
+                "@local//xts:BUILD.bazel",
+                "@local//xts:all_files",
                 "@local//goldfish:release",
                 "@local//image:BUILD.bazel",
                 "@local//image:all_files",
