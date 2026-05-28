@@ -31,6 +31,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
+import org.junit.Ignore
 
 class AndroidInputTest {
 
@@ -85,6 +86,7 @@ class AndroidInputTest {
 
   /** Verifies that sending raw evdev events for a key press works. */
   @Test
+  @Ignore("This test is currently unstable, b/507520000")
   fun testRawEvdevEvent() {
     sharedObserver
         .waitForEvents(4, TestConstants.DEFAULT_TIMEOUT_MS, filter = { true }) {
