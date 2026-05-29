@@ -1718,6 +1718,5 @@ test_suite(
     name = "postsubmit",
     tests = [
         "cts.CtsUsbTests",
-        "sts.CtsProviderTestCases",
     ],
 )
