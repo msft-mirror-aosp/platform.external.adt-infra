@@ -26,6 +26,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/netsim:pkg",
         "//ets/java/com/android/tools/e2etests/sensors:pkg",
         "//ets/java/com/android/tools/e2etests/sms:pkg",
+        "//ets/java/com/android/tools/e2etests/snapshot:pkg",
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
         "//ets/java/com/android/tools/e2etests/wifi:pkg",
         "@animation_app//file",

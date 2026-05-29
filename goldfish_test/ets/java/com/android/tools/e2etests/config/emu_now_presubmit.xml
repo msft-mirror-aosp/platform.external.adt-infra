@@ -20,6 +20,7 @@
     <option name="include-filter" value="ScreenshotTest" />
     <option name="include-filter" value="SensorTest" />
     <option name="include-filter" value="SmsTest" />
+    <option name="include-filter" value="SnapshotTest" />
     <option name="include-filter" value="VulkanAppTest" />
 
 </configuration>
