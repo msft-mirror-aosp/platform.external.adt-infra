@@ -2,6 +2,7 @@ package com.android.tools.e2etests.events
 
 import com.android.emulator.control.EmulatorControllerGrpc
 import com.android.emulator.control.VmRunState
+import com.android.tools.e2etests.grpc.getHostGrpcChannel
 import com.android.tools.testlib.emu.findEmulator
 import com.android.tools.testlib.netsim.netsimdIsLaunched
 import com.android.tradefed.config.Option
@@ -19,9 +20,6 @@ import oshi.SystemInfo
 
 @RunWith(DeviceJUnit4ClassRunner::class)
 public class CloseEmulatorTest : BaseHostJUnit4Test() {
-  @Option(name = "grpc_port", description = "Port to use for grpc calls. If empty test is skipped")
-  private var mGrpcPort: String = ""
-
   // NOTE: The emulator process will exit during this test, so tradefed cannot connect to it via
   // adb or an error
   @Option(name = "emu_serial", description = "Emulator serial number. If empty test is skipped")
@@ -32,7 +30,6 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
 
   @Test
   fun closeEmulatorAndCheckProcesses() {
-    Assume.assumeFalse(mGrpcPort.isEmpty())
     Assume.assumeFalse(mEmuSerial.isEmpty())
 
     val pid = findEmulator(mEmuSerial)!!.pid.toInt()
@@ -43,8 +40,7 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
   }
 
   fun closeEmulator() {
-    val channel =
-      Grpc.newChannelBuilder("localhost:" + mGrpcPort, InsecureChannelCredentials.create()).build()
+    val channel = getHostGrpcChannel(mEmuSerial)
     val stub = EmulatorControllerGrpc.newBlockingStub(channel)
 
     val req = VmRunState.newBuilder().setState(VmRunState.RunState.SHUTDOWN).build()
@@ -63,7 +59,6 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
   }
 
   fun netsimdExitsWithEmulator() {
-    Assume.assumeFalse(mGrpcPort.isEmpty())
     Assume.assumeFalse(mEmuSerial.isEmpty())
 
     val timeout = Clock.systemUTC().millis() + mTimeoutMillis

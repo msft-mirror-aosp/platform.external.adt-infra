@@ -183,12 +183,6 @@ def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
         [
             test_sequencer_pb2.Import(
                 id="goldfish",
-                src="grpc_port",
-                dst="args",
-                re_replace="--module-arg=CloseEmulatorTest:set-option:grpc_port:${1}",
-            ),
-            test_sequencer_pb2.Import(
-                id="goldfish",
                 src="serial_number",
                 dst="args",
                 re_replace="--module-arg=CloseEmulatorTest:set-option:emu_serial:${1}",
