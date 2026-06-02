@@ -22,6 +22,7 @@ java_binary(
     use_launcher = False,
     visibility = ["//ets:__pkg__"],
     runtime_deps = [
+        "//ets/java/com/android/tools/e2etests/avd:avd_test",
         "//ets/java/com/android/tools/e2etests/discovery:display_name_test",
         "//ets/java/com/android/tools/e2etests/display:adb_screen_cap_test",
         "//ets/java/com/android/tools/e2etests/events:close_emulator_test",

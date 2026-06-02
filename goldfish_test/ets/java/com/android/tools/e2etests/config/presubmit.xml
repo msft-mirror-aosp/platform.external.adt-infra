@@ -4,6 +4,8 @@
     <include name="ets" />
     <option name="include-filter" value="AdbPushPullTest" />
     <option name="include-filter" value="AdbScreenCapTest" />
+    <!-- Not yet implemented on emu-next -->
+    <option name="exclude-filter" value="AvdTest" />
     <option name="include-filter" value="BootTest" />
     <option name="include-filter" value="InputTest" />
     <!-- Not yet implemented on emu-next -->

@@ -16,6 +16,7 @@ pkg_files(
     name = "ets_modules",
     testonly = True,
     srcs = [
+        "//ets/java/com/android/tools/e2etests/avd:pkg",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
