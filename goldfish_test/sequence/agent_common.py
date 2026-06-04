@@ -174,6 +174,8 @@ def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             "ets",
             "-m",
             "CloseEmulatorTest",
+            "--suite-name",
+            "ETS-CLOSE",
             "--abi",
             ns.abi,
             "--null-device",

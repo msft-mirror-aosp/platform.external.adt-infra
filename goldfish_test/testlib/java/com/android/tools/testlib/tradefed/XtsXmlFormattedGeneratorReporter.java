@@ -15,7 +15,10 @@
  */
 package com.android.tools.testlib.tradefed;
 
+import com.android.compatibility.common.tradefed.result.suite.CertificationResultXml;
+import com.android.tradefed.result.suite.IFormatterGenerator;
 import com.android.tradefed.result.suite.XmlFormattedGeneratorReporter;
+import com.android.tradefed.result.suite.XmlSuiteResultFormatter;
 import com.android.tradefed.config.Option;
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +33,13 @@ public class XtsXmlFormattedGeneratorReporter extends XmlFormattedGeneratorRepor
     @Option(name = "results-dir", description = "base directory to output test_result.xml.")
     private File mResultDir = null;
 
+    @Option(name = "suite-name", description = "Name of the test suite.")
+    private String mSuiteName = "ETS";
+
+    private String mVersion = "0.1";
+    // TODO: kmagic - Add support to pull in the build id from AB.
+    private String mBuildId = "";
+
     /** Returns the result directory that should be used to store results. */
     @Override
     public File createResultDir() throws IOException {
@@ -43,5 +53,12 @@ public class XtsXmlFormattedGeneratorReporter extends XmlFormattedGeneratorRepor
         return super.createResultDir();
     }
 
+    /** Create the {@link IFormatterGenerator} to be used. Can be overridden to change the format. */
+    @Override
+    public IFormatterGenerator createFormatter() {
+        return new CertificationResultXml(
+          mSuiteName, mVersion, mSuiteName, "ets", mBuildId, "", "", null
+        );
+    }
 }
 
