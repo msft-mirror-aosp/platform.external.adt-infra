@@ -1,4 +1,5 @@
 load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 kt_android_library(
     name = "grpc_lib",
@@ -9,5 +10,17 @@ kt_android_library(
         "//deps/proto:aemu_java_grpc",
         "@maven//:androidx_test_core",
         "@maven//:io_grpc_grpc_okhttp",
+    ],
+)
+
+kt_jvm_library(
+    name = "host_grpc_lib",
+    testonly = 1,
+    srcs = ["HostGrpc.kt"],
+    visibility = ["//ets:__subpackages__"],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@tradefed//:tradefed_jars",
     ],
 )

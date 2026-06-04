@@ -16,6 +16,7 @@ kt_jvm_test(
     deps = [
         "//deps/proto:aemu_java_grpc",
         "//deps/proto:aemu_java_proto",
+        "//ets/java/com/android/tools/e2etests/grpc:host_grpc_lib",
         "//testlib/java/com/android/tools/testlib/emu:discovery",
         "//testlib/java/com/android/tools/testlib/netsim:netsimd",
         "@grpc-java//api",

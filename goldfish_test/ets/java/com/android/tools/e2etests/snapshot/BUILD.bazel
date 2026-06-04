@@ -1,0 +1,20 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+filegroup(
+    name = "pkg",
+    srcs = ["SnapshotTest.config"],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_jvm_test(
+    name = "snapshot_test",
+    srcs = ["SnapshotTest.kt"],
+    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//deps/proto:aemu_java_proto",
+        "//ets/java/com/android/tools/e2etests/grpc:host_grpc_lib",
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@tradefed//:tradefed_jars",
+    ],
+)
