@@ -21,6 +21,9 @@ py_library(
     name = "config",
     srcs = [
         "config.py",
+        "gemini_analyzer.py",
+        "gemini_auth.py",
+        "gemini_client.py",
         "run.py",
     ],
     visibility = ["//visibility:public"],
