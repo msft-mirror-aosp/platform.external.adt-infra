@@ -84,3 +84,10 @@ test_suite(
         ":presubmit",
     ],
 )
+
+test_suite(
+    name = "exclusive_postsubmit",
+    tests = [
+        ":exclusive_presubmit",
+    ],
+)
