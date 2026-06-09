@@ -22,10 +22,12 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/display:pkg",
         "//ets/java/com/android/tools/e2etests/events:pkg",
         "//ets/java/com/android/tools/e2etests/files:pkg",
+        "//ets/java/com/android/tools/e2etests/input:pkg",
         "//ets/java/com/android/tools/e2etests/netsim:pkg",
         "//ets/java/com/android/tools/e2etests/sensors:pkg",
         "//ets/java/com/android/tools/e2etests/sms:pkg",
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
+        "//ets/java/com/android/tools/e2etests/wifi:pkg",
         "@animation_app//file",
     ],
     # Bazel builds the apks in with read-only permissions, which tradefed does
