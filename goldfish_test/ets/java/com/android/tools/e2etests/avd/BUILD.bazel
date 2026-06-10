@@ -1,0 +1,28 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = glob(["*.config"]),
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_jvm_test(
+    name = "avd_test",
+    srcs = ["AvdTest.kt"],
+    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//deps/proto:aemu_java_proto",
+        "//ets/java/com/android/tools/e2etests/grpc:host_grpc_lib",
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@grpc-java//api",
+        "@grpc-java//context",
+        "@grpc-java//protobuf",
+        "@grpc-java//stub",
+        "@maven//:junit_junit",
+        "@protobuf//:protobuf_java",
+        "@protobuf//:protobuf_java_util",
+        "@tradefed//:tradefed_jars",
+    ],
+)

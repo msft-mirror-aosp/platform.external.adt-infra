@@ -16,6 +16,7 @@ pkg_files(
     name = "ets_modules",
     testonly = True,
     srcs = [
+        "//ets/java/com/android/tools/e2etests/avd:pkg",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
@@ -26,6 +27,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/netsim:pkg",
         "//ets/java/com/android/tools/e2etests/sensors:pkg",
         "//ets/java/com/android/tools/e2etests/sms:pkg",
+        "//ets/java/com/android/tools/e2etests/snapshot:pkg",
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
         "//ets/java/com/android/tools/e2etests/wifi:pkg",
         "@animation_app//file",

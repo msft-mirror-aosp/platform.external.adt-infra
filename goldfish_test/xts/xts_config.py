@@ -27,6 +27,10 @@ def get_parser() -> argparse.ArgumentParser:
         type=config.path_type,
         help="Path to the plan file to run",
     )
+    parser.add_argument(
+        "--suite",
+        help="XTS suite to run",
+    )
     return parser
 
 
@@ -53,7 +57,10 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
     elif ns.plan_path:
         args = [ns.plan_path]
     else:
-        args = ["cts", "-m", ns.module]
+        suite_name = ns.suite
+        if suite_name == "sts":
+            suite_name = "sts-dynamic-full"
+        args = [suite_name, "-m", ns.module]
     return [
         agent_common.goldfish_fetch(ns),
         agent_common.android_home(ns),
