@@ -6,10 +6,10 @@ import com.android.tools.e2etests.grpc.getHostGrpcChannel
 import com.android.tools.testlib.emu.findEmulator
 import com.android.tools.testlib.netsim.netsimdIsLaunched
 import com.android.tradefed.config.Option
+import com.android.tradefed.log.Log
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test
-import io.grpc.Grpc
-import io.grpc.InsecureChannelCredentials
+import io.grpc.StatusRuntimeException
 import java.time.Clock
 import java.util.concurrent.TimeUnit
 import org.junit.Assert
@@ -28,6 +28,8 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
   // wait 60 seconds to give snapshot more time to save
   private val mTimeoutMillis = 60000
 
+  private val TAG = "CloseEmulatorTest"
+
   @Test
   fun closeEmulatorAndCheckProcesses() {
     Assume.assumeFalse(mEmuSerial.isEmpty())
@@ -44,7 +46,12 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
     val stub = EmulatorControllerGrpc.newBlockingStub(channel)
 
     val req = VmRunState.newBuilder().setState(VmRunState.RunState.SHUTDOWN).build()
-    stub!!.withDeadlineAfter(10, TimeUnit.SECONDS).setVmState(req)
+    try {
+      stub!!.withDeadlineAfter(10, TimeUnit.SECONDS).setVmState(req)
+    } catch (e: StatusRuntimeException) {
+      // Ignore the exception, as the emulator process is expected to exit.
+      Log.w(TAG, "Ignoring exception as the emulator process may have exited.")
+    }
   }
 
   fun emulatorProcessExitsAfterClose(pid: Int) {
