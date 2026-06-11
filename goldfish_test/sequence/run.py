@@ -1,9 +1,12 @@
 """Library to run a test sequencer sequence."""
 
+import logging
 import os
 import pathlib
 import subprocess
 import sys
+
+from sequence import gemini_analyzer
 
 
 def run(test_seq_path: str, sequence: str, extra_path: list[str]):
@@ -32,17 +35,23 @@ def run(test_seq_path: str, sequence: str, extra_path: list[str]):
         env["TMPDIR"] = str(darwin_tmp)
         env["JAVA_TOOL_OPTIONS"] = "-Djava.io.tmpdir=" + str(darwin_tmp)
 
-    subprocess.run(
-        args=[
-            test_seq_path,
-            "-name",
-            results,
-            "-runtime_dir",
-            runtime,
-            "-common_dir",
-            common,
-            sequence_path,
-        ],
-        check=True,
-        env=env,
-    )
+    try:
+        subprocess.run(
+            args=[
+                test_seq_path,
+                "-name",
+                results,
+                "-runtime_dir",
+                runtime,
+                "-common_dir",
+                common,
+                sequence_path,
+            ],
+            check=True,
+            env=env,
+        )
+    finally:
+        try:
+            gemini_analyzer.analyze_failures(str(results))
+        except Exception as e:
+            logging.error(f"Failed to run Gemini failure analysis: {e}")
