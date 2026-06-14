@@ -1,5 +1,10 @@
 load(":xts_sharded.bzl", "xts_sharded_tests")
 load("//xts:xts.bzl", "cts_media_tests", "deqp_tests", "module_subtests", "xts_plan", "xts_tests")
+load("//xts:verifier.bzl", "cts_verifier_tests")
+
+cts_verifier_tests(
+    name = "cts-verifier",
+)
 
 cts_modules = [
     "AconfigPublicApiCtsTests",
