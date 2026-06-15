@@ -24,7 +24,12 @@ class KeyboardInputTest {
     @BeforeClass
     @JvmStatic
     fun setUpClass() {
-      sharedObserver = EventObserver.observer("QEMU Virtio Keyboard")
+      try {
+        sharedObserver = EventObserver.observer("QEMU Virtio Keyboard")
+      } catch (e: IllegalArgumentException) {
+        // Try the emu-now device name.
+        sharedObserver = EventObserver.observer("qwerty2")
+      }
       sharedObserver.start()
 
       // Launch the activity once for all tests in this class
