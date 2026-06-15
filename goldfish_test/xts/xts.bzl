@@ -160,6 +160,9 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
                 "//sequence:config",
                 "@test_seq//test_seq/proto:test_sequencer_pb2",
             ],
+            exec_properties = {
+                "dockerNetwork": "standard",
+            },
             size = "enormous",
             tags = [
                 "manual",
@@ -218,6 +221,9 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
                 "//sequence:config",
                 "@test_seq//test_seq/proto:test_sequencer_pb2",
             ],
+            exec_properties = {
+                "dockerNetwork": "standard",
+            },
             size = "enormous",
             # Note: mac platforms may need requires-network for GRPC to work
             tags = ["manual"],
@@ -233,3 +239,4 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
         tests = ["local_" + t for t in tests],
         tags = ["manual"],
     )
+
