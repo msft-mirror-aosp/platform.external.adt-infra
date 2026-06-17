@@ -17,6 +17,7 @@ _ETS_ZIP_PATH = ""
 # Modules that are allowed to not be present.
 _ALLOW_LIST = frozenset([
     "CloseEmulatorTest",  # This is run in a separate tradefed invocation.
+    "CtsVerifierTest",  # This is run as a separate bazel target.
 ])
 
 
