@@ -105,7 +105,6 @@ def cts(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConf
         [
             "--skip-preconditions",
             "--skip-all-system-status-check",
-            "--no-has-server-side-config",
             "-l",
             "INFO",
         ]

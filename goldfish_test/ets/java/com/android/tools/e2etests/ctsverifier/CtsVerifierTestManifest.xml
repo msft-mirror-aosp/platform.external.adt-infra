@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.tools.e2etests.ctsverifier" >
+
+
+    <application android:usesCleartextTraffic="true">>
+       <uses-library android:name="android.test.runner"/>
+    </application>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
+    <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
+         android:targetPackage="com.android.tools.e2etests.ctsverifier"
+         android:label="CtsVerifier Test">
+    </instrumentation>
+
+</manifest>
+
