@@ -136,22 +136,23 @@ async def test_accelerometer_updates_with_model_change(avd):
         )
     )
 
-    # Check new orientation data.
-    orientation = await emulator_controller.getSensor(
-        SensorValue(target=SensorValue.ORIENTATION)
-    )
-    assert initial_orientation.value.data != pytest.approx(
-        orientation.value.data
-    ), "Orientation sensor data wasn't updated"
+    async def orientation_changed():
+        o = await emulator_controller.getSensor(
+            SensorValue(target=SensorValue.ORIENTATION)
+        )
+        return list(o.value.data) != list(initial_orientation.value.data)
 
-    # Check new acceleration data.
-    acceleration = await emulator_controller.getSensor(
-        SensorValue(target=SensorValue.ACCELERATION)
-    )
+    assert await wait_until(orientation_changed, timeout=5), \
+        "Orientation sensor data wasn't updated"
 
-    assert initial_acceleration.value.data != pytest.approx(
-        acceleration.value.data
-    ), "Acceleration sensor data didn't change after rotation"
+    async def acceleration_changed():
+        a = await emulator_controller.getSensor(
+            SensorValue(target=SensorValue.ACCELERATION)
+        )
+        return list(a.value.data) != list(initial_acceleration.value.data)
+
+    assert await wait_until(acceleration_changed, timeout=5), \
+        "Acceleration sensor data didn't change after rotation"
 
 
 @pytest.mark.fast

@@ -221,6 +221,7 @@ class Application:
         timeout: float = 5,
         attempts: int = 3,
         delay: float = 1,
+        wait_for_started=None,
     ) -> bool:
         """Starts the application on the emulator.
 
@@ -230,6 +231,7 @@ class Application:
             timeout: The maximum time to wait for the application to start, in seconds.
             attempts: The maximum number of attempts to make.
             delay: The delay in seconds between attempts.
+            wait_for_started: Overrides the instance-level wait strategy for this call.
 
         Returns:
             True if the application started successfully, False otherwise.
@@ -239,12 +241,13 @@ class Application:
             if activity is None
             else f"{self.package_name}/{activity}"
         )
+        wait_fn = wait_for_started if wait_for_started is not None else self.wait_for_started
         logging.info("Starting %s with params: %s", self.package_name, params)
         try:
             await self.adb.clear_logcat()
             success = await retry(
                 lambda: self._start_activity(
-                    self.wait_for_started, activity, params, timeout
+                    wait_fn, activity, params, timeout
                 ),
                 attempts=attempts,
                 name=f"Starting {self.default_activity}",

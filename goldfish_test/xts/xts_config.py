@@ -6,6 +6,8 @@ from sequence import agent_common
 from sequence import config
 from test_seq.proto import test_sequencer_pb2
 
+_APE_API_KEY = "secret://projects/android-devtools-emulator/secrets/android-emulator-ape-api-key/versions/latest"
+
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -61,13 +63,16 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         if suite_name == "sts":
             suite_name = "sts-dynamic-full"
         args = [suite_name, "-m", ns.module]
+    tradefed = agent_common.cts(ns, args)
+    if ns.suite == "gts":
+        tradefed.tradefed.ape_api_key = _APE_API_KEY
     return [
         agent_common.goldfish_fetch(ns),
         agent_common.android_home(ns),
         agent_common.avd(ns),
         agent_common.junit_xml_result(ns),
         agent_common.goldfish(ns),
-        agent_common.cts(ns, args),
+        tradefed,
     ]
 
 
