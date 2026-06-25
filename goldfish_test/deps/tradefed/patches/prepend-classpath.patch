@@ -1,0 +1,8 @@
+--- tradefed.sh
++++ tradefed.sh
+@@ -53,4 +53,4 @@
+ # when unset
+ exec ${TF_JAVA} $ADD_OPENS_FLAG $RDBG_FLAG ${TF_JVM_OPTIONS} -XX:+HeapDumpOnOutOfMemoryError \
+   -XX:-OmitStackTraceInFastThrow $TRADEFED_OPTS \
+-  -cp "${TF_PATH}" -DTF_JAR_DIR=${TF_JAR_DIR} $CONSOLE_CLASS "$@"
++  -cp "${TF_PATH_PREPEND:+$TF_PATH_PREPEND:}${TF_PATH}" -DTF_JAR_DIR=${TF_JAR_DIR} $CONSOLE_CLASS "$@"

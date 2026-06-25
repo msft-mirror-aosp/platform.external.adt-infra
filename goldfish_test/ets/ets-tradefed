@@ -1,4 +1,9 @@
 #!/bin/bash
 # We want to $PWD to be the parent directory of this file.
 cd $(dirname $(dirname ${BASH_SOURCE[0]}))
+for f in tools/*protobuf*.jar; do
+  if [ -f "$f" ]; then
+    export TF_PATH_PREPEND="${TF_PATH_PREPEND:+$TF_PATH_PREPEND:}$f"
+  fi
+done
 exec ./tools/tradefed.sh "$@"
