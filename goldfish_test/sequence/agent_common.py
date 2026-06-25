@@ -208,6 +208,23 @@ def ets_external(
     return ac
 
 
+def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ac = ets(ns)
+    ac.id = "ets_snapshot"
+    args = ac.tradefed.args[:]
+    del ac.tradefed.args[:]
+    args = args[:-1] + [
+        "--suite-name",
+        "ETS_SNAPSHOT",
+        "--module-arg=SnapshotTest:set-option:booted_from_snapshot:true",
+    ] + args[-1:]
+    ac.tradefed.args.extend(args)
+    for imp in ac.imports:
+        if imp.id == "goldfish":
+            imp.id = "goldfish_snapshot"
+    return ac
+
+
 def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return test_sequencer_pb2.AgentConfig(
         goldfish=goldfish_pb2.GoldFish(
@@ -257,6 +274,12 @@ def goldfish_grpc(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
+def goldfish_load_snapshot_grpc(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ac = goldfish_grpc(ns)
+    ac.id = "goldfish_snapshot"
+    return ac
+
+
 def goldfish_very_verbose(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ac = goldfish(ns)
     ac.goldfish.args.extend(
@@ -289,6 +312,21 @@ def junit_xml_result_ets_close(
         imports=[
             test_sequencer_pb2.Import(
                 id="ets_close",
+                src="results_dir",
+            ),
+        ],
+    )
+
+
+def junit_xml_result_ets_snapshot(
+    ns: argparse.Namespace,
+) -> test_sequencer_pb2.AgentConfig:
+    return test_sequencer_pb2.AgentConfig(
+        id="junit_xml_ets_snapshot",
+        junit_xml_result=junit_xml_result_pb2.JUnitXMLResult(),
+        imports=[
+            test_sequencer_pb2.Import(
+                id="ets_snapshot",
                 src="results_dir",
             ),
         ],
