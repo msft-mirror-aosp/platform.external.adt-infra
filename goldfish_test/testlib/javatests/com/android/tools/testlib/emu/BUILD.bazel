@@ -21,3 +21,14 @@ kt_jvm_test(
         "@bazel_tools//tools/jdk:TestRunner",
     ],
 )
+
+kt_jvm_test(
+    name = "telnet_test",
+    size = "small",
+    srcs = ["TelnetTest.kt"],
+    test_class = "com.android.tools.testlib.emu.TelnetTest",
+    deps = [
+        "//testlib/java/com/android/tools/testlib/emu:telnet",
+        "@bazel_tools//tools/jdk:TestRunner",
+    ],
+)

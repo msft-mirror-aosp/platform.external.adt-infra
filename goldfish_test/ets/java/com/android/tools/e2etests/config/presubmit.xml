@@ -22,6 +22,7 @@
     <option name="include-filter" value="SmsTest" />
     <!-- Not yet implemented on emu-next -->
     <option name="exclude-filter" value="SnapshotTest" />
+    <option name="include-filter" value="TelnetTest" />
     <option name="include-filter" value="VulkanAppTest" />
 
 </configuration>

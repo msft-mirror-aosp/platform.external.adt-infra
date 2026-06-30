@@ -21,6 +21,8 @@ def run(test_seq_path: str, sequence: str, extra_path: list[str]):
     xdg_runtime.mkdir()
     home = tmp_dir.joinpath("home")
     home.mkdir()
+    # Create a fake auth token for the emulator to use b/529880652.
+    home.joinpath(".emulator_console_auth_token").write_text("supersecret")
     env = os.environ.copy()
     env["DISABLE_CLEARCUT"] = "1"
     env["HOME"] = str(home)
