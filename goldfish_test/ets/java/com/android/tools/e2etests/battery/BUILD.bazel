@@ -1,0 +1,37 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = [
+        ":BatteryTest.apk",
+        ":BatteryTest.config",
+    ],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_android_library(
+    name = "battery_test_lib",
+    testonly = 1,
+    srcs = ["BatteryTest.kt"],
+    deps = [
+        "//deps/proto:aemu_java_grpc_lite",
+        "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
+        "@maven//:androidx_test_core",
+        "@maven//:androidx_test_runner",
+        "@maven//:com_google_testparameterinjector_test_parameter_injector",
+    ],
+)
+
+android_binary(
+    name = "BatteryTest",
+    testonly = 1,
+    custom_package = "com.android.tools.e2etests.battery",
+    manifest = "BatteryTestManifest.xml",
+    manifest_values = {
+        "minSdkVersion": "36",
+        "targetSdkVersion": "36",
+    },
+    deps = [":battery_test_lib"],
+)
