@@ -1,6 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
-load(":ets.bzl", "run_ets")
+load(":ets.bzl", "ets_plan")
 
 pkg_files(
     name = "e2e_host_tests",
@@ -19,7 +19,6 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/avd:pkg",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
-        "//ets/java/com/android/tools/e2etests/ctsverifier:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
         "//ets/java/com/android/tools/e2etests/display:pkg",
         "//ets/java/com/android/tools/e2etests/events:pkg",
@@ -72,9 +71,24 @@ pkg_zip(
     visibility = ["//visibility:public"],
 )
 
-run_ets(name = "ets")
+# Runs all of ets.
+ets_plan(
+    name = "ets",
+    plan = "ets",
+)
 
-run_ets(name = "presubmit")
+# Runs the presubmit ETS plan.
+ets_plan(
+    name = "presubmit",
+    plan = "presubmit",
+)
+
+# Runs the presubmit ETS plan in exclusive mode for less contention.
+ets_plan(
+    name = "exclusive_presubmit",
+    plan = "presubmit",
+    tags = ["exclusive"],
+)
 
 # Currently there are no tests specific for the postsubmit. This alias exists so
 # the build can run two different targets based on the environment, as they are
