@@ -7,7 +7,7 @@ kt_android_library(
     srcs = ["Grpc.kt"],
     visibility = ["//ets:__subpackages__"],
     deps = [
-        "//deps/proto:aemu_java_grpc",
+        "//deps/proto:aemu_java_grpc_lite",
         "@maven//:androidx_test_core",
         "@maven//:io_grpc_grpc_okhttp",
     ],

@@ -16,7 +16,7 @@ kt_android_library(
     testonly = 1,
     srcs = ["SmsTest.kt"],
     deps = [
-        "//deps/proto:aemu_java_grpc",
+        "//deps/proto:aemu_java_grpc_lite",
         "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
         "@maven//:androidx_test_core",
         "@maven//:androidx_test_runner",

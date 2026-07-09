@@ -5,6 +5,7 @@
     <option name="include-filter" value="AdbPushPullTest" />
     <option name="include-filter" value="AdbScreenCapTest" />
     <option name="include-filter" value="AvdTest" />
+    <option name="include-filter" value="BatteryTest" />
     <option name="include-filter" value="BootTest" />
     <option name="include-filter" value="InputTest" />
     <!-- These tests experience timeouts -->
@@ -22,6 +23,7 @@
     <option name="include-filter" value="SensorTest" />
     <option name="include-filter" value="SmsTest" />
     <option name="include-filter" value="SnapshotTest" />
+    <option name="include-filter" value="TelnetTest" />
     <option name="include-filter" value="VulkanAppTest" />
 
 </configuration>
