@@ -8,7 +8,8 @@ import oshi.SystemInfo
 private val logger = Logger.getLogger("Netsimd")
 
 fun netsimdIsLaunched(): Boolean {
-  val netsimdName = netsimdProcessName()
+  val netsimdName = netsimdProcessName(false)
+  val netsimdxName = netsimdProcessName(true)
   val os = SystemInfo().getOperatingSystem()
 
   for (proc in os.getProcesses()) {
@@ -27,7 +28,7 @@ fun netsimdIsLaunched(): Boolean {
       val path = Paths.get(executablePath)
       val fileName = path.fileName?.toString() ?: ""
 
-      if (fileName == netsimdName) {
+      if (fileName == netsimdName || fileName == netsimdxName) {
         return true
       }
     } catch (e: InvalidPathException) {
@@ -37,8 +38,11 @@ fun netsimdIsLaunched(): Boolean {
   return false
 }
 
-fun netsimdProcessName(osName: String = System.getProperty("os.name")): String {
+fun netsimdProcessName(isNext: Boolean, osName: String = System.getProperty("os.name")): String {
   var ret = "netsimd"
+  if (isNext) {
+    ret = "netsimdx"
+  }
   if (osName.contains("Windows", ignoreCase = true)) {
     ret += ".exe"
   }
