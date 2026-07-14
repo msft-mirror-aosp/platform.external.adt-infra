@@ -1,6 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
-load(":ets.bzl", "ets_plan")
+load(":ets.bzl", "ets_boot_emulator", "ets_plan")
 
 pkg_files(
     name = "e2e_host_tests",
@@ -28,6 +28,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/battery:pkg",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
+        "//ets/java/com/android/tools/e2etests/ctsverifier:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
         "//ets/java/com/android/tools/e2etests/display:pkg",
         "//ets/java/com/android/tools/e2etests/events:pkg",
@@ -115,4 +116,17 @@ test_suite(
     tests = [
         ":exclusive_presubmit",
     ],
+)
+
+ets_boot_emulator(
+    name = "cts_verifier",
+    args = [
+        "--cts_verifier_extract_dir",
+        "$(rlocationpath @cts-verifier//:BUILD.bazel)",
+    ],
+    config = "verifier_cfg.py",
+    data = [
+        "@cts-verifier//:BUILD.bazel",
+        "@cts-verifier//:all_files",
+    ]
 )
