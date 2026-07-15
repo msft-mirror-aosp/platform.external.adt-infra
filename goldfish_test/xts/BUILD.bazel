@@ -1,4 +1,4 @@
-load("//xts:xts.bzl", "cts_media_tests", "deqp_tests", "xts_plan", "xts_tests")
+load("//xts:xts.bzl", "cts_media_tests", "deqp_tests", "module_subtests", "xts_plan", "xts_tests")
 
 cts_modules = [
     "AconfigPublicApiCtsTests",
@@ -1706,6 +1706,21 @@ deqp_submodules = [
 deqp_tests(
     name = "deqp",
     submodules = deqp_submodules,
+)
+
+infodeqp_submodules = [
+    "dEQP-EGL.info*",
+    "dEQP-GLES3.info*",
+    "dEQP-GLES31.info*",
+    "dEQP-VK.api.info.*",
+    "dEQP-VK.info*",
+]
+
+module_subtests(
+    name = "infodeqp",
+    suite = "cts",
+    module_name = "CtsDeqpTestCases",
+    submodules = infodeqp_submodules,
 )
 
 xts_plan(
