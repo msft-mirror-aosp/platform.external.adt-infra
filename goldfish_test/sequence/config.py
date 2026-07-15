@@ -84,6 +84,12 @@ _KNOWN_FLAGS = {
         help="Path to the extracted build tools",
         required=True,
     ),
+    "cts_verifier_extract_dir": lambda p: p.add_argument(
+        "--cts_verifier_extract_dir",
+        type=dir_type,
+        help="Path to the extracted cts-verifier",
+        required=True,
+    ),
     "emulator_access_json": lambda p: p.add_argument(
         "--emulator_access_json",
         type=path_type,
