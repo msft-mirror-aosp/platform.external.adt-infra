@@ -1,6 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
-load(":ets.bzl", "ets_plan")
+load(":ets.bzl", "ets_boot_emulator", "ets_plan")
 
 pkg_files(
     name = "e2e_host_tests",
@@ -8,8 +8,16 @@ pkg_files(
     srcs = [
         "//ets/java/com/android/tools/e2etests:e2e_tests_post_deploy.jar",
         "//ets/java/com/android/tools/e2etests:e2e_tests_pre_deploy.jar",
+        "@protobuf//:protobuf_java",
+        "@protobuf//:protobuf_javalite",
+        "@protobuf//java/lite:lite_nowkt",
     ],
     prefix = "android-ets/tools",
+    renames = {
+        "@protobuf//:protobuf_java": "protobuf_java.jar",
+        "@protobuf//:protobuf_javalite": "protobuf_javalite.jar",
+        "@protobuf//java/lite:lite_nowkt": "protobuf_javalite_runtime.jar",
+    },
 )
 
 pkg_files(
@@ -17,8 +25,10 @@ pkg_files(
     testonly = True,
     srcs = [
         "//ets/java/com/android/tools/e2etests/avd:pkg",
+        "//ets/java/com/android/tools/e2etests/battery:pkg",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
+        "//ets/java/com/android/tools/e2etests/ctsverifier:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
         "//ets/java/com/android/tools/e2etests/display:pkg",
         "//ets/java/com/android/tools/e2etests/events:pkg",
@@ -28,6 +38,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/sensors:pkg",
         "//ets/java/com/android/tools/e2etests/sms:pkg",
         "//ets/java/com/android/tools/e2etests/snapshot:pkg",
+        "//ets/java/com/android/tools/e2etests/telnet:pkg",
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
         "//ets/java/com/android/tools/e2etests/wifi:pkg",
         "@animation_app//file",
@@ -105,4 +116,17 @@ test_suite(
     tests = [
         ":exclusive_presubmit",
     ],
+)
+
+ets_boot_emulator(
+    name = "cts_verifier",
+    args = [
+        "--cts_verifier_extract_dir",
+        "$(rlocationpath @cts-verifier//:BUILD.bazel)",
+    ],
+    config = "verifier_cfg.py",
+    data = [
+        "@cts-verifier//:BUILD.bazel",
+        "@cts-verifier//:all_files",
+    ]
 )

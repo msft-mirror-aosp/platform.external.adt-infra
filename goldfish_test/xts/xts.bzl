@@ -2,6 +2,30 @@
 
 load("//sequence:sequence.bzl", "run_sequence")
 
+def module_subtests(name, suite, module_name, submodules = []):
+    """Creates a set of rules that runs submodules for a test module.
+
+    Args:
+      name: The name of the rule
+      suite: The name of the suite to run
+      module_name: The name of the module
+      submodules: A list of submodules to create rules for of the form
+          <name>.<submodule>
+    """
+    test_specs = [
+        struct(
+            subname = smp,
+            args = [
+                "--module",
+                module_name,
+                "--submodule",
+                smp,
+            ],
+        )
+        for smp in submodules
+    ]
+    xts_test_specs(name, suite, test_specs)
+
 def deqp_tests(name, submodules = []):
     """Creates a set of rules that runs CTS deqp submodules.
 
@@ -10,17 +34,7 @@ def deqp_tests(name, submodules = []):
       submodules: A list of submodules to create rules for of the form
           <name>.<submodule>
     """
-    test_specs = [
-        struct(
-            subname = smp,
-            args = [
-                "--deqp_submodule",
-                smp,
-            ],
-        )
-        for smp in submodules
-    ]
-    xts_test_specs(name, "cts", test_specs)
+    module_subtests(name, "cts", "CtsDeqpTestCases", submodules)
 
 def cts_media_tests(name, modules = []):
     """Creates a set of rules that runs CTS media modules.

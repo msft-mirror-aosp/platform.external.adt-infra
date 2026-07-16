@@ -16,7 +16,10 @@ _adb_counter = 0
 
 
 def adb(
-    ns: argparse.Namespace, args: list[str], timeout_seconds=60
+    ns: argparse.Namespace,
+    args: list[str],
+    timeout_seconds=60,
+    run_dir="",
 ) -> test_sequencer_pb2.AgentConfig:
     global _adb_counter
     _adb_counter += 1
@@ -24,6 +27,7 @@ def adb(
         id=f"adb-{_adb_counter}",
         adb=adb_pb2.ADB(
             args=args,
+            run_dir=run_dir,
             timeout_seconds=timeout_seconds,
         ),
         imports=[
@@ -119,6 +123,13 @@ def cts(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConf
         ]
     )
     return ac
+
+
+def cts_verifier_fetch(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    return test_sequencer_pb2.AgentConfig(
+        id="cts_verifier_fetch",
+        extract=extract_pb2.Extract(path=ns.cts_verifier_zip),
+    )
 
 
 def _ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
@@ -222,6 +233,29 @@ def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     for imp in ac.imports:
         if imp.id == "goldfish":
             imp.id = "goldfish_snapshot"
+    return ac
+
+
+def ets_verifier(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    ac = _ets(ns)
+    ac.tradefed.args.extend(
+        [
+            "ets",
+            "-m",
+            "CtsVerifierTest",
+            "--abi",
+            ns.abi,
+            "--test-arg",
+        ]
+    )
+    ac.imports.append(
+        test_sequencer_pb2.Import(
+            id="goldfish",
+            src="grpc_port",
+            dst="args",
+            re_replace="com.android.tradefed.testtype.AndroidJUnitTest:instrumentation-arg:grpc-port:=${1}",
+        ),
+    )
     return ac
 
 

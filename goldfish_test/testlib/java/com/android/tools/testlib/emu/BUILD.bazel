@@ -18,3 +18,12 @@ kt_jvm_library(
     name = "eventually",
     srcs = ["Eventually.kt"],
 )
+
+kt_jvm_library(
+    name = "telnet",
+    srcs = ["Telnet.kt"],
+    deps = [
+        "@maven//:commons_net_commons_net",
+        "@maven//:org_jetbrains_kotlinx_kotlinx_coroutines_core",
+    ],
+)

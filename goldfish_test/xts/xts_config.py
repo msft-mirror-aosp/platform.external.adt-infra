@@ -12,8 +12,8 @@ _APE_API_KEY = "secret://projects/android-devtools-emulator/secrets/android-emul
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--deqp_submodule",
-        help="Submodule of deqp to run",
+        "--submodule",
+        help="Submodule to run",
     )
     parser.add_argument(
         "--media_extract_dir",
@@ -38,13 +38,16 @@ def get_parser() -> argparse.ArgumentParser:
 
 def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
     args = []
-    if ns.deqp_submodule:
+    if ns.submodule:
+        suite_name = ns.suite
+        if suite_name == "sts":
+            suite_name = "sts-dynamic-full"
         args = [
-            "cts",
+            suite_name,
             "-m",
-            "CtsDeqpTestCases",
+            ns.module,
             "--module-arg",
-            "CtsDeqpTestCases:include-filter:" + ns.deqp_submodule,
+            ns.module + ":include-filter:" + ns.submodule,
         ]
     elif ns.media_extract_dir:
         args = [

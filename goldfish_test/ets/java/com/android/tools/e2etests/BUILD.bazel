@@ -30,6 +30,7 @@ java_binary(
         "//ets/java/com/android/tools/e2etests/netsim:netsim_daemon_test",
         "//ets/java/com/android/tools/e2etests/netsim:netsim_single_device_test",
         "//ets/java/com/android/tools/e2etests/snapshot:snapshot_test",
+        "//ets/java/com/android/tools/e2etests/telnet:telnet_test",
         "//ets/java/com/android/tools/e2etests/vulkan:vulkan_app_test",
         "//testlib/java/com/android/tools/testlib/tradefed:emulator_test_suite",
         "//testlib/java/com/android/tools/testlib/tradefed:log_saver",
