@@ -2093,3 +2093,22 @@ test_suite(
         "cts.CtsUsbTests",
     ],
 )
+
+
+
+GtsExoPlayerTestCases_submodules = [
+
+"com.google.android.exoplayer.gts.CommonEncryptionDrmTest",
+"com.google.android.exoplayer.gts.DashDownloadTest",
+"com.google.android.exoplayer.gts.DashStreamingTest",
+"com.google.android.exoplayer.gts.DashWidevineOfflineTest",
+"com.google.android.exoplayer.gts.EnumerateDecodersTest",
+
+]
+
+module_subtests(
+    name = "GtsExoPlayerTestCases.shard",
+    suite = "gts",
+    module_name = "GtsExoPlayerTestCases",
+    submodules = GtsExoPlayerTestCases_submodules,
+)

@@ -42,13 +42,22 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         suite_name = ns.suite
         if suite_name == "sts":
             suite_name = "sts-dynamic-full"
-        args = [
-            suite_name,
-            "-m",
-            ns.module,
-            "--module-arg",
-            ns.module + ":include-filter:" + ns.submodule,
-        ]
+        if ns.submodule.endswith("*"):
+            args = [
+                suite_name,
+                "-m",
+                ns.module,
+                "--module-arg",
+                ns.module + ":include-filter:" + ns.submodule,
+            ]
+        else:
+            args = [
+                suite_name,
+                "-m",
+                ns.module,
+                "-t",
+                ns.submodule,
+            ]
     elif ns.media_extract_dir:
         args = [
             "cts",
