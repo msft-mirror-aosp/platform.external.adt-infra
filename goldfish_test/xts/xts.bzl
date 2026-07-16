@@ -110,6 +110,13 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
         linux_suite_repo = suite + "-x86-64"
         mac_suite_repo = suite + "-arm64"
 
+    if suite == "sts":
+        x86_image = "android16k-x86_64"
+        arm_image = "android16k-arm64-v8a"
+    else:
+        x86_image = "android16k-x86_64-user"
+        arm_image = "android16k-arm64-v8a-user"
+
     tests = []
     for test_spec in test_specs:
         test = name + "." + test_spec.subname
@@ -128,7 +135,7 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
                     "--build_tools_extract_dir",
                     "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
                     "--image_extract_dir",
-                    "$(rlocationpath @android16k-x86_64//:BUILD.bazel)",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % x86_image,
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
                     "--tradefed_extract_dir",
@@ -138,7 +145,7 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
                     "--build_tools_extract_dir",
                     "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
                     "--image_extract_dir",
-                    "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % arm_image,
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
                     "--tradefed_extract_dir",
@@ -149,8 +156,8 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
                 "@goldfish//emulator:release",
             ] + additional_data + select({
                 "@platforms//os:linux": [
-                    "@android16k-x86_64//:BUILD.bazel",
-                    "@android16k-x86_64//:all_files",
+                    "@%s//:BUILD.bazel" % x86_image,
+                    "@%s//:all_files" % x86_image,
                     "@build-tools-linux//:BUILD.bazel",
                     "@build-tools-linux//:all_files",
                     "@" + linux_suite_repo + "//:BUILD.bazel",
@@ -159,8 +166,8 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
                     "@platform-tools-linux//:all_files",
                 ],
                 "@platforms//os:macos": [
-                    "@android16k-arm64-v8a//:BUILD.bazel",
-                    "@android16k-arm64-v8a//:all_files",
+                    "@%s//:BUILD.bazel" % arm_image,
+                    "@%s//:all_files" % arm_image,
                     "@build-tools-mac//:BUILD.bazel",
                     "@build-tools-mac//:all_files",
                     "@" + mac_suite_repo + "//:BUILD.bazel",
