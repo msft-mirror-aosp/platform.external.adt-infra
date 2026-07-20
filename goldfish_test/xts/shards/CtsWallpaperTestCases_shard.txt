@@ -1,0 +1,5 @@
+android.app.cts.wallpapers.WallpaperColorsTest*
+android.app.cts.wallpapers.WallpaperDescriptionTest*
+android.app.cts.wallpapers.WallpaperInfoTest*
+android.app.cts.wallpapers.WallpaperInstanceTest*
+android.app.cts.wallpapers.WallpaperManagerTest*

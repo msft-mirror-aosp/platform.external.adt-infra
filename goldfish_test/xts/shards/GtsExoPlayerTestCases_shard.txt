@@ -1,0 +1,5 @@
+com.google.android.exoplayer.gts.CommonEncryptionDrmTest
+com.google.android.exoplayer.gts.DashDownloadTest
+com.google.android.exoplayer.gts.DashStreamingTest
+com.google.android.exoplayer.gts.DashWidevineOfflineTest
+com.google.android.exoplayer.gts.EnumerateDecodersTest
