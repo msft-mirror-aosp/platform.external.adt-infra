@@ -260,14 +260,17 @@ def ets_verifier(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
 
 
 def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    args = [
+        "-verbose",
+        "-show-kernel",
+        "-no-window",
+    ]
+    if not getattr(ns, 'is_prebuilt_emulator', False):
+        args.append("-not-in-bazel")
+
     return test_sequencer_pb2.AgentConfig(
         goldfish=goldfish_pb2.GoldFish(
-            args=[
-                "-verbose",
-                "-show-kernel",
-                "-not-in-bazel",
-                "-no-window",
-            ],
+            args=args,
             cleanup=True,
             emulator_path="emulator/emulator",
             max_attempts=3,

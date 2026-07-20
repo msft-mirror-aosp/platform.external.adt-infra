@@ -102,7 +102,10 @@ _KNOWN_FLAGS = {
         required=True,
     ),
     "goldfish_zip": lambda p: p.add_argument(
-        "--goldfish_zip", type=path_type, help="Path to the goldfish zip", required=True
+        "--goldfish_zip", type=path_type, help="Path to the goldfish zip"
+    ),
+    "is_prebuilt_emulator": lambda p: p.add_argument(
+        "--is_prebuilt_emulator", action="store_true", help="If true, the emulator is prebuilt and does not support -not-in-bazel"
     ),
     "hellovk_extract_dir": lambda p: p.add_argument(
         "--hellovk_extract_dir",

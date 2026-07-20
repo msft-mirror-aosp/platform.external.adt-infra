@@ -102,10 +102,19 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
       test_specs: The test spec struct that will be passed to the tradefed agent
       additional_data: Additional data files
     """
+    if not native.existing_rule("use_emu_main_dev_linux_x64"):
+        native.config_setting(
+            name = "use_emu_main_dev_linux_x64",
+            values = {"define": "use_emu_main_dev_linux_x64=true"},
+        )
+
     # GTS is does not have two separate builds.
     if suite == "gts":
         linux_suite_repo = "gts"
         mac_suite_repo = "gts"
+    elif suite == "cts-verifier":
+        linux_suite_repo = "cts-verifier"
+        mac_suite_repo = "cts-verifier"
     else:
         linux_suite_repo = suite + "-x86-64"
         mac_suite_repo = suite + "-arm64"
@@ -128,9 +137,17 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
             args = [
                 "--suite",
                 suite,
-                "--goldfish_zip",
-                "$(rlocationpath @goldfish//emulator:release)",
-            ] + test_spec.args + select({
+            ] + select({
+                ":use_emu_main_dev_linux_x64": [
+                    "--goldfish_zip",
+                    "$(rlocationpath @emu-main-dev-linux-x64//file)",
+                    "--is_prebuilt_emulator",
+                ],
+                "//conditions:default": [
+                    "--goldfish_zip",
+                    "$(rlocationpath @goldfish//emulator:release)",
+                ],
+            }) + test_spec.args + select({
                 "@platforms//os:linux": [
                     "--build_tools_extract_dir",
                     "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
@@ -139,7 +156,7 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
                     "--tradefed_extract_dir",
-                    "$(rlocationpath @" + linux_suite_repo +"//:BUILD.bazel)",
+                    "$(rlocationpath @" + linux_suite_repo + "//:BUILD.bazel)",
                 ],
                 "@platforms//os:macos": [
                     "--build_tools_extract_dir",
@@ -149,12 +166,17 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
                     "--tradefed_extract_dir",
-                    "$(rlocationpath @" + mac_suite_repo +"//:BUILD.bazel)",
+                    "$(rlocationpath @" + mac_suite_repo + "//:BUILD.bazel)",
                 ],
             }),
-            data = [
-                "@goldfish//emulator:release",
-            ] + additional_data + select({
+            data = select({
+                ":use_emu_main_dev_linux_x64": [
+                    "@emu-main-dev-linux-x64//file",
+                ],
+                "//conditions:default": [
+                    "@goldfish//emulator:release",
+                ],
+            }) + additional_data + select({
                 "@platforms//os:linux": [
                     "@%s//:BUILD.bazel" % x86_image,
                     "@%s//:all_files" % x86_image,
@@ -260,4 +282,3 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
         tests = ["local_" + t for t in tests],
         tags = ["manual"],
     )
-
