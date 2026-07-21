@@ -1282,6 +1282,7 @@ EXPECTED_RELEASE_CONTENTS = {
         "emulator/qemu/windows-x86_64/vccorlib140.dll",
         "emulator/qemu/windows-x86_64/vcruntime140_1.dll",
         "emulator/qemu/windows-x86_64/vcruntime140.dll",
+        "emulator/qemu/windows-x86_64/vcruntime140_threads.dll",
         "emulator/qsn.exe",
         "emulator/resources/",
         "emulator/resources/default.jpg",
@@ -1344,6 +1345,7 @@ EXPECTED_RELEASE_CONTENTS = {
         "emulator/vccorlib140.dll",
         "emulator/vcruntime140_1.dll",
         "emulator/vcruntime140.dll",
+        "emulator/vcruntime140_threads.dll",
     ],
     "linux_x86_64": [
         "emulator/",
