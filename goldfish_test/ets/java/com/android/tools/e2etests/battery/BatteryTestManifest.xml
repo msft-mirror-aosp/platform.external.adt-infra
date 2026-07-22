@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.tools.e2etests.battery" >
+
+
+    <application android:usesCleartextTraffic="true">>
+       <uses-library android:name="android.test.runner"/>
+    </application>
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
+         android:targetPackage="com.android.tools.e2etests.battery"
+         android:label="Battery Test">
+    </instrumentation>
+</manifest>

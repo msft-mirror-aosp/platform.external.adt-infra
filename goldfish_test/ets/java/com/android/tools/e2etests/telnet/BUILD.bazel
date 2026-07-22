@@ -1,0 +1,20 @@
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = glob(["*.config"]),
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_jvm_test(
+    name = "telnet_test",
+    srcs = ["TelnetTest.kt"],
+    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    deps = [
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "//testlib/java/com/android/tools/testlib/emu:telnet",
+        "@maven//:junit_junit",
+        "@tradefed//:tradefed_jars",
+    ],
+)

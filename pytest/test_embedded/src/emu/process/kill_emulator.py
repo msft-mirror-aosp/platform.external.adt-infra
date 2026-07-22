@@ -91,7 +91,7 @@ def kill_process_tree(process: psutil.Process) -> None:
 
 def is_emulator_process(
     process: psutil.Process,
-    emulator_process_names="emulator,qemu-system,netsim,netsimd",
+    emulator_process_names="emulator,qemu-system,netsim,netsimd,netsimdx",
 ) -> bool:
     """Checks if the given process is an emulator (or related) process
 
@@ -180,7 +180,7 @@ def main():
     parser.add_argument(
         "-p",
         "--process_names",
-        default="emulator, qemu-system, netsim, netsimd",
+        default="emulator, qemu-system, netsim, netsimd, netsimdx",
         help="Names of processes that should be killed",
     )
 

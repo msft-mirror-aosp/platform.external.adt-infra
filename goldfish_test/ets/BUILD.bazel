@@ -8,8 +8,16 @@ pkg_files(
     srcs = [
         "//ets/java/com/android/tools/e2etests:e2e_tests_post_deploy.jar",
         "//ets/java/com/android/tools/e2etests:e2e_tests_pre_deploy.jar",
+        "@protobuf//:protobuf_java",
+        "@protobuf//:protobuf_javalite",
+        "@protobuf//java/lite:lite_nowkt",
     ],
     prefix = "android-ets/tools",
+    renames = {
+        "@protobuf//:protobuf_java": "protobuf_java.jar",
+        "@protobuf//:protobuf_javalite": "protobuf_javalite.jar",
+        "@protobuf//java/lite:lite_nowkt": "protobuf_javalite_runtime.jar",
+    },
 )
 
 pkg_files(
@@ -17,6 +25,7 @@ pkg_files(
     testonly = True,
     srcs = [
         "//ets/java/com/android/tools/e2etests/avd:pkg",
+        "//ets/java/com/android/tools/e2etests/battery:pkg",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
@@ -28,6 +37,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/sensors:pkg",
         "//ets/java/com/android/tools/e2etests/sms:pkg",
         "//ets/java/com/android/tools/e2etests/snapshot:pkg",
+        "//ets/java/com/android/tools/e2etests/telnet:pkg",
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
         "//ets/java/com/android/tools/e2etests/wifi:pkg",
         "@animation_app//file",

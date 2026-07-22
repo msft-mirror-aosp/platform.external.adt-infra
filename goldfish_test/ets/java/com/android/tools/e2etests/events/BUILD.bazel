@@ -38,8 +38,8 @@ kt_android_library(
     testonly = 1,
     srcs = ["ControlKeysTest.kt"],
     deps = [
-        "//deps/proto:aemu_java_grpc",
-        "//deps/proto:aemu_java_proto",
+        "//deps/proto:aemu_java_grpc_lite",
+        "//deps/proto:aemu_java_proto_lite",
         "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
         "//testlib/java/com/android/tools/testlib/emu:adb",
         "//testlib/java/com/android/tools/testlib/emu:eventually",

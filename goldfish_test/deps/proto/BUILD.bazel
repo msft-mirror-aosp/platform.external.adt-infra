@@ -1,3 +1,5 @@
+load("@grpc-java//:java_grpc_library.bzl", "java_grpc_library")
+load("@protobuf//bazel:java_lite_proto_library.bzl", "java_lite_proto_library")
 load("@rules_java//java:defs.bzl", "java_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -36,5 +38,182 @@ java_library(
         "@aemu//protos/services/ui-controller:ui_controller_service_java_grpc",
         "@aemu//protos/services/waterfall:waterfall_java_grpc",
         "@aemu//protos/services/webrtc:rtc_service_java_grpc",
+    ],
+)
+
+# Lite protos
+java_lite_proto_library(
+    name = "grpc_endpoint_description_java_proto_lite",
+    deps = ["@aemu//protos/client:grpc_endpoint_description_proto"],
+)
+
+java_lite_proto_library(
+    name = "emulator_controller_java_proto_lite",
+    deps = ["@aemu//protos/services/emulator-controller:emulator_controller_proto"],
+)
+
+java_lite_proto_library(
+    name = "avd_service_java_proto_lite",
+    deps = ["@aemu//protos/services/incubating/avd:avd_service_proto"],
+)
+
+java_lite_proto_library(
+    name = "car_service_java_proto_lite",
+    deps = ["@aemu//protos/services/incubating/car:car_service_proto"],
+)
+
+java_lite_proto_library(
+    name = "modem_service_java_proto_lite",
+    deps = ["@aemu//protos/services/incubating/modem:modem_service_proto"],
+)
+
+java_lite_proto_library(
+    name = "screen_recording_service_java_proto_lite",
+    deps = ["@aemu//protos/services/incubating/recording:screen_recording_service_proto"],
+)
+
+java_lite_proto_library(
+    name = "sensor_service_java_proto_lite",
+    deps = ["@aemu//protos/services/incubating/sensor:sensor_service_proto"],
+)
+
+java_lite_proto_library(
+    name = "virtual_scene_service_java_proto_lite",
+    deps = ["@aemu//protos/services/incubating/virtualscene:virtual_scene_service_proto"],
+)
+
+java_lite_proto_library(
+    name = "snapshot_service_java_proto_lite",
+    deps = ["@aemu//protos/services/snapshot:snapshot_service_proto"],
+)
+
+java_lite_proto_library(
+    name = "ui_controller_service_java_proto_lite",
+    deps = ["@aemu//protos/services/ui-controller:ui_controller_service_proto"],
+)
+
+java_lite_proto_library(
+    name = "waterfall_java_proto_lite",
+    deps = ["@aemu//protos/services/waterfall:waterfall_proto"],
+)
+
+java_lite_proto_library(
+    name = "rtc_service_java_proto_lite",
+    deps = ["@aemu//protos/services/webrtc:rtc_service_proto"],
+)
+
+# Lite gRPCs
+java_grpc_library(
+    name = "emulator_controller_java_grpc_lite",
+    srcs = ["@aemu//protos/services/emulator-controller:emulator_controller_proto"],
+    flavor = "lite",
+    deps = [":emulator_controller_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "avd_service_java_grpc_lite",
+    srcs = ["@aemu//protos/services/incubating/avd:avd_service_proto"],
+    flavor = "lite",
+    deps = [":avd_service_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "car_service_java_grpc_lite",
+    srcs = ["@aemu//protos/services/incubating/car:car_service_proto"],
+    flavor = "lite",
+    deps = [":car_service_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "modem_service_java_grpc_lite",
+    srcs = ["@aemu//protos/services/incubating/modem:modem_service_proto"],
+    flavor = "lite",
+    deps = [":modem_service_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "screen_recording_service_java_grpc_lite",
+    srcs = ["@aemu//protos/services/incubating/recording:screen_recording_service_proto"],
+    flavor = "lite",
+    deps = [":screen_recording_service_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "sensor_service_java_grpc_lite",
+    srcs = ["@aemu//protos/services/incubating/sensor:sensor_service_proto"],
+    flavor = "lite",
+    deps = [":sensor_service_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "virtual_scene_service_java_grpc_lite",
+    srcs = ["@aemu//protos/services/incubating/virtualscene:virtual_scene_service_proto"],
+    flavor = "lite",
+    deps = [":virtual_scene_service_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "snapshot_service_java_grpc_lite",
+    srcs = ["@aemu//protos/services/snapshot:snapshot_service_proto"],
+    flavor = "lite",
+    deps = [":snapshot_service_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "ui_controller_service_java_grpc_lite",
+    srcs = ["@aemu//protos/services/ui-controller:ui_controller_service_proto"],
+    flavor = "lite",
+    deps = [":ui_controller_service_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "waterfall_java_grpc_lite",
+    srcs = ["@aemu//protos/services/waterfall:waterfall_proto"],
+    flavor = "lite",
+    deps = [":waterfall_java_proto_lite"],
+)
+
+java_grpc_library(
+    name = "rtc_service_java_grpc_lite",
+    srcs = ["@aemu//protos/services/webrtc:rtc_service_proto"],
+    flavor = "lite",
+    deps = [":rtc_service_java_proto_lite"],
+)
+
+# Group targets
+java_library(
+    name = "aemu_java_proto_lite",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":avd_service_java_proto_lite",
+        ":car_service_java_proto_lite",
+        ":emulator_controller_java_proto_lite",
+        ":grpc_endpoint_description_java_proto_lite",
+        ":modem_service_java_proto_lite",
+        ":rtc_service_java_proto_lite",
+        ":screen_recording_service_java_proto_lite",
+        ":sensor_service_java_proto_lite",
+        ":snapshot_service_java_proto_lite",
+        ":ui_controller_service_java_proto_lite",
+        ":virtual_scene_service_java_proto_lite",
+        ":waterfall_java_proto_lite",
+    ],
+)
+
+java_library(
+    name = "aemu_java_grpc_lite",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":avd_service_java_grpc_lite",
+        ":car_service_java_grpc_lite",
+        ":emulator_controller_java_grpc_lite",
+        ":modem_service_java_grpc_lite",
+        ":rtc_service_java_grpc_lite",
+        ":screen_recording_service_java_grpc_lite",
+        ":sensor_service_java_grpc_lite",
+        ":snapshot_service_java_grpc_lite",
+        ":ui_controller_service_java_grpc_lite",
+        ":virtual_scene_service_java_grpc_lite",
+        ":waterfall_java_grpc_lite",
     ],
 )
