@@ -3,12 +3,10 @@ package com.android.tools.testlib.netsim
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 
 data class TestCase(val osName: String, val want: String)
 
 class NetsimdTest {
-  @Rule @JvmField val tempFolder = TemporaryFolder()
 
   @Test
   fun testNetsimdProcessName() {
@@ -21,7 +19,23 @@ class NetsimdTest {
       )
 
     for (c in cases) {
-      val got = netsimdProcessName(c.osName)
+      val got = netsimdProcessName(false, c.osName)
+      Assert.assertEquals(got, c.want)
+    }
+  }
+
+  @Test
+  fun testNetsimdxProcessName() {
+    val cases =
+      arrayOf(
+        TestCase("Linux", "netsimdx"),
+        TestCase("Mac", "netsimdx"),
+        TestCase("Windows", "netsimdx.exe"),
+        TestCase("Unknown", "netsimdx"),
+      )
+
+    for (c in cases) {
+      val got = netsimdProcessName(true, c.osName)
       Assert.assertEquals(got, c.want)
     }
   }
