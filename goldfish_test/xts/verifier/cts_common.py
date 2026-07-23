@@ -6,6 +6,16 @@ import subprocess
 import time
 import xml.etree.ElementTree as ET
 
+def setup_emulator_console_auth():
+    """Ensure adb can find the emulator console auth token in RBE environments."""
+    test_tmpdir = os.environ.get("TEST_TMPDIR")
+    if test_tmpdir:
+        expected_home = os.path.join(test_tmpdir, "home")
+        if os.path.exists(os.path.join(expected_home, ".emulator_console_auth_token")):
+            os.environ["HOME"] = expected_home
+
+setup_emulator_console_auth()
+
 APK_PATH = os.environ.get("CTS_APK_PATH", "/tmp/android-cts-verifier/CtsVerifier.apk")
 PACKAGE = "com.android.cts.verifier"
 ACTIVITY = f"{PACKAGE}/.CtsVerifierActivity"
@@ -145,31 +155,62 @@ def setup():
     time.sleep(8)
 
 
-def navigate_to(test_name, max_swipes=40):
+def navigate_to(test_name, max_swipes=40, verify_title=None):
     """Scroll through the test list to find test_name, tap it, and wait for the screen to settle."""
     print(f"Navigating to: {test_name!r}...")
     # Kill background processes to free memory before the first UI dump
     adb("shell", "am", "kill-all", check=False)
     time.sleep(1)
-    # Check if already visible without scrolling
-    root = ui_dump()
-    node = find_node(root, text=test_name)
-    if node is not None:
-        print(f"  Found at {node.attrib['bounds']}, tapping...")
-        tap(node)
-        time.sleep(3)
-        return
-    # Scroll down until the test is found
-    for _ in range(max_swipes):
-        adb("shell", "input", "swipe", "540", "1400", "540", "400", "250")
-        time.sleep(1.5)
+
+    # helper to check and click
+    def check_and_click():
         root = ui_dump()
+
+        # Dismiss any permission or OK dialogs that might block the view
+        allow_btn = find_node(root, text="Allow")
+        if allow_btn is not None:
+            print("  Dismissing Allow dialog...")
+            tap(allow_btn)
+            time.sleep(1)
+            root = ui_dump()
+        ok_btn = find_node(root, text="OK")
+        if ok_btn is not None:
+            print("  Dismissing OK dialog...")
+            tap(ok_btn)
+            time.sleep(1)
+            root = ui_dump()
+
         node = find_node(root, text=test_name)
         if node is not None:
             print(f"  Found at {node.attrib['bounds']}, tapping...")
             tap(node)
             time.sleep(3)
+
+            if verify_title:
+                new_root = ui_dump()
+                title_found = False
+                for n in new_root.iter("node"):
+                    if n.attrib.get("text", "").startswith(verify_title):
+                        title_found = True
+                        break
+                if not title_found:
+                    print(f"  Navigated to wrong test (title missing {verify_title!r}). Going back...")
+                    adb("shell", "input", "keyevent", "KEYCODE_BACK")
+                    time.sleep(2)
+                    return False # Need to keep searching
+            return True
+        return False
+
+    if check_and_click():
+        return
+
+    # Scroll down until the test is found
+    for _ in range(max_swipes):
+        adb("shell", "input", "swipe", "540", "1400", "540", "400", "250")
+        time.sleep(1.5)
+        if check_and_click():
             return
+
     raise RuntimeError(f"Could not find test in list: {test_name!r}")
 
 

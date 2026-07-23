@@ -71,20 +71,28 @@ def tap_bounds(b):
     time.sleep(1.5)
 
 
-def wait_for_button(texts, timeout=20):
+def wait_for_button(texts, timeout=20, index=0):
     """Wait for any text-Button (not ImageButton/View) in *texts* to be enabled."""
     if isinstance(texts, str):
         texts = [texts]
     deadline = time.time() + timeout
     while time.time() < deadline:
         root = ui_dump()
+        matches = []
         for n in root.iter("node"):
             cls = n.get("class", "")
             if "Button" in cls and "Image" not in cls:
                 if n.get("text") in texts and n.get("enabled") == "true":
-                    return n
+                    matches.append(n)
+        if len(matches) > index if index >= 0 else len(matches) >= abs(index):
+            return matches[index]
         time.sleep(1)
-    raise TimeoutError(f"Timed out waiting for enabled button with text in {texts}")
+    
+    # Dump UI if it times out
+    import xml.etree.ElementTree as ET
+    root = ui_dump()
+    ET.dump(root)
+    raise TimeoutError(f"Timed out waiting for enabled button with text in {texts} at index {index}")
 
 
 def wait_for_parent_pass(timeout=30):
@@ -100,15 +108,27 @@ def wait_for_parent_pass(timeout=30):
     raise TimeoutError("Timed out waiting for parent Pass button")
 
 
-def tap_dialog_option(label, exact=False, timeout=10):
+def tap_dialog_option(label, exact=False, timeout=30):
     """Tap a dialog button/text. If exact=True, full text must match (case-insensitive)."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         root = ui_dump()
         for n in root.iter("node"):
             t = n.get("text", "")
-            match = (t.lower() == label.lower()) if exact else (label.lower() in t.lower())
+            if not t:
+                continue
+            if exact:
+                match = (t.lower() == label.lower())
+            else:
+                # Handle special case for "don't add tile" due to possible smart quotes
+                if label == "don't add tile":
+                    match = "don" in t.lower() and "add tile" in t.lower()
+                else:
+                    match = (label.lower() in t.lower())
             if match:
+                # Make sure we don't accidentally tap the dialog title which might contain the label
+                if "wants to add a tile" in t.lower() or "add tile to quick settings" in t.lower():
+                    continue
                 print(f"  Tapping dialog option {t!r}")
                 tap_bounds(n.get("bounds"))
                 return
@@ -138,7 +158,18 @@ time.sleep(1)
 setup()
 screenshot("app_launched")
 
-navigate_to(TEST_NAME)
+for attempt in range(3):
+    try:
+        navigate_to(TEST_NAME)
+        break
+    except RuntimeError:
+        print(f"Flaky navigation attempt {attempt + 1}, retrying...")
+        adb("shell", "am", "force-stop", "com.android.cts.verifier")
+        time.sleep(2)
+        adb("shell", "am", "start", "-n", "com.android.cts.verifier/.CtsVerifierActivity")
+        time.sleep(5)
+else:
+    raise RuntimeError(f"Failed to navigate to {TEST_NAME} after 3 attempts")
 time.sleep(2)
 screenshot("test_opened")
 
@@ -182,7 +213,7 @@ screenshot("step4_pass_tapped")
 
 # Step 5: Start request → dialog → dismiss with BACK → auto-complete
 print("Step 5: Start request → dismiss dialog (KEYCODE_BACK) → auto-complete...")
-n = wait_for_button("Start request", timeout=20)
+n = wait_for_button("Start request", timeout=20, index=0)
 print(f"  Start request at {n.get('bounds')}")
 tap_bounds(n.get("bounds"))
 time.sleep(2)
@@ -198,11 +229,12 @@ time.sleep(1)
 
 # Step 6: Start request → dialog → "Don't add tile" → Pass enables → tap Pass
 print("Step 6: Start request → verify info → Don't add tile → tap Pass...")
-n = wait_for_button("Start request", timeout=30)
+n = wait_for_button("Start request", timeout=30, index=-1)
 print(f"  Start request at {n.get('bounds')}")
 tap_bounds(n.get("bounds"))
 time.sleep(2)
 screenshot("step6_dialog_appeared")
+
 tap_dialog_option("don't add tile")
 time.sleep(1)
 
@@ -215,7 +247,7 @@ screenshot("step6_pass_tapped")
 
 # Step 7: Start request → dialog → "Add tile" → auto-complete
 print("Step 7: Start request → Add tile → auto-complete...")
-n = wait_for_button("Start request", timeout=15)
+n = wait_for_button("Start request", timeout=15, index=-1)
 print(f"  Start request at {n.get('bounds')}")
 tap_bounds(n.get("bounds"))
 time.sleep(2)
@@ -235,8 +267,11 @@ screenshot("step8_pass_tapped")
 
 # Step 9 auto-completes; Step 10 Start request enables (app still installed)
 print("Step 9: Auto-completes (tile-already-added response check)...")
+print("  Scrolling down to reveal Step 10...")
+adb("shell", "input", "swipe", "540", "1800", "540", "400", "300")
+time.sleep(1)
 print("Step 10: Waiting for Start request (uninstall companion app)...")
-n = wait_for_button("Start request", timeout=15)
+n = wait_for_button("Start request", timeout=60, index=-1)
 screenshot("step10_start_request_enabled")
 print(f"  Tapping Start request at {n.get('bounds')}")
 tap_bounds(n.get("bounds"))

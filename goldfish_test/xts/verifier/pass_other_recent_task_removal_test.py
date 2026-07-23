@@ -6,14 +6,14 @@ opens Recents, swipes away its task, and returns to CtsVerifier for Pass.
 """
 
 import os
+import re
 import sys
-import os
-import sys
+import time
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
-from cts_common import screenshot, set_screenshot_dir
-import time
-from cts_common import ACTIVITY, adb, setup, navigate_to, ui_dump, find_node, tap, export_and_verify
+
+from cts_common import ACTIVITY, adb, export_and_verify, find_node, navigate_to, screenshot, set_screenshot_dir, setup, tap, ui_dump
 
 TEST_NAME = "Recent Task Removal Test"
 set_screenshot_dir("recent_task_removal_test")
@@ -29,6 +29,11 @@ if not os.path.exists(HELPER_APK):
     raise FileNotFoundError(f"HELPER_APK not found: {HELPER_APK}")
 
 setup()
+# Uninstall helper APK if present to ensure clean state
+print("Uninstalling existing CtsForceStopHelper...")
+adb("uninstall", "com.android.cts.forcestophelper", check=False)
+time.sleep(1)
+
 # Install helper APK
 print("Installing CtsForceStopHelper.apk...")
 screenshot("installing_ctsforcestophelper_apk")
@@ -47,6 +52,7 @@ for _ in range(10):
     ok = find_node(root, text="OK")
     if ok is not None:
         print("Dismissing intro dialog...")
+        screenshot("dismissing_intro_dialog")
         tap(ok)
         time.sleep(1)
         continue
@@ -69,42 +75,69 @@ adb("shell", "input", "keyevent", "KEYCODE_APP_SWITCH")
 time.sleep(2.5)
 
 print("Checking position of helper task in Recents...")
-root = ui_dump()
-helper_node = None
-for node in root.iter("node"):
-    if node.attrib.get("content-desc") == "Force stop helper app":
-        helper_node = node
-        # Prefer the large node, which typically has a larger width
-        # But any node for the app is fine. Let's just break on first.
+for attempt in range(5):
+    root = ui_dump()
+    helper_node = None
+    for node in root.iter("node"):
+        if node.attrib.get("content-desc") == "Force stop helper app":
+            helper_node = node
+            break
 
-if helper_node is not None:
+    if helper_node is None:
+        if attempt == 0:
+            print("Could not find helper app explicitly. Falling back to center swipe...")
+            try:
+                out = adb("shell", "wm", "size")
+                m = re.search(r'(\d+)x(\d+)', out)
+                if m:
+                    w, h = int(m.group(1)), int(m.group(2))
+                    cx, cy = w // 2, int(h * 0.75)
+                    print(f"Swiping up from calculated center ({cx}, {cy})")
+                    adb("shell", "input", "swipe", str(cx), str(cy), str(cx), "100", "100")
+                else:
+                    adb("shell", "input", "swipe", "540", "1500", "540", "100", "100")
+            except Exception as e:
+                print(f"Error getting screen size: {e}")
+                adb("shell", "input", "swipe", "540", "1500", "540", "100", "100")
+            time.sleep(2)
+            continue
+        else:
+            print("Helper task no longer found in Recents, assuming it's swiped away.")
+            break
+
+    screenshot(f"swiping_away_helper_task_attempt_{attempt}")
     bounds = helper_node.attrib.get("bounds", "")
     print(f"Found helper app at {bounds}")
-    # Extract first x coordinate
-    try:
-        x1 = int(bounds.split(',')[0].strip('['))
+    match = re.match(r'\[(\d+),(\d+)\]\[(\d+),(\d+)\]', bounds)
+    if match:
+        x1, y1, x2, y2 = map(int, match.groups())
+
+        # Center the app if it's off to the left or right
         if x1 < 100:
             print("Swiping left-to-right to center the app...")
-            adb("shell", "input", "swipe", "200", "1000", "800", "1000", "300")
+            screenshot(f"centering_helper_task_left_to_right_{attempt}")
+            adb("shell", "input", "swipe", "200", "1000", "800", "1000", "100")
             time.sleep(2)
+            continue
         elif x1 > 600:
             print("Swiping right-to-left to center the app...")
-            adb("shell", "input", "swipe", "800", "1000", "200", "1000", "300")
+            screenshot(f"centering_helper_task_right_to_left_{attempt}")
+            adb("shell", "input", "swipe", "800", "1000", "200", "1000", "100")
             time.sleep(2)
-        else:
-            print("App is already centered.")
-    except Exception as e:
-        print(f"Error parsing bounds: {e}")
-else:
-    print("Could not find helper app explicitly. Attempting to center if on left...")
-    adb("shell", "input", "swipe", "200", "1000", "800", "1000", "300")
-    time.sleep(2)
+            continue
 
-print("Swiping away helper task...")
-screenshot("swiping_away_helper_task")
-# Swipe up from center of the screen with a longer gesture
-adb("shell", "input", "swipe", "540", "1500", "540", "100", "300")
-time.sleep(1.5)
+        cx = (x1 + x2) // 2
+        cy = (y1 + y2) // 2
+        start_y = y2 - 200 if y2 > 400 else cy
+        print(f"Swiping away helper task from {cx}, {start_y} to {cx}, 100...")
+        adb("shell", "input", "swipe", str(cx), str(start_y), str(cx), "100", "300")
+        time.sleep(2)
+    else:
+        print("Could not parse bounds, falling back to generic swipe.")
+        adb("shell", "input", "swipe", "540", "1500", "540", "100", "300")
+        time.sleep(2)
+else:
+    print("Warning: Exhausted 5 attempts to swipe away helper task. Proceeding anyway.")
 
 # Dismiss any force-stop/kill permission dialog that may appear (deny it)
 root = ui_dump()
@@ -112,6 +145,7 @@ for deny_text in ["Deny", "Cancel", "No"]:
     deny_btn = find_node(root, text=deny_text)
     if deny_btn is not None:
         print(f"Denying dialog: {deny_text!r}")
+        screenshot("denying_permission_dialog")
         tap(deny_btn)
         break
 

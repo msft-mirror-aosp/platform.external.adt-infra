@@ -22,7 +22,7 @@ def cts_verifier_tests(name):
     test_specs = []
     for script in scripts:
         script_name = script.split("/")[-1]
-        subname = script_name.replace("run_", "").replace("_tests.sh", "").replace(".sh", "")
+        subname = script_name.replace("run_", "").replace(".sh", "")
         test_specs.append(
             struct(
                 subname = subname,
