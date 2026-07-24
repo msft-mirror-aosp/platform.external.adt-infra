@@ -102,13 +102,29 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
       test_specs: The test spec struct that will be passed to the tradefed agent
       additional_data: Additional data files
     """
+    if not native.existing_rule("use_emu_main_dev_linux_x64"):
+        native.config_setting(
+            name = "use_emu_main_dev_linux_x64",
+            values = {"define": "use_emu_main_dev_linux_x64=true"},
+        )
+
     # GTS is does not have two separate builds.
     if suite == "gts":
         linux_suite_repo = "gts"
         mac_suite_repo = "gts"
+    elif suite == "cts-verifier":
+        linux_suite_repo = "cts-verifier"
+        mac_suite_repo = "cts-verifier"
     else:
         linux_suite_repo = suite + "-x86-64"
         mac_suite_repo = suite + "-arm64"
+
+    if suite == "sts":
+        x86_image = "android16k-x86_64"
+        arm_image = "android16k-arm64-v8a"
+    else:
+        x86_image = "android16k-x86_64-user"
+        arm_image = "android16k-arm64-v8a-user"
 
     tests = []
     for test_spec in test_specs:
@@ -121,36 +137,49 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
             args = [
                 "--suite",
                 suite,
-                "--goldfish_zip",
-                "$(rlocationpath @goldfish//emulator:release)",
-            ] + test_spec.args + select({
+            ] + select({
+                ":use_emu_main_dev_linux_x64": [
+                    "--goldfish_zip",
+                    "$(rlocationpath @emu-main-dev-linux-x64//file)",
+                    "--is_prebuilt_emulator",
+                ],
+                "//conditions:default": [
+                    "--goldfish_zip",
+                    "$(rlocationpath @goldfish//emulator:release)",
+                ],
+            }) + test_spec.args + select({
                 "@platforms//os:linux": [
                     "--build_tools_extract_dir",
                     "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
                     "--image_extract_dir",
-                    "$(rlocationpath @android16k-x86_64//:BUILD.bazel)",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % x86_image,
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
                     "--tradefed_extract_dir",
-                    "$(rlocationpath @" + linux_suite_repo +"//:BUILD.bazel)",
+                    "$(rlocationpath @" + linux_suite_repo + "//:BUILD.bazel)",
                 ],
                 "@platforms//os:macos": [
                     "--build_tools_extract_dir",
                     "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
                     "--image_extract_dir",
-                    "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % arm_image,
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
                     "--tradefed_extract_dir",
-                    "$(rlocationpath @" + mac_suite_repo +"//:BUILD.bazel)",
+                    "$(rlocationpath @" + mac_suite_repo + "//:BUILD.bazel)",
                 ],
             }),
-            data = [
-                "@goldfish//emulator:release",
-            ] + additional_data + select({
+            data = select({
+                ":use_emu_main_dev_linux_x64": [
+                    "@emu-main-dev-linux-x64//file",
+                ],
+                "//conditions:default": [
+                    "@goldfish//emulator:release",
+                ],
+            }) + additional_data + select({
                 "@platforms//os:linux": [
-                    "@android16k-x86_64//:BUILD.bazel",
-                    "@android16k-x86_64//:all_files",
+                    "@%s//:BUILD.bazel" % x86_image,
+                    "@%s//:all_files" % x86_image,
                     "@build-tools-linux//:BUILD.bazel",
                     "@build-tools-linux//:all_files",
                     "@" + linux_suite_repo + "//:BUILD.bazel",
@@ -159,8 +188,8 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
                     "@platform-tools-linux//:all_files",
                 ],
                 "@platforms//os:macos": [
-                    "@android16k-arm64-v8a//:BUILD.bazel",
-                    "@android16k-arm64-v8a//:all_files",
+                    "@%s//:BUILD.bazel" % arm_image,
+                    "@%s//:all_files" % arm_image,
                     "@build-tools-mac//:BUILD.bazel",
                     "@build-tools-mac//:all_files",
                     "@" + mac_suite_repo + "//:BUILD.bazel",
@@ -253,4 +282,3 @@ def xts_test_specs(name, suite, test_specs = [], additional_data = []):
         tests = ["local_" + t for t in tests],
         tags = ["manual"],
     )
-
