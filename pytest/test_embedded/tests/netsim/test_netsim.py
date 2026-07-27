@@ -20,8 +20,6 @@ from emu.timing import eventually
 
 EXE_SUFFIX = '.exe' if platform.system() == 'Windows' else ''
 NETSIMD_BINARY = f'netsimd{EXE_SUFFIX}'
-NETSIMDX_BINARY = f'netsimdx{EXE_SUFFIX}'
-NETSIM_BINARIES = (NETSIMD_BINARY, NETSIMDX_BINARY)
 
 
 class NetsimProcessNotFoundException(Exception):
@@ -33,7 +31,7 @@ class NetsimProcessNotFoundException(Exception):
 def netsim_is_alive():
     for process in psutil.process_iter(["name"]):
         try:
-            if any(b in process.name() for b in NETSIM_BINARIES):
+            if NETSIMD_BINARY in process.name():
                 return True
         except:
             pass
@@ -45,7 +43,7 @@ async def get_netsimd_cpu_usage():
     netsimd_cpu_usage = [
         process.info["cpu_percent"]
         for process in psutil.process_iter(["name", "cpu_percent"])
-        if process.info["name"] in NETSIM_BINARIES
+        if process.info["name"] == NETSIMD_BINARY
     ]
     if len(netsimd_cpu_usage) > 1:
         raise AssertionError("Multiple netsimd processes found")
