@@ -16,6 +16,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--apk_dir", type=config.dir_type, help="Directory containing CTS verifier APKs")
     parser.add_argument("--build_tools_extract_dir", type=config.dir_type, help="Directory containing build tools")
     parser.add_argument("--script", help="Script to run")
+    parser.add_argument("--window", action="store_true", default=False, help="Run emulator with GUI window")
+    parser.add_argument("--no-window", "--headless", dest="window", action="store_false", help="Run emulator in headless mode without GUI window")
     return parser
 
 def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
