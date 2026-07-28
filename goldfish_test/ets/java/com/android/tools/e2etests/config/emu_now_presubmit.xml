@@ -14,6 +14,7 @@
     <option name="exclude-filter" value="CallTest com.android.tools.e2etests.call.CallTest#disconnectCall" />
     <option name="exclude-filter" value="CallTest com.android.tools.e2etests.call.CallTest#takeCallOffHold" />
     <option name="exclude-filter" value="CallTest com.android.tools.e2etests.call.CallTest#placeCallOnHold" />
+    <option name="include-filter" value="ClipboardTest" />
     <option name="include-filter" value="ConnectivityTest" />
     <option name="include-filter" value="ControlKeysTest" />
     <option name="include-filter" value="DisplayNameTest" />

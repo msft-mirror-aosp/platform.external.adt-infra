@@ -11,6 +11,7 @@
     <option name="include-filter" value="InputTest" />
     <!-- Not yet implemented on emu-next -->
     <option name="exclude-filter" value="CallTest" />
+    <option name="include-filter" value="ClipboardTest" />
     <option name="include-filter" value="ConnectivityTest" />
     <option name="include-filter" value="ControlKeysTest" />
     <!-- Not yet passing on emu-next -->
