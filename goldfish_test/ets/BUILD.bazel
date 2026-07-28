@@ -28,6 +28,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/battery:pkg",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
+        "//ets/java/com/android/tools/e2etests/clipboard:pkg",
         "//ets/java/com/android/tools/e2etests/ctsverifier:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
         "//ets/java/com/android/tools/e2etests/display:pkg",
