@@ -28,6 +28,7 @@ class ScriptTestRunner : IRemoteTest {
     val pb = ProcessBuilder(mScriptArgs).inheritIO()
     val env = pb.environment()
     env.put("SERIAL", testInfo.getDevice().getSerialNumber())
+    env.put("ETS", "true")
     val process = pb.start()
     val exitCode = process.waitFor()
 

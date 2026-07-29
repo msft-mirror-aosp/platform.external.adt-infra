@@ -18,6 +18,7 @@ pkg_files(
         "@protobuf//:protobuf_javalite": "protobuf_javalite.jar",
         "@protobuf//java/lite:lite_nowkt": "protobuf_javalite_runtime.jar",
     },
+    visibility = ["//visibility:public"],
 )
 
 pkg_files(
@@ -60,6 +61,7 @@ pkg_files(
     ],
     attributes = pkg_attributes(mode = "0777"),
     prefix = "android-ets/tools",
+    visibility = ["//visibility:public"],
 )
 
 pkg_filegroup(

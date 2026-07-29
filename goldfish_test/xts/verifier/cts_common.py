@@ -137,17 +137,22 @@ def setup():
     # Kill background processes first to prevent uiautomator OOM (exit 137)
     adb("shell", "am", "kill-all", check=False)
     time.sleep(1)
-    print("Uninstalling existing CtsVerifier (if present)...")
-    adb("shell", "pm", "uninstall", PACKAGE, check=False)
-    time.sleep(1)
-    adb("shell", "settings", "put", "global", "hidden_api_policy", "1")
-    print("Installing CtsVerifier.apk...")
-    adb("install", "-g", APK_PATH)
-    print("Installed.")
-    adb("shell", "appops", "set", PACKAGE, "android:read_device_identifiers", "allow")
-    adb("shell", "appops", "set", PACKAGE, "MANAGE_EXTERNAL_STORAGE", "0")
-    adb("shell", "am", "compat", "enable", "ALLOW_TEST_API_ACCESS", PACKAGE)
-    adb("shell", "appops", "set", PACKAGE, "TURN_SCREEN_ON", "0")
+    if os.environ.get("ETS", "false") == "false":
+        print("Uninstalling existing CtsVerifier (if present)...")
+        adb("shell", "pm", "uninstall", PACKAGE, check=False)
+        time.sleep(1)
+        adb("shell", "settings", "put", "global", "hidden_api_policy", "1")
+        print("Installing CtsVerifier.apk...")
+        adb("install", "-g", APK_PATH)
+        print("Installed.")
+        adb("shell", "appops", "set", PACKAGE, "android:read_device_identifiers", "allow")
+        adb("shell", "appops", "set", PACKAGE, "MANAGE_EXTERNAL_STORAGE", "0")
+        adb("shell", "am", "compat", "enable", "ALLOW_TEST_API_ACCESS", PACKAGE)
+        adb("shell", "appops", "set", PACKAGE, "TURN_SCREEN_ON", "0")
+    else:
+        # The package was already installed by ETS, just kill it if it is running.
+        adb("shell", "am", "force-stop", PACKAGE)
+
     print("Launching CtsVerifier...")
     adb("shell", "am", "start", "-n", ACTIVITY)
     # Wait for CTS Verifier to fully initialize and UI to stabilize.

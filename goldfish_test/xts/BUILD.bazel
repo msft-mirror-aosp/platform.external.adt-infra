@@ -1,9 +1,46 @@
 load(":xts_sharded.bzl", "xts_sharded_tests")
 load("//xts:xts.bzl", "cts_media_tests", "deqp_tests", "module_subtests", "xts_plan", "xts_tests")
-load("//xts:verifier.bzl", "cts_verifier_tests")
+load("//xts:verifier.bzl", "cts_verifier_tests", "ets_verifier")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
+load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
 
 cts_verifier_tests(
     name = "cts-verifier",
+)
+
+ets_verifier(
+    name = "ets-verifier",
+)
+
+pkg_files(
+    name = "verifier_scripts",
+    testonly = True,
+    srcs = glob(["verifier/*.py", "verifier/*.sh"]) + [
+        ":verifier_ets_configs",
+    ],
+    attributes = pkg_attributes(mode = "0777"),
+    prefix = "android-ets/testcases",
+)
+
+pkg_filegroup(
+    name = "android_ets",
+    testonly = True,
+    srcs = [
+        "//ets:e2e_host_tests",
+        "//ets:ets_tradefed",
+        ":verifier_scripts",
+        "@tradefed//:android_ets",
+    ],
+)
+
+pkg_zip(
+    name = "android_ets_verifier_zip",
+    testonly = True,
+    srcs = [
+        ":android_ets",
+    ],
+    out = "android-ets-verifier.zip",
+    visibility = ["//visibility:public"],
 )
 
 cts_modules = [

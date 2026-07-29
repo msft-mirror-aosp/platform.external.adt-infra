@@ -236,13 +236,13 @@ def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
-def ets_verifier(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+def ets_verifier(ns: argparse.Namespace, module: str = "CtsVerifierTest") -> test_sequencer_pb2.AgentConfig:
     ac = _ets(ns)
     ac.tradefed.args.extend(
         [
             "ets",
             "-m",
-            "CtsVerifierTest",
+            module,
             "--abi",
             ns.abi,
             "--test-arg",
