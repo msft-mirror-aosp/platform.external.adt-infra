@@ -1,0 +1,680 @@
+{
+  "total_categories": 23,
+  "total_test_items": 125,
+  "total_automated_items": 6,
+  "total_untested_items": 119,
+  "automation_coverage": "4.8%",
+  "categories": {
+    "AUDIO": [
+      {
+        "name": "Analog Headset Audio Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Acoustic Echo Cancellation (AEC) Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Cold Start Input Latency Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Cold Start Output Latency Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Communication Latency Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Data Paths Analog Jack Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Data Paths Speaker/Mic Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Data Paths USB 4-Channel Input Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Data Paths USB Headset Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Data Paths USB Interface Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Data Paths USB Multichannel Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Descriptor Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Frequency Line Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Input Devices Notifications Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Input Routing Notifications Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Loopback Latency Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio MMAP PCM Offload Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Output Devices Notifications Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Output Routing Notifications Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Playback Parameters Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Stream Disconnect Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Tap To Tone Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Audio Workload Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Hifi Ultrasound Microphone Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Hifi Ultrasound Speaker Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Immersive Audio Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Multichannel Mixdown Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Ringer Mode Tests",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "CAMERA": [
+      {
+        "name": "Camera Bokeh",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Camera FOV Calibration",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Camera Flashlight",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Camera Formats",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Camera Intents",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Camera Orientation",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Camera Performance",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Camera Video",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "CLOCK": [
+      {
+        "name": "Alarms and Timers Tests",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "DEVICE ADMINISTRATION": [
+      {
+        "name": "Device Admin Tapjacking Test",
+        "automated": true,
+        "script": "pass_device_admin_tapjacking_test.py"
+      },
+      {
+        "name": "Device Admin Uninstall Test",
+        "automated": true,
+        "script": "pass_device_admin_uninstall_test.py"
+      },
+      {
+        "name": "Policy Serialization Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Screen Lock Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "DEVICE CONTROLS": [
+      {
+        "name": "Controls Panel tests",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "DISPLAYCUTOUT": [
+      {
+        "name": "DisplayCutout Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "FEATURES": [
+      {
+        "name": "Capture Content For Notes Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Clipboard Preview Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "EyeDropper Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "HOST-SIDE": [
+      {
+        "name": "Host-side Tests",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "INPUT": [
+      {
+        "name": "USI Version Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "MANAGED PROVISIONING": [
+      {
+        "name": "BYOD Managed Provisioning",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "BYOD Provisioning tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Device Owner Requesting Bugreport Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Device Owner Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "No Device Owner Tests",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "NETWORKING": [
+      {
+        "name": "Multinetwork connectivity Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Network Background Connectivity Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "BLUETOOTH": [
+      {
+        "name": "Bluetooth Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "NOTIFICATIONS": [
+      {
+        "name": "Condition Provider test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Toast test (may auto pass if CtsVerifier isn't targeting S+)",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "NOTIFICATIONS & SYSTEM UI": [
+      {
+        "name": "Bubble Notification Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "CA Cert Notification Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "CA Cert Notification on Boot test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Live Update Notification Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Notification Dismiss Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Notification Full Screen Intent Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Notification Hiding Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Notification Listener Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Notification Privacy Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Notification Styles Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "CA Cert install via intent",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "OTHER": [
+      {
+        "name": "Battery Saver Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Ignore Battery Optimizations Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Recent Task Removal Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Screen Pinning Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "TTS Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Widget Framework Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Widget Generated Previews Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "SENSORS": [
+      {
+        "name": "Barometer Reference Device",
+        "automated": true,
+        "script": "pass_other_barometer_reference_device_test.py"
+      },
+      {
+        "name": "Biometric Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "6DoF Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Accelerometer Measurement Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Barometer Measurement Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Device Suspend Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Dynamic Sensor Discovery Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Event sanitization for idle UID test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Gyroscope Measurement Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Magnetic Field Measurement Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Off Body Sensor Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Rotation Vector CV Crosscheck",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Sensor Batching Manual Tests",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Significant Motion Tests",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "PROJECTION TESTS": [
+      {
+        "name": "Projection Cube Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Projection Multitouch Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Projection Offscreen Activity",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Projection Scrolling List Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Projection Video Playback Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Projection Widget Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "SECURITY": [
+      {
+        "name": "Android Protected Confirmation Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Credential Management App Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Fingerprint Bound Keys Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Identity Credential Authentication",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Identity Credential Authentication Multi-Document",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "KeyChain Storage Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Keyguard Password Verification",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "LSKF Bound Keys Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "SecurityModeFeatureVerifier Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Set New Password Complexity Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Unlocked Device Required Keys Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "SHARESHEET": [
+      {
+        "name": "Chooser Result: Component",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Chooser Result: Copy",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Chooser Result: Edit",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Interactive Session Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Sharesheet Album Label Test",
+        "automated": true,
+        "script": "pass_sharesheet_album_label_test.py"
+      },
+      {
+        "name": "Sharesheet Payload Toggle Chooser Action Test",
+        "automated": true,
+        "script": "pass_sharesheet_payload_toggle_chooser_action_test.py"
+      },
+      {
+        "name": "Sharesheet Payload Toggle Test",
+        "automated": true,
+        "script": "pass_sharesheet_payload_toggle_test.py"
+      },
+      {
+        "name": "Sharesheet Text Plus Image",
+        "automated": true,
+        "script": "pass_sharesheet_text_plus_image_test.py"
+      }
+    ],
+    "STREAMING": [
+      {
+        "name": "Streaming Video Quality Verifier",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "TELEPHONY": [
+      {
+        "name": "Dialer Receives Incoming Call",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Dialer Shows HUN on Incoming Call",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Hide settings in voicemail test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Hide voicemail in call settings test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "System Implements Telecom Intents",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Voicemail Broadcast Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "TILES": [
+      {
+        "name": "Tile Service Request Test",
+        "automated": false,
+        "script": null
+      },
+      {
+        "name": "Tile Service Test",
+        "automated": false,
+        "script": null
+      }
+    ],
+    "VIBRATIONS": [
+      {
+        "name": "Has Vibrator Test",
+        "automated": false,
+        "script": null
+      }
+    ]
+  }
+}
