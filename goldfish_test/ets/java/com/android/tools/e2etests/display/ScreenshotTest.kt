@@ -1,25 +1,18 @@
 package com.android.tools.e2etests.display
 
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.util.Log
-import android.view.KeyEvent
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.platform.io.PlatformTestStorage
 import androidx.test.platform.io.PlatformTestStorageRegistry
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.Until
 import com.android.emulator.control.Image
 import com.android.emulator.control.ImageFormat
 import com.android.emulator.control.ParameterValue
 import com.android.emulator.control.PhysicalModelValue
+import com.android.tools.e2etests.animatebox.AnimateBox
 import com.android.tools.e2etests.grpc.EmulatorController
-import com.android.tools.testlib.emu.Adb
-import com.android.tools.testlib.emu.LogcatWatcher
-import com.android.tools.testlib.emu.eventually
 import com.google.protobuf.ByteString
 import com.google.testing.junit.testparameterinjector.TestParameter
 import com.google.testing.junit.testparameterinjector.TestParameterInjector
@@ -28,14 +21,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 val TAG = "ScreenshotTest"
-val FILTER = "aemu:I"
 
 @RunWith(TestParameterInjector::class)
 class ScreenshotTest {
-
   val inst = InstrumentationRegistry.getInstrumentation()
-  val adb = Adb(inst.getUiAutomation())
-  val context = inst.getTargetContext()
   val testStorage: PlatformTestStorage = PlatformTestStorageRegistry.getInstance()
 
   enum class TestCase(val format: ImageFormat.ImgFormat, val rotation: Float) {
@@ -73,35 +62,9 @@ class ScreenshotTest {
 
   @Test
   fun screenshotAllFormatsAreEqual() {
-    val packageName = "com.google.AnimateBox"
-    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    Log.i(TAG, "Starting animation app")
-
-    // Stop the animation app if it is already running so we start from a clean state.
-    adb.shell("am force-stop $packageName")
-
-    val watcher = LogcatWatcher(adb, FILTER)
-
-    device.pressHome()
-    val launchIntent = context.getPackageManager().getLaunchIntentForPackage(packageName)
-    launchIntent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-    context.startActivity(launchIntent)
-
-    Assert.assertNotNull(device.wait(Until.hasObject(By.pkg(packageName).depth(0)), 5000))
-    // The animation app can sometimes take a while to start.
-    Assert.assertTrue(eventually(300, 100) { watcher.containsNewLine("--STARTED--") })
-
-    // There may be a dialog indicating the app is full screen. Click it.
-    val fullScreenDialog = device.wait(Until.findObject(By.text("Got it")), 500)
-    fullScreenDialog?.click()
-
-    // Keycodes can sometimes get lost so try to pause multiple times.
-    Assert.assertTrue(
-      eventually(5, 500) {
-        device.pressKeyCode(KeyEvent.KEYCODE_P)
-        watcher.containsNewLine("Pausing animation")
-      }
-    )
+    val animateBox = AnimateBox(inst)
+    animateBox.start()
+    animateBox.pause()
 
     // The pause action can trigger the clock/status to be shown.
     Thread.sleep(500)

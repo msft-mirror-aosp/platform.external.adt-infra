@@ -1,4 +1,5 @@
 load("@rules_java//java:java_library.bzl", "java_library")
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
 
 package(default_visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"])
 
@@ -13,6 +14,15 @@ java_library(
 java_library(
     name = "log_saver",
     srcs = ["XtsFileSystemLogSaver.java"],
+    deps = [
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+kt_jvm_library(
+    name = "script_test_runner",
+    srcs = ["ScriptTestRunner.kt"],
+    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
     deps = [
         "@tradefed//:tradefed_jars",
     ],
