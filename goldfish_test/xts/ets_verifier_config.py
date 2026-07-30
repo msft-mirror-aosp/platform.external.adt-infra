@@ -86,6 +86,7 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         # Pull CTS Verifier results.
         agent_common.adb(
             ns, ["pull", "/sdcard/verifierReports", "verifierReports"],
+            run_dir=os.environ.get("TEST_UNDECLARED_OUTPUTS_DIR"),
         ),
     ]
 

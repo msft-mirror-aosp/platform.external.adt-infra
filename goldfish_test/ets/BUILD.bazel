@@ -30,7 +30,6 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
         "//ets/java/com/android/tools/e2etests/clipboard:pkg",
-        "//ets/java/com/android/tools/e2etests/ctsverifier:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
         "//ets/java/com/android/tools/e2etests/display:pkg",
         "//ets/java/com/android/tools/e2etests/events:pkg",
@@ -119,17 +118,4 @@ test_suite(
     tests = [
         ":exclusive_presubmit",
     ],
-)
-
-ets_boot_emulator(
-    name = "cts_verifier",
-    args = [
-        "--cts_verifier_extract_dir",
-        "$(rlocationpath @cts-verifier//:BUILD.bazel)",
-    ],
-    config = "verifier_cfg.py",
-    data = [
-        "@cts-verifier//:BUILD.bazel",
-        "@cts-verifier//:all_files",
-    ]
 )

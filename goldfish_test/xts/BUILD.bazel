@@ -17,6 +17,7 @@ pkg_files(
     testonly = True,
     srcs = glob(["verifier/*.py", "verifier/*.sh"]) + [
         ":verifier_ets_configs",
+        "//xts/verifier/java/com/android/tools/e2etests/clock:pkg",
     ],
     attributes = pkg_attributes(mode = "0777"),
     prefix = "android-ets/testcases",
