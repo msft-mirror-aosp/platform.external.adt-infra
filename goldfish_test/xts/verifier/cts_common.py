@@ -471,6 +471,84 @@ def tap_pass(pass_btn=None):
     time.sleep(1)
 
 
+def tap_fail(fail_btn=None):
+    """Tap the Fail button (red exclamation mark / X button)."""
+    if fail_btn is None:
+        fail_btn = wait_for(content_desc="Fail")
+        if fail_btn is None:
+            fail_btn = wait_for(text="Fail")
+    print(f"  Tapping Fail at {fail_btn.attrib['bounds']}...")
+    tap(fail_btn)
+    time.sleep(1)
+
+
+def find_pass_button(root):
+    """Find the toolbar Pass button node in an XML root."""
+    btn = find_node(root, content_desc="Pass")
+    if btn is None:
+        btn = find_node(root, text="Pass")
+    return btn
+
+
+def find_fail_button(root):
+    """Find the toolbar Fail button node in an XML root."""
+    btn = find_node(root, content_desc="Fail")
+    if btn is None:
+        btn = find_node(root, text="Fail")
+    return btn
+
+
+def is_pass_button_enabled(root):
+    """Return True if the toolbar Pass button is present and enabled."""
+    btn = find_pass_button(root)
+    return btn is not None and btn.attrib.get("enabled") == "true"
+
+
+def _extract_test_prefix(text):
+    """Extract label prefix like '0a', '1a', '4c' from a string like '1a: Credential Not Enrolled Tests'."""
+    parts = text.split(":")
+    if len(parts) >= 2:
+        prefix = parts[0].strip().lower()
+        if len(prefix) == 2 and prefix[0].isdigit() and prefix[1].isalpha():
+            return prefix
+    return None
+
+
+def scroll_to_subtest(subtest_title, max_swipes=25):
+    """
+    Scroll through a TestListActivity view until a sub-test matching subtest_title is found.
+    Uses predictable label ordering ('0a', '1a', '1b', etc.) to return None immediately
+    when a test is not present without wasting swipes.
+    """
+    target_prefix = _extract_test_prefix(subtest_title)
+    for _ in range(max_swipes):
+        root = ui_dump()
+        node, _ = find_node_containing(root, subtest_title)
+        if node is not None:
+            return node
+
+        # Check visible prefixes on current screen to detect missing tests early
+        visible_prefixes = []
+        for n in root.iter("node"):
+            p = _extract_test_prefix(n.attrib.get("text", ""))
+            if p:
+                visible_prefixes.append(p)
+
+        if visible_prefixes and target_prefix:
+            min_p = min(visible_prefixes)
+            max_p = max(visible_prefixes)
+            # If all visible prefixes are already greater than target_prefix, test is not present
+            if min_p > target_prefix:
+                return None
+            # If target_prefix is bracketed by min_p and max_p but was not found on screen, test is not present
+            if min_p < target_prefix < max_p:
+                return None
+
+        adb("shell", "input", "swipe", "540", "1400", "540", "400", "250")
+        time.sleep(1.5)
+    return None
+
+
 def export_and_verify(test_name):
     """Open the overflow menu, tap Export, pull the ZIP, and rename it."""
     print("Opening overflow menu...")

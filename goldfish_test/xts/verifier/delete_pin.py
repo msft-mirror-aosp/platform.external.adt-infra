@@ -54,13 +54,14 @@ def delete_pin(pin):
         )
 
     out = adb("shell", "locksettings", "clear", "--old", pin)
-    if "cleared" not in out.lower():
+    adb("shell", "locksettings", "set-disabled", "true", check=False)
+    if "cleared" not in out.lower() and "no password" not in out.lower():
         raise RuntimeError(f"Unexpected output from clear: {out!r}")
 
     if not lock_disabled():
         raise RuntimeError("clear reported success but lock is still enabled")
 
-    print(f"PIN {pin} deleted and verified.")
+    print(f"PIN {pin} deleted and verified (lock set to None).")
 
 
 if __name__ == "__main__":
