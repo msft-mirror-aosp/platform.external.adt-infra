@@ -180,7 +180,7 @@ def main():
     parser.add_argument(
         "-p",
         "--process_names",
-        default="emulator, qemu-system, netsim, netsimd, netsimdx",
+        default="emulator, qemu-system, netsim, netsimd",
         help="Names of processes that should be killed",
     )
 
