@@ -1,0 +1,40 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+
+filegroup(
+    name = "pkg",
+    testonly = 1,
+    srcs = [
+        ":ClipboardTest.apk",
+        ":ClipboardTest.config",
+    ],
+    visibility = ["//ets:__pkg__"],
+)
+
+kt_android_library(
+    name = "clipboard_test_lib",
+    testonly = 1,
+    srcs = ["ClipboardTest.kt"],
+    deps = [
+        "//deps/proto:aemu_java_grpc_lite",
+        "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
+        "//testlib/java/com/android/tools/testlib/emu:eventually",
+        "@maven//:androidx_test_core",
+        "@maven//:androidx_test_ext_junit",
+        "@maven//:androidx_test_runner",
+        "@maven//:com_google_testparameterinjector_test_parameter_injector",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+android_binary(
+    name = "ClipboardTest",
+    testonly = 1,
+    custom_package = "com.android.tools.e2etests.clipboard",
+    manifest = "ClipboardTestManifest.xml",
+    manifest_values = {
+        "minSdkVersion": "36",
+        "targetSdkVersion": "36",
+    },
+    deps = [":clipboard_test_lib"],
+)

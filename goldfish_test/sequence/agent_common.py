@@ -236,13 +236,13 @@ def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
-def ets_verifier(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+def ets_verifier(ns: argparse.Namespace, module: str = "CtsVerifierTest") -> test_sequencer_pb2.AgentConfig:
     ac = _ets(ns)
     ac.tradefed.args.extend(
         [
             "ets",
             "-m",
-            "CtsVerifierTest",
+            module,
             "--abi",
             ns.abi,
             "--test-arg",
@@ -263,8 +263,9 @@ def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     args = [
         "-verbose",
         "-show-kernel",
-        "-no-window",
     ]
+    if getattr(ns, 'no_window', False) or not getattr(ns, 'window', False):
+        args.append("-no-window")
     if not getattr(ns, 'is_prebuilt_emulator', False):
         args.append("-not-in-bazel")
 

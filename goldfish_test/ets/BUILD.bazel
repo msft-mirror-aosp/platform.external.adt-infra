@@ -18,6 +18,7 @@ pkg_files(
         "@protobuf//:protobuf_javalite": "protobuf_javalite.jar",
         "@protobuf//java/lite:lite_nowkt": "protobuf_javalite_runtime.jar",
     },
+    visibility = ["//visibility:public"],
 )
 
 pkg_files(
@@ -28,6 +29,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/battery:pkg",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
+        "//ets/java/com/android/tools/e2etests/clipboard:pkg",
         "//ets/java/com/android/tools/e2etests/ctsverifier:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
         "//ets/java/com/android/tools/e2etests/display:pkg",
@@ -59,6 +61,7 @@ pkg_files(
     ],
     attributes = pkg_attributes(mode = "0777"),
     prefix = "android-ets/tools",
+    visibility = ["//visibility:public"],
 )
 
 pkg_filegroup(
