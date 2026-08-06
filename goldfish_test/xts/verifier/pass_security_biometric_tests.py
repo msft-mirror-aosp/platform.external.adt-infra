@@ -30,7 +30,6 @@ from cts_common import (
     find_node,
     find_node_containing,
     tap,
-    dismiss_dialogs_and_wait_for_pass,
     tap_pass,
     tap_fail,
     find_pass_button,
@@ -38,6 +37,11 @@ from cts_common import (
     is_pass_button_enabled,
     scroll_to_subtest,
     export_and_verify,
+)
+from security_common import (
+    ensure_security_prerequisites,
+    is_pin_prompt_present as _is_pin_prompt_present,
+    enter_pin_on_keypad,
 )
 
 TEST_NAME = "Biometric Tests"
@@ -89,120 +93,13 @@ SUBTEST_GROUPS = [
 ]
 
 
-def clear_all_credentials():
-    """Wipe all PIN/password credentials and set lock state to None, clearing all fingerprints."""
-    print("  Clearing all lock credentials and fingerprints (setting lock to None)...")
-    adb("shell", "locksettings", "clear", "--old", "1111", check=False)
-    adb("shell", "locksettings", "clear", check=False)
-    adb("shell", "locksettings", "set-disabled", "true", check=False)
-    time.sleep(1.5)
-
-
 def ensure_prerequisite_state(prereq_state, skip_prereqs=False):
     """Ensure required credentials are set up or wiped once per group."""
-    print(
-        f"\n[PREREQUISITE] Ensuring state: {prereq_state} (skip_prereqs={skip_prereqs})..."
-    )
-    if skip_prereqs:
-        print(f"  [SKIP PREREQS] skipping credential setup for {prereq_state}.")
-        return
-
-    adb("shell", "am", "force-stop", "com.android.settings", check=False)
-    clear_all_credentials()
-
-    if prereq_state == "UNENROLLED":
-        print("  Device is now clean (UNENROLLED, lockscreen set to None).")
-    elif prereq_state == "PIN_ONLY_NO_BIOMETRIC":
-        print(
-            "  Setting up clean PIN (without biometrics) for PIN_ONLY_NO_BIOMETRIC tests..."
-        )
-        os.system(f"{sys.executable} {os.path.join(SCRIPT_DIR, 'create_pin.py')} 1111")
-    elif prereq_state in ["ENROLLED", "PIN_AND_BIOMETRIC_ENROLLED"]:
-        print(
-            "  Setting up clean PIN and fingerprint credentials for ENROLLED tests..."
-        )
-        os.system(f"{sys.executable} {os.path.join(SCRIPT_DIR, 'create_pin.py')} 1111")
-        os.system(
-            f"{sys.executable} {os.path.join(SCRIPT_DIR, 'enroll_fingerprint.py')} 1"
-        )
-
+    ensure_security_prerequisites(prereq_state, skip_prereqs=skip_prereqs)
     # Re-launch CtsVerifier after settings changes
     adb("shell", "am", "start", "-n", "com.android.cts.verifier/.CtsVerifierActivity")
     time.sleep(5)
     navigate_to(TEST_NAME)
-    time.sleep(2)
-
-
-def _is_pin_prompt_present(root):
-    # 1. Broad structural signals (SystemUI pads & Settings PIN input IDs/descs)
-    for node in root.iter("node"):
-        res_id = node.attrib.get("resource-id", "").lower()
-        desc = node.attrib.get("content-desc", "").lower()
-        if any(
-            k in res_id
-            for k in [
-                "cred_pin_pad",
-                "compose_credential_view",
-                "key_enter",
-                "password_entry",
-                "pin_entry",
-                "lockpassword",
-            ]
-        ):
-            return True
-        if any(d in desc for d in ["pin area", "pin entry", "enter pin"]):
-            return True
-
-    # 2. Flexible token-based PIN keyword & helper text matching
-    for node in root.iter("node"):
-        text = node.attrib.get("text", "").strip().lower()
-        if not text:
-            continue
-        words = set(text.replace(".", "").replace(",", "").split())
-        if "pin" in words and any(
-            v in text
-            for v in [
-                "enter",
-                "confirm",
-                "re-enter",
-                "verify",
-                "required",
-                "use",
-                "device",
-                "verifies",
-            ]
-        ):
-            return True
-        # Helper text fallback (e.g., "Your PIN verifies it's you")
-        if "pin verifies" in text or "pin required" in text:
-            return True
-
-    return False
-
-
-def enter_pin_on_keypad(pin="1111"):
-    """Enter a PIN on the custom numeric keypad by tapping digit buttons and Enter."""
-    print(f"  Tapping PIN digits {pin!r} on numeric keypad...")
-    for digit in pin:
-        root = ui_dump()
-        btn = find_node(root, text=digit)
-        if btn is not None:
-            tap(btn)
-            time.sleep(0.5)
-        else:
-            adb("shell", "input", "keyevent", f"KEYCODE_{digit}")
-            time.sleep(0.5)
-
-    time.sleep(0.5)
-    root = ui_dump()
-    enter_btn = find_node(root, content_desc="Enter")
-    if enter_btn is None:
-        enter_btn = find_node(root, text="Enter")
-    if enter_btn is not None:
-        print("  Tapping keypad Enter button...")
-        tap(enter_btn)
-    else:
-        adb("shell", "input", "keyevent", "KEYCODE_ENTER")
     time.sleep(2)
 
 
@@ -359,9 +256,7 @@ def run_start_enrollment_step(test_label="2a"):
     for _ in range(3):
         new_root = ui_dump()
         if _is_pin_prompt_present(new_root):
-            print(
-                f"  [{test_label}] PIN/authentication prompt detected, entering '1111' on keypad..."
-            )
+            print(f"  [{test_label}] PIN/authentication prompt detected.")
             enter_pin_on_keypad("1111")
             time.sleep(2)
             flow_started = True
@@ -589,7 +484,7 @@ def test_section4_user_authentication(subtest_title):
         if target_node is None:
             # Maybe an authentication prompt is already visible from a previous tap?
             if _is_pin_prompt_present(root):
-                print(f"  [{subtest_title}] PIN prompt detected, entering '1111'...")
+                print(f"  [{subtest_title}] PIN prompt detected.")
                 enter_pin_on_keypad("1111")
                 time.sleep(2)
                 continue
@@ -634,9 +529,7 @@ def test_section4_user_authentication(subtest_title):
         for _ in range(5):
             new_root = ui_dump()
             if _is_pin_prompt_present(new_root):
-                print(
-                    f"  [{subtest_title}] PIN prompt detected after tapping button, entering '1111'..."
-                )
+                print(f"  [{subtest_title}] PIN prompt detected after tapping button.")
                 enter_pin_on_keypad("1111")
                 time.sleep(2)
                 # After entering PIN, also check if BiometricPrompt is still waiting
@@ -755,9 +648,13 @@ def main():
     )
     parser.add_argument(
         "--skip-prereqs",
+        "--skip_prereqs",
         "-s",
         action="store_true",
-        default=os.environ.get("BIOMETRIC_SKIP_PREREQS", "0") == "1",
+        default=bool(
+            os.environ.get("BIOMETRIC_SKIP_PREREQS", "0") == "1"
+            or os.environ.get("CTS_SECURITY_SKIP_PREREQS")
+        ),
         help="Skip prerequisite credential setup to verify tests naturally fail.",
     )
     parser.add_argument(

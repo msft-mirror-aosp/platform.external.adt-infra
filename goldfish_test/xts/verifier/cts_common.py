@@ -591,11 +591,11 @@ def export_and_verify(test_name):
     """Open the overflow menu, tap Export, pull the ZIP, and rename it."""
     print("Opening overflow menu...")
     root = ui_dump()
-    menu_btn = (
-        find_node(root, content_desc="More options")
-        or find_node(root, content_desc="More Options")
-        or find_node(root, text="More options")
-    )
+    menu_btn = find_node(root, content_desc="More options")
+    if menu_btn is None:
+        menu_btn = find_node(root, content_desc="More Options")
+    if menu_btn is None:
+        menu_btn = find_node(root, text="More options")
     if menu_btn is None:
         for node in root.iter("node"):
             r_id = node.attrib.get("resource-id", "")
@@ -617,11 +617,11 @@ def export_and_verify(test_name):
     export_btn = None
     for _ in range(5):
         root = ui_dump()
-        export_btn = (
-            find_node(root, text="Export test report")
-            or find_node(root, text="Export")
-            or find_node(root, text="Export test results")
-        )
+        export_btn = find_node(root, text="Export test report")
+        if export_btn is None:
+            export_btn = find_node(root, text="Export")
+        if export_btn is None:
+            export_btn = find_node(root, text="Export test results")
         if export_btn is None:
             for node in root.iter("node"):
                 txt = node.attrib.get("text", "")
@@ -646,12 +646,12 @@ def export_and_verify(test_name):
     deadline = time.time() + 30
     while time.time() < deadline:
         root = ui_dump()
-        node, full_text = (
-            find_node_containing(root, "Report saved to")
-            or find_node_containing(root, "Exported")
-            or find_node_containing(root, ".zip")
-        )
-        if node is not None:
+        node, full_text = find_node_containing(root, "Report saved to")
+        if node is None:
+            node, full_text = find_node_containing(root, "Exported")
+        if node is None:
+            node, full_text = find_node_containing(root, ".zip")
+        if node is not None and full_text:
             match = re.search(r"(\/(?:sdcard|storage)\/\S+\.zip)", full_text)
             if match:
                 device_zip_path = match.group(1)
