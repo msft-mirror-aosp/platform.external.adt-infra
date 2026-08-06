@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.tools.e2etests.ctsverifier" >
+    package="com.android.tools.e2etests.clock" >
 
 
     <application android:usesCleartextTraffic="true">>
@@ -11,9 +11,8 @@
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
-         android:targetPackage="com.android.tools.e2etests.ctsverifier"
-         android:label="CtsVerifier Test">
+         android:targetPackage="com.android.tools.e2etests.clock"
+         android:label="Clock CtsVerifier Test">
     </instrumentation>
 
 </manifest>
-

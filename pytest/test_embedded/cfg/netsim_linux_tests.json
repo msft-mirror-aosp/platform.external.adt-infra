@@ -7,25 +7,9 @@
         "avd_configs": [
             {
                 "launch_flags": [
-                    "-no-snapshot"
-                ],
-                "api": "34",
-                "tag.id": "google_apis"
-            }
-        ],
-        "status": "enabled"
-    },
-    "netsim_linux_with_wifi_test_suite_api_34": {
-        "description": "Set of tests that verify netsim daemon process with wifi enabled",
-        "pytest_flags": [
-            "-m netsim and not multi or wifi_perf"
-        ],
-        "avd_configs": [
-            {
-                "launch_flags": [
                     "-no-snapshot",
                     "-feature",
-                    "WiFiPacketStream"
+                    "-NetsimX"
                 ],
                 "api": "34",
                 "tag.id": "google_apis"

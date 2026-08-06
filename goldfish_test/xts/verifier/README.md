@@ -116,3 +116,33 @@ adb("shell", "input", "keyevent", "KEYCODE_WAKEUP")
 time.sleep(2)
 adb("shell", "input", "keyevent", "82") # Unlock
 ```
+
+## 5. Handling Device Reboots (`reboot_and_wait`)
+
+Some CTS Verifier tests (e.g., Device Admin Policy Serialization, Device Admin Screen Lock, Device Admin Uninstall) require an intentional device reboot during execution to verify policy persistence across reboots.
+
+### Important Rule
+Because the CTS Verifier test harness uses ADB to monitor device liveliness and maintain the emulator session, executing `adb shell reboot` directly will cause the ADB socket to close unexpectedly and fail the test.
+
+**Tests must always use `reboot_and_wait()` rather than calling `adb shell reboot` directly:**
+
+```python
+from cts_common import setup, navigate_to, tap, reboot_and_wait, export_and_verify
+
+setup()
+navigate_to("Policy Serialization Test")
+
+# Execute pre-reboot UI steps...
+tap(apply_policy_btn)
+tap(activate_admin_btn)
+
+# Use reboot_and_wait() instead of raw 'adb shell reboot':
+reboot_and_wait()
+
+# Re-open CtsVerifier and check persisted policies post-reboot...
+navigate_to("Policy Serialization Test")
+export_and_verify("Policy Serialization Test")
+```
+
+`reboot_and_wait()` automatically issues the reboot, waits for `adbd` to disconnect and reconnect, verifies `sys.boot_completed == 1`, and unlocks the device screen post-reboot. **IMPORTANT:** Because raw `adb shell` commands drop their connection when a device reboots, any CTS Verifier test that calls `reboot_and_wait()` MUST be executed via `ets-verifier` (`@goldfish_test//xts:ets-verifier.<module>`) rather than `cts-verifier`. Tradefed (`ets-verifier`) natively supervises ADB disconnection and reconnection across 0, 1, or N reboots.
+

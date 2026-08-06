@@ -7,7 +7,9 @@
         "avd_configs": [
             {
                 "launch_flags": [
-                    "-no-snapshot"
+                    "-no-snapshot",
+                    "-feature",
+                    "-NetsimX"
                 ],
                 "api": "33",
                 "tag.id": "google_apis",
@@ -15,7 +17,9 @@
             },
             {
                 "launch_flags": [
-                    "-no-snapshot"
+                    "-no-snapshot",
+                    "-feature",
+                    "-NetsimX"
                 ],
                 "api": "33",
                 "tag.id": "google_apis",

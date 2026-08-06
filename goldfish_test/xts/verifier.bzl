@@ -1,8 +1,18 @@
-load("//sequence:sequence.bzl", "run_sequence")
+"""CTS Verifier test rules and macro definitions."""
+
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load("//sequence:sequence.bzl", "run_sequence")
+
+_KOTLIN_MODULES = [
+    "ClockTest",
+]
 
 def cts_verifier_tests(name):
-    """Creates a set of rules that runs CTS verifier."""
+    """Creates a set of rules that runs CTS verifier.
+
+    Args:
+        name: The base name of the test suite.
+    """
     if not native.existing_rule("use_emu_main_dev_linux_x64"):
         native.config_setting(
             name = "use_emu_main_dev_linux_x64",
@@ -86,7 +96,7 @@ def cts_verifier_tests(name):
                 "//conditions:default": [
                     "@goldfish//emulator:release",
                 ],
-            }) + native.glob(["verifier/*.py", "verifier/*.sh"], allow_empty = True) + additional_data + select({
+            }) + native.glob(["verifier/*.py", "verifier/*.sh", "verifier/automation_dev/*.py"], allow_empty = True) + additional_data + select({
                 "@platforms//os:linux": [
                     "@android16k-x86_64-user//:BUILD.bazel",
                     "@android16k-x86_64-user//:all_files",
@@ -126,7 +136,6 @@ def cts_verifier_tests(name):
         tags = ["manual"],
     )
 
-
 def _ets_verifier_config_impl(ctx):
     config = """
 <configuration description="A basic Tradefed test configuration">
@@ -149,7 +158,6 @@ _ets_verifier_config = rule(
         "output_file": attr.output(mandatory = True),
     },
 )
-
 
 def ets_verifier(name):
     """Creates a set of rules to generate ETS verifier configs.
@@ -180,97 +188,20 @@ def ets_verifier(name):
         )
         config_rules.append(base_name + ".config")
 
-        run_sequence(
-            name = name + "." + base_name,
-            srcs = ["ets_verifier_config.py"],
-            main = "ets_verifier_config.py",
-            args = [
-                "--module",
-                base_name,
-                "--tradefed_zip",
-                "$(rlocationpath :android_ets_verifier_zip)",
-                "--cts_verifier_extract_dir",
-                "$(rlocationpath @cts-verifier//:BUILD.bazel)",
-                "--emulator_access_json",
-                "$(rlocationpath @goldfish//emulator/libs/grpc_security:unsecure-emulator-access)",
-            ] + select({
-                ":use_emu_main_dev_linux_x64": [
-                    "--goldfish_zip",
-                    "$(rlocationpath @emu-main-dev-linux-x64//file)",
-                    "--is_prebuilt_emulator",
-                ],
-                "//conditions:default": [
-                    "--goldfish_zip",
-                    "$(rlocationpath @goldfish//emulator:release)",
-                ],
-            }) + select({
-                "@platforms//os:linux": [
-                    "--abi",
-                    "x86_64",
-                    "--build_tools_extract_dir",
-                    "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
-                    "--image_extract_dir",
-                    "$(rlocationpath @android16k-x86_64-user//:BUILD.bazel)",
-                    "--platform_tools_extract_dir",
-                    "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
-                ],
-                "@platforms//os:macos": [
-                    "--abi",
-                    "arm64-v8a",
-                    "--build_tools_extract_dir",
-                    "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
-                    "--image_extract_dir",
-                    "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
-                    "--platform_tools_extract_dir",
-                    "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
-                ],
-            }),
-            data = [
-                ":android_ets_verifier_zip",
-                "@cts-verifier//:BUILD.bazel",
-                "@cts-verifier//:all_files",
-                "@goldfish//emulator/libs/grpc_security:unsecure-emulator-access",
-            ] + select({
-                ":use_emu_main_dev_linux_x64": [
-                    "@emu-main-dev-linux-x64//file",
-                ],
-                "//conditions:default": [
-                    "@goldfish//emulator:release",
-                ],
-            }) + select({
-                "@platforms//os:linux": [
-                    "@android16k-x86_64-user//:BUILD.bazel",
-                    "@android16k-x86_64-user//:all_files",
-                    "@build-tools-linux//:BUILD.bazel",
-                    "@build-tools-linux//:all_files",
-                    "@platform-tools-linux//:BUILD.bazel",
-                    "@platform-tools-linux//:all_files",
-                ],
-                "@platforms//os:macos": [
-                    "@android16k-arm64-v8a//:BUILD.bazel",
-                    "@android16k-arm64-v8a//:all_files",
-                    "@build-tools-mac//:BUILD.bazel",
-                    "@build-tools-mac//:all_files",
-                    "@platform-tools-mac//:BUILD.bazel",
-                    "@platform-tools-mac//:all_files",
-                ],
-            }),
-            exec_properties = {
-                "dockerNetwork": "standard",
-            },
-            size = "enormous",
-            tags = [
-                "manual",
-                "requires-network",
-            ],
-            deps = [
-                "//sequence:agent_common",
-                "//sequence:config",
-                "@test_seq//test_seq/proto:test_sequencer_pb2",
-                "@rules_python//python/runfiles",
-            ],
+        test_rules.append(
+            ets_verifier_test(
+                name = name,
+                module = base_name,
+            ),
         )
-        test_rules.append(base_name)
+
+    for module in _KOTLIN_MODULES:
+        test_rules.append(
+            ets_verifier_test(
+                name = name,
+                module = module,
+            ),
+        )
 
     pkg_files(
         name = "verifier_ets_configs",
@@ -282,3 +213,200 @@ def ets_verifier(name):
         tags = ["manual"],
     )
 
+def ets_verifier_test(name, module):
+    """Creates a single ETS verifier test target.
+
+    Args:
+        name: The base name of the test suite.
+        module: The verifier test module name.
+    """
+    test_name = name + "." + module
+    run_sequence(
+        name = test_name,
+        srcs = ["ets_verifier_config.py"],
+        main = "ets_verifier_config.py",
+        args = [
+            "--module",
+            module,
+            "--tradefed_zip",
+            "$(rlocationpath :android_ets_verifier_zip)",
+            "--cts_verifier_extract_dir",
+            "$(rlocationpath @cts-verifier//:BUILD.bazel)",
+            "--emulator_access_json",
+            "$(rlocationpath @goldfish//emulator/libs/grpc_security:unsecure-emulator-access)",
+        ] + select({
+            ":use_emu_main_dev_linux_x64": [
+                "--goldfish_zip",
+                "$(rlocationpath @emu-main-dev-linux-x64//file)",
+                "--is_prebuilt_emulator",
+            ],
+            "//conditions:default": [
+                "--goldfish_zip",
+                "$(rlocationpath @goldfish//emulator:release)",
+            ],
+        }) + select({
+            "@platforms//os:linux": [
+                "--abi",
+                "x86_64",
+                "--build_tools_extract_dir",
+                "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
+                "--image_extract_dir",
+                "$(rlocationpath @android16k-x86_64-user//:BUILD.bazel)",
+                "--platform_tools_extract_dir",
+                "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
+            ],
+            "@platforms//os:macos": [
+                "--abi",
+                "arm64-v8a",
+                "--build_tools_extract_dir",
+                "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
+                "--image_extract_dir",
+                "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
+                "--platform_tools_extract_dir",
+                "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
+            ],
+        }),
+        data = [
+            ":android_ets_verifier_zip",
+            "@cts-verifier//:BUILD.bazel",
+            "@cts-verifier//:all_files",
+            "@goldfish//emulator/libs/grpc_security:unsecure-emulator-access",
+        ] + select({
+            ":use_emu_main_dev_linux_x64": [
+                "@emu-main-dev-linux-x64//file",
+            ],
+            "//conditions:default": [
+                "@goldfish//emulator:release",
+            ],
+        }) + select({
+            "@platforms//os:linux": [
+                "@android16k-x86_64-user//:BUILD.bazel",
+                "@android16k-x86_64-user//:all_files",
+                "@build-tools-linux//:BUILD.bazel",
+                "@build-tools-linux//:all_files",
+                "@platform-tools-linux//:BUILD.bazel",
+                "@platform-tools-linux//:all_files",
+            ],
+            "@platforms//os:macos": [
+                "@android16k-arm64-v8a//:BUILD.bazel",
+                "@android16k-arm64-v8a//:all_files",
+                "@build-tools-mac//:BUILD.bazel",
+                "@build-tools-mac//:all_files",
+                "@platform-tools-mac//:BUILD.bazel",
+                "@platform-tools-mac//:all_files",
+            ],
+        }),
+        exec_properties = {
+            "dockerNetwork": "standard",
+        },
+        size = "enormous",
+        tags = [
+            "manual",
+            "requires-network",
+        ],
+        deps = [
+            "//sequence:agent_common",
+            "//sequence:config",
+            "@test_seq//test_seq/proto:test_sequencer_pb2",
+            "@rules_python//python/runfiles",
+        ],
+    )
+    return test_name
+
+def cts_verifier_automation_dev_tests(name = "cts-verifier-automation-dev"):
+    """Creates a set of rules that runs CTS verifier in automation development mode.
+
+    Args:
+        name: The target name for the automation dev target.
+    """
+    if not native.existing_rule("use_emu_main_dev_linux_x64"):
+        native.config_setting(
+            name = "use_emu_main_dev_linux_x64",
+            values = {"define": "use_emu_main_dev_linux_x64=true"},
+        )
+
+    additional_data = [
+        "@cts-verifier//:BUILD.bazel",
+        "@cts-verifier//:all_files",
+    ]
+
+    # Top-level standalone target for test collection and interactive development without requiring any run_*.sh script
+    run_sequence(
+        name = name,
+        srcs = ["verifier_config.py"],
+        main = "verifier_config.py",
+        args = [
+            "--suite",
+            "cts-verifier",
+            "--apk_dir",
+            "$(rlocationpath @cts-verifier//:BUILD.bazel)",
+            "--dev_mode",
+            "--window",
+        ] + select({
+            ":use_emu_main_dev_linux_x64": [
+                "--goldfish_zip",
+                "$(rlocationpath @emu-main-dev-linux-x64//file)",
+                "--is_prebuilt_emulator",
+            ],
+            "//conditions:default": [
+                "--goldfish_zip",
+                "$(rlocationpath @goldfish//emulator:release)",
+            ],
+        }) + select({
+            "@platforms//os:linux": [
+                "--build_tools_extract_dir",
+                "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
+                "--image_extract_dir",
+                "$(rlocationpath @android16k-x86_64-user//:BUILD.bazel)",
+                "--platform_tools_extract_dir",
+                "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
+            ],
+            "@platforms//os:macos": [
+                "--build_tools_extract_dir",
+                "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
+                "--image_extract_dir",
+                "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
+                "--platform_tools_extract_dir",
+                "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
+            ],
+        }),
+        data = select({
+            ":use_emu_main_dev_linux_x64": [
+                "@emu-main-dev-linux-x64//file",
+            ],
+            "//conditions:default": [
+                "@goldfish//emulator:release",
+            ],
+        }) + native.glob(["verifier/*.py", "verifier/*.sh", "verifier/automation_dev/*.py"], allow_empty = True) + additional_data + select({
+            "@platforms//os:linux": [
+                "@android16k-x86_64-user//:BUILD.bazel",
+                "@android16k-x86_64-user//:all_files",
+                "@build-tools-linux//:BUILD.bazel",
+                "@build-tools-linux//:all_files",
+                "@platform-tools-linux//:BUILD.bazel",
+                "@platform-tools-linux//:all_files",
+            ],
+            "@platforms//os:macos": [
+                "@android16k-arm64-v8a//:BUILD.bazel",
+                "@android16k-arm64-v8a//:all_files",
+                "@build-tools-mac//:BUILD.bazel",
+                "@build-tools-mac//:all_files",
+                "@platform-tools-mac//:BUILD.bazel",
+                "@platform-tools-mac//:all_files",
+            ],
+        }),
+        exec_properties = {
+            "dockerNetwork": "standard",
+        },
+        size = "enormous",
+        tags = [
+            "manual",
+            "requires-network",
+        ],
+        deps = [
+            "//sequence:agent_common",
+            "//sequence:config",
+            "@test_seq//test_seq/proto:test_sequencer_pb2",
+            "@rules_python//python/runfiles",
+        ],
+    )
