@@ -416,10 +416,10 @@ def navigate_to(test_name, max_swipes=40, verify_title=None):
         if check_and_click():
             return
 
-    # Scroll down until the test is found
+    # Scroll down with controlled drag (1600->800, 500ms) ensuring 5-8 item overlap per check
     for swipe_idx in range(max_swipes):
-        adb("shell", "input", "swipe", "540", "1400", "540", "400", "250")
-        time.sleep(1.5)
+        adb("shell", "input", "swipe", "540", "1600", "540", "800", "500")
+        time.sleep(1.0)
         if (swipe_idx + 1) % 5 == 0:
             print(
                 f"  Still scrolling to find '{test_name}' (swipe {swipe_idx + 1}/{max_swipes})..."
@@ -544,8 +544,8 @@ def scroll_to_subtest(subtest_title, max_swipes=25):
             if min_p < target_prefix < max_p:
                 return None
 
-        adb("shell", "input", "swipe", "540", "1400", "540", "400", "250")
-        time.sleep(1.5)
+        adb("shell", "input", "swipe", "540", "1600", "540", "800", "500")
+        time.sleep(1.0)
     return None
 
 
