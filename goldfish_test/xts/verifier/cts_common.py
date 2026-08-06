@@ -334,6 +334,39 @@ def tap(node):
     time.sleep(1.5)
 
 
+def swipe(x1, y1, x2, y2, duration_ms=500, sleep_after=1.0):
+    """
+    Perform an ADB input swipe between two points with configurable duration and settling delay.
+    """
+    adb(
+        "shell",
+        "input",
+        "swipe",
+        str(x1),
+        str(y1),
+        str(x2),
+        str(y2),
+        str(duration_ms),
+    )
+    if sleep_after > 0:
+        time.sleep(sleep_after)
+
+
+def scroll_down(x=540, y1=1600, y2=800, duration_ms=500, sleep_after=1.0):
+    """
+    Perform a single controlled scroll down gesture with tuned defaults (1600 -> 800, 500ms)
+    ensuring continuous screen overlap without momentum flinging.
+    """
+    swipe(x, y1, x, y2, duration_ms=duration_ms, sleep_after=sleep_after)
+
+
+def scroll_up(x=540, y1=800, y2=1600, duration_ms=500, sleep_after=1.0):
+    """
+    Perform a single controlled scroll up gesture with tuned defaults (800 -> 1600, 500ms).
+    """
+    swipe(x, y1, x, y2, duration_ms=duration_ms, sleep_after=sleep_after)
+
+
 def wait_for(text=None, content_desc=None, resource_id=None, timeout=15):
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -454,10 +487,9 @@ def navigate_to(test_name, max_swipes=40, verify_title=None):
         if check_and_click():
             return
 
-    # Scroll down with controlled drag (1600->800, 500ms) ensuring 5-8 item overlap per check
+    # Scroll down with controlled drag ensuring 5-8 item overlap per check
     for swipe_idx in range(max_swipes):
-        adb("shell", "input", "swipe", "540", "1600", "540", "800", "500")
-        time.sleep(1.0)
+        scroll_down()
         if (swipe_idx + 1) % 5 == 0:
             print(
                 f"  Still scrolling to find '{test_name}' (swipe {swipe_idx + 1}/{max_swipes})..."
@@ -582,9 +614,49 @@ def scroll_to_subtest(subtest_title, max_swipes=25):
             if min_p < target_prefix < max_p:
                 return None
 
-        adb("shell", "input", "swipe", "540", "1600", "540", "800", "500")
-        time.sleep(1.0)
+        scroll_down()
     return None
+
+
+def scroll_to_item(text, max_swipes=10):
+    """
+    Scroll through a list, menu, or Settings view to find an arbitrary item by text,
+    without making any prefix ordering assumptions.
+    """
+    for _ in range(max_swipes):
+        root = ui_dump()
+        node = find_node(root, text=text)
+        if node is None:
+            match = find_node_containing(root, text)
+            node = match[0] if match else None
+        if node is not None:
+            return node
+
+        scroll_down()
+    return None
+
+
+def scroll_and_tap_item_or_fail(text, max_swipes=10):
+    """
+    Scroll through a list or Settings page to find an arbitrary item by text and tap it.
+    If the item cannot be found after max_swipes, taps Fail and exits with code 1.
+    """
+    print(f"  Scrolling to find and tap: {text!r}...")
+    node = scroll_to_item(text, max_swipes=max_swipes)
+    if node is None:
+        print(
+            f"  [ERROR] Could not find item {text!r} after scrolling. Tapping Fail..."
+        )
+        screenshot(f"error_not_found_{text.replace(' ', '_')}")
+        fail_btn = find_fail_button(ui_dump())
+        if fail_btn is not None:
+            tap_fail(fail_btn)
+        sys.exit(1)
+
+    print(f"  Tapping item {text!r} at {node.attrib['bounds']}...")
+    tap(node)
+    time.sleep(2)
+    return node
 
 
 def export_and_verify(test_name):
