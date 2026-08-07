@@ -264,14 +264,52 @@ def ui_dump(retries=8):
     raise RuntimeError(f"ui_dump failed after {retries} attempts (last rc={last_rc})")
 
 
-def find_node(root, text=None, content_desc=None, resource_id=None):
+def find_node(
+    root,
+    text=None,
+    content_desc=None,
+    resource_id=None,
+    text_contains=None,
+    content_desc_contains=None,
+    resource_id_contains=None,
+    class_name=None,
+    clickable=None,
+    enabled=None,
+):
+    """
+    Find the first XML node matching all provided non-None criteria (conjunction / AND).
+    """
     for node in root.iter("node"):
-        if text is not None and node.attrib.get("text") == text:
-            return node
-        if content_desc is not None and node.attrib.get("content-desc") == content_desc:
-            return node
-        if resource_id is not None and node.attrib.get("resource-id") == resource_id:
-            return node
+        if text is not None and node.attrib.get("text") != text:
+            continue
+        if text_contains is not None and text_contains not in node.attrib.get(
+            "text", ""
+        ):
+            continue
+        if content_desc is not None and node.attrib.get("content-desc") != content_desc:
+            continue
+        if (
+            content_desc_contains is not None
+            and content_desc_contains not in node.attrib.get("content-desc", "")
+        ):
+            continue
+        if resource_id is not None and node.attrib.get("resource-id") != resource_id:
+            continue
+        if (
+            resource_id_contains is not None
+            and resource_id_contains not in node.attrib.get("resource-id", "")
+        ):
+            continue
+        if class_name is not None and node.attrib.get("class") != class_name:
+            continue
+        if (
+            clickable is not None
+            and node.attrib.get("clickable") != str(clickable).lower()
+        ):
+            continue
+        if enabled is not None and node.attrib.get("enabled") != str(enabled).lower():
+            continue
+        return node
     return None
 
 
