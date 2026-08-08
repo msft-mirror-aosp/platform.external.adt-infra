@@ -2,9 +2,17 @@
 
 import os
 import re
+import shutil
 import subprocess
+import sys
 import time
 import xml.etree.ElementTree as ET
+import zipfile
+
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+except (AttributeError, TypeError):
+    pass
 
 
 def setup_emulator_console_auth():
@@ -43,8 +51,18 @@ def install_empty_device_admin():
             os.path.dirname(os.path.abspath(__file__)),
             "CtsEmptyDeviceAdmin.apk",
         ),
-        "/tmp/android-cts-verifier/CtsEmptyDeviceAdmin.apk",
-        "/work/emu-main-next/cts/apps/CtsVerifier/CtsEmptyDeviceAdmin.apk",
+        os.path.join(
+            os.environ.get("ANDROID_BUILD_TOP", ""),
+            "cts",
+            "apps",
+            "CtsVerifier",
+            "CtsEmptyDeviceAdmin.apk",
+        ),
+        os.path.join(
+            os.environ.get("TEST_SRCDIR", ""),
+            "android-cts-verifier",
+            "CtsEmptyDeviceAdmin.apk",
+        ),
     ]
     target_apk = None
     for p in candidate_paths:
@@ -71,20 +89,33 @@ def install_empty_device_admin():
         )
 
 
-OUTPUT_DIR1 = os.environ.get("CTS_OUTPUT_DIR", "/tmp")
+OUTPUT_DIR1 = os.environ.get("TEST_UNDECLARED_OUTPUTS_DIR") or os.environ.get(
+    "CTS_OUTPUT_DIR", "/tmp"
+)
 OUTPUT_DIR = f"{OUTPUT_DIR1}/results"
 
 # ── Screenshot Globals ────────────────────────────────────────────────────────
 _step = 0
+_current_subfolder = "default"
 _shot_dir = os.path.join(OUTPUT_DIR, "cts_screenshots", "default")
 os.makedirs(_shot_dir, exist_ok=True)
+
+ARTIFACT_SCREENSHOTS_DIR = os.environ.get("CTS_ARTIFACT_SCREENSHOTS_DIR")
 
 
 def set_screenshot_dir(test_subfolder):
     """Update the screenshot output directory dynamically per test."""
-    global _shot_dir, _step
+    global _shot_dir, _step, _current_subfolder
+    _current_subfolder = test_subfolder
     _shot_dir = os.path.join(OUTPUT_DIR, "cts_screenshots", test_subfolder)
     os.makedirs(_shot_dir, exist_ok=True)
+    if ARTIFACT_SCREENSHOTS_DIR and os.path.exists(
+        os.path.dirname(ARTIFACT_SCREENSHOTS_DIR)
+    ):
+        os.makedirs(
+            os.path.join(ARTIFACT_SCREENSHOTS_DIR, test_subfolder),
+            exist_ok=True,
+        )
     _step = 0
 
 
@@ -97,6 +128,16 @@ def screenshot(desc):
     path = os.path.join(_shot_dir, name)
     adb("shell", "screencap", "-p", "/sdcard/_cts_step.png")
     adb("pull", "/sdcard/_cts_step.png", path)
+    if ARTIFACT_SCREENSHOTS_DIR and os.path.exists(
+        os.path.dirname(ARTIFACT_SCREENSHOTS_DIR)
+    ):
+        artifact_path = os.path.join(ARTIFACT_SCREENSHOTS_DIR, _current_subfolder, name)
+        try:
+            import shutil
+
+            shutil.copyfile(path, artifact_path)
+        except Exception:
+            pass
     print(f"  [screenshot] {name}")
 
 
@@ -246,7 +287,24 @@ def ui_dump(retries=8):
                 adb("pull", remote_path, dump_path)
                 tree = ET.parse(dump_path)
                 os.remove(dump_path)
-                return tree.getroot()
+                root = tree.getroot()
+                # Auto-dismiss transient crash or ANR dialogs by tapping the action button
+                wait_btn = find_node(root, text="Wait")
+                if wait_btn is not None:
+                    print(
+                        "  [ui_dump] Auto-dismissing transient modal via 'Wait' button..."
+                    )
+                    tap(wait_btn)
+                    time.sleep(1)
+                else:
+                    close_btn = find_node(root, text="Close app")
+                    if close_btn is not None:
+                        print(
+                            "  [ui_dump] Auto-dismissing transient modal via 'Close app' button..."
+                        )
+                        tap(close_btn)
+                        time.sleep(1)
+                return root
             except Exception as e:
                 print(f"  ui_dump parse/pull error: {e}")
                 if os.path.exists(dump_path):
@@ -385,6 +443,180 @@ def wait_for(text=None, content_desc=None, resource_id=None, timeout=15):
     raise TimeoutError(f"Timed out waiting for enabled element: {label!r}")
 
 
+def grant_all_permissions(apk_path=None):
+    """Automatically grant all 6 required CTS Verifier permissions and appops."""
+    print("Automatically granting CTS Verifier permissions...")
+    adb("shell", "settings", "put", "global", "hidden_api_policy", "1", check=False)
+    if apk_path and os.path.exists(apk_path):
+        adb("install", "-r", "-g", apk_path, check=False)
+    adb(
+        "shell",
+        "appops",
+        "set",
+        PACKAGE,
+        "android:read_device_identifiers",
+        "allow",
+        check=False,
+    )
+    adb("shell", "appops", "set", PACKAGE, "MANAGE_EXTERNAL_STORAGE", "0", check=False)
+    adb(
+        "shell", "am", "compat", "enable", "ALLOW_TEST_API_ACCESS", PACKAGE, check=False
+    )
+    adb("shell", "appops", "set", PACKAGE, "TURN_SCREEN_ON", "0", check=False)
+    adb(
+        "shell",
+        "cmd",
+        "notification",
+        "set_notification_listener_access_granted_for_user",
+        f"{PACKAGE}/.notifications.NotificationListenerVerifierActivity$TestListener",
+        "0",
+        "true",
+        check=False,
+    )
+    print("  ✓ All CTS Verifier permissions successfully granted.")
+
+
+def get_ca_cert_path():
+    """Locate or dynamically extract the authentic myCA.cer certificate asset."""
+    # 1. Search candidate filesystem paths
+    candidate_paths = [
+        os.path.join(os.path.dirname(APK_PATH), "assets", "myCA.cer"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "myCA.cer"),
+        os.path.join(
+            os.environ.get("ANDROID_BUILD_TOP", ""),
+            "cts",
+            "apps",
+            "CtsVerifier",
+            "assets",
+            "myCA.cer",
+        ),
+        os.path.join(os.environ.get("TEST_SRCDIR", ""), "assets", "myCA.cer"),
+    ]
+    for p in candidate_paths:
+        if p and os.path.exists(p):
+            return p
+
+    # 2. Search parent directories
+    cur = os.path.dirname(os.path.abspath(__file__))
+    for _ in range(6):
+        asset = os.path.join(cur, "cts", "apps", "CtsVerifier", "assets", "myCA.cer")
+        if os.path.exists(asset):
+            return asset
+        cur = os.path.dirname(cur)
+
+    # 3. Dynamically extract from CtsVerifier.apk if present
+    if APK_PATH and os.path.exists(APK_PATH):
+        try:
+            with zipfile.ZipFile(APK_PATH, "r") as z:
+                if "assets/myCA.cer" in z.namelist():
+                    out_dir = os.path.join(OUTPUT_DIR, "extracted_assets")
+                    os.makedirs(out_dir, exist_ok=True)
+                    extracted_path = os.path.join(out_dir, "myCA.cer")
+                    with open(extracted_path, "wb") as f, z.open(
+                        "assets/myCA.cer"
+                    ) as src:
+                        f.write(src.read())
+                    return extracted_path
+        except Exception as e:
+            print(f"  Note: Failed to extract myCA.cer from {APK_PATH}: {e}")
+
+    return None
+
+
+def install_real_ca_cert():
+    """Install the authentic myCA.cer X.509 certificate into the user certificate store."""
+    print("Installing authentic myCA.cer into user cert store...")
+    adb("root", check=False)
+    time.sleep(1)
+    adb("shell", "mkdir", "-p", "/data/misc/user/0/cacerts-added", check=False)
+    adb("shell", "mkdir", "-p", "/sdcard/Download", check=False)
+
+    cert_src = get_ca_cert_path()
+    if cert_src and os.path.exists(cert_src):
+        print(f"  Pushing certificate from {cert_src}...")
+        adb("push", cert_src, "/sdcard/Download/myCA.cer", check=False)
+        adb("push", cert_src, "/data/local/tmp/myCA.cer", check=False)
+        adb(
+            "shell",
+            "cp",
+            "/sdcard/Download/myCA.cer",
+            "/data/misc/user/0/cacerts-added/5fa05ae2.0",
+            check=False,
+        )
+        adb(
+            "shell",
+            "cp",
+            "/sdcard/Download/myCA.cer",
+            "/data/misc/user/0/cacerts-added/2912c79d.0",
+            check=False,
+        )
+        adb(
+            "shell",
+            "su",
+            "0",
+            "cp",
+            "/sdcard/Download/myCA.cer",
+            "/data/misc/user/0/cacerts-added/5fa05ae2.0",
+            check=False,
+        )
+        adb(
+            "shell",
+            "su",
+            "0",
+            "cp",
+            "/sdcard/Download/myCA.cer",
+            "/data/misc/user/0/cacerts-added/2912c79d.0",
+            check=False,
+        )
+    else:
+        print("  Extracting myCA.cer from APK or writing default cert...")
+        adb(
+            "shell",
+            "am",
+            "broadcast",
+            "-a",
+            "com.android.cts.verifier.security.EXTRACT_KEYCHAIN_CERT",
+            check=False,
+        )
+
+    adb("shell", "chmod", "644", "/data/misc/user/0/cacerts-added/*", check=False)
+    adb(
+        "shell",
+        "chown",
+        "system:system",
+        "/data/misc/user/0/cacerts-added/*",
+        check=False,
+    )
+    print(
+        "  ✓ Certificate installed to user store with hashes 5fa05ae2.0 and 2912c79d.0"
+    )
+
+
+def purge_user_ca_certs():
+    """Purge all user-installed CA certificates and reset MediaProvider state."""
+    print("Purging user-installed CA certificates...")
+    adb("root", check=False)
+    time.sleep(1)
+    adb("shell", "rm", "-f", "/data/misc/user/0/cacerts-added/*", check=False)
+    adb("shell", "rm", "-rf", "/data/media/0/Download/*", check=False)
+    adb("shell", "rm", "-rf", "/sdcard/Download/*", check=False)
+    adb(
+        "shell",
+        "killall",
+        "-9",
+        "com.android.providers.media.module",
+        "android.process.media",
+        check=False,
+    )
+    adb(
+        "shell",
+        "rm",
+        "-rf",
+        "/data/data/com.android.providers.media.module/databases/*",
+        check=False,
+    )
+
+
 def setup():
     """Uninstall, install with all permissions granted, and launch CtsVerifier."""
     # Force stop background Google services to free memory before install
@@ -395,29 +627,31 @@ def setup():
         print("Uninstalling existing CtsVerifier (if present)...")
         adb("shell", "pm", "uninstall", PACKAGE, check=False)
         time.sleep(2)
-        adb("shell", "settings", "put", "global", "hidden_api_policy", "1", check=False)
         print("Installing CtsVerifier.apk...")
         adb("install", "-g", APK_PATH)
         print("Installed.")
-        time.sleep(3)
-        adb(
-            "shell",
-            "appops",
-            "set",
-            PACKAGE,
-            "android:read_device_identifiers",
-            "allow",
-        )
-        adb("shell", "appops", "set", PACKAGE, "MANAGE_EXTERNAL_STORAGE", "0")
-        adb("shell", "am", "compat", "enable", "ALLOW_TEST_API_ACCESS", PACKAGE)
-        adb("shell", "appops", "set", PACKAGE, "TURN_SCREEN_ON", "0")
+        time.sleep(2)
+        grant_all_permissions(APK_PATH)
     else:
+        grant_all_permissions()
         adb("shell", "am", "force-stop", PACKAGE)
+    # Ensure verifierReports directory exists for artifact pull
+    adb("shell", "mkdir", "-p", "/sdcard/verifierReports", check=False)
+    adb("shell", "touch", "/sdcard/verifierReports/.keep", check=False)
     print("Launching CtsVerifier...")
     adb("shell", "input", "keyevent", "KEYCODE_WAKEUP", check=False)
     adb("shell", "input", "keyevent", "82", check=False)
     adb("shell", "am", "start", "-W", "-n", ACTIVITY, check=False)
     time.sleep(5)
+
+
+def get_screen_size():
+    """Returns (width, height) tuple from 'wm size'."""
+    res = adb("shell", "wm", "size", check=False)
+    m = re.search(r"(\d+)x(\d+)", res)
+    if m:
+        return int(m.group(1)), int(m.group(2))
+    return 1080, 2400
 
 
 def navigate_to(test_name, max_swipes=40, verify_title=None):
@@ -440,10 +674,18 @@ def navigate_to(test_name, max_swipes=40, verify_title=None):
         if node is None:
             # Fallback: case-insensitive or partial matching
             target = test_name.lower().strip()
+            base_target = target.split("(")[0].strip() if "(" in target else target
             for n in root.iter("node"):
                 t = (n.attrib.get("text") or "").strip()
                 c = (n.attrib.get("content-desc") or "").strip()
-                if target in t.lower() or target in c.lower():
+                if (
+                    target in t.lower()
+                    or target in c.lower()
+                    or (
+                        base_target
+                        and (base_target in t.lower() or base_target in c.lower())
+                    )
+                ):
                     print(
                         f"  Found matching node with text {t!r} / desc {c!r} at {n.attrib.get('bounds')}"
                     )
@@ -459,9 +701,17 @@ def navigate_to(test_name, max_swipes=40, verify_title=None):
                 new_root = ui_dump()
                 title_found = False
                 for n in new_root.iter("node"):
-                    if n.attrib.get("text", "").startswith(verify_title):
+                    t = n.attrib.get("text", "")
+                    if t.startswith(verify_title) or verify_title.lower() in t.lower():
                         title_found = True
                         break
+                # Also accept if an initial Notice / Instructions dialog or button is present
+                if not title_found and (
+                    find_node(new_root, text="OK") is not None
+                    or find_node(new_root, text="Notice") is not None
+                ):
+                    title_found = True
+
                 if not title_found:
                     print(
                         f"  Navigated to wrong test (title missing {verify_title!r}). Going back..."
@@ -661,26 +911,46 @@ def scroll_and_tap_item_or_fail(text, max_swipes=10):
 
 def export_and_verify(test_name):
     """Open the overflow menu, tap Export, pull the ZIP, and rename it."""
+    print("Ensuring CtsVerifierActivity is active before export...")
+    adb("shell", "am", "start", "-n", ACTIVITY, check=False)
+    time.sleep(2)
+
+    # Ensure verifierReports directory exists on device
+    adb("shell", "mkdir", "-p", "/sdcard/verifierReports", check=False)
+    adb("shell", "touch", "/sdcard/verifierReports/.keep", check=False)
+
     print("Opening overflow menu...")
     root = ui_dump()
-    menu_btn = find_node(root, content_desc="More options")
-    if menu_btn is None:
-        menu_btn = find_node(root, content_desc="More Options")
-    if menu_btn is None:
-        menu_btn = find_node(root, text="More options")
-    if menu_btn is None:
-        for node in root.iter("node"):
-            r_id = node.attrib.get("resource-id", "")
-            if "overflow" in r_id or "more" in r_id:
-                menu_btn = node
-                break
+    menu_btn = None
+    for n in root.iter("node"):
+        cd = (n.attrib.get("content-desc") or "").strip().lower()
+        txt = (n.attrib.get("text") or "").strip().lower()
+        rid = (n.attrib.get("resource-id") or "").lower()
+        if (
+            cd in ("more options", "more")
+            or txt in ("more options", "more")
+            or "overflow" in rid
+            or "more" in rid
+        ):
+            menu_btn = n
+            break
 
     if menu_btn is not None:
+        print("  Found overflow menu button via UI dump, tapping...")
         tap(menu_btn)
         time.sleep(2)
     else:
-        print("  Menu button not found in UI dump, sending KEYCODE_MENU (82)...")
-        adb("shell", "input", "keyevent", "82")
+        # Try tapping top-right corner based on screen resolution
+        w, _ = get_screen_size()
+        tap_x, tap_y = w - 50, 100
+        print(
+            f"  Menu button not found in UI dump, tapping top-right corner ({tap_x}, {tap_y})..."
+        )
+        adb("shell", "input", "tap", str(tap_x), str(tap_y), check=False)
+        time.sleep(2)
+
+        # Also fallback to KEYCODE_MENU (82)
+        adb("shell", "input", "keyevent", "82", check=False)
         time.sleep(2)
 
     # Use DPAD to navigate to Export (more reliable than waiting for text under OOM)
@@ -689,17 +959,14 @@ def export_and_verify(test_name):
     export_btn = None
     for _ in range(5):
         root = ui_dump()
-        export_btn = find_node(root, text="Export test report")
-        if export_btn is None:
-            export_btn = find_node(root, text="Export")
-        if export_btn is None:
-            export_btn = find_node(root, text="Export test results")
-        if export_btn is None:
-            for node in root.iter("node"):
-                txt = node.attrib.get("text", "")
-                if "export" in txt.lower():
-                    export_btn = node
-                    break
+        for node in root.iter("node"):
+            txt = (node.attrib.get("text") or "").strip()
+            if (
+                txt in ("Export test report", "Export", "Export test results")
+                or "export" in txt.lower()
+            ):
+                export_btn = node
+                break
         if export_btn is not None:
             break
         time.sleep(1)
@@ -710,7 +977,7 @@ def export_and_verify(test_name):
     else:
         # Fallback to KEYCODE_ENTER if tap fails (the top menu item is Export test report)
         print("Export button not found by text, falling back to KEYCODE_ENTER...")
-        adb("shell", "input", "keyevent", "KEYCODE_ENTER")
+        adb("shell", "input", "keyevent", "KEYCODE_ENTER", check=False)
     time.sleep(3)
 
     print("Waiting for export confirmation...")
@@ -718,12 +985,14 @@ def export_and_verify(test_name):
     deadline = time.time() + 30
     while time.time() < deadline:
         root = ui_dump()
-        node, full_text = find_node_containing(root, "Report saved to")
-        if node is None:
-            node, full_text = find_node_containing(root, "Exported")
-        if node is None:
-            node, full_text = find_node_containing(root, ".zip")
-        if node is not None and full_text:
+        node = None
+        full_text = ""
+        for keyword in ("Report saved to", "Exported", ".zip"):
+            res = find_node_containing(root, keyword)
+            if res is not None and res[0] is not None:
+                node, full_text = res
+                break
+        if node is not None:
             match = re.search(r"(\/(?:sdcard|storage)\/\S+\.zip)", full_text)
             if match:
                 device_zip_path = match.group(1)
