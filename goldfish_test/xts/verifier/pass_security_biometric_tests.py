@@ -194,7 +194,7 @@ def enroll_fingerprint_in_current_screen(finger_id=1, max_touches=15):
                 break
 
         # Simulate finger touch
-        adb("emu", "finger", "touch", str(finger_id), check=False)
+        adb("emu", "finger", "touch", str(finger_id), timeout=10, check=False)
         time.sleep(1.2)
     return False
 
@@ -225,7 +225,7 @@ def authenticate_with_biometric_or_pin(
             time.sleep(2)
             continue
 
-        adb("emu", "finger", "touch", str(finger_id), check=False)
+        adb("emu", "finger", "touch", str(finger_id), timeout=10, check=False)
         time.sleep(1.2)
 
     if expected_btn_text:
@@ -502,7 +502,7 @@ def test_section4_user_authentication(subtest_title):
                 print(
                     f"  [{subtest_title}] Biometric prompt detected, simulating finger 1..."
                 )
-                adb("emu", "finger", "touch", "1", check=False)
+                adb("emu", "finger", "touch", "1", timeout=10, check=False)
                 time.sleep(2)
                 continue
 
