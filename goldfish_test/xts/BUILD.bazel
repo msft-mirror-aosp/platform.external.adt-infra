@@ -1,8 +1,8 @@
-load(":xts_sharded.bzl", "xts_sharded_tests")
-load("//xts:xts.bzl", "cts_media_tests", "deqp_tests", "module_subtests", "xts_plan", "xts_tests")
-load("//xts:verifier.bzl", "cts_verifier_tests", "ets_verifier")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
+load("//xts:verifier.bzl", "cts_verifier_automation_dev_tests", "cts_verifier_tests", "ets_verifier")
+load("//xts:xts.bzl", "cts_media_tests", "deqp_tests", "module_subtests", "xts_plan", "xts_tests")
+load(":xts_sharded.bzl", "xts_sharded_tests")
 
 cts_verifier_tests(
     name = "cts-verifier",
@@ -12,11 +12,19 @@ ets_verifier(
     name = "ets-verifier",
 )
 
+cts_verifier_automation_dev_tests(
+    name = "cts-verifier-automation-dev",
+)
+
 pkg_files(
     name = "verifier_scripts",
     testonly = True,
-    srcs = glob(["verifier/*.py", "verifier/*.sh"]) + [
+    srcs = glob([
+        "verifier/*.py",
+        "verifier/*.sh",
+    ]) + [
         ":verifier_ets_configs",
+        "//xts/verifier/java/com/android/tools/e2etests/clock:pkg",
     ],
     attributes = pkg_attributes(mode = "0777"),
     prefix = "android-ets/testcases",
@@ -26,9 +34,9 @@ pkg_filegroup(
     name = "android_ets",
     testonly = True,
     srcs = [
+        ":verifier_scripts",
         "//ets:e2e_host_tests",
         "//ets:ets_tradefed",
-        ":verifier_scripts",
         "@tradefed//:android_ets",
     ],
 )
