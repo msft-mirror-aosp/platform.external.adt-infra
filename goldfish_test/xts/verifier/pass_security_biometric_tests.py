@@ -349,7 +349,9 @@ def test_2a_strong_biometrics_crypto(subtest_title):
 
     # ── Step 3: Authenticate Key Invalidated (Part 1 - Invalidate Keys) ───────
     print("  [2a] Enrolling finger 2 in Settings to invalidate cryptographic keys...")
-    os.system(f"{sys.executable} {os.path.join(SCRIPT_DIR, 'enroll_fingerprint.py')} 2")
+    os.system(
+        f"{sys.executable} -u {os.path.join(SCRIPT_DIR, 'enroll_fingerprint.py')} 2"
+    )
 
     # Return to CtsVerifier and check if we are already inside 2a: Strong Biometrics + Crypto
     adb("shell", "am", "start", "-n", "com.android.cts.verifier/.CtsVerifierActivity")
