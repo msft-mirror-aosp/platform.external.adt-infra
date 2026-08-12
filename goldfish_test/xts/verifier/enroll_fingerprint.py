@@ -196,14 +196,7 @@ def enroll_fingerprint(finger_id):
             print(f"On enrollment screen (touch {i}). Simulating touch...")
             screenshot(f"enroll_touch_{i}")
 
-            if not getattr(enroll_fingerprint, "help_printed", False):
-                print("Dumping input devices:")
-                print(adb("shell", "getevent", "-il", check=False))
-                enroll_fingerprint.help_printed = True
-
             out = adb("emu", "finger", "touch", str(finger_id), check=False)
-            if i == 4 or i == 5:
-                print(f"adb emu finger touch output: '{out}'")
 
             # If emu finger touch fails, fail the enrollment
             if (
