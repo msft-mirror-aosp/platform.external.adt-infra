@@ -42,6 +42,8 @@ from security_common import (
     ensure_security_prerequisites,
     is_pin_prompt_present as _is_pin_prompt_present,
     enter_pin_on_keypad,
+    wait_for_auth_prompt,
+    is_fingerprint_prompt_present,
 )
 
 TEST_NAME = "Biometric Tests"
@@ -526,52 +528,29 @@ def test_section4_user_authentication(subtest_title):
         time.sleep(1.5)
 
         # Handle any authentication prompt (PIN or Biometric) that appeared after tapping
-        for _ in range(5):
-            new_root = ui_dump()
-            if _is_pin_prompt_present(new_root):
-                print(f"  [{subtest_title}] PIN prompt detected after tapping button.")
-                enter_pin_on_keypad("1111")
-                time.sleep(2)
-                # After entering PIN, also check if BiometricPrompt is still waiting
-                after_pin_root = ui_dump()
-                text_nodes = [
-                    n.attrib.get("text", "").lower()
-                    for n in after_pin_root.iter("node")
-                ]
-                if any(
-                    w in t
-                    for t in text_nodes
-                    for w in [
-                        "touch the sensor",
-                        "touch the fingerprint sensor",
-                        "fingerprint sensor",
-                        "touch sensor",
-                    ]
-                ):
-                    adb("emu", "finger", "touch", "1", check=False)
-                    time.sleep(1.5)
-                break
-
-            text_nodes = [
-                n.attrib.get("text", "").lower() for n in new_root.iter("node")
-            ]
-            if any(
-                w in t
-                for t in text_nodes
-                for w in [
-                    "touch the sensor",
-                    "touch the fingerprint sensor",
-                    "fingerprint sensor",
-                    "touch sensor",
-                ]
-            ):
+        prompt_type, new_root = wait_for_auth_prompt(timeout=10.0)
+        if prompt_type == "pin":
+            print(f"  [{subtest_title}] PIN prompt detected after tapping button.")
+            enter_pin_on_keypad("1111")
+            time.sleep(2)
+            # After entering PIN, also check if BiometricPrompt is still waiting
+            after_pin_root = ui_dump()
+            if is_fingerprint_prompt_present(after_pin_root):
                 print(
-                    f"  [{subtest_title}] Biometric prompt detected after tapping button, simulating finger 1..."
+                    f"  [{subtest_title}] Biometric prompt also detected after PIN entry, simulating finger 1..."
                 )
-                adb("emu", "finger", "touch", "1", check=False)
+                adb("emu", "finger", "touch", "1", timeout=10, check=False)
                 time.sleep(2)
-                break
-            time.sleep(1)
+        elif prompt_type == "biometric":
+            print(
+                f"  [{subtest_title}] Biometric prompt detected after tapping button, simulating finger 1..."
+            )
+            adb("emu", "finger", "touch", "1", timeout=10, check=False)
+            time.sleep(2)
+        else:
+            print(
+                f"  [{subtest_title}] No prompt detected after tapping button within 10s."
+            )
 
         time.sleep(1)
 
