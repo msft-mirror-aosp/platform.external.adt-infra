@@ -224,8 +224,10 @@ def wait_for_screen_off(timeout=10):
         # Also check if Keyguard / NotificationShade is showing in UI dump
         try:
             root = ui_dump(retries=2)
-            if root.attrib.get("package") == "com.android.systemui" or find_node(
-                root, resource_id="com.android.systemui:id/scrim_behind"
+            if (
+                root.attrib.get("package") == "com.android.systemui"
+                or find_node(root, resource_id="com.android.systemui:id/scrim_behind")
+                is not None
             ):
                 print("  Keyguard / NotificationShade is showing!")
                 return True
@@ -251,9 +253,13 @@ def wait_for_keyguard_showing(timeout=10):
             return True
         try:
             root = ui_dump(retries=2)
-            if find_node(
-                root, resource_id="com.android.systemui:id/device_entry_icon_view"
-            ) or find_node(root, text="Unlock for all features and data"):
+            if (
+                find_node(
+                    root, resource_id="com.android.systemui:id/device_entry_icon_view"
+                )
+                is not None
+                or find_node(root, text="Unlock for all features and data") is not None
+            ):
                 print("  Keyguard prompt is active!")
                 return True
         except Exception:

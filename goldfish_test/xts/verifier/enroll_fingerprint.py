@@ -138,7 +138,9 @@ def enroll_fingerprint(finger_id):
             continue
 
         # Check for Add
-        add_btn = find_node(root, text="Add") or find_node(root, text="Add fingerprint")
+        add_btn = find_node(root, text="Add")
+        if add_btn is None:
+            add_btn = find_node(root, text="Add fingerprint")
         if add_btn is not None:
             if not has_tapped_add:
                 print("Tapping Add...")
