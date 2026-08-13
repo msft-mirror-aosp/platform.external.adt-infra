@@ -126,8 +126,8 @@ def screenshot(desc):
     safe = re.sub(r"[^a-zA-Z0-9]+", "_", desc).strip("_")
     name = f"{_step:02d}_{safe}.png"
     path = os.path.join(_shot_dir, name)
-    adb("shell", "screencap", "-p", "/sdcard/_cts_step.png")
-    adb("pull", "/sdcard/_cts_step.png", path)
+    adb("shell", "screencap", "-p", "/sdcard/_cts_step.png", timeout=15)
+    adb("pull", "/sdcard/_cts_step.png", path, timeout=15)
     if ARTIFACT_SCREENSHOTS_DIR and os.path.exists(
         os.path.dirname(ARTIFACT_SCREENSHOTS_DIR)
     ):
@@ -141,13 +141,19 @@ def screenshot(desc):
     print(f"  [screenshot] {name}")
 
 
-def adb(*args, check=True):
+def adb(*args, timeout=None, check=True):
     cmd = ["adb"]
     if SERIAL:
         cmd += ["-s", SERIAL]
     cmd += list(args)
-    result = subprocess.run(cmd, capture_output=True, text=True, check=check)
-    return result.stdout.strip()
+    try:
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, check=check, timeout=timeout
+        )
+        return result.stdout.strip()
+    except subprocess.TimeoutExpired as e:
+        print(f"  [ERROR] adb command timed out after {timeout}s: {' '.join(cmd)}")
+        raise e
 
 
 def wait_for_boot_finished(adb_path=None, timeout=300):
@@ -218,8 +224,10 @@ def wait_for_screen_off(timeout=10):
         # Also check if Keyguard / NotificationShade is showing in UI dump
         try:
             root = ui_dump(retries=2)
-            if root.attrib.get("package") == "com.android.systemui" or find_node(
-                root, resource_id="com.android.systemui:id/scrim_behind"
+            if (
+                root.attrib.get("package") == "com.android.systemui"
+                or find_node(root, resource_id="com.android.systemui:id/scrim_behind")
+                is not None
             ):
                 print("  Keyguard / NotificationShade is showing!")
                 return True
@@ -245,9 +253,13 @@ def wait_for_keyguard_showing(timeout=10):
             return True
         try:
             root = ui_dump(retries=2)
-            if find_node(
-                root, resource_id="com.android.systemui:id/device_entry_icon_view"
-            ) or find_node(root, text="Unlock for all features and data"):
+            if (
+                find_node(
+                    root, resource_id="com.android.systemui:id/device_entry_icon_view"
+                )
+                is not None
+                or find_node(root, text="Unlock for all features and data") is not None
+            ):
                 print("  Keyguard prompt is active!")
                 return True
         except Exception:
@@ -268,15 +280,36 @@ import tempfile
 
 
 def ui_dump(retries=8):
-    """Dump the UI hierarchy, retrying if uiautomator is killed (e.g. OOM, exit 137)."""
+    """Dump the UI hierarchy, retrying if uiautomator is killed or hangs."""
     cmd_base = ["adb"] + (["-s", SERIAL] if SERIAL else [])
     last_rc = None
     for attempt in range(retries):
-        r = subprocess.run(
-            cmd_base + ["shell", "uiautomator", "dump"], capture_output=True, text=True
-        )
-        last_rc = r.returncode
-        if last_rc == 0:
+        try:
+            r = subprocess.run(
+                cmd_base + ["shell", "uiautomator", "dump"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            last_rc = r.returncode
+        except subprocess.TimeoutExpired as e:
+            print(f"  ui_dump attempt {attempt + 1} timed out (15s)")
+            last_rc = -1
+            r = None
+
+        if r is not None and last_rc != 0:
+            stderr_lower = r.stderr.lower()
+            if (
+                "device offline" in stderr_lower
+                or "not found" in stderr_lower
+                or "unreachable" in stderr_lower
+            ):
+                print(
+                    f"  [FATAL] Device offline or missing during ui_dump: {r.stderr.strip()}"
+                )
+                raise RuntimeError(f"Device offline: {r.stderr.strip()}")
+
+        if last_rc == 0 and r is not None:
             remote_path = "/sdcard/window_dump.xml"
             match = re.search(r"dumped to:\s*(/\S+)", r.stdout)
             if match:
@@ -284,7 +317,7 @@ def ui_dump(retries=8):
             fd, dump_path = tempfile.mkstemp(suffix=".xml")
             os.close(fd)
             try:
-                adb("pull", remote_path, dump_path)
+                adb("pull", remote_path, dump_path, timeout=15)
                 tree = ET.parse(dump_path)
                 os.remove(dump_path)
                 root = tree.getroot()
@@ -317,6 +350,13 @@ def ui_dump(retries=8):
             subprocess.run(
                 cmd_base + ["shell", "am", "force-stop", "com.google.android.gms"],
                 capture_output=True,
+                timeout=10,
+            )
+            # Kill any stuck uiautomator processes
+            subprocess.run(
+                cmd_base + ["shell", "pkill", "-f", "uiautomator"],
+                capture_output=True,
+                timeout=10,
             )
             time.sleep(3)
     raise RuntimeError(f"ui_dump failed after {retries} attempts (last rc={last_rc})")

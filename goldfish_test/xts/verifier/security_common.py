@@ -305,6 +305,24 @@ def tap_button_or_fail(button_text, resource_id=None, timeout=5):
     return btn
 
 
+def wait_for_auth_prompt(timeout=10.0, poll_interval=0.5):
+    """
+    Polls the UI until either a Biometric Prompt (Fingerprint) or Device Credential Prompt (PIN) appears.
+
+    Returns:
+        (prompt_type, root): ('biometric' | 'pin' | None, root_element)
+    """
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        root = ui_dump()
+        if is_fingerprint_prompt_present(root):
+            return "biometric", root
+        if is_pin_prompt_present(root):
+            return "pin", root
+        time.sleep(poll_interval)
+    return None, None
+
+
 def wait_for_pass_and_export(test_name, timeout=20, exit_on_complete=True):
     """
     Poll for the Pass button to become enabled, tap it, and export/verify the report.

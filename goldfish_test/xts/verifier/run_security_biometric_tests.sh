@@ -15,7 +15,7 @@ echo "----------------------------------------"
 echo "Running: pass_security_biometric_tests.py"
 echo "----------------------------------------"
 
-if python3 "$SCRIPT_DIR/pass_security_biometric_tests.py" "$@"; then
+if python3 -u "$SCRIPT_DIR/pass_security_biometric_tests.py" "$@"; then
     echo ">>> PASSED: pass_security_biometric_tests.py"
     exit 0
 else

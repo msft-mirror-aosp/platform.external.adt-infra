@@ -85,7 +85,7 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
                     "while [ ! -f /sdcard/verifier_done ] && [ ! -f /sdcard/verifier_failed ]; do sleep 0.5; done; "
                     "if [ -f /sdcard/verifier_failed ]; then exit 1; fi",
                 ],
-                timeout_seconds=1200,
+                timeout_seconds=2400,
             )
         )
 
