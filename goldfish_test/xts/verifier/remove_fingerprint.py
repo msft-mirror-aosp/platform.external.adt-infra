@@ -5,9 +5,11 @@ import os
 
 import os
 import sys
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
 from cts_common import adb, ui_dump, tap, find_node
+
 
 def remove_fingerprint(finger_id):
     print("Opening Security Settings...")
@@ -17,7 +19,7 @@ def remove_fingerprint(finger_id):
 
     print("Navigating to Device unlock...")
     root = ui_dump()
-    du_btn = find_node(root, text="Device unlock")
+    du_btn = find_node(root, text="Device unlock", resource_id="android:id/title")
     if du_btn is not None:
         tap(du_btn)
         time.sleep(2)
@@ -25,7 +27,7 @@ def remove_fingerprint(finger_id):
         adb("shell", "input", "swipe", "540", "1500", "540", "500", "300")
         time.sleep(2)
         root = ui_dump()
-        du_btn = find_node(root, text="Device unlock")
+        du_btn = find_node(root, text="Device unlock", resource_id="android:id/title")
         if du_btn is not None:
             tap(du_btn)
             time.sleep(2)
@@ -41,7 +43,10 @@ def remove_fingerprint(finger_id):
         return
 
     root = ui_dump()
-    if find_node(root, text="Enter your device PIN") is not None or find_node(root, text="Re-enter your PIN") is not None:
+    if (
+        find_node(root, text="Enter your device PIN") is not None
+        or find_node(root, text="Re-enter your PIN") is not None
+    ):
         print("Entering PIN...")
         adb("shell", "input", "text", "1111")
         time.sleep(1)
@@ -51,9 +56,9 @@ def remove_fingerprint(finger_id):
     print(f"Checking for Finger {finger_id}...")
     root = ui_dump()
     del_btn = find_node(root, content_desc=f"Delete Finger {finger_id}")
-    
+
     if del_btn is None:
-        # Sometimes the content desc might just be 'Delete' if it's not strictly 'Delete Finger X' 
+        # Sometimes the content desc might just be 'Delete' if it's not strictly 'Delete Finger X'
         # But based on our dump, it is 'Delete Finger 1'
         print(f"Fingerprint {finger_id} not found.")
         return
@@ -61,7 +66,7 @@ def remove_fingerprint(finger_id):
     print(f"Tapping Delete for Finger {finger_id}...")
     tap(del_btn)
     time.sleep(2)
-    
+
     print("Confirming Delete...")
     root = ui_dump()
     confirm_btn = find_node(root, text="Delete")
@@ -72,10 +77,11 @@ def remove_fingerprint(finger_id):
     else:
         print("Could not find confirmation Delete button.")
 
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print(f"Usage: {sys.argv[0]} <fingerid>")
         sys.exit(1)
-    
+
     finger_id = sys.argv[1]
     remove_fingerprint(finger_id)

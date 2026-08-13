@@ -8,6 +8,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(SCRIPT_DIR)
 from cts_common import adb, ui_dump, tap, find_node, screenshot, set_screenshot_dir
 
+
 def wait_for_node_with_text(texts, timeout=30):
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -19,8 +20,10 @@ def wait_for_node_with_text(texts, timeout=30):
         time.sleep(2)
     return None, None
 
+
 def wait_for_node(text, timeout=30):
     return wait_for_node_with_text([text], timeout=timeout)
+
 
 def wait_for_cpu_load(threshold=50.0, timeout=120):
     print(f"Waiting for CPU load to drop below {threshold}% (out of 400%)...")
@@ -58,12 +61,15 @@ def wait_for_cpu_load(threshold=50.0, timeout=120):
 
     print("Warning: Timed out waiting for CPU load to drop.")
 
+
 def enroll_fingerprint(finger_id):
     set_screenshot_dir(f"enroll_fingerprint_{finger_id}")
 
     # Ensure PIN is set first
     print("Ensuring PIN 1111 is set...")
-    subprocess.run([sys.executable, os.path.join(SCRIPT_DIR, "create_pin.py"), "1111"], check=True)
+    subprocess.run(
+        [sys.executable, os.path.join(SCRIPT_DIR, "create_pin.py"), "1111"], check=True
+    )
     screenshot("01_after_create_pin")
 
     wait_for_cpu_load(threshold=50.0, timeout=120)
@@ -77,7 +83,7 @@ def enroll_fingerprint(finger_id):
     du_btn = None
     while time.time() < deadline:
         root = ui_dump()
-        du_btn = find_node(root, text="Device unlock")
+        du_btn = find_node(root, text="Device unlock", resource_id="android:id/title")
         if du_btn is not None:
             break
         # Swipe in case we need to scroll down
@@ -113,11 +119,14 @@ def enroll_fingerprint(finger_id):
     print("Navigating through fingerprint setup state machine...")
     enroll_success = False
     has_tapped_add = False
-    for i in range(60): # Increased loop range just in case
+    for i in range(60):  # Increased loop range just in case
         root = ui_dump()
 
         # Check for PIN prompt
-        if find_node(root, text="Enter your device PIN") is not None or find_node(root, text="Re-enter your PIN") is not None:
+        if (
+            find_node(root, text="Enter your device PIN") is not None
+            or find_node(root, text="Re-enter your PIN") is not None
+        ):
             print("Entering PIN...")
             screenshot(f"pin_prompt_{i}")
             adb("shell", "input", "text", "1111")
@@ -195,7 +204,12 @@ def enroll_fingerprint(finger_id):
                 print(f"adb emu finger touch output: '{out}'")
 
             # If emu finger touch fails, fail the enrollment
-            if "KO" in out or "unknown" in out.lower() or "not found" in out.lower() or out.strip() == "":
+            if (
+                "KO" in out
+                or "unknown" in out.lower()
+                or "not found" in out.lower()
+                or out.strip() == ""
+            ):
                 screenshot("failed_emu_finger_touch")
                 raise RuntimeError(f"adb emu finger touch failed with output: '{out}'")
 
@@ -208,10 +222,13 @@ def enroll_fingerprint(finger_id):
 
     if not enroll_success:
         import xml.etree.ElementTree as ET
+
         print("Failed to find DONE button. UI dump:")
-        print(ET.tostring(ui_dump(), encoding='unicode'))
+        print(ET.tostring(ui_dump(), encoding="unicode"))
         screenshot("failed_done_not_found")
-        raise RuntimeError(f"Fingerprint {finger_id} enrollment failed - DONE button never appeared.")
+        raise RuntimeError(
+            f"Fingerprint {finger_id} enrollment failed - DONE button never appeared."
+        )
 
     print(f"Fingerprint {finger_id} enrollment completed.")
     screenshot("enrollment_completed")
@@ -228,6 +245,7 @@ def enroll_fingerprint(finger_id):
 
     # Also force-stop just to be sure it doesn't linger in a broken state
     adb("shell", "am", "force-stop", "com.android.settings")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

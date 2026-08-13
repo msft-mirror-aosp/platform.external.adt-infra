@@ -19,23 +19,7 @@ class NetsimdTest {
       )
 
     for (c in cases) {
-      val got = netsimdProcessName(false, c.osName)
-      Assert.assertEquals(got, c.want)
-    }
-  }
-
-  @Test
-  fun testNetsimdxProcessName() {
-    val cases =
-      arrayOf(
-        TestCase("Linux", "netsimdx"),
-        TestCase("Mac", "netsimdx"),
-        TestCase("Windows", "netsimdx.exe"),
-        TestCase("Unknown", "netsimdx"),
-      )
-
-    for (c in cases) {
-      val got = netsimdProcessName(true, c.osName)
+      val got = netsimdProcessName(c.osName)
       Assert.assertEquals(got, c.want)
     }
   }
