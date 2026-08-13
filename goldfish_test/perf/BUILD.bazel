@@ -1,0 +1,14 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+py_binary(
+    name = "measure_display_perf",
+    srcs = ["measure_display_perf.py"],
+    data = [
+        "//apps/rotating_cube:rotating_cube.apk",
+    ],
+    deps = [
+        "@aemu//protos/aemu-grpc:aemu_grpc_lib",
+    ],
+)
