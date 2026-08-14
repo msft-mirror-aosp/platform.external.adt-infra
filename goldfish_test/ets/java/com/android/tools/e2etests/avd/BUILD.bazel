@@ -1,16 +1,15 @@
-load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    testonly = 1,
-    srcs = glob(["*.config"]),
-    visibility = ["//ets:__pkg__"],
+    srcs = [":avd_test_config"],
 )
 
-kt_jvm_test(
+ets_host_test(
     name = "avd_test",
     srcs = ["AvdTest.kt"],
-    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    class_name = "com.android.tools.e2etests.avd.AvdTest",
+    description = "Host test which checks the AVD",
     deps = [
         "//deps/proto:aemu_java_grpc",
         "//deps/proto:aemu_java_proto",

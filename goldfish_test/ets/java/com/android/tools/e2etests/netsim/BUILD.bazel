@@ -1,16 +1,18 @@
-load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    testonly = 1,
-    srcs = glob(["*.config"]),
-    visibility = ["//ets:__pkg__"],
+    srcs = [
+        ":netsim_daemon_test_config",
+        ":netsim_single_device_test_config",
+    ],
 )
 
-kt_jvm_test(
+ets_host_test(
     name = "netsim_daemon_test",
     srcs = ["NetsimDaemonTest.kt"],
-    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    class_name = "com.android.tools.e2etests.netsim.NetsimDaemonTest",
+    description = "Host tests for the netsim daemon",
     deps = [
         "//testlib/java/com/android/tools/testlib/netsim:netsimd",
         "@maven//:com_github_oshi_oshi_core",
@@ -21,10 +23,11 @@ kt_jvm_test(
     ],
 )
 
-kt_jvm_test(
+ets_host_test(
     name = "netsim_single_device_test",
     srcs = ["NetsimSingleDeviceTest.kt"],
-    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    class_name = "com.android.tools.e2etests.netsim.NetsimSingleDeviceTest",
+    description = "Host tests for netsim using a single device",
     deps = [
         "//testlib/java/com/android/tools/testlib/netsim:grpc",
         "@netsim//proto:netsim_java_grpc",
