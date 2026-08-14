@@ -20,13 +20,15 @@ def setup_emulator_console_auth():
     test_tmpdir = os.environ.get("TEST_TMPDIR")
     if test_tmpdir:
         expected_home = os.path.join(test_tmpdir, "home")
-        if os.path.exists(os.path.join(expected_home, ".emulator_console_auth_token")):
+        if os.path.exists(
+                os.path.join(expected_home, ".emulator_console_auth_token")):
             os.environ["HOME"] = expected_home
 
 
 setup_emulator_console_auth()
 
-APK_PATH = os.environ.get("CTS_APK_PATH", "/tmp/android-cts-verifier/CtsVerifier.apk")
+APK_PATH = os.environ.get("CTS_APK_PATH",
+                          "/tmp/android-cts-verifier/CtsVerifier.apk")
 PACKAGE = "com.android.cts.verifier"
 ACTIVITY = f"{PACKAGE}/.CtsVerifierActivity"
 SERIAL = None  # set to e.g. "emulator-5554" to target a specific device
@@ -71,9 +73,8 @@ def install_empty_device_admin():
             break
 
     if not target_apk:
-        start_dir = (
-            os.path.dirname(APK_PATH) if os.path.exists(APK_PATH) else os.getcwd()
-        )
+        start_dir = (os.path.dirname(APK_PATH)
+                     if os.path.exists(APK_PATH) else os.getcwd())
         for root, _, files in os.walk(start_dir):
             if "CtsEmptyDeviceAdmin.apk" in files:
                 target_apk = os.path.join(root, "CtsEmptyDeviceAdmin.apk")
@@ -90,8 +91,7 @@ def install_empty_device_admin():
 
 
 OUTPUT_DIR1 = os.environ.get("TEST_UNDECLARED_OUTPUTS_DIR") or os.environ.get(
-    "CTS_OUTPUT_DIR", "/tmp"
-)
+    "CTS_OUTPUT_DIR", "/tmp")
 OUTPUT_DIR = f"{OUTPUT_DIR1}/results"
 
 # ── Screenshot Globals ────────────────────────────────────────────────────────
@@ -110,8 +110,7 @@ def set_screenshot_dir(test_subfolder):
     _shot_dir = os.path.join(OUTPUT_DIR, "cts_screenshots", test_subfolder)
     os.makedirs(_shot_dir, exist_ok=True)
     if ARTIFACT_SCREENSHOTS_DIR and os.path.exists(
-        os.path.dirname(ARTIFACT_SCREENSHOTS_DIR)
-    ):
+            os.path.dirname(ARTIFACT_SCREENSHOTS_DIR)):
         os.makedirs(
             os.path.join(ARTIFACT_SCREENSHOTS_DIR, test_subfolder),
             exist_ok=True,
@@ -129,9 +128,9 @@ def screenshot(desc):
     adb("shell", "screencap", "-p", "/sdcard/_cts_step.png", timeout=15)
     adb("pull", "/sdcard/_cts_step.png", path, timeout=15)
     if ARTIFACT_SCREENSHOTS_DIR and os.path.exists(
-        os.path.dirname(ARTIFACT_SCREENSHOTS_DIR)
-    ):
-        artifact_path = os.path.join(ARTIFACT_SCREENSHOTS_DIR, _current_subfolder, name)
+            os.path.dirname(ARTIFACT_SCREENSHOTS_DIR)):
+        artifact_path = os.path.join(ARTIFACT_SCREENSHOTS_DIR,
+                                     _current_subfolder, name)
         try:
             import shutil
 
@@ -141,18 +140,25 @@ def screenshot(desc):
     print(f"  [screenshot] {name}")
 
 
-def adb(*args, timeout=None, check=True):
+def adb(*args, check=True, timeout=None, **kwargs):
     cmd = ["adb"]
     if SERIAL:
         cmd += ["-s", SERIAL]
     cmd += list(args)
     try:
         result = subprocess.run(
-            cmd, capture_output=True, text=True, check=check, timeout=timeout
+            cmd,
+            capture_output=True,
+            text=True,
+            check=check,
+            timeout=timeout,
+            **kwargs,
         )
         return result.stdout.strip()
     except subprocess.TimeoutExpired as e:
-        print(f"  [ERROR] adb command timed out after {timeout}s: {' '.join(cmd)}")
+        print(
+            f"  [ERROR] adb command timed out after {timeout}s: {' '.join(cmd)}"
+        )
         raise e
 
 
@@ -215,20 +221,18 @@ def wait_for_screen_off(timeout=10):
     deadline = time.time() + timeout
     while time.time() < deadline:
         power_state = adb("shell", "dumpsys", "power", check=False)
-        if (
-            "mInteractive=false" in power_state
-            or "Display Power: state=OFF" in power_state
-        ):
+        if ("mInteractive=false" in power_state or
+                "Display Power: state=OFF" in power_state):
             print("  Screen is OFF / Locked!")
             return True
         # Also check if Keyguard / NotificationShade is showing in UI dump
         try:
             root = ui_dump(retries=2)
-            if (
-                root.attrib.get("package") == "com.android.systemui"
-                or find_node(root, resource_id="com.android.systemui:id/scrim_behind")
-                is not None
-            ):
+            if (root.attrib.get("package") == "com.android.systemui" or
+                    find_node(
+                        root,
+                        resource_id="com.android.systemui:id/scrim_behind")
+                    is not None):
                 print("  Keyguard / NotificationShade is showing!")
                 return True
         except Exception:
@@ -243,23 +247,22 @@ def wait_for_keyguard_showing(timeout=10):
     print("Waiting for Keyguard prompt to appear...")
     deadline = time.time() + timeout
     while time.time() < deadline:
-        window_state = adb("shell", "dumpsys", "window", "displays", check=False)
-        if (
-            "StatusBar" in window_state
-            or "Keyguard" in window_state
-            or "com.android.systemui" in window_state
-        ):
+        window_state = adb("shell",
+                           "dumpsys",
+                           "window",
+                           "displays",
+                           check=False)
+        if ("StatusBar" in window_state or "Keyguard" in window_state or
+                "com.android.systemui" in window_state):
             print("  Keyguard prompt is active and ready for PIN entry!")
             return True
         try:
             root = ui_dump(retries=2)
-            if (
-                find_node(
-                    root, resource_id="com.android.systemui:id/device_entry_icon_view"
-                )
-                is not None
-                or find_node(root, text="Unlock for all features and data") is not None
-            ):
+            if (find_node(
+                    root,
+                    resource_id="com.android.systemui:id/device_entry_icon_view"
+            ) is not None or find_node(
+                    root, text="Unlock for all features and data") is not None):
                 print("  Keyguard prompt is active!")
                 return True
         except Exception:
@@ -299,11 +302,9 @@ def ui_dump(retries=8):
 
         if r is not None and last_rc != 0:
             stderr_lower = r.stderr.lower()
-            if (
-                "device offline" in stderr_lower
-                or "not found" in stderr_lower
-                or "unreachable" in stderr_lower
-            ):
+            if ("device offline" in stderr_lower or
+                    "not found" in stderr_lower or
+                    "unreachable" in stderr_lower):
                 print(
                     f"  [FATAL] Device offline or missing during ui_dump: {r.stderr.strip()}"
                 )
@@ -348,7 +349,8 @@ def ui_dump(retries=8):
             )
             # Force-stop background Google services to free memory without killing CtsVerifier
             subprocess.run(
-                cmd_base + ["shell", "am", "force-stop", "com.google.android.gms"],
+                cmd_base +
+                ["shell", "am", "force-stop", "com.google.android.gms"],
                 capture_output=True,
                 timeout=10,
             )
@@ -359,7 +361,8 @@ def ui_dump(retries=8):
                 timeout=10,
             )
             time.sleep(3)
-    raise RuntimeError(f"ui_dump failed after {retries} attempts (last rc={last_rc})")
+    raise RuntimeError(
+        f"ui_dump failed after {retries} attempts (last rc={last_rc})")
 
 
 def find_node(
@@ -381,31 +384,28 @@ def find_node(
         if text is not None and node.attrib.get("text") != text:
             continue
         if text_contains is not None and text_contains not in node.attrib.get(
-            "text", ""
-        ):
+                "text", ""):
             continue
-        if content_desc is not None and node.attrib.get("content-desc") != content_desc:
+        if content_desc is not None and node.attrib.get(
+                "content-desc") != content_desc:
             continue
-        if (
-            content_desc_contains is not None
-            and content_desc_contains not in node.attrib.get("content-desc", "")
-        ):
+        if (content_desc_contains is not None and
+                content_desc_contains not in node.attrib.get(
+                    "content-desc", "")):
             continue
-        if resource_id is not None and node.attrib.get("resource-id") != resource_id:
+        if resource_id is not None and node.attrib.get(
+                "resource-id") != resource_id:
             continue
-        if (
-            resource_id_contains is not None
-            and resource_id_contains not in node.attrib.get("resource-id", "")
-        ):
+        if (resource_id_contains is not None and
+                resource_id_contains not in node.attrib.get("resource-id", "")):
             continue
         if class_name is not None and node.attrib.get("class") != class_name:
             continue
-        if (
-            clickable is not None
-            and node.attrib.get("clickable") != str(clickable).lower()
-        ):
+        if (clickable is not None and
+                node.attrib.get("clickable") != str(clickable).lower()):
             continue
-        if enabled is not None and node.attrib.get("enabled") != str(enabled).lower():
+        if enabled is not None and node.attrib.get("enabled") != str(
+                enabled).lower():
             continue
         return node
     return None
@@ -450,18 +450,44 @@ def swipe(x1, y1, x2, y2, duration_ms=500, sleep_after=1.0):
         time.sleep(sleep_after)
 
 
-def scroll_down(x=540, y1=1600, y2=800, duration_ms=500, sleep_after=1.0):
+def scroll_down(x=None,
+                y1=None,
+                y2=None,
+                duration_ms=250,
+                sleep_after=1.0,
+                distance_ratio=0.25):
     """
-    Perform a single controlled scroll down gesture with tuned defaults (1600 -> 800, 500ms)
+    Perform a single controlled scroll down gesture with tuned defaults
     ensuring continuous screen overlap without momentum flinging.
     """
+    if x is None or y1 is None or y2 is None:
+        w, h = get_screen_size()
+        if x is None:
+            x = w // 2
+        if y1 is None:
+            y1 = int(h * 0.65)
+        if y2 is None:
+            y2 = int(h * (0.65 - distance_ratio))
     swipe(x, y1, x, y2, duration_ms=duration_ms, sleep_after=sleep_after)
 
 
-def scroll_up(x=540, y1=800, y2=1600, duration_ms=500, sleep_after=1.0):
+def scroll_up(x=None,
+              y1=None,
+              y2=None,
+              duration_ms=250,
+              sleep_after=1.0,
+              distance_ratio=0.25):
     """
-    Perform a single controlled scroll up gesture with tuned defaults (800 -> 1600, 500ms).
+    Perform a single controlled scroll up gesture with tuned defaults.
     """
+    if x is None or y1 is None or y2 is None:
+        w, h = get_screen_size()
+        if x is None:
+            x = w // 2
+        if y1 is None:
+            y1 = int(h * (0.65 - distance_ratio))
+        if y2 is None:
+            y2 = int(h * 0.65)
     swipe(x, y1, x, y2, duration_ms=duration_ms, sleep_after=sleep_after)
 
 
@@ -469,9 +495,10 @@ def wait_for(text=None, content_desc=None, resource_id=None, timeout=15):
     deadline = time.time() + timeout
     while time.time() < deadline:
         root = ui_dump()
-        node = find_node(
-            root, text=text, content_desc=content_desc, resource_id=resource_id
-        )
+        node = find_node(root,
+                         text=text,
+                         content_desc=content_desc,
+                         resource_id=resource_id)
         if node is not None:
             if node.attrib.get("enabled", "true") == "true":
                 return node
@@ -486,7 +513,13 @@ def wait_for(text=None, content_desc=None, resource_id=None, timeout=15):
 def grant_all_permissions(apk_path=None):
     """Automatically grant all 6 required CTS Verifier permissions and appops."""
     print("Automatically granting CTS Verifier permissions...")
-    adb("shell", "settings", "put", "global", "hidden_api_policy", "1", check=False)
+    adb("shell",
+        "settings",
+        "put",
+        "global",
+        "hidden_api_policy",
+        "1",
+        check=False)
     if apk_path and os.path.exists(apk_path):
         adb("install", "-r", "-g", apk_path, check=False)
     adb(
@@ -498,10 +531,20 @@ def grant_all_permissions(apk_path=None):
         "allow",
         check=False,
     )
-    adb("shell", "appops", "set", PACKAGE, "MANAGE_EXTERNAL_STORAGE", "0", check=False)
-    adb(
-        "shell", "am", "compat", "enable", "ALLOW_TEST_API_ACCESS", PACKAGE, check=False
-    )
+    adb("shell",
+        "appops",
+        "set",
+        PACKAGE,
+        "MANAGE_EXTERNAL_STORAGE",
+        "0",
+        check=False)
+    adb("shell",
+        "am",
+        "compat",
+        "enable",
+        "ALLOW_TEST_API_ACCESS",
+        PACKAGE,
+        check=False)
     adb("shell", "appops", "set", PACKAGE, "TURN_SCREEN_ON", "0", check=False)
     adb(
         "shell",
@@ -539,7 +582,8 @@ def get_ca_cert_path():
     # 2. Search parent directories
     cur = os.path.dirname(os.path.abspath(__file__))
     for _ in range(6):
-        asset = os.path.join(cur, "cts", "apps", "CtsVerifier", "assets", "myCA.cer")
+        asset = os.path.join(cur, "cts", "apps", "CtsVerifier", "assets",
+                             "myCA.cer")
         if os.path.exists(asset):
             return asset
         cur = os.path.dirname(cur)
@@ -552,9 +596,8 @@ def get_ca_cert_path():
                     out_dir = os.path.join(OUTPUT_DIR, "extracted_assets")
                     os.makedirs(out_dir, exist_ok=True)
                     extracted_path = os.path.join(out_dir, "myCA.cer")
-                    with open(extracted_path, "wb") as f, z.open(
-                        "assets/myCA.cer"
-                    ) as src:
+                    with open(extracted_path,
+                              "wb") as f, z.open("assets/myCA.cer") as src:
                         f.write(src.read())
                     return extracted_path
         except Exception as e:
@@ -619,7 +662,11 @@ def install_real_ca_cert():
             check=False,
         )
 
-    adb("shell", "chmod", "644", "/data/misc/user/0/cacerts-added/*", check=False)
+    adb("shell",
+        "chmod",
+        "644",
+        "/data/misc/user/0/cacerts-added/*",
+        check=False)
     adb(
         "shell",
         "chown",
@@ -658,23 +705,26 @@ def purge_user_ca_certs():
 
 
 def setup():
-    """Uninstall, install with all permissions granted, and launch CtsVerifier."""
+    """Ensure CtsVerifier is installed with all permissions granted, and launch CtsVerifier."""
     # Force stop background Google services to free memory before install
     adb("shell", "am", "force-stop", "com.google.android.gms", check=False)
     adb("shell", "am", "force-stop", "com.google.android.vending", check=False)
-    time.sleep(3)
-    if os.environ.get("ETS", "false") == "false":
-        print("Uninstalling existing CtsVerifier (if present)...")
-        adb("shell", "pm", "uninstall", PACKAGE, check=False)
-        time.sleep(2)
-        print("Installing CtsVerifier.apk...")
-        adb("install", "-g", APK_PATH)
-        print("Installed.")
-        time.sleep(2)
-        grant_all_permissions(APK_PATH)
-    else:
-        grant_all_permissions()
-        adb("shell", "am", "force-stop", PACKAGE)
+    time.sleep(2)
+
+    # Check if CtsVerifier is installed. If not, install it with retries!
+    res = adb("shell", "pm", "path", PACKAGE, check=False)
+    if "package:" not in res:
+        print(f"CtsVerifier not installed. Installing from {APK_PATH}...")
+        for _ in range(5):
+            adb("install", "-r", "-g", APK_PATH, check=False)
+            time.sleep(2)
+            if "package:" in adb("shell", "pm", "path", PACKAGE, check=False):
+                print("  ✓ CtsVerifier.apk installed successfully!")
+                break
+            time.sleep(2)
+
+    grant_all_permissions()
+    adb("shell", "am", "force-stop", PACKAGE, check=False)
     # Ensure verifierReports directory exists for artifact pull
     adb("shell", "mkdir", "-p", "/sdcard/verifierReports", check=False)
     adb("shell", "touch", "/sdcard/verifierReports/.keep", check=False)
@@ -687,45 +737,171 @@ def setup():
 
 def get_screen_size():
     """Returns (width, height) tuple from 'wm size'."""
-    res = adb("shell", "wm", "size", check=False)
-    m = re.search(r"(\d+)x(\d+)", res)
-    if m:
-        return int(m.group(1)), int(m.group(2))
+    try:
+        res = adb("shell", "wm", "size", check=False)
+        matches = re.findall(r"(\d+)x(\d+)", res)
+        if matches:
+            return int(matches[-1][0]), int(matches[-1][1])
+    except Exception:
+        pass
     return 1080, 2400
 
 
-def navigate_to(test_name, max_swipes=40, verify_title=None):
-    """Scroll through the test list to find test_name, tap it, and wait for the screen to settle."""
+def get_display_dimensions():
+    """Alias for get_screen_size returning (width, height)."""
+    return get_screen_size()
+
+
+def tap_switch_widget(node, root=None):
+    """
+    Tap a switch widget or preference row in Settings.
+    Finds the actual android.widget.Switch / CompoundButton / switch_widget child node and taps its
+    geometric center. If tapping a wide preference container where the switch is embedded on the right,
+    uses proportional relative coordinates (x1 + int((x2 - x1) * 0.90), (y1 + y2) // 2).
+    """
+    if node is None:
+        return
+    cls = node.attrib.get("class", "")
+    res_id = node.attrib.get("resource-id", "").lower()
+    if "Switch" in cls or "CompoundButton" in cls or "switch" in res_id:
+        tap(node)
+        return
+
+    for child in node.iter("node"):
+        if child is node:
+            continue
+        c_cls = child.attrib.get("class", "")
+        c_res = child.attrib.get("resource-id", "").lower()
+        if ("Switch" in c_cls or "CompoundButton" in c_cls or
+                "switch_widget" in c_res or "switch" in c_res or
+                "checked" in child.attrib):
+            tap(child)
+            return
+
+    bounds = node.attrib.get("bounds", "")
+    if bounds:
+        nums = [
+            int(n) for n in bounds.replace("][", ",").strip("[]").split(",")
+        ]
+        x1, y1, x2, y2 = nums
+        w, _ = get_screen_size()
+        if (x2 - x1) > int(w * 0.35):
+            tap_x = x1 + int((x2 - x1) * 0.90)
+            tap_y = (y1 + y2) // 2
+            print(
+                f"  [Settings] Tapping switch at proportional right edge ({tap_x}, {tap_y})..."
+            )
+            adb("shell", "input", "tap", str(tap_x), str(tap_y), check=False)
+            return
+    tap(node)
+
+
+def get_focused_activity():
+    """Returns the full component name (pkg/activity) currently in the foreground across Android 15-17."""
+    # Strategy 1: dumpsys activity resumed
+    out_resumed = adb("shell", "dumpsys", "activity", "resumed", check=False)
+    if out_resumed:
+        for line in out_resumed.splitlines():
+            if any(k in line for k in ("mResumedActivity", "topResumedActivity",
+                                       "ResumedActivity")):
+                m = re.search(
+                    r"([a-zA-Z0-9_.]+/(\.[a-zA-Z0-9_.$]+|[a-zA-Z0-9_.$]+))",
+                    line)
+                if m:
+                    return m.group(1).rstrip("}")
+
+    # Strategy 2: dumpsys window (checking mCurrentFocus, mFocusedApp, topFocusedApp)
+    out_window = adb("shell", "dumpsys", "window", "displays", check=False)
+    if not out_window or not any(
+            k in out_window
+            for k in ("mCurrentFocus", "mFocusedApp", "topFocusedApp")):
+        out_window = adb("shell", "dumpsys", "window", check=False)
+    if out_window:
+        for line in out_window.splitlines():
+            if any(k in line
+                   for k in ("mCurrentFocus", "mFocusedApp", "topFocusedApp")):
+                m = re.search(
+                    r"([a-zA-Z0-9_.]+/(\.[a-zA-Z0-9_.$]+|[a-zA-Z0-9_.$]+))",
+                    line)
+                if m:
+                    return m.group(1).rstrip("}")
+
+    # Strategy 3: dumpsys activity top
+    out_top = adb("shell", "dumpsys", "activity", "top", check=False)
+    if out_top:
+        for line in out_top.splitlines():
+            if any(k in line
+                   for k in ("ACTIVITY", "mResumedActivity",
+                             "topResumedActivity", "ResumedActivity")):
+                m = re.search(
+                    r"([a-zA-Z0-9_.]+/(\.[a-zA-Z0-9_.$]+|[a-zA-Z0-9_.$]+))",
+                    line)
+                if m:
+                    return m.group(1).rstrip("}")
+
+    return ""
+
+
+def navigate_to(test_name,
+                max_swipes=50,
+                verify_title=None,
+                target_activity=None):
+    """Scroll through the test list in CtsVerifierActivity to find and tap test_name.
+
+    Always uses UI list scrolling and tapping in CtsVerifierActivity so tests are
+    launched via startActivityForResult(intent, LAUNCH_TEST_REQUEST_CODE) and results
+    are properly recorded upon completion.
+    """
     print(f"Navigating to: {test_name!r}...")
+
+    # Ensure CtsVerifierActivity is in the foreground before starting navigation
+    adb("shell", "am", "start", "-W", "-n", ACTIVITY, check=False)
+    time.sleep(2)
 
     # helper to check and click
     def check_and_click():
         root = ui_dump()
 
-        # Dismiss any permission dialogs that might block the view
-        allow_btn = find_node(root, text="Allow")
-        if allow_btn is not None:
-            print("  Dismissing Allow dialog...")
-            tap(allow_btn)
-            time.sleep(1)
+        # Ensure CtsVerifier is in foreground
+        pkgs = {
+            n.attrib.get("package")
+            for n in root.iter("node")
+            if n.attrib.get("package")
+        }
+        if "com.android.cts.verifier" not in pkgs:
+            adb("shell", "am", "start", "-W", "-n", ACTIVITY, check=False)
+            time.sleep(2)
             root = ui_dump()
+
+        # Dismiss permission/system dialogs ONLY if an explicit AlertDialog panel is present
+        alert_dialog = find_node(root, resource_id="android:id/parentPanel")
+        if alert_dialog is None:
+            alert_dialog = find_node(root, resource_id="android:id/alertTitle")
+        if alert_dialog is not None:
+            for btn_id in (
+                    "android:id/button1",
+                    "com.android.permissioncontroller:id/permission_allow_button",
+            ):
+                btn = find_node(root, resource_id=btn_id)
+                if btn is not None:
+                    print(f"  Dismissing alert dialog via {btn_id}...")
+                    tap(btn)
+                    time.sleep(1)
+                    root = ui_dump()
+                    break
 
         node = find_node(root, text=test_name)
         if node is None:
             # Fallback: case-insensitive or partial matching
             target = test_name.lower().strip()
-            base_target = target.split("(")[0].strip() if "(" in target else target
+            base_target = target.split(
+                "(")[0].strip() if "(" in target else target
             for n in root.iter("node"):
                 t = (n.attrib.get("text") or "").strip()
                 c = (n.attrib.get("content-desc") or "").strip()
-                if (
-                    target in t.lower()
-                    or target in c.lower()
-                    or (
-                        base_target
-                        and (base_target in t.lower() or base_target in c.lower())
-                    )
-                ):
+                if (target in t.lower() or target in c.lower() or
+                    (base_target and
+                     (base_target in t.lower() or base_target in c.lower()))):
                     print(
                         f"  Found matching node with text {t!r} / desc {c!r} at {n.attrib.get('bounds')}"
                     )
@@ -742,15 +918,10 @@ def navigate_to(test_name, max_swipes=40, verify_title=None):
                 title_found = False
                 for n in new_root.iter("node"):
                     t = n.attrib.get("text", "")
-                    if t.startswith(verify_title) or verify_title.lower() in t.lower():
+                    if t.startswith(
+                            verify_title) or verify_title.lower() in t.lower():
                         title_found = True
                         break
-                # Also accept if an initial Notice / Instructions dialog or button is present
-                if not title_found and (
-                    find_node(new_root, text="OK") is not None
-                    or find_node(new_root, text="Notice") is not None
-                ):
-                    title_found = True
 
                 if not title_found:
                     print(
@@ -765,20 +936,29 @@ def navigate_to(test_name, max_swipes=40, verify_title=None):
     if check_and_click():
         return
 
-    # Ensure CtsVerifier is actually in the foreground before scrolling
-    root = ui_dump()
-    pkgs = {
-        n.attrib.get("package") for n in root.iter("node") if n.attrib.get("package")
-    }
-    if "com.android.cts.verifier" not in pkgs:
-        print("  CtsVerifier not in foreground! Re-launching activity...")
-        adb("shell", "am", "start", "-W", "-n", ACTIVITY, check=False)
-        time.sleep(3)
-        if check_and_click():
-            return
-
-    # Scroll down with controlled drag ensuring 5-8 item overlap per check
+    # Scroll down with controlled drag ensuring continuous screen overlap
     for swipe_idx in range(max_swipes):
+        # Guard: recover focus if lost or trapped in wrong activity
+        focused = get_focused_activity()
+        if focused and "CtsVerifierActivity" not in focused and "TestListActivity" not in focused:
+            print(
+                f"  [Navigation Guard] Trapped in wrong activity '{focused}'. Recovering with KEYCODE_BACK..."
+            )
+            adb("shell", "input", "keyevent", "KEYCODE_BACK", check=False)
+            time.sleep(1.5)
+            focused = get_focused_activity()
+            if focused and "CtsVerifierActivity" not in focused and "TestListActivity" not in focused:
+                adb("shell", "am", "start", "-W", "-n", ACTIVITY, check=False)
+                time.sleep(2)
+        elif get_focused_package() != "com.android.cts.verifier":
+            print(
+                f"  [Navigation Guard] Focus lost to '{get_focused_package()}'. Sending KEYCODE_BACK..."
+            )
+            adb("shell", "input", "keyevent", "KEYCODE_BACK", check=False)
+            time.sleep(1.5)
+            if get_focused_package() != "com.android.cts.verifier":
+                adb("shell", "am", "start", "-W", "-n", ACTIVITY, check=False)
+                time.sleep(2)
         scroll_down()
         if (swipe_idx + 1) % 5 == 0:
             print(
@@ -789,7 +969,9 @@ def navigate_to(test_name, max_swipes=40, verify_title=None):
 
     # Log visible text nodes for debugging if not found
     root = ui_dump()
-    texts = [n.attrib.get("text") for n in root.iter("node") if n.attrib.get("text")]
+    texts = [
+        n.attrib.get("text") for n in root.iter("node") if n.attrib.get("text")
+    ]
     print(
         f"  Failed to find {test_name!r}. Visible text nodes on final screen: {texts}"
     )
@@ -843,25 +1025,101 @@ def tap_fail(fail_btn=None):
 
 
 def find_pass_button(root):
-    """Find the toolbar Pass button node in an XML root."""
-    btn = find_node(root, content_desc="Pass")
-    if btn is None:
-        btn = find_node(root, text="Pass")
-    return btn
+    """Find the bottom toolbar Pass button node in an XML root."""
+    if root is None:
+        return None
+    w, h = get_screen_size()
+    for node in root.iter("node"):
+        res_id = (node.attrib.get("resource-id") or "").lower()
+        cls = (node.attrib.get("class") or "").lower()
+        if res_id.endswith(":id/pass_button") or res_id.endswith(
+                "/pass_button"):
+            _, cy = bounds_center(node)
+            if cy > int(h * 0.80):
+                return node
+    return None
 
 
 def find_fail_button(root):
-    """Find the toolbar Fail button node in an XML root."""
-    btn = find_node(root, content_desc="Fail")
-    if btn is None:
-        btn = find_node(root, text="Fail")
-    return btn
+    """Find the bottom toolbar Fail button node in an XML root."""
+    if root is None:
+        return None
+    w, h = get_screen_size()
+    for node in root.iter("node"):
+        res_id = (node.attrib.get("resource-id") or "").lower()
+        cls = (node.attrib.get("class") or "").lower()
+        if res_id.endswith(":id/fail_button") or res_id.endswith(
+                "/fail_button"):
+            _, cy = bounds_center(node)
+            if cy > int(h * 0.80):
+                return node
+    return None
+
+
+def get_focused_package():
+    """Returns the package name of the currently focused window / resumed activity across Android 15-17."""
+    # Strategy 1: dumpsys window (checking mCurrentFocus, mFocusedApp, topFocusedApp)
+    out_window = adb("shell", "dumpsys", "window", "displays", check=False)
+    if not out_window or not any(
+            k in out_window
+            for k in ("mCurrentFocus", "mFocusedApp", "topFocusedApp")):
+        out_window = adb("shell", "dumpsys", "window", check=False)
+    for line in out_window.splitlines():
+        if any(k in line
+               for k in ("mCurrentFocus", "mFocusedApp", "topFocusedApp")):
+            match = re.search(r"([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)+)/", line)
+            if match:
+                pkg = match.group(1).strip()
+                if pkg and pkg != "null":
+                    return pkg
+            for token in line.split():
+                if "/" in token and "{" not in token:
+                    pkg = token.split("/")[0].strip()
+                    if pkg and pkg != "null" and "." in pkg:
+                        return pkg
+
+    # Strategy 2: dumpsys activity resumed (checking mResumedActivity, topResumedActivity, ResumedActivity)
+    out_activity = adb("shell", "dumpsys", "activity", "resumed", check=False)
+    if not out_activity or not any(k in out_activity for k in (
+            "mResumedActivity", "topResumedActivity", "ResumedActivity")):
+        out_activity = adb("shell", "dumpsys", "activity", "top", check=False)
+    for line in out_activity.splitlines():
+        if any(k in line for k in ("mResumedActivity", "topResumedActivity",
+                                   "ResumedActivity")):
+            match = re.search(r"([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)+)/", line)
+            if match:
+                pkg = match.group(1).strip()
+                if pkg and pkg != "null":
+                    return pkg
+            for token in line.split():
+                if "/" in token and "{" not in token:
+                    pkg = token.split("/")[0].strip()
+                    if pkg and pkg != "null" and "." in pkg:
+                        return pkg
+
+    return ""
 
 
 def is_pass_button_enabled(root):
     """Return True if the toolbar Pass button is present and enabled."""
     btn = find_pass_button(root)
     return btn is not None and btn.attrib.get("enabled") == "true"
+
+
+def find_active_inline_pass(root):
+    """Locate the currently enabled inline action pass button in an InteractiveVerifierActivity list."""
+    if root is None:
+        return None
+    for n in root.iter("node"):
+        res = (n.attrib.get("resource-id") or "").strip()
+        text = (n.attrib.get("text") or "").strip().lower()
+        if res.endswith(":id/pass_button"):
+            continue
+        if res.endswith(":id/iva_action_button_pass") or (
+                res.endswith(":id/nls_action_button") and text == "pass"):
+            if n.attrib.get("enabled", "false") == "true":
+                return n
+    return None
 
 
 def _extract_test_prefix(text):
@@ -966,12 +1224,8 @@ def export_and_verify(test_name):
         cd = (n.attrib.get("content-desc") or "").strip().lower()
         txt = (n.attrib.get("text") or "").strip().lower()
         rid = (n.attrib.get("resource-id") or "").lower()
-        if (
-            cd in ("more options", "more")
-            or txt in ("more options", "more")
-            or "overflow" in rid
-            or "more" in rid
-        ):
+        if (cd in ("more options", "more") or txt in ("more options", "more") or
+                "overflow" in rid or "more" in rid):
             menu_btn = n
             break
 
@@ -981,8 +1235,8 @@ def export_and_verify(test_name):
         time.sleep(2)
     else:
         # Try tapping top-right corner based on screen resolution
-        w, _ = get_screen_size()
-        tap_x, tap_y = w - 50, 100
+        w, h = get_screen_size()
+        tap_x, tap_y = int(w * 0.95), int(h * 0.04)
         print(
             f"  Menu button not found in UI dump, tapping top-right corner ({tap_x}, {tap_y})..."
         )
@@ -1001,10 +1255,8 @@ def export_and_verify(test_name):
         root = ui_dump()
         for node in root.iter("node"):
             txt = (node.attrib.get("text") or "").strip()
-            if (
-                txt in ("Export test report", "Export", "Export test results")
-                or "export" in txt.lower()
-            ):
+            if (txt in ("Export test report", "Export", "Export test results")
+                    or "export" in txt.lower()):
                 export_btn = node
                 break
         if export_btn is not None:
@@ -1016,7 +1268,8 @@ def export_and_verify(test_name):
         tap(export_btn)
     else:
         # Fallback to KEYCODE_ENTER if tap fails (the top menu item is Export test report)
-        print("Export button not found by text, falling back to KEYCODE_ENTER...")
+        print(
+            "Export button not found by text, falling back to KEYCODE_ENTER...")
         adb("shell", "input", "keyevent", "KEYCODE_ENTER", check=False)
     time.sleep(3)
 
@@ -1047,13 +1300,14 @@ def export_and_verify(test_name):
             zips = [
                 z.strip()
                 for z in ls_res.splitlines()
-                if z.strip().endswith(".zip")
-                and "Permission denied" not in z
-                and "No such file" not in z
+                if z.strip().endswith(".zip") and
+                "Permission denied" not in z and "No such file" not in z
             ]
             if zips:
                 device_zip_path = zips[-1]
-                print(f"  Found exported report via storage search: {device_zip_path}")
+                print(
+                    f"  Found exported report via storage search: {device_zip_path}"
+                )
                 break
         time.sleep(1)
 
@@ -1069,9 +1323,8 @@ def export_and_verify(test_name):
         tap(ok)
 
     original_filename = os.path.basename(device_zip_path)
-    ts_match = re.match(
-        r"(\d{4})\.(\d{2})\.(\d{2})_(\d{2})\.(\d{2})\.(\d{2})", original_filename
-    )
+    ts_match = re.match(r"(\d{4})\.(\d{2})\.(\d{2})_(\d{2})\.(\d{2})\.(\d{2})",
+                        original_filename)
     test_slug = re.sub(r"[^a-zA-Z0-9]+", "_", test_name).strip("_")
     if ts_match:
         y, mo, d, h, mi, s = ts_match.groups()
@@ -1121,9 +1374,11 @@ def export_and_verify(test_name):
             all_pass = False
 
     if tests_found == 0:
-        raise AssertionError("VERIFICATION FAILED: No tests found in test_result.xml")
+        raise AssertionError(
+            "VERIFICATION FAILED: No tests found in test_result.xml")
     if failed > 0 or not all_pass:
-        raise AssertionError(f"VERIFICATION FAILED: {failed} test(s) not passing")
+        raise AssertionError(
+            f"VERIFICATION FAILED: {failed} test(s) not passing")
     print(f"\nAll {passed} test(s) PASS — verification OK")
 
 
@@ -1145,10 +1400,8 @@ def _all_pass_buttons(root):
     seen_bounds = set()
     result = []
     for node in root.iter("node"):
-        is_pass = (
-            node.attrib.get("content-desc") == "Pass"
-            or node.attrib.get("text") == "Pass"
-        )
+        is_pass = (node.attrib.get("content-desc") == "Pass" or
+                   node.attrib.get("text") == "Pass")
         is_clickable = node.attrib.get("clickable") == "true"
         if is_pass and is_clickable:
             b = node.attrib.get("bounds", "")
@@ -1183,7 +1436,9 @@ def tap_all_inline_then_pass(timeout=90):
             if pass_buttons[0].attrib.get("enabled") == "false":
                 time.sleep(1)
                 continue
-            print(f"  Tapping final Pass at {pass_buttons[0].attrib['bounds']}...")
+            print(
+                f"  Tapping final Pass at {pass_buttons[0].attrib['bounds']}..."
+            )
             tap(pass_buttons[0])
             return
         # Multiple Pass buttons: the toolbar Pass (content-desc) has the highest y;
@@ -1192,7 +1447,8 @@ def tap_all_inline_then_pass(timeout=90):
             n for n in pass_buttons if n.attrib.get("content-desc") == "Pass"
         ]
         if toolbar_candidates:
-            bottom_pass = max(toolbar_candidates, key=lambda n: bounds_center(n)[1])
+            bottom_pass = max(toolbar_candidates,
+                              key=lambda n: bounds_center(n)[1])
         else:
             bottom_pass = max(pass_buttons, key=lambda n: bounds_center(n)[1])
         top_passes = [n for n in pass_buttons if n is not bottom_pass]
