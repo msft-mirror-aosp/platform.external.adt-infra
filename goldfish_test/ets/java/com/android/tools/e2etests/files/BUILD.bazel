@@ -1,18 +1,15 @@
-load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    testonly = 1,
-    srcs = [
-        ":AdbPushPullTest.config",
-    ],
-    visibility = ["//ets:__pkg__"],
+    srcs = [":adb_push_pull_test_config"],
 )
 
-kt_jvm_test(
+ets_host_test(
     name = "adb_push_pull_test",
     srcs = ["AdbPushPullTest.kt"],
-    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    class_name = "com.android.tools.e2etests.files.AdbPushPullTest",
+    description = "Host tests checking adb push and pull",
     deps = [
         "@tradefed//:tradefed_jars",
     ],

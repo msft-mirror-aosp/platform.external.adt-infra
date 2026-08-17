@@ -1,18 +1,15 @@
-load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    testonly = 1,
-    srcs = [
-        ":VulkanAppTest.config",
-    ],
-    visibility = ["//ets:__pkg__"],
+    srcs = [":vulkan_app_test_config"],
 )
 
-kt_jvm_test(
+ets_host_test(
     name = "vulkan_app_test",
     srcs = ["VulkanAppTest.kt"],
-    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    class_name = "com.android.tools.e2etests.vulkan.VulkanAppTest",
+    description = "Host tests checking vulkan compatibility",
     deps = [
         "@tradefed//:tradefed_jars",
     ],
