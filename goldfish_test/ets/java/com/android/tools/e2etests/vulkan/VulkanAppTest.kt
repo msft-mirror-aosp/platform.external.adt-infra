@@ -7,6 +7,7 @@ import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestLogData
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test
 import java.lang.Thread
 import org.junit.Assert
+import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,6 +16,8 @@ import org.junit.runner.RunWith
 public class VulkanAppTest : BaseHostJUnit4Test() {
   // TODO(kmagic): Use a map here to specify paths to the other apks.
   @Option(name = "apk_path", description = "Path to hellovk.apk") private var mApkPath: String = ""
+
+  @Option(name = "using_lavapipe", description = "True if the emulator is using Lavapipe") private var mUsingLavapipe: Boolean = true
 
   private val mPackage = "com.android.hellovk"
   private val mActivity = mPackage + "/com.android.hellovk.VulkanActivity"
@@ -33,5 +36,12 @@ public class VulkanAppTest : BaseHostJUnit4Test() {
 
     val streamSource = getDevice().getScreenshot()
     mLogs.addTestLog("hellovk_screenshot", LogDataType.PNG, streamSource)
+  }
+
+  @Test
+  fun vulkanLavapipe() {
+    Assume.assumeTrue(mUsingLavapipe)
+    val stdout = getDevice().executeShellCommand("cmd gpu vkjson")
+    Assert.assertTrue(stdout.contains("llvmpipe"))
   }
 }
