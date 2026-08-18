@@ -1,9 +1,9 @@
 {
   "total_categories": 23,
   "total_test_items": 125,
-  "total_automated_items": 6,
-  "total_untested_items": 119,
-  "automation_coverage": "4.8%",
+  "total_automated_items": 9,
+  "total_untested_items": 116,
+  "automation_coverage": "7.2%",
   "categories": {
     "AUDIO": [
       {
@@ -317,8 +317,8 @@
       },
       {
         "name": "Toast test (may auto pass if CtsVerifier isn't targeting S+)",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_toast_test.py"
       }
     ],
     "NOTIFICATIONS & SYSTEM UI": [
@@ -329,13 +329,13 @@
       },
       {
         "name": "CA Cert Notification Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_ca_cert_test.py"
       },
       {
         "name": "CA Cert Notification on Boot test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_ca_cert_on_boot_test.py"
       },
       {
         "name": "Live Update Notification Test",
