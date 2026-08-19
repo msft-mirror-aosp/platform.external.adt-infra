@@ -1,20 +1,18 @@
-load("@rules_android//rules:rules.bzl", "android_binary")
-load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+load("//ets:ets.bzl", "ets_device_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    testonly = 1,
     srcs = [
-        ":ConnectivityTest.config",
+        ":ConnectivityTest_config",
         ":ConnectivityTest.apk",
     ],
-    visibility = ["//ets:__pkg__"],
 )
 
-kt_android_library(
-    name = "connectivity_test_lib",
-    testonly = 1,
+ets_device_test(
+    name = "ConnectivityTest",
     srcs = ["ConnectivityTest.kt"],
+    description = "Tests related to the emulator wifi connectivity",
+    package = "com.android.tools.e2etests.wifi",
     deps = [
         "//testlib/java/com/android/tools/testlib/emu:adb",
         "@maven//:androidx_test_core",
@@ -22,16 +20,3 @@ kt_android_library(
         "@maven//:androidx_test_uiautomator_uiautomator",
     ],
 )
-
-android_binary(
-    name = "ConnectivityTest",
-    testonly = 1,
-    custom_package = "com.android.tools.e2etests.wifi",
-    manifest = "ConnectivityTestManifest.xml",
-    manifest_values = {
-        "minSdkVersion": "36",
-        "targetSdkVersion": "36",
-    },
-    deps = [":connectivity_test_lib"],
-)
-

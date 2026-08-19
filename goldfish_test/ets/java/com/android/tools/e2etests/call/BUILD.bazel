@@ -1,20 +1,42 @@
-load("@rules_android//rules:rules.bzl", "android_binary")
-load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+load("//ets:ets.bzl", "ets_device_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    testonly = 1,
     srcs = [
         ":CallTest.apk",
-        ":CallTest.config",
+        ":CallTest_config",
     ],
-    visibility = ["//ets:__pkg__"],
 )
 
-kt_android_library(
-    name = "call_test_lib",
-    testonly = 1,
+ets_device_test(
+    name = "CallTest",
     srcs = ["CallTest.kt"],
+    description = "Tests related to the emulator phone",
+    manifest_app_extra = """
+       <service android:name=".TestInCallService"
+                android:permission="android.permission.BIND_INCALL_SERVICE"
+                android:exported="true">
+           <meta-data android:name="android.telecom.IN_CALL_SERVICE_UI" android:value="true" />
+           <intent-filter>
+               <action android:name="android.telecom.InCallService"/>
+           </intent-filter>
+       </service>
+       <activity android:name=".DummyActivity" android:exported="true">
+           <intent-filter>
+               <action android:name="android.intent.action.DIAL"/>
+               <category android:name="android.intent.category.DEFAULT"/>
+           </intent-filter>
+           <intent-filter>
+               <action android:name="android.intent.action.DIAL"/>
+               <category android:name="android.intent.category.DEFAULT"/>
+               <data android:scheme="tel"/>
+           </intent-filter>
+       </activity>
+    """,
+    manifest_extra = """
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    """,
+    package = "com.android.tools.e2etests.boot",
     deps = [
         "//deps/proto:aemu_java_grpc_lite",
         "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
@@ -22,16 +44,4 @@ kt_android_library(
         "@maven//:androidx_test_runner",
         "@tradefed//:tradefed_jars",
     ],
-)
-
-android_binary(
-    name = "CallTest",
-    testonly = 1,
-    custom_package = "com.android.tools.e2etests.boot",
-    manifest = "CallTestManifest.xml",
-    manifest_values = {
-        "minSdkVersion": "36",
-        "targetSdkVersion": "36",
-    },
-    deps = [":call_test_lib"],
 )
