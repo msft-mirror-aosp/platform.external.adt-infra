@@ -35,11 +35,13 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
   fun closeEmulatorAndCheckProcesses() {
     Assume.assumeFalse(mEmuSerial.isEmpty())
 
-    val pid = findEmulator(mEmuSerial)!!.pid.toInt()
+    val discovery = findEmulator(mEmuSerial)
+    Assert.assertNotNull("Could not find discovery file for emulator serial $mEmuSerial", discovery)
+    val pid = discovery!!.pid.toInt()
 
     closeEmulator()
     emulatorProcessExitsAfterClose(pid)
-    netsimdExitsWithEmulator()
+    netsimdExitsWithEmulator(discovery)
   }
 
   fun closeEmulator() {
@@ -63,11 +65,14 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
     Assert.assertTrue("emulator never exited", exited)
   }
 
-  fun netsimdExitsWithEmulator() {
+  fun netsimdExitsWithEmulator(discovery: com.android.tools.testlib.emu.Discovery? = null) {
     Assume.assumeFalse(mEmuSerial.isEmpty())
 
+    val endpoint = discovery?.discoveryIni?.get("netsim.endpoint")
+    val port = endpoint?.substringAfterLast(":")?.takeIf { it.all { c -> c.isDigit() } }
+
     val exited = eventually(count = mPollCount, delay = mPollDelayMs) {
-      !netsimdIsLaunched()
+      !netsimdIsLaunched(port)
     }
     Assert.assertTrue("netsimd never exited", exited)
   }
