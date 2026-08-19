@@ -3,6 +3,7 @@ package com.android.tools.e2etests.events
 import com.android.emulator.control.EmulatorControllerGrpc
 import com.android.emulator.control.VmRunState
 import com.android.tools.e2etests.grpc.getHostGrpcChannel
+import com.android.tools.testlib.emu.eventually
 import com.android.tools.testlib.emu.findEmulator
 import com.android.tools.testlib.netsim.netsimdIsLaunched
 import com.android.tradefed.config.Option
@@ -10,7 +11,6 @@ import com.android.tradefed.log.Log
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test
 import io.grpc.StatusRuntimeException
-import java.time.Clock
 import java.util.concurrent.TimeUnit
 import org.junit.Assert
 import org.junit.Assume
@@ -25,8 +25,9 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
   @Option(name = "emu_serial", description = "Emulator serial number. If empty test is skipped")
   private var mEmuSerial: String = ""
 
-  // wait 60 seconds to give snapshot more time to save
-  private val mTimeoutMillis = 60000
+  // Wait up to 60 seconds (120 attempts x 500ms delay) to give snapshot more time to save
+  private val mPollCount = 120
+  private val mPollDelayMs = 500L
 
   private val TAG = "CloseEmulatorTest"
 
@@ -55,25 +56,19 @@ public class CloseEmulatorTest : BaseHostJUnit4Test() {
   }
 
   fun emulatorProcessExitsAfterClose(pid: Int) {
-    val timeout = Clock.systemUTC().millis() + mTimeoutMillis
     val os = SystemInfo().getOperatingSystem()
-    while (Clock.systemUTC().millis() < timeout) {
-      if (os.getProcess(pid) == null) {
-        return
-      }
+    val exited = eventually(count = mPollCount, delay = mPollDelayMs) {
+      os.getProcess(pid) == null
     }
-    Assert.fail("emulator never exited")
+    Assert.assertTrue("emulator never exited", exited)
   }
 
   fun netsimdExitsWithEmulator() {
     Assume.assumeFalse(mEmuSerial.isEmpty())
 
-    val timeout = Clock.systemUTC().millis() + mTimeoutMillis
-    while (Clock.systemUTC().millis() < timeout) {
-      if (!netsimdIsLaunched()) {
-        return
-      }
+    val exited = eventually(count = mPollCount, delay = mPollDelayMs) {
+      !netsimdIsLaunched()
     }
-    Assert.fail("netsimd never exited")
+    Assert.assertTrue("netsimd never exited", exited)
   }
 }

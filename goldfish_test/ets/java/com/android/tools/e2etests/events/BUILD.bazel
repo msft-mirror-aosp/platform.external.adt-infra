@@ -20,6 +20,7 @@ ets_host_test(
         "//deps/proto:aemu_java_proto",
         "//ets/java/com/android/tools/e2etests/grpc:host_grpc_lib",
         "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "//testlib/java/com/android/tools/testlib/emu:eventually",
         "//testlib/java/com/android/tools/testlib/netsim:netsimd",
         "@grpc-java//api",
         "@grpc-java//context",
