@@ -1,9 +1,9 @@
 {
   "total_categories": 23,
   "total_test_items": 125,
-  "total_automated_items": 9,
-  "total_untested_items": 116,
-  "automation_coverage": "7.2%",
+  "total_automated_items": 17,
+  "total_untested_items": 108,
+  "automation_coverage": "13.6%",
   "categories": {
     "AUDIO": [
       {
@@ -324,8 +324,8 @@
     "NOTIFICATIONS & SYSTEM UI": [
       {
         "name": "Bubble Notification Tests",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_bubbles_test.py"
       },
       {
         "name": "CA Cert Notification Test",
@@ -339,38 +339,38 @@
       },
       {
         "name": "Live Update Notification Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_live_update_test.py"
       },
       {
         "name": "Notification Dismiss Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_dismiss_test.py"
       },
       {
         "name": "Notification Full Screen Intent Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_fsi_test.py"
       },
       {
         "name": "Notification Hiding Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_hiding_test.py"
       },
       {
         "name": "Notification Listener Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_listener_test.py"
       },
       {
         "name": "Notification Privacy Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_privacy_test.py"
       },
       {
         "name": "Notification Styles Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_style_test.py"
       },
       {
         "name": "CA Cert install via intent",
