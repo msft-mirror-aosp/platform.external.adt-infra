@@ -1,15 +1,15 @@
-load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    srcs = ["DisplayNameTest.config"],
-    visibility = ["//ets:__pkg__"],
+    srcs = [":display_name_test_config"],
 )
 
-kt_jvm_test(
+ets_host_test(
     name = "display_name_test",
     srcs = ["DisplayNameTest.kt"],
-    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    class_name = "com.android.tools.e2etests.discovery.DisplayNameTest",
+    description = "Host test checking the display name",
     deps = [
         "//testlib/java/com/android/tools/testlib/emu:discovery",
         "@tradefed//:tradefed_jars",

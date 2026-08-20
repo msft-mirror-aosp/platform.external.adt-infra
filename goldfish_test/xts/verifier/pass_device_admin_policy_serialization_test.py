@@ -87,11 +87,11 @@ if apply_btn is not None and apply_btn.attrib.get("enabled") == "true":
 
     # Check if device admin activation screen appeared
     root = ui_dump()
-    act_btn = (
-        find_node(root, text="Activate this device admin app")
-        or find_node(root, text="Activate")
-        or find_node(root, text="Activate this device admin")
-    )
+    act_btn = find_node(root, text="Activate this device admin app")
+    if act_btn is None:
+        act_btn = find_node(root, text="Activate")
+    if act_btn is None:
+        act_btn = find_node(root, text="Activate this device admin")
     if act_btn is None:
         for node in root.iter("node"):
             r_id = node.attrib.get("resource-id", "")
