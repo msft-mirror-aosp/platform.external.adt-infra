@@ -37,6 +37,12 @@ def get_parser() -> argparse.ArgumentParser:
         help="Collect all test module labels by scrolling live CtsVerifier UI on device",
     )
     parser.add_argument(
+        "--multi_device",
+        action="store_true",
+        default=False,
+        help="Run in multi-device mesh mode (launches DUT and Companion instances)",
+    )
+    parser.add_argument(
         "--window",
         action="store_true",
         default=False,
@@ -55,20 +61,53 @@ def get_parser() -> argparse.ArgumentParser:
 def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
     # Ensure ~/.android directory exists in Bazel test sandbox for goldfish launcher
     os.makedirs(os.path.expanduser("~/.android"), exist_ok=True)
-    agents = [
-        agent_common.goldfish_fetch(ns),
-        agent_common.android_home(ns),
-        agent_common.avd(ns),
-        agent_common.goldfish(ns),
-        agent_common.adb(ns, ["wait-for-device"]),
-        agent_common.adb(
-            ns,
-            [
-                "shell",
-                'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done',
-            ],
-        ),  # Wait for boot
-    ]
+
+    if getattr(ns, "multi_device", False):
+        agents = [
+            agent_common.goldfish_fetch(ns),
+            agent_common.android_home(ns),
+            agent_common.avd(ns, id="avd_dut", display_name="DUT🤖"),
+            agent_common.avd(ns, id="avd_companion", display_name="Companion🤖"),
+            agent_common.goldfish(ns, id="goldfish_dut", avd_id="avd_dut", port=5554),
+            agent_common.goldfish(
+                ns, id="goldfish_companion", avd_id="avd_companion", port=5556
+            ),
+            agent_common.adb(ns, ["wait-for-device"], goldfish_id="goldfish_dut"),
+            agent_common.adb(
+                ns,
+                [
+                    "shell",
+                    'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done',
+                ],
+                goldfish_id="goldfish_dut",
+            ),
+            agent_common.adb(ns, ["wait-for-device"], goldfish_id="goldfish_companion"),
+            agent_common.adb(
+                ns,
+                [
+                    "shell",
+                    'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done',
+                ],
+                goldfish_id="goldfish_companion",
+            ),
+        ]
+        completion_target = "goldfish_dut"
+    else:
+        agents = [
+            agent_common.goldfish_fetch(ns),
+            agent_common.android_home(ns),
+            agent_common.avd(ns),
+            agent_common.goldfish(ns),
+            agent_common.adb(ns, ["wait-for-device"]),
+            agent_common.adb(
+                ns,
+                [
+                    "shell",
+                    'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 1; done',
+                ],
+            ),  # Wait for boot
+        ]
+        completion_target = "goldfish"
 
     if hasattr(ns, "apk_dir") and ns.apk_dir:
         # NOTE: This static adb completion check does not support device reboots because an adb
@@ -86,6 +125,7 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
                     "if [ -f /sdcard/verifier_failed ]; then exit 1; fi",
                 ],
                 timeout_seconds=2400,
+                goldfish_id=completion_target,
             )
         )
 
@@ -123,36 +163,51 @@ def test_runner_thread(args, results_dir):
             time.sleep(1)
             adb_path = shutil.which("adb")
 
-        # Wait for emulator to fully boot
-        print("Waiting for device...")
-        subprocess.run([adb_path, "wait-for-device"], timeout=120)
+        # Wait for emulator(s) to fully boot
+        multi_device = getattr(args, "multi_device", False)
+        devices_to_wait = ["emulator-5554", "emulator-5556"] if multi_device else [None]
 
-        print("Waiting for sys.boot_completed...")
-        while True:
-            res = subprocess.run(
-                [adb_path, "shell", "getprop", "sys.boot_completed"],
-                capture_output=True,
-                text=True,
+        for dev_serial in devices_to_wait:
+            serial_prefix = ["-s", dev_serial] if dev_serial else []
+            print(
+                f"Waiting for device {'default' if not dev_serial else dev_serial}..."
             )
-            if res.stdout.strip() == "1":
-                break
-            time.sleep(2)
+            subprocess.run(
+                [adb_path] + serial_prefix + ["wait-for-device"], timeout=120
+            )
 
-        print("Waiting for package manager...")
-        while True:
-            res = subprocess.run(
-                [adb_path, "shell", "pm", "path", "android"],
-                capture_output=True,
-                text=True,
-            )
-            if "package:" in res.stdout:
-                break
-            time.sleep(2)
+            print(f"Waiting for sys.boot_completed on {dev_serial or 'default'}...")
+            while True:
+                res = subprocess.run(
+                    [adb_path]
+                    + serial_prefix
+                    + ["shell", "getprop", "sys.boot_completed"],
+                    capture_output=True,
+                    text=True,
+                )
+                if res.stdout.strip() == "1":
+                    break
+                time.sleep(2)
+
+            print(f"Waiting for package manager on {dev_serial or 'default'}...")
+            while True:
+                res = subprocess.run(
+                    [adb_path] + serial_prefix + ["shell", "pm", "path", "android"],
+                    capture_output=True,
+                    text=True,
+                )
+                if "package:" in res.stdout:
+                    break
+                time.sleep(2)
 
         time.sleep(5)
 
         # Setup environment for the script
         env = os.environ.copy()
+
+        if multi_device:
+            env["DUT_SERIAL"] = "emulator-5554"
+            env["COMPANION_SERIAL"] = "emulator-5556"
 
         # Symlink python3 to sys.executable
         bin_dir = os.path.join(results_dir, "bin")
@@ -223,16 +278,32 @@ def test_runner_thread(args, results_dir):
                 print(f"Script output:\n{f.read()}")
 
         # Unblock test_seq
+        target_serial_prefix = ["-s", "emulator-5554"] if multi_device else []
         if p.returncode != 0:
             print("Script failed! Creating failure marker.")
-            subprocess.run([adb_path, "shell", "touch", "/sdcard/verifier_failed"])
+            subprocess.run(
+                [adb_path]
+                + target_serial_prefix
+                + ["shell", "touch", "/sdcard/verifier_failed"]
+            )
         else:
             print("Unblocking test_seq cleanup...")
-            subprocess.run([adb_path, "shell", "touch", "/sdcard/verifier_done"])
+            subprocess.run(
+                [adb_path]
+                + target_serial_prefix
+                + ["shell", "touch", "/sdcard/verifier_done"]
+            )
 
     except Exception as e:
         print(f"Exception in test_runner_thread: {e}")
-        subprocess.run([adb_path, "shell", "touch", "/sdcard/verifier_failed"])
+        target_serial_prefix = (
+            ["-s", "emulator-5554"] if getattr(args, "multi_device", False) else []
+        )
+        subprocess.run(
+            [adb_path]
+            + target_serial_prefix
+            + ["shell", "touch", "/sdcard/verifier_failed"]
+        )
 
 
 if __name__ == "__main__":
