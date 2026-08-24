@@ -20,6 +20,7 @@ def adb(
     args: list[str],
     timeout_seconds=60,
     run_dir="",
+    goldfish_id="goldfish",
 ) -> test_sequencer_pb2.AgentConfig:
     global _adb_counter
     _adb_counter += 1
@@ -36,7 +37,7 @@ def adb(
                 src="android_home",
             ),
             test_sequencer_pb2.Import(
-                id="goldfish",
+                id=goldfish_id,
                 src="serial_number",
             ),
         ],
@@ -51,11 +52,16 @@ def android_home(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     )
 
 
-def avd(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+def avd(
+    ns: argparse.Namespace,
+    id: str = "avd",
+    display_name: str = "UTF8🤖",
+) -> test_sequencer_pb2.AgentConfig:
     return test_sequencer_pb2.AgentConfig(
+        id=id,
         avd=avd_pb2.AVD(
             avd_config_ini=[
-                "avd.ini.displayname=UTF8🤖",
+                f"avd.ini.displayname={display_name}",
                 "avd.ini.encoding=UTF-8",
                 "disk.dataPartition.size=4G",
                 "hw.accelerometer=yes",
@@ -88,7 +94,7 @@ def avd(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             ],
             cleanup=True,
             extract_dir=ns.image_extract_dir,
-        )
+        ),
     )
 
 
@@ -224,11 +230,15 @@ def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ac.id = "ets_snapshot"
     args = ac.tradefed.args[:]
     del ac.tradefed.args[:]
-    args = args[:-1] + [
-        "--suite-name",
-        "ETS_SNAPSHOT",
-        "--module-arg=SnapshotTest:set-option:booted_from_snapshot:true",
-    ] + args[-1:]
+    args = (
+        args[:-1]
+        + [
+            "--suite-name",
+            "ETS_SNAPSHOT",
+            "--module-arg=SnapshotTest:set-option:booted_from_snapshot:true",
+        ]
+        + args[-1:]
+    )
     ac.tradefed.args.extend(args)
     for imp in ac.imports:
         if imp.id == "goldfish":
@@ -236,7 +246,9 @@ def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
-def ets_verifier(ns: argparse.Namespace, module: str = "CtsVerifierTest") -> test_sequencer_pb2.AgentConfig:
+def ets_verifier(
+    ns: argparse.Namespace, module: str = "CtsVerifierTest"
+) -> test_sequencer_pb2.AgentConfig:
     ac = _ets(ns)
     ac.tradefed.args.extend(
         [
@@ -259,17 +271,25 @@ def ets_verifier(ns: argparse.Namespace, module: str = "CtsVerifierTest") -> tes
     return ac
 
 
-def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+def goldfish(
+    ns: argparse.Namespace,
+    id: str = "goldfish",
+    avd_id: str = "avd",
+    port: int = 0,
+) -> test_sequencer_pb2.AgentConfig:
     args = [
         "-verbose",
         "-show-kernel",
     ]
-    if getattr(ns, 'no_window', False) or not getattr(ns, 'window', False):
+    if port:
+        args.extend(["-port", str(port)])
+    if getattr(ns, "no_window", False) or not getattr(ns, "window", False):
         args.append("-qt-hide-window")
-    if not getattr(ns, 'is_prebuilt_emulator', False):
+    if not getattr(ns, "is_prebuilt_emulator", False):
         args.append("-not-in-bazel")
 
     return test_sequencer_pb2.AgentConfig(
+        id=id,
         goldfish=goldfish_pb2.GoldFish(
             args=args,
             cleanup=True,
@@ -282,7 +302,7 @@ def goldfish(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
                 src="android_home",
             ),
             test_sequencer_pb2.Import(
-                id="avd",
+                id=avd_id,
                 src="avd_path",
             ),
             test_sequencer_pb2.Import(
@@ -312,7 +332,9 @@ def goldfish_grpc(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
-def goldfish_load_snapshot_grpc(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+def goldfish_load_snapshot_grpc(
+    ns: argparse.Namespace,
+) -> test_sequencer_pb2.AgentConfig:
     ac = goldfish_grpc(ns)
     ac.id = "goldfish_snapshot"
     return ac

@@ -17,3 +17,5 @@ adb_wireless_test/build
 adb_wireless_test/local.properties
 adb_wireless_test/adb_wireless_test.iml
 **/screenrecording/
+__pycache__/
+*.py[cod]
