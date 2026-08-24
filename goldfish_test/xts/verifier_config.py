@@ -310,7 +310,11 @@ if __name__ == "__main__":
     parser = get_parser()
     args, _ = parser.parse_known_args()
 
-    if getattr(args, "mode", "run") == "run":
+    is_print_mode = "--mode=print" in sys.argv or (
+        "--mode" in sys.argv and "print" in sys.argv
+    )
+
+    if not is_print_mode:
         results_dir = os.environ.get("TEST_UNDECLARED_OUTPUTS_DIR", "/tmp")
 
         t = threading.Thread(target=test_runner_thread, args=(args, results_dir))

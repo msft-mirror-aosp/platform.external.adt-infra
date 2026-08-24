@@ -1,9 +1,9 @@
 {
   "total_categories": 23,
-  "total_test_items": 125,
-  "total_automated_items": 17,
-  "total_untested_items": 108,
-  "automation_coverage": "13.6%",
+  "total_test_items": 129,
+  "total_automated_items": 22,
+  "total_untested_items": 107,
+  "automation_coverage": "17.1%",
   "categories": {
     "AUDIO": [
       {
@@ -304,9 +304,64 @@
     ],
     "BLUETOOTH": [
       {
-        "name": "Bluetooth Test",
-        "automated": false,
-        "script": null
+        "name": "Toggle Bluetooth",
+        "automated": true,
+        "script": "pass_bluetooth_toggle_test.py"
+      },
+      {
+        "name": "Insecure Client",
+        "automated": true,
+        "script": "pass_bluetooth_classic_insecure_test.py"
+      },
+      {
+        "name": "Secure Client",
+        "automated": true,
+        "script": "pass_bluetooth_classic_secure_test.py"
+      },
+      {
+        "name": "Bluetooth LE Insecure Client Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_insecure_test.py"
+      },
+      {
+        "name": "Bluetooth LE Secure Client Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_secure_test.py"
+      },
+      {
+        "name": "Bluetooth LE CoC Insecure Client Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_coc_insecure_test.py"
+      },
+      {
+        "name": "Bluetooth LE CoC Secure Client Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_coc_secure_test.py"
+      },
+      {
+        "name": "Bluetooth LE Scanner Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_scanner_advertiser_test.py"
+      },
+      {
+        "name": "Bluetooth HID Device Test",
+        "automated": true,
+        "script": "pass_bluetooth_hid_device_test.py"
+      },
+      {
+        "name": "Bluetooth HID Host Test",
+        "automated": true,
+        "script": "pass_bluetooth_hid_host_test.py"
+      },
+      {
+        "name": "Connection Access Server",
+        "automated": true,
+        "script": "pass_bluetooth_connection_access_server_test.py"
+      },
+      {
+        "name": "Connection Access Client",
+        "automated": true,
+        "script": "pass_bluetooth_connection_access_client_test.py"
       }
     ],
     "NOTIFICATIONS": [
