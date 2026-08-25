@@ -1,20 +1,18 @@
-load("@rules_android//rules:rules.bzl", "android_binary")
-load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+load("//ets:ets.bzl", "ets_device_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    testonly = 1,
     srcs = [
         ":BootTest.apk",
-        ":BootTest.config",
+        ":BootTest_config",
     ],
-    visibility = ["//ets:__pkg__"],
 )
 
-kt_android_library(
-    name = "boot_test_lib",
-    testonly = 1,
+ets_device_test(
+    name = "BootTest",
     srcs = ["BootTest.kt"],
+    description = "Tests related to the emulator boot",
+    package = "com.android.tools.e2etests.boot",
     deps = [
         "//deps/proto:aemu_java_grpc_lite",
         "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
@@ -22,16 +20,4 @@ kt_android_library(
         "@maven//:androidx_test_runner",
         "@tradefed//:tradefed_jars",
     ],
-)
-
-android_binary(
-    name = "BootTest",
-    testonly = 1,
-    custom_package = "com.android.tools.e2etests.boot",
-    manifest = "BootTestManifest.xml",
-    manifest_values = {
-        "minSdkVersion": "36",
-        "targetSdkVersion": "36",
-    },
-    deps = [":boot_test_lib"],
 )

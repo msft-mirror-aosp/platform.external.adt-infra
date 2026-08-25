@@ -1,12 +1,10 @@
-load("@rules_android//rules:rules.bzl", "android_binary")
-load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
-load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
+load("//ets:ets.bzl", "ets_device_test", "ets_host_test", "ets_pkg")
 
 ets_pkg(
     name = "pkg",
     srcs = [
         ":ScreenshotTest.apk",
-        ":ScreenshotTest.config",
+        ":ScreenshotTest_config",
         ":adb_screen_cap_test_config",
     ],
 )
@@ -21,10 +19,19 @@ ets_host_test(
     ],
 )
 
-kt_android_library(
-    name = "screenshot_test_lib",
-    testonly = 1,
+ets_device_test(
+    name = "ScreenshotTest",
     srcs = ["ScreenshotTest.kt"],
+    description = "Tests related to the emulator screenshots",
+    extra_apks = ["app-debug.apk"],
+    manifest_extra = """
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <queries>
+        <package android:name="com.google.AnimateBox" />
+    </queries>
+    """,
+    package = "com.android.tools.e2etests.display",
+    pull_files = True,
     deps = [
         "//deps/proto:aemu_java_grpc_lite",
         "//ets/java/com/android/tools/e2etests/animatebox:animate_box",
@@ -36,16 +43,4 @@ kt_android_library(
         "@maven//:com_google_testparameterinjector_test_parameter_injector",
         "@tradefed//:tradefed_jars",
     ],
-)
-
-android_binary(
-    name = "ScreenshotTest",
-    testonly = 1,
-    custom_package = "com.android.tools.e2etests.display",
-    manifest = "ScreenshotTestManifest.xml",
-    manifest_values = {
-        "minSdkVersion": "36",
-        "targetSdkVersion": "36",
-    },
-    deps = [":screenshot_test_lib"],
 )

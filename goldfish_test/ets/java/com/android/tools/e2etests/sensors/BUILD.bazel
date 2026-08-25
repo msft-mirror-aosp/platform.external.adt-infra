@@ -1,20 +1,18 @@
-load("@rules_android//rules:rules.bzl", "android_binary")
-load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+load("//ets:ets.bzl", "ets_device_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    testonly = 1,
     srcs = [
         ":SensorTest.apk",
-        ":SensorTest.config",
+        ":SensorTest_config",
     ],
-    visibility = ["//ets:__pkg__"],
 )
 
-kt_android_library(
-    name = "sensor_test_lib",
-    testonly = 1,
+ets_device_test(
+    name = "SensorTest",
     srcs = ["SensorTest.kt"],
+    description = "Tests related to the emulator sensors",
+    package = "com.android.tools.e2etests.sensors",
     deps = [
         "//deps/proto:aemu_java_grpc_lite",
         "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
@@ -22,16 +20,4 @@ kt_android_library(
         "@maven//:androidx_test_runner",
         "@maven//:com_google_testparameterinjector_test_parameter_injector",
     ],
-)
-
-android_binary(
-    name = "SensorTest",
-    testonly = 1,
-    custom_package = "com.android.tools.e2etests.sensors",
-    manifest = "SensorTestManifest.xml",
-    manifest_values = {
-        "minSdkVersion": "36",
-        "targetSdkVersion": "36",
-    },
-    deps = [":sensor_test_lib"],
 )
