@@ -7,7 +7,7 @@ import oshi.SystemInfo
 
 private val logger = Logger.getLogger("Netsimd")
 
-fun netsimdIsLaunched(): Boolean {
+fun netsimdIsLaunched(port: String? = null): Boolean {
   val netsimdName = netsimdProcessName()
   val os = SystemInfo().getOperatingSystem()
 
@@ -28,7 +28,13 @@ fun netsimdIsLaunched(): Boolean {
       val fileName = path.fileName?.toString() ?: ""
 
       if (fileName == netsimdName) {
-        return true
+        if (port != null) {
+          if (args.any { it.contains(port) }) {
+            return true
+          }
+        } else {
+          return true
+        }
       }
     } catch (e: InvalidPathException) {
       // Ignore invalid paths and continue checking the rest of the processes.
