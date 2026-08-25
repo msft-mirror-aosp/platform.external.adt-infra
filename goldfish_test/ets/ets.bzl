@@ -1,5 +1,6 @@
 """Macro for running different ETS plans."""
 
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 load("//sequence:sequence.bzl", "run_sequence")
 
 def _ets_sequence(name, config, args = [], data = [], tags = []):
@@ -213,4 +214,69 @@ def ets_plan(name, plan, tags = []):
         config = "external_ets_cfg.py",
         data = data,
         tags = tags,
+    )
+
+def _ets_host_module_config_impl(ctx):
+    config = """
+<configuration description="{}">
+  <test class="com.android.tradefed.testtype.HostTest">
+    <option name="class" value="{}" />
+  </test>
+</configuration>
+  """
+    ctx.actions.write(
+        output = ctx.outputs.output_file,
+        content = config.format(ctx.attr.description, ctx.attr.class_name),
+    )
+
+_ets_host_module_config = rule(
+    implementation = _ets_host_module_config_impl,
+    attrs = {
+        "class_name": attr.string(mandatory = True),
+        "description": attr.string(mandatory = True),
+        "output_file": attr.output(mandatory = True),
+    },
+)
+
+def ets_host_test(name, srcs, class_name, description = "", **kwargs):
+    """Creates an ETS Host Test.
+
+    This will do the following:
+    - Create a tradefed config file <name>.config
+    - Create a filegroup named pkg for the config file.
+    - Create a kt_jvm_test target for the test using **kwargs.
+
+    Args:
+        name: The name of the bazel targets.
+        srcs: The source files for the test.
+        class_name: The class name of the test.
+        description: The description of the test.
+        **kwargs: Additional arguments to pass to the kt_jvm_test target.
+    """
+    output_file = srcs[0].replace(".kt", ".config")
+    _ets_host_module_config(
+        name = name + "_config",
+        class_name = class_name,
+        description = description,
+        output_file = output_file,
+    )
+    kt_jvm_test(
+        name = name,
+        srcs = srcs,
+        visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+        **kwargs
+    )
+
+def ets_pkg(name, srcs):
+    """Creates a filegroup for ETS tests.
+
+    Args:
+        name: The name of the bazel targets.
+        srcs: The source files for the test.
+    """
+    native.filegroup(
+        name = name,
+        srcs = srcs,
+        visibility = ["//ets:__pkg__"],
+        testonly = True,
     )

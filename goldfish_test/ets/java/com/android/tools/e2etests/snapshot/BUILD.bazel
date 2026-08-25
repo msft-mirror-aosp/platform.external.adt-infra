@@ -1,15 +1,15 @@
-load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    srcs = ["SnapshotTest.config"],
-    visibility = ["//ets:__pkg__"],
+    srcs = ["snapshot_test_config"],
 )
 
-kt_jvm_test(
+ets_host_test(
     name = "snapshot_test",
     srcs = ["SnapshotTest.kt"],
-    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    class_name = "com.android.tools.e2etests.snapshot.SnapshotTest",
+    description = "Host test which test snapshot functionality",
     deps = [
         "//deps/proto:aemu_java_grpc",
         "//deps/proto:aemu_java_proto",

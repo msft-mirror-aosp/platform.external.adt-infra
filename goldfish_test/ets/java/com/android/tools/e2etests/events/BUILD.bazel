@@ -1,23 +1,26 @@
 load("@rules_android//rules:rules.bzl", "android_binary")
 load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
-load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
 
-filegroup(
+ets_pkg(
     name = "pkg",
-    testonly = 1,
-    srcs = glob(["*.config"]) + [":ControlKeysTest.apk"],
-    visibility = ["//ets:__pkg__"],
+    srcs = glob(["*.config"]) + [
+        ":ControlKeysTest.apk",
+        ":close_emulator_test_config",
+    ],
 )
 
-kt_jvm_test(
+ets_host_test(
     name = "close_emulator_test",
     srcs = ["CloseEmulatorTest.kt"],
-    visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+    class_name = "com.android.tools.e2etests.events.CloseEmulatorTest",
+    description = "Host test which closes the emulator",
     deps = [
         "//deps/proto:aemu_java_grpc",
         "//deps/proto:aemu_java_proto",
         "//ets/java/com/android/tools/e2etests/grpc:host_grpc_lib",
         "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "//testlib/java/com/android/tools/testlib/emu:eventually",
         "//testlib/java/com/android/tools/testlib/netsim:netsimd",
         "@grpc-java//api",
         "@grpc-java//context",

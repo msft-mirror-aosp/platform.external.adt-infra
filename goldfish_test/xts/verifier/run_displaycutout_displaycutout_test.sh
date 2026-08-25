@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run Biometric Tests
+# Run DisplayCutout Test.
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -8,17 +8,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$SCRIPT_DIR/sourceme.rc" ]; then
     source "$SCRIPT_DIR/sourceme.rc"
     # Override CTS_OUTPUT_DIR to subdirectory for this test
-    export CTS_OUTPUT_DIR="$CTS_OUTPUT_DIR/security_biometric_tests"
+    export CTS_OUTPUT_DIR="$CTS_OUTPUT_DIR/displaycutout_test"
 fi
 
 echo "----------------------------------------"
-echo "Running: pass_security_biometric_tests.py"
+echo "Running: pass_displaycutout_displaycutout_test.py"
 echo "----------------------------------------"
 
-if python3 -u "$SCRIPT_DIR/pass_security_biometric_tests.py" "$@"; then
-    echo ">>> PASSED: pass_security_biometric_tests.py"
+if python3 "$SCRIPT_DIR/pass_displaycutout_displaycutout_test.py"; then
+    echo ">>> PASSED: pass_displaycutout_displaycutout_test.py"
     exit 0
 else
-    echo ">>> FAILED: pass_security_biometric_tests.py"
+    echo ">>> FAILED: pass_displaycutout_displaycutout_test.py"
     exit 1
 fi
