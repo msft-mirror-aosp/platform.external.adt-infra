@@ -1,11 +1,10 @@
-load("@rules_android//rules:rules.bzl", "android_binary")
-load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
-load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
+load("//ets:ets.bzl", "ets_device_test", "ets_host_test", "ets_pkg")
 
 ets_pkg(
     name = "pkg",
-    srcs = glob(["*.config"]) + [
+    srcs = [
         ":ControlKeysTest.apk",
+        ":ControlKeysTest_config",
         ":close_emulator_test_config",
     ],
 )
@@ -36,10 +35,11 @@ ets_host_test(
     ],
 )
 
-kt_android_library(
-    name = "control_keys_test_lib",
-    testonly = 1,
+ets_device_test(
+    name = "ControlKeysTest",
     srcs = ["ControlKeysTest.kt"],
+    description = "Tests related to the emulator control keys",
+    package = "com.android.tools.e2etests.events",
     deps = [
         "//deps/proto:aemu_java_grpc_lite",
         "//deps/proto:aemu_java_proto_lite",
@@ -50,16 +50,4 @@ kt_android_library(
         "@maven//:androidx_test_runner",
         "@tradefed//:tradefed_jars",
     ],
-)
-
-android_binary(
-    name = "ControlKeysTest",
-    testonly = 1,
-    custom_package = "com.android.tools.e2etests.events",
-    manifest = "ControlKeysTestManifest.xml",
-    manifest_values = {
-        "minSdkVersion": "36",
-        "targetSdkVersion": "36",
-    },
-    deps = [":control_keys_test_lib"],
 )

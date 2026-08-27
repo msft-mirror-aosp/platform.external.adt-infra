@@ -1,11 +1,21 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
-load("//xts:verifier.bzl", "cts_verifier_automation_dev_tests", "cts_verifier_tests", "ets_verifier")
+load(
+    "//xts:verifier.bzl",
+    "cts_verifier_automation_dev_tests",
+    "cts_verifier_mesh_tests",
+    "cts_verifier_tests",
+    "ets_verifier",
+)
 load("//xts:xts.bzl", "cts_media_tests", "deqp_tests", "module_subtests", "xts_plan", "xts_tests")
 load(":xts_sharded.bzl", "xts_sharded_tests")
 
 cts_verifier_tests(
     name = "cts-verifier",
+)
+
+cts_verifier_mesh_tests(
+    name = "cts-verifier-mesh",
 )
 
 ets_verifier(

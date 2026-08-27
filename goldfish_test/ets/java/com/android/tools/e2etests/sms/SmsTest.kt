@@ -12,6 +12,7 @@ import com.android.emulation.control.incubating.SmsMessage
 import com.android.tools.e2etests.grpc.ModemService
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -20,6 +21,7 @@ val TAG = "SmsTest"
 val SENDER_NUMBER = "+1234567890"
 val SMS_TEXT = "Hello from Emulator Controller!"
 
+@Ignore("The service is migrating to netsim")
 class SmsTest {
 
     @Before
