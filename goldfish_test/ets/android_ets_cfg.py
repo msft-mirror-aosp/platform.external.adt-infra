@@ -1,6 +1,7 @@
 """Configuration to run ets."""
 
 import argparse
+import platform
 
 from sequence import agent_common
 from sequence import config
@@ -8,15 +9,32 @@ from test_seq.proto import test_sequencer_pb2
 
 
 def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
-    return [
+    # TODO: b/553593925 Skip snapshots on macOS until the bug is fixed.
+    no_snapshot = platform.system() == "Darwin"
+
+    ret =  [
         agent_common.goldfish_fetch(ns),
         agent_common.tradefed_fetch(ns),
         agent_common.android_home(ns),
         agent_common.avd_ets(ns),
-        agent_common.junit_xml_result_ets_snapshot(ns),
-        agent_common.junit_xml_result_ets_close(ns),
-        agent_common.junit_xml_result(ns),
-        agent_common.goldfish_grpc(ns),
+    ]
+    if no_snapshot:
+        ret.extend([
+            agent_common.junit_xml_result_ets_close(ns),
+            agent_common.junit_xml_result(ns),
+        ])
+        gf = agent_common.goldfish_grpc(ns)
+        gf.goldfish.args.append("-no-snapshot")
+        ret.append(gf)
+    else:
+        ret.extend([
+            agent_common.junit_xml_result_ets_snapshot(ns),
+            agent_common.junit_xml_result_ets_close(ns),
+            agent_common.junit_xml_result(ns),
+            agent_common.goldfish_grpc(ns),
+        ])
+
+    ret.extend([
         # Stabilize emulator environment
         # Force Setup Wizard to consider itself complete
         agent_common.adb(
@@ -79,9 +97,13 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         ),
         agent_common.ets(ns),
         agent_common.ets_close(ns),
-        agent_common.goldfish_load_snapshot_grpc(ns),
-        agent_common.ets_snapshot(ns),
-    ]
+    ])
+    if not no_snapshot:
+        ret.extend([
+            agent_common.goldfish_load_snapshot_grpc(ns),
+            agent_common.ets_snapshot(ns),
+        ])
+    return ret
 
 
 if __name__ == "__main__":
