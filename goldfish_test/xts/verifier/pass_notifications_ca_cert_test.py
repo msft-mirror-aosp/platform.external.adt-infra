@@ -82,7 +82,7 @@ def tap_dialog_go(timeout=10):
     raise TimeoutError("Timed out waiting for Go button on dialog")
 
 
-def tap_dialog_pass(timeout=10):
+def tap_dialog_pass(timeout=15, reopen_item_text=None):
     """Find and tap PASS on an open DialogTestListItem dialog."""
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -99,6 +99,15 @@ def tap_dialog_pass(timeout=10):
             tap(pass_btn)
             time.sleep(2)
             return True
+
+        # If dialog is not open and we know the item text, re-tap list item to open dialog
+        if reopen_item_text:
+            item, _ = find_node_containing(root, reopen_item_text)
+            if item is not None:
+                print(f"  Re-opening dialog for '{reopen_item_text}'...")
+                tap(item)
+                time.sleep(2)
+                continue
         time.sleep(1)
     raise TimeoutError("Timed out waiting for Pass button on dialog")
 
@@ -117,14 +126,14 @@ def return_to_main_activity():
 
 def return_to_test_activity():
     """Ensure device returns to CAInstallNotificationVerifierActivity."""
-    for _ in range(3):
+    for _ in range(5):
         root = ui_dump()
-        if find_node(root, text="CA Cert Notification Test") is not None:
-            return
         for n in root.iter("node"):
             t = (n.attrib.get("text") or "").strip().upper()
             if t in ("PASS", "GO"):
                 return
+        if find_node(root, text="CA Cert Notification Test") is not None:
+            return
         adb("shell", "input", "keyevent", "KEYCODE_BACK", check=False)
         time.sleep(1.5)
     adb(
@@ -169,7 +178,7 @@ def main():
         screenshot("step1_security_settings")
         install_real_ca_cert()
         return_to_test_activity()
-        tap_dialog_pass()
+        tap_dialog_pass(reopen_item_text="install a CA certificate")
         time.sleep(2)
         screenshot("step1_passed")
 
@@ -198,7 +207,7 @@ def main():
 
         screenshot("step2_trusted_credentials_user_tab")
         return_to_test_activity()
-        tap_dialog_pass()
+        tap_dialog_pass(reopen_item_text="user-installed trusted credentials")
         time.sleep(2)
         screenshot("step2_passed")
 
@@ -214,7 +223,7 @@ def main():
         tap_dialog_go()
         screenshot("step3_screen_lock_settings")
         return_to_test_activity()
-        tap_dialog_pass()
+        tap_dialog_pass(reopen_item_text="remove the screen lock")
         time.sleep(2)
         screenshot("step3_passed")
 

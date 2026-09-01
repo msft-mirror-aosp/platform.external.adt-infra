@@ -1,9 +1,9 @@
 {
   "total_categories": 23,
-  "total_test_items": 125,
-  "total_automated_items": 9,
-  "total_untested_items": 116,
-  "automation_coverage": "7.2%",
+  "total_test_items": 129,
+  "total_automated_items": 22,
+  "total_untested_items": 107,
+  "automation_coverage": "17.1%",
   "categories": {
     "AUDIO": [
       {
@@ -304,9 +304,64 @@
     ],
     "BLUETOOTH": [
       {
-        "name": "Bluetooth Test",
-        "automated": false,
-        "script": null
+        "name": "Toggle Bluetooth",
+        "automated": true,
+        "script": "pass_bluetooth_toggle_test.py"
+      },
+      {
+        "name": "Insecure Client",
+        "automated": true,
+        "script": "pass_bluetooth_classic_insecure_test.py"
+      },
+      {
+        "name": "Secure Client",
+        "automated": true,
+        "script": "pass_bluetooth_classic_secure_test.py"
+      },
+      {
+        "name": "Bluetooth LE Insecure Client Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_insecure_test.py"
+      },
+      {
+        "name": "Bluetooth LE Secure Client Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_secure_test.py"
+      },
+      {
+        "name": "Bluetooth LE CoC Insecure Client Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_coc_insecure_test.py"
+      },
+      {
+        "name": "Bluetooth LE CoC Secure Client Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_coc_secure_test.py"
+      },
+      {
+        "name": "Bluetooth LE Scanner Test",
+        "automated": true,
+        "script": "pass_bluetooth_ble_scanner_advertiser_test.py"
+      },
+      {
+        "name": "Bluetooth HID Device Test",
+        "automated": true,
+        "script": "pass_bluetooth_hid_device_test.py"
+      },
+      {
+        "name": "Bluetooth HID Host Test",
+        "automated": true,
+        "script": "pass_bluetooth_hid_host_test.py"
+      },
+      {
+        "name": "Connection Access Server",
+        "automated": true,
+        "script": "pass_bluetooth_connection_access_server_test.py"
+      },
+      {
+        "name": "Connection Access Client",
+        "automated": true,
+        "script": "pass_bluetooth_connection_access_client_test.py"
       }
     ],
     "NOTIFICATIONS": [
@@ -324,8 +379,8 @@
     "NOTIFICATIONS & SYSTEM UI": [
       {
         "name": "Bubble Notification Tests",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_bubbles_test.py"
       },
       {
         "name": "CA Cert Notification Test",
@@ -339,38 +394,38 @@
       },
       {
         "name": "Live Update Notification Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_live_update_test.py"
       },
       {
         "name": "Notification Dismiss Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_dismiss_test.py"
       },
       {
         "name": "Notification Full Screen Intent Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_fsi_test.py"
       },
       {
         "name": "Notification Hiding Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_hiding_test.py"
       },
       {
         "name": "Notification Listener Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_listener_test.py"
       },
       {
         "name": "Notification Privacy Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_privacy_test.py"
       },
       {
         "name": "Notification Styles Test",
-        "automated": false,
-        "script": null
+        "automated": true,
+        "script": "pass_notifications_style_test.py"
       },
       {
         "name": "CA Cert install via intent",

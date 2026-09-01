@@ -49,7 +49,8 @@ def main(
         print(cfg)
     elif args.mode == "run":
         # NOTE: All of the java tools are passed in, just use the first.
-        run.run(args.test_seq_path, cfg, [args.java_path[0]])
+        java_paths = [args.java_path[0]] if args.java_path else []
+        run.run(args.test_seq_path, cfg, java_paths)
 
 
 def _add_args(parser: argparse.ArgumentParser):
@@ -67,10 +68,10 @@ def _add_args(parser: argparse.ArgumentParser):
     )
     parser.add_argument(
         "--java_path",
-        nargs="+",
+        nargs="*",
         type=dir_type,
         help="Paths to the java tools to put in PATH",
-        required=True,
+        default=[],
     )
 
 
@@ -105,7 +106,9 @@ _KNOWN_FLAGS = {
         "--goldfish_zip", type=path_type, help="Path to the goldfish zip"
     ),
     "is_prebuilt_emulator": lambda p: p.add_argument(
-        "--is_prebuilt_emulator", action="store_true", help="If true, the emulator is prebuilt and does not support -not-in-bazel"
+        "--is_prebuilt_emulator",
+        action="store_true",
+        help="If true, the emulator is prebuilt and does not support -not-in-bazel",
     ),
     "hellovk_extract_dir": lambda p: p.add_argument(
         "--hellovk_extract_dir",

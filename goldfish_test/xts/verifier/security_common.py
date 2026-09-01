@@ -27,6 +27,8 @@ from cts_common import (
     screenshot,
     set_screenshot_dir,
     export_and_verify,
+    get_screen_size,
+    get_display_dimensions,
 )
 
 
@@ -42,7 +44,8 @@ class PrereqState:
     PIN_AND_TWO_FINGERPRINTS = "PIN_AND_TWO_FINGERPRINTS"
 
 
-def parse_security_args(description="Run CTS Verifier Security Test.", env_var=None):
+def parse_security_args(description="Run CTS Verifier Security Test.",
+                        env_var=None):
     """Standardized CLI argument parser for Security tests."""
     parser = argparse.ArgumentParser(description=description)
 
@@ -58,7 +61,8 @@ def parse_security_args(description="Run CTS Verifier Security Test.", env_var=N
         "-s",
         action="store_true",
         default=default_val,
-        help="Skip prerequisite lockscreen and biometric setup to verify natural test failure.",
+        help=
+        "Skip prerequisite lockscreen and biometric setup to verify natural test failure.",
     )
     args, _ = parser.parse_known_args()
     return args
@@ -94,18 +98,22 @@ def ensure_security_prerequisites(prereq_state, skip_prereqs=False):
 
     if prereq_state in [PrereqState.NONE, PrereqState.UNENROLLED]:
         print("  [PREREQ] Clean slate (lockscreen None, zero fingerprints).")
-    elif prereq_state in [PrereqState.PIN_ONLY, PrereqState.PIN_ONLY_NO_BIOMETRIC]:
+    elif prereq_state in [
+            PrereqState.PIN_ONLY, PrereqState.PIN_ONLY_NO_BIOMETRIC
+    ]:
         print("  [PREREQ] Setting up PIN '1111' (zero fingerprints)...")
         os.system(f"{sys.executable} {create_pin_script} 1111")
     elif prereq_state in [
-        PrereqState.PIN_AND_FINGERPRINT,
-        PrereqState.PIN_AND_BIOMETRIC_ENROLLED,
+            PrereqState.PIN_AND_FINGERPRINT,
+            PrereqState.PIN_AND_BIOMETRIC_ENROLLED,
     ]:
         print("  [PREREQ] Setting up PIN '1111' and enrolling Fingerprint 1...")
         os.system(f"{sys.executable} {create_pin_script} 1111")
         os.system(f"{sys.executable} {enroll_fp_script} 1")
     elif prereq_state == PrereqState.PIN_AND_TWO_FINGERPRINTS:
-        print("  [PREREQ] Setting up PIN '1111' and enrolling Fingerprints 1 & 2...")
+        print(
+            "  [PREREQ] Setting up PIN '1111' and enrolling Fingerprints 1 & 2..."
+        )
         os.system(f"{sys.executable} {create_pin_script} 1111")
         os.system(f"{sys.executable} {enroll_fp_script} 1")
         os.system(f"{sys.executable} {enroll_fp_script} 2")
@@ -113,9 +121,10 @@ def ensure_security_prerequisites(prereq_state, skip_prereqs=False):
     time.sleep(2)
 
 
-def setup_and_navigate(
-    test_name, prereq_state=None, skip_prereqs=None, screenshot_subdir=None
-):
+def setup_and_navigate(test_name,
+                       prereq_state=None,
+                       skip_prereqs=None,
+                       screenshot_subdir=None):
     """Initialize app, optionally ensure prerequisites, and navigate to the specified test."""
     if screenshot_subdir:
         set_screenshot_dir(screenshot_subdir)
@@ -142,26 +151,30 @@ def dismiss_initial_dialog(timeout=3):
     return False
 
 
-def is_pin_prompt_present(root):
+def is_pin_entry_present(root):
     """
-    Multi-layered PIN prompt detection across SystemUI Keyguard pads and Settings PIN entries.
+    Multi-layered PIN prompt and keypad entry detection across SystemUI Keyguard pads and Settings PIN entries.
     """
+    if root is None:
+        return False
     # 1. Broad structural signals
     for node in root.iter("node"):
         res_id = node.attrib.get("resource-id", "").lower()
         desc = node.attrib.get("content-desc", "").lower()
-        if any(
-            w in res_id
-            for w in [
+        if any(w in res_id for w in [
                 "cred_pin_pad",
                 "compose_credential_view",
                 "pin_entry",
                 "password_entry",
                 "lockpassword",
-            ]
-        ):
+                "pinentry",
+                "keyguard_pin_view",
+                "keyguard_bouncer_container",
+                "pin_view",
+        ]):
             return True
-        if any(w in desc for w in ["pin area", "pin entry"]):
+        if any(w in desc for w in
+               ["pin area", "pin entry", "keyguard pin", "keypad", "bouncer"]):
             return True
 
     # 2. Token-based matching on text
@@ -181,28 +194,51 @@ def is_pin_prompt_present(root):
         if not text:
             continue
         words = set(
-            text.replace("'", " ")
-            .replace("-", " ")
-            .replace(".", " ")
-            .replace(":", " ")
-            .split()
-        )
+            text.replace("'",
+                         " ").replace("-",
+                                      " ").replace(".",
+                                                   " ").replace(":",
+                                                                " ").split())
         if "pin" in words and (words & auth_verbs):
             return True
 
     # 3. Helper subtitle signals
     for node in root.iter("node"):
         text = node.attrib.get("text", "").lower()
-        if "pin verifies" in text or "pin required" in text:
+        if ("pin verifies" in text or "pin required" in text or
+                "enter your pin" in text or "enter pin" in text or
+                "wrong pin" in text):
             return True
 
+    # 4. Check for keypad digit presence (must have at least 8 distinct digit nodes, characteristic of a numeric keypad)
+    digits_found = set()
+    for node in root.iter("node"):
+        t = (node.attrib.get("text") or "").strip()
+        if t in ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"):
+            digits_found.add(t)
+    if len(digits_found) >= 8:
+        return True
+
     return False
+
+
+def is_pin_prompt_present(root):
+    """Alias for is_pin_entry_present."""
+    return is_pin_entry_present(root)
 
 
 def enter_pin_on_keypad(pin="1111"):
     """Enter a PIN on the on-screen keypad and submit."""
     print(f"  Entering PIN {pin!r} on keypad...")
     root = ui_dump()
+    if not is_pin_entry_present(root):
+        print("  Waiting for PIN entry / keypad to appear...")
+        for _ in range(5):
+            time.sleep(0.5)
+            root = ui_dump()
+            if is_pin_entry_present(root):
+                break
+
     for digit in pin:
         digit_node = find_node(root, text=digit)
         if digit_node is None:
@@ -225,6 +261,33 @@ def enter_pin_on_keypad(pin="1111"):
     else:
         adb("shell", "input", "keyevent", "KEYCODE_ENTER")
     time.sleep(2)
+
+
+def unlock_device_with_pin(pin="1111"):
+    """Wake screen, dismiss keyguard if unlocked, or swipe up and enter PIN on keypad."""
+    print(f"  [Security] Unlocking device with PIN {pin!r}...")
+    adb("shell", "input", "keyevent", "KEYCODE_WAKEUP", check=False)
+    adb("shell", "wm", "dismiss-keyguard", check=False)
+    time.sleep(1.0)
+    root = ui_dump()
+    if not is_pin_entry_present(root):
+        w, h = get_screen_size()
+        x = w // 2
+        y1 = int(h * 0.75)
+        y2 = int(h * 0.20)
+        adb(
+            "shell",
+            "input",
+            "swipe",
+            str(x),
+            str(y1),
+            str(x),
+            str(y2),
+            "200",
+            check=False,
+        )
+        time.sleep(1.0)
+    enter_pin_on_keypad(pin)
 
 
 def is_fingerprint_prompt_present(root):
@@ -328,7 +391,8 @@ def wait_for_pass_and_export(test_name, timeout=20, exit_on_complete=True):
     Poll for the Pass button to become enabled, tap it, and export/verify the report.
     If the Pass button fails to enable within timeout, taps Fail and exits with code 1.
     """
-    print(f"  Waiting for Pass button to become enabled (timeout {timeout}s)...")
+    print(
+        f"  Waiting for Pass button to become enabled (timeout {timeout}s)...")
     pass_btn = None
     deadline = time.time() + timeout
     while time.time() < deadline:

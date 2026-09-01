@@ -1,5 +1,7 @@
 """Macro for running different ETS plans."""
 
+load("@rules_android//rules:rules.bzl", "android_binary")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
 load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 load("//sequence:sequence.bzl", "run_sequence")
 
@@ -216,6 +218,152 @@ def ets_plan(name, plan, tags = []):
         tags = tags,
     )
 
+def _ets_device_module_config_impl(ctx):
+    config = """
+<configuration description="{}">
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+    """.format(ctx.attr.description)
+
+    for apk in ctx.attr.apks:
+        config += """<option name="test-file-name" value="{}" />""".format(apk)
+
+    config += """
+    </target_preparer>
+
+    <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
+        <option name="package" value="{}" />
+    </test>
+    """.format(ctx.attr.package)
+    if ctx.attr.pull_files:
+        config += """
+    <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
+        <option name="directory-keys" value="/storage/emulated/0/googletest/test_outputfiles" />
+        <option name="collect-on-run-ended-only" value="true" />
+    </metrics_collector>
+    """
+    config += "</configuration>"
+
+    ctx.actions.write(
+        output = ctx.outputs.output_file,
+        content = config,
+    )
+
+_ets_device_module_config = rule(
+    implementation = _ets_device_module_config_impl,
+    attrs = {
+        "apks": attr.string_list(mandatory = True),
+        "package": attr.string(mandatory = True),
+        "description": attr.string(mandatory = True),
+        "pull_files": attr.bool(default = False),
+        "output_file": attr.output(mandatory = True),
+    },
+)
+
+def _ets_device_manifest_impl(ctx):
+    manifest = """<?xml version="1.0" encoding="utf-8"?>
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="{}" >
+
+
+    <application android:usesCleartextTraffic="true">>
+       <uses-library android:name="android.test.runner"/>
+       {}
+    </application>
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
+         android:targetPackage="{}"
+         android:label="{}">
+    </instrumentation>
+    {}
+</manifest>
+  """
+    ctx.actions.write(
+        output = ctx.outputs.output_file,
+        content = manifest.format(ctx.attr.package, ctx.attr.app_extra, ctx.attr.package, ctx.attr.label, ctx.attr.extra),
+    )
+
+_ets_device_manifest = rule(
+    implementation = _ets_device_manifest_impl,
+    attrs = {
+        "app_extra": attr.string(mandatory = True),
+        "extra": attr.string(mandatory = True),
+        "label": attr.string(mandatory = True),
+        "package": attr.string(mandatory = True),
+        "output_file": attr.output(mandatory = True),
+    },
+)
+
+def ets_device_test(name,
+                    srcs,
+                    package,
+                    description = "",
+                    manifest_file = None,
+                    manifest_app_extra = "",
+                    manifest_extra = "",
+                    extra_apks = None,
+                    pull_files = False,
+                    **kwargs):
+    """Creates an ETS Device Test.
+
+    This will do the following:
+    - Create a tradefed config file <name>.config
+    - Create an android manifest.
+    - Create an android_binary target for the test.
+
+    Args:
+        name: The name of the bazel targets.
+        srcs: The source files for the test.
+        package: The package name of the test.
+        description: The description of the test.
+        manifest_file: If specified, use this manifest file instead of generating one.
+        manifest_app_extra: Extra context to put in the application tag of the manifest.
+        manifest_extra: Extra context to put in the manifest tag of the manifest.
+        extra_apks: Optional list of extra apks to install for the test.
+        pull_files: If true, pull all test output files from the device.
+        **kwargs: Additional arguments to pass to the kt_android_library target.
+    """
+    kt_android_library(
+        name = name + "_lib",
+        testonly = 1,
+        srcs = srcs,
+        **kwargs,
+    )
+    apks = [name + ".apk"]
+    if extra_apks:
+        apks.extend(extra_apks)
+    _ets_device_module_config(
+        name = name + "_config",
+        package = package,
+        description = description,
+        apks = apks,
+        pull_files = pull_files,
+        output_file = name + ".config",
+    )
+    if manifest_file == None:
+        _ets_device_manifest(
+            name = name + "_manifest",
+            package = package,
+            label = description,
+            app_extra = manifest_app_extra,
+            extra = manifest_extra,
+            output_file = name + "Manifest.xml",
+        )
+        manifest_file = ":" + name + "_manifest"
+    android_binary(
+        name = name,
+        testonly = 1,
+        custom_package = package,
+        manifest = manifest_file,
+        manifest_values = {
+            "minSdkVersion": "36",
+            "targetSdkVersion": "36",
+        },
+        deps = [":" + name + "_lib"],
+    )
+
 def _ets_host_module_config_impl(ctx):
     config = """
 <configuration description="{}">
@@ -243,7 +391,6 @@ def ets_host_test(name, srcs, class_name, description = "", **kwargs):
 
     This will do the following:
     - Create a tradefed config file <name>.config
-    - Create a filegroup named pkg for the config file.
     - Create a kt_jvm_test target for the test using **kwargs.
 
     Args:
