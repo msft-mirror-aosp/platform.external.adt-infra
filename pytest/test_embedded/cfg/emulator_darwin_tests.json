@@ -634,7 +634,7 @@
           "-feature",
           "Vulkan",
           "-gpu",
-          "host",
+          "lavapipe",
           "-no-snapshot"
         ],
         "tag.id": "google-xr"
