@@ -1,0 +1,20 @@
+load("@rules_android//rules:rules.bzl", "android_binary")
+load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
+
+package(default_visibility = ["//visibility:public"])
+
+kt_android_library(
+    name = "rotating_cube_lib",
+    srcs = glob(["src/main/java/**/*.kt"]),
+)
+
+android_binary(
+    name = "rotating_cube",
+    custom_package = "com.android.emulator.cube",
+    manifest = "AndroidManifest.xml",
+    manifest_values = {
+        "minSdkVersion": "24",
+        "targetSdkVersion": "36",
+    },
+    deps = [":rotating_cube_lib"],
+)
