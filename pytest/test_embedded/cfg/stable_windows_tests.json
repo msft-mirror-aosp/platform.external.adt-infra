@@ -107,10 +107,6 @@
         "device.name": "XR1",
         "api": "34",
         "launch_flags": [
-          "-feature",
-          "Vulkan",
-          "-feature",
-          "GuestAngle",
           "-gpu",
           "lavapipe",
           "-no-snapshot"

@@ -630,8 +630,6 @@
         "device.name": "XR1",
         "api": "34",
         "launch_flags": [
-          "-feature",
-          "Vulkan",
           "-gpu",
           "lavapipe",
           "-no-snapshot"
