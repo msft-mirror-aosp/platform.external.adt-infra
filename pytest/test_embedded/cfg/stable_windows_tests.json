@@ -156,6 +156,44 @@
     ],
     "status": "enabled"
   },
+  "presubmit_emulator_test_suite_xr_glasses_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "xr_glasses_device",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot"
+        ],
+        "tag.id": "android-xr-preview-playstore"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for XR Glasses AVDs",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
+  },
+  "presubmit_emulator_test_suite_xr_glasses_software_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "xr_glasses_device",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot"
+        ],
+        "tag.id": "android-xr-preview-playstore"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for XR Glasses AVDs with software GPU",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
+  },
   "sanity_test_suite_api_28": {
     "avd_configs": [
       {
