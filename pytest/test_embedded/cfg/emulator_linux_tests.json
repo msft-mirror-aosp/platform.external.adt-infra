@@ -642,7 +642,7 @@
     ],
     "status": "enabled"
   },
-  "presubmit_emulator_test_suite_xr_api_34": {
+  "presubmit_emulator_test_suite_xr_software_api_34": {
     "avd_configs": [
       {
         "device.name": "XR1",
@@ -655,7 +655,7 @@
         "tag.id": "google-xr"
       }
     ],
-    "description": "Set of tests we want to run as part of presubmit for XR AVDs",
+    "description": "Set of tests we want to run as part of presubmit for XR AVDs with software GPU",
     "pytest_flags": [
       "-m boot and not slow and not flaky and not snapshot"
     ],
