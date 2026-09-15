@@ -688,13 +688,31 @@
         "api": "36",
         "launch_flags": [
           "-gpu",
-          "lavapipe",
+          "host",
           "-no-snapshot"
         ],
         "tag.id": "ai-glasses"
       }
     ],
     "description": "Set of tests we want to run as part of presubmit for AI Glasses AVDs",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
+  },
+  "presubmit_emulator_test_suite_glasses_software_api_36": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot"
+        ],
+        "tag.id": "ai-glasses"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for AI Glasses AVDs with software GPU",
     "pytest_flags": [
       "-m boot and not slow and not flaky and not snapshot"
     ],
