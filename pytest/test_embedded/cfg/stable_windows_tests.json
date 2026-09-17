@@ -87,6 +87,24 @@
     ],
     "status": "enabled"
   },
+  "presubmit_emulator_test_suite_api_37": {
+    "avd_configs": [
+      {
+        "api": "37.0",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot"
+        ],
+        "tag.id": "google_apis"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit, it merely boots the emulator and does some basic checks.",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
+  },
   "presubmit_emulator_test_suite_api_34": {
     "avd_configs": [
       {
@@ -100,6 +118,118 @@
       "-m boot and not slow and not flaky"
     ],
     "status": "disabled"
+  },
+  "presubmit_emulator_test_suite_xr_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "XR1",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot"
+        ],
+        "tag.id": "google-xr"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for XR AVDs",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
+  },
+  "presubmit_emulator_test_suite_xr_software_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "XR1",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot"
+        ],
+        "tag.id": "google-xr"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for XR AVDs with software GPU",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
+  },
+  "presubmit_emulator_test_suite_glasses_api_36": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot"
+        ],
+        "tag.id": "ai-glasses"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for AI Glasses AVDs",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
+  },
+  "presubmit_emulator_test_suite_glasses_software_api_36": {
+    "avd_configs": [
+      {
+        "api": "36",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot"
+        ],
+        "tag.id": "ai-glasses"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for AI Glasses AVDs with software GPU",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
+  },
+  "presubmit_emulator_test_suite_xr_glasses_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "xr_glasses_device",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "host",
+          "-no-snapshot"
+        ],
+        "tag.id": "android-xr-preview-playstore"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for XR Glasses AVDs",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
+  },
+  "presubmit_emulator_test_suite_xr_glasses_software_api_34": {
+    "avd_configs": [
+      {
+        "device.name": "xr_glasses_device",
+        "api": "34",
+        "launch_flags": [
+          "-gpu",
+          "lavapipe",
+          "-no-snapshot"
+        ],
+        "tag.id": "android-xr-preview-playstore"
+      }
+    ],
+    "description": "Set of tests we want to run as part of presubmit for XR Glasses AVDs with software GPU",
+    "pytest_flags": [
+      "-m boot and not slow and not flaky and not snapshot"
+    ],
+    "status": "enabled"
   },
   "sanity_test_suite_api_28": {
     "avd_configs": [
