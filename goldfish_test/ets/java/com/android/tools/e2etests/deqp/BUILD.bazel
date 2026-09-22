@@ -1,0 +1,32 @@
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg")
+
+ets_pkg(
+    name = "pkg",
+    srcs = [
+        "deqp-runner",
+        "deqp-runner-aarch64",
+        "testcases/presubmit.txt",
+        ":deqp_runner_test_config",
+    ],
+)
+
+pkg_files(
+    name = "cts_data",
+    testonly = True,
+    srcs = glob(["CtsDeqpTestCases/**"]),
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "android-ets/testcases",
+    strip_prefix = strip_prefix.from_pkg(),
+    visibility = ["//ets:__pkg__"],
+)
+
+ets_host_test(
+    name = "deqp_runner_test",
+    srcs = ["DeqpRunnerTest.kt"],
+    class_name = "com.android.tools.e2etests.deqp.DeqpRunnerTest",
+    description = "Host tests running dEQP test cases via deqp-runner",
+    deps = [
+        "@tradefed//:tradefed_jars",
+    ],
+)
