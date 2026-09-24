@@ -81,7 +81,7 @@ def avd(
                 "hw.lcd.height=3120",
                 "hw.lcd.width=1440",
                 "hw.mainKeys=no",
-                "hw.ramSize=4096",
+                "hw.ramSize=8192",
                 "hw.sdCard=no",
                 "hw.sensors.orientation=yes",
                 "hw.sensors.proximity=yes",
