@@ -26,6 +26,7 @@
     <option name="exclude-filter" value="SnapshotTest" />
     <option name="include-filter" value="TelnetTest" />
     <option name="include-filter" value="VulkanAppTest" />
+    <option name="include-filter" value="DeqpRunnerTest" />
 
 </configuration>
 
