@@ -193,16 +193,30 @@ def ets_plan(name, plan, tags = []):
         plan: The ETS plan to run.
         tags: Additional tags to pass to the bazel targets.
     """
+    vulkan_apps = [
+        "gears",
+        "gltf-viewer",
+        "hellovk",
+        "qr-generator",
+        "triangle",
+        "vulkan_samples",
+        "vulkancapsviewer",
+    ]
     args = [
         "--ets_plan",
         plan,
-        "--hellovk_extract_dir",
-        "$(rlocationpath @hellovk//:BUILD.bazel)",
     ]
-    data = [
-        "@hellovk//:BUILD.bazel",
-        "@hellovk//:all_files",
-    ]
+    data = []
+    for app in vulkan_apps:
+        flag_name = app.replace("-", "_") + "_extract_dir"
+        args.extend([
+            "--" + flag_name,
+            "$(rlocationpath @" + app + "//:BUILD.bazel)",
+        ])
+        data.extend([
+            "@" + app + "//:BUILD.bazel",
+            "@" + app + "//:all_files",
+        ])
     ets_boot_emulator(
         name = name,
         args = args,
