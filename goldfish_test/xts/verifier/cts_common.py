@@ -398,7 +398,7 @@ def ui_dump(retries=8):
                 print(
                     f"  [FATAL] Device offline or missing during ui_dump: {r.stderr.strip()}"
                 )
-        if r is not None and (last_rc == 0 or "dumped to:" in r.stdout):
+        if r is not None and "dumped to:" in r.stdout:
             remote_path = "/data/local/tmp/window_dump.xml"
             match = re.search(r"dumped to:\s*(/\S+)", r.stdout)
             if match:
@@ -432,6 +432,17 @@ def ui_dump(retries=8):
                 if os.path.exists(dump_path):
                     os.remove(dump_path)
         if attempt < retries - 1:
+            if r is not None and "null root node" in (r.stdout + r.stderr).lower():
+                subprocess.run(
+                    cmd_base + ["shell", "input", "keyevent", "KEYCODE_WAKEUP"],
+                    capture_output=True,
+                    timeout=5,
+                )
+                subprocess.run(
+                    cmd_base + ["shell", "wm", "dismiss-keyguard"],
+                    capture_output=True,
+                    timeout=5,
+                )
             print(
                 f"  ui_dump attempt {attempt + 1} failed (rc={last_rc}), retrying in 3s..."
             )
