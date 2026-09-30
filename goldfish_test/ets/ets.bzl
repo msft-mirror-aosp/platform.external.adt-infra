@@ -12,7 +12,7 @@ def _ets_sequence(name, config, args = [], data = [], tags = []):
         srcs = [config],
         args = args + [
             "--tradefed_zip",
-            "$(rlocationpath :android_ets_zip)",
+            "$(rlocationpath //ets:android_ets_zip)",
         ] + select({
             "@platforms//os:linux": [
                 "--abi",
@@ -32,7 +32,7 @@ def _ets_sequence(name, config, args = [], data = [], tags = []):
             ],
         }),
         data = data + [
-            ":android_ets_zip",
+            "//ets:android_ets_zip",
         ] + select({
             "@platforms//os:linux": [
                 "@build-tools-linux//:BUILD.bazel",
@@ -185,12 +185,14 @@ def ets_external_emulator(name, config, args = [], data = [], tags = []):
         ],
     )
 
-def ets_plan(name, plan, tags = []):
+def ets_plan(name, plan, args = [], data = [], tags = []):
     """Runs a normal ETS plan with normal/local/external variants.
 
     Args:
         name: The base name of the bazel targets.
         plan: The ETS plan to run.
+        args: Additional arguments to pass to the bazel targets.
+        data: Additional data to pass to the bazel targets.
         tags: Additional tags to pass to the bazel targets.
     """
     vulkan_apps = [
@@ -202,33 +204,34 @@ def ets_plan(name, plan, tags = []):
         "vulkan_samples",
         "vulkancapsviewer",
     ]
-    args = [
+    plan_args = args + [
         "--ets_plan",
         plan,
     ]
-    data = []
+    vulkan_data = []
     for app in vulkan_apps:
         flag_name = app.replace("-", "_") + "_extract_dir"
-        args.extend([
+        plan_args.extend([
             "--" + flag_name,
             "$(rlocationpath @" + app + "//:BUILD.bazel)",
         ])
-        data.extend([
+        vulkan_data.extend([
             "@" + app + "//:BUILD.bazel",
             "@" + app + "//:all_files",
         ])
+    plan_data = data + vulkan_data
     ets_boot_emulator(
         name = name,
-        args = args,
-        config = "android_ets_cfg.py",
-        data = data,
+        args = plan_args,
+        config = "//ets:android_ets_cfg.py",
+        data = plan_data,
         tags = tags,
     )
     ets_external_emulator(
         name = "external_" + name,
-        args = args,
-        config = "external_ets_cfg.py",
-        data = data,
+        args = plan_args,
+        config = "//ets:external_ets_cfg.py",
+        data = plan_data,
         tags = tags,
     )
 

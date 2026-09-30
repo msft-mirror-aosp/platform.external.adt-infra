@@ -29,6 +29,7 @@ ALL_MODULES = [
     "ConnectivityTest",
     "ControlKeysTest",
     "DeqpRunnerTest",
+    "DeviceHubUiTest",
     "DisplayNameTest",
     "InputTest",
     "NetsimDaemonTest",
@@ -45,6 +46,8 @@ ALL_MODULES = [
 # list is empty, the entire module is excluded.
 EXCLUSIONS = {
     Kind.PRESUBMIT: {
+        # Needs an X display to run the Electron UI, which CI bots lack.
+        "DeviceHubUiTest": [],
         # Not yet implemented on emu-next.
         "AvdTest": [],
         "CallTest": [],
@@ -54,6 +57,8 @@ EXCLUSIONS = {
         "SnapshotTest": [],
         },
     Kind.EMU_NOW: {
+        # Needs an X display to run the Electron UI, which CI bots lack.
+        "DeviceHubUiTest": [],
         # These tests experience timeouts.
         "CallTest": [
             "com.android.tools.e2etests.call.CallTest#acceptCall",
