@@ -309,25 +309,27 @@ dEQP-VK.api.external.memory.android_hardware_buffer.dedicated.image.bind_export_
 dEQP-VK.api.external.fence.sync_fd.signal_export_import_wait_temporary
 dEQP-VK.api.external.semaphore.sync_fd.signal_export_import_wait_temporary
 
+# subset of GLES tests
+dEQP-GLES2.info.vendor
+dEQP-GLES2.info.renderer
+dEQP-GLES2.info.version
+dEQP-GLES2.info.shading_language_version
+dEQP-GLES2.info.extensions
+dEQP-GLES2.info.render_target
+dEQP-GLES3.info.vendor
+dEQP-GLES3.info.renderer
+dEQP-GLES3.info.version
+dEQP-GLES3.info.shading_language_version
+dEQP-GLES3.info.extensions
+dEQP-GLES3.info.render_target
+dEQP-GLES31.info.vendor
+dEQP-GLES31.info.renderer
+dEQP-GLES31.info.version
+dEQP-GLES31.info.shading_language_version
+dEQP-GLES31.info.extensions
+dEQP-GLES31.info.render_target
+
 # TODO: fix known failures/flakes:
-# dEQP-GLES2.info.vendor
-# dEQP-GLES2.info.renderer
-# dEQP-GLES2.info.version
-# dEQP-GLES2.info.shading_language_version
-# dEQP-GLES2.info.extensions
-# dEQP-GLES2.info.render_target
-# dEQP-GLES3.info.vendor
-# dEQP-GLES3.info.renderer
-# dEQP-GLES3.info.version
-# dEQP-GLES3.info.shading_language_version
-# dEQP-GLES3.info.extensions
-# dEQP-GLES3.info.render_target
-# dEQP-GLES31.info.vendor
-# dEQP-GLES31.info.renderer
-# dEQP-GLES31.info.version
-# dEQP-GLES31.info.shading_language_version
-# dEQP-GLES31.info.extensions
-# dEQP-GLES31.info.render_target
 # dEQP-GLES2.functional.prerequisite.state_reset
 # dEQP-GLES2.functional.prerequisite.clear_color
 # dEQP-GLES2.functional.prerequisite.read_pixels
