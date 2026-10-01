@@ -8,7 +8,7 @@ load("//sequence:sequence.bzl", "run_sequence")
 def _ets_sequence(name, config, args = [], data = [], tags = []):
     run_sequence(
         name = name,
-        size = "large",
+        size = "enormous",
         srcs = [config],
         args = args + [
             "--tradefed_zip",
