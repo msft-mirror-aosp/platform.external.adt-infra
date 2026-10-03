@@ -18,7 +18,7 @@ case "$(uname -s)" in
     TEST_STRATEGY="--strategy=TestRunner=local"
     ;;
   *)
-    echo "Unsupported OS for run_local.sh: $(uname -s). On Windows, use run_external.bat or run_external.sh." >&2
+    echo "Unsupported OS for run_local.sh: $(uname -s). On Windows, use run_local.bat." >&2
     exit 1
     ;;
 esac

@@ -38,6 +38,7 @@ ALL_MODULES = [
     "SensorTest",
     "SmsTest",
     "SnapshotTest",
+    "SnapshotUiTest",
     "TelnetTest",
     "VulkanAppTest",
 ]
@@ -48,6 +49,7 @@ EXCLUSIONS = {
     Kind.PRESUBMIT: {
         # Needs an X display to run the Electron UI, which CI bots lack.
         "DeviceHubUiTest": [],
+        "SnapshotUiTest": [],
         # Not yet implemented on emu-next.
         "AvdTest": [],
         "CallTest": [],
@@ -59,6 +61,7 @@ EXCLUSIONS = {
     Kind.EMU_NOW: {
         # Needs an X display to run the Electron UI, which CI bots lack.
         "DeviceHubUiTest": [],
+        "SnapshotUiTest": [],
         # These tests experience timeouts.
         "CallTest": [
             "com.android.tools.e2etests.call.CallTest#acceptCall",

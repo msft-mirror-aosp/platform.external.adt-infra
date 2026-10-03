@@ -174,6 +174,11 @@ _KNOWN_FLAGS = {
         help="Path to the extracted platform tools",
         required=True,
     ),
+    "skip_snapshot_relaunch": lambda p: p.add_argument(
+        "--skip_snapshot_relaunch",
+        action="store_true",
+        help="If true, do not relaunch the emulator for a second ETS_SNAPSHOT pass after ets_close",
+    ),
     "tradefed_args": lambda p: p.add_argument(
         "--tradefed_args",
         help="Arguments to pass to tradefed (comma-separated)",

@@ -33,9 +33,12 @@ case "$(uname -s)" in
     trap 'rm -rf "${WORK_DIR}"' EXIT
     unzip -q "${REPO_ROOT}/${ETS_ZIP}" -d "${WORK_DIR}"
     "${WORK_DIR}/android-ets/tools/ets-tradefed.bat" run commandAndExit ets \
-      -m DeviceHubUiTest \
+      --include-filter DeviceHubUiTest \
+      --include-filter SnapshotUiTest \
       --module-arg "DeviceHubUiTest:set-option:device_hub_path:${REPO_ROOT}/${HUB_DIR}" \
       --module-arg "DeviceHubUiTest:set-option:display_dir:${REPO_ROOT}/tools/emulator/testlib/display" \
+      --module-arg "SnapshotUiTest:set-option:device_hub_path:${REPO_ROOT}/${HUB_DIR}" \
+      --module-arg "SnapshotUiTest:set-option:display_dir:${REPO_ROOT}/tools/emulator/testlib/display" \
       "$@"
     ;;
   *)
