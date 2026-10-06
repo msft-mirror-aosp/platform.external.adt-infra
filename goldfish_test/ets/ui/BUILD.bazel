@@ -1,0 +1,43 @@
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg", "ets_plan")
+
+ets_pkg(
+    name = "pkg",
+    srcs = [":device_hub_ui_test_config"],
+)
+
+ets_host_test(
+    name = "device_hub_ui_test",
+    srcs = ["DeviceHubUiTest.kt"],
+    class_name = "com.android.tools.e2etests.ui.DeviceHubUiTest",
+    description = "Host test driving the Android Device Hub UI against the running emulator",
+    deps = [
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+_UI_ARGS = [
+    "--device_hub_dir",
+    "$(rlocationpath @goldfish//emulator/launcher:android-device-hub)",
+    "--display_dir",
+    "$(rlocationpath @local//tools/emulator/testlib/display:ffmpeg_files)",
+]
+
+_UI_DATA = [
+    "@goldfish//emulator/launcher:android-device-hub",
+    "@local//tools/emulator/testlib/display:ffmpeg_files",
+] + select({
+    "@platforms//os:linux": [
+        "@local//tools/emulator/testlib/display:xvfb",
+    ],
+    "//conditions:default": [],
+})
+
+ets_plan(
+    name = "ui",
+    args = _UI_ARGS + [
+        "--tradefed_args=-m,DeviceHubUiTest",
+    ],
+    data = _UI_DATA,
+    plan = "ets",
+)
