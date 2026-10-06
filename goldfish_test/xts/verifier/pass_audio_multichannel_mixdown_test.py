@@ -120,7 +120,17 @@ def run_mixdown_and_wait_for_pass(timeout=90):
 
         if phases_done or start_btn is None:
             print("  Mixdown phases finished; scrolling down to find Pass button...")
-            adb("shell", "input", "swipe", "540", "2000", "540", "300", "200", check=False)
+            adb(
+                "shell",
+                "input",
+                "swipe",
+                "540",
+                "2000",
+                "540",
+                "300",
+                "200",
+                check=False,
+            )
             time.sleep(1)
             continue
 
