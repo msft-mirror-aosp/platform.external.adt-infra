@@ -193,19 +193,21 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             ]
         )
     if ns.device_hub_dir:
-        ac.tradefed.args.extend(
-            [
-                "--module-arg",
-                f"DeviceHubUiTest:set-option:device_hub_path:{ns.device_hub_dir}",
-            ]
-        )
+        for ui_mod in ("DeviceHubUiTest", "SnapshotUiTest"):
+            ac.tradefed.args.extend(
+                [
+                    "--module-arg",
+                    f"{ui_mod}:set-option:device_hub_path:{ns.device_hub_dir}",
+                ]
+            )
     if ns.display_dir:
-        ac.tradefed.args.extend(
-            [
-                "--module-arg",
-                f"DeviceHubUiTest:set-option:display_dir:{ns.display_dir}",
-            ]
-        )
+        for ui_mod in ("DeviceHubUiTest", "SnapshotUiTest"):
+            ac.tradefed.args.extend(
+                [
+                    "--module-arg",
+                    f"{ui_mod}:set-option:display_dir:{ns.display_dir}",
+                ]
+            )
     if ns.tradefed_args:
         ac.tradefed.args.extend(ns.tradefed_args.split(","))
     ac.tradefed.args.append("--test-arg")
@@ -256,6 +258,7 @@ def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
 def ets_external(
     ns: argparse.Namespace, serial_number: str, grpc_port: str
 ) -> test_sequencer_pb2.AgentConfig:
+    _ = ns.skip_snapshot_relaunch
     ac = ets(ns)
     imps = [i for i in ac.imports if i.id != "goldfish"]
     del ac.imports[:]

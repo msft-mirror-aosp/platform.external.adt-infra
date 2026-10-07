@@ -36,43 +36,40 @@ import java.nio.file.StandardCopyOption
 import kotlin.random.Random
 
 /**
- * End to end test of the Android Device Hub UI (Electron) connected to the emulator under test.
- *
- * The device hub is launched with Chromium's remote debugging enabled (and inside a hermetic Xvfb
- * virtual X11 display with ffmpeg video recording when `display_dir` is provided). Toolbar buttons
- * and touch screen gestures are driven via the Chrome DevTools Protocol (CDP), and their effects
- * are verified on the live emulator through adb.
+ * Base host test harness that launches the Android Device Hub UI (Electron) connected to the
+ * emulator under test, inside a hermetic Xvfb virtual X11 display when headless on Linux, and
+ * records host-side video (.mp4 via ffmpeg) and screenshots (.png via CDP).
  */
-@RunWith(DeviceJUnit4ClassRunner::class)
-class DeviceHubUiTest : BaseHostJUnit4Test() {
+open class UiTestBase : BaseHostJUnit4Test() {
   @Option(
     name = "device_hub_path",
     description =
       "Path to the android-device-hub launcher. If empty, it is located via the emulator " +
         "discovery file (<launcher.dir>/android-device-hub/android-device-hub).",
   )
-  private var mDeviceHubPath: String = ""
+  protected var mDeviceHubPath: String = ""
 
   @Option(
     name = "display_dir",
     description =
       "Path to the hermetic display directory containing launch_xvfb.sh, lib/, fonts/, and ffmpeg.",
   )
-  private var mDisplayDir: String = ""
+  protected var mDisplayDir: String = ""
 
   @Option(name = "protocol", description = "Device hub emulator protocol: v1 (gRPC) or v2 (WebRTC)")
-  private var mProtocol: String = "v1"
+  protected var mProtocol: String = "v1"
 
   @Option(
     name = "cdp_video",
     description =
       "Use CDP-piped screenshots for video recording even when Xvfb (x11grab) is active.",
   )
-  private var mCdpVideo: Boolean = false
+  protected var mCdpVideo: Boolean = false
 
   @get:Rule val mLogs = TestLogData()
 
-  private val TAG = "DeviceHubUiTest"
+  protected open val logPrefix: String = "device_hub"
+  protected val TAG: String = javaClass.simpleName
   private val mResolution = "1280x1024"
   private var mDisplay: String? = null
   private var mXvfb: Process? = null
@@ -82,6 +79,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
   private var mFfmpeg: Process? = null
   private var mFfmpegLog: File? = null
   private var mVideoFile: File? = null
+  private var mVideoEncoder: String? = null
   @Volatile private var mCdpVideoRunning: Boolean = false
   private var mCdpVideoThread: Thread? = null
   private var mHub: Process? = null
@@ -103,141 +101,17 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     stopXvfb()
   }
 
-  @Test
-  fun windowTitleShowsProtocol() {
-    Assert.assertEquals(
-      "Android Device Hub (Emu ${mProtocol.uppercase()} API)",
-      cdp().eval("document.title"),
-    )
-  }
-
-  @Test
-  fun homeButtonGoesToLauncher() {
-    getDevice().executeShellCommand("am start -W -a android.settings.SETTINGS")
-    eventually("Settings in foreground") { resumedActivity().contains("settings", ignoreCase = true) }
-    click("Home")
-    eventually("launcher in foreground") { resumedActivity().contains("launcher", ignoreCase = true) }
-  }
-
-  @Test
-  fun backButtonLeavesActivity() {
-    getDevice().executeShellCommand("am start -W -a android.settings.SETTINGS")
-    eventually("Settings in foreground") { resumedActivity().contains("settings", ignoreCase = true) }
-    click("Back")
-    eventually("Settings no longer in foreground") {
-      !resumedActivity().contains("settings", ignoreCase = true)
-    }
-  }
-
-  @Test
-  fun volumeUpRaisesMusicVolume() {
-    // Make sure there is headroom (max is 15); adb key events don't go through the device hub.
-    repeat(4) {
-      if (musicVolume() >= 13) getDevice().executeShellCommand("input keyevent KEYCODE_VOLUME_DOWN")
-    }
-    val before = musicVolume()
-    Assert.assertTrue("Could not read music volume", before >= 0)
-    // The first volume key press only shows the volume panel; the second adjusts the volume.
-    click("Volume Up")
-    Thread.sleep(500)
-    click("Volume Up")
-    eventually("music volume increased from $before") { musicVolume() > before }
-  }
-
-  @Test
-  fun rotateButtonsChangeDisplayRotation() {
-    getDevice().executeShellCommand("settings put system accelerometer_rotation 1")
-    // The launcher is portrait-locked; put a rotatable activity in the foreground.
-    getDevice().executeShellCommand("am start -W -a android.settings.SETTINGS")
-    eventually("Settings in foreground") { resumedActivity().contains("settings", ignoreCase = true) }
-    val before = rotation()
-    click("Rotate Right")
-    eventually("display rotated from $before") { rotation() != before }
-    attachScreenshot("rotated")
-    click("Rotate Left")
-    eventually("display rotation restored to $before") { rotation() == before }
-  }
-
-  @Test
-  fun touchScreenTapsAndSwipesOnDevice() {
-    getDevice().executeShellCommand("settings put system pointer_location 1")
-    try {
-      getDevice().executeShellCommand("am start -W -a android.settings.SETTINGS")
-      eventually("Settings in foreground") {
-        resumedActivity().contains("settings", ignoreCase = true)
-      }
-      Thread.sleep(500)
-      swipeScreen(0.5, 0.75, 0.5, 0.25)
-      Thread.sleep(300)
-      tapScreen(0.5, 0.5)
-      attachScreenshot("after_touch")
-      eventually("touch MotionEvents delivered to InputDispatcher") {
-        val dumpsysInput = getDevice().executeShellCommand("dumpsys input")
-        dumpsysInput.contains("MotionEvent") &&
-          dumpsysInput.contains("action=DOWN") &&
-          dumpsysInput.contains("action=UP")
-      }
-    } finally {
-      runCatching { getDevice().executeShellCommand("settings put system pointer_location 0") }
-    }
-  }
-
-  // TODO: Current android device hub is not handling this yet, enable it afterwards.
-  @Ignore("Current android device hub is not handling this yet, enable it afterwards")
-  @Test
-  fun uiLaunchedBeforeEmulatorConnectsWhenEmulatorAppears() {
-    val serial = getDevice().getSerialNumber()
-    val discoveryFile = findDiscoveryFile(serial)
-    Assert.assertNotNull("Could not locate emulator discovery file for $serial", discoveryFile)
-
-    // Stop the default UI instance so we can launch a fresh UI before any emulator is discoverable.
-    stopDeviceHub()
-
-    val iniPath = discoveryFile!!.toPath()
-    val backupPath = iniPath.resolveSibling("${iniPath.fileName}.bak")
-    Files.move(iniPath, backupPath, StandardCopyOption.REPLACE_EXISTING)
-    try {
-      startDeviceHub(waitForStream = false)
-      waitForUi(
-        "document.querySelector('[data-testid=\"display-panel-0\"]') != null && " +
-          "[...document.querySelectorAll('canvas,video')].every(e => e.classList.contains('hidden'))",
-        20_000,
-      )
-      attachScreenshot("ui_waiting_for_emulator")
-      Thread.sleep(1000)
-
-      // Restore the emulator discovery file to simulate the emulator starting after the UI.
-      Files.move(backupPath, iniPath, StandardCopyOption.REPLACE_EXISTING)
-      waitForStream()
-      attachScreenshot("ui_connected_after_emulator_appeared")
-
-      // Verify toolbar interaction works after late discovery.
-      getDevice().executeShellCommand("am start -W -a android.settings.SETTINGS")
-      eventually("Settings in foreground") {
-        resumedActivity().contains("settings", ignoreCase = true)
-      }
-      click("Home")
-      eventually("launcher in foreground") {
-        resumedActivity().contains("launcher", ignoreCase = true)
-      }
-    } finally {
-      if (Files.exists(backupPath) && !Files.exists(iniPath)) {
-        runCatching { Files.move(backupPath, iniPath, StandardCopyOption.REPLACE_EXISTING) }
-      }
-    }
-  }
-
   // --- helpers ---------------------------------------------------------------------------------
 
-  private fun cdp(): Cdp = mCdp!!
+  internal fun cdp(): Cdp = mCdp!!
 
-  private fun isLinux(): Boolean =
+  protected fun isLinux(): Boolean =
     System.getProperty("os.name").contains("Linux", ignoreCase = true)
 
-  private fun isWindows(): Boolean =
+  protected fun isWindows(): Boolean =
     System.getProperty("os.name").contains("Win", ignoreCase = true)
 
-  private fun startXvfbIfNeeded() {
+  protected fun startXvfbIfNeeded() {
     if (!isLinux()) return
     val existingDisplay = System.getenv("DISPLAY")?.takeIf { it.isNotEmpty() }
     if (existingDisplay != null) {
@@ -337,9 +211,37 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     return names.map { File(displayDir, it) }.firstOrNull { it.isFile && it.canExecute() }
   }
 
+  /**
+   * The video encoder for this ffmpeg build: libx264 where available, otherwise OpenH264 (the
+   * Windows build in the display dir has no libx264), otherwise ffmpeg's built-in mpeg4.
+   */
+  private fun videoEncoder(ffmpegBin: File): String {
+    mVideoEncoder?.let {
+      return it
+    }
+    val encoders =
+      runCatching {
+          val proc =
+            ProcessBuilder(ffmpegBin.absolutePath, "-hide_banner", "-encoders")
+              .redirectErrorStream(true)
+              .start()
+          val out = proc.inputStream.bufferedReader().readText()
+          proc.waitFor(10, TimeUnit.SECONDS)
+          out
+        }
+        .getOrDefault("")
+    val encoder =
+      listOf("libx264", "libopenh264").firstOrNull { Regex("\\s$it\\s").containsMatchIn(encoders) }
+        ?: "mpeg4"
+    CLog.i("%s: recording video with the %s encoder of %s", TAG, encoder, ffmpegBin)
+    mVideoEncoder = encoder
+    return encoder
+  }
+
   private fun startVideoRecording() {
     val displayDir = mDisplayDir.takeIf { it.isNotEmpty() }?.let(::File) ?: return
     val ffmpegBin = findFfmpegBinary(displayDir) ?: return
+    val encoder = videoEncoder(ffmpegBin)
     mVideoFile = Files.createTempFile("device-hub-video", ".mp4").toFile()
     mFfmpegLog = Files.createTempFile("ffmpeg", ".log").toFile()
 
@@ -359,7 +261,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
           "-i",
           display,
           "-c:v",
-          "libx264",
+          encoder,
           "-pix_fmt",
           "yuv420p",
           "-movflags",
@@ -387,7 +289,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
         "-vf",
         "scale=trunc(iw/2)*2:trunc(ih/2)*2",
         "-c:v",
-        "libx264",
+        encoder,
         "-pix_fmt",
         "yuv420p",
         "-movflags",
@@ -461,7 +363,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     mVideoFile?.let {
       if (it.exists() && it.length() > 0) {
         mLogs.addTestLog(
-          "device_hub_video",
+          "${logPrefix}_video",
           LogDataType.MP4,
           ByteArrayInputStreamSource(it.readBytes()),
         )
@@ -478,10 +380,10 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     mFfmpegLog = null
   }
 
-  private fun startDeviceHub(waitForStream: Boolean) {
+  protected fun startDeviceHub(waitForStream: Boolean) {
     val exe = locateDeviceHub()
     Assert.assertNotNull(
-      "android-device-hub not found. Set --module-arg DeviceHubUiTest:set-option:device_hub_path:<path> " +
+      "android-device-hub not found. Set --module-arg $TAG:set-option:device_hub_path:<path> " +
         "or make sure the emulator discovery file (XDG_RUNTIME_DIR/avd/running) has launcher.dir",
       exe,
     )
@@ -521,7 +423,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     }
   }
 
-  private fun waitForStream() {
+  protected fun waitForStream() {
     // The canvas (v1) or video (v2) element becomes visible once frames are streaming.
     waitForUi(
       "[...document.querySelectorAll('canvas,video')].some(e => !e.classList.contains('hidden'))",
@@ -529,7 +431,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     )
   }
 
-  private fun stopDeviceHub() {
+  protected fun stopDeviceHub() {
     runCatching { mCdp?.close() }
     mCdp = null
     mHub?.let {
@@ -540,7 +442,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     mHubLog?.let {
       if (it.exists()) {
         mLogs.addTestLog(
-          "device_hub_log",
+          "${logPrefix}_log",
           LogDataType.TEXT,
           ByteArrayInputStreamSource(it.readBytes()),
         )
@@ -574,7 +476,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     return launcherDir?.let { findExecutableIn(File(it)) }
   }
 
-  private fun findDiscoveryFile(serial: String): File? {
+  protected fun findDiscoveryFile(serial: String): File? {
     findEmulator(serial)?.discoveryPath?.toFile()?.takeIf { it.exists() }?.let { return it }
     if (!isLinux()) return null
     val uid =
@@ -598,7 +500,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
       .associate { it.substringBefore("=") to it.substringAfter("=") }["launcher.dir"]
   }
 
-  private fun displayBounds(): JSONObject {
+  protected fun displayBounds(): JSONObject {
     val rect =
       cdp().eval(
         "(() => { const el = [...document.querySelectorAll('canvas,video')].find(e => !e.classList.contains('hidden'));" +
@@ -609,7 +511,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     return JSONObject(rect as String)
   }
 
-  private fun tapScreen(normX: Double, normY: Double) {
+  protected fun tapScreen(normX: Double, normY: Double) {
     val b = displayBounds()
     val x = b.getDouble("x") + b.getDouble("width") * normX
     val y = b.getDouble("y") + b.getDouble("height") * normY
@@ -619,7 +521,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     dispatchMouse("mouseReleased", x, y)
   }
 
-  private fun swipeScreen(
+  protected fun swipeScreen(
     startNormX: Double,
     startNormY: Double,
     endNormX: Double,
@@ -644,7 +546,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     dispatchMouse("mouseReleased", endX, endY)
   }
 
-  private fun dispatchMouse(type: String, x: Double, y: Double, pressed: Boolean = false) {
+  protected fun dispatchMouse(type: String, x: Double, y: Double, pressed: Boolean = false) {
     val isDown = type == "mousePressed" || (type == "mouseMoved" && pressed)
     cdp()
       .call(
@@ -664,7 +566,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
    * (Home, Back, Volume, Power) react to mousedown/mouseup, while others (Rotate) react to click, so
    * a synthetic element.click() is not sufficient.
    */
-  private fun click(label: String) {
+  protected fun click(label: String) {
     val rect =
       cdp().eval(
         "(() => { const b = document.querySelector('[aria-label=\"$label\"]'); if (!b) return null;" +
@@ -680,25 +582,25 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     dispatchMouse("mouseReleased", x, y)
   }
 
-  private fun resumedActivity(): String =
+  protected fun resumedActivity(): String =
     getDevice()
       .executeShellCommand(
         "dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity'"
       )
 
-  private fun rotation(): String =
+  protected fun rotation(): String =
     Regex("mCurrentRotation=(\\S+)")
       .find(getDevice().executeShellCommand("dumpsys window displays"))
       ?.groupValues
       ?.get(1) ?: ""
 
-  private fun musicVolume(): Int {
+  protected fun musicVolume(): Int {
     val out = getDevice().executeShellCommand("cmd media_session volume --stream 3 --get 2>&1")
     val v = Regex("volume is (\\d+)").find(out)?.groupValues?.get(1)?.toInt() ?: -1
     return v
   }
 
-  private fun waitForUi(expr: String, timeoutMs: Long) {
+  protected fun waitForUi(expr: String, timeoutMs: Long) {
     val end = System.currentTimeMillis() + timeoutMs
     while (System.currentTimeMillis() < end) {
       if (runCatching { cdp().eval(expr) == true }.getOrDefault(false)) return
@@ -709,7 +611,7 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     Assert.fail("Device hub UI never satisfied `$expr`. Page text: $status")
   }
 
-  private fun eventually(what: String, timeoutMs: Long = 10_000, cond: () -> Boolean) {
+  protected fun eventually(what: String, timeoutMs: Long = 10_000, cond: () -> Boolean) {
     val end = System.currentTimeMillis() + timeoutMs
     while (System.currentTimeMillis() < end) {
       if (runCatching(cond).getOrDefault(false)) return
@@ -719,18 +621,170 @@ class DeviceHubUiTest : BaseHostJUnit4Test() {
     Assert.fail("Timed out after ${timeoutMs}ms waiting for: $what")
   }
 
-  private fun attachScreenshot(tag: String) {
+  protected fun attachScreenshot(tag: String) {
     val data = cdp().call("Page.captureScreenshot").getJSONObject("result").getString("data")
     mLogs.addTestLog(
-      "device_hub_$tag",
+      "${logPrefix}_$tag",
       LogDataType.PNG,
       ByteArrayInputStreamSource(Base64.getDecoder().decode(data)),
     )
   }
 }
 
+/**
+ * End to end test of the Android Device Hub UI (Electron) connected to the emulator under test.
+ *
+ * The device hub is launched with Chromium's remote debugging enabled (and inside a hermetic Xvfb
+ * virtual X11 display with ffmpeg video recording when `display_dir` is provided). Toolbar buttons
+ * and touch screen gestures are driven via the Chrome DevTools Protocol (CDP), and their effects
+ * are verified on the live emulator through adb.
+ */
+@RunWith(DeviceJUnit4ClassRunner::class)
+class DeviceHubUiTest : UiTestBase() {
+  @Test
+  fun verifyDeviceHubUiInteractions() {
+    windowTitleShowsProtocol()
+    homeButtonGoesToLauncher()
+    backButtonLeavesActivity()
+    volumeUpRaisesMusicVolume()
+    rotateButtonsChangeDisplayRotation()
+    touchScreenTapsAndSwipesOnDevice()
+  }
+
+  private fun windowTitleShowsProtocol() {
+    Assert.assertEquals(
+      "Android Device Hub (Emu ${mProtocol.uppercase()} API)",
+      cdp().eval("document.title"),
+    )
+    attachScreenshot("window_title")
+    Thread.sleep(500)
+  }
+
+  private fun homeButtonGoesToLauncher() {
+    getDevice().executeShellCommand("am start -W --activity-clear-task -a android.settings.SETTINGS")
+    eventually("Settings in foreground") { resumedActivity().contains("settings", ignoreCase = true) }
+    attachScreenshot("settings_open")
+    click("Home")
+    eventually("launcher in foreground") { resumedActivity().contains("launcher", ignoreCase = true) }
+    attachScreenshot("launcher_after_home")
+  }
+
+  private fun backButtonLeavesActivity() {
+    getDevice().executeShellCommand("input keyevent KEYCODE_HOME")
+    eventually("launcher in foreground") { resumedActivity().contains("launcher", ignoreCase = true) }
+    getDevice().executeShellCommand("am start -W --activity-clear-task -a android.settings.SETTINGS")
+    eventually("Settings in foreground") { resumedActivity().contains("settings", ignoreCase = true) }
+    attachScreenshot("settings_before_back")
+    click("Back")
+    eventually("Settings no longer in foreground") {
+      !resumedActivity().contains("settings", ignoreCase = true)
+    }
+    attachScreenshot("after_back")
+  }
+
+  private fun volumeUpRaisesMusicVolume() {
+    // Make sure there is headroom (max is 15); adb key events don't go through the device hub.
+    repeat(4) {
+      if (musicVolume() >= 13) getDevice().executeShellCommand("input keyevent KEYCODE_VOLUME_DOWN")
+    }
+    val before = musicVolume()
+    Assert.assertTrue("Could not read music volume", before >= 0)
+    attachScreenshot("volume_before")
+    // The first volume key press only shows the volume panel; the second adjusts the volume.
+    click("Volume Up")
+    Thread.sleep(500)
+    click("Volume Up")
+    eventually("music volume increased from $before") { musicVolume() > before }
+    attachScreenshot("volume_after")
+  }
+
+  private fun rotateButtonsChangeDisplayRotation() {
+    getDevice().executeShellCommand("settings put system accelerometer_rotation 1")
+    // The launcher is portrait-locked; put a rotatable activity in the foreground.
+    getDevice().executeShellCommand("am start -W --activity-clear-task -a android.settings.SETTINGS")
+    eventually("Settings in foreground") { resumedActivity().contains("settings", ignoreCase = true) }
+    val before = rotation()
+    attachScreenshot("before_rotate")
+    click("Rotate Right")
+    eventually("display rotated from $before") { rotation() != before }
+    attachScreenshot("rotated")
+    click("Rotate Left")
+    eventually("display rotation restored to $before") { rotation() == before }
+    attachScreenshot("rotation_restored")
+  }
+
+  private fun touchScreenTapsAndSwipesOnDevice() {
+    getDevice().executeShellCommand("settings put system pointer_location 1")
+    try {
+      getDevice().executeShellCommand("am start -W --activity-clear-task -a android.settings.SETTINGS")
+      eventually("Settings in foreground") {
+        resumedActivity().contains("settings", ignoreCase = true)
+      }
+      Thread.sleep(500)
+      attachScreenshot("before_touch")
+      swipeScreen(0.5, 0.75, 0.5, 0.25)
+      Thread.sleep(300)
+      tapScreen(0.5, 0.5)
+      attachScreenshot("after_touch")
+      eventually("touch MotionEvents delivered to InputDispatcher") {
+        val dumpsysInput = getDevice().executeShellCommand("dumpsys input")
+        dumpsysInput.contains("MotionEvent") &&
+          dumpsysInput.contains("action=DOWN") &&
+          dumpsysInput.contains("action=UP")
+      }
+    } finally {
+      runCatching { getDevice().executeShellCommand("settings put system pointer_location 0") }
+    }
+  }
+
+  // TODO: Current android device hub is not handling this yet, enable it afterwards.
+  @Ignore("Current android device hub is not handling this yet, enable it afterwards")
+  @Test
+  fun uiLaunchedBeforeEmulatorConnectsWhenEmulatorAppears() {
+    val serial = getDevice().getSerialNumber()
+    val discoveryFile = findDiscoveryFile(serial)
+    Assert.assertNotNull("Could not locate emulator discovery file for $serial", discoveryFile)
+
+    // Stop the default UI instance so we can launch a fresh UI before any emulator is discoverable.
+    stopDeviceHub()
+
+    val iniPath = discoveryFile!!.toPath()
+    val backupPath = iniPath.resolveSibling("${iniPath.fileName}.bak")
+    Files.move(iniPath, backupPath, StandardCopyOption.REPLACE_EXISTING)
+    try {
+      startDeviceHub(waitForStream = false)
+      waitForUi(
+        "document.querySelector('[data-testid=\"display-panel-0\"]') != null && " +
+          "[...document.querySelectorAll('canvas,video')].every(e => e.classList.contains('hidden'))",
+        20_000,
+      )
+      attachScreenshot("ui_waiting_for_emulator")
+      Thread.sleep(1000)
+
+      // Restore the emulator discovery file to simulate the emulator starting after the UI.
+      Files.move(backupPath, iniPath, StandardCopyOption.REPLACE_EXISTING)
+      waitForStream()
+      attachScreenshot("ui_connected_after_emulator_appeared")
+
+      // Verify toolbar interaction works after late discovery.
+      getDevice().executeShellCommand("am start -W -a android.settings.SETTINGS")
+      eventually("Settings in foreground") {
+        resumedActivity().contains("settings", ignoreCase = true)
+      }
+      click("Home")
+      eventually("launcher in foreground") {
+        resumedActivity().contains("launcher", ignoreCase = true)
+      }
+    } finally {
+      if (Files.exists(backupPath) && !Files.exists(iniPath)) {
+        runCatching { Files.move(backupPath, iniPath, StandardCopyOption.REPLACE_EXISTING) }
+      }
+    }
+  }
+}
+
 /** Minimal Chrome DevTools Protocol client using the JDK WebSocket. */
-private class Cdp
+internal class Cdp
 private constructor(
   private val ws: WebSocket,
   private val pending: ConcurrentHashMap<Int, CompletableFuture<JSONObject>>,

@@ -385,26 +385,36 @@ def ets_device_test(
 def _ets_host_module_config_impl(ctx):
     config = """
 <configuration description="{}">
-  <test class="com.android.tradefed.testtype.HostTest">
+""".format(ctx.attr.description)
+    if ctx.attr.apks:
+        config += """  <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+    <option name="cleanup-apks" value="true" />
+"""
+        for apk in ctx.attr.apks:
+            config += """    <option name="test-file-name" value="{}" />\n""".format(apk)
+        config += """  </target_preparer>
+"""
+    config += """  <test class="com.android.tradefed.testtype.HostTest">
     <option name="class" value="{}" />
   </test>
 </configuration>
-  """
+  """.format(ctx.attr.class_name)
     ctx.actions.write(
         output = ctx.outputs.output_file,
-        content = config.format(ctx.attr.description, ctx.attr.class_name),
+        content = config,
     )
 
 _ets_host_module_config = rule(
     implementation = _ets_host_module_config_impl,
     attrs = {
+        "apks": attr.string_list(default = []),
         "class_name": attr.string(mandatory = True),
         "description": attr.string(mandatory = True),
         "output_file": attr.output(mandatory = True),
     },
 )
 
-def ets_host_test(name, srcs, class_name, description = "", **kwargs):
+def ets_host_test(name, srcs, class_name, description = "", extra_apks = None, **kwargs):
     """Creates an ETS Host Test.
 
     This will do the following:
@@ -416,11 +426,13 @@ def ets_host_test(name, srcs, class_name, description = "", **kwargs):
         srcs: The source files for the test.
         class_name: The class name of the test.
         description: The description of the test.
+        extra_apks: Optional list of apks to install on the device for the test.
         **kwargs: Additional arguments to pass to the kt_jvm_test target.
     """
     output_file = srcs[0].replace(".kt", ".config")
     _ets_host_module_config(
         name = name + "_config",
+        apks = extra_apks or [],
         class_name = class_name,
         description = description,
         output_file = output_file,
@@ -428,7 +440,10 @@ def ets_host_test(name, srcs, class_name, description = "", **kwargs):
     kt_jvm_test(
         name = name,
         srcs = srcs,
-        visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+        visibility = [
+            "//ets/java/com/android/tools/e2etests:__pkg__",
+            "//ets/ui:__pkg__",
+        ],
         **kwargs
     )
 

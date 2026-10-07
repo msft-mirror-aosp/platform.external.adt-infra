@@ -1,24 +1,26 @@
-# Android Device Hub UI E2E Tests (`//ets/ui`)
+# Android Device Hub & Snapshot UI E2E Tests (`//ets/ui`)
 
-End-to-end Tradefed host tests for the **Android Device Hub** Electron UI (`android-device-hub`) connected to a live Android Emulator.
+End-to-end UI tests under `//ets/ui`:
+- **[`DeviceHubUiTest.kt`](DeviceHubUiTest.kt)** (`ets_host_test`): Tradefed host test that launches the **Android Device Hub** Electron UI (`android-device-hub`) against a live Android Emulator, drives it over Chrome DevTools Protocol (CDP), and verifies effects via `adb`. Also defines [`UiTestBase`](DeviceHubUiTest.kt), the shared host harness for `Xvfb`, `ffmpeg` video recording, and CDP screenshots.
+- **[`SnapshotUiTest.kt`](SnapshotUiTest.kt)** (`ets_host_test`): Host-driven UI responsiveness test (modeled after `profiler.py`) extending [`UiTestBase`](DeviceHubUiTest.kt). Uses `uiautomator dump` to inspect what clickable items are on the screen, issues touch events (`tapScreen`) and toolbar `Back` clicks (`click("Back")`) through the **Android Device Hub** UI on the host to touch up to 4 Settings items and verify the UI hierarchy updates across `cold boot -> interact with settings -> save snapshot -> {load snapshot -> interact with settings -> save snapshot} x 3`, and records a single combined host-side video (`snapshot_ui_video_*.mp4` via `ffmpeg`) and screenshots (`snapshot_ui_*.png` via CDP).
 
-## How It Works
+## How `DeviceHubUiTest` and `SnapshotUiTest` Work
 
-Each test in [`DeviceHubUiTest.kt`](DeviceHubUiTest.kt):
+Both [`DeviceHubUiTest.kt`](DeviceHubUiTest.kt) and [`SnapshotUiTest.kt`](SnapshotUiTest.kt) extend [`UiTestBase`](DeviceHubUiTest.kt) and run all of their UI checks within a single session per phase so that each test class records **one combined video** (`device_hub_video_*.mp4` and `snapshot_ui_video_*.mp4`):
 1. **Virtual Display (Headless Linux RBE)**: Starts a hermetic `Xvfb` server (`launch_xvfb.sh` from `//tools/emulator/testlib/display:xvfb`) when `DISPLAY` is unset so the Electron window renders on headless RBE workers.
 2. **Video & Screenshot Recording**:
    - **Headless Linux RBE (default)**: Uses `ffmpeg -f x11grab` against the `Xvfb` display, capturing the entire window including the window bar. (Pass `--cdp-video` to `run_rbe.sh` to use CDP-piped screenshots instead.)
    - **Local Desktop (gLinux, macOS, Windows)**: Pipes JPEG frames from CDP (`Page.captureScreenshot`) into `ffmpeg -f image2pipe` so only the UI window is recorded without triggering macOS Screen Recording permission prompts.
-   - Attaches `device_hub_video` (`.mp4`), `device_hub_final` / intermediate `.png` screenshots, and `device_hub_log` / `ffmpeg_log` / `xvfb_log` to the Tradefed test outputs.
+   - Attaches one combined `${logPrefix}_video` (`.mp4`), `${logPrefix}_final` and per-action `.png` screenshots, and `${logPrefix}_log` / `ffmpeg_log` / `xvfb_log` to the Tradefed test outputs.
 3. **UI Automation via CDP**: Launches `android-device-hub` with `--remote-debugging-port=<port>`, connects a lightweight JDK WebSocket Chrome DevTools Protocol (CDP) client, waits for the emulator video/canvas stream to become visible, and dispatches real mouse press/move/release events (`Input.dispatchMouseEvent`) and DOM queries (`Runtime.evaluate`).
-4. **Device Verification**: Verifies the resulting state changes on the emulator over `adb` (`getDevice().executeShellCommand(...)`).
+4. **Device Verification**: Verifies the resulting state changes on the emulator over `adb` (`getDevice().executeShellCommand(...)` and `uiautomator dump`).
 
 ---
 
 ## Running the Tests
 
 ### 1. Run on Linux RBE (`run_rbe.sh`)
-Boots the emulator and runs the full `DeviceHubUiTest` suite (including snapshot save/load) on remote Linux RBE workers:
+Boots the emulator and runs all UI tests under `//ets/ui` (`DeviceHubUiTest` and `SnapshotUiTest`, including snapshot save/load) on remote Linux RBE workers:
 ```bash
 ./third_party/adt-infra/goldfish_test/ets/ui/run_rbe.sh
 
@@ -26,11 +28,19 @@ Boots the emulator and runs the full `DeviceHubUiTest` suite (including snapshot
 ./third_party/adt-infra/goldfish_test/ets/ui/run_rbe.sh --cdp-video
 ```
 
-### 2. Run Full Sequence Locally on gLinux or macOS (`run_local.sh`)
-Boots the emulator locally, runs `DeviceHubUiTest`, and runs the snapshot sequence on the local machine:
-```bash
-./third_party/adt-infra/goldfish_test/ets/ui/run_local.sh
-```
+### 2. Run Full Sequence Locally (`run_local.sh` / `run_local.bat`)
+Boots the emulator locally, runs `DeviceHubUiTest` and `SnapshotUiTest`, and runs the snapshot sequence on the local machine:
+- **gLinux / macOS**:
+  ```bash
+  ./third_party/adt-infra/goldfish_test/ets/ui/run_local.sh
+  ```
+- **Windows (`cmd.exe` / PowerShell)**:
+  ```cmd
+  third_party\adt-infra\goldfish_test\ets\ui\run_local.bat
+  ```
+  Bazel cannot run the `:ui` sequence on Windows, so the script replays it: it builds an optimized emulator from the checkout and fetches the same system image, cold boots the ETS AVD with the same emulator flags and device setup, runs the tests through `run_external.bat`, and closes the emulator with `CloseEmulatorTest`. Extra arguments are passed to Tradefed. The emulator log and the Tradefed logs and results (videos, screenshots) are written to `out\ets_ui\<timestamp>` under the repo root. Set `EMULATOR_PORT` to choose the console port instead of the first free one. Like the sequence's `junit_xml_result` step, both Windows scripts take pass/fail from Tradefed's result XML (`check_tradefed_results.ps1`) and exit with 1 when a test failed or did not run; Tradefed's own exit code is not usable for this (0 on test failures, and always 1 on Windows where its console dies with `Unknown signal: TSTP`).
+
+  `run_local.sh` and `run_external.sh` are Bazel tests, so Bazel reports them to Sponge. The Windows scripts run the emulator and Tradefed outside of Bazel, so they end with [`report_to_sponge.bat`](report_to_sponge.bat) instead, which runs `bazel test --config=rcache --config=sponge --test_arg=--out_dir=<out dir> @goldfish_test//ets/ui:report_results` and prints the Fusion link (`run_local.bat` reports the whole run including `CloseEmulatorTest`; `run_external.bat` reports when it is not called from `run_local.bat`). [`report_results.py`](report_results.py) converts the Tradefed `test_result.xml` files of the run into Bazel's JUnit XML (one test case per Tradefed test, flaky passes and skips included), copies the output directory into the test's undeclared outputs (`outputs.zip` in Fusion: `emulator.log`, videos, screenshots, Tradefed logs), and fails when a test failed or an invocation is missing. `--config=rcache` is what makes Bazel upload those files rather than referencing them by local path; the test verdict and exit code of the scripts do not depend on this step.
 
 ### 3. Run Against an Already-Running Emulator (`run_external.sh` / `run_external.bat`)
 Fastest workflow for local iteration on **gLinux**, **macOS**, or **Windows**. Start an emulator first, then run:
@@ -42,16 +52,17 @@ Fastest workflow for local iteration on **gLinux**, **macOS**, or **Windows**. S
   ```cmd
   third_party\adt-infra\goldfish_test\ets\ui\run_external.bat
   ```
+  The Tradefed logs and results, including the `device_hub_video` and `snapshot_ui_video` recordings, are copied to `out\ets_ui\<timestamp>` under the repo root and reported to Sponge (see section 2). If `BAZEL_SH` points at busybox, the ETS is built with Git Bash or MSYS2 bash instead when one is installed (`--shell_executable` and `--repo_env=BAZEL_SH`): rules_android extracts `.aar` manifests with a shebang-less `unzip` script and generates the desugar configs with `unzip -c`, and busybox-w32 supports neither (`unzip: Exec format error`). Because the shell's directory is part of every action's `PATH`, the ETS build tools get their own `bazel-out\ets-opt-exec` directory so that they do not evict the emulator build's tools from the cache.
 
 ---
 
 ## How to Add a New UI Test
 
-### Option A: Add a New `@Test` Method to `DeviceHubUiTest.kt` (Recommended)
+### Option A: Add a New Step to `DeviceHubUiTest.kt` (Recommended)
 
-For most UI features (toolbar buttons, multi-touch gestures, settings panels, window state), add a new `@Test` method directly to [`DeviceHubUiTest.kt`](DeviceHubUiTest.kt). The `@Before` / `@After` hooks automatically handle launching `Xvfb`, starting video recording, starting `android-device-hub`, waiting for the emulator display stream, and collecting logs/screenshots/videos on teardown.
+For most UI features (toolbar buttons, multi-touch gestures, settings panels, window state), add a helper method to [`DeviceHubUiTest.kt`](DeviceHubUiTest.kt) and invoke it inside `verifyDeviceHubUiInteractions()`. All steps in `verifyDeviceHubUiInteractions()` share a single `Xvfb` + `ffmpeg` + `android-device-hub` session and are recorded into a single combined `device_hub_video_*.mp4`.
 
-#### Built-in Helpers in `DeviceHubUiTest`
+#### Built-in Helpers in `UiTestBase`
 
 | Helper | Description |
 | :--- | :--- |
@@ -62,14 +73,13 @@ For most UI features (toolbar buttons, multi-touch gestures, settings panels, wi
 | `cdp().call("Domain.method", json)` | Sends any raw Chrome DevTools Protocol command (`Input.*`, `Page.*`, `DOM.*`, etc.). |
 | `waitForUi("jsBooleanExpr", timeoutMs)` | Polls until the JavaScript expression evaluates to `true` in the UI (attaches a screenshot on timeout). |
 | `eventually("description") { ... }` | Polls until a host/device condition returns `true` (attaches a screenshot on timeout). |
-| `attachScreenshot("tag_name")` | Captures a PNG screenshot of the UI and attaches it to Tradefed logs as `device_hub_<tag_name>`. |
+| `attachScreenshot("tag_name")` | Captures a PNG screenshot of the UI and attaches it to Tradefed logs as `${logPrefix}_<tag_name>`. |
 | `getDevice().executeShellCommand("...")` | Runs an `adb shell` command on the connected emulator to set up or verify device state. |
 
-#### Example: Adding a New Test Method
+#### Example: Adding a New Step
 
 ```kotlin
-@Test
-fun powerButtonTogglesInteractiveState() {
+private fun powerButtonTogglesInteractiveState() {
   // 1. Ensure the device screen starts awake.
   getDevice().executeShellCommand("input keyevent KEYCODE_WAKEUP")
   eventually("screen is interactive") {
@@ -89,7 +99,6 @@ fun powerButtonTogglesInteractiveState() {
   getDevice().executeShellCommand("input keyevent KEYCODE_WAKEUP")
 }
 ```
-
 ---
 
 ### Option B: Add a New Test Class Under `ets/ui/`
