@@ -1,6 +1,11 @@
+load("@goldfish_build//rules:zip.bzl", "parallel_pkg_zip")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
-load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
 load(":ets.bzl", "ets_plan")
+
+exports_files([
+    "android_ets_cfg.py",
+    "external_ets_cfg.py",
+])
 
 pkg_files(
     name = "e2e_host_tests",
@@ -43,6 +48,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/telnet:pkg",
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
         "//ets/java/com/android/tools/e2etests/wifi:pkg",
+        "//ets/ui:pkg",
         "@animation_app//file",
     ],
     # Bazel builds the apks in with read-only permissions, which tradefed does
@@ -76,7 +82,7 @@ pkg_filegroup(
     ],
 )
 
-pkg_zip(
+parallel_pkg_zip(
     name = "android_ets_zip",
     testonly = True,
     srcs = [

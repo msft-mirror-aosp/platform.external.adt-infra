@@ -13,6 +13,7 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
     # b/553593925, revert if happens again
     # btw, to trigger a test, bump b to 6: b = 5
     no_snapshot = False
+    skip_relaunch = bool(ns.skip_snapshot_relaunch)
 
     ret =  [
         agent_common.goldfish_fetch(ns),
@@ -28,6 +29,12 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         gf = agent_common.goldfish_grpc(ns)
         gf.goldfish.args.append("-no-snapshot")
         ret.append(gf)
+    elif skip_relaunch:
+        ret.extend([
+            agent_common.junit_xml_result_ets_close(ns),
+            agent_common.junit_xml_result(ns),
+            agent_common.goldfish_grpc(ns),
+        ])
     else:
         ret.extend([
             agent_common.junit_xml_result_ets_snapshot(ns),
@@ -100,7 +107,7 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         agent_common.ets(ns),
         agent_common.ets_close(ns),
     ])
-    if not no_snapshot:
+    if not no_snapshot and not skip_relaunch:
         ret.extend([
             agent_common.goldfish_load_snapshot_grpc(ns),
             agent_common.ets_snapshot(ns),
