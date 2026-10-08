@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs DeviceHubUiTest locally against an already-running emulator on gLinux, macOS, or Windows (Git Bash/MSYS).
+# Runs the //ets/ui tests (DeviceHubUiTest, SnapshotUiTest, WebGlAquariumUiTest, MapsUiTest) locally against an already-running emulator on gLinux, macOS, or Windows (Git Bash/MSYS).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -35,10 +35,16 @@ case "$(uname -s)" in
     "${WORK_DIR}/android-ets/tools/ets-tradefed.bat" run commandAndExit ets \
       --include-filter DeviceHubUiTest \
       --include-filter SnapshotUiTest \
+      --include-filter WebGlAquariumUiTest \
+      --include-filter MapsUiTest \
       --module-arg "DeviceHubUiTest:set-option:device_hub_path:${REPO_ROOT}/${HUB_DIR}" \
       --module-arg "DeviceHubUiTest:set-option:display_dir:${REPO_ROOT}/tools/emulator/testlib/display" \
       --module-arg "SnapshotUiTest:set-option:device_hub_path:${REPO_ROOT}/${HUB_DIR}" \
       --module-arg "SnapshotUiTest:set-option:display_dir:${REPO_ROOT}/tools/emulator/testlib/display" \
+      --module-arg "WebGlAquariumUiTest:set-option:device_hub_path:${REPO_ROOT}/${HUB_DIR}" \
+      --module-arg "WebGlAquariumUiTest:set-option:display_dir:${REPO_ROOT}/tools/emulator/testlib/display" \
+      --module-arg "MapsUiTest:set-option:device_hub_path:${REPO_ROOT}/${HUB_DIR}" \
+      --module-arg "MapsUiTest:set-option:display_dir:${REPO_ROOT}/tools/emulator/testlib/display" \
       "$@"
     ;;
   *)

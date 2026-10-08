@@ -79,6 +79,11 @@ _KNOWN_FLAGS = {
     "abi": lambda p: p.add_argument(
         "--abi", help="ABI to run the tests as", required=True
     ),
+    "avd_ini": lambda p: p.add_argument(
+        "--avd_ini",
+        default="",
+        help="Extra AVD config.ini entries (comma-separated key=value), e.g. hw.lcd.width=1080",
+    ),
     "build_tools_extract_dir": lambda p: p.add_argument(
         "--build_tools_extract_dir",
         type=dir_type,
@@ -178,6 +183,16 @@ _KNOWN_FLAGS = {
         "--skip_snapshot_relaunch",
         action="store_true",
         help="If true, do not relaunch the emulator for a second ETS_SNAPSHOT pass after ets_close",
+    ),
+    "snapshot_relaunch_rounds": lambda p: p.add_argument(
+        "--snapshot_relaunch_rounds",
+        type=int,
+        default=0,
+        help=(
+            "If set, run the ETS plan with snapshot_phase=cold_boot, then this many times: shut the"
+            " emulator down through gRPC (which saves its snapshot), relaunch it from the snapshot"
+            " and run the plan again with snapshot_phase=load_<N>. Replaces the ETS_SNAPSHOT pass."
+        ),
     ),
     "tradefed_args": lambda p: p.add_argument(
         "--tradefed_args",

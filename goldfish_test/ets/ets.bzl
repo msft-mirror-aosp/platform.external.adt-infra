@@ -429,7 +429,9 @@ def ets_host_test(name, srcs, class_name, description = "", extra_apks = None, *
         extra_apks: Optional list of apks to install on the device for the test.
         **kwargs: Additional arguments to pass to the kt_jvm_test target.
     """
-    output_file = srcs[0].replace(".kt", ".config")
+    # The Tradefed module is named after the test class, not after srcs[0]: srcs may list helper
+    # sources (e.g. RenderingUiTestBase.kt) before the test class.
+    output_file = class_name.rsplit(".", 1)[-1] + ".config"
     _ets_host_module_config(
         name = name + "_config",
         apks = extra_apks or [],

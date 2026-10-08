@@ -1,9 +1,11 @@
 @echo off
-REM Runs the Android Device Hub UI ETS sequence (@goldfish_test//ets/ui:ui) locally on Windows the
-REM way run_local.sh does on gLinux and macOS (android_ets_cfg.py with --skip_snapshot_relaunch):
+REM Runs the cold boot part of the Android Device Hub UI ETS sequence (@goldfish_test//ets/ui:ui)
+REM locally on Windows the way run_local.sh does on gLinux and macOS (android_ets_cfg.py):
 REM builds the emulator from this checkout, cold boots it on the same system image with the same
-REM AVD, flags and device setup, runs DeviceHubUiTest and SnapshotUiTest through run_external.bat
-REM (which launches the Android Device Hub UI against it), and closes it with CloseEmulatorTest.
+REM AVD, flags and device setup, runs DeviceHubUiTest, SnapshotUiTest, WebGlAquariumUiTest and
+REM MapsUiTest through run_external.bat (which launches the Android Device Hub UI against it), and closes it
+REM with CloseEmulatorTest. It does not relaunch the emulator from its snapshot afterwards, so the
+REM snapshot phases of the sequence (--snapshot_relaunch_rounds) do not run.
 REM
 REM Extra arguments are passed on to Tradefed, e.g.
 REM   run_local.bat --module-arg SnapshotUiTest:set-option:cdp_video:true
@@ -82,10 +84,11 @@ if not exist "%WORK_DIR%\emulator\emulator.exe" (
   exit /b 1
 )
 
-REM The AVD agent_common.avd_ets creates: only a UTF-8 display name and 8G of RAM are set.
+REM The AVD agent_common.avd_ets creates for the //ets/ui plans: a UTF-8 display name, 8G of RAM and
+REM the phone sized screen of --avd_ini in ets/ui/BUILD.bazel.
 set "ANDROID_AVD_HOME=%WORK_DIR%\avd"
 > "%ANDROID_AVD_HOME%\ets.ini" echo path=%ANDROID_AVD_HOME%\ets.avd
-powershell -NoProfile -Command "[IO.File]::WriteAllLines('%ANDROID_AVD_HOME%\ets.avd\config.ini', @(('avd.ini.displayname=UTF8' + [char]::ConvertFromUtf32(0x1F916)), 'hw.ramSize=8192', 'image.sysdir.1=%SYSDIR%'))"
+powershell -NoProfile -Command "[IO.File]::WriteAllLines('%ANDROID_AVD_HOME%\ets.avd\config.ini', @(('avd.ini.displayname=UTF8' + [char]::ConvertFromUtf32(0x1F916)), 'hw.ramSize=8192', 'hw.lcd.width=1080', 'hw.lcd.height=2400', 'hw.lcd.density=420', 'image.sysdir.1=%SYSDIR%'))"
 
 for /f %%T in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set "OUT_DIR=%REPO_ROOT%\out\ets_ui\%%T"
 mkdir "%OUT_DIR%"
@@ -133,7 +136,7 @@ if "!EXIT_CODE!"=="0" (
   ) do adb -s %SERIAL% shell %%~C
 
   REM The ets step: the same Tradefed arguments agent_common.ets passes, plus the UI test modules.
-  echo === Running DeviceHubUiTest and SnapshotUiTest on %SERIAL%
+  echo === Running DeviceHubUiTest, SnapshotUiTest, WebGlAquariumUiTest and MapsUiTest on %SERIAL%
   call "%SCRIPT_DIR%run_external.bat" -s %SERIAL% --abi x86_64 --retry-strategy RETRY_ANY_FAILURE --max-testcase-run-count 3 %*
   if errorlevel 1 set "EXIT_CODE=1"
 )

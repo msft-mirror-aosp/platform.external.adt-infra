@@ -14,6 +14,9 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
     # btw, to trigger a test, bump b to 6: b = 5
     no_snapshot = False
     skip_relaunch = bool(ns.skip_snapshot_relaunch)
+    # Cold boot pass, then this many {shut down (saves the snapshot), relaunch from the snapshot,
+    # pass} rounds, instead of the single ETS_SNAPSHOT pass.
+    relaunch_rounds = int(ns.snapshot_relaunch_rounds or 0)
 
     ret =  [
         agent_common.goldfish_fetch(ns),
@@ -21,7 +24,19 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         agent_common.android_home(ns),
         agent_common.avd_ets(ns),
     ]
-    if no_snapshot:
+    if relaunch_rounds:
+        ret.extend([
+            agent_common.junit_xml_result_ets_close(ns),
+            agent_common.junit_xml_result(ns),
+        ])
+        for r in range(1, relaunch_rounds + 1):
+            ret.append(agent_common.junit_xml_result_for(ns, agent_common.ets_load_id(r)))
+            if r < relaunch_rounds:
+                ret.append(
+                    agent_common.junit_xml_result_for(ns, agent_common.ets_close_load_id(r))
+                )
+        ret.append(agent_common.goldfish_grpc(ns))
+    elif no_snapshot:
         ret.extend([
             agent_common.junit_xml_result_ets_close(ns),
             agent_common.junit_xml_result(ns),
@@ -104,10 +119,24 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         agent_common.adb(
             ns, ["shell", "am", "wait-for-broadcast-idle"], timeout_seconds=180
         ),
-        agent_common.ets(ns),
+        agent_common.ets_cold_boot_phase(ns) if relaunch_rounds else agent_common.ets(ns),
         agent_common.ets_close(ns),
     ])
-    if not no_snapshot and not skip_relaunch:
+    if relaunch_rounds:
+        for r in range(1, relaunch_rounds + 1):
+            ret.extend([
+                agent_common.goldfish_load_phase(ns, r),
+                agent_common.ets_load_phase(ns, r),
+            ])
+            if r < relaunch_rounds:
+                ret.append(
+                    agent_common.ets_close(
+                        ns,
+                        id=agent_common.ets_close_load_id(r),
+                        goldfish_id=agent_common.goldfish_load_id(r),
+                    )
+                )
+    elif not no_snapshot and not skip_relaunch:
         ret.extend([
             agent_common.goldfish_load_snapshot_grpc(ns),
             agent_common.ets_snapshot(ns),

@@ -16,13 +16,13 @@ esac
 EXTRA_ARGS=()
 for arg in "$@"; do
   if [[ "${arg}" == "--cdp-video" ]]; then
-    EXTRA_ARGS+=("--test_arg=--tradefed_args=--include-filter,DeviceHubUiTest,--include-filter,SnapshotUiTest,--module-arg,DeviceHubUiTest:set-option:cdp_video:true,--module-arg,SnapshotUiTest:set-option:cdp_video:true")
+    EXTRA_ARGS+=("--test_arg=--tradefed_args=--include-filter,DeviceHubUiTest,--include-filter,SnapshotUiTest,--include-filter,WebGlAquariumUiTest,--include-filter,MapsUiTest,--module-arg,DeviceHubUiTest:set-option:cdp_video:true,--module-arg,SnapshotUiTest:set-option:cdp_video:true,--module-arg,WebGlAquariumUiTest:set-option:cdp_video:true,--module-arg,MapsUiTest:set-option:cdp_video:true")
   else
     EXTRA_ARGS+=("${arg}")
   fi
 done
 if [[ "${CDP_VIDEO:-0}" == "1" || "${CDP_VIDEO:-false}" == "true" ]]; then
-  EXTRA_ARGS+=("--test_arg=--tradefed_args=--include-filter,DeviceHubUiTest,--include-filter,SnapshotUiTest,--module-arg,DeviceHubUiTest:set-option:cdp_video:true,--module-arg,SnapshotUiTest:set-option:cdp_video:true")
+  EXTRA_ARGS+=("--test_arg=--tradefed_args=--include-filter,DeviceHubUiTest,--include-filter,SnapshotUiTest,--include-filter,WebGlAquariumUiTest,--include-filter,MapsUiTest,--module-arg,DeviceHubUiTest:set-option:cdp_video:true,--module-arg,SnapshotUiTest:set-option:cdp_video:true,--module-arg,WebGlAquariumUiTest:set-option:cdp_video:true,--module-arg,MapsUiTest:set-option:cdp_video:true")
 fi
 
 cd "${REPO_ROOT}"
@@ -33,4 +33,4 @@ exec "${BAZEL}" test \
   --config=ants \
   --config=sponge \
   @goldfish_test//ets/ui:ui \
-  "${EXTRA_ARGS[@]}"
+  ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}

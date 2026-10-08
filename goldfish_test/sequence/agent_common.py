@@ -104,6 +104,8 @@ def avd_ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
         "avd.ini.displayname=UTF8🤖",
         "hw.ramSize=8192",  # Make sure we do not run under low memory conditions.
     ]
+    # Plans can add entries, e.g. the //ets/ui plans set a phone sized screen.
+    ret.avd.avd_config_ini.extend(e for e in (ns.avd_ini or "").split(",") if e)
     return ret
 
 
@@ -147,6 +149,15 @@ def _ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
         ),
     )
     return ac
+
+
+# Host UI test modules under //ets/ui that take the device hub and display options.
+_UI_TEST_MODULES = (
+    "DeviceHubUiTest",
+    "SnapshotUiTest",
+    "WebGlAquariumUiTest",
+    "MapsUiTest",
+)
 
 
 def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
@@ -193,7 +204,7 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             ]
         )
     if ns.device_hub_dir:
-        for ui_mod in ("DeviceHubUiTest", "SnapshotUiTest"):
+        for ui_mod in _UI_TEST_MODULES:
             ac.tradefed.args.extend(
                 [
                     "--module-arg",
@@ -201,7 +212,7 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
                 ]
             )
     if ns.display_dir:
-        for ui_mod in ("DeviceHubUiTest", "SnapshotUiTest"):
+        for ui_mod in _UI_TEST_MODULES:
             ac.tradefed.args.extend(
                 [
                     "--module-arg",
@@ -222,9 +233,12 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
-def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+def ets_close(
+    ns: argparse.Namespace, id: str = "ets_close", goldfish_id: str = "goldfish"
+) -> test_sequencer_pb2.AgentConfig:
+    """Shuts the emulator started by goldfish_id down through gRPC, which saves its snapshot."""
     ac = _ets(ns)
-    ac.id = "ets_close"
+    ac.id = id
     # The test closes the emulator so tradefed cannot connect to it via adb or an error will be
     # raised when it closes.
     imps = [i for i in ac.imports if i.src != "serial_number"]
@@ -245,7 +259,7 @@ def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ac.imports.extend(
         [
             test_sequencer_pb2.Import(
-                id="goldfish",
+                id=goldfish_id,
                 src="serial_number",
                 dst="args",
                 re_replace="--module-arg=CloseEmulatorTest:set-option:emu_serial:${1}",
@@ -289,6 +303,77 @@ def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     for imp in ac.imports:
         if imp.id == "goldfish":
             imp.id = "goldfish_snapshot"
+    return ac
+
+
+# //ets/ui modules that run once per phase of the snapshot relaunch sequence (snapshot_phase option).
+_SNAPSHOT_UI_TEST_MODULES = (
+    "SnapshotUiTest",
+    "WebGlAquariumUiTest",
+    "MapsUiTest",
+)
+
+
+def _insert_ets_args(ac: test_sequencer_pb2.AgentConfig, args: list[str]):
+    """Inserts args before the trailing --test-arg of ets(), whose value is imported."""
+    tf_args = ac.tradefed.args[:]
+    del ac.tradefed.args[:]
+    ac.tradefed.args.extend(tf_args[:-1] + args + tf_args[-1:])
+
+
+def _snapshot_phase_args(phase: str) -> list[str]:
+    ret = []
+    for mod in _SNAPSHOT_UI_TEST_MODULES:
+        ret.extend(["--module-arg", f"{mod}:set-option:snapshot_phase:{phase}"])
+    return ret
+
+
+def ets_cold_boot_phase(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
+    """The ETS pass on the cold booted emulator of the snapshot relaunch sequence."""
+    ac = ets(ns)
+    _insert_ets_args(ac, _snapshot_phase_args("cold_boot"))
+    return ac
+
+
+def goldfish_load_id(round: int) -> str:
+    return f"goldfish_load_{round}"
+
+
+def ets_load_id(round: int) -> str:
+    return f"ets_load_{round}"
+
+
+def ets_close_load_id(round: int) -> str:
+    return f"ets_close_load_{round}"
+
+
+def goldfish_load_phase(
+    ns: argparse.Namespace, round: int
+) -> test_sequencer_pb2.AgentConfig:
+    """Relaunches the emulator, which boots from the snapshot it saved when it was shut down."""
+    return goldfish_load_snapshot_grpc(ns, id=goldfish_load_id(round))
+
+
+def ets_load_phase(
+    ns: argparse.Namespace, round: int
+) -> test_sequencer_pb2.AgentConfig:
+    """The ETS pass after the round-th relaunch of the emulator from its snapshot."""
+    ac = ets(ns)
+    ac.id = ets_load_id(round)
+    _insert_ets_args(
+        ac,
+        [
+            "--suite-name",
+            f"ETS_LOAD_{round}",
+            # Not about snapshots; covered by the cold boot pass.
+            "--exclude-filter",
+            "DeviceHubUiTest",
+        ]
+        + _snapshot_phase_args(f"load_{round}"),
+    )
+    for imp in ac.imports:
+        if imp.id == "goldfish":
+            imp.id = goldfish_load_id(round)
     return ac
 
 
@@ -379,10 +464,10 @@ def goldfish_grpc(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
 
 
 def goldfish_load_snapshot_grpc(
-    ns: argparse.Namespace,
+    ns: argparse.Namespace, id: str = "goldfish_snapshot"
 ) -> test_sequencer_pb2.AgentConfig:
     ac = goldfish_grpc(ns)
-    ac.id = "goldfish_snapshot"
+    ac.id = id
     return ac
 
 
@@ -418,6 +503,22 @@ def junit_xml_result_ets_close(
         imports=[
             test_sequencer_pb2.Import(
                 id="ets_close",
+                src="results_dir",
+            ),
+        ],
+    )
+
+
+def junit_xml_result_for(
+    ns: argparse.Namespace, agent_id: str
+) -> test_sequencer_pb2.AgentConfig:
+    """Reports the results of the tradefed agent agent_id."""
+    return test_sequencer_pb2.AgentConfig(
+        id=f"junit_xml_{agent_id}",
+        junit_xml_result=junit_xml_result_pb2.JUnitXMLResult(),
+        imports=[
+            test_sequencer_pb2.Import(
+                id=agent_id,
                 src="results_dir",
             ),
         ],
