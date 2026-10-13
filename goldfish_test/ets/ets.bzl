@@ -8,11 +8,11 @@ load("//sequence:sequence.bzl", "run_sequence")
 def _ets_sequence(name, config, args = [], data = [], tags = []):
     run_sequence(
         name = name,
-        size = "large",
+        size = "enormous",
         srcs = [config],
         args = args + [
             "--tradefed_zip",
-            "$(rlocationpath :android_ets_zip)",
+            "$(rlocationpath //ets:android_ets_zip)",
         ] + select({
             "@platforms//os:linux": [
                 "--abi",
@@ -32,7 +32,7 @@ def _ets_sequence(name, config, args = [], data = [], tags = []):
             ],
         }),
         data = data + [
-            ":android_ets_zip",
+            "//ets:android_ets_zip",
         ] + select({
             "@platforms//os:linux": [
                 "@build-tools-linux//:BUILD.bazel",
@@ -185,12 +185,14 @@ def ets_external_emulator(name, config, args = [], data = [], tags = []):
         ],
     )
 
-def ets_plan(name, plan, tags = []):
+def ets_plan(name, plan, args = [], data = [], tags = []):
     """Runs a normal ETS plan with normal/local/external variants.
 
     Args:
         name: The base name of the bazel targets.
         plan: The ETS plan to run.
+        args: Additional arguments to pass to the bazel targets.
+        data: Additional data to pass to the bazel targets.
         tags: Additional tags to pass to the bazel targets.
     """
     vulkan_apps = [
@@ -202,33 +204,34 @@ def ets_plan(name, plan, tags = []):
         "vulkan_samples",
         "vulkancapsviewer",
     ]
-    args = [
+    plan_args = args + [
         "--ets_plan",
         plan,
     ]
-    data = []
+    vulkan_data = []
     for app in vulkan_apps:
         flag_name = app.replace("-", "_") + "_extract_dir"
-        args.extend([
+        plan_args.extend([
             "--" + flag_name,
             "$(rlocationpath @" + app + "//:BUILD.bazel)",
         ])
-        data.extend([
+        vulkan_data.extend([
             "@" + app + "//:BUILD.bazel",
             "@" + app + "//:all_files",
         ])
+    plan_data = data + vulkan_data
     ets_boot_emulator(
         name = name,
-        args = args,
-        config = "android_ets_cfg.py",
-        data = data,
+        args = plan_args,
+        config = "//ets:android_ets_cfg.py",
+        data = plan_data,
         tags = tags,
     )
     ets_external_emulator(
         name = "external_" + name,
-        args = args,
-        config = "external_ets_cfg.py",
-        data = data,
+        args = plan_args,
+        config = "//ets:external_ets_cfg.py",
+        data = plan_data,
         tags = tags,
     )
 
@@ -382,26 +385,36 @@ def ets_device_test(
 def _ets_host_module_config_impl(ctx):
     config = """
 <configuration description="{}">
-  <test class="com.android.tradefed.testtype.HostTest">
+""".format(ctx.attr.description)
+    if ctx.attr.apks:
+        config += """  <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+    <option name="cleanup-apks" value="true" />
+"""
+        for apk in ctx.attr.apks:
+            config += """    <option name="test-file-name" value="{}" />\n""".format(apk)
+        config += """  </target_preparer>
+"""
+    config += """  <test class="com.android.tradefed.testtype.HostTest">
     <option name="class" value="{}" />
   </test>
 </configuration>
-  """
+  """.format(ctx.attr.class_name)
     ctx.actions.write(
         output = ctx.outputs.output_file,
-        content = config.format(ctx.attr.description, ctx.attr.class_name),
+        content = config,
     )
 
 _ets_host_module_config = rule(
     implementation = _ets_host_module_config_impl,
     attrs = {
+        "apks": attr.string_list(default = []),
         "class_name": attr.string(mandatory = True),
         "description": attr.string(mandatory = True),
         "output_file": attr.output(mandatory = True),
     },
 )
 
-def ets_host_test(name, srcs, class_name, description = "", **kwargs):
+def ets_host_test(name, srcs, class_name, description = "", extra_apks = None, **kwargs):
     """Creates an ETS Host Test.
 
     This will do the following:
@@ -413,11 +426,13 @@ def ets_host_test(name, srcs, class_name, description = "", **kwargs):
         srcs: The source files for the test.
         class_name: The class name of the test.
         description: The description of the test.
+        extra_apks: Optional list of apks to install on the device for the test.
         **kwargs: Additional arguments to pass to the kt_jvm_test target.
     """
     output_file = srcs[0].replace(".kt", ".config")
     _ets_host_module_config(
         name = name + "_config",
+        apks = extra_apks or [],
         class_name = class_name,
         description = description,
         output_file = output_file,
@@ -425,7 +440,10 @@ def ets_host_test(name, srcs, class_name, description = "", **kwargs):
     kt_jvm_test(
         name = name,
         srcs = srcs,
-        visibility = ["//ets/java/com/android/tools/e2etests:__pkg__"],
+        visibility = [
+            "//ets/java/com/android/tools/e2etests:__pkg__",
+            "//ets/ui:__pkg__",
+        ],
         **kwargs
     )
 

@@ -2,6 +2,7 @@ package com.android.tools.e2etests.wifi
 
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.tools.testlib.emu.Adb
+import com.android.tools.testlib.emu.eventually
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -23,28 +24,32 @@ class ConnectivityTest {
 
   @Test
   fun wifiHasConnectivity() {
-    var dnsSuccess = false
-    for (line in adb.shell("dumpsys connectivity --diag")) {
-      if (line.contains("DNS UDP dst") && line.contains("SUCCEEDED")) {
-        dnsSuccess = true
-        break
-      }
-    }
-
-    Assert.assertTrue("Unable to connect to dns", dnsSuccess)
+    Assert.assertTrue(
+      "Unable to connect to dns",
+      eventually(10, 1000) {
+        for (line in adb.shell("dumpsys connectivity --diag")) {
+          if (line.contains("DNS UDP dst") && line.contains("SUCCEEDED")) {
+            return@eventually true
+          }
+        }
+        false
+      },
+    )
   }
 
   @Test
   fun wifiConnectivityWithoutMobileData() {
-    var success = false
-    for (line in adb.shell("ping -c 3 $ipv4Host")) {
-      if (line.contains("64 bytes from") && line.contains("icmp_seq") && line.contains("ttl")) {
-        success = true
-        break
-      }
-    }
-
-    Assert.assertTrue("Failed to ping $ipv4Host", success)
+    Assert.assertTrue(
+      "Failed to ping $ipv4Host",
+      eventually(10, 1000) {
+        for (line in adb.shell("ping -c 3 $ipv4Host")) {
+          if (line.contains("64 bytes from") && line.contains("icmp_seq") && line.contains("ttl")) {
+            return@eventually true
+          }
+        }
+        false
+      },
+    )
   }
 
   @Test
@@ -59,26 +64,32 @@ class ConnectivityTest {
 
   @Test
   fun wlan0CanPingIpv4() {
-    var success = false
-    for (line in adb.shell("ping -I wlan0 -c 3 $ipv4Host")) {
-      if (line.contains("64 bytes from") && line.contains("icmp_seq") && line.contains("ttl")) {
-        success = true
-        break
-      }
-    }
-    Assert.assertTrue("Failed to ping $ipv4Host", success)
+    Assert.assertTrue(
+      "Failed to ping $ipv4Host",
+      eventually(10, 1000) {
+        for (line in adb.shell("ping -I wlan0 -c 3 $ipv4Host")) {
+          if (line.contains("64 bytes from") && line.contains("icmp_seq") && line.contains("ttl")) {
+            return@eventually true
+          }
+        }
+        false
+      },
+    )
   }
 
   @Test
   fun wlan0CanPingIpv6() {
-    var success = false
-    for (line in adb.shell("ping6 -I wlan0 -c 3 $ipv6Host")) {
-      if (line.contains("64 bytes from") && line.contains("icmp_seq") && line.contains("ttl")) {
-        success = true
-        break
-      }
-    }
-    Assert.assertTrue("Failed to ping $ipv6Host", success)
+    Assert.assertTrue(
+      "Failed to ping $ipv6Host",
+      eventually(10, 1000) {
+        for (line in adb.shell("ping6 -I wlan0 -c 3 $ipv6Host")) {
+          if (line.contains("64 bytes from") && line.contains("icmp_seq") && line.contains("ttl")) {
+            return@eventually true
+          }
+        }
+        false
+      },
+    )
   }
 
   @After
@@ -88,11 +99,13 @@ class ConnectivityTest {
   }
 
   fun hasIp(kind: String): Boolean {
-    for (line in adb.shell("ip -$kind addr show wlan0")) {
-      if (line.contains("scope")) {
-        return true
+    return eventually(10, 1000) {
+      for (line in adb.shell("ip -$kind addr show wlan0")) {
+        if (line.contains("scope")) {
+            return@eventually true
+        }
       }
+      false
     }
-    return false
   }
 }

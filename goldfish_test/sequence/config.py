@@ -91,6 +91,16 @@ _KNOWN_FLAGS = {
         help="Path to the extracted cts-verifier",
         required=True,
     ),
+    "device_hub_dir": lambda p: p.add_argument(
+        "--device_hub_dir",
+        type=path_type,
+        help="Path to the extracted android-device-hub directory",
+    ),
+    "display_dir": lambda p: p.add_argument(
+        "--display_dir",
+        type=dir_type,
+        help="Path to the display testlib directory (Xvfb and ffmpeg)",
+    ),
     "emulator_access_json": lambda p: p.add_argument(
         "--emulator_access_json",
         type=path_type,
@@ -163,6 +173,11 @@ _KNOWN_FLAGS = {
         type=dir_type,
         help="Path to the extracted platform tools",
         required=True,
+    ),
+    "skip_snapshot_relaunch": lambda p: p.add_argument(
+        "--skip_snapshot_relaunch",
+        action="store_true",
+        help="If true, do not relaunch the emulator for a second ETS_SNAPSHOT pass after ets_close",
     ),
     "tradefed_args": lambda p: p.add_argument(
         "--tradefed_args",

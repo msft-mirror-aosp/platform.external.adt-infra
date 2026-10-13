@@ -110,56 +110,56 @@ class BatteryTest {
 
   @Test
   fun setAndGetBattery(@TestParameter testCase: TestCase) {
-      // The Android side battery status is updated via a broadcast receiver.
-      // This code will get one immediate update, followed by another then the grpc call is made.
-      val latch = CountDownLatch(2)
-      var androidBattery: AndroidBattery? = null
-      val batteryReceiver =
-        object : BroadcastReceiver() {
-          override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == Intent.ACTION_BATTERY_CHANGED) {
-              val level: Int = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-              val health: Int = intent.getIntExtra(BatteryManager.EXTRA_HEALTH, -1)
-              val status: Int = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-              val isPresent: Boolean = intent.getBooleanExtra(BatteryManager.EXTRA_PRESENT, false)
-              val plugged: Int = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
-              androidBattery = AndroidBattery(level, health, status, isPresent, plugged)
+    val latch = CountDownLatch(1)
+    val wantBattery =
+      AndroidBattery(
+        testCase.chargeLevel,
+        healthMap[testCase.health]!!,
+        statusMap[testCase.status]!!,
+        testCase.isPresent,
+        pluggedMap[testCase.charger]!!,
+      )
+    val batteryReceiver =
+      object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+          if (intent?.action == Intent.ACTION_BATTERY_CHANGED) {
+            val level: Int = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val health: Int = intent.getIntExtra(BatteryManager.EXTRA_HEALTH, -1)
+            val status: Int = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+            val isPresent: Boolean = intent.getBooleanExtra(BatteryManager.EXTRA_PRESENT, false)
+            val plugged: Int = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+            val gotBattery = AndroidBattery(level, health, status, isPresent, plugged)
+            // The gRPC call may result in multiple ACTION_BATTERY_CHANGED broadcasts.
+            // Only countDown the latch if we get the expected battery state.
+            if (gotBattery == wantBattery) {
               latch.countDown()
             }
           }
         }
-
-      val context = InstrumentationRegistry.getInstrumentation().targetContext
-      context.registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-
-      EmulatorController.defaultDeadline()
-        .setBattery(
-          BatteryState.newBuilder()
-            .setStatus(testCase.status)
-            .setHealth(testCase.health)
-            .setCharger(testCase.charger)
-            .setHasBattery(hasBattery)
-            .setIsPresent(testCase.isPresent)
-            .setChargeLevel(testCase.chargeLevel)
-            .build()
-        )
-
-      val resp = EmulatorController.defaultDeadline().getBattery(Empty.getDefaultInstance())
-      Assert.assertEquals(testCase.status, resp.getStatus())
-      Assert.assertEquals(testCase.health, resp.getHealth())
-      Assert.assertEquals(hasBattery, resp.getHasBattery())
-      Assert.assertEquals(testCase.isPresent, resp.getIsPresent())
-      Assert.assertEquals(testCase.chargeLevel, resp.getChargeLevel())
-
-      val success = latch.await(5, TimeUnit.SECONDS)
-      Assert.assertTrue("Timed out waiting for battery receiver", success)
-
-      if (androidBattery != null) {
-        Assert.assertEquals(testCase.chargeLevel, androidBattery.level)
-        Assert.assertEquals(healthMap[testCase.health], androidBattery.health)
-        Assert.assertEquals(statusMap[testCase.status], androidBattery.status)
-        Assert.assertEquals(testCase.isPresent, androidBattery.isPresent)
-        Assert.assertEquals(pluggedMap[testCase.charger], androidBattery.plugged)
       }
-    }
+
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+    context.registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+    EmulatorController.defaultDeadline()
+      .setBattery(
+        BatteryState.newBuilder()
+          .setStatus(testCase.status)
+          .setHealth(testCase.health)
+          .setCharger(testCase.charger)
+          .setHasBattery(hasBattery)
+          .setIsPresent(testCase.isPresent)
+          .setChargeLevel(testCase.chargeLevel)
+          .build()
+      )
+
+    val resp = EmulatorController.defaultDeadline().getBattery(Empty.getDefaultInstance())
+    Assert.assertEquals(testCase.status, resp.getStatus())
+    Assert.assertEquals(testCase.health, resp.getHealth())
+    Assert.assertEquals(hasBattery, resp.getHasBattery())
+    Assert.assertEquals(testCase.isPresent, resp.getIsPresent())
+    Assert.assertEquals(testCase.chargeLevel, resp.getChargeLevel())
+
+    val success = latch.await(15, TimeUnit.SECONDS)
+    Assert.assertTrue("Timed out waiting for battery receiver", success)
+  }
 }
