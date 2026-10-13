@@ -31,6 +31,7 @@ ALL_MODULES = [
     "DeqpRunnerTest",
     "DeviceHubUiTest",
     "DisplayNameTest",
+    "FoldableDisplayTest",
     "InputTest",
     "MapsUiTest",
     "NetsimDaemonTest",
@@ -54,6 +55,8 @@ EXCLUSIONS = {
         "MapsUiTest": [],
         "SnapshotUiTest": [],
         "WebGlAquariumUiTest": [],
+        # Needs a foldable AVD configuration (see //ets/foldable).
+        "FoldableDisplayTest": [],
         # Not yet implemented on emu-next.
         "AvdTest": [],
         "CallTest": [],
@@ -68,6 +71,8 @@ EXCLUSIONS = {
         "MapsUiTest": [],
         "SnapshotUiTest": [],
         "WebGlAquariumUiTest": [],
+        # Needs a foldable AVD configuration (see //ets/foldable).
+        "FoldableDisplayTest": [],
         # These tests experience timeouts.
         "CallTest": [
             "com.android.tools.e2etests.call.CallTest#acceptCall",

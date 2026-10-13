@@ -11,5 +11,7 @@ fun getHostGrpcChannel(serialNumber: String): io.grpc.ManagedChannel {
 
 fun getHostGrpcChannel(discovery: Discovery): io.grpc.ManagedChannel {
   val port = discovery!!.discoveryIni["grpc.port"]
-  return Grpc.newChannelBuilder("localhost:" + port, InsecureChannelCredentials.create()).build()
+  return Grpc.newChannelBuilder("localhost:" + port, InsecureChannelCredentials.create())
+    .maxInboundMessageSize(64 * 1024 * 1024)
+    .build()
 }

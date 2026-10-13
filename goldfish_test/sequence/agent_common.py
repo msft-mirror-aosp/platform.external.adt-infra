@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import re
 
 from test_seq.proto import adb_pb2
 from test_seq.proto import android_home_pb2
@@ -105,7 +106,11 @@ def avd_ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
         "hw.ramSize=8192",  # Make sure we do not run under low memory conditions.
     ]
     # Plans can add entries, e.g. the //ets/ui plans set a phone sized screen.
-    ret.avd.avd_config_ini.extend(e for e in (ns.avd_ini or "").split(",") if e)
+    # Split only on commas followed by key=value so comma-separated values like
+    # hw.sensor.posture_list=1, 2, 3 stay intact.
+    ret.avd.avd_config_ini.extend(
+        e for e in re.split(r",(?=[A-Za-z0-9_.]+\s*=)", ns.avd_ini or "") if e
+    )
     return ret
 
 
@@ -212,7 +217,7 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
                 ]
             )
     if ns.display_dir:
-        for ui_mod in _UI_TEST_MODULES:
+        for ui_mod in (*_UI_TEST_MODULES, "FoldableDisplayTest"):
             ac.tradefed.args.extend(
                 [
                     "--module-arg",

@@ -443,6 +443,7 @@ def ets_host_test(name, srcs, class_name, description = "", extra_apks = None, *
         name = name,
         srcs = srcs,
         visibility = [
+            "//ets/foldable:__pkg__",
             "//ets/java/com/android/tools/e2etests:__pkg__",
             "//ets/ui:__pkg__",
         ],
