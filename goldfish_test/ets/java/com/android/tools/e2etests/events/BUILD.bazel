@@ -21,6 +21,8 @@ ets_host_test(
         "//testlib/java/com/android/tools/testlib/emu:discovery",
         "//testlib/java/com/android/tools/testlib/emu:eventually",
         "//testlib/java/com/android/tools/testlib/netsim:netsimd",
+        "@aemu//protos/services_v2:hypervisor_service_java_grpc",
+        "@aemu//protos/services_v2:hypervisor_service_java_proto",
         "@grpc-java//api",
         "@grpc-java//context",
         "@grpc-java//protobuf",

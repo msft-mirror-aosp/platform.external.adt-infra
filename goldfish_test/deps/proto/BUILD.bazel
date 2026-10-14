@@ -20,6 +20,7 @@ java_library(
         "@aemu//protos/services/ui-controller:ui_controller_service_java_proto",
         "@aemu//protos/services/waterfall:waterfall_java_proto",
         "@aemu//protos/services/webrtc:rtc_service_java_proto",
+        "@aemu//protos/services_v2:hypervisor_service_java_proto",
     ],
 )
 
@@ -38,6 +39,7 @@ java_library(
         "@aemu//protos/services/ui-controller:ui_controller_service_java_grpc",
         "@aemu//protos/services/waterfall:waterfall_java_grpc",
         "@aemu//protos/services/webrtc:rtc_service_java_grpc",
+        "@aemu//protos/services_v2:hypervisor_service_java_grpc",
     ],
 )
 
