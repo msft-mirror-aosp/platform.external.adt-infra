@@ -7,6 +7,7 @@ import re
 from test_seq.proto import adb_pb2
 from test_seq.proto import android_home_pb2
 from test_seq.proto import avd_pb2
+from test_seq.proto import crashreport_pb2
 from test_seq.proto import extract_pb2
 from test_seq.proto import goldfish_pb2
 from test_seq.proto import junit_xml_result_pb2
@@ -113,6 +114,17 @@ def avd_ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     )
     return ret
 
+
+def crash_report() -> test_sequencer_pb2.AgentConfig:
+    return test_sequencer_pb2.AgentConfig(
+        crashreport=crashreport_pb2.CrashReport(),
+        imports=[
+            test_sequencer_pb2.Import(
+                id="goldfish_fetch",
+                src="extract_dir",
+            ),
+        ],
+    )
 
 def cts(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConfig:
     ac = _tradefed(ns)

@@ -9,6 +9,7 @@ py_library(
     deps = [
         "@test_seq//test_seq/proto:android_home_pb2",
         "@test_seq//test_seq/proto:avd_pb2",
+        "@test_seq//test_seq/proto:crashreport_pb2",
         "@test_seq//test_seq/proto:extract_pb2",
         "@test_seq//test_seq/proto:goldfish_pb2",
         "@test_seq//test_seq/proto:junit_xml_result_pb2",
