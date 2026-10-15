@@ -445,6 +445,7 @@ def ets_host_test(name, srcs, class_name, description = "", extra_apks = None, *
         visibility = [
             "//ets/foldable:__pkg__",
             "//ets/java/com/android/tools/e2etests:__pkg__",
+            "//ets/snapshot:__pkg__",
             "//ets/ui:__pkg__",
         ],
         **kwargs

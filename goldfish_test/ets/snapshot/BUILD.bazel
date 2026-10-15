@@ -1,0 +1,56 @@
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg", "ets_plan")
+
+ets_pkg(
+    name = "pkg",
+    srcs = [
+        ":snapshot_version_test_config",
+    ],
+)
+
+ets_host_test(
+    name = "snapshot_version_test",
+    srcs = ["SnapshotVersionTest.kt"],
+    class_name = "com.android.tools.e2etests.snapshot.SnapshotVersionTest",
+    description = "End-to-end host test verifying emulator snapshot load when version.txt matches and cold boot fallback when version.txt mismatches",
+    deps = [
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@maven//:junit_junit",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+# Runs both snapshot E2E tests in SnapshotVersionTest across 2 relaunch rounds:
+# 1. cold_boot -> save snapshot -> load_1: verifies loadFromSnapshotWhenVersionMatches
+# 2. load_1 (switches version.txt back by 1) -> save snapshot -> load_2: verifies coldBootWhenSnapshotVersionMismatches
+ets_plan(
+    name = "snapshot",
+    args = [
+        "--snapshot_relaunch_rounds",
+        "2",
+        "--tradefed_args=-m,SnapshotVersionTest",
+    ],
+    plan = "ets",
+)
+
+# Standalone E2E test 1: launch emulator, save snapshot, launch again -> loads from snapshot.
+ets_plan(
+    name = "load_from_snapshot_when_version_matches",
+    args = [
+        "--snapshot_relaunch_rounds",
+        "1",
+        "--tradefed_args=-m,SnapshotVersionTest,-t,com.android.tools.e2etests.snapshot.SnapshotVersionTest#loadFromSnapshotWhenVersionMatches",
+    ],
+    plan = "ets",
+)
+
+# Standalone E2E test 2: launch emulator, save snapshot, switch version.txt back a bit,
+# launch again -> does not load from snapshot and performs a cold boot instead.
+ets_plan(
+    name = "cold_boot_when_snapshot_version_mismatches",
+    args = [
+        "--snapshot_relaunch_rounds",
+        "1",
+        "--tradefed_args=-m,SnapshotVersionTest,-t,com.android.tools.e2etests.snapshot.SnapshotVersionTest#coldBootWhenSnapshotVersionMismatches,--module-arg,SnapshotVersionTest:set-option:downgrade_version_in_phase:cold_boot",
+    ],
+    plan = "ets",
+)
