@@ -5,7 +5,9 @@ ets_pkg(
     name = "pkg",
     srcs = [
         ":device_hub_ui_test_config",
+        ":maps_ui_test_config",
         ":snapshot_ui_test_config",
+        ":webgl_aquarium_ui_test_config",
     ],
 )
 
@@ -22,25 +24,58 @@ ets_host_test(
 
 ets_host_test(
     name = "snapshot_ui_test",
-    srcs = ["SnapshotUiTest.kt"],
+    srcs = [
+        "RenderingUiTestBase.kt",
+        "SnapshotUiTest.kt",
+    ],
     class_name = "com.android.tools.e2etests.ui.SnapshotUiTest",
-    description = "Host test using uiautomator dump to locate Settings items and touching them via the Android Device Hub UI across cold boot and 3 snapshot save/load cycles",
+    description = "Host test using uiautomator dump to locate Settings items and touching them via the Android Device Hub UI on cold boot and after each of 3 relaunches from the snapshot the emulator saves when shut down through gRPC",
     deps = [
         ":device_hub_ui_test",
-        "//deps/proto:aemu_java_grpc",
-        "//deps/proto:aemu_java_proto",
-        "//ets/java/com/android/tools/e2etests/grpc:host_grpc_lib",
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+ets_host_test(
+    name = "webgl_aquarium_ui_test",
+    srcs = ["WebGlAquariumUiTest.kt"],
+    class_name = "com.android.tools.e2etests.ui.WebGlAquariumUiTest",
+    description = "Host test rendering the WebGL Aquarium in Chrome on the device, recording a 5 second video and checking for fish and no black screen on cold boot and after each of 3 relaunches from the snapshot the emulator saves when shut down through gRPC",
+    deps = [
+        ":device_hub_ui_test",
+        ":snapshot_ui_test",
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+ets_host_test(
+    name = "maps_ui_test",
+    srcs = ["MapsUiTest.kt"],
+    class_name = "com.android.tools.e2etests.ui.MapsUiTest",
+    description = "Host test panning and zooming Google Maps via the Android Device Hub UI while recording a video, checking the map renders without a black screen or crash on cold boot and after each of 3 relaunches from the snapshot the emulator saves when shut down through gRPC, with other activity in between",
+    deps = [
+        ":device_hub_ui_test",
+        ":snapshot_ui_test",
         "//testlib/java/com/android/tools/testlib/emu:discovery",
         "@tradefed//:tradefed_jars",
     ],
 )
 
 _UI_ARGS = [
+    # A phone sized screen instead of the emulator's default 320x640 at 160 dpi, which the minimal
+    # ETS AVD gets. Keep in sync with run_local.bat.
+    "--avd_ini",
+    "hw.lcd.width=1080,hw.lcd.height=2400,hw.lcd.density=420",
     "--device_hub_dir",
     "$(rlocationpath @goldfish//emulator/launcher:android-device-hub)",
     "--display_dir",
     "$(rlocationpath @local//tools/emulator/testlib/display:ffmpeg_files)",
-    "--skip_snapshot_relaunch",
+    # The snapshot tests (SnapshotUiTest, WebGlAquariumUiTest, MapsUiTest) run on cold boot and then
+    # after each of 3 {shut down through gRPC (saves the snapshot), relaunch from the snapshot}.
+    "--snapshot_relaunch_rounds",
+    "3",
 ]
 
 _UI_DATA = [
@@ -56,7 +91,7 @@ _UI_DATA = [
 ets_plan(
     name = "ui",
     args = _UI_ARGS + [
-        "--tradefed_args=--include-filter,DeviceHubUiTest,--include-filter,SnapshotUiTest",
+        "--tradefed_args=--include-filter,DeviceHubUiTest,--include-filter,SnapshotUiTest,--include-filter,WebGlAquariumUiTest,--include-filter,MapsUiTest",
     ],
     data = _UI_DATA,
     plan = "ets",
@@ -66,6 +101,24 @@ ets_plan(
     name = "snapshot_ui",
     args = _UI_ARGS + [
         "--tradefed_args=-m,SnapshotUiTest",
+    ],
+    data = _UI_DATA,
+    plan = "ets",
+)
+
+ets_plan(
+    name = "webgl_ui",
+    args = _UI_ARGS + [
+        "--tradefed_args=-m,WebGlAquariumUiTest",
+    ],
+    data = _UI_DATA,
+    plan = "ets",
+)
+
+ets_plan(
+    name = "maps_ui",
+    args = _UI_ARGS + [
+        "--tradefed_args=-m,MapsUiTest",
     ],
     data = _UI_DATA,
     plan = "ets",

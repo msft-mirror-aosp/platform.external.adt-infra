@@ -1,8 +1,9 @@
 @echo off
-REM Runs DeviceHubUiTest and SnapshotUiTest locally on Windows against an already-running emulator.
+REM Runs DeviceHubUiTest, SnapshotUiTest, WebGlAquariumUiTest and MapsUiTest locally on Windows
+REM against an already-running emulator.
 REM Extra arguments are passed on to Tradefed, e.g. -s emulator-5554 to pick the device.
-REM The Tradefed logs and results (device_hub_video/snapshot_ui_video .mp4, screenshots, hub and
-REM ffmpeg logs) are copied to %ETS_UI_OUT_DIR%, by default out\ets_ui\<timestamp> under the repo
+REM The Tradefed logs and results (device_hub_video/snapshot_ui_video/webgl_aquarium_video/maps_ui_video .mp4,
+REM screenshots, hub and ffmpeg logs) are copied to %ETS_UI_OUT_DIR%, by default out\ets_ui\<timestamp> under the repo
 REM root, and reported to Sponge like run_external.sh's. If ETS_WORK_DIR is set, the ETS and device
 REM hub are extracted there and kept, so that run_local.bat can run CloseEmulatorTest from the same
 REM ETS afterwards and report the whole run.
@@ -78,10 +79,16 @@ set "DISPLAY_DIR=!DISPLAY_DIR::=\:!"
 call "%WORK_DIR%\ets\android-ets\tools\ets-tradefed.bat" run commandAndExit ets ^
   --include-filter DeviceHubUiTest ^
   --include-filter SnapshotUiTest ^
+  --include-filter WebGlAquariumUiTest ^
+  --include-filter MapsUiTest ^
   --module-arg "DeviceHubUiTest:set-option:device_hub_path:!HUB_EXE!" ^
   --module-arg "DeviceHubUiTest:set-option:display_dir:!DISPLAY_DIR!" ^
   --module-arg "SnapshotUiTest:set-option:device_hub_path:!HUB_EXE!" ^
   --module-arg "SnapshotUiTest:set-option:display_dir:!DISPLAY_DIR!" ^
+  --module-arg "WebGlAquariumUiTest:set-option:device_hub_path:!HUB_EXE!" ^
+  --module-arg "WebGlAquariumUiTest:set-option:display_dir:!DISPLAY_DIR!" ^
+  --module-arg "MapsUiTest:set-option:device_hub_path:!HUB_EXE!" ^
+  --module-arg "MapsUiTest:set-option:display_dir:!DISPLAY_DIR!" ^
   %*
 
 REM ets-tradefed.bat changes the current directory into WORK_DIR; leave it before deleting it.

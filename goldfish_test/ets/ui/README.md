@@ -1,12 +1,27 @@
-# Android Device Hub & Snapshot UI E2E Tests (`//ets/ui`)
+# Android Device Hub, Snapshot, WebGL & Maps UI E2E Tests (`//ets/ui`)
 
 End-to-end UI tests under `//ets/ui`:
 - **[`DeviceHubUiTest.kt`](DeviceHubUiTest.kt)** (`ets_host_test`): Tradefed host test that launches the **Android Device Hub** Electron UI (`android-device-hub`) against a live Android Emulator, drives it over Chrome DevTools Protocol (CDP), and verifies effects via `adb`. Also defines [`UiTestBase`](DeviceHubUiTest.kt), the shared host harness for `Xvfb`, `ffmpeg` video recording, and CDP screenshots.
-- **[`SnapshotUiTest.kt`](SnapshotUiTest.kt)** (`ets_host_test`): Host-driven UI responsiveness test (modeled after `profiler.py`) extending [`UiTestBase`](DeviceHubUiTest.kt). Uses `uiautomator dump` to inspect what clickable items are on the screen, issues touch events (`tapScreen`) and toolbar `Back` clicks (`click("Back")`) through the **Android Device Hub** UI on the host to touch up to 4 Settings items and verify the UI hierarchy updates across `cold boot -> interact with settings -> save snapshot -> {load snapshot -> interact with settings -> save snapshot} x 3`, and records a single combined host-side video (`snapshot_ui_video_*.mp4` via `ffmpeg`) and screenshots (`snapshot_ui_*.png` via CDP).
+- **[`SnapshotUiTest.kt`](SnapshotUiTest.kt)** (`ets_host_test`): Host-driven UI responsiveness test (modeled after `profiler.py`) extending [`UiTestBase`](DeviceHubUiTest.kt). Uses `uiautomator dump` to inspect what clickable items are on the screen, issues touch events (`tapScreen`) and toolbar `Back` clicks (`click("Back")`) through the **Android Device Hub** UI on the host to touch up to 4 Settings items and verify the UI hierarchy updates in every phase of the [snapshot sequence](#the-snapshot-sequence) (after a snapshot boot it first checks that Settings came back in the foreground), and records a host-side video (`snapshot_ui_video_*.mp4` via `ffmpeg`) and screenshots (`snapshot_ui_*.png` via CDP) per phase. Also defines [`SnapshotUiTestBase`](SnapshotUiTest.kt), which adds the snapshot sequence phase handling (`snapshot_phase` option, `beginPhase`/`endPhase`, state kept on the device) to `UiTestBase`.
+- **[`RenderingUiTestBase.kt`](RenderingUiTestBase.kt)** (built into `:snapshot_ui_test`): extends `SnapshotUiTestBase` with the checks shared by the rendering tests: `recordDeviceVideo` (on-device `screenrecord` of `video_seconds`, attached as `<logPrefix>_<phase>_device_video.mp4`, checked with ffmpeg `blackdetect`), black screen checks of the device screenshot and the Device Hub display (`assertNotBlack`, `assertDisplaysNotBlack`), frame differences (`meanAbsDiff`) and crash/ANR checks (`assertNoCrash`).
+- **[`WebGlAquariumUiTest.kt`](WebGlAquariumUiTest.kt)** (`ets_host_test`): WebGL rendering test extending [`RenderingUiTestBase`](RenderingUiTestBase.kt). Opens the [WebGL Aquarium](https://webglsamples.org/aquarium/aquarium.html) in Chrome on the device on cold boot and, in every phase of the [snapshot sequence](#the-snapshot-sequence), verifies:
+  - a 5 second on-device video (`screenrecord`, attached as `webgl_aquarium_<phase>_device_video.mp4`) has no black segment (ffmpeg `blackdetect` over the center of the screen);
+  - over Chrome DevTools (`adb forward tcp:<port> localabstract:chrome_devtools_remote`): all fish models are loaded, the WebGL context is not lost, frames keep being rendered, and each frame issues at least one `gl.drawElements` call per fish (the aquarium draws each fish separately);
+  - the Chrome page screenshot, the device screenshot and the Device Hub display are not black, and the aquarium is animating;
+  - after each snapshot boot: Chrome is back in the foreground in the same process, the page was not reloaded (a probe installed into the page survives), and the logcat crash buffer has no Chrome crash.
 
-## How `DeviceHubUiTest` and `SnapshotUiTest` Work
+  It needs Chrome on the system image and internet access from the emulator; set `--module-arg WebGlAquariumUiTest:set-option:aquarium_url:<url>` to use a mirror. `@goldfish_test//ets/ui:webgl_ui` runs only this test.
+- **[`MapsUiTest.kt`](MapsUiTest.kt)** (`ets_host_test`): Google Maps rendering test extending [`RenderingUiTestBase`](RenderingUiTestBase.kt). Gives the device a GPS fix and opens Maps there (`latitude`/`longitude` options), gets past first run and permission dialogs, searches for a place in the search box (`search_query`, default Googleplex) so Maps drops a pin and loads the area on cold boot, and in every phase of the [snapshot sequence](#the-snapshot-sequence) verifies:
+  - while panning (swipes) and zooming (double tap, then one finger zoom out) the map through the Device Hub UI for a few seconds, a 5 second on-device video (`maps_ui_<phase>_device_video.mp4`) has no black segment;
+  - the map is rendered (not black or blank) before and after the gestures, the gestures changed what is drawn, and the device screen and the Device Hub display are not black;
+  - Maps is still in the foreground, did not crash (logcat crash buffer) and shows no crash/ANR dialog;
+  - after each snapshot boot: Maps is back in the foreground in the same process; after interacting, the test uses other apps (Home, Settings), switches back to Maps and checks the map again.
 
-Both [`DeviceHubUiTest.kt`](DeviceHubUiTest.kt) and [`SnapshotUiTest.kt`](SnapshotUiTest.kt) extend [`UiTestBase`](DeviceHubUiTest.kt) and run all of their UI checks within a single session per phase so that each test class records **one combined video** (`device_hub_video_*.mp4` and `snapshot_ui_video_*.mp4`):
+  It needs Google Maps on the system image and internet access from the emulator for the map data, and enables Google Play services (disabled by the ETS device setup, but Maps needs it to load map data) for the duration of the test (of the whole snapshot sequence). The map checks look at the part of the screen between the search box and the bottom sheet. `@goldfish_test//ets/ui:maps_ui` runs only this test.
+
+## How the UI Tests Work
+
+[`DeviceHubUiTest.kt`](DeviceHubUiTest.kt), [`SnapshotUiTest.kt`](SnapshotUiTest.kt), [`WebGlAquariumUiTest.kt`](WebGlAquariumUiTest.kt) and [`MapsUiTest.kt`](MapsUiTest.kt) extend [`UiTestBase`](DeviceHubUiTest.kt) and run all of their UI checks within a single session per phase so that each test class records **one combined video** (`device_hub_video_*.mp4`, `snapshot_ui_video_*.mp4`, `webgl_aquarium_video_*.mp4` and `maps_ui_video_*.mp4`):
 1. **Virtual Display (Headless Linux RBE)**: Starts a hermetic `Xvfb` server (`launch_xvfb.sh` from `//tools/emulator/testlib/display:xvfb`) when `DISPLAY` is unset so the Electron window renders on headless RBE workers.
 2. **Video & Screenshot Recording**:
    - **Headless Linux RBE (default)**: Uses `ffmpeg -f x11grab` against the `Xvfb` display, capturing the entire window including the window bar. (Pass `--cdp-video` to `run_rbe.sh` to use CDP-piped screenshots instead.)
@@ -15,12 +30,22 @@ Both [`DeviceHubUiTest.kt`](DeviceHubUiTest.kt) and [`SnapshotUiTest.kt`](Snapsh
 3. **UI Automation via CDP**: Launches `android-device-hub` with `--remote-debugging-port=<port>`, connects a lightweight JDK WebSocket Chrome DevTools Protocol (CDP) client, waits for the emulator video/canvas stream to become visible, and dispatches real mouse press/move/release events (`Input.dispatchMouseEvent`) and DOM queries (`Runtime.evaluate`).
 4. **Device Verification**: Verifies the resulting state changes on the emulator over `adb` (`getDevice().executeShellCommand(...)` and `uiautomator dump`).
 
+## The Snapshot Sequence
+
+The emulator saves its quickboot snapshot when it exits, so `SnapshotUiTest`, `WebGlAquariumUiTest` and `MapsUiTest` do not call the gRPC `SaveSnapshot`/`LoadSnapshot` themselves. The `//ets/ui` plans pass `--snapshot_relaunch_rounds 3` to [`android_ets_cfg.py`](../android_ets_cfg.py), which runs the plan once per phase (each phase is its own Tradefed run, with its own results):
+
+1. `cold_boot` (`ets`): the emulator cold boots; each test sets up its app, exercises it and leaves it in the foreground.
+2. `ets_close`: `CloseEmulatorTest` shuts the emulator down through gRPC (`setVmState(SHUTDOWN)`); the emulator saves its snapshot on exit.
+3. `load_<N>` for N = 1..3 (`goldfish_load_<N>`, `ets_load_<N>`, `ets_close_load_<N>`): the emulator is relaunched and boots from that snapshot, the tests run again with `snapshot_phase=load_<N>` (`DeviceHubUiTest` is skipped), and the emulator is shut down again (except after the last round).
+
+After a snapshot boot each test checks that the guest was resumed (same `/proc/sys/kernel/random/boot_id` as when the previous phase started) from the snapshot saved at the end of the previous phase (the state it recorded when that phase started is there), and that its app came back in the foreground in the same process. The snapshot check only uses what a phase records when it starts, so a test failure in one phase does not make the following phases fail too; if the emulator cold boots or resumes an older snapshot (e.g. because it crashed during the previous phase and could not save), the failure names the phase and the `goldfish*` agent log to look at. What has to carry over from one phase to the next is stored on the device under `/data/local/tmp/ets_ui_snapshot`, so it is saved and restored with the snapshot. When a plan runs several of these tests, only the test that ran last before the shutdown (and finished that phase) finds its app in the foreground; the others reopen their app. Without `snapshot_phase` (`run_external.*`, `run_local.bat`) the tests only run the cold boot phase.
+
 ---
 
 ## Running the Tests
 
 ### 1. Run on Linux RBE (`run_rbe.sh`)
-Boots the emulator and runs all UI tests under `//ets/ui` (`DeviceHubUiTest` and `SnapshotUiTest`, including snapshot save/load) on remote Linux RBE workers:
+Boots the emulator and runs all UI tests under `//ets/ui` (`DeviceHubUiTest`, `SnapshotUiTest`, `WebGlAquariumUiTest` and `MapsUiTest`, including the [snapshot sequence](#the-snapshot-sequence)) on remote Linux RBE workers:
 ```bash
 ./third_party/adt-infra/goldfish_test/ets/ui/run_rbe.sh
 
@@ -29,11 +54,12 @@ Boots the emulator and runs all UI tests under `//ets/ui` (`DeviceHubUiTest` and
 ```
 
 ### 2. Run Full Sequence Locally (`run_local.sh` / `run_local.bat`)
-Boots the emulator locally, runs `DeviceHubUiTest` and `SnapshotUiTest`, and runs the snapshot sequence on the local machine:
+Boots the emulator locally, runs `DeviceHubUiTest`, `SnapshotUiTest`, `WebGlAquariumUiTest` and `MapsUiTest`, and runs the snapshot sequence on the local machine:
 - **gLinux / macOS**:
   ```bash
   ./third_party/adt-infra/goldfish_test/ets/ui/run_local.sh
   ```
+  On gLinux the Device Hub window is shown on your desktop (the script passes `DISPLAY`/`XAUTHORITY` into the test). Pass `--xvfb` (or set `XVFB=1`) to run inside the hermetic Xvfb display instead, like on RBE. Other arguments are passed to `bazel test`.
 - **Windows (`cmd.exe` / PowerShell)**:
   ```cmd
   third_party\adt-infra\goldfish_test\ets\ui\run_local.bat
@@ -52,7 +78,7 @@ Fastest workflow for local iteration on **gLinux**, **macOS**, or **Windows**. S
   ```cmd
   third_party\adt-infra\goldfish_test\ets\ui\run_external.bat
   ```
-  The Tradefed logs and results, including the `device_hub_video` and `snapshot_ui_video` recordings, are copied to `out\ets_ui\<timestamp>` under the repo root and reported to Sponge (see section 2). If `BAZEL_SH` points at busybox, the ETS is built with Git Bash or MSYS2 bash instead when one is installed (`--shell_executable` and `--repo_env=BAZEL_SH`): rules_android extracts `.aar` manifests with a shebang-less `unzip` script and generates the desugar configs with `unzip -c`, and busybox-w32 supports neither (`unzip: Exec format error`). Because the shell's directory is part of every action's `PATH`, the ETS build tools get their own `bazel-out\ets-opt-exec` directory so that they do not evict the emulator build's tools from the cache.
+  The Tradefed logs and results, including the `device_hub_video`, `snapshot_ui_video`, `webgl_aquarium_video` and `maps_ui_video` recordings, are copied to `out\ets_ui\<timestamp>` under the repo root and reported to Sponge (see section 2). If `BAZEL_SH` points at busybox, the ETS is built with Git Bash or MSYS2 bash instead when one is installed (`--shell_executable` and `--repo_env=BAZEL_SH`): rules_android extracts `.aar` manifests with a shebang-less `unzip` script and generates the desugar configs with `unzip -c`, and busybox-w32 supports neither (`unzip: Exec format error`). Because the shell's directory is part of every action's `PATH`, the ETS build tools get their own `bazel-out\ets-opt-exec` directory so that they do not evict the emulator build's tools from the cache.
 
 ---
 
