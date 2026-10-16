@@ -80,6 +80,7 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
         agent_common.tradefed_fetch(ns),
         agent_common.android_home(ns),
         agent_common.avd_ets(ns),
+        agent_common.crash_report(),
     ]
     if relaunch_rounds:
         ret.extend(
