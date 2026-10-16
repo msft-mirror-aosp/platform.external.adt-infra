@@ -311,9 +311,11 @@ def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
-# //ets/ui modules that run once per phase of the snapshot relaunch sequence (snapshot_phase option).
+# //ets/ui and //ets/snapshot modules that run once per phase of the snapshot relaunch sequence
+# (snapshot_phase option).
 _SNAPSHOT_UI_TEST_MODULES = (
     "SnapshotUiTest",
+    "SnapshotVersionTest",
     "WebGlAquariumUiTest",
     "MapsUiTest",
 )

@@ -41,6 +41,7 @@ ALL_MODULES = [
     "SmsTest",
     "SnapshotTest",
     "SnapshotUiTest",
+    "SnapshotVersionTest",
     "TelnetTest",
     "VulkanAppTest",
     "WebGlAquariumUiTest",
@@ -64,6 +65,8 @@ EXCLUSIONS = {
         "ControlKeysTest": ["com.android.tools.e2etests.events.ControlKeysTest#screenshot"],
         # Not yet implemented on emu-next.
         "SnapshotTest": [],
+        # Dedicated multi-launch snapshot sequence under //ets/snapshot.
+        "SnapshotVersionTest": [],
         },
     Kind.EMU_NOW: {
         # Needs an X display to run the Electron UI, which CI bots lack.
@@ -73,6 +76,8 @@ EXCLUSIONS = {
         "WebGlAquariumUiTest": [],
         # Needs a foldable AVD configuration (see //ets/foldable).
         "FoldableDisplayTest": [],
+        # Dedicated multi-launch snapshot sequence under //ets/snapshot.
+        "SnapshotVersionTest": [],
         # These tests experience timeouts.
         "CallTest": [
             "com.android.tools.e2etests.call.CallTest#acceptCall",
