@@ -328,6 +328,7 @@ def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
 _SNAPSHOT_UI_TEST_MODULES = (
     "SnapshotUiTest",
     "SnapshotVersionTest",
+    "NamedSnapshotTest",
     "WebGlAquariumUiTest",
     "MapsUiTest",
 )
@@ -437,6 +438,7 @@ def goldfish(
         args.append("-qt-hide-window")
     if not getattr(ns, "is_prebuilt_emulator", False):
         args.append("-not-in-bazel")
+    args.extend(_split_args(getattr(ns, "emulator_args", "")))
 
     return test_sequencer_pb2.AgentConfig(
         id=id,
@@ -487,7 +489,13 @@ def goldfish_load_snapshot_grpc(
 ) -> test_sequencer_pb2.AgentConfig:
     ac = goldfish_grpc(ns)
     ac.id = id
+    ac.goldfish.args.extend(_split_args(getattr(ns, "relaunch_emulator_args", "")))
     return ac
+
+
+def _split_args(value: str) -> list[str]:
+    """Splits a comma-separated flag value into arguments, dropping empty ones."""
+    return [a for a in (value or "").split(",") if a]
 
 
 def goldfish_very_verbose(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:

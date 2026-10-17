@@ -1,10 +1,10 @@
 @echo off
-REM Reports a run of run_local.bat or run_external.bat to Sponge the way Bazel reports run_local.sh
-REM and run_external.sh: runs @goldfish_test//ets/ui:report_results (see report_results.py) on the
+REM Reports a run of run_local.bat or run_external.bat (ets\ui, ets\snapshot) to Sponge the way Bazel
+REM reports run_local.sh and run_external.sh: runs @goldfish_test//ets/ui:report_results (see report_results.py) on the
 REM output directory of the run with --config=rcache, which makes Bazel upload the test log, the
 REM JUnit XML and the outputs, and --config=sponge, which streams the invocation, and prints the
 REM Fusion link. Exits with bazel's exit code: 3 when the reported run failed, 0 when it passed.
-REM   report_to_sponge.bat <out\ets_ui\timestamp directory> <number of Tradefed invocations expected>
+REM   report_to_sponge.bat <out\ets_ui or out\ets_snapshot timestamp directory> <number of Tradefed invocations expected>
 setlocal enabledelayedexpansion
 
 set "SCRIPT_DIR=%~dp0"
