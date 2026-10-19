@@ -132,6 +132,7 @@ def main():
     elif len(exclusions) == 0:
       print(ENTRY % ("exclude", module))
     else:
+      print(ENTRY % ("include", module))
       for test_method in exclusions:
         print(ENTRY % ("exclude", f"{module} {test_method}"))
   print(FOOTER)
