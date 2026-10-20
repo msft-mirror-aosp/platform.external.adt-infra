@@ -84,9 +84,6 @@ def _local_impl(repo_ctx):
         goldfish_label = "@goldfish_test//deps/local/goldfish"
     repo_ctx.file("goldfish/BUILD", _goldfish_build.format(label = goldfish_label))
 
-    # Expose tools/emulator (e.g. //tools/emulator/testlib/display:xvfb and :ffmpeg_files).
-    repo_ctx.symlink(repo_ctx.workspace_root.get_child("tools/emulator"), "tools/emulator")
-
 def _get_local_zip(base_path, name):
     zips = [p for p in base_path.get_child(name).readdir() if p.basename.endswith(".zip")]
     if len(zips) > 1:

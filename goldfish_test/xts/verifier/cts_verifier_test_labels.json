@@ -1,15 +1,15 @@
 {
   "total_categories": 23,
   "total_test_items": 129,
-  "total_automated_items": 73,
-  "total_untested_items": 56,
-  "automation_coverage": "56.6%",
+  "total_automated_items": 24,
+  "total_untested_items": 105,
+  "automation_coverage": "18.6%",
   "categories": {
     "AUDIO": [
       {
         "name": "Analog Headset Audio Test",
-        "automated": true,
-        "script": "pass_audio_analog_headset_audio_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Acoustic Echo Cancellation (AEC) Test",
@@ -18,88 +18,88 @@
       },
       {
         "name": "Audio Cold Start Input Latency Test",
-        "automated": true,
-        "script": "pass_audio_cold_start_input_latency_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Cold Start Output Latency Test",
-        "automated": true,
-        "script": "pass_audio_cold_start_output_latency_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Communication Latency Test",
-        "automated": true,
-        "script": "pass_audio_communication_latency_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Data Paths Analog Jack Test",
-        "automated": true,
-        "script": "pass_audio_data_paths_analog_jack_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Data Paths Speaker/Mic Test",
-        "automated": true,
-        "script": "pass_audio_data_paths_speaker_mic_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Data Paths USB 4-Channel Input Test",
-        "automated": true,
-        "script": "pass_audio_data_paths_usb_4_channel_input_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Data Paths USB Headset Test",
-        "automated": true,
-        "script": "pass_audio_data_paths_usb_headset_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Data Paths USB Interface Test",
-        "automated": true,
-        "script": "pass_audio_data_paths_usb_interface_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Data Paths USB Multichannel Test",
-        "automated": true,
-        "script": "pass_audio_data_paths_usb_multichannel_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Descriptor Test",
-        "automated": true,
-        "script": "pass_audio_descriptor_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Frequency Line Test",
-        "automated": true,
-        "script": "pass_audio_frequency_line_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Input Devices Notifications Test",
-        "automated": true,
-        "script": "pass_audio_input_devices_notifications_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Input Routing Notifications Test",
-        "automated": true,
-        "script": "pass_audio_input_routing_notifications_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Loopback Latency Test",
-        "automated": true,
-        "script": "pass_audio_loopback_latency_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio MMAP PCM Offload Test",
-        "automated": true,
-        "script": "pass_audio_mmap_pcm_offload_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Output Devices Notifications Test",
-        "automated": true,
-        "script": "pass_audio_output_devices_notifications_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Output Routing Notifications Test",
-        "automated": true,
-        "script": "pass_audio_output_routing_notifications_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Playback Parameters Test",
@@ -108,18 +108,18 @@
       },
       {
         "name": "Audio Stream Disconnect Test",
-        "automated": true,
-        "script": "pass_audio_stream_disconnect_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Tap To Tone Test",
-        "automated": true,
-        "script": "pass_audio_tap_to_tone_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Audio Workload Test",
-        "automated": true,
-        "script": "pass_audio_workload_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Hifi Ultrasound Microphone Test",
@@ -128,55 +128,55 @@
       },
       {
         "name": "Hifi Ultrasound Speaker Test",
-        "automated": true,
-        "script": "pass_audio_hifi_ultrasound_speaker_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Immersive Audio Test",
-        "automated": true,
-        "script": "pass_audio_immersive_audio_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Multichannel Mixdown Test",
-        "automated": true,
-        "script": "pass_audio_multichannel_mixdown_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Ringer Mode Tests",
-        "automated": true,
-        "script": "pass_audio_ringer_mode_test.py"
+        "automated": false,
+        "script": null
       }
     ],
     "CAMERA": [
       {
         "name": "Camera Bokeh",
-        "automated": true,
-        "script": "pass_camera_bokeh_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Camera FOV Calibration",
-        "automated": true,
-        "script": "pass_camera_fov_calibration_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Camera Flashlight",
-        "automated": true,
-        "script": "pass_camera_flashlight_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Camera Formats",
-        "automated": true,
-        "script": "pass_camera_formats_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Camera Intents",
-        "automated": true,
-        "script": "pass_camera_intents_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Camera Orientation",
-        "automated": true,
-        "script": "pass_camera_orientation_test.py"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Camera Performance",
@@ -185,8 +185,8 @@
       },
       {
         "name": "Camera Video",
-        "automated": true,
-        "script": "pass_camera_video_test.py"
+        "automated": false,
+        "script": null
       }
     ],
     "CLOCK": [
@@ -483,24 +483,18 @@
       },
       {
         "name": "6DoF Test",
-        "automated": true,
-        "script": "pass_sensors_6dof_test.py",
-        "test_script": "pass_sensors_6dof_test.py",
-        "run_script": "run_sensors_6dof_test.sh"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Accelerometer Measurement Tests",
-        "automated": true,
-        "script": "pass_sensors_accelerometer_measurement_tests.py",
-        "test_script": "pass_sensors_accelerometer_measurement_tests.py",
-        "run_script": "run_sensors_accelerometer_measurement_tests.sh"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Barometer Measurement Test",
-        "automated": true,
-        "script": "pass_sensors_barometer_measurement_test.py",
-        "test_script": "pass_sensors_barometer_measurement_test.py",
-        "run_script": "run_sensors_barometer_measurement_test.sh"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Device Suspend Tests",
@@ -509,17 +503,13 @@
       },
       {
         "name": "Dynamic Sensor Discovery Test",
-        "automated": true,
-        "script": "pass_sensors_dynamic_sensor_discovery_test.py",
-        "test_script": "pass_sensors_dynamic_sensor_discovery_test.py",
-        "run_script": "run_sensors_dynamic_sensor_discovery_test.sh"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Event sanitization for idle UID test",
-        "automated": true,
-        "script": "pass_sensors_event_sanitization_for_idle_uid_test.py",
-        "test_script": "pass_sensors_event_sanitization_for_idle_uid_test.py",
-        "run_script": "run_sensors_event_sanitization_for_idle_uid_test.sh"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Gyroscope Measurement Test",
@@ -528,17 +518,13 @@
       },
       {
         "name": "Magnetic Field Measurement Tests",
-        "automated": true,
-        "script": "pass_sensors_magnetic_field_measurement_tests.py",
-        "test_script": "pass_sensors_magnetic_field_measurement_tests.py",
-        "run_script": "run_sensors_magnetic_field_measurement_tests.sh"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Off Body Sensor Tests",
-        "automated": true,
-        "script": "pass_sensors_off_body_sensor_tests.py",
-        "test_script": "pass_sensors_off_body_sensor_tests.py",
-        "run_script": "run_sensors_off_body_sensor_tests.sh"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Rotation Vector CV Crosscheck",
@@ -547,17 +533,13 @@
       },
       {
         "name": "Sensor Batching Manual Tests",
-        "automated": true,
-        "script": "pass_sensors_sensor_batching_manual_tests.py",
-        "test_script": "pass_sensors_sensor_batching_manual_tests.py",
-        "run_script": "run_sensors_sensor_batching_manual_tests.sh"
+        "automated": false,
+        "script": null
       },
       {
         "name": "Significant Motion Tests",
-        "automated": true,
-        "script": "pass_sensors_significant_motion_tests.py",
-        "test_script": "pass_sensors_significant_motion_tests.py",
-        "run_script": "run_sensors_significant_motion_tests.sh"
+        "automated": false,
+        "script": null
       }
     ],
     "PROJECTION TESTS": [

@@ -91,16 +91,6 @@ _KNOWN_FLAGS = {
         help="Path to the extracted cts-verifier",
         required=True,
     ),
-    "device_hub_dir": lambda p: p.add_argument(
-        "--device_hub_dir",
-        type=path_type,
-        help="Path to the extracted android-device-hub directory",
-    ),
-    "display_dir": lambda p: p.add_argument(
-        "--display_dir",
-        type=dir_type,
-        help="Path to the display testlib directory (Xvfb and ffmpeg)",
-    ),
     "emulator_access_json": lambda p: p.add_argument(
         "--emulator_access_json",
         type=path_type,
@@ -120,46 +110,10 @@ _KNOWN_FLAGS = {
         action="store_true",
         help="If true, the emulator is prebuilt and does not support -not-in-bazel",
     ),
-    "gears_extract_dir": lambda p: p.add_argument(
-        "--gears_extract_dir",
-        type=dir_type,
-        help="Path to the extracted gears app",
-        required=True,
-    ),
-    "gltf_viewer_extract_dir": lambda p: p.add_argument(
-        "--gltf_viewer_extract_dir",
-        type=dir_type,
-        help="Path to the extracted gltf-viewer app",
-        required=True,
-    ),
     "hellovk_extract_dir": lambda p: p.add_argument(
         "--hellovk_extract_dir",
         type=dir_type,
         help="Path to the extracted hellovk app",
-        required=True,
-    ),
-    "qr_generator_extract_dir": lambda p: p.add_argument(
-        "--qr_generator_extract_dir",
-        type=dir_type,
-        help="Path to the extracted qr-generator app",
-        required=True,
-    ),
-    "triangle_extract_dir": lambda p: p.add_argument(
-        "--triangle_extract_dir",
-        type=dir_type,
-        help="Path to the extracted triangle app",
-        required=True,
-    ),
-    "vulkan_samples_extract_dir": lambda p: p.add_argument(
-        "--vulkan_samples_extract_dir",
-        type=dir_type,
-        help="Path to the extracted vulkan_samples app",
-        required=True,
-    ),
-    "vulkancapsviewer_extract_dir": lambda p: p.add_argument(
-        "--vulkancapsviewer_extract_dir",
-        type=dir_type,
-        help="Path to the extracted vulkancapsviewer app",
         required=True,
     ),
     "image_extract_dir": lambda p: p.add_argument(
@@ -174,16 +128,10 @@ _KNOWN_FLAGS = {
         help="Path to the extracted platform tools",
         required=True,
     ),
-    "skip_snapshot_relaunch": lambda p: p.add_argument(
-        "--skip_snapshot_relaunch",
-        action="store_true",
-        help="If true, do not relaunch the emulator for a second ETS_SNAPSHOT pass after ets_close",
-    ),
     "tradefed_args": lambda p: p.add_argument(
         "--tradefed_args",
         help="Arguments to pass to tradefed (comma-separated)",
-        required=False,
-        default="",
+        required=True,
     ),
     "tradefed_extract_dir": lambda p: p.add_argument(
         "--tradefed_extract_dir",

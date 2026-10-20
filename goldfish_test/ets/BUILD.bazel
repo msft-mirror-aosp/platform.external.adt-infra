@@ -1,11 +1,6 @@
-load("@goldfish_build//rules:zip.bzl", "parallel_pkg_zip")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
-load(":ets.bzl", "ets_plan")
-
-exports_files([
-    "android_ets_cfg.py",
-    "external_ets_cfg.py",
-])
+load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
+load(":ets.bzl", "ets_boot_emulator", "ets_plan")
 
 pkg_files(
     name = "e2e_host_tests",
@@ -35,7 +30,6 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/boot:pkg",
         "//ets/java/com/android/tools/e2etests/call:pkg",
         "//ets/java/com/android/tools/e2etests/clipboard:pkg",
-        "//ets/java/com/android/tools/e2etests/deqp:pkg",
         "//ets/java/com/android/tools/e2etests/discovery:pkg",
         "//ets/java/com/android/tools/e2etests/display:pkg",
         "//ets/java/com/android/tools/e2etests/events:pkg",
@@ -48,7 +42,6 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/telnet:pkg",
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
         "//ets/java/com/android/tools/e2etests/wifi:pkg",
-        "//ets/ui:pkg",
         "@animation_app//file",
     ],
     # Bazel builds the apks in with read-only permissions, which tradefed does
@@ -77,12 +70,11 @@ pkg_filegroup(
         ":e2e_host_tests",
         ":ets_modules",
         ":ets_tradefed",
-        "//ets/java/com/android/tools/e2etests/deqp:cts_data",
         "@tradefed//:android_ets",
     ],
 )
 
-parallel_pkg_zip(
+pkg_zip(
     name = "android_ets_zip",
     testonly = True,
     srcs = [

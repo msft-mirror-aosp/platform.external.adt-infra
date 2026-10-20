@@ -3,8 +3,8 @@ load("//ets:ets.bzl", "ets_device_test", "ets_pkg")
 ets_pkg(
     name = "pkg",
     srcs = [
-        ":ConnectivityTest.apk",
         ":ConnectivityTest_config",
+        ":ConnectivityTest.apk",
     ],
 )
 
@@ -15,7 +15,6 @@ ets_device_test(
     package = "com.android.tools.e2etests.wifi",
     deps = [
         "//testlib/java/com/android/tools/testlib/emu:adb",
-        "//testlib/java/com/android/tools/testlib/emu:eventually",
         "@maven//:androidx_test_core",
         "@maven//:androidx_test_runner",
         "@maven//:androidx_test_uiautomator_uiautomator",

@@ -81,7 +81,7 @@ def avd(
                 "hw.lcd.height=3120",
                 "hw.lcd.width=1440",
                 "hw.mainKeys=no",
-                "hw.ramSize=8192",
+                "hw.ramSize=4096",
                 "hw.sdCard=no",
                 "hw.sensors.orientation=yes",
                 "hw.sensors.proximity=yes",
@@ -151,29 +151,6 @@ def _ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
 
 def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     ac = _ets(ns)
-    vulkan_apks = {
-        "gears": os.path.join(ns.gears_extract_dir, "gears", "gears-debug.apk"),
-        "gltf-viewer": os.path.join(
-            ns.gltf_viewer_extract_dir, "gltf-viewer", "gltf-viewer.apk"
-        ),
-        "hellovk": os.path.join(ns.hellovk_extract_dir, "hellovk", "hellovk.apk"),
-        "qr-generator": os.path.join(
-            ns.qr_generator_extract_dir, "qr-generator", "qr-generator.apk"
-        ),
-        "triangle": os.path.join(
-            ns.triangle_extract_dir, "triangle", "triangle-debug.apk"
-        ),
-        "vulkan_samples": os.path.join(
-            ns.vulkan_samples_extract_dir,
-            "vulkan_samples",
-            "vulkan_samples-release.apk",
-        ),
-        "vulkancapsviewer": os.path.join(
-            ns.vulkancapsviewer_extract_dir,
-            "vulkancapsviewer",
-            "vulkancapsviewer_3.40_arm.apk",
-        ),
-    }
     ac.tradefed.args.extend(
         [
             ns.ets_plan,
@@ -183,34 +160,12 @@ def ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
             "RETRY_ANY_FAILURE",
             "--max-testcase-run-count",
             "3",
+            "--module-arg",
+            "VulkanAppTest:set-option:apk_path:"
+            + os.path.join(ns.hellovk_extract_dir, "hellovk", "hellovk.apk"),
+            "--test-arg",
         ]
     )
-    for app_name, apk_path in vulkan_apks.items():
-        ac.tradefed.args.extend(
-            [
-                "--module-arg",
-                f"VulkanAppTest:set-option:apk_paths:{app_name}={apk_path}",
-            ]
-        )
-    if ns.device_hub_dir:
-        for ui_mod in ("DeviceHubUiTest", "SnapshotUiTest"):
-            ac.tradefed.args.extend(
-                [
-                    "--module-arg",
-                    f"{ui_mod}:set-option:device_hub_path:{ns.device_hub_dir}",
-                ]
-            )
-    if ns.display_dir:
-        for ui_mod in ("DeviceHubUiTest", "SnapshotUiTest"):
-            ac.tradefed.args.extend(
-                [
-                    "--module-arg",
-                    f"{ui_mod}:set-option:display_dir:{ns.display_dir}",
-                ]
-            )
-    if ns.tradefed_args:
-        ac.tradefed.args.extend(ns.tradefed_args.split(","))
-    ac.tradefed.args.append("--test-arg")
     ac.imports.append(
         test_sequencer_pb2.Import(
             id="goldfish",
@@ -258,7 +213,6 @@ def ets_close(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
 def ets_external(
     ns: argparse.Namespace, serial_number: str, grpc_port: str
 ) -> test_sequencer_pb2.AgentConfig:
-    _ = ns.skip_snapshot_relaunch
     ac = ets(ns)
     imps = [i for i in ac.imports if i.id != "goldfish"]
     del ac.imports[:]
