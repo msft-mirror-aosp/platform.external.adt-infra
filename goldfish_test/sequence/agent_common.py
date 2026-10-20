@@ -430,6 +430,7 @@ def goldfish(
     args = [
         "-verbose",
         "-show-kernel",
+        "-metrics-collection",
     ]
     if port:
         args.extend(["-port", str(port)])
