@@ -1,5 +1,7 @@
 """Reports the Tradefed results of a run_local.bat or run_external.bat run to Bazel and Sponge.
 
+Used by ets/ui and ets/snapshot (see their run_local.bat).
+
 On gLinux and macOS run_local.sh and run_external.sh are Bazel tests, so Bazel
 uploads their JUnit XML, log and outputs to Sponge. On Windows run_local.bat and
 run_external.bat drive the emulator and Tradefed outside of Bazel, so they end
@@ -33,7 +35,7 @@ def _parse_args(argv):
         "--out_dir",
         required=True,
         type=pathlib.Path,
-        help="Output directory of a run_local.bat run (out\\ets_ui\\<timestamp>).",
+        help="Output directory of a run_local.bat run (out\\ets_ui\\<timestamp> or out\\ets_snapshot\\<timestamp>).",
     )
     parser.add_argument(
         "--min_results",

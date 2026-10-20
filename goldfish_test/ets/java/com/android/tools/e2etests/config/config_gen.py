@@ -19,6 +19,7 @@ class Kind(enum.Enum):
   EMU_NOW_NO_DEQP = 3
 
 ALL_MODULES = [
+    "AdbEmuSnapshotTest",
     "AdbPushPullTest",
     "AdbScreenCapTest",
     "AvdTest",
@@ -34,6 +35,7 @@ ALL_MODULES = [
     "FoldableDisplayTest",
     "InputTest",
     "MapsUiTest",
+    "NamedSnapshotTest",
     "NetsimDaemonTest",
     "NetsimSingleDeviceTest",
     "ScreenshotTest",
@@ -65,7 +67,9 @@ EXCLUSIONS = {
         "ControlKeysTest": ["com.android.tools.e2etests.events.ControlKeysTest#screenshot"],
         # Not yet implemented on emu-next.
         "SnapshotTest": [],
-        # Dedicated multi-launch snapshot sequence under //ets/snapshot.
+        # Dedicated multi-launch snapshot sequences under //ets/snapshot.
+        "AdbEmuSnapshotTest": [],
+        "NamedSnapshotTest": [],
         "SnapshotVersionTest": [],
         },
     Kind.EMU_NOW: {
@@ -76,7 +80,9 @@ EXCLUSIONS = {
         "WebGlAquariumUiTest": [],
         # Needs a foldable AVD configuration (see //ets/foldable).
         "FoldableDisplayTest": [],
-        # Dedicated multi-launch snapshot sequence under //ets/snapshot.
+        # Dedicated multi-launch snapshot sequences under //ets/snapshot.
+        "AdbEmuSnapshotTest": [],
+        "NamedSnapshotTest": [],
         "SnapshotVersionTest": [],
         # These tests experience timeouts.
         "CallTest": [
