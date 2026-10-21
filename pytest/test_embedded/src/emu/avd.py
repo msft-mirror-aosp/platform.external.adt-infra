@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """A basic emulator launcher."""
+
 import configparser
 import gzip
 import logging
@@ -135,7 +136,7 @@ class FetcherSystemImages:
             dict[str, str]:  A dictionary with api, tag, abi, and cpu.
         """
         channel = channel or SdkManagerChannel.STABLE
-        if tag in ["google-xr", "ai-glasses"]:
+        if tag in ["google-xr", "ai-glasses", "android-xr-preview-playstore"]:
             # Use Canary releases for XR and Glasses
             channel = SdkManagerChannel.CANARY
         if fetch_target:
@@ -169,7 +170,7 @@ class FetcherSystemImages:
 
 class SystemImages:
     IMAGE = re.compile(
-        r".*android-([\w\.-]+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv|google-xr|ai-glasses)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
+        r".*android-([\w\.-]+)[\/\\](default|google_apis|google_apis_playstore|google_apis_tablet|android-desktop|android-wear|android-tv|google-xr|ai-glasses|android-xr-preview-playstore)[\/\\](x86|x86_64|arm64-v8a)[\/\\]system.img(.gz)?$"
     )
 
     def __init__(self, sdk_root: Path = Path(os.environ.get("ANDROID_SDK_ROOT", "."))):
@@ -323,7 +324,7 @@ class SystemImages:
         """
         # # 0 (Stable), 1 (Beta), 2 (Dev), and 3 (Canary).
         channel = channel or SdkManagerChannel.STABLE
-        if tag in ["google-xr", "ai-glasses"]:
+        if tag in ["google-xr", "ai-glasses", "android-xr-preview-playstore"]:
             # Use Canary releases for XR and Glasses
             channel = SdkManagerChannel.CANARY
         logging.info(

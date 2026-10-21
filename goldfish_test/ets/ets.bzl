@@ -296,16 +296,17 @@ _ets_device_manifest = rule(
     },
 )
 
-def ets_device_test(name,
-                    srcs,
-                    package,
-                    description = "",
-                    manifest_file = None,
-                    manifest_app_extra = "",
-                    manifest_extra = "",
-                    extra_apks = None,
-                    pull_files = False,
-                    **kwargs):
+def ets_device_test(
+        name,
+        srcs,
+        package,
+        description = "",
+        manifest_file = None,
+        manifest_app_extra = "",
+        manifest_extra = "",
+        extra_apks = None,
+        pull_files = False,
+        **kwargs):
     """Creates an ETS Device Test.
 
     This will do the following:
@@ -329,7 +330,7 @@ def ets_device_test(name,
         name = name + "_lib",
         testonly = 1,
         srcs = srcs,
-        **kwargs,
+        **kwargs
     )
     apks = [name + ".apk"]
     if extra_apks:
@@ -358,7 +359,7 @@ def ets_device_test(name,
         custom_package = package,
         manifest = manifest_file,
         manifest_values = {
-            "minSdkVersion": "36",
+            "minSdkVersion": "28",
             "targetSdkVersion": "36",
         },
         deps = [":" + name + "_lib"],

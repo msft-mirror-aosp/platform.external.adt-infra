@@ -1795,6 +1795,15 @@ xts_plan(
 test_suite(
     name = "postsubmit",
     tests = [
+        "cts.CtsAtomicInstallTestCases",
+        "cts.CtsControlsDeviceTestCases",
+        "cts.CtsIkeTestCases",
+        "cts.CtsLibcoreJsr166TestCases",
+        "cts.CtsMediaPerformanceClassTestCases",
+        "cts.CtsNetHttpTestCases",
+        "cts.CtsProtoTestCases",
+        "cts.CtsTfliteNnapiDelegateTestCases",
         "cts.CtsUsbTests",
+        "cts.CtsUtilTestCases",
     ],
 )

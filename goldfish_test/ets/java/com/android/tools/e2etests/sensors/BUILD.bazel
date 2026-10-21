@@ -12,6 +12,7 @@ ets_device_test(
     name = "SensorTest",
     srcs = ["SensorTest.kt"],
     description = "Tests related to the emulator sensors",
+    manifest_extra = "<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\" />",
     package = "com.android.tools.e2etests.sensors",
     deps = [
         "//deps/proto:aemu_java_grpc_lite",
