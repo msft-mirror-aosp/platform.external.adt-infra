@@ -10,7 +10,9 @@ from test_seq.proto import test_sequencer_pb2
 
 def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
     # TODO: b/553593925 Skip snapshots on macOS until the bug is fixed.
-    no_snapshot = platform.system() == "Darwin"
+    # b/553593925, revert if happens again
+    # btw, to trigger a test, bump b to 6: b = 5
+    no_snapshot = False
 
     ret =  [
         agent_common.goldfish_fetch(ns),
