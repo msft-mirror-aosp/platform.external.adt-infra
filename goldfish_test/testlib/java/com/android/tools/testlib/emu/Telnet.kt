@@ -28,7 +28,7 @@ fun readLine(input: BufferedReader, close: () -> Unit, timeout: Long = TIMEOUT_M
     launch(Dispatchers.IO) {
       val line = input.readLine()
       if (line != null) {
-         channel.send(line)
+        channel.send(line)
       }
     }
     result = withTimeoutOrNull(timeout) { channel.receive() }
@@ -41,6 +41,36 @@ fun readLine(input: BufferedReader, close: () -> Unit, timeout: Long = TIMEOUT_M
     return result
   }
   throw TimeoutException("Timeout waiting for line")
+}
+
+/**
+ * Reads until EOF is reached, with a timeout.
+ *
+ * @param input The input to read from.
+ * @param close The function to call if the timeout is reached. This must close the input stream to
+ *   unblock the coroutine.
+ * @param timeout The timeout in milliseconds.
+ */
+fun readUntilEof(input: BufferedReader, close: () -> Unit, timeout: Long = TIMEOUT_MS) {
+  var result: Boolean? = null
+  runBlocking {
+    val channel = Channel<Boolean>(Channel.UNLIMITED)
+    launch(Dispatchers.IO) {
+      var c = 1
+      while (c != -1) {
+        c = input.read()
+      }
+      channel.send(true)
+    }
+    result = withTimeoutOrNull(timeout) { channel.receive() }
+    // If the timeout is reached, we must close the connection to unblock the other coroutine.
+    if (result == null) {
+      close()
+    }
+  }
+  if (result == null) {
+    throw TimeoutException("Timeout waiting for EOF")
+  }
 }
 
 /**
@@ -90,6 +120,21 @@ class Telnet(val input: BufferedReader, val output: OutputStream, val disconnect
     output.write("$command\n".toByteArray())
     output.flush()
     return readUntilOk()
+  }
+
+  /** Sends a command to the emulator without reading response. */
+  fun sendCommandNoResponse(command: String) {
+    output.write("$command\n".toByteArray())
+    output.flush()
+  }
+
+  /**
+   * Waits for the telnet connection to be terminated.
+   *
+   * @throws TimeoutException if the connection is not terminated within the timeout.
+   */
+  fun waitForTermination() {
+    return readUntilEof(input, disconnect)
   }
 }
 

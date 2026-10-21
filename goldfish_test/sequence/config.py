@@ -110,10 +110,46 @@ _KNOWN_FLAGS = {
         action="store_true",
         help="If true, the emulator is prebuilt and does not support -not-in-bazel",
     ),
+    "gears_extract_dir": lambda p: p.add_argument(
+        "--gears_extract_dir",
+        type=dir_type,
+        help="Path to the extracted gears app",
+        required=True,
+    ),
+    "gltf_viewer_extract_dir": lambda p: p.add_argument(
+        "--gltf_viewer_extract_dir",
+        type=dir_type,
+        help="Path to the extracted gltf-viewer app",
+        required=True,
+    ),
     "hellovk_extract_dir": lambda p: p.add_argument(
         "--hellovk_extract_dir",
         type=dir_type,
         help="Path to the extracted hellovk app",
+        required=True,
+    ),
+    "qr_generator_extract_dir": lambda p: p.add_argument(
+        "--qr_generator_extract_dir",
+        type=dir_type,
+        help="Path to the extracted qr-generator app",
+        required=True,
+    ),
+    "triangle_extract_dir": lambda p: p.add_argument(
+        "--triangle_extract_dir",
+        type=dir_type,
+        help="Path to the extracted triangle app",
+        required=True,
+    ),
+    "vulkan_samples_extract_dir": lambda p: p.add_argument(
+        "--vulkan_samples_extract_dir",
+        type=dir_type,
+        help="Path to the extracted vulkan_samples app",
+        required=True,
+    ),
+    "vulkancapsviewer_extract_dir": lambda p: p.add_argument(
+        "--vulkancapsviewer_extract_dir",
+        type=dir_type,
+        help="Path to the extracted vulkancapsviewer app",
         required=True,
     ),
     "image_extract_dir": lambda p: p.add_argument(
@@ -131,7 +167,8 @@ _KNOWN_FLAGS = {
     "tradefed_args": lambda p: p.add_argument(
         "--tradefed_args",
         help="Arguments to pass to tradefed (comma-separated)",
-        required=True,
+        required=False,
+        default="",
     ),
     "tradefed_extract_dir": lambda p: p.add_argument(
         "--tradefed_extract_dir",

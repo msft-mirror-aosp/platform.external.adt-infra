@@ -106,7 +106,9 @@ def set_dnd_via_quick_settings(enable, customize_alarms_media_only=False):
         root = ui_dump()
         tile = find_node(root, text="Modes") or find_node(root, text="Do Not Disturb")
     if tile is None:
-        print("  Quick Settings tile not found; using cmd notification set_dnd fallback...")
+        print(
+            "  Quick Settings tile not found; using cmd notification set_dnd fallback..."
+        )
         adb("shell", "cmd", "statusbar", "collapse", check=False)
         if enable:
             adb("shell", "cmd", "notification", "set_dnd", "priority", check=False)

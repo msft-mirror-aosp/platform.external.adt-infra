@@ -1,0 +1,38 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
+py_binary(
+    name = "config_gen",
+    srcs = ["config_gen.py"],
+)
+
+genrule(
+    name = "presubmit_gen",
+    outs = ["presubmit.xml"],
+    cmd = "$(execpath :config_gen) PRESUBMIT > $@",
+    tools = [":config_gen"],
+)
+
+genrule(
+    name = "emu_now_presubmit_gen",
+    outs = ["emu_now_presubmit.xml"],
+    cmd = "$(execpath :config_gen) EMU_NOW > $@",
+    tools = [":config_gen"],
+)
+
+genrule(
+    name = "emu_now_no_deqp_presubmit_gen",
+    outs = ["emu_now_no_deqp_presubmit.xml"],
+    cmd = "$(execpath :config_gen) EMU_NOW_NO_DEQP > $@",
+    tools = [":config_gen"],
+)
+
+filegroup(
+    name = "configs",
+    srcs = [
+        "ets.xml",
+        ":emu_now_no_deqp_presubmit_gen",
+        ":emu_now_presubmit_gen",
+        ":presubmit_gen",
+    ],
+    visibility = ["//ets:__subpackages__"],
+)

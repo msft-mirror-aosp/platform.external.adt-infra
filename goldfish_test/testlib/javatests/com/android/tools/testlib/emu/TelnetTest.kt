@@ -40,6 +40,23 @@ class TelnetTest {
   }
 
   @Test
+  fun testReadUntilEofSuccess() {
+    val input = "foo\nbar\n".reader().buffered()
+    readUntilEof(input, {})
+  }
+
+  @Test
+  fun testReadUntilEofTimeout() {
+    val lock = ReentrantLock()
+    val condition = lock.newCondition()
+    val input = BlockingReader(lock, condition)
+
+    Assert.assertThrows(TimeoutException::class.java) {
+      readUntilEof(input.buffered(), { lock.withLock { condition.signalAll() } }, 100L)
+    }
+  }
+
+  @Test
   fun testTelnetReadUntilOkIsOk() {
     val input = "foo\nbar\nOK\n".reader().buffered()
     val output = ByteArrayOutputStream()
@@ -77,6 +94,23 @@ class TelnetTest {
       telnet.sendCommand("go")
     }
     Assert.assertEquals("go\n", output.toString())
+  }
+
+  @Test
+  fun telnetSendCommandNoResponse() {
+    val input = "foo\nbar\nOK\n".reader().buffered()
+    val output = ByteArrayOutputStream()
+    val telnet = Telnet(input, output, {})
+    telnet.sendCommandNoResponse("gooo")
+    Assert.assertEquals("gooo\n", output.toString())
+  }
+
+  @Test
+  fun waitForTermination() {
+    val input = "error\n".reader().buffered()
+    val output = ByteArrayOutputStream()
+    val telnet = Telnet(input, output, {})
+    telnet.waitForTermination()
   }
 
 }

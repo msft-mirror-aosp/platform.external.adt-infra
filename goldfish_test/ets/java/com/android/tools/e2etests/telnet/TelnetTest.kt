@@ -85,6 +85,14 @@ public class TelnetTest : BaseHostJUnit4Test() {
     Assert.assertTrue(got.containsAll(wantCommandsAfterAuth))
   }
 
+  @Test
+  fun exit() {
+    telnet.readUntilOk()
+    telnet.sendCommandNoResponse("exit")
+    // This will raise an exception if the telnet connection is not closed.
+    telnet.waitForTermination()
+  }
+
   @After
   fun tearDown() {
     telnet.disconnect()
