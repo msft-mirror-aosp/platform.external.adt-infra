@@ -103,7 +103,7 @@ open class UiTestBase : BaseHostJUnit4Test() {
 
   // --- helpers ---------------------------------------------------------------------------------
 
-  internal fun cdp(): Cdp = mCdp!!
+  protected fun cdp(): Cdp = mCdp!!
 
   protected fun isLinux(): Boolean =
     System.getProperty("os.name").contains("Linux", ignoreCase = true)
@@ -200,7 +200,7 @@ open class UiTestBase : BaseHostJUnit4Test() {
     mDisplay = null
   }
 
-  private fun findFfmpegBinary(displayDir: File): File? {
+  protected fun findFfmpegBinary(displayDir: File): File? {
     // The display dir ships binaries for every host; only consider the ones for this OS.
     val names =
       when {
@@ -784,21 +784,28 @@ class DeviceHubUiTest : UiTestBase() {
 }
 
 /** Minimal Chrome DevTools Protocol client using the JDK WebSocket. */
-internal class Cdp
+class Cdp
 private constructor(
   private val ws: WebSocket,
   private val pending: ConcurrentHashMap<Int, CompletableFuture<JSONObject>>,
 ) {
   private val ids = AtomicInteger()
 
-  fun call(method: String, params: JSONObject = JSONObject()): JSONObject {
+  fun call(method: String, params: JSONObject = JSONObject(), timeoutSec: Long = 10): JSONObject {
     val id = ids.incrementAndGet()
     val future = CompletableFuture<JSONObject>()
     pending[id] = future
-    ws.sendText(JSONObject().put("id", id).put("method", method).put("params", params).toString(), true)
-    val resp = future.get(10, TimeUnit.SECONDS)
-    if (resp.has("error")) throw IllegalStateException("CDP $method failed: ${resp.get("error")}")
-    return resp
+    try {
+      val msg = JSONObject().put("id", id).put("method", method).put("params", params).toString()
+      synchronized(ws) {
+        ws.sendText(msg, true).get(timeoutSec, TimeUnit.SECONDS)
+      }
+      val resp = future.get(timeoutSec, TimeUnit.SECONDS)
+      if (resp.has("error")) throw IllegalStateException("CDP $method failed: ${resp.get("error")}")
+      return resp
+    } finally {
+      pending.remove(id)
+    }
   }
 
   fun eval(expr: String): Any? {
@@ -810,11 +817,22 @@ private constructor(
   }
 
   fun close() {
-    ws.sendClose(WebSocket.NORMAL_CLOSURE, "").get(5, TimeUnit.SECONDS)
+    synchronized(ws) {
+      ws.sendClose(WebSocket.NORMAL_CLOSURE, "").get(5, TimeUnit.SECONDS)
+    }
   }
 
   companion object {
-    fun connect(port: Int, timeoutMs: Long = 60_000): Cdp {
+    /**
+     * Connects to the first DevTools target on 127.0.0.1:[port] that matches [isTarget] (by default
+     * the first page). The target's webSocketDebuggerUrl is rebuilt against 127.0.0.1:[port] because
+     * Chrome on Android, reached through `adb forward`, may report it without a host.
+     */
+    fun connect(
+      port: Int,
+      timeoutMs: Long = 60_000,
+      isTarget: (JSONObject) -> Boolean = { it.getString("type") == "page" },
+    ): Cdp {
       val http = HttpClient.newHttpClient()
       val end = System.currentTimeMillis() + timeoutMs
       var wsUrl: String? = null
@@ -829,10 +847,11 @@ private constructor(
                   )
                   .body()
               val targets = JSONArray(body)
-              (0 until targets.length())
-                .map { targets.getJSONObject(it) }
-                .first { it.getString("type") == "page" }
-                .getString("webSocketDebuggerUrl")
+              val target =
+                (0 until targets.length())
+                  .map { targets.getJSONObject(it) }
+                  .first { isTarget(it) }
+              "ws://127.0.0.1:$port" + URI(target.getString("webSocketDebuggerUrl")).rawPath
             }
             .getOrNull()
         if (wsUrl == null) Thread.sleep(500)

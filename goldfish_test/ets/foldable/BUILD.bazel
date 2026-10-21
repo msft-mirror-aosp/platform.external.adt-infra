@@ -1,0 +1,80 @@
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg", "ets_plan")
+
+ets_pkg(
+    name = "pkg",
+    srcs = [
+        ":foldable_display_test_config",
+    ],
+)
+
+ets_host_test(
+    name = "foldable_display_test",
+    srcs = ["FoldableDisplayTest.kt"],
+    class_name = "com.android.tools.e2etests.foldable.FoldableDisplayTest",
+    description = "Host test verifying embedded foldable display rendering across fold, unfold, and display power off/on transitions",
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//deps/proto:aemu_java_proto",
+        "//ets/java/com/android/tools/e2etests/grpc:host_grpc_lib",
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@grpc-java//api",
+        "@grpc-java//context",
+        "@grpc-java//protobuf",
+        "@grpc-java//stub",
+        "@maven//:junit_junit",
+        "@protobuf//:protobuf_java",
+        "@protobuf//:protobuf_java_util",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+_FOLDABLE_AVD_INI = ",".join([
+    "hw.device.manufacturer=Google",
+    "hw.device.name=pixel_10_pro_fold",
+    "hw.lcd.width=2076",
+    "hw.lcd.height=2152",
+    "hw.lcd.density=373",
+    "hw.displayRegion.0.1.xOffset=0",
+    "hw.displayRegion.0.1.yOffset=0",
+    "hw.displayRegion.0.1.width=1080",
+    "hw.displayRegion.0.1.height=2364",
+    "hw.sensor.hinge=yes",
+    "hw.sensor.hinge.count=1",
+    "hw.sensor.hinge.type=1",
+    "hw.sensor.hinge.sub_type=1",
+    "hw.sensor.hinge.ranges=0-180",
+    "hw.sensor.hinge.defaults=180",
+    "hw.sensor.hinge.areas=1038-0-0-2152",
+    "hw.sensor.posture_list=1,2,3",
+    "hw.sensor.hinge_angles_posture_definitions=0-30,30-150,150-180",
+    "hw.sensor.hinge.fold_to_displayRegion.0.1_at_posture=1",
+    "hw.initialOrientation=landscape",
+    "hw.keyboard.lid=yes",
+])
+
+_FOLDABLE_ARGS = [
+    "--avd_ini",
+    _FOLDABLE_AVD_INI,
+    "--display_dir",
+    "$(rlocationpath @local//tools/emulator/testlib/display:ffmpeg_files)",
+]
+
+_FOLDABLE_DATA = [
+    "@local//tools/emulator/testlib/display:ffmpeg_files",
+]
+
+ets_plan(
+    name = "foldable",
+    args = _FOLDABLE_ARGS + [
+        "--tradefed_args=-m,FoldableDisplayTest",
+    ],
+    data = _FOLDABLE_DATA,
+    plan = "ets",
+)
+
+# The system image :foldable boots on gLinux. run_local.bat builds this to fetch it on Windows.
+alias(
+    name = "system_image",
+    actual = "@android16k-x86_64//:all_files",
+    tags = ["manual"],
+)

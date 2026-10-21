@@ -31,7 +31,9 @@ ALL_MODULES = [
     "DeqpRunnerTest",
     "DeviceHubUiTest",
     "DisplayNameTest",
+    "FoldableDisplayTest",
     "InputTest",
+    "MapsUiTest",
     "NetsimDaemonTest",
     "NetsimSingleDeviceTest",
     "ScreenshotTest",
@@ -41,6 +43,7 @@ ALL_MODULES = [
     "SnapshotUiTest",
     "TelnetTest",
     "VulkanAppTest",
+    "WebGlAquariumUiTest",
 ]
 
 # Maps Kind to a map of module name to a list of excluded test methods. If the
@@ -49,7 +52,11 @@ EXCLUSIONS = {
     Kind.PRESUBMIT: {
         # Needs an X display to run the Electron UI, which CI bots lack.
         "DeviceHubUiTest": [],
+        "MapsUiTest": [],
         "SnapshotUiTest": [],
+        "WebGlAquariumUiTest": [],
+        # Needs a foldable AVD configuration (see //ets/foldable).
+        "FoldableDisplayTest": [],
         # Not yet implemented on emu-next.
         "AvdTest": [],
         "CallTest": [],
@@ -61,7 +68,11 @@ EXCLUSIONS = {
     Kind.EMU_NOW: {
         # Needs an X display to run the Electron UI, which CI bots lack.
         "DeviceHubUiTest": [],
+        "MapsUiTest": [],
         "SnapshotUiTest": [],
+        "WebGlAquariumUiTest": [],
+        # Needs a foldable AVD configuration (see //ets/foldable).
+        "FoldableDisplayTest": [],
         # These tests experience timeouts.
         "CallTest": [
             "com.android.tools.e2etests.call.CallTest#acceptCall",
