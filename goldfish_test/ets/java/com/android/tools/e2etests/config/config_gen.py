@@ -29,6 +29,7 @@ ALL_MODULES = [
     "ConnectivityTest",
     "ControlKeysTest",
     "DeqpRunnerTest",
+    "DeviceHubUiTest",
     "DisplayNameTest",
     "InputTest",
     "NetsimDaemonTest",
@@ -37,6 +38,7 @@ ALL_MODULES = [
     "SensorTest",
     "SmsTest",
     "SnapshotTest",
+    "SnapshotUiTest",
     "TelnetTest",
     "VulkanAppTest",
 ]
@@ -45,6 +47,9 @@ ALL_MODULES = [
 # list is empty, the entire module is excluded.
 EXCLUSIONS = {
     Kind.PRESUBMIT: {
+        # Needs an X display to run the Electron UI, which CI bots lack.
+        "DeviceHubUiTest": [],
+        "SnapshotUiTest": [],
         # Not yet implemented on emu-next.
         "AvdTest": [],
         "CallTest": [],
@@ -54,6 +59,9 @@ EXCLUSIONS = {
         "SnapshotTest": [],
         },
     Kind.EMU_NOW: {
+        # Needs an X display to run the Electron UI, which CI bots lack.
+        "DeviceHubUiTest": [],
+        "SnapshotUiTest": [],
         # These tests experience timeouts.
         "CallTest": [
             "com.android.tools.e2etests.call.CallTest#acceptCall",
@@ -66,6 +74,23 @@ EXCLUSIONS = {
 
 EXCLUSIONS[Kind.EMU_NOW_NO_DEQP] = EXCLUSIONS[Kind.EMU_NOW] | {
     "DeqpRunnerTest": (),
+    # TODO(b/570641589): Re-enable once Vulkan tests are fixed.
+    "VulkanAppTest": [
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunGears",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunGltfViewer",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunQrGenerator",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunTriangle",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunVulkanCapsViewer",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunVulkanSamplesHelloTriangle",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunVulkanSamplesHelloTriangle13",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunVulkanSamplesTextureLoading",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunVulkanSamplesDynamicUniformBuffers",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunVulkanSamplesComputeNbody",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunVulkanSamplesSynchronization2",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunVulkanSamplesSwapchainImages",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#testRunVulkanSamplesSubpasses",
+        "com.android.tools.e2etests.vulkan.VulkanAppTest#vulkanLavapipe",
+    ],
 }
 
 HEADER = """
