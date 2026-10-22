@@ -49,6 +49,7 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
         "//ets/java/com/android/tools/e2etests/wifi:pkg",
         "//ets/foldable:pkg",
+        "//ets/snapshot:pkg",
         "//ets/ui:pkg",
         "@animation_app//file",
     ],

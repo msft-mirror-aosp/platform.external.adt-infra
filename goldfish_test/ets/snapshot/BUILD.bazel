@@ -1,0 +1,134 @@
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg", "ets_plan")
+load("//sequence:api_level.bzl", "DEFAULT_API_LEVEL", "sysimg_repo_for_api")
+
+ets_pkg(
+    name = "pkg",
+    srcs = [
+        ":adb_emu_snapshot_test_config",
+        ":named_snapshot_test_config",
+        ":snapshot_version_test_config",
+    ],
+)
+
+ets_host_test(
+    name = "snapshot_version_test",
+    srcs = ["SnapshotVersionTest.kt"],
+    class_name = "com.android.tools.e2etests.snapshot.SnapshotVersionTest",
+    description = "End-to-end host test verifying emulator snapshot load when version.txt matches and cold boot fallback when version.txt mismatches",
+    deps = [
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@maven//:junit_junit",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+ets_host_test(
+    name = "adb_emu_snapshot_test",
+    srcs = ["AdbEmuSnapshotTest.kt"],
+    class_name = "com.android.tools.e2etests.snapshot.AdbEmuSnapshotTest",
+    description = "End-to-end host test of 'adb emu avd snapshot save|load|del|list' for snapshots saved by name",
+    deps = [
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@maven//:junit_junit",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+ets_host_test(
+    name = "named_snapshot_test",
+    srcs = ["NamedSnapshotTest.kt"],
+    class_name = "com.android.tools.e2etests.snapshot.NamedSnapshotTest",
+    description = "End-to-end host test saving, restoring and deleting snapshots by name through HypervisorService v2, and relaunching the emulator from a snapshot created at runtime",
+    deps = [
+        "//ets/java/com/android/tools/e2etests/grpc:host_grpc_lib",
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "@aemu//protos/services_v2:hypervisor_service_java_grpc",
+        "@aemu//protos/services_v2:hypervisor_service_java_proto",
+        "@grpc-java//api",
+        "@grpc-java//stub",
+        "@maven//:junit_junit",
+        "@protobuf//:protobuf_java",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+# Runs both snapshot E2E tests in SnapshotVersionTest across 2 relaunch rounds:
+# 1. cold_boot -> save snapshot -> load_1: verifies loadFromSnapshotWhenVersionMatches
+# 2. load_1 (switches version.txt back by 1) -> save snapshot -> load_2: verifies coldBootWhenSnapshotVersionMismatches
+ets_plan(
+    name = "snapshot",
+    args = [
+        "--snapshot_relaunch_rounds",
+        "2",
+        "--tradefed_args=-m,SnapshotVersionTest",
+    ],
+    plan = "ets",
+)
+
+# Standalone E2E test 1: launch emulator, save snapshot, launch again -> loads from snapshot.
+ets_plan(
+    name = "load_from_snapshot_when_version_matches",
+    args = [
+        "--snapshot_relaunch_rounds",
+        "1",
+        "--tradefed_args=-m,SnapshotVersionTest,-t,com.android.tools.e2etests.snapshot.SnapshotVersionTest#loadFromSnapshotWhenVersionMatches",
+    ],
+    plan = "ets",
+)
+
+# Standalone E2E test 2: launch emulator, save snapshot, switch version.txt back a bit,
+# launch again -> does not load from snapshot and performs a cold boot instead.
+ets_plan(
+    name = "cold_boot_when_snapshot_version_mismatches",
+    args = [
+        "--snapshot_relaunch_rounds",
+        "1",
+        "--tradefed_args=-m,SnapshotVersionTest,-t,com.android.tools.e2etests.snapshot.SnapshotVersionTest#coldBootWhenSnapshotVersionMismatches,--module-arg,SnapshotVersionTest:set-option:downgrade_version_in_phase:cold_boot",
+    ],
+    plan = "ets",
+)
+
+# Named snapshots over gRPC and "adb emu avd snapshot" (b/574891578), single cold-boot pass:
+# create / list / restore / delete a runtime snapshot, reject a stale one and invalid ids. Then relaunch once with
+# `-snapshot ets_named` and check the emulator resumed from the snapshot CreateSnapshot took
+# (not from the default_boot saved by the shutdown).
+ets_plan(
+    name = "named_snapshot",
+    args = [
+        "--snapshot_relaunch_rounds",
+        "1",
+        "--relaunch_emulator_args=-snapshot,ets_named",
+        "--tradefed_args=--include-filter,NamedSnapshotTest,--include-filter,AdbEmuSnapshotTest",
+    ],
+    plan = "ets",
+)
+
+# Same tests, without the relaunch (also usable against an external emulator).
+ets_plan(
+    name = "named_snapshot_round_trip",
+    args = [
+        "--skip_snapshot_relaunch",
+        "--tradefed_args=--include-filter,NamedSnapshotTest,--include-filter,AdbEmuSnapshotTest",
+    ],
+    plan = "ets",
+)
+
+# Emulator launched with -no-snapshot: CreateSnapshot / RestoreSnapshot are rejected with
+# FAILED_PRECONDITION while ListSnapshots keeps working.
+ets_plan(
+    name = "named_snapshot_disabled",
+    args = [
+        "--skip_snapshot_relaunch",
+        "--emulator_args=-no-snapshot",
+        "--tradefed_args=--include-filter,NamedSnapshotTest,--include-filter,AdbEmuSnapshotTest,--module-arg,NamedSnapshotTest:set-option:snapshots_disabled:true",
+    ],
+    plan = "ets",
+)
+
+# The system image the plans above boot on gLinux at the default API level. run_local.bat builds
+# this to fetch it on Windows.
+alias(
+    name = "system_image",
+    actual = "@%s//:all_files" % sysimg_repo_for_api(DEFAULT_API_LEVEL, "x86_64"),
+    tags = ["manual"],
+)

@@ -3,6 +3,12 @@
 load("@rules_android//rules:rules.bzl", "android_binary")
 load("@rules_kotlin//kotlin:android.bzl", "kt_android_library")
 load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
+load(
+    "//sequence:api_level.bzl",
+    "SUPPORTED_API_LEVELS",
+    "select_by_os_and_api",
+    "sysimg_repo_for_api",
+)
 load("//sequence:sequence.bzl", "run_sequence")
 
 def _ets_sequence(name, config, args = [], data = [], tags = []):
@@ -65,35 +71,37 @@ def _ets_sequence(name, config, args = [], data = [], tags = []):
         ],
     )
 
-def _boot_normal_config(args, data):
+def _boot_normal_config(args, data, api_level = None):
     ret_args = args + [
         "--goldfish_zip",
         "$(rlocationpath @goldfish//emulator:release)",
         "--emulator_access_json",
         "$(rlocationpath @goldfish//emulator/libs/grpc_security:unsecure-emulator-access)",
-    ] + select({
-        "@platforms//os:linux": [
+    ] + select_by_os_and_api(
+        linux_fn = lambda api: [
             "--image_extract_dir",
-            "$(rlocationpath @android16k-x86_64//:BUILD.bazel)",
+            "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "x86_64"),
         ],
-        "@platforms//os:macos": [
+        macos_fn = lambda api: [
             "--image_extract_dir",
-            "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
+            "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "arm64-v8a"),
         ],
-    })
+        api_level = api_level,
+    )
     ret_data = data + [
         "@goldfish//emulator:release",
         "@goldfish//emulator/libs/grpc_security:unsecure-emulator-access",
-    ] + select({
-        "@platforms//os:linux": [
-            "@android16k-x86_64//:BUILD.bazel",
-            "@android16k-x86_64//:all_files",
+    ] + select_by_os_and_api(
+        linux_fn = lambda api: [
+            "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "x86_64"),
+            "@%s//:all_files" % sysimg_repo_for_api(api, "x86_64"),
         ],
-        "@platforms//os:macos": [
-            "@android16k-arm64-v8a//:BUILD.bazel",
-            "@android16k-arm64-v8a//:all_files",
+        macos_fn = lambda api: [
+            "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "arm64-v8a"),
+            "@%s//:all_files" % sysimg_repo_for_api(api, "arm64-v8a"),
         ],
-    })
+        api_level = api_level,
+    )
     return ret_args, ret_data
 
 def _boot_local_config(args, data):
@@ -110,19 +118,19 @@ def _boot_local_config(args, data):
         "@local//goldfish:release",
         "@local//image:BUILD.bazel",
         "@local//image:all_files",
-    ] + select({
-        "@platforms//os:linux": [
-            "@android16k-x86_64//:BUILD.bazel",
-            "@android16k-x86_64//:all_files",
+    ] + select_by_os_and_api(
+        linux_fn = lambda api: [
+            "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "x86_64"),
+            "@%s//:all_files" % sysimg_repo_for_api(api, "x86_64"),
         ],
-        "@platforms//os:macos": [
-            "@android16k-arm64-v8a//:BUILD.bazel",
-            "@android16k-arm64-v8a//:all_files",
+        macos_fn = lambda api: [
+            "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "arm64-v8a"),
+            "@%s//:all_files" % sysimg_repo_for_api(api, "arm64-v8a"),
         ],
-    })
+    )
     return ret_args, ret_data
 
-def ets_boot_emulator(name, config, args = [], data = [], tags = []):
+def ets_boot_emulator(name, config, args = [], data = [], tags = [], api_level = None):
     """Create bazel targets run boot an emulator and run ETS.
 
     Includes a normal and local override version of the target.
@@ -133,10 +141,11 @@ def ets_boot_emulator(name, config, args = [], data = [], tags = []):
         args: Additional arguments to pass to the bazel targets.
         data: Additional data to pass to the bazel targets.
         tags: Additional tags to pass to the bazel targets.
+        api_level: Optional fixed API level (29..37). When None, responds to `--define api_level=<29..37>`.
     """
 
     # Normal version which starts an emulator.
-    normal_args, normal_data = _boot_normal_config(args, data)
+    normal_args, normal_data = _boot_normal_config(args, data, api_level = api_level)
     _ets_sequence(
         name = name,
         config = config,
@@ -148,18 +157,19 @@ def ets_boot_emulator(name, config, args = [], data = [], tags = []):
         ],
     )
 
-    # Version which starts an emulator using local overrides (goldfish/img).
-    local_args, local_data = _boot_local_config(args, data)
-    _ets_sequence(
-        name = "local_" + name,
-        config = config,
-        args = local_args,
-        data = local_data,
-        tags = tags + [
-            "manual",
-            "requires-network",
-        ],
-    )
+    if api_level == None:
+        # Version which starts an emulator using local overrides (goldfish/img).
+        local_args, local_data = _boot_local_config(args, data)
+        _ets_sequence(
+            name = "local_" + name,
+            config = config,
+            args = local_args,
+            data = local_data,
+            tags = tags + [
+                "manual",
+                "requires-network",
+            ],
+        )
 
 def ets_external_emulator(name, config, args = [], data = [], tags = []):
     """Runs ETS.
@@ -185,7 +195,7 @@ def ets_external_emulator(name, config, args = [], data = [], tags = []):
         ],
     )
 
-def ets_plan(name, plan, args = [], data = [], tags = []):
+def ets_plan(name, plan, args = [], data = [], tags = [], generate_api_targets = True):
     """Runs a normal ETS plan with normal/local/external variants.
 
     Args:
@@ -194,6 +204,7 @@ def ets_plan(name, plan, args = [], data = [], tags = []):
         args: Additional arguments to pass to the bazel targets.
         data: Additional data to pass to the bazel targets.
         tags: Additional tags to pass to the bazel targets.
+        generate_api_targets: If True, also generates `<name>_api_<29..37>` targets.
     """
     vulkan_apps = [
         "gears",
@@ -234,6 +245,16 @@ def ets_plan(name, plan, args = [], data = [], tags = []):
         data = plan_data,
         tags = tags,
     )
+    if generate_api_targets:
+        for api in SUPPORTED_API_LEVELS:
+            ets_boot_emulator(
+                name = "%s_api_%d" % (name, api),
+                args = plan_args,
+                config = "//ets:android_ets_cfg.py",
+                data = plan_data,
+                tags = tags,
+                api_level = api,
+            )
 
 def _ets_device_module_config_impl(ctx):
     config = """
@@ -429,6 +450,7 @@ def ets_host_test(name, srcs, class_name, description = "", extra_apks = None, *
         extra_apks: Optional list of apks to install on the device for the test.
         **kwargs: Additional arguments to pass to the kt_jvm_test target.
     """
+
     # The Tradefed module is named after the test class, not after srcs[0]: srcs may list helper
     # sources (e.g. RenderingUiTestBase.kt) before the test class.
     output_file = class_name.rsplit(".", 1)[-1] + ".config"
@@ -445,6 +467,7 @@ def ets_host_test(name, srcs, class_name, description = "", extra_apks = None, *
         visibility = [
             "//ets/foldable:__pkg__",
             "//ets/java/com/android/tools/e2etests:__pkg__",
+            "//ets/snapshot:__pkg__",
             "//ets/ui:__pkg__",
         ],
         **kwargs

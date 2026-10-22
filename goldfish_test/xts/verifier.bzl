@@ -1,17 +1,24 @@
 """CTS Verifier test rules and macro definitions."""
 
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
+load(
+    "//sequence:api_level.bzl",
+    "cts_verifier_repo_for_api",
+    "select_by_os_and_api",
+    "sysimg_repo_for_api",
+)
 load("//sequence:sequence.bzl", "run_sequence")
 
 _KOTLIN_MODULES = [
     "ClockTest",
 ]
 
-def cts_verifier_tests(name):
+def cts_verifier_tests(name, api_level = None):
     """Creates a set of rules that runs CTS verifier.
 
     Args:
         name: The base name of the test suite.
+        api_level: Optional fixed API level (29..37). When None, responds to `--define api_level=<29..37>`.
     """
     if not native.existing_rule("use_emu_main_dev_linux_x64"):
         native.config_setting(
@@ -41,11 +48,6 @@ def cts_verifier_tests(name):
             ),
         )
 
-    additional_data = [
-        "@cts-verifier//:BUILD.bazel",
-        "@cts-verifier//:all_files",
-    ]
-
     tests = []
     for test_spec in test_specs:
         test = name + "." + test_spec.subname
@@ -57,8 +59,6 @@ def cts_verifier_tests(name):
             args = [
                 "--suite",
                 "cts-verifier",
-                "--apk_dir",
-                "$(rlocationpath @cts-verifier//:BUILD.bazel)",
                 "--script",
                 test_spec.script,
             ] + select({
@@ -71,24 +71,29 @@ def cts_verifier_tests(name):
                     "--goldfish_zip",
                     "$(rlocationpath @goldfish//emulator:release)",
                 ],
-            }) + select({
-                "@platforms//os:linux": [
+            }) + select_by_os_and_api(
+                linux_fn = lambda api: [
+                    "--apk_dir",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % cts_verifier_repo_for_api(api, "x86_64"),
                     "--build_tools_extract_dir",
                     "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
                     "--image_extract_dir",
-                    "$(rlocationpath @android16k-x86_64-user//:BUILD.bazel)",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
                 ],
-                "@platforms//os:macos": [
+                macos_fn = lambda api: [
+                    "--apk_dir",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % cts_verifier_repo_for_api(api, "arm64-v8a"),
                     "--build_tools_extract_dir",
                     "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
                     "--image_extract_dir",
-                    "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
                 ],
-            }),
+                api_level = api_level,
+            ),
             data = select({
                 ":use_emu_main_dev_linux_x64": [
                     "@emu-main-dev-linux-x64//file",
@@ -96,24 +101,29 @@ def cts_verifier_tests(name):
                 "//conditions:default": [
                     "@goldfish//emulator:release",
                 ],
-            }) + native.glob(["verifier/*.py", "verifier/*.sh", "verifier/automation_dev/*.py"], allow_empty = True) + additional_data + select({
-                "@platforms//os:linux": [
-                    "@android16k-x86_64-user//:BUILD.bazel",
-                    "@android16k-x86_64-user//:all_files",
+            }) + native.glob(["verifier/*.py", "verifier/*.sh", "verifier/automation_dev/*.py"], allow_empty = True) + select_by_os_and_api(
+                linux_fn = lambda api: [
+                    "@%s//:BUILD.bazel" % cts_verifier_repo_for_api(api, "x86_64"),
+                    "@%s//:all_files" % cts_verifier_repo_for_api(api, "x86_64"),
+                    "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
+                    "@%s//:all_files" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
                     "@build-tools-linux//:BUILD.bazel",
                     "@build-tools-linux//:all_files",
                     "@platform-tools-linux//:BUILD.bazel",
                     "@platform-tools-linux//:all_files",
                 ],
-                "@platforms//os:macos": [
-                    "@android16k-arm64-v8a//:BUILD.bazel",
-                    "@android16k-arm64-v8a//:all_files",
+                macos_fn = lambda api: [
+                    "@%s//:BUILD.bazel" % cts_verifier_repo_for_api(api, "arm64-v8a"),
+                    "@%s//:all_files" % cts_verifier_repo_for_api(api, "arm64-v8a"),
+                    "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
+                    "@%s//:all_files" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
                     "@build-tools-mac//:BUILD.bazel",
                     "@build-tools-mac//:all_files",
                     "@platform-tools-mac//:BUILD.bazel",
                     "@platform-tools-mac//:all_files",
                 ],
-            }),
+                api_level = api_level,
+            ),
             exec_properties = {
                 "dockerNetwork": "standard",
             },
@@ -136,12 +146,13 @@ def cts_verifier_tests(name):
         tags = ["manual"],
     )
 
-def cts_verifier_mesh_tests(name, scripts = None):
+def cts_verifier_mesh_tests(name, scripts = None, api_level = None):
     """Creates a set of rules that runs CTS verifier multi-device mesh tests.
 
     Args:
         name: The base name of the test suite.
         scripts: Optional explicit list of run_*.sh scripts. If omitted, globs verifier/run_bluetooth_*.sh.
+        api_level: Optional fixed API level (29..37). When None, responds to `--define api_level=<29..37>`.
     """
     if not native.existing_rule("use_emu_main_dev_linux_x64"):
         native.config_setting(
@@ -170,11 +181,6 @@ def cts_verifier_mesh_tests(name, scripts = None):
             ),
         )
 
-    additional_data = [
-        "@cts-verifier//:BUILD.bazel",
-        "@cts-verifier//:all_files",
-    ]
-
     tests = []
     for test_spec in test_specs:
         test = name + "." + test_spec.subname
@@ -187,8 +193,6 @@ def cts_verifier_mesh_tests(name, scripts = None):
                 "--suite",
                 "cts-verifier",
                 "--multi_device",
-                "--apk_dir",
-                "$(rlocationpath @cts-verifier//:BUILD.bazel)",
                 "--script",
                 test_spec.script,
             ] + select({
@@ -201,24 +205,29 @@ def cts_verifier_mesh_tests(name, scripts = None):
                     "--goldfish_zip",
                     "$(rlocationpath @goldfish//emulator:release)",
                 ],
-            }) + select({
-                "@platforms//os:linux": [
+            }) + select_by_os_and_api(
+                linux_fn = lambda api: [
+                    "--apk_dir",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % cts_verifier_repo_for_api(api, "x86_64"),
                     "--build_tools_extract_dir",
                     "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
                     "--image_extract_dir",
-                    "$(rlocationpath @android16k-x86_64-user//:BUILD.bazel)",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
                 ],
-                "@platforms//os:macos": [
+                macos_fn = lambda api: [
+                    "--apk_dir",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % cts_verifier_repo_for_api(api, "arm64-v8a"),
                     "--build_tools_extract_dir",
                     "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
                     "--image_extract_dir",
-                    "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
+                    "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
                     "--platform_tools_extract_dir",
                     "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
                 ],
-            }),
+                api_level = api_level,
+            ),
             data = select({
                 ":use_emu_main_dev_linux_x64": [
                     "@emu-main-dev-linux-x64//file",
@@ -226,24 +235,29 @@ def cts_verifier_mesh_tests(name, scripts = None):
                 "//conditions:default": [
                     "@goldfish//emulator:release",
                 ],
-            }) + native.glob(["verifier/*.py", "verifier/*.sh", "verifier/automation_dev/*.py"], allow_empty = True) + additional_data + select({
-                "@platforms//os:linux": [
-                    "@android16k-x86_64-user//:BUILD.bazel",
-                    "@android16k-x86_64-user//:all_files",
+            }) + native.glob(["verifier/*.py", "verifier/*.sh", "verifier/automation_dev/*.py"], allow_empty = True) + select_by_os_and_api(
+                linux_fn = lambda api: [
+                    "@%s//:BUILD.bazel" % cts_verifier_repo_for_api(api, "x86_64"),
+                    "@%s//:all_files" % cts_verifier_repo_for_api(api, "x86_64"),
+                    "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
+                    "@%s//:all_files" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
                     "@build-tools-linux//:BUILD.bazel",
                     "@build-tools-linux//:all_files",
                     "@platform-tools-linux//:BUILD.bazel",
                     "@platform-tools-linux//:all_files",
                 ],
-                "@platforms//os:macos": [
-                    "@android16k-arm64-v8a//:BUILD.bazel",
-                    "@android16k-arm64-v8a//:all_files",
+                macos_fn = lambda api: [
+                    "@%s//:BUILD.bazel" % cts_verifier_repo_for_api(api, "arm64-v8a"),
+                    "@%s//:all_files" % cts_verifier_repo_for_api(api, "arm64-v8a"),
+                    "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
+                    "@%s//:all_files" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
                     "@build-tools-mac//:BUILD.bazel",
                     "@build-tools-mac//:all_files",
                     "@platform-tools-mac//:BUILD.bazel",
                     "@platform-tools-mac//:all_files",
                 ],
-            }),
+                api_level = api_level,
+            ),
             exec_properties = {
                 "dockerNetwork": "standard",
             },
@@ -290,7 +304,7 @@ _ets_verifier_config = rule(
     },
 )
 
-def ets_verifier(name):
+def ets_verifier(name, api_level = None):
     """Creates a set of rules to generate ETS verifier configs.
 
     This will create one .config file for each run_*.sh script in the verifier/
@@ -299,6 +313,7 @@ def ets_verifier(name):
 
     Args:
         name: The name of the overall test suite rule.
+        api_level: Optional fixed API level (29..37). When None, responds to `--define api_level=<29..37>`.
     """
     if not native.existing_rule("use_emu_main_dev_linux_x64"):
         native.config_setting(
@@ -308,21 +323,24 @@ def ets_verifier(name):
 
     config_rules = []
     test_rules = []
+    generate_configs = not native.existing_rule("verifier_ets_configs")
     for script in native.glob(["verifier/run_*.sh"]):
         script_name = script.split("/")[-1]
         base_name = script_name.replace("run_", "").replace(".sh", "")
 
-        _ets_verifier_config(
-            name = base_name + "_gen_config",
-            script_path = "testcases/" + script_name,
-            output_file = base_name + ".config",
-        )
-        config_rules.append(base_name + ".config")
+        if generate_configs:
+            _ets_verifier_config(
+                name = base_name + "_gen_config",
+                script_path = "testcases/" + script_name,
+                output_file = base_name + ".config",
+            )
+            config_rules.append(base_name + ".config")
 
         test_rules.append(
             ets_verifier_test(
                 name = name,
                 module = base_name,
+                api_level = api_level,
             ),
         )
 
@@ -331,25 +349,28 @@ def ets_verifier(name):
             ets_verifier_test(
                 name = name,
                 module = module,
+                api_level = api_level,
             ),
         )
 
-    pkg_files(
-        name = "verifier_ets_configs",
-        srcs = config_rules,
-    )
+    if generate_configs:
+        pkg_files(
+            name = "verifier_ets_configs",
+            srcs = config_rules,
+        )
     native.test_suite(
         name = name,
         tests = test_rules,
         tags = ["manual"],
     )
 
-def ets_verifier_test(name, module):
+def ets_verifier_test(name, module, api_level = None):
     """Creates a single ETS verifier test target.
 
     Args:
         name: The base name of the test suite.
         module: The verifier test module name.
+        api_level: Optional fixed API level (29..37). When None, responds to `--define api_level=<29..37>`.
     """
     test_name = name + "." + module
     run_sequence(
@@ -361,8 +382,6 @@ def ets_verifier_test(name, module):
             module,
             "--tradefed_zip",
             "$(rlocationpath :android_ets_verifier_zip)",
-            "--cts_verifier_extract_dir",
-            "$(rlocationpath @cts-verifier//:BUILD.bazel)",
             "--emulator_access_json",
             "$(rlocationpath @goldfish//emulator/libs/grpc_security:unsecure-emulator-access)",
         ] + select({
@@ -375,32 +394,35 @@ def ets_verifier_test(name, module):
                 "--goldfish_zip",
                 "$(rlocationpath @goldfish//emulator:release)",
             ],
-        }) + select({
-            "@platforms//os:linux": [
+        }) + select_by_os_and_api(
+            linux_fn = lambda api: [
                 "--abi",
                 "x86_64",
+                "--cts_verifier_extract_dir",
+                "$(rlocationpath @%s//:BUILD.bazel)" % cts_verifier_repo_for_api(api, "x86_64"),
                 "--build_tools_extract_dir",
                 "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
                 "--image_extract_dir",
-                "$(rlocationpath @android16k-x86_64-user//:BUILD.bazel)",
+                "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
                 "--platform_tools_extract_dir",
                 "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
             ],
-            "@platforms//os:macos": [
+            macos_fn = lambda api: [
                 "--abi",
                 "arm64-v8a",
+                "--cts_verifier_extract_dir",
+                "$(rlocationpath @%s//:BUILD.bazel)" % cts_verifier_repo_for_api(api, "arm64-v8a"),
                 "--build_tools_extract_dir",
                 "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
                 "--image_extract_dir",
-                "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
+                "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
                 "--platform_tools_extract_dir",
                 "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
             ],
-        }),
+            api_level = api_level,
+        ),
         data = [
             ":android_ets_verifier_zip",
-            "@cts-verifier//:BUILD.bazel",
-            "@cts-verifier//:all_files",
             "@goldfish//emulator/libs/grpc_security:unsecure-emulator-access",
         ] + select({
             ":use_emu_main_dev_linux_x64": [
@@ -409,24 +431,29 @@ def ets_verifier_test(name, module):
             "//conditions:default": [
                 "@goldfish//emulator:release",
             ],
-        }) + select({
-            "@platforms//os:linux": [
-                "@android16k-x86_64-user//:BUILD.bazel",
-                "@android16k-x86_64-user//:all_files",
+        }) + select_by_os_and_api(
+            linux_fn = lambda api: [
+                "@%s//:BUILD.bazel" % cts_verifier_repo_for_api(api, "x86_64"),
+                "@%s//:all_files" % cts_verifier_repo_for_api(api, "x86_64"),
+                "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
+                "@%s//:all_files" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
                 "@build-tools-linux//:BUILD.bazel",
                 "@build-tools-linux//:all_files",
                 "@platform-tools-linux//:BUILD.bazel",
                 "@platform-tools-linux//:all_files",
             ],
-            "@platforms//os:macos": [
-                "@android16k-arm64-v8a//:BUILD.bazel",
-                "@android16k-arm64-v8a//:all_files",
+            macos_fn = lambda api: [
+                "@%s//:BUILD.bazel" % cts_verifier_repo_for_api(api, "arm64-v8a"),
+                "@%s//:all_files" % cts_verifier_repo_for_api(api, "arm64-v8a"),
+                "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
+                "@%s//:all_files" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
                 "@build-tools-mac//:BUILD.bazel",
                 "@build-tools-mac//:all_files",
                 "@platform-tools-mac//:BUILD.bazel",
                 "@platform-tools-mac//:all_files",
             ],
-        }),
+            api_level = api_level,
+        ),
         exec_properties = {
             "dockerNetwork": "standard",
         },
@@ -444,22 +471,18 @@ def ets_verifier_test(name, module):
     )
     return test_name
 
-def cts_verifier_automation_dev_tests(name = "cts-verifier-automation-dev"):
+def cts_verifier_automation_dev_tests(name = "cts-verifier-automation-dev", api_level = None):
     """Creates a set of rules that runs CTS verifier in automation development mode.
 
     Args:
         name: The target name for the automation dev target.
+        api_level: Optional fixed API level (29..37). When None, responds to `--define api_level=<29..37>`.
     """
     if not native.existing_rule("use_emu_main_dev_linux_x64"):
         native.config_setting(
             name = "use_emu_main_dev_linux_x64",
             values = {"define": "use_emu_main_dev_linux_x64=true"},
         )
-
-    additional_data = [
-        "@cts-verifier//:BUILD.bazel",
-        "@cts-verifier//:all_files",
-    ]
 
     # Top-level standalone target for test collection and interactive development without requiring any run_*.sh script
     run_sequence(
@@ -469,8 +492,6 @@ def cts_verifier_automation_dev_tests(name = "cts-verifier-automation-dev"):
         args = [
             "--suite",
             "cts-verifier",
-            "--apk_dir",
-            "$(rlocationpath @cts-verifier//:BUILD.bazel)",
             "--dev_mode",
             "--window",
         ] + select({
@@ -483,24 +504,29 @@ def cts_verifier_automation_dev_tests(name = "cts-verifier-automation-dev"):
                 "--goldfish_zip",
                 "$(rlocationpath @goldfish//emulator:release)",
             ],
-        }) + select({
-            "@platforms//os:linux": [
+        }) + select_by_os_and_api(
+            linux_fn = lambda api: [
+                "--apk_dir",
+                "$(rlocationpath @%s//:BUILD.bazel)" % cts_verifier_repo_for_api(api, "x86_64"),
                 "--build_tools_extract_dir",
                 "$(rlocationpath @build-tools-linux//:BUILD.bazel)",
                 "--image_extract_dir",
-                "$(rlocationpath @android16k-x86_64-user//:BUILD.bazel)",
+                "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
                 "--platform_tools_extract_dir",
                 "$(rlocationpath @platform-tools-linux//:BUILD.bazel)",
             ],
-            "@platforms//os:macos": [
+            macos_fn = lambda api: [
+                "--apk_dir",
+                "$(rlocationpath @%s//:BUILD.bazel)" % cts_verifier_repo_for_api(api, "arm64-v8a"),
                 "--build_tools_extract_dir",
                 "$(rlocationpath @build-tools-mac//:BUILD.bazel)",
                 "--image_extract_dir",
-                "$(rlocationpath @android16k-arm64-v8a//:BUILD.bazel)",
+                "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
                 "--platform_tools_extract_dir",
                 "$(rlocationpath @platform-tools-mac//:BUILD.bazel)",
             ],
-        }),
+            api_level = api_level,
+        ),
         data = select({
             ":use_emu_main_dev_linux_x64": [
                 "@emu-main-dev-linux-x64//file",
@@ -508,24 +534,29 @@ def cts_verifier_automation_dev_tests(name = "cts-verifier-automation-dev"):
             "//conditions:default": [
                 "@goldfish//emulator:release",
             ],
-        }) + native.glob(["verifier/*.py", "verifier/*.sh", "verifier/automation_dev/*.py"], allow_empty = True) + additional_data + select({
-            "@platforms//os:linux": [
-                "@android16k-x86_64-user//:BUILD.bazel",
-                "@android16k-x86_64-user//:all_files",
+        }) + native.glob(["verifier/*.py", "verifier/*.sh", "verifier/automation_dev/*.py"], allow_empty = True) + select_by_os_and_api(
+            linux_fn = lambda api: [
+                "@%s//:BUILD.bazel" % cts_verifier_repo_for_api(api, "x86_64"),
+                "@%s//:all_files" % cts_verifier_repo_for_api(api, "x86_64"),
+                "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
+                "@%s//:all_files" % sysimg_repo_for_api(api, "x86_64", prefer_user = True),
                 "@build-tools-linux//:BUILD.bazel",
                 "@build-tools-linux//:all_files",
                 "@platform-tools-linux//:BUILD.bazel",
                 "@platform-tools-linux//:all_files",
             ],
-            "@platforms//os:macos": [
-                "@android16k-arm64-v8a//:BUILD.bazel",
-                "@android16k-arm64-v8a//:all_files",
+            macos_fn = lambda api: [
+                "@%s//:BUILD.bazel" % cts_verifier_repo_for_api(api, "arm64-v8a"),
+                "@%s//:all_files" % cts_verifier_repo_for_api(api, "arm64-v8a"),
+                "@%s//:BUILD.bazel" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
+                "@%s//:all_files" % sysimg_repo_for_api(api, "arm64-v8a", prefer_user = True),
                 "@build-tools-mac//:BUILD.bazel",
                 "@build-tools-mac//:all_files",
                 "@platform-tools-mac//:BUILD.bazel",
                 "@platform-tools-mac//:all_files",
             ],
-        }),
+            api_level = api_level,
+        ),
         exec_properties = {
             "dockerNetwork": "standard",
         },

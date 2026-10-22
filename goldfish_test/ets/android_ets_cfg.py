@@ -1,11 +1,46 @@
 """Configuration to run ets."""
 
 import argparse
+import os
 import platform
 
 from sequence import agent_common
 from sequence import config
 from test_seq.proto import test_sequencer_pb2
+
+
+def _is_legacy_goldfish_image(ns: argparse.Namespace) -> bool:
+    """Returns True when the system image uses legacy Goldfish graphics (API <= 36 without preview codename)."""
+    image_dir = getattr(ns, "image_extract_dir", "")
+    abi = getattr(ns, "abi", "")
+    if not image_dir:
+        return False
+    candidates = [
+        os.path.join(image_dir, abi, "source.properties") if abi else "",
+        os.path.join(image_dir, "source.properties"),
+    ]
+    for prop_path in candidates:
+        if not prop_path or not os.path.isfile(prop_path):
+            continue
+        api_level = None
+        has_codename = False
+        try:
+            with open(prop_path, encoding="utf-8", errors="replace") as f:
+                for raw_line in f:
+                    line = raw_line.strip()
+                    if line.startswith("AndroidVersion.ApiLevel="):
+                        try:
+                            api_level = int(line.split("=", 1)[1].strip())
+                        except ValueError:
+                            pass
+                    elif line.startswith("AndroidVersion.Codename="):
+                        if line.split("=", 1)[1].strip():
+                            has_codename = True
+        except OSError:
+            continue
+        if api_level is not None:
+            return api_level <= 36 and not has_codename
+    return False
 
 
 def _wait_for_network_connectivity(
@@ -34,17 +69,18 @@ def get_config(ns: argparse.Namespace) -> list[test_sequencer_pb2.AgentConfig]:
     # TODO: b/553593925 Skip snapshots on macOS until the bug is fixed.
     # b/553593925, revert if happens again
     # btw, to trigger a test, bump b to 6: b = 5
-    no_snapshot = False
+    no_snapshot = _is_legacy_goldfish_image(ns)
     skip_relaunch = bool(ns.skip_snapshot_relaunch)
     # Cold boot pass, then this many {shut down (saves the snapshot), relaunch from the snapshot,
     # pass} rounds, instead of the single ETS_SNAPSHOT pass.
-    relaunch_rounds = int(ns.snapshot_relaunch_rounds or 0)
+    relaunch_rounds = 0 if no_snapshot else int(ns.snapshot_relaunch_rounds or 0)
 
     ret = [
         agent_common.goldfish_fetch(ns),
         agent_common.tradefed_fetch(ns),
         agent_common.android_home(ns),
         agent_common.avd_ets(ns),
+        agent_common.crash_report(),
     ]
     if relaunch_rounds:
         ret.extend(

@@ -19,6 +19,7 @@ class Kind(enum.Enum):
   EMU_NOW_NO_DEQP = 3
 
 ALL_MODULES = [
+    "AdbEmuSnapshotTest",
     "AdbPushPullTest",
     "AdbScreenCapTest",
     "AvdTest",
@@ -34,6 +35,7 @@ ALL_MODULES = [
     "FoldableDisplayTest",
     "InputTest",
     "MapsUiTest",
+    "NamedSnapshotTest",
     "NetsimDaemonTest",
     "NetsimSingleDeviceTest",
     "ScreenshotTest",
@@ -41,6 +43,7 @@ ALL_MODULES = [
     "SmsTest",
     "SnapshotTest",
     "SnapshotUiTest",
+    "SnapshotVersionTest",
     "TelnetTest",
     "VulkanAppTest",
     "WebGlAquariumUiTest",
@@ -64,6 +67,10 @@ EXCLUSIONS = {
         "ControlKeysTest": ["com.android.tools.e2etests.events.ControlKeysTest#screenshot"],
         # Not yet implemented on emu-next.
         "SnapshotTest": [],
+        # Dedicated multi-launch snapshot sequences under //ets/snapshot.
+        "AdbEmuSnapshotTest": [],
+        "NamedSnapshotTest": [],
+        "SnapshotVersionTest": [],
         },
     Kind.EMU_NOW: {
         # Needs an X display to run the Electron UI, which CI bots lack.
@@ -73,6 +80,10 @@ EXCLUSIONS = {
         "WebGlAquariumUiTest": [],
         # Needs a foldable AVD configuration (see //ets/foldable).
         "FoldableDisplayTest": [],
+        # Dedicated multi-launch snapshot sequences under //ets/snapshot.
+        "AdbEmuSnapshotTest": [],
+        "NamedSnapshotTest": [],
+        "SnapshotVersionTest": [],
         # These tests experience timeouts.
         "CallTest": [
             "com.android.tools.e2etests.call.CallTest#acceptCall",
@@ -127,6 +138,7 @@ def main():
     elif len(exclusions) == 0:
       print(ENTRY % ("exclude", module))
     else:
+      print(ENTRY % ("include", module))
       for test_method in exclusions:
         print(ENTRY % ("exclude", f"{module} {test_method}"))
   print(FOOTER)
