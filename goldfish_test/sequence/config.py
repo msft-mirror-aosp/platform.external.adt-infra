@@ -179,6 +179,25 @@ _KNOWN_FLAGS = {
         help="Path to the extracted platform tools",
         required=True,
     ),
+    "emulator_args": lambda p: p.add_argument(
+        "--emulator_args",
+        help=(
+            "Extra arguments appended to every emulator launch of the sequence (comma-separated),"
+            " e.g. -no-snapshot."
+        ),
+        required=False,
+        default="",
+    ),
+    "relaunch_emulator_args": lambda p: p.add_argument(
+        "--relaunch_emulator_args",
+        help=(
+            "Extra arguments appended only to the emulator relaunches of the snapshot sequence"
+            " (comma-separated), e.g. -snapshot,ets_named to boot the relaunches from a named"
+            " snapshot. Requires --snapshot_relaunch_rounds."
+        ),
+        required=False,
+        default="",
+    ),
     "skip_snapshot_relaunch": lambda p: p.add_argument(
         "--skip_snapshot_relaunch",
         action="store_true",

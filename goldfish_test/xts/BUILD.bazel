@@ -1,5 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
+load("//sequence:api_level.bzl", "SUPPORTED_API_LEVELS")
 load(
     "//xts:verifier.bzl",
     "cts_verifier_automation_dev_tests",
@@ -25,6 +26,24 @@ ets_verifier(
 cts_verifier_automation_dev_tests(
     name = "cts-verifier-automation-dev",
 )
+
+[
+    (
+        cts_verifier_tests(
+            name = "cts-verifier_api_%d" % api,
+            api_level = api,
+        ),
+        ets_verifier(
+            name = "ets-verifier_api_%d" % api,
+            api_level = api,
+        ),
+        cts_verifier_automation_dev_tests(
+            name = "cts-verifier-automation-dev_api_%d" % api,
+            api_level = api,
+        ),
+    )
+    for api in SUPPORTED_API_LEVELS
+]
 
 pkg_files(
     name = "verifier_scripts",
@@ -1783,6 +1802,35 @@ module_subtests(
     submodules = infodeqp_submodules,
     suite = "cts",
 )
+
+[
+    (
+        cts_media_tests(
+            name = "cts-media_api_%d" % api,
+            api_level = api,
+            modules = cts_media_modules,
+        ),
+        deqp_tests(
+            name = "deqp_api_%d" % api,
+            api_level = api,
+            submodules = deqp_submodules,
+        ),
+        module_subtests(
+            name = "infodeqp_api_%d" % api,
+            api_level = api,
+            module_name = "CtsDeqpTestCases",
+            submodules = infodeqp_submodules,
+            suite = "cts",
+        ),
+        xts_plan(
+            name = "deqp-plan_api_%d" % api,
+            api_level = api,
+            plan_glob = "xts_plan_files/deqp/**",
+            suite = "cts",
+        ),
+    )
+    for api in SUPPORTED_API_LEVELS
+]
 
 xts_sharded_tests()
 

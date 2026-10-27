@@ -7,6 +7,7 @@ import re
 from test_seq.proto import adb_pb2
 from test_seq.proto import android_home_pb2
 from test_seq.proto import avd_pb2
+from test_seq.proto import crashreport_pb2
 from test_seq.proto import extract_pb2
 from test_seq.proto import goldfish_pb2
 from test_seq.proto import junit_xml_result_pb2
@@ -113,6 +114,17 @@ def avd_ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     )
     return ret
 
+
+def crash_report() -> test_sequencer_pb2.AgentConfig:
+    return test_sequencer_pb2.AgentConfig(
+        crashreport=crashreport_pb2.CrashReport(),
+        imports=[
+            test_sequencer_pb2.Import(
+                id="goldfish_fetch",
+                src="extract_dir",
+            ),
+        ],
+    )
 
 def cts(ns: argparse.Namespace, args: list[str]) -> test_sequencer_pb2.AgentConfig:
     ac = _tradefed(ns)
@@ -311,9 +323,12 @@ def ets_snapshot(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     return ac
 
 
-# //ets/ui modules that run once per phase of the snapshot relaunch sequence (snapshot_phase option).
+# //ets/ui and //ets/snapshot modules that run once per phase of the snapshot relaunch sequence
+# (snapshot_phase option).
 _SNAPSHOT_UI_TEST_MODULES = (
     "SnapshotUiTest",
+    "SnapshotVersionTest",
+    "NamedSnapshotTest",
     "WebGlAquariumUiTest",
     "MapsUiTest",
 )
@@ -416,6 +431,7 @@ def goldfish(
     args = [
         "-verbose",
         "-show-kernel",
+        "-metrics-collection",
     ]
     if port:
         args.extend(["-port", str(port)])
@@ -423,6 +439,7 @@ def goldfish(
         args.append("-qt-hide-window")
     if not getattr(ns, "is_prebuilt_emulator", False):
         args.append("-not-in-bazel")
+    args.extend(_split_args(getattr(ns, "emulator_args", "")))
 
     return test_sequencer_pb2.AgentConfig(
         id=id,
@@ -473,7 +490,13 @@ def goldfish_load_snapshot_grpc(
 ) -> test_sequencer_pb2.AgentConfig:
     ac = goldfish_grpc(ns)
     ac.id = id
+    ac.goldfish.args.extend(_split_args(getattr(ns, "relaunch_emulator_args", "")))
     return ac
+
+
+def _split_args(value: str) -> list[str]:
+    """Splits a comma-separated flag value into arguments, dropping empty ones."""
+    return [a for a in (value or "").split(",") if a]
 
 
 def goldfish_very_verbose(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
