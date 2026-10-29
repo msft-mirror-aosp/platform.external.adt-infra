@@ -30,6 +30,8 @@ pkg_files(
     name = "ets_modules",
     testonly = True,
     srcs = [
+        "//ets/foldable:pkg",
+        "//ets/java/com/android/tools/e2etests/audio:pkg",
         "//ets/java/com/android/tools/e2etests/avd:pkg",
         "//ets/java/com/android/tools/e2etests/battery:pkg",
         "//ets/java/com/android/tools/e2etests/boot:pkg",
@@ -48,7 +50,6 @@ pkg_files(
         "//ets/java/com/android/tools/e2etests/telnet:pkg",
         "//ets/java/com/android/tools/e2etests/vulkan:pkg",
         "//ets/java/com/android/tools/e2etests/wifi:pkg",
-        "//ets/foldable:pkg",
         "//ets/snapshot:pkg",
         "//ets/ui:pkg",
         "@animation_app//file",
