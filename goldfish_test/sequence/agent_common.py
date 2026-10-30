@@ -110,7 +110,9 @@ def avd_ets(ns: argparse.Namespace) -> test_sequencer_pb2.AgentConfig:
     # Split only on commas followed by key=value so comma-separated values like
     # hw.sensor.posture_list=1, 2, 3 stay intact.
     ret.avd.avd_config_ini.extend(
-        e for e in re.split(r",(?=[A-Za-z0-9_.]+\s*=)", ns.avd_ini or "") if e
+        e
+        for e in re.split(r",(?=[A-Za-z0-9_.]+\s*=)", ",".join(ns.avd_ini or []))
+        if e
     )
     return ret
 

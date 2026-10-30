@@ -81,8 +81,10 @@ _KNOWN_FLAGS = {
     ),
     "avd_ini": lambda p: p.add_argument(
         "--avd_ini",
-        default="",
-        help="Extra AVD config.ini entries (comma-separated key=value), e.g. hw.lcd.width=1080",
+        action="append",
+        default=[],
+        help="Extra AVD config.ini entries (comma-separated key=value), e.g. hw.lcd.width=1080."
+        " May be repeated; all occurrences are applied in order.",
     ),
     "build_tools_extract_dir": lambda p: p.add_argument(
         "--build_tools_extract_dir",
