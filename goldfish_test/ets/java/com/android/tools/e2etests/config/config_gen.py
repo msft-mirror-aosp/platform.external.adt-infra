@@ -69,8 +69,10 @@ EXCLUSIONS = {
         "ControlKeysTest": [
             "com.android.tools.e2etests.events.ControlKeysTest#screenshot"
         ],
-        # Not yet implemented on emu-next.
-        "SnapshotTest": [],
+        # SnapshotTest#snapshotTraceFileSet checks snapshot.trace, which emu-next does not write.
+        "SnapshotTest": [
+            "com.android.tools.e2etests.snapshot.SnapshotTest#snapshotTraceFileSet"
+        ],
         # Dedicated multi-launch snapshot sequences under //ets/snapshot.
         "AdbEmuSnapshotTest": [],
         "NamedSnapshotTest": [],
