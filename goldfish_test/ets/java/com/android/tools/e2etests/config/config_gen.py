@@ -40,6 +40,7 @@ ALL_MODULES = [
     "NamedSnapshotTest",
     "NetsimDaemonTest",
     "NetsimSingleDeviceTest",
+    "RecordingTest",
     "ScreenshotTest",
     "SensorTest",
     "SmsTest",
@@ -68,6 +69,10 @@ EXCLUSIONS = {
         # Failing on emu-next.
         "ControlKeysTest": [
             "com.android.tools.e2etests.events.ControlKeysTest#screenshot"
+        ],
+        # Auto-stop after time limit is not yet supported on emu-next.
+        "RecordingTest": [
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordingDuration",
         ],
         # SnapshotTest#snapshotTraceFileSet checks snapshot.trace, which emu-next does not write.
         "SnapshotTest": [
@@ -98,6 +103,16 @@ EXCLUSIONS = {
             "com.android.tools.e2etests.call.CallTest#disconnectCall",
             "com.android.tools.e2etests.call.CallTest#takeCallOffHold",
             "com.android.tools.e2etests.call.CallTest#placeCallOnHold",
+        ],
+        # Only recording over telnet is supported on emu-now.
+        "RecordingTest": [
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordingDuration",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordSendsEvent",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordsVideo",
+            "com.android.tools.e2etests.recording.RecordingTest#canOnlyRecordOnce",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordsVideoInWebm",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordingDuration",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordsWithDifferentOrientations",
         ],
     },
 }
