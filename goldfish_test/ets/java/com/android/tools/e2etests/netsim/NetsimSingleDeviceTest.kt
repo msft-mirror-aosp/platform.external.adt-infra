@@ -62,11 +62,8 @@ class NetsimSingleDeviceTest : BaseHostJUnit4Test() {
 
   @Test
   fun netsimRadioStateToggle() {
-    val resp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
-    Assert.assertTrue(resp.getDevicesCount() > 0)
-
-    // Turn off Radio State (BLE) and verify.
-    val name = resp.getDevices(0).getName()
+    // Select the attached emulator Bluetooth device rather than built-in BLE beacons.
+    val name = waitForBluetoothDeviceName()
     NetsimController.defaultDeadline().patchDevice(patchBleStateRequest(name, false))
 
     var patchedResp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
@@ -85,6 +82,35 @@ class NetsimSingleDeviceTest : BaseHostJUnit4Test() {
     patchedResp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
     assertBleState(getDevice(patchedResp.getDevicesList(), name), true)
   }
+}
+
+private const val DEVICE_ATTACH_TIMEOUT_MS = 5_000L
+private const val DEVICE_ATTACH_POLL_INTERVAL_MS = 200L
+
+fun hasNonBeaconBluetoothChip(device: Device): Boolean {
+  return device.getChipsList().any { it.getKind() == ChipKind.BLUETOOTH && it.hasBt() }
+}
+
+fun waitForBluetoothDeviceName(): String {
+  val deadlineNs = System.nanoTime() + DEVICE_ATTACH_TIMEOUT_MS * 1_000_000L
+  var lastDevices: List<Device> = emptyList()
+  while (true) {
+    val resp = NetsimController.defaultDeadline().listDevice(Empty.getDefaultInstance())
+    lastDevices = resp.getDevicesList()
+    val btDevice = lastDevices.firstOrNull(::hasNonBeaconBluetoothChip)
+    if (btDevice != null) {
+      return btDevice.getName()
+    }
+    if (System.nanoTime() >= deadlineNs) {
+      break
+    }
+    Thread.sleep(DEVICE_ATTACH_POLL_INTERVAL_MS)
+  }
+  val seenNames = lastDevices.map { it.getName() }
+  Assert.fail(
+    "Timed out after ${DEVICE_ATTACH_TIMEOUT_MS} ms waiting for a non-beacon Bluetooth device in netsimd; saw devices: $seenNames"
+  )
+  return ""
 }
 
 fun getDevice(devices: List<Device>, name: String): Device {
@@ -117,9 +143,17 @@ fun patchBleStateRequest(name: String, state: Boolean): PatchDeviceRequest {
 }
 
 fun assertBleState(device: Device, state: Boolean) {
-  for (chip in device.getChipsList()) {
-    if (chip.getKind() == ChipKind.BLUETOOTH) {
-      Assert.assertEquals(chip.getBt().getLowEnergy().getState(), state)
-    }
+  val btChips =
+    device.getChipsList().filter { it.getKind() == ChipKind.BLUETOOTH && it.hasBt() }
+  Assert.assertFalse(
+    "Expected device '${device.getName()}' to have a non-beacon Bluetooth chip, found chips: ${device.getChipsList()}",
+    btChips.isEmpty(),
+  )
+  for (chip in btChips) {
+    Assert.assertEquals(
+      "Unexpected BLE radio state for device '${device.getName()}'",
+      state,
+      chip.getBt().getLowEnergy().getState(),
+    )
   }
 }
