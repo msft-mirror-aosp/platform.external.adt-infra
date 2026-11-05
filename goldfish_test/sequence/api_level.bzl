@@ -3,6 +3,25 @@
 SUPPORTED_API_LEVELS = [29, 30, 31, 32, 33, 34, 35, 36, 37]
 DEFAULT_API_LEVEL = 37
 
+# First API level whose system images use virtio-gpu. The launcher trampolines
+# AVDs below this level to the legacy (qemu2) emulator unless the AVD opts
+# into the new emulator with `trampoline.force_version=10`; see
+# `ShouldTrampolineToQemu2()` in hardware/generic/goldfish/emulator/launcher.
+VIRTIO_READY_API_LEVEL = 37
+
+def avd_ini_args_for_api(api):
+    """Returns the extra `--avd_ini` arguments needed to boot `api` on the new emulator.
+
+    Args:
+      api: Android API level integer (29..37).
+
+    Returns:
+      A list of command-line arguments (possibly empty).
+    """
+    if api < VIRTIO_READY_API_LEVEL:
+        return ["--avd_ini", "trampoline.force_version=10"]
+    return []
+
 def _ensure_api_level_config_settings():
     """Defines per-OS, per-API config_setting targets in the current package if not already defined."""
     for api in SUPPORTED_API_LEVELS:

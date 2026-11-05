@@ -314,6 +314,11 @@ class SnapshotUiTest : SnapshotUiTestBase() {
   private fun ensureSettingsApp() {
     CLog.i("%s: Launching Settings app...", TAG)
     getDevice().executeShellCommand("input keyevent KEYCODE_WAKEUP")
+    // Shortly after a cold boot the system posts heads-up notifications (e.g. Digital Wellbeing's
+    // "Enable Google Play services"). A heads-up popup appearing right before one of our taps
+    // swallows that tap, which then reads as "UI did not change" below; keep them off-screen.
+    getDevice().executeShellCommand("settings put global heads_up_notifications_enabled 0")
+    getDevice().executeShellCommand("cmd statusbar collapse")
     getDevice().executeShellCommand("am start -W --activity-clear-task -a android.settings.SETTINGS")
     eventually("Settings in foreground") {
       resumedActivity().contains("settings", ignoreCase = true)

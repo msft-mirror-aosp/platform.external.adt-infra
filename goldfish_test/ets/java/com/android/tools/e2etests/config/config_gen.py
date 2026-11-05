@@ -14,14 +14,16 @@ import sys
 
 
 class Kind(enum.Enum):
-  PRESUBMIT = 1
-  EMU_NOW = 2
-  EMU_NOW_NO_DEQP = 3
+    PRESUBMIT = 1
+    EMU_NOW = 2
+    EMU_NOW_NO_DEQP = 3
+
 
 ALL_MODULES = [
     "AdbEmuSnapshotTest",
     "AdbPushPullTest",
     "AdbScreenCapTest",
+    "AudioTest",
     "AvdTest",
     "BatteryTest",
     "BootTest",
@@ -38,6 +40,7 @@ ALL_MODULES = [
     "NamedSnapshotTest",
     "NetsimDaemonTest",
     "NetsimSingleDeviceTest",
+    "RecordingTest",
     "ScreenshotTest",
     "SensorTest",
     "SmsTest",
@@ -64,15 +67,25 @@ EXCLUSIONS = {
         "AvdTest": [],
         "CallTest": [],
         # Failing on emu-next.
-        "ControlKeysTest": ["com.android.tools.e2etests.events.ControlKeysTest#screenshot"],
-        # Not yet implemented on emu-next.
-        "SnapshotTest": [],
+        "ControlKeysTest": [
+            "com.android.tools.e2etests.events.ControlKeysTest#screenshot"
+        ],
+        # Auto-stop after time limit is not yet supported on emu-next.
+        "RecordingTest": [
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordingDuration",
+        ],
+        # SnapshotTest#snapshotTraceFileSet checks snapshot.trace, which emu-next does not write.
+        "SnapshotTest": [
+            "com.android.tools.e2etests.snapshot.SnapshotTest#snapshotTraceFileSet"
+        ],
         # Dedicated multi-launch snapshot sequences under //ets/snapshot.
         "AdbEmuSnapshotTest": [],
         "NamedSnapshotTest": [],
         "SnapshotVersionTest": [],
-        },
+    },
     Kind.EMU_NOW: {
+        # Exercises the v2 AudioService, which only emu-next implements.
+        "AudioTest": [],
         # Needs an X display to run the Electron UI, which CI bots lack.
         "DeviceHubUiTest": [],
         "MapsUiTest": [],
@@ -90,6 +103,16 @@ EXCLUSIONS = {
             "com.android.tools.e2etests.call.CallTest#disconnectCall",
             "com.android.tools.e2etests.call.CallTest#takeCallOffHold",
             "com.android.tools.e2etests.call.CallTest#placeCallOnHold",
+        ],
+        # Only recording over telnet is supported on emu-now.
+        "RecordingTest": [
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordingDuration",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordSendsEvent",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordsVideo",
+            "com.android.tools.e2etests.recording.RecordingTest#canOnlyRecordOnce",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordsVideoInWebm",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordingDuration",
+            "com.android.tools.e2etests.recording.RecordingTest#screenRecordsWithDifferentOrientations",
         ],
     },
 }
@@ -120,29 +143,29 @@ HEADER = """
     <include name="ets" />
 """
 
-ENTRY = "    <option name=\"%s-filter\" value=\"%s\" />"
+ENTRY = '    <option name="%s-filter" value="%s" />'
 
 FOOTER = "</configuration>"
 
 
 def main():
-  if len(sys.argv) != 2:
-    sys.stderr.write("Usage: python3 config_gen.py <kind>\n")
-    os.exit(1)
-  kind = Kind[sys.argv[1]]
-  print(HEADER)
-  for module in ALL_MODULES:
-    exclusions = EXCLUSIONS[kind].get(module, None)
-    if exclusions is None:
-      print(ENTRY % ("include", module))
-    elif len(exclusions) == 0:
-      print(ENTRY % ("exclude", module))
-    else:
-      print(ENTRY % ("include", module))
-      for test_method in exclusions:
-        print(ENTRY % ("exclude", f"{module} {test_method}"))
-  print(FOOTER)
+    if len(sys.argv) != 2:
+        sys.stderr.write("Usage: python3 config_gen.py <kind>\n")
+        os.exit(1)
+    kind = Kind[sys.argv[1]]
+    print(HEADER)
+    for module in ALL_MODULES:
+        exclusions = EXCLUSIONS[kind].get(module, None)
+        if exclusions is None:
+            print(ENTRY % ("include", module))
+        elif len(exclusions) == 0:
+            print(ENTRY % ("exclude", module))
+        else:
+            print(ENTRY % ("include", module))
+            for test_method in exclusions:
+                print(ENTRY % ("exclude", f"{module} {test_method}"))
+    print(FOOTER)
 
 
 if __name__ == "__main__":
-  main()
+    main()

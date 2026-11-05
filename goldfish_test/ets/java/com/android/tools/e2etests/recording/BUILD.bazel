@@ -1,0 +1,36 @@
+load("//ets:ets.bzl", "ets_host_test", "ets_pkg", "ets_plan")
+
+ets_pkg(
+    name = "pkg",
+    srcs = [":recording_test_config"],
+)
+
+ets_host_test(
+    name = "recording_test",
+    srcs = ["RecordingTest.kt"],
+    class_name = "com.android.tools.e2etests.recording.RecordingTest",
+    description = "Host test checking emulator screen recording functionality",
+    extra_apks = ["app-debug.apk"],
+    deps = [
+        "//deps/proto:aemu_java_grpc",
+        "//deps/proto:aemu_java_proto",
+        "//ets/java/com/android/tools/e2etests/grpc:host_grpc_lib",
+        "//testlib/java/com/android/tools/testlib/emu:discovery",
+        "//testlib/java/com/android/tools/testlib/emu:eventually",
+        "//testlib/java/com/android/tools/testlib/emu:telnet",
+        "@grpc-java//api",
+        "@grpc-java//stub",
+        "@maven//:junit_junit",
+        "@protobuf//:protobuf_java",
+        "@tradefed//:tradefed_jars",
+    ],
+)
+
+# Boots an emulator and runs only the recording module:
+#   bazel test @goldfish_test//ets/java/com/android/tools/e2etests/recording:recording
+ets_plan(
+    name = "recording",
+    args = ["--tradefed_args=--include-filter,RecordingTest"],
+    generate_api_targets = False,
+    plan = "ets",
+)

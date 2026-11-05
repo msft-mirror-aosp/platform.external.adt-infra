@@ -1,0 +1,40 @@
+load("//ets:ets.bzl", "ets_device_test", "ets_pkg", "ets_plan")
+
+ets_pkg(
+    name = "pkg",
+    srcs = [
+        ":AudioTest.apk",
+        ":AudioTest_config",
+    ],
+)
+
+ets_device_test(
+    name = "AudioTest",
+    srcs = [
+        "AudioTest.kt",
+        "AudioTestSupport.kt",
+    ],
+    description = "End-to-end tests of the v2 AudioService: microphone injection, speaker capture, and mixer state",
+    manifest_extra = """
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    """,
+    package = "com.android.tools.e2etests.audio",
+    deps = [
+        "//deps/proto:audio_service_java_grpc_lite",
+        "//deps/proto:audio_service_java_proto_lite",
+        "//ets/java/com/android/tools/e2etests/grpc:grpc_lib",
+        "@maven//:androidx_test_core",
+        "@maven//:androidx_test_runner",
+        "@maven//:com_google_testparameterinjector_test_parameter_injector",
+    ],
+)
+
+# Boots an emulator and runs only the audio module:
+#   bazel test @goldfish_test//ets/java/com/android/tools/e2etests/audio:audio
+ets_plan(
+    name = "audio",
+    args = ["--tradefed_args=--include-filter,AudioTest"],
+    generate_api_targets = False,
+    plan = "ets",
+)

@@ -6,6 +6,7 @@ load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_test")
 load(
     "//sequence:api_level.bzl",
     "SUPPORTED_API_LEVELS",
+    "avd_ini_args_for_api",
     "select_by_os_and_api",
     "sysimg_repo_for_api",
 )
@@ -81,11 +82,11 @@ def _boot_normal_config(args, data, api_level = None):
         linux_fn = lambda api: [
             "--image_extract_dir",
             "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "x86_64"),
-        ],
+        ] + avd_ini_args_for_api(api),
         macos_fn = lambda api: [
             "--image_extract_dir",
             "$(rlocationpath @%s//:BUILD.bazel)" % sysimg_repo_for_api(api, "arm64-v8a"),
-        ],
+        ] + avd_ini_args_for_api(api),
         api_level = api_level,
     )
     ret_data = data + [
