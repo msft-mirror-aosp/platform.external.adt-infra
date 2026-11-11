@@ -30,8 +30,8 @@ ets_host_test(
     description = "Host tests for netsim using a single device",
     deps = [
         "//testlib/java/com/android/tools/testlib/netsim:grpc",
-        "@netsim//proto:netsim_java_grpc",
-        "@netsim//proto:netsim_java_proto",
+        "@goldfish_prebuilts_common//netsim:netsim_java_grpc",
+        "@goldfish_prebuilts_common//netsim:netsim_java_proto",
         "@tradefed//:tradefed_jars",
     ],
 )
